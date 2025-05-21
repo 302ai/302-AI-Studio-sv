@@ -1,11 +1,13 @@
 import { app, BrowserWindow } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
+
+// WARN: This is needed to make ESM work after vite build
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
   app.quit();
@@ -25,7 +27,7 @@ const createWindow = () => {
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
     mainWindow.webContents.on("did-frame-finish-load", () => {
-      mainWindow.webContents.openDevTools();
+      mainWindow.webContents.openDevTools({ mode: "detach" });
     });
   } else {
     mainWindow.loadFile(path.join(__dirname, "build", "index.html"));
