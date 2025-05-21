@@ -6,6 +6,7 @@ const config = {
   kit: {
     adapter: adapter({
       fallback: "index.html",
+      pages: ".vite/renderer/main_window",
     }),
   },
 };

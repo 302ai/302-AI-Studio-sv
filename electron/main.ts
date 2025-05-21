@@ -24,7 +24,12 @@ const createWindow = () => {
       mainWindow.webContents.openDevTools({ mode: "detach" });
     });
   } else {
-    mainWindow.loadFile(path.join(import.meta.dirname, "build", "index.html"));
+    mainWindow.loadFile(
+      path.join(
+        import.meta.dirname,
+        `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`,
+      ),
+    );
   }
 };
 
