@@ -5,7 +5,7 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
-  "main": "electron/main.ts",
+  "main": ".vite/build/main.js",
   "author": {
     "name": "Pandoks_",
     "email": "35944715+Pandoks@users.noreply.github.com"
@@ -37,6 +37,7 @@
     "@electron-forge/maker-zip": "^7.8.1",
     "@electron-forge/plugin-auto-unpack-natives": "^7.8.1",
     "@electron-forge/plugin-fuses": "^7.8.1",
+    "@electron-forge/plugin-vite": "^7.8.1",
     "@electron/fuses": "^1.8.0",
     "@playwright/test": "^1.49.1",
     "@sveltejs/adapter-static": "^3.0.8",
@@ -47,6 +48,7 @@
     "@tailwindcss/vite": "^4.0.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/svelte": "^5.2.4",
+    "@types/electron-squirrel-startup": "^1.0.2",
     "@types/node": "^22",
     "drizzle-kit": "^0.30.2",
     "electron": "^36.2.1",
@@ -54,6 +56,7 @@
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "tailwindcss": "^4.0.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.0.0",
     "vite": "^6.2.6",
     "vitest": "^3.0.0"
@@ -71,4 +74,3 @@
     ]
   }
 }
-
