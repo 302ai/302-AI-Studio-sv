@@ -2,7 +2,7 @@
 
 A minimal template for building Electron apps with SvelteKit.
 
-It has native support for Typscript and doesn't use `electron-serve` in the production build.
+Includes native support for Typscript and uses Electron's official recommended Electron Forge for packaging.
 
 Everything you can do in SvelteKit, you can do in SveltronKit; meaning that you can use component
 libraries like [Shadcn-Svelte](https://next.shadcn-svelte.com/).
