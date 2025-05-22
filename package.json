@@ -65,6 +65,9 @@
       "esbuild",
       "electron",
       "electron-winstaller"
-    ]
+    ],
+    "patchedDependencies": {
+      "@sveltejs/kit": "patches/@sveltejs__kit.patch"
+    }
   }
 }
