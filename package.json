@@ -54,8 +54,7 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1",
-    "postgres": "^3.4.5"
+    "electron-squirrel-startup": "^1.0.1"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
