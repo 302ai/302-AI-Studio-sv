@@ -5,9 +5,11 @@ const config = {
   preprocess: vitePreprocess(),
   kit: {
     adapter: adapter({
-      fallback: "index.html",
       pages: ".vite/renderer/main_window",
     }),
+    router: {
+      type: "hash",
+    },
   },
 };
 
