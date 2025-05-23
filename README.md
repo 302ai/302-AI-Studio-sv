@@ -69,6 +69,45 @@ information.
 
 # Electron Crash Course
 
+> [!NOTE]
+> This is a super simplified version of the Electron documentation meant to give you a general idea
+> of how Electron works and how each file corresponds to responsibilities in Electron. For a more
+> accurate description of how Electron works, you can refer to the [official documentation](https://www.electronjs.org/docs).
+
 I found that most of the problems I encountered when setting up Electron were because I didn't know
 how Electron works and that the documentation was too dense to get up to speed with, so I'll include
-a crash course here.
+a crash course here. _I will be making a lot of analogies to web development_ as it seems like a lot
+of people who are new to Electron come from web development.
+
+## main.ts
+
+This file defines what the main process will do. The process runs your app. It's the one that
+creates and manages windows and also has permissions to access the file system. You also define
+"_signals_"/"_endpoints_", through IPC, that let the renderer process (browser that runs your app)
+can "_call_" to interact with the file system.
+
+By default, Electron will block off file system access to the renderer process as a security measure,
+which is the reason why you need to use IPC to interact with the file system.
+
+## preload.ts
+
+Think about this as a "bridge" or a "network"/"proxy" between the main process and the renderer process.
+You specify what functions that the renderer process can call and these functions will usually be
+interacting with the file system through the main process.
+
+## renderer
+
+The renderer process is the browser that runs your app. Just treat this like another SvelteKit app.
+
+## Overview
+
+```mermaid
+flowchart LR
+  subgraph main[Main Process]
+    electron
+  end
+  subgraph renderer[Renderer Process]
+    browser
+  end
+  electron <-- preload --> renderer
+```
