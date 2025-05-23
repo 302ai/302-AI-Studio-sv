@@ -79,6 +79,9 @@ how Electron works and that the documentation was too dense to get up to speed w
 a crash course here. _I will be making a lot of analogies to web development_ as it seems like a lot
 of people who are new to Electron come from web development.
 
+Because everything in Electron is client based, you'll need to host your own server if you want to
+access any sensitive logic like a database or authentication, etc.
+
 ## main.ts
 
 This file defines what the main process will do. The process runs your app. It's the one that
