@@ -1,58 +1,14 @@
 {
 	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
-		"target": "ESNext",
-		"lib": ["ESNext", "DOM", "DOM.Iterable"],
-		"module": "ESNext",
-		"moduleResolution": "bundler",
-
-		// JavaScript support
 		"allowJs": true,
-		"checkJs": false,
-
-		// Interop and compatibility
+		"checkJs": true,
 		"esModuleInterop": true,
-		"allowSyntheticDefaultImports": true,
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true,
-
-		// Type checking (relaxed for easier development)
-		"strict": false,
-		"noImplicitAny": false,
-		"strictNullChecks": false,
-
-		// Basic quality checks
-		"noImplicitReturns": false,
-		"noFallthroughCasesInSwitch": true,
-		"noUnusedLocals": false,
-		"noUnusedParameters": false,
-
-		// Emit
-		"declaration": false,
+		"skipLibCheck": true,
 		"sourceMap": true,
-		"skipLibCheck": true
-	},
-	"include": [
-		"src/**/*.d.ts",
-		"src/**/*.ts",
-		"src/**/*.js",
-		"src/**/*.svelte",
-		"tests/**/*.ts",
-		"tests/**/*.js",
-		"vite.config.ts",
-		"playwright.config.ts"
-	],
-	"exclude": [
-		"node_modules/**",
-		".svelte-kit/**",
-		"build/**",
-		"dist/**",
-		"out/**",
-		"src/lib/paraglide/**"
-	]
-	// Path aliases are handled by https://svelte.dev/docs/kit/configuration#alias
-	// except $lib which is handled by https://svelte.dev/docs/kit/configuration#files
-	//
-	// If you want to overwrite includes/excludes, make sure to copy over the relevant includes/excludes
-	// from the referenced tsconfig.json - TypeScript does not merge them in
+		"strict": true,
+		"moduleResolution": "bundler"
+	}
 }
