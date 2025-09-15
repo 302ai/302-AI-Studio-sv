@@ -6,10 +6,8 @@ const config = {
 	kit: {
 		adapter: adapter({
 			pages: ".vite/renderer/main_window",
+			fallback: "index.html",
 		}),
-		router: {
-			type: "hash",
-		},
 	},
 };
 

@@ -15,21 +15,21 @@
 		{
 			id: "home",
 			title: "Home",
-			href: "#/",
+			href: "/",
 			closable: false,
 			icon: homeIcon,
 		},
 		{
 			id: "with-sidebar",
 			title: "With Sidebar",
-			href: "#/dashboard",
+			href: "/dashboard",
 			closable: true,
 			icon: layoutIcon,
 		},
 		{
 			id: "settings",
 			title: "Settings",
-			href: "#/settings/general-settings",
+			href: "/settings/general-settings",
 			closable: true,
 			icon: settingsIcon,
 		},
@@ -77,7 +77,7 @@
 		const newTab: Tab = {
 			id: chatId,
 			title: "New Chat",
-			href: `#/chat/${chatId}`,
+			href: `/chat/${chatId}`,
 			closable: true,
 			icon: messageIcon,
 		};

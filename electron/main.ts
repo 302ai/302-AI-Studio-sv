@@ -1,8 +1,12 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
 
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, net, protocol } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
+
+protocol.registerSchemesAsPrivileged([
+	{ scheme: "app", privileges: { standard: true, secure: true } },
+]);
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -26,16 +30,30 @@ const createWindow = () => {
 			mainWindow.webContents.openDevTools({ mode: "detach" });
 		});
 	} else {
-		mainWindow.loadFile(
-			path.join(import.meta.dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`),
-		);
+		mainWindow.loadURL("app://localhost");
 	}
 };
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", createWindow);
+app.on("ready", () => {
+	protocol.handle("app", (request) => {
+		const url = new URL(request.url);
+		const filePath = url.pathname.substring(1); // 移除开头的 /
+
+		if (!filePath || filePath === "localhost") {
+			return net.fetch(
+				`file://${path.join(import.meta.dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)}`,
+			);
+		}
+
+		return net.fetch(
+			`file://${path.join(import.meta.dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}`, filePath)}`,
+		);
+	});
+	createWindow();
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
