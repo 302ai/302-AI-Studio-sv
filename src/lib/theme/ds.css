@@ -1,0 +1,288 @@
+/*
+  Design System v1 — Tailwind v4 Token Layer
+
+  Goals:
+  - Preserve shadcn UI tokens; do not modify existing components.
+  - Provide a clean, layered token system for our components.
+  - Allow end-users to override a curated set of variables using plain CSS syntax.
+
+  Layering strategy:
+  1) Exposed tokens (prefix: --ui-*) — safe, minimal knobs users can tweak.
+  2) Derived component tokens (prefix: --ui-tab-*) — computed from exposed tokens.
+  3) Tailwind v4 @theme bridge (prefix: --color-*, --spacing-*, --size-*, --radius-*)
+     to generate ergonomic utility classes like bg-*, h-*, size-*, rounded-*.
+
+  To override via CSS in Settings, users should set only --ui-* variables, e.g.:
+    :root {
+      --ui-accent: oklch(65% 0.17 277);
+      --ui-accent-fg: #fff;
+      --ui-radius: 0.5rem;
+    }
+*/
+
+/* 1) Exposed tokens (safe for users). Default to shadcn base tokens to keep parity. */
+:root {
+	/* Core surfaces & text */
+	--ui-surface: var(--background);
+	--ui-surface-muted: var(--muted);
+	--ui-text: var(--foreground);
+	--ui-text-muted: var(--muted-foreground);
+
+	--ui-icon-btn-hover: #f3f2ff;
+	--ui-icon-btn-active: #f3f2ff;
+	--ui-icon-btn-active-fg: var(--primary);
+
+	/* Accent & focus */
+	--ui-accent: var(--accent);
+	--ui-accent-fg: var(--accent-foreground);
+	--ui-ring: var(--ring);
+
+	/* Global geometry & density */
+	--ui-radius: 0.375rem; /* 6px — aligns with current visuals */
+	--ui-density: 1; /* scale factor for compactness */
+
+	/* Component-level high-level knobs (kept minimal) */
+	--ui-tab-radius: var(--ui-radius);
+	--ui-tab-height: calc(2rem * var(--ui-density));
+	--ui-tab-padding-x: calc(0.75rem * var(--ui-density));
+	--ui-tab-gap: calc(0.125rem * var(--ui-density));
+	--ui-tabbar-height: 2.5rem;
+	--ui-tabbar-padding-x: 0.5rem;
+	--ui-tab-width: 10rem; /* accommodates icons */
+	--ui-tab-min-width: 8rem; /* stretch mode minimum */
+	--ui-tab-title-max-w: 12.5rem;
+	--ui-tab-icon-size: 1rem;
+	--ui-tab-item-icon-size: 0.875rem;
+	--ui-tab-icon-mr: 0.5rem;
+	--ui-tab-close-icon-size: 0.75rem;
+	--ui-tab-close-pad: 0.125rem;
+	--ui-tab-new-button-size: 1.75rem;
+
+	/* Semantic states for tabs (derived) */
+	--ui-tab-bg-active: var(--ui-accent);
+	--ui-tab-fg-active: var(--ui-accent-fg);
+	--ui-tab-bg-inactive: transparent;
+	--ui-tab-fg-inactive: var(--ui-text);
+	/*
+    Defaults align with previous hand-picked colors to preserve look & feel.
+    Fallbacks keep the dynamic color-mix behavior for future flexibility.
+  */
+	--ui-tab-hover-bg: var(--color-muted);
+	--ui-tab-btn-hover-active: var(--hover-2);
+	--ui-tab-btn-hover-inactive: var(--hover-2);
+	--ui-tab-btn-hover-fg: var(--hover-fg);
+	--ui-tabbar-bg: var(--ui-surface-muted);
+
+	/* Settings — exposed minimal knobs (concrete defaults; avoid cycles) */
+	--ui-settings-item-bg: var(--settings-item-bg, var(--overlay));
+	--ui-settings-switch-border: var(--settings-switch-border, var(--border));
+	--ui-settings-item-radius: 0.625rem; /* rounded-[10px] */
+	--ui-settings-item-h: 2.75rem; /* h-11 */
+	--ui-settings-item-px: 0.875rem; /* px-3.5 */
+	--ui-settings-item-py: 0.625rem; /* py-2.5 */
+
+	/* Settings layout (concrete defaults) */
+	--ui-settings-layout-max-w: 33rem; /* max-w-[528px] */
+	--ui-settings-layout-min-w: 33rem; /* min-w-[528px] */
+	--ui-settings-layout-pt: 1.125rem; /* pt-[18px] */
+	--ui-settings-gap: 0.5rem; /* 8px — gap-2 equivalent */
+
+	/* Settings shortcut text */
+	--ui-settings-shortcut-text-size: 0.875rem; /* text-sm */
+	--ui-settings-shortcut-hint-color: #aaaaaa; /* hint text color - light mode */
+
+	/* Settings sidebar */
+	--ui-settings-sidebar-bg: var(--ui-surface-muted);
+	--ui-settings-sidebar-width: 15rem; /* w-60 */
+
+	/* Segmented button (concrete defaults) */
+	--ui-seg-btn-thumb-h: 2rem; /* h-[32px] */
+	--ui-seg-btn-container-h: 2.75rem; /* h-11 */
+	--ui-seg-btn-container-px: 0.5rem; /* px-2 */
+	--ui-seg-btn-radius: 0.625rem; /* rounded-[10px] */
+
+	/* Chat — exposed minimal knobs (preserve existing look) */
+	--ui-chat-slogan-text: 2.125rem; /* text-[34px] */
+	--ui-chat-container-max-w: 45rem; /* max-w-[720px] */
+	--ui-chat-container-max-h: 13rem; /* max-h-52 */
+	--ui-chat-container-min-h: 7.875rem; /* min-h-[126px] */
+	--ui-chat-container-gap-y: 2.25rem; /* gap-y-9 */
+	--ui-chat-container-padding: 0.75rem; /* p-3 */
+	--ui-chat-button-bar-h: 2.25rem; /* h-9 */
+	--ui-chat-button-bar-gap: 0.5rem; /* gap-x-2 */
+	--ui-chat-icon-size: 1rem; /* size-4 */
+	--ui-chat-container-radius: 1.25rem; /* rounded-[20px] */
+	--ui-chat-send-message-button: var(--primary);
+	--ui-chat-action-hover: var(--ui-icon-btn-hover);
+	--ui-chat-action-active: var(--ui-icon-btn-active);
+	--ui-chat-action-active-fg: var(--ui-icon-btn-active-fg);
+	--ui-chat-attachment-viewer: var(--popover);
+	--ui-chat-user-message-bg: var(--ui-accent);
+	--ui-chat-user-message-fg: var(--ui-accent-fg);
+	--ui-chat-assistant-message-fg: var(--ui-text);
+
+	/* Provider List — exposed minimal knobs */
+	--ui-provider-item-h: 3.5rem; /* h-14 */
+	--ui-provider-padding-x: 0.75rem; /* px-3 */
+	--ui-provider-padding-y: 0.5rem; /* py-2 */
+	--ui-provider-gap: 0.75rem; /* gap-3 */
+	--ui-provider-list-gap: 0.25rem; /* gap-1 */
+	--ui-provider-radius: var(--ui-radius);
+	--ui-provider-icon-size: 2rem; /* size-8 */
+	--ui-provider-icon-inner-size: 1.25rem; /* size-5 */
+
+	/* Provider semantic states */
+	--ui-provider-bg: transparent;
+	--ui-provider-hover: var(--ui-surface-muted);
+	--ui-provider-dragging: var(--ui-accent);
+	--ui-provider-border-dragging: var(--ui-ring);
+	--ui-provider-title: var(--ui-text);
+	--ui-provider-description: var(--ui-text-muted);
+	--ui-provider-icon-color: var(--ui-text-muted);
+}
+
+.dark {
+	--ui-icon-btn-hover: #383838;
+	--ui-icon-btn-active: rgba(142, 71, 240, 0.2);
+
+	--ui-chat-action-hover: var(--ui-icon-btn-hover);
+	--ui-chat-action-active: var(--ui-icon-btn-active);
+
+	/* Settings shortcut text - dark mode */
+	--ui-settings-shortcut-hint-color: #5c5c5c;
+}
+
+/* 2) Tailwind v4 theme bridge: generates utilities like bg-*, h-*, px-*, gap-*, size-*, rounded-* */
+@theme inline {
+	--color-icon-btn-hover: var(--ui-icon-btn-hover);
+	--color-icon-btn-active: var(--ui-icon-btn-active);
+	--color-icon-btn-active-fg: var(--ui-icon-btn-active-fg);
+
+	/* Colors */
+	--color-tab-active: var(--ui-tab-bg-active);
+	--color-tab-inactive: var(--ui-tab-bg-inactive);
+	--color-tab-hover: var(--ui-tab-hover-bg);
+	--color-tab-fg-active: var(--ui-tab-fg-active);
+	--color-tab-fg-inactive: var(--ui-tab-fg-inactive);
+	--color-tabbar-bg: var(--ui-tabbar-bg);
+	--color-tab-btn-hover-active: var(--ui-tab-btn-hover-active);
+	--color-tab-btn-hover-inactive: var(--ui-tab-btn-hover-inactive);
+	--color-tab-btn-hover-fg: var(--ui-tab-btn-hover-fg);
+
+	/* Spacing */
+	--spacing-tab-h: var(--ui-tab-height);
+	/* Simplified alias */
+	--spacing-tab: var(--ui-tab-height); /* h-tab */
+	--spacing-tab-w: var(--ui-tab-width);
+	--spacing-tab-min-w: var(--ui-tab-min-width);
+	--spacing-tab-pad-x: var(--ui-tab-padding-x);
+	--spacing-tab-x: var(--ui-tab-padding-x); /* px-tab-x */
+	--spacing-tab-gap: var(--ui-tab-gap);
+	--spacing-tabbar-h: var(--ui-tabbar-height);
+	--spacing-tabbar: var(--ui-tabbar-height); /* h-tabbar */
+	--spacing-tabbar-pad-x: var(--ui-tabbar-padding-x);
+	--spacing-tabbar-x: var(--ui-tabbar-padding-x); /* px-tabbar-x */
+	--spacing-tab-title-max-w: var(--ui-tab-title-max-w);
+	/* Simplified alias */
+	--spacing-tab-title: var(--ui-tab-title-max-w); /* max-w-tab-title */
+	--spacing-tab-icon-mr: var(--ui-tab-icon-mr);
+	--spacing-tab-icon: var(--ui-tab-icon-mr); /* mr-tab-icon */
+	--spacing-tab-close-pad: var(--ui-tab-close-pad);
+	--spacing-tab-close: var(--ui-tab-close-pad); /* p-tab-close */
+
+	/* Sizes */
+	--size-tab-icon: var(--ui-tab-icon-size);
+	--size-tab-item-icon: var(--ui-tab-item-icon-size);
+	--size-tab-close-icon: var(--ui-tab-close-icon-size);
+	--size-tab-new-btn: var(--ui-tab-new-button-size);
+	/* Simplified alias */
+	--size-tab-new: var(--ui-tab-new-button-size);
+
+	/* Radius */
+	--radius-tab: var(--ui-tab-radius);
+
+	/* Settings bridge */
+	--color-settings-item-bg: var(--ui-settings-item-bg);
+	--color-settings-switch-border: var(--ui-settings-switch-border);
+	--radius-settings-item: var(--ui-settings-item-radius);
+	--radius-settings-item-border-radius: var(--ui-settings-item-radius);
+	--spacing-settings-item-height: var(--ui-settings-item-h);
+	--spacing-settings-item-padding-x: var(--ui-settings-item-px);
+	--spacing-settings-item-padding-y: var(--ui-settings-item-py);
+	--spacing-settings-gap: var(--ui-settings-gap);
+	/* Simplified aliases */
+	--spacing-settings-item: var(--ui-settings-item-h);
+	--spacing-settings-item-x: var(--ui-settings-item-px);
+	--spacing-settings-item-y: var(--ui-settings-item-py);
+	--spacing-settings-layout-max-width: var(--ui-settings-layout-max-w);
+	--spacing-settings-layout-min-width: var(--ui-settings-layout-min-w);
+	--spacing-settings-layout-padding-top: var(--ui-settings-layout-pt);
+	--spacing-settings-gap: var(--ui-settings-gap);
+	/* Simplified aliases (both max/min can use same token by default) */
+	--spacing-settings-layout: var(--ui-settings-layout-max-w);
+	--spacing-settings-layout-pt: var(--ui-settings-layout-pt);
+
+	/* Settings shortcut text bridge */
+	--text-settings-shortcut-size: var(--ui-settings-shortcut-text-size);
+	--color-settings-shortcut-hint: var(--ui-settings-shortcut-hint-color);
+
+	/* Settings sidebar bridge */
+	--color-settings-bg: var(--ui-settings-sidebar-bg);
+	--spacing-settings-sidebar-width: var(--ui-settings-sidebar-width);
+
+	/* Segmented button bridge */
+	--spacing-seg-button-thumb-height: var(--ui-seg-btn-thumb-h);
+	--spacing-seg-button-container-height: var(--ui-seg-btn-container-h);
+	--spacing-seg-button-container-padding-x: var(--ui-seg-btn-container-px);
+	--radius-seg-button-container: var(--ui-seg-btn-radius);
+	/* Simplified aliases */
+	--spacing-seg: var(--ui-seg-btn-container-h);
+	--spacing-seg-thumb: var(--ui-seg-btn-thumb-h);
+	--spacing-seg-x: var(--ui-seg-btn-container-px);
+
+	/* Chat bridge */
+	--text-chat-slogan: var(--ui-chat-slogan-text);
+	--spacing-chat-container-max-width: var(--ui-chat-container-max-w);
+	--spacing-chat-container-max-height: var(--ui-chat-container-max-h);
+	--spacing-chat-container-min-height: var(--ui-chat-container-min-h);
+	--spacing-chat-container-gap-y: var(--ui-chat-container-gap-y);
+	--spacing-chat-container-padding: var(--ui-chat-container-padding);
+	--spacing-chat-button-bar-height: var(--ui-chat-button-bar-h);
+	--spacing-chat-button-bar-gap: var(--ui-chat-button-bar-gap);
+	--spacing-chat-max-w: var(--ui-chat-container-max-w);
+	--spacing-chat-max-h: var(--ui-chat-container-max-h);
+	--spacing-chat-min-h: var(--ui-chat-container-min-h);
+	--spacing-chat-gap-y: var(--ui-chat-container-gap-y);
+	--spacing-chat-pad: var(--ui-chat-container-padding);
+	--spacing-chat-bar: var(--ui-chat-button-bar-h);
+	--spacing-chat-bar-gap: var(--ui-chat-button-bar-gap);
+	--size-chat-icon-size: var(--ui-chat-icon-size);
+	--size-chat-icon: var(--ui-chat-icon-size);
+	--radius-chat-container: var(--ui-chat-container-radius);
+	--radius-chat: var(--ui-chat-container-radius);
+	--color-chat-action-hover: var(--ui-chat-action-hover);
+	--color-chat-action-active: var(--ui-chat-action-active);
+	--color-chat-action-active-fg: var(--ui-chat-action-active-fg);
+	--color-chat-send-message-button: var(--ui-chat-send-message-button);
+	--color-chat-attachment-viewer-bg: var(--ui-chat-attachment-viewer-bg);
+	--color-chat-user-message-bg: var(--ui-chat-user-message-bg);
+	--color-chat-user-message-fg: var(--ui-chat-user-message-fg);
+	--color-chat-assistant-message-fg: var(--ui-chat-assistant-message-fg);
+
+	/* Provider List bridge */
+	--spacing-provider-item: var(--ui-provider-item-h);
+	--spacing-provider-x: var(--ui-provider-padding-x);
+	--spacing-provider-y: var(--ui-provider-padding-y);
+	--spacing-provider-gap: var(--ui-provider-gap);
+	--spacing-provider-list-gap: var(--ui-provider-list-gap);
+	--radius-provider: var(--ui-provider-radius);
+	--size-provider-icon: var(--ui-provider-icon-size);
+	--size-provider-icon-size: var(--ui-provider-icon-inner-size);
+	--color-provider-bg: var(--ui-provider-bg);
+	--color-provider-hover: var(--ui-provider-hover);
+	--color-provider-dragging: var(--ui-provider-dragging);
+	--color-provider-border-dragging: var(--ui-provider-border-dragging);
+	--color-provider-title: var(--ui-provider-title);
+	--color-provider-description: var(--ui-provider-description);
+	--color-provider-icon-color: var(--ui-provider-icon-color);
+}

@@ -1,0 +1,96 @@
+/* View Transition Names for Chat Input Animation */
+[data-layoutid="chat-input-container"] {
+	view-transition-name: chat-input-container;
+}
+
+[data-layoutid="chat-input-box"] {
+	view-transition-name: chat-input-box;
+}
+
+[data-layoutid="chat-slogan"] {
+	view-transition-name: chat-slogan;
+}
+
+[data-layoutid="chat-message-list"] {
+	view-transition-name: chat-message-list;
+}
+
+/* View Transition Custom Animations */
+@supports (view-transition-name: none) {
+	/* Chat input container sliding animation */
+	::view-transition-old(chat-input-container),
+	::view-transition-new(chat-input-container) {
+		animation-duration: 0.5s;
+		animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+	}
+
+	::view-transition-old(chat-input-container) {
+		animation-name: slide-to-bottom-out;
+	}
+
+	::view-transition-new(chat-input-container) {
+		animation-name: slide-to-bottom-in;
+	}
+
+	/* Chat slogan fade animation */
+	::view-transition-old(chat-slogan) {
+		animation: fade-out 0.3s ease-out forwards;
+	}
+
+	::view-transition-new(chat-slogan) {
+		animation: fade-in 0.3s ease-in-out forwards;
+	}
+
+	/* Chat message list appear animation */
+	::view-transition-new(chat-message-list) {
+		animation: fade-in-up 0.4s ease-out 0.2s both;
+	}
+
+	/* Keyframes */
+	@keyframes slide-to-bottom-out {
+		from {
+			transform: translateY(0);
+		}
+		to {
+			transform: translateY(100px);
+		}
+	}
+
+	@keyframes slide-to-bottom-in {
+		from {
+			transform: translateY(-100px);
+		}
+		to {
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes fade-out {
+		from {
+			opacity: 1;
+		}
+		to {
+			opacity: 0;
+		}
+	}
+
+	@keyframes fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@keyframes fade-in-up {
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+}
