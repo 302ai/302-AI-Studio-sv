@@ -1,8 +1,8 @@
 diff --git a/src/exports/vite/index.js b/src/exports/vite/index.js
-index e23cf2b833fc0a04287d34328b97bf64c7916f0d..81b6f30f3a5f2c8d3d0337777e141e549c4a5f98 100644
+index 6d26c63c7c0d2e7a29e27954c7f738fd9204fa2b..89adad6fc2812ccdc06776a5f87d7d9c505f8ba0 100644
 --- a/src/exports/vite/index.js
 +++ b/src/exports/vite/index.js
-@@ -473,7 +473,7 @@ Tips:
+@@ -463,7 +463,7 @@ async function kit({ svelte_config }) {
  				// for internal use only. it's published as $app/paths externally
  				// we use this alias so that we won't collide with user aliases
  				case sveltekit_paths: {
@@ -11,7 +11,7 @@ index e23cf2b833fc0a04287d34328b97bf64c7916f0d..81b6f30f3a5f2c8d3d0337777e141e54
  
  					// use the values defined in `global`, but fall back to hard-coded values
  					// for the sake of things like Vitest which may import this module
-@@ -488,10 +488,10 @@ Tips:
+@@ -478,10 +478,10 @@ async function kit({ svelte_config }) {
  
  					return dedent`
  						export let base = ${s(base)};
