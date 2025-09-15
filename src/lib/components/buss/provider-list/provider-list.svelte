@@ -103,7 +103,7 @@
 
 <div class={cn("flex w-full flex-col", className)} role="list" aria-label="Model providers">
 	<div
-		class="flex h-full w-full flex-col gap-provider-list-gap"
+		class="gap-provider-list-gap flex h-full w-full flex-col"
 		use:dndzone={{
 			items: providers,
 			flipDurationMs: 200,

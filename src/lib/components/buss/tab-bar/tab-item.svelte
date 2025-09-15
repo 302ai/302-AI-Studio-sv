@@ -30,7 +30,7 @@
 	import type { Snippet } from "svelte";
 	import { onDestroy } from "svelte";
 
-	let {
+	const {
 		tab,
 		isActive,
 		isDragging: _isDragging = false,
@@ -74,12 +74,12 @@
 <ContextMenu.Root>
 	<ContextMenu.Trigger
 		class={cn(
-			"relative flex h-tab cursor-pointer items-center rounded-tab px-tab-x text-sm",
-			isCompact ? "justify-center" : "justify-between gap-tab-gap",
-			stretch ? "w-auto min-w-tab-min-w" : "w-tab-w",
+			"h-tab rounded-tab px-tab-x relative flex cursor-pointer items-center text-sm",
+			isCompact ? "justify-center" : "gap-tab-gap justify-between",
+			stretch ? "min-w-tab-min-w w-auto" : "w-tab-w",
 			isActive
 				? "bg-tab-active text-tab-fg-active"
-				: "border-transparent bg-tab-inactive text-tab-fg-inactive hover:bg-tab-hover",
+				: "bg-tab-inactive text-tab-fg-inactive hover:bg-tab-hover border-transparent",
 			"overflow-hidden",
 			className,
 		)}
@@ -89,7 +89,7 @@
 	>
 		<div bind:this={triggerRef} class="contents">
 			{#if tab.icon && !isCompact}
-				<div class="mr-tab-icon flex size-tab-item-icon shrink-0 items-center justify-center">
+				<div class="mr-tab-icon size-tab-item-icon flex shrink-0 items-center justify-center">
 					{@render tab.icon()}
 				</div>
 			{/if}
@@ -103,7 +103,7 @@
 					variant="ghost"
 					size="icon"
 					class={cn(
-						"h-auto w-auto shrink-0 rounded bg-transparent p-tab-close transition-colors",
+						"p-tab-close h-auto w-auto shrink-0 rounded bg-transparent transition-colors",
 						isActive
 							? "hover:bg-tab-btn-hover-active dark:hover:bg-tab-btn-hover-active"
 							: "hover:bg-tab-btn-hover-inactive hover:text-tab-btn-hover-fg dark:hover:bg-tab-btn-hover-inactive",

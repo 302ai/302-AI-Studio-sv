@@ -22,9 +22,9 @@
 	} from "./index";
 	import { formatFileSize, getViewerType } from "./viewer-utils";
 
-	let { attachment, isOpen, onClose }: ViewerPanelProps = $props();
+	const { attachment, isOpen, onClose }: ViewerPanelProps = $props();
 
-	let viewerType = $derived(getViewerType(attachment));
+	const viewerType = $derived(getViewerType(attachment));
 </script>
 
 <Dialog.Root open={isOpen} onOpenChange={onClose}>

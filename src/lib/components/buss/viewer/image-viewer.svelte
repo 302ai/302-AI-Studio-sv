@@ -9,7 +9,7 @@
 	import { ImageViewer } from "svelte-image-viewer";
 	import ViewerBase from "./viewer-base.svelte";
 
-	let { src, alt }: ImageViewerProps = $props();
+	const { src, alt }: ImageViewerProps = $props();
 </script>
 
 <ViewerBase>

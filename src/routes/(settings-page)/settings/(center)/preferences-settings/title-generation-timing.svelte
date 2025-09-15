@@ -12,7 +12,7 @@
 	let value = $state("firstTime");
 </script>
 
-<div class="flex flex-col gap-settings-gap">
+<div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.settings_titleGenerationTiming()}</Label>
 	<SettingSelect name="titleGenerationTiming" bind:value options={searchServices} />
 </div>

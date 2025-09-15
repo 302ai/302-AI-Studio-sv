@@ -16,13 +16,13 @@
 		onSelect: (key: string) => void;
 	}
 
-	let { options, selectedKey, onSelect }: Props = $props();
+	const { options, selectedKey, onSelect }: Props = $props();
 
 	let thumbStyle: { left: string; width: string } = $state({ left: "", width: "" });
-	let itemElements: HTMLElement[] = $state([]);
+	const itemElements: HTMLElement[] = $state([]);
 	let containerElement: HTMLElement | null = $state(null);
 
-	let selectedIndex = $derived(options.findIndex((o) => o.key === selectedKey));
+	const selectedIndex = $derived(options.findIndex((o) => o.key === selectedKey));
 
 	async function updateThumbPosition() {
 		if (selectedIndex === -1) return;
@@ -57,11 +57,11 @@
 
 <div
 	bind:this={containerElement}
-	class="relative flex h-seg items-center rounded-seg-button-container bg-settings-item-bg px-seg-x"
+	class="h-seg rounded-seg-button-container bg-settings-item-bg px-seg-x relative flex items-center"
 >
 	{#if thumbStyle.left}
 		<div
-			class="absolute z-1 h-seg-thumb rounded-md bg-accent !transition-all duration-400 ease-in-out"
+			class="h-seg-thumb bg-accent absolute z-1 rounded-md !transition-all duration-400 ease-in-out"
 			style="left: {thumbStyle.left}; width: {thumbStyle.width};"
 		></div>
 	{/if}
@@ -72,8 +72,8 @@
 			<button
 				bind:this={itemElements[index]}
 				class={cn(
-					"relative z-2 flex h-seg-thumb flex-1 cursor-pointer items-center justify-center gap-1 rounded-md text-sm",
-					isActive ? "text-accent-foreground" : "z-1 text-secondary-foreground hover:bg-tab-hover",
+					"h-seg-thumb relative z-2 flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-md text-sm",
+					isActive ? "text-accent-foreground" : "text-secondary-foreground hover:bg-tab-hover z-1",
 				)}
 				type="button"
 				onmousedown={() => handleSelect(option.key)}

@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.svelte-kit/
+build/
+dist/
+out/
+
+# Generated files
+src/lib/paraglide/
+
+# Package managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+
+# Static assets
+/static/

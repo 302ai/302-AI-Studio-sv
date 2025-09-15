@@ -36,7 +36,7 @@
 		{ value: "music", label: m.text_capability_music() },
 		{ value: "video", label: m.text_capability_video() },
 	];
-	let formData = $state({
+	const formData = $state({
 		id: model?.id || "",
 		name: model?.name || "",
 		remark: model?.remark || "",
@@ -104,7 +104,7 @@
 		formData.capabilities = new Set(formData.capabilities);
 	}
 
-	let dialogTitle = $derived(
+	const dialogTitle = $derived(
 		mode === "add" ? m.text_dialog_add_model_title() : m.text_dialog_edit_model_title(),
 	);
 </script>
@@ -123,7 +123,7 @@
 					id="modelId"
 					bind:value={formData.id}
 					placeholder={m.placeholder_input_model_id()}
-					class="rounded-settings-item bg-settings-item-bg hover:ring-1 hover:ring-ring"
+					class="rounded-settings-item bg-settings-item-bg hover:ring-ring hover:ring-1"
 				/>
 			</div>
 
@@ -134,7 +134,7 @@
 					id="modelName"
 					bind:value={formData.name}
 					placeholder={m.placeholder_input_model_name()}
-					class="rounded-settings-item bg-settings-item-bg hover:ring-1 hover:ring-ring"
+					class="rounded-settings-item bg-settings-item-bg hover:ring-ring hover:ring-1"
 				/>
 			</div>
 
@@ -145,7 +145,7 @@
 					id="modelRemark"
 					bind:value={formData.remark}
 					placeholder={m.placeholder_input_model_remark()}
-					class="rounded-settings-item bg-settings-item-bg hover:ring-1 hover:ring-ring"
+					class="rounded-settings-item bg-settings-item-bg hover:ring-ring hover:ring-1"
 				/>
 			</div>
 
@@ -159,7 +159,7 @@
 						formData.type = (value || "language") as ModelType;
 					}}
 				>
-					<Select.Trigger class="w-full rounded-settings-item bg-settings-item-bg">
+					<Select.Trigger class="rounded-settings-item bg-settings-item-bg w-full">
 						{modelTypes.find((t) => t.value === formData.type)?.label || formData.type}
 					</Select.Trigger>
 					<Select.Content>
@@ -175,9 +175,9 @@
 				<Label>{m.text_label_model_capabilities()}</Label>
 				<div class="flex flex-wrap gap-3">
 					{#each availableCapabilities as capability (capability.value)}
-						<div class="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-accent/10">
+						<div class="hover:bg-accent/10 flex items-center gap-2 rounded-md px-2 py-1">
 							<Checkbox
-								class="border-muted-foreground/40 bg-transparent hover:border-muted-foreground/70 dark:border-white/30"
+								class="border-muted-foreground/40 hover:border-muted-foreground/70 bg-transparent dark:border-white/30"
 								id={capability.value}
 								checked={formData.capabilities.has(capability.value)}
 								onCheckedChange={(checked) => toggleCapability(capability.value, !!checked)}

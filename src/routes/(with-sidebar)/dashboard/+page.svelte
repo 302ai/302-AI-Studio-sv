@@ -4,7 +4,7 @@
 
 <div>
 	<h1 class="mb-4 text-3xl font-bold">Dashboard</h1>
-	<p class="mb-6 text-muted-foreground">
+	<p class="text-muted-foreground mb-6">
 		This page has a sidebar layout. The sidebar is persistent across all pages in this route group.
 	</p>
 

@@ -12,7 +12,7 @@
 	import { toast } from "svelte-sonner";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 
-	let { content, position = "bottom" }: Props = $props();
+	const { content, position = "bottom" }: Props = $props();
 
 	let isCopied = $state(false);
 	let timeoutId: NodeJS.Timeout | null = null;
@@ -36,7 +36,7 @@
 </script>
 
 <ButtonWithTooltip
-	class="relative text-muted-foreground hover:!bg-chat-action-hover"
+	class="text-muted-foreground hover:!bg-chat-action-hover relative"
 	tooltip={m.title_copy()}
 	onclick={handleCopy}
 	tooltipSide={position}

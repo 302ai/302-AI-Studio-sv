@@ -6,7 +6,7 @@
 	import { cn } from "$lib/utils";
 	import { Eye, Trash2 } from "@lucide/svelte";
 
-	let attachments = $derived(chatState.attachments);
+	const attachments = $derived(chatState.attachments);
 	let selectedAttachment = $state<AttachmentFile | null>(null);
 
 	function handleRemove(id: string) {
@@ -25,7 +25,7 @@
 {#if attachments.length > 0}
 	<div class="flex gap-2 pb-2">
 		{#each attachments as attachment (attachment.id)}
-			<div class="group relative overflow-hidden rounded-lg border border-border">
+			<div class="group border-border relative overflow-hidden rounded-lg border">
 				<button
 					class={cn(
 						"relative size-14",
@@ -43,7 +43,7 @@
 					{:else}
 						{@const IconComponent = getFileIcon(attachment)}
 						<div
-							class="flex h-full w-full flex-col items-center justify-center gap-y-1 px-0.5 text-muted-foreground"
+							class="text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-y-1 px-0.5"
 						>
 							<IconComponent class="size-6" />
 							<span class="max-w-full truncate text-xs leading-none">
@@ -68,9 +68,9 @@
 
 				<button
 					onclick={() => handleRemove(attachment.id)}
-					class="pointer-events-auto absolute top-0.5 right-0 size-4 text-destructive opacity-0 group-hover:opacity-100"
+					class="text-destructive pointer-events-auto absolute top-0.5 right-0 size-4 opacity-0 group-hover:opacity-100"
 				>
-					<Trash2 class="size-3.5 hover:text-destructive/80" />
+					<Trash2 class="hover:text-destructive/80 size-3.5" />
 				</button>
 			</div>
 		{/each}

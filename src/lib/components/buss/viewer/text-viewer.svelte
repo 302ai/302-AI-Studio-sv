@@ -12,7 +12,7 @@
 	import ViewerBase from "./viewer-base.svelte";
 	import { loadTextContent } from "./viewer-utils";
 
-	let { attachment }: TextViewerProps = $props();
+	const { attachment }: TextViewerProps = $props();
 
 	let content = $state<string | null>(null);
 
@@ -38,7 +38,7 @@
 			></ScrollArea.Scrollbar>
 
 			<pre
-				class="cursor-text px-4 py-2 font-mono text-sm leading-relaxed break-words whitespace-pre-wrap text-foreground select-text">{content}</pre>
+				class="text-foreground cursor-text px-4 py-2 font-mono text-sm leading-relaxed break-words whitespace-pre-wrap select-text">{content}</pre>
 		</ScrollArea.Root>
 	{:else}
 		<ErrorState />

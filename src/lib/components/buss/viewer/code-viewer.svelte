@@ -12,7 +12,7 @@
 	import ViewerBase from "./viewer-base.svelte";
 	import { loadTextContent } from "./viewer-utils";
 
-	let { attachment, fileName }: CodeViewerProps = $props();
+	const { attachment, fileName }: CodeViewerProps = $props();
 
 	let content = $state<string>("");
 
@@ -38,12 +38,12 @@
 
 		<div class="p-4">
 			{#if fileName}
-				<div class="mb-4 border-b pb-2 text-sm font-medium text-muted-foreground">
+				<div class="text-muted-foreground mb-4 border-b pb-2 text-sm font-medium">
 					{fileName}
 				</div>
 			{/if}
 			<pre
-				class="cursor-text font-mono text-sm leading-relaxed break-words whitespace-pre-wrap text-foreground select-text">{content}</pre>
+				class="text-foreground cursor-text font-mono text-sm leading-relaxed break-words whitespace-pre-wrap select-text">{content}</pre>
 		</div>
 	</ScrollArea.Root>
 </ViewerBase>

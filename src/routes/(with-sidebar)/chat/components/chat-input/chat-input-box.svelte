@@ -14,7 +14,7 @@
 	import { match } from "ts-pattern";
 	import { AttachmentThumbnailBar, AttachmentUploader } from "../attachment";
 
-	let actionDisabled = $derived(chatState.providerType !== "302ai");
+	const actionDisabled = $derived(chatState.providerType !== "302ai");
 	let openModelSelect = $state<() => void>();
 
 	function handleSendMessage() {
@@ -43,13 +43,13 @@
 	}
 </script>
 
-<div class="w-full max-w-chat-max-w" data-layoutid="chat-input-container">
+<div class="max-w-chat-max-w w-full" data-layoutid="chat-input-container">
 	<AttachmentThumbnailBar />
 	<div
 		class={cn(
 			"transition-[color,box-shadow]",
-			"flex max-h-chat-max-h min-h-chat-min-h w-full flex-col justify-between rounded-chat border p-chat-pad pb-1.5",
-			"focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/50 focus-within:outline-hidden",
+			"max-h-chat-max-h min-h-chat-min-h rounded-chat p-chat-pad flex w-full flex-col justify-between border pb-1.5",
+			"focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px] focus-within:outline-hidden",
 			"bg-input",
 		)}
 		data-layoutid="chat-input-box"
@@ -70,7 +70,7 @@
 		/>
 
 		<div class="mt-1.5 flex flex-row justify-between">
-			<div class="flex h-chat-bar items-center gap-chat-bar-gap">
+			<div class="h-chat-bar gap-chat-bar-gap flex items-center">
 				<AttachmentUploader />
 				<ButtonWithTooltip
 					class={cn(
@@ -122,7 +122,7 @@
 				>
 					{#snippet trigger({ onclick })}
 						{((openModelSelect = onclick), "")}
-						<Button variant="ghost" class="text-xs hover:!bg-chat-action-hover" {onclick}>
+						<Button variant="ghost" class="hover:!bg-chat-action-hover text-xs" {onclick}>
 							{chatState.selectedModel?.name ?? m.text_button_select_model()}
 						</Button>
 					{/snippet}
@@ -135,8 +135,8 @@
 
 				<button
 					class={cn(
-						"flex size-9 items-center justify-center rounded-[10px] bg-chat-send-message-button text-foreground hover:!bg-chat-send-message-button/80",
-						"disabled:cursor-not-allowed disabled:bg-chat-send-message-button/50 disabled:hover:!bg-chat-send-message-button/50",
+						"bg-chat-send-message-button text-foreground hover:!bg-chat-send-message-button/80 flex size-9 items-center justify-center rounded-[10px]",
+						"disabled:bg-chat-send-message-button/50 disabled:hover:!bg-chat-send-message-button/50 disabled:cursor-not-allowed",
 					)}
 					onclick={handleSendMessage}
 				>

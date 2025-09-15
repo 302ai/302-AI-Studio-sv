@@ -8,7 +8,7 @@
 	import { Ghost, Settings } from "@lucide/svelte";
 	import AppSidebar from "./app-sidebar.svelte";
 
-	let { children } = $props();
+	const { children } = $props();
 </script>
 
 <Sidebar.Provider class="h-full min-h-fit">
@@ -25,7 +25,7 @@
 					: m.title_sidebar_open()}
 				tooltipSide="bottom"
 			>
-				<Sidebar.Trigger class="size-9 hover:!bg-icon-btn-hover [&_svg]:!size-5" />
+				<Sidebar.Trigger class="hover:!bg-icon-btn-hover size-9 [&_svg]:!size-5" />
 			</ButtonWithTooltip>
 
 			<div class="flex flex-row items-center gap-2">

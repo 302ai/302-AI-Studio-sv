@@ -9,7 +9,7 @@
 	let autoDisableMarkdown = $state(false);
 </script>
 
-<div class="flex flex-col gap-settings-gap">
+<div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.settings_chatSetting()}</Label>
 	<SettingSwitchItem label={m.settings_hideCode()} bind:checked={autoHideCode} />
 	<SettingSwitchItem label={m.settings_hideReason()} bind:checked={autoHideReason} />

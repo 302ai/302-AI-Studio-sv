@@ -11,7 +11,7 @@
 </script>
 
 <script lang="ts" generics="T extends { id?: string | number }">
-	let { items, itemHeight, height, class: className = "", item }: Props<T> = $props();
+	const { items, itemHeight, height, class: className = "", item }: Props<T> = $props();
 
 	let scrollTop = $state(0);
 	const visibleCount = $derived(Math.ceil(height / itemHeight));

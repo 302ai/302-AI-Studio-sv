@@ -14,7 +14,7 @@
 {#snippet trigger({ onclick }: { onclick: () => void })}
 	<button
 		class={cn(
-			"flex h-settings-item w-full items-center justify-between rounded-settings-item bg-settings-item-bg px-settings-item-x py-settings-item-y text-settings-shortcut-size",
+			"h-settings-item rounded-settings-item bg-settings-item-bg px-settings-item-x py-settings-item-y text-settings-shortcut-size flex w-full items-center justify-between",
 		)}
 		{onclick}
 	>
@@ -22,7 +22,7 @@
 	</button>
 {/snippet}
 
-<div class="flex flex-col gap-settings-gap">
+<div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.settings_newSessionModel()}</Label>
 
 	<ModelSelect {selectedModel} {trigger} onModelSelect={handleModelSelect} />

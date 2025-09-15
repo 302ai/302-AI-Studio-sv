@@ -15,7 +15,7 @@
 	import { VirtualList } from "$lib/components/ui/virtual-list/index.js";
 	import { ModelListItem } from "./index.js";
 
-	let { models, onModelEdit, onModelDelete, onModelToggleCollected, onModelDuplicate }: Props =
+	const { models, onModelEdit, onModelDelete, onModelToggleCollected, onModelDuplicate }: Props =
 		$props();
 	const ITEM_HEIGHT = 50;
 
@@ -41,7 +41,7 @@
 	<div class="flex h-full w-full flex-col overflow-hidden rounded-xl">
 		<!-- 表格头部 -->
 		<div
-			class="text-muted-fg grid h-10 w-full flex-shrink-0 bg-muted"
+			class="text-muted-fg bg-muted grid h-10 w-full flex-shrink-0"
 			style="grid-template-columns: 1.3fr 0.7fr 1.2fr 0.8fr;"
 		>
 			<div class="flex h-full items-center pl-4 outline-hidden">

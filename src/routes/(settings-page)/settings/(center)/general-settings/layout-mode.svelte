@@ -31,7 +31,7 @@
 	}));
 </script>
 
-<div class="flex flex-col gap-settings-gap">
+<div class="gap-settings-gap flex flex-col">
 	<Label id="layout" class="text-label-fg">{m.layout()}</Label>
 	<SettingSelect name="layout" bind:value {options} />
 </div>

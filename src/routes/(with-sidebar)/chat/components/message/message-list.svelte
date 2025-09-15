@@ -8,7 +8,7 @@
 		messages: ChatMessage[];
 	}
 
-	let { messages }: Props = $props();
+	const { messages }: Props = $props();
 </script>
 
 <ScrollArea class="h-full w-full">

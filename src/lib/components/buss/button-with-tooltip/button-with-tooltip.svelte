@@ -24,7 +24,7 @@
 	} from "$lib/components/ui/tooltip/index.js";
 	import { cn } from "$lib/utils.js";
 
-	let {
+	const {
 		tooltip,
 		tooltipSide = "top",
 		variant = "ghost",
@@ -45,7 +45,7 @@
 		</TooltipTrigger>
 		<TooltipContent
 			side={tooltipSide}
-			class="rounded-[10px] border bg-overlay px-2.5 py-1.5 text-sm/6 text-overlay-foreground"
+			class="bg-overlay text-overlay-foreground rounded-[10px] border px-2.5 py-1.5 text-sm/6"
 			arrowClasses="hidden"
 			sideOffset={5}
 		>

@@ -183,11 +183,11 @@
 <div class={cn("relative", className)}>
 	<div
 		class={cn(
-			"flex h-settings-item w-full items-center justify-between rounded-settings-item bg-settings-item-bg px-settings-item-x py-settings-item-y",
-			"focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none",
+			"h-settings-item rounded-settings-item bg-settings-item-bg px-settings-item-x py-settings-item-y flex w-full items-center justify-between",
+			"focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-none",
 			value.length === 0 && "text-muted-fg",
 			disabled && "cursor-not-allowed opacity-50",
-			isRecording && "border-primary ring-1 ring-ring",
+			isRecording && "border-primary ring-ring ring-1",
 			!isRecording && !disabled && "cursor-text",
 		)}
 		onclick={() => {
@@ -206,7 +206,7 @@
 			}
 		}}
 	>
-		<span class="flex-1 text-left text-settings-shortcut-size">{displayValue()}</span>
+		<span class="text-settings-shortcut-size flex-1 text-left">{displayValue()}</span>
 
 		{#if isRecording}
 			<button
@@ -215,7 +215,7 @@
 					e.stopPropagation();
 					handleCancel();
 				}}
-				class="ml-2 cursor-pointer text-settings-shortcut-size font-medium text-primary hover:text-primary/80"
+				class="text-settings-shortcut-size text-primary hover:text-primary/80 ml-2 cursor-pointer font-medium"
 			>
 				{t("cancel")}
 			</button>
@@ -226,7 +226,7 @@
 					e.stopPropagation();
 					handleReset();
 				}}
-				class="ml-2 cursor-pointer text-settings-shortcut-size font-medium text-primary hover:text-primary/80"
+				class="text-settings-shortcut-size text-primary hover:text-primary/80 ml-2 cursor-pointer font-medium"
 			>
 				{t("reset")}
 			</button>

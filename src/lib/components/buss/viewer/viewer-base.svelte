@@ -8,7 +8,7 @@
 <script lang="ts">
 	import { cn } from "$lib/utils";
 
-	let { children, class: className }: ViewerBaseProps = $props();
+	const { children, class: className }: ViewerBaseProps = $props();
 </script>
 
 <div

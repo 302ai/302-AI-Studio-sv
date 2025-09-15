@@ -9,7 +9,7 @@
 	import { ModeWatcher } from "mode-watcher";
 	import "../app.css";
 
-	let { children } = $props();
+	const { children } = $props();
 
 	let tabs = $state<Tab[]>([
 		{

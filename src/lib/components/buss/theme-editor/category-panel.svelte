@@ -15,7 +15,7 @@
 	import { Palette, Ruler, Move, Circle, Grid3X3, Type, Settings } from "@lucide/svelte";
 	import { m } from "$lib/paraglide/messages.js";
 
-	let { category, onVariableChange }: Props = $props();
+	const { category, onVariableChange }: Props = $props();
 
 	function handleVariableChange(variable: ThemeVariable, value: string) {
 		variable.currentValue = value;
@@ -92,30 +92,30 @@
 		</div>
 		{@const description = getCategoryDescription(category.name)}
 		{#if description}
-			<p class="mt-1 text-sm text-muted-foreground">{description}</p>
+			<p class="text-muted-foreground mt-1 text-sm">{description}</p>
 		{/if}
 	</Accordion.Trigger>
 
 	<Accordion.Content class="space-y-4 pt-4">
 		{#each category.variables as variable (variable.name)}
 			{@const IconComponent = getVariableTypeIcon(variable.type)}
-			<div class="rounded-lg border border-border/50 bg-card p-5">
+			<div class="border-border/50 bg-card rounded-lg border p-5">
 				<div class="mb-4 flex items-start gap-3">
 					<div
-						class="mt-0.5 flex h-6 w-6 items-center justify-center rounded-md bg-muted/50 text-muted-foreground"
+						class="bg-muted/50 text-muted-foreground mt-0.5 flex h-6 w-6 items-center justify-center rounded-md"
 						title={variable.type}
 					>
 						<IconComponent class="h-4 w-4" />
 					</div>
 					<div class="min-w-0 flex-1">
 						<div class="mb-2 flex items-center gap-3">
-							<h4 class="text-sm font-medium text-foreground">{variable.label}</h4>
+							<h4 class="text-foreground text-sm font-medium">{variable.label}</h4>
 							<Badge variant="outline" class="shrink-0 font-mono text-xs">
 								{variable.name}
 							</Badge>
 						</div>
 						{#if variable.description}
-							<p class="text-xs text-muted-foreground">{variable.description}</p>
+							<p class="text-muted-foreground text-xs">{variable.description}</p>
 						{/if}
 					</div>
 				</div>
@@ -148,10 +148,10 @@
 							type="text"
 							value={currentValue}
 							onchange={(e) => handleVariableChange(variable, e.currentTarget.value)}
-							class="w-full rounded-md border border-input px-3 py-2 font-mono text-sm"
+							class="border-input w-full rounded-md border px-3 py-2 font-mono text-sm"
 							placeholder={variable.defaultValue}
 						/>
-						<div class="text-xs text-muted-foreground">
+						<div class="text-muted-foreground text-xs">
 							{m.text_theme_variable_default()}
 							<span class="font-mono">{variable.defaultValue}</span>
 						</div>

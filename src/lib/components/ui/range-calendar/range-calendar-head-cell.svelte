@@ -12,7 +12,7 @@
 <RangeCalendarPrimitive.HeadCell
 	bind:ref
 	class={cn(
-		"w-(--cell-size) rounded-md text-[0.8rem] font-normal text-muted-foreground",
+		"text-muted-foreground w-(--cell-size) rounded-md text-[0.8rem] font-normal",
 		className,
 	)}
 	{...restProps}

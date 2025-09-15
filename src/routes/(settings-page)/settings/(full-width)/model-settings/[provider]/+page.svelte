@@ -14,8 +14,8 @@
 	import { Eye, EyeOff } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 
-	let providerParam = $derived(page.params.provider);
-	let currentProvider = $derived(
+	const providerParam = $derived(page.params.provider);
+	const currentProvider = $derived(
 		providerParam ? providerState.getProviderByNameOrId(providerParam) : undefined,
 	);
 	let formData = $state<ModelProvider>({
@@ -268,7 +268,7 @@
 			saveFormData();
 		}, 500);
 	}
-	let filteredModels = $derived(
+	const filteredModels = $derived(
 		modelsState.filter(
 			(model) =>
 				searchQuery === "" ||
@@ -307,7 +307,7 @@
 							bind:value={formData.name}
 							placeholder={m.placeholder_input_provider_name()}
 							oninput={handleInputChange}
-							class="h-11 rounded-settings-item bg-settings-item-bg hover:ring-1 hover:ring-ring"
+							class="rounded-settings-item bg-settings-item-bg hover:ring-ring h-11 hover:ring-1"
 						/>
 					</div>
 				</div>
@@ -321,10 +321,10 @@
 					bind:value={formData.baseUrl}
 					placeholder={formData.custom ? m.placeholder_input_provider_base_url() : ""}
 					oninput={handleInputChange}
-					class="rounded-settings-item bg-settings-item-bg hover:ring-1 hover:ring-ring"
+					class="rounded-settings-item bg-settings-item-bg hover:ring-ring hover:ring-1"
 				/>
 				{#if formData.baseUrl}
-					<p class="text-xs text-muted-foreground">
+					<p class="text-muted-foreground text-xs">
 						{m.text_base_url_request_info({
 							url: getChatEndpointUrl(formData.baseUrl, formData.apiType),
 						})}
@@ -341,7 +341,7 @@
 						type={showApiKey ? "text" : "password"}
 						bind:value={formData.apiKey}
 						placeholder={m.placeholder_input_provider_api_key()}
-						class="rounded-settings-item bg-settings-item-bg pr-10 hover:ring-1 hover:ring-ring"
+						class="rounded-settings-item bg-settings-item-bg hover:ring-ring pr-10 hover:ring-1"
 						oninput={handleInputChange}
 					/>
 					<Button
@@ -358,7 +358,7 @@
 					</Button>
 				</div>
 				{#if !formData.custom && formData.websites.apiKey}
-					<p class="text-xs text-muted-foreground">
+					<p class="text-muted-foreground text-xs">
 						<a href={formData.websites.apiKey} target="_blank" class="text-primary hover:underline">
 							{m.text_get_api_key()}
 						</a>
@@ -378,7 +378,7 @@
 							saveFormData();
 						}}
 					>
-						<Select.Trigger class="w-full rounded-settings-item bg-settings-item-bg">
+						<Select.Trigger class="rounded-settings-item bg-settings-item-bg w-full">
 							{apiTypes.find((t) => t.value === formData.apiType)?.label ||
 								m.placeholder_select_provider_interface_type()}
 						</Select.Trigger>
@@ -408,7 +408,7 @@
 				<Input
 					bind:value={searchQuery}
 					placeholder={m.placeholder_input_search_model()}
-					class="w-64 rounded-settings-item bg-settings-item-bg hover:ring-1 hover:ring-ring"
+					class="rounded-settings-item bg-settings-item-bg hover:ring-ring w-64 hover:ring-1"
 				/>
 			</div>
 		</div>

@@ -2,7 +2,7 @@
 	import * as Sidebar from "$lib/components/ui/sidebar";
 	import SettingsSidebar from "./settings-sidebar.svelte";
 
-	let { children } = $props();
+	const { children } = $props();
 </script>
 
 <Sidebar.Provider class="h-full min-h-fit" style="--sidebar-width: var(--setting-width);">

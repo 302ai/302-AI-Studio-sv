@@ -4,8 +4,12 @@ import { defineConfig } from "vite";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 
 export default defineConfig({
-  plugins: [tailwindcss(), sveltekit(), paraglideVitePlugin({
-    project: "./project.inlang",
-    outdir: "./src/lib/paraglide",
-  }),],
+	plugins: [
+		tailwindcss(),
+		sveltekit(),
+		paraglideVitePlugin({
+			project: "./project.inlang",
+			outdir: "./src/lib/paraglide",
+		}),
+	],
 });

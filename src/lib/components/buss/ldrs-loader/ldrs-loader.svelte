@@ -12,7 +12,7 @@
 	import { onMount } from "svelte";
 	import { match } from "ts-pattern";
 
-	let {
+	const {
 		type,
 		size = 30,
 		speed = 1,

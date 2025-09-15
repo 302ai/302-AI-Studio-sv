@@ -15,14 +15,14 @@
 		size="sm"
 		onclick={handleImport}
 		variant="outline"
-		class="border border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none dark:border-border dark:text-foreground dark:hover:bg-muted dark:hover:text-foreground"
+		class="border-border text-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring dark:border-border dark:text-foreground dark:hover:bg-muted dark:hover:text-foreground border bg-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
 	>
 		<Upload className="size-4" />
 		{m.settings_importLabel()}
 	</Button>
 {/snippet}
 
-<div class="flex flex-col gap-settings-gap">
+<div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.settings_importData()}</Label>
 	<SettingInfoItem label={m.settings_importFromBackup()} action={importButton} />
 </div>

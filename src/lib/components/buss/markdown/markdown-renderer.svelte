@@ -5,7 +5,7 @@
 		content: string;
 	}
 
-	let { content }: Props = $props();
+	const { content }: Props = $props();
 	let rendered = $state("");
 
 	$effect(() => {

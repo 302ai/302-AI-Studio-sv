@@ -106,7 +106,7 @@
 		<div>
 			<Label class="text-sm font-medium">{label}</Label>
 			{#if description}
-				<p class="mt-1 text-xs text-muted-foreground">{description}</p>
+				<p class="text-muted-foreground mt-1 text-xs">{description}</p>
 			{/if}
 		</div>
 		<Button variant="ghost" size="sm" onclick={resetToDefault}>
@@ -121,7 +121,7 @@
 				type="color"
 				bind:value={colorInputValue}
 				onchange={(e) => handleColorInputChange(e.currentTarget.value)}
-				class="h-8 w-12 cursor-pointer rounded border border-input disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:rounded [&::-webkit-color-swatch-wrapper]:p-0"
+				class="border-input h-8 w-12 cursor-pointer rounded border disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0 [&::-webkit-color-swatch-wrapper]:rounded [&::-webkit-color-swatch-wrapper]:p-0"
 			/>
 		</div>
 
@@ -136,14 +136,14 @@
 
 	<!-- Color presets -->
 	<div class="space-y-2">
-		<Label class="text-xs text-muted-foreground">{m.text_label_theme_color_quick_colors()}</Label>
+		<Label class="text-muted-foreground text-xs">{m.text_label_theme_color_quick_colors()}</Label>
 		<div class="flex flex-wrap gap-1.5">
 			{#each colorPresets as preset (preset)}
 				<button
 					onclick={() => selectPreset(preset)}
 					class={cn(
-						"h-6 w-6 rounded border border-border transition-transform hover:scale-110",
-						value === preset && "ring-2 ring-primary ring-offset-1",
+						"border-border h-6 w-6 rounded border transition-transform hover:scale-110",
+						value === preset && "ring-primary ring-2 ring-offset-1",
 					)}
 					style="background-color: {preset}"
 					title={preset}
@@ -154,9 +154,9 @@
 	</div>
 
 	<!-- Current value display -->
-	<div class="flex items-center gap-2 text-xs text-muted-foreground">
+	<div class="text-muted-foreground flex items-center gap-2 text-xs">
 		<span>{m.text_theme_color_current()}</span>
-		<div class="h-4 w-4 rounded border border-border" style="background-color: {value}"></div>
+		<div class="border-border h-4 w-4 rounded border" style="background-color: {value}"></div>
 		<span class="font-mono">{value}</span>
 	</div>
 </div>

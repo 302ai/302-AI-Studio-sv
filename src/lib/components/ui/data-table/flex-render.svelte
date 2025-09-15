@@ -15,7 +15,7 @@
 		context: TContext;
 	};
 
-	let { content, context }: Props = $props();
+	const { content, context }: Props = $props();
 </script>
 
 {#if typeof content === "string"}

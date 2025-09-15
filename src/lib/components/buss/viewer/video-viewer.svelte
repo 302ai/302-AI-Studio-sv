@@ -8,7 +8,7 @@
 	import ErrorState from "./error-state.svelte";
 	import ViewerBase from "./viewer-base.svelte";
 
-	let { src }: VideoViewerProps = $props();
+	const { src }: VideoViewerProps = $props();
 </script>
 
 <ViewerBase>

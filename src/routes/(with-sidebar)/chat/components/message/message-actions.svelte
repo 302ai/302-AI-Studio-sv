@@ -18,7 +18,7 @@
 	import type { ChatMessage } from "$lib/types/chat";
 	import { RefreshCcw, SquarePen } from "@lucide/svelte";
 
-	let { message, enabledActions = ["copy", "regenerate", "edit"] }: Props = $props();
+	const { message, enabledActions = ["copy", "regenerate", "edit"] }: Props = $props();
 
 	let isEditDialogOpen = $state(false);
 	let editContent = $state("");
@@ -80,7 +80,7 @@
 			<Textarea
 				bind:value={editContent}
 				rows={8}
-				class="max-h-128 min-h-40 w-[512px] resize-none border-border"
+				class="border-border max-h-128 min-h-40 w-[512px] resize-none"
 			/>
 
 			<Dialog.Footer class="flex !justify-between">

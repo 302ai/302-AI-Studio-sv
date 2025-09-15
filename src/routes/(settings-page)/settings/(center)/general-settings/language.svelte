@@ -29,7 +29,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-settings-gap">
+<div class="gap-settings-gap flex flex-col">
 	<Label id="language" class="text-label-fg">{m.language()}</Label>
 	<SettingSelect
 		name="language"

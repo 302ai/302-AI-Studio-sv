@@ -58,7 +58,7 @@
 		<div class="flex flex-col gap-4">
 			<div>
 				<Label class="text-sm font-medium">{m.text_label_theme_code_title()}</Label>
-				<p class="mt-1 text-xs text-muted-foreground">
+				<p class="text-muted-foreground mt-1 text-xs">
 					{m.text_theme_code_description()}
 				</p>
 			</div>
@@ -74,7 +74,7 @@
 				<Button variant="secondary" onclick={reset}>{m?.reset?.() ?? "Reset"}</Button>
 			</div>
 
-			<div class="rounded-lg bg-muted/50 p-4 text-sm text-muted-foreground">
+			<div class="bg-muted/50 text-muted-foreground rounded-lg p-4 text-sm">
 				<p class="mb-2 font-medium">{m.text_theme_code_usage_notes()}</p>
 				<ul class="list-disc space-y-1 pl-5">
 					<li>{m.text_theme_code_note_1()}</li>

@@ -8,7 +8,7 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 
-	let { onClick }: HeaderProps = $props();
+	const { onClick }: HeaderProps = $props();
 </script>
 
 <div class="flex items-center justify-between">

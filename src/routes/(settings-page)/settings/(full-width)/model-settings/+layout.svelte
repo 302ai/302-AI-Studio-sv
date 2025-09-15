@@ -10,7 +10,7 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import Header from "./header.svelte";
 
-	let { children } = $props();
+	const { children } = $props();
 	let activeProviderId = $state<string>();
 	$effect(() => {
 		const currentProvider = page.params.provider;

@@ -153,7 +153,7 @@
 		reader.readAsText(file);
 		input.value = "";
 	}
-	let filteredCategories = $derived(
+	const filteredCategories = $derived(
 		themeConfig.categories.filter((category) => {
 			if (!searchQuery.trim()) return true;
 
@@ -168,11 +168,11 @@
 		}),
 	);
 
-	let totalVariables = $derived(
+	const totalVariables = $derived(
 		themeConfig.categories.reduce((sum, cat) => sum + cat.variables.length, 0),
 	);
 
-	let modifiedVariables = $derived(
+	const modifiedVariables = $derived(
 		themeConfig.categories.reduce((sum, cat) => {
 			const modified = cat.variables.filter((v) => {
 				const isModified = v.currentValue !== v.defaultValue;
@@ -197,7 +197,7 @@
 		<div class="flex items-center justify-between">
 			<div>
 				<h2 class="text-lg font-semibold">{m.text_theme_editor_title()}</h2>
-				<p class="text-sm text-muted-foreground">
+				<p class="text-muted-foreground text-sm">
 					{m.text_theme_editor_description()}
 				</p>
 			</div>
@@ -235,7 +235,7 @@
 		<!-- Search -->
 		<div class="relative">
 			<Search
-				class="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform text-muted-foreground"
+				class="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform"
 			/>
 			<Input
 				bind:value={searchQuery}
@@ -248,7 +248,7 @@
 	<!-- Loading state -->
 	{#if isLoading}
 		<div class="flex items-center justify-center py-12">
-			<div class="text-sm text-muted-foreground">{m.text_theme_editor_loading()}</div>
+			<div class="text-muted-foreground text-sm">{m.text_theme_editor_loading()}</div>
 		</div>
 	{/if}
 
@@ -272,14 +272,14 @@
 
 	<!-- Empty state -->
 	{#if !isLoading && !loadError && filteredCategories.length === 0 && searchQuery}
-		<div class="py-12 text-center text-muted-foreground">
+		<div class="text-muted-foreground py-12 text-center">
 			<Search class="mx-auto mb-4 h-12 w-12 opacity-50" />
 			<p>{m.text_theme_editor_no_results({ query: searchQuery })}</p>
 		</div>
 	{/if}
 
 	<!-- Help text -->
-	<div class="space-y-1 border-t pt-4 text-xs text-muted-foreground">
+	<div class="text-muted-foreground space-y-1 border-t pt-4 text-xs">
 		<p><strong>Tip:</strong> {m.text_theme_editor_tip()}</p>
 		<p>{m.text_theme_editor_help()}</p>
 	</div>

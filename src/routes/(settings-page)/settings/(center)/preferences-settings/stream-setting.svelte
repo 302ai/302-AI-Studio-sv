@@ -33,7 +33,7 @@
 	}
 </script>
 
-<div class="flex flex-col gap-settings-gap">
+<div class="gap-settings-gap flex flex-col">
 	<div class="space-y-2">
 		<Label class="text-label-fg">{m.settings_streamOutputLabel()}</Label>
 		<SettingSwitchItem label={m.settings_streamOutputEnable()} bind:checked={autoStreamOutput} />

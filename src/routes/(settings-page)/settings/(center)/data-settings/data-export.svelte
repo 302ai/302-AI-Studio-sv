@@ -17,7 +17,7 @@
 	</Button>
 {/snippet}
 
-<div class="flex flex-col gap-settings-gap">
+<div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.settings_exportData()}</Label>
 	<SettingInfoItem label={m.settings_exportAsJson()} action={exportButton} />
 </div>

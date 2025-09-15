@@ -98,7 +98,7 @@
 		<div>
 			<Label class="text-sm font-medium">{label}</Label>
 			{#if description}
-				<p class="mt-1 text-xs text-muted-foreground">{description}</p>
+				<p class="text-muted-foreground mt-1 text-xs">{description}</p>
 			{/if}
 		</div>
 		<Button variant="ghost" size="sm" onclick={resetToDefault}>
@@ -132,7 +132,7 @@
 					})}
 				/>
 			</div>
-			<div class="min-w-0 text-sm text-muted-foreground">
+			<div class="text-muted-foreground min-w-0 text-sm">
 				<span class="font-mono">{formatValue(numericValue)}</span>
 			</div>
 		</div>
@@ -141,13 +141,13 @@
 	<!-- Presets -->
 	{#if presets.length > 0}
 		<div class="space-y-2">
-			<Label class="text-xs text-muted-foreground">{m.text_label_theme_numeric_presets()}</Label>
+			<Label class="text-muted-foreground text-xs">{m.text_label_theme_numeric_presets()}</Label>
 			<div class="flex flex-wrap gap-1.5">
 				{#each presets as preset (preset)}
 					<Badge
 						variant={value === preset ? "default" : "outline"}
 						class={cn(
-							"cursor-pointer px-2 py-1 text-xs hover:bg-accent",
+							"hover:bg-accent cursor-pointer px-2 py-1 text-xs",
 							value === preset && "bg-primary text-primary-foreground",
 						)}
 						onclick={() => selectPreset(preset)}
@@ -160,7 +160,7 @@
 	{/if}
 
 	<!-- Range display -->
-	<div class="flex justify-between text-xs text-muted-foreground">
+	<div class="text-muted-foreground flex justify-between text-xs">
 		<span>{formatValue(min)}</span>
 		<span>{formatValue(max)}</span>
 	</div>

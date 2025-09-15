@@ -30,7 +30,14 @@
 	} from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 
-	let { model, isLast = false, onEdit, onDelete, onToggleCollected, onDuplicate }: Props = $props();
+	const {
+		model,
+		isLast = false,
+		onEdit,
+		onDelete,
+		onToggleCollected,
+		onDuplicate,
+	}: Props = $props();
 
 	const getCapabilityIcon = (capability: string) => {
 		switch (capability) {
@@ -119,8 +126,8 @@
 <ContextMenu.Root>
 	<ContextMenu.Trigger
 		class={cn(
-			"h-[50px] w-full cursor-pointer ring-primary outline-transparent hover:bg-muted/50",
-			!isLast ? "border-b border-border" : "",
+			"ring-primary hover:bg-muted/50 h-[50px] w-full cursor-pointer outline-transparent",
+			!isLast ? "border-border border-b" : "",
 		)}
 	>
 		<div class="grid h-full w-full" style="grid-template-columns: 1.3fr 0.7fr 1.2fr 0.8fr;">
@@ -163,7 +170,7 @@
 					<Button
 						variant="ghost"
 						size="icon"
-						class="pressed:bg-accent/20 h-8 w-8 rounded-lg p-0 hover:bg-accent/10"
+						class="pressed:bg-accent/20 hover:bg-accent/10 h-8 w-8 rounded-lg p-0"
 						onclick={onToggleCollected}
 						title={model.collected ? m.title_button_unstar() : m.title_button_star()}
 					>
@@ -181,22 +188,22 @@
 					<Button
 						variant="ghost"
 						size="icon"
-						class="pressed:bg-accent/20 h-8 w-8 rounded-lg p-0 hover:bg-accent/10"
+						class="pressed:bg-accent/20 hover:bg-accent/10 h-8 w-8 rounded-lg p-0"
 						onclick={onEdit}
 						title={m.title_button_edit()}
 					>
-						<PenLine class="size-4 text-muted-foreground hover:text-foreground" strokeWidth={1.5} />
+						<PenLine class="text-muted-foreground hover:text-foreground size-4" strokeWidth={1.5} />
 					</Button>
 
 					<!-- Delete -->
 					<Button
 						variant="ghost"
 						size="icon"
-						class="pressed:bg-destructive/20 h-8 w-8 rounded-lg p-0 hover:bg-destructive/10"
+						class="pressed:bg-destructive/20 hover:bg-destructive/10 h-8 w-8 rounded-lg p-0"
 						onclick={onDelete}
 						title={m.title_button_delete()}
 					>
-						<Trash2 class="size-4 text-destructive/70 hover:text-destructive" />
+						<Trash2 class="text-destructive/70 hover:text-destructive size-4" />
 					</Button>
 				</div>
 			</div>

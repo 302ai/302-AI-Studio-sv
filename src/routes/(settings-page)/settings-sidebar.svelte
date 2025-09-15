@@ -38,14 +38,14 @@
 	];
 
 	let indicatorStyle: { top: string; height: string } = $state({ top: "", height: "" });
-	let itemElements: HTMLElement[] = $state([]);
+	const itemElements: HTMLElement[] = $state([]);
 	let containerElement: HTMLElement | null = $state(null);
 
 	function isActiveTab(itemPath: string): boolean {
 		return page.url.pathname.startsWith(itemPath);
 	}
 
-	let selectedIndex = $derived(items.findIndex((item) => isActiveTab(item.path)));
+	const selectedIndex = $derived(items.findIndex((item) => isActiveTab(item.path)));
 
 	async function updateIndicatorPosition() {
 		if (selectedIndex === -1) return;
@@ -84,7 +84,7 @@
 		>
 			{#if indicatorStyle.top && selectedIndex !== -1}
 				<div
-					class="absolute right-[-12px] z-10 w-[5px] rounded-none bg-primary transition-all duration-300 ease-in-out"
+					class="bg-primary absolute right-[-12px] z-10 w-[5px] rounded-none transition-all duration-300 ease-in-out"
 					style="top: {indicatorStyle.top}; height: {indicatorStyle.height};"
 					data-selected-indicator
 				></div>
@@ -96,7 +96,7 @@
 					bind:this={itemElements[index]}
 					href={item.path}
 					class={cn(
-						"flex w-full items-center rounded-lg px-settings-item-x py-settings-item-y text-sm font-medium whitespace-nowrap outline-hidden transition-colors",
+						"px-settings-item-x py-settings-item-y flex w-full items-center rounded-lg text-sm font-medium whitespace-nowrap outline-hidden transition-colors",
 						"hover:bg-hover-primary",
 						isSelected ? "text-accent-fg bg-accent" : "text-foreground",
 					)}

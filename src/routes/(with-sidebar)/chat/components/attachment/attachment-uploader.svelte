@@ -9,8 +9,8 @@
 	import { Paperclip } from "@lucide/svelte";
 	import { nanoid } from "nanoid";
 
-	let attachments = $derived(chatState.attachments);
-	let isMaxReached = $derived(attachments.length >= MAX_ATTACHMENT_COUNT);
+	const attachments = $derived(chatState.attachments);
+	const isMaxReached = $derived(attachments.length >= MAX_ATTACHMENT_COUNT);
 	let fileInput: HTMLInputElement;
 
 	async function generatePreview(file: File): Promise<string | undefined> {

@@ -12,7 +12,7 @@
 	import { cn } from "$lib/utils";
 	import { FileImage } from "@lucide/svelte";
 
-	let { value, onChange, class: className }: Props = $props();
+	const { value, onChange, class: className }: Props = $props();
 	let isOpen = $state(false);
 
 	const aiIcons = [
@@ -52,14 +52,14 @@
 <Popover.Root bind:open={isOpen}>
 	<Popover.Trigger
 		class={cn(
-			"flex size-11 items-center justify-center rounded-lg bg-muted transition-colors hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none",
+			"bg-muted hover:bg-muted/80 focus-visible:ring-ring flex size-11 items-center justify-center rounded-lg transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
 			className,
 		)}
 	>
 		{#if selectedIcon}
 			<ModelIcon modelName={selectedIcon.key} className="h-6 w-6" />
 		{:else}
-			<FileImage class="h-4 w-4 text-muted-foreground" />
+			<FileImage class="text-muted-foreground h-4 w-4" />
 		{/if}
 	</Popover.Trigger>
 
@@ -71,8 +71,8 @@
 						type="button"
 						onclick={() => handleIconSelect(iconItem.key)}
 						class={cn(
-							"flex flex-col items-center rounded p-2 text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none",
-							value === iconItem.key && "bg-primary/10 text-primary ring-2 ring-primary/20",
+							"text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:ring-ring flex flex-col items-center rounded p-2 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+							value === iconItem.key && "bg-primary/10 text-primary ring-primary/20 ring-2",
 						)}
 						title={iconItem.name}
 					>

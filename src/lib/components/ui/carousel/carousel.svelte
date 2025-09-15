@@ -18,7 +18,7 @@
 		...restProps
 	}: WithElementRef<CarouselProps> = $props();
 
-	let carouselState = $state<EmblaContext>({
+	const carouselState = $state<EmblaContext>({
 		api: undefined,
 		scrollPrev,
 		scrollNext,

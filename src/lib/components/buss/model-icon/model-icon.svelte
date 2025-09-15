@@ -52,7 +52,7 @@
 	import yiIcon from "@lobehub/icons-static-svg/icons/yi-color.svg";
 	import zhipuIcon from "@lobehub/icons-static-svg/icons/zhipu-color.svg";
 
-	let { modelName, className }: Props = $props();
+	const { modelName, className }: Props = $props();
 	const coloredIcons = new Set([
 		ai302Icon,
 		azureIcon,

@@ -20,13 +20,13 @@
 
 		"[&[data-outside-month]:not([data-selected])]:text-muted-foreground [&[data-outside-month]:not([data-selected])]:hover:text-accent-foreground",
 
-		"data-[disabled]:pointer-events-none data-[disabled]:text-muted-foreground data-[disabled]:opacity-50",
+		"data-[disabled]:text-muted-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
 
 		"data-[unavailable]:text-muted-foreground data-[unavailable]:line-through",
 
 		"dark:hover:text-accent-foreground",
 
-		"focus:relative focus:border-ring focus:ring-ring/50",
+		"focus:border-ring focus:ring-ring/50 focus:relative",
 
 		"[&>span]:text-xs [&>span]:opacity-70",
 		className,

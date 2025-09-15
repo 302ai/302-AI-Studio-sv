@@ -22,10 +22,10 @@
 	import { cn } from "$lib/utils";
 	import { Check, ChevronRight } from "@lucide/svelte";
 
-	let { trigger, selectedModel, onModelSelect }: ModelSelectProps = $props();
+	const { trigger, selectedModel, onModelSelect }: ModelSelectProps = $props();
 	let isOpen = $state(false);
 	let searchValue = $state("");
-	let collapsedProviders = $state<Record<string, boolean>>({});
+	const collapsedProviders = $state<Record<string, boolean>>({});
 	let hoveredItemId = $state<string | null>(null);
 	let listRef = $state<HTMLElement | null>(null);
 	let scrollTop = $state(0);
@@ -146,7 +146,7 @@
 			{#each Object.entries(groupedModels()) as [provider, models] (provider)}
 				<div class="px-2 py-1">
 					<button
-						class="flex w-full items-center justify-between rounded-sm px-2 py-2 text-sm text-muted-foreground"
+						class="text-muted-foreground flex w-full items-center justify-between rounded-sm px-2 py-2 text-sm"
 						onclick={() => toggleProvider(provider)}
 						disabled={searchValue.length > 0}
 					>
@@ -170,7 +170,7 @@
 									"my-1 h-12",
 									selectedModel?.id === model.id ? "!bg-accent !text-accent-foreground" : "",
 									selectedModel?.id !== model.id && hoveredItemId !== model.id
-										? "aria-selected:bg-transparent aria-selected:text-foreground"
+										? "aria-selected:text-foreground aria-selected:bg-transparent"
 										: "",
 								)}
 								onmouseenter={() => handleItemMouseEnter(model.id)}
@@ -179,7 +179,7 @@
 								<div class="flex w-full flex-row items-center justify-between pl-2">
 									<div class="flex flex-row gap-2">
 										{model.name}
-										<span class="text-sm text-muted-foreground">{model.type}</span>
+										<span class="text-muted-foreground text-sm">{model.type}</span>
 									</div>
 									{#if selectedModel?.id === model.id}
 										<Check class="h-4 w-4" />
