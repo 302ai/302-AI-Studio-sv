@@ -1,11 +1,12 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
 
-import { app, BrowserWindow, nativeTheme, net, protocol } from "electron";
+import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, net, protocol } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import windowStateKeeper from "electron-window-state";
-import { WINDOW_SIZE, CONFIG } from "../constants";
-import { isDev, isLinux, isMac } from "../constants";
+import { PLATFORM, ENVIRONMENT, WINDOW_SIZE } from "../constants";
+import type { Theme } from "../shared/types";
+import { CONFIG } from "../constants";
 const { shouldUseDarkColors } = nativeTheme;
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
@@ -14,6 +15,16 @@ protocol.registerSchemesAsPrivileged([
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
 	app.quit();
+}
+
+function updateTitleBarOverlay() {
+	if (!PLATFORM.IS_WINDOWS && !PLATFORM.IS_LINUX) return;
+
+	BrowserWindow.getAllWindows().forEach((window) => {
+		window.setTitleBarOverlay(
+			nativeTheme.shouldUseDarkColors ? CONFIG.TITLE_BAR_OVERLAY.DARK : CONFIG.TITLE_BAR_OVERLAY.LIGHT,
+		);
+	});
 }
 
 const createWindow = () => {
@@ -32,18 +43,18 @@ const createWindow = () => {
 		minWidth: WINDOW_SIZE.MIN_WIDTH,
 		minHeight: WINDOW_SIZE.MIN_HEIGHT,
 		autoHideMenuBar: true,
-		transparent: isMac,
-		frame: isLinux ? false : undefined,
+		transparent: PLATFORM.IS_MAC,
+		frame: PLATFORM.IS_LINUX ? false : undefined,
 		visualEffectState: "active",
-		titleBarStyle: isMac ? "hiddenInset" : "hidden",
-		titleBarOverlay: !isMac
+		titleBarStyle: PLATFORM.IS_MAC ? "hiddenInset" : "hidden",
+		titleBarOverlay: !PLATFORM.IS_MAC
 			? shouldUseDarkColors
 				? CONFIG.TITLE_BAR_OVERLAY.DARK
 				: CONFIG.TITLE_BAR_OVERLAY.LIGHT
 			: undefined,
 		backgroundColor: shouldUseDarkColors ? "#121212" : "#FFFFFF",
-		trafficLightPosition: isMac ? { x: 12, y: 12 } : undefined,
-		...(isLinux && {
+		trafficLightPosition: PLATFORM.IS_MAC ? { x: 12, y: 12 } : undefined,
+		...(PLATFORM.IS_LINUX && {
 			thickFrame: false,
 			resizable: true,
 			skipTaskbar: false,
@@ -51,13 +62,25 @@ const createWindow = () => {
 		webPreferences: {
 			preload: path.join(import.meta.dirname, "../preload/index.js"),
 			sandbox: false,
-			devTools: isDev,
+			devTools: ENVIRONMENT.IS_DEV,
 			webgl: true,
 		},
 		roundedCorners: true,
 	});
 
 	mainWindowState.manage(mainWindow);
+	nativeTheme.on("updated", () => {
+		updateTitleBarOverlay();
+	});
+
+	ipcMain.on("app:theme:setTheme", (event, theme: Theme) => {
+		nativeTheme.themeSource = theme;
+		mainWindow.webContents.send("app:theme:setTheme", theme);
+	});
+
+	ipcMain.handle("app:theme:getCurrentTheme", () => {
+		return nativeTheme.themeSource;
+	});
 
 	// and load the index.html of the app.
 	if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {

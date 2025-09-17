@@ -9,6 +9,13 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
-		"moduleResolution": "bundler"
+		"moduleResolution": "bundler",
+		"baseUrl": ".",
+		"paths": {
+			"@shared/*": ["electron/shared/*"],
+			"$lib": ["src/lib"],
+			"$lib/*": ["src/lib/*"],
+			"$app/types": [".svelte-kit/types/index.d.ts"]
+		}
 	}
 }

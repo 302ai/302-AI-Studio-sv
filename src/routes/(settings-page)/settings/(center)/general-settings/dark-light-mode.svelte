@@ -4,6 +4,8 @@
 	import { m } from "$lib/paraglide/messages";
 	import { Laptop, Moon, Sun } from "@lucide/svelte";
 	import { setMode } from "mode-watcher";
+	import { onMount } from "svelte";
+	import type { Theme } from "@shared/types";
 
 	let selectedKey = "system";
 	const themeOptions = [
@@ -30,7 +32,22 @@
 	async function handleSelect(key: string) {
 		selectedKey = key;
 		setMode(key as "light" | "dark" | "system");
+
+		// Send theme change to electron main process
+		if (window.electronAPI) {
+			window.electronAPI.theme.setTheme(key as Theme);
+		}
 	}
+
+	onMount(() => {
+		// Listen for theme changes from electron
+		if (window.electronAPI) {
+			window.electronAPI.theme.onThemeChange((theme: Theme) => {
+				selectedKey = theme;
+				setMode(theme);
+			});
+		}
+	});
 </script>
 
 <div class="gap-settings-gap flex flex-col">

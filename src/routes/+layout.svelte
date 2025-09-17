@@ -6,7 +6,8 @@
 	import { Toaster } from "$lib/components/ui/sonner";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { Ghost, Home, Layout, MessageCircle, Settings } from "@lucide/svelte";
-	import { ModeWatcher } from "mode-watcher";
+	import { ModeWatcher, setMode } from "mode-watcher";
+	import { onMount } from "svelte";
 	import "../app.css";
 
 	const { children } = $props();
@@ -85,6 +86,18 @@
 		activeTabId = newTab.id;
 		goto(newTab.href);
 	}
+
+	onMount(async () => {
+		// Get current theme from Electron and apply it
+		if (window.electronAPI) {
+			try {
+				const currentTheme = await window.electronAPI.theme.getCurrentTheme();
+				setMode(currentTheme);
+			} catch (error) {
+				console.warn("Failed to get current theme from Electron:", error);
+			}
+		}
+	});
 </script>
 
 <svelte:head>

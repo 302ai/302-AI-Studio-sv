@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from "electron";
-import type { Theme } from "../shared/types";
+import type { Theme } from "./shared/types";
 
 contextBridge.exposeInMainWorld("electronAPI", {
 	theme: {

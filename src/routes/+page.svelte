@@ -26,9 +26,4 @@
 			<Button onclick={() => (window.location.href = "/full")}>Go to Full Width</Button>
 		</div>
 	</div>
-
-	<div class="flex items-center gap-4">
-		<span class="text-muted-foreground text-sm">Theme:</span>
-		<ThemeSwitcher />
-	</div>
 </div>

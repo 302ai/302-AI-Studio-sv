@@ -131,7 +131,7 @@
 
 <div
 	class={cn(
-		"h-[calc(env(titlebar-area-height,40px)+1px)] bg-tabbar-bg/50 flex  items-center border-b",
+		"h-[calc(env(titlebar-area-height,40px)+1px)] bg-tabbar-bg flex  items-center border-b",
 		className,
 	)}
 	role="tablist"
