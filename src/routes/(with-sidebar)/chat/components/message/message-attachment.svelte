@@ -8,7 +8,7 @@
 		openViewer: (attachment: AttachmentFile) => void;
 	}
 
-	const { attachment, openViewer }: Props = $props();
+	let { attachment, openViewer }: Props = $props();
 </script>
 
 <button
@@ -24,7 +24,7 @@
 	{:else}
 		{@const IconComponent = getFileIcon(attachment)}
 		<div
-			class="text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-y-1 px-0.5"
+			class="flex h-full w-full flex-col items-center justify-center gap-y-1 px-0.5 text-muted-foreground"
 		>
 			<IconComponent class="size-6" />
 			<span class="max-w-full truncate text-xs leading-none">

@@ -20,20 +20,20 @@
 	import MessageActions from "./message-actions.svelte";
 	import { formatTimeAgo } from "./utils";
 
-	const { message }: Props = $props();
+	let { message }: Props = $props();
 </script>
 
 {#snippet messageHeader()}
 	{@const modelName = message.model.name}
 	<div class="flex items-center gap-2">
 		<ModelIcon className="size-6" {modelName} />
-		<span class="text-muted-foreground text-xs">{modelName}</span>
+		<span class="text-xs text-muted-foreground">{modelName}</span>
 	</div>
 {/snippet}
 
 {#snippet messageStatus()}
 	{#if message.status === "pending"}
-		<div class="text-muted-foreground flex items-center gap-2 text-sm">
+		<div class="flex items-center gap-2 text-sm text-muted-foreground">
 			{m.text_chat_pending()}
 			<LdrsLoader type="dot-pulse" size={16} />
 		</div>
@@ -49,7 +49,7 @@
 {#snippet messageFooter()}
 	<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100">
 		<MessageActions {message} />
-		<span class="text-muted-foreground text-xs">
+		<span class="text-xs text-muted-foreground">
 			{formatTimeAgo(message.createAt.toLocaleString(), getLocale())}
 		</span>
 	</div>

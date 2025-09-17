@@ -1,5 +1,6 @@
 import type { AttachmentFile, ChatMessage, MCPServer, Model } from "$lib/types/chat";
 import { nanoid } from "nanoid";
+
 export type { AttachmentFile, ChatMessage, MCPServer, Model } from "$lib/types/chat";
 
 class ChatState {
@@ -12,6 +13,12 @@ class ChatState {
 	isMCPActive = $state(false);
 	selectedModel = $state<Model | null>(null);
 	isPrivateChatActive = $state(false);
+	// Chat Parameters
+	temperature = $state<number | null>(null);
+	topP = $state<number | null>(null);
+	frequencyPenalty = $state<number | null>(null);
+	presencePenalty = $state<number | null>(null);
+	maxTokens = $state<number | null>(null);
 
 	providerType = $derived<string | null>(this.selectedModel?.provider.name ?? null);
 	sendMessageEnabled = $derived<boolean>(
@@ -304,6 +311,26 @@ describe('UserProfile Component', () => {
 
 	handlePrivateChatActiveChange(active: boolean) {
 		this.isPrivateChatActive = active;
+	}
+
+	handleTemperatureChange(value: number | null) {
+		this.temperature = value;
+	}
+
+	handleTopPChange(value: number | null) {
+		this.topP = value;
+	}
+
+	handleFrequencyPenaltyChange(value: number | null) {
+		this.frequencyPenalty = value;
+	}
+
+	handlePresencePenaltyChange(value: number | null) {
+		this.presencePenalty = value;
+	}
+
+	handleMaxTokensChange(value: number | null) {
+		this.maxTokens = value;
 	}
 }
 

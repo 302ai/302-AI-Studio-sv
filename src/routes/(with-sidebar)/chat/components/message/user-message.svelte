@@ -15,7 +15,7 @@
 	import MessageActions from "./message-actions.svelte";
 	import MessageAttachment from "./message-attachment.svelte";
 
-	const { message }: Props = $props();
+	let { message }: Props = $props();
 	let selectedAttachment = $state<AttachmentFile | null>(null);
 
 	function openViewer(attachment: AttachmentFile) {
@@ -35,7 +35,7 @@
 
 <div class="group flex flex-col items-end gap-2">
 	<div
-		class="bg-chat-user-message-bg text-chat-user-message-fg flex max-w-[80%] rounded-lg px-4 py-2"
+		class="flex max-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg"
 	>
 		{#if message.attachments.length > 0}
 			<div class="space-y-2">
