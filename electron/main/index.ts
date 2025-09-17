@@ -52,7 +52,7 @@ const createWindow = () => {
 				? CONFIG.TITLE_BAR_OVERLAY.DARK
 				: CONFIG.TITLE_BAR_OVERLAY.LIGHT
 			: undefined,
-		backgroundColor: shouldUseDarkColors ? "#121212" : "#FFFFFF",
+		backgroundColor: shouldUseDarkColors ? "#2d2d2d" : "#f1f1f1",
 		trafficLightPosition: PLATFORM.IS_MAC ? { x: 12, y: 12 } : undefined,
 		...(PLATFORM.IS_LINUX && {
 			thickFrame: false,

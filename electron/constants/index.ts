@@ -21,14 +21,14 @@ export const WINDOW_SIZE = {
 export const CONFIG = {
 	TITLE_BAR_OVERLAY: {
 		DARK: {
-				height: 40,
-	color: "#2d2d2d",
-	symbolColor: "#fff",
+			height: 40,
+			color: "#2d2d2d",
+			symbolColor: "#fff",
 		},
 		LIGHT: {
-		height: 40,
-	color: "#f1f1f1",
-	symbolColor: "#000",
+			height: 40,
+			color: "#f1f1f1",
+			symbolColor: "#000",
 		},
 	},
 };
