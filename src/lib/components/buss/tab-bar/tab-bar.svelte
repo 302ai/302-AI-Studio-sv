@@ -130,13 +130,16 @@
 </script>
 
 <div
-	class={cn("h-tabbar bg-tabbar-bg/50 flex w-full items-center border-b", className)}
+	class={cn(
+		"h-[calc(env(titlebar-area-height,40px)+1px)] bg-tabbar-bg/50 flex  items-center border-b",
+		className,
+	)}
 	role="tablist"
 	style="app-region: drag;"
 	aria-label={m.label_button_new_tab() ?? "Tab bar"}
 >
 	<div
-		class="gap-tab-gap px-tabbar-x flex w-full min-w-0 items-center overflow-x-hidden"
+		class="gap-tab-gap px-tabbar-x flex min-w-0 items-center overflow-x-hidden w-[calc(env(titlebar-area-width,100%)-10px)]"
 		use:dndzone={{
 			items: tabs,
 			flipDurationMs: 200,
