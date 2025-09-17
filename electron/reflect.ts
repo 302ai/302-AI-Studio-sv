@@ -1,16 +1,18 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import "reflect-metadata";
 
-// Define a metadata to collect all metadata
 const _metadata = {};
 
 export function ServiceRegister(serviceName: string) {
 	return (target: any) => {
 		const targetName = target.name;
 
+		const existingMetadata = Reflect.getMetadata(`${targetName}`, _metadata) || {};
+
 		const data = {
 			service: serviceName,
-			...Reflect.getMetadata(`${targetName}`, _metadata),
+			handles: existingMetadata.handles || {},
+			...existingMetadata,
 		};
 
 		Reflect.defineMetadata(`${targetName}`, data, _metadata);
@@ -23,18 +25,14 @@ export function ServiceHandler() {
 
 		const existingMetadata = Reflect.getMetadata(`${targetName}`, _metadata) || {};
 
-		if (!existingMetadata.handlers) {
-			existingMetadata.handlers = {};
+		if (!existingMetadata.handles) {
+			existingMetadata.handles = {};
 		}
 
-		existingMetadata.handlers[methodName] = {
-			handle: descriptor.value,
-		};
+		existingMetadata.handles[methodName] = descriptor.value;
 
 		Reflect.defineMetadata(`${targetName}`, existingMetadata, _metadata);
 	};
 }
 
-export function getMetadata(className: string) {
-	return Reflect.getMetadata(`${className}`, _metadata);
-}
+export const getMetadata = (className: string) => Reflect.getMetadata(`${className}`, _metadata);

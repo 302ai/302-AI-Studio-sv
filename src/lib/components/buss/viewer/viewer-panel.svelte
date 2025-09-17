@@ -49,7 +49,27 @@
 					console.log("attachmentsService", attachmentsService);
 					attachmentsService.openExternal("https://302.ai");
 				}}
-			>
+				>1
+				<FolderOpen />
+			</Button>
+			<Button
+				variant="ghost"
+				size="icon"
+				onclick={() => {
+					console.log("attachmentsService", attachmentsService);
+					attachmentsService.openExternal2("https://302.ai");
+				}}
+				>2
+				<FolderOpen />
+			</Button>
+			<Button
+				variant="ghost"
+				size="icon"
+				onclick={() => {
+					console.log("attachmentsService", attachmentsService);
+					attachmentsService.openExternal3("https://302.ai");
+				}}
+				>3
 				<FolderOpen />
 			</Button>
 		</div>

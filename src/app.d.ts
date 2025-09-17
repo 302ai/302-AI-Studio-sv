@@ -14,6 +14,8 @@ declare global {
 		service: {
 			attachmentsService: {
 				openExternal: (url: string) => Promise<void>;
+				openExternal2: (url: string) => Promise<void>;
+				openExternal3: (url: string) => Promise<void>;
 			};
 		};
 	}

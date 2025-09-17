@@ -1,3 +1,3 @@
-import { attachmentsService } from "./attachments-sevice";
+import { AttachmentsService } from "./attachments-sevice";
 
-export const services = [attachmentsService];
+export default [AttachmentsService];
