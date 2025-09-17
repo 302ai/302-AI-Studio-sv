@@ -1,7 +1,5 @@
-import { ServiceRegister, ServiceHandler } from "@electron/reflect";
 import { shell } from "electron";
 
-@ServiceRegister("attachmentsService")
 export class AttachmentsService {
 	private url = "https://baidu.com";
 
@@ -11,8 +9,7 @@ export class AttachmentsService {
 		);
 	}
 
-	@ServiceHandler()
-	async openExternal(_event: Electron.IpcMainEvent, url: string) {
+	async openExternal(_event: Electron.IpcMainInvokeEvent, url: string) {
 		try {
 			console.log("AttachmentsService:openExternal", { url });
 			await shell.openExternal(url);
@@ -22,8 +19,7 @@ export class AttachmentsService {
 		}
 	}
 
-	@ServiceHandler()
-	async openExternal2(_event: Electron.IpcMainEvent, url: string) {
+	async openExternal2(_event: Electron.IpcMainInvokeEvent, url: string) {
 		try {
 			console.log("AttachmentsService:openExternal2", { url });
 			await shell.openExternal(this.url);
@@ -33,8 +29,17 @@ export class AttachmentsService {
 		}
 	}
 
-	@ServiceHandler()
-	async openExternal3(_event: Electron.IpcMainEvent, url: string) {
+	async openExternal3(_event: Electron.IpcMainInvokeEvent, url: string) {
+		try {
+			console.log("AttachmentsService:openExternal3", { url });
+			await shell.openExternal(url);
+		} catch (error) {
+			console.error("AttachmentsService:openExternal error", { error });
+			throw error;
+		}
+	}
+
+	async openExternal4(_event: Electron.IpcMainInvokeEvent, url: string) {
 		try {
 			console.log("AttachmentsService:openExternal3", { url });
 			await shell.openExternal(url);

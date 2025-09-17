@@ -28,6 +28,17 @@ export default [
 		},
 	},
 	{
+		files: ["**/generated/**/*.ts"],
+		rules: {
+			"@typescript-eslint/no-empty-object-type": [
+				"error",
+				{
+					allowInterfaces: "always",
+				},
+			],
+		},
+	},
+	{
 		files: ["**/*.svelte", "**/*.svelte.ts", "**/*.svelte.js"],
 		languageOptions: {
 			parserOptions: {

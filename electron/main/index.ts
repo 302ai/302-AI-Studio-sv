@@ -7,7 +7,7 @@ import windowStateKeeper from "electron-window-state";
 import { PLATFORM, ENVIRONMENT, WINDOW_SIZE } from "../constants";
 import type { Theme } from "../shared/types";
 import { CONFIG } from "../constants";
-import { initMainBridge } from "../bridge";
+import { registerIpcHandlers } from "../generated/ipc-registration";
 const { shouldUseDarkColors } = nativeTheme;
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
@@ -100,8 +100,8 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
-	// Initialize the bridge for IPC communication
-	initMainBridge();
+	// Register auto-generated IPC handlers
+	registerIpcHandlers();
 
 	protocol.handle("app", (request) => {
 		const url = new URL(request.url);

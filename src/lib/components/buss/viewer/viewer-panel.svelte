@@ -23,7 +23,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { FolderOpen } from "@lucide/svelte";
 
-	const { attachmentsService } = window.service;
+	const { attachments } = window.electronAPI;
 
 	const { attachment, isOpen, onClose }: ViewerPanelProps = $props();
 
@@ -46,8 +46,8 @@
 				variant="ghost"
 				size="icon"
 				onclick={() => {
-					console.log("attachmentsService", attachmentsService);
-					attachmentsService.openExternal("https://302.ai");
+					console.log("attachments", attachments);
+					attachments.openExternal("https://302.ai");
 				}}
 				>1
 				<FolderOpen />
@@ -56,8 +56,8 @@
 				variant="ghost"
 				size="icon"
 				onclick={() => {
-					console.log("attachmentsService", attachmentsService);
-					attachmentsService.openExternal2("https://302.ai");
+					console.log("attachments", attachments);
+					attachments.openExternal2("https://302.ai");
 				}}
 				>2
 				<FolderOpen />
@@ -66,8 +66,8 @@
 				variant="ghost"
 				size="icon"
 				onclick={() => {
-					console.log("attachmentsService", attachmentsService);
-					attachmentsService.openExternal3("https://302.ai");
+					console.log("attachments", attachments);
+					attachments.openExternal3("https://302.ai");
 				}}
 				>3
 				<FolderOpen />

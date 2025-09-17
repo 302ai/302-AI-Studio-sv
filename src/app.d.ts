@@ -1,4 +1,5 @@
 import type { Theme } from "@electron/shared/types";
+import type { ElectronAPIExtension } from "../generated/preload-services";
 
 declare global {
 	namespace App {}
@@ -10,7 +11,7 @@ declare global {
 				onThemeChange: (callback: (theme: Theme) => void) => void;
 				getCurrentTheme: () => Promise<Theme>;
 			};
-		};
+		} & ElectronAPIExtension;
 		service: {
 			attachmentsService: {
 				openExternal: (url: string) => Promise<void>;
