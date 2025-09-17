@@ -76,7 +76,7 @@ const createWindow = () => {
 		updateTitleBarOverlay();
 	});
 
-	ipcMain.on("app:theme:setTheme", (event, theme: Theme) => {
+	ipcMain.on("app:theme:setTheme", (_, theme: Theme) => {
 		nativeTheme.themeSource = theme;
 		mainWindow.webContents.send("app:theme:setTheme", theme);
 	});

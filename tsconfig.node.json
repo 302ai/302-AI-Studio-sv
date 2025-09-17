@@ -2,7 +2,9 @@
 	"extends": ["@electron-toolkit/tsconfig/tsconfig.node.json", "./tsconfig.json"],
 	"compilerOptions": {
 		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true
+		"emitDecoratorMetadata": true,
+		"moduleResolution": "bundler",
+		"composite": true
 	},
 	"include": ["electron/**/*"]
 }

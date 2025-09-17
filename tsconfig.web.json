@@ -5,10 +5,15 @@
 		"@electron-toolkit/tsconfig/tsconfig.web.json"
 	],
 	"compilerOptions": {
+		"moduleResolution": "bundler",
+		"composite": true,
+		"noEmit": false,
 		"paths": {
 			"$lib": ["src/lib"],
 			"$lib/*": ["src/lib/*"],
-			"$app/types": [".svelte-kit/types/index.d.ts"]
+			"$app/types": [".svelte-kit/types/index.d.ts"],
+			"@shared/*": ["electron/shared/*"]
 		}
-	}
+	},
+	"include": ["src/**/*", "electron/**/*"]
 }

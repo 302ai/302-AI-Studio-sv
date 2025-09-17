@@ -63,6 +63,7 @@
 			console.warn("Error setting up ResizeObserver:", error);
 			const width = triggerRef.parentElement.clientWidth;
 			isCompact = width < COMPACT_THRESHOLD_PX;
+			return;
 		}
 	});
 

@@ -16,6 +16,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@shared": path.resolve(__dirname, "./electron/shared"),
+			"@electron": path.resolve(__dirname, "./electron"),
 		},
 	},
 });

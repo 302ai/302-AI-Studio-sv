@@ -77,10 +77,11 @@
 	$effect(() => {
 		if (shouldRender) {
 			document.addEventListener("keydown", handleKeydown);
-			return () => {
-				document.removeEventListener("keydown", handleKeydown);
-			};
 		}
+
+		return () => {
+			document.removeEventListener("keydown", handleKeydown);
+		};
 	});
 </script>
 
