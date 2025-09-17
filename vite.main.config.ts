@@ -3,11 +3,11 @@ import { defineConfig } from "vite";
 // https://vitejs.dev/config
 export default defineConfig({
 	build: {
-		outDir: ".vite/build",
+		outDir: ".vite/build/main",
 		lib: {
 			formats: ["es"],
-			entry: "electron/main.ts",
-			fileName: "main",
+			entry: "electron/main/index.ts",
+			fileName: "index",
 		},
 	},
 });

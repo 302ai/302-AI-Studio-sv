@@ -5,7 +5,7 @@
 	"private": true,
 	"version": "0.0.1",
 	"type": "module",
-	"main": ".vite/build/main.js",
+	"main": ".vite/build/main/index.js",
 	"author": {
 		"name": "Pandoks_",
 		"email": "35944715+Pandoks@users.noreply.github.com"
