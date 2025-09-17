@@ -1,9 +1,13 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
 
-import { app, BrowserWindow, net, protocol } from "electron";
+import { app, BrowserWindow, nativeImage, nativeTheme, net, protocol } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
-
+import windowStateKeeper from "electron-window-state";
+import { WINDOW_SIZE } from "./shared/constants";
+import { isDev, isLinux, isMac, isWin } from "./constant";
+import { titleBarOverlayDark, titleBarOverlayLight } from "./shared/config";
+const { shouldUseDarkColors } = nativeTheme;
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
 ]);
@@ -14,14 +18,47 @@ if (started) {
 }
 
 const createWindow = () => {
+	const mainWindowState = windowStateKeeper({
+		defaultWidth: WINDOW_SIZE.MIN_WIDTH,
+		defaultHeight: WINDOW_SIZE.MIN_HEIGHT,
+		fullScreen: false,
+		maximize: false,
+	});
 	// Create the browser window.
 	const mainWindow = new BrowserWindow({
-		width: 800,
-		height: 600,
+		x: mainWindowState.x,
+		y: mainWindowState.y,
+		width: mainWindowState.width,
+		height: mainWindowState.height,
+		minWidth: WINDOW_SIZE.MIN_WIDTH,
+		minHeight: WINDOW_SIZE.MIN_HEIGHT,
+		autoHideMenuBar: true,
+		transparent: isMac,
+		frame: isLinux ? false : undefined,
+		visualEffectState: "active",
+		titleBarStyle: isMac ? "hiddenInset" : "hidden",
+		titleBarOverlay: !isMac
+			? shouldUseDarkColors
+				? titleBarOverlayDark
+				: titleBarOverlayLight
+			: undefined,
+		backgroundColor: shouldUseDarkColors ? "#121212" : "#FFFFFF",
+		trafficLightPosition: isMac ? { x: 12, y: 12 } : undefined,
+		...(isLinux && {
+			thickFrame: false,
+			resizable: true,
+			skipTaskbar: false,
+		}),
 		webPreferences: {
 			preload: path.join(import.meta.dirname, "preload.js"),
+			sandbox: false,
+			devTools: isDev,
+			webgl: true,
 		},
+		roundedCorners: true,
 	});
+
+	mainWindowState.manage(mainWindow);
 
 	// and load the index.html of the app.
 	if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {

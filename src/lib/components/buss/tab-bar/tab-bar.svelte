@@ -132,6 +132,7 @@
 <div
 	class={cn("h-tabbar bg-tabbar-bg/50 flex w-full items-center border-b", className)}
 	role="tablist"
+	style="app-region: drag;"
 	aria-label={m.label_button_new_tab() ?? "Tab bar"}
 >
 	<div
@@ -204,6 +205,7 @@
 				variant="ghost"
 				size="icon"
 				class="size-tab-new hover:!bg-tab-btn-hover-inactive bg-transparent transition-colors"
+				style="app-region: no-drag;"
 				onclick={handleNewTab}
 			>
 				<Plus class="size-tab-icon" />

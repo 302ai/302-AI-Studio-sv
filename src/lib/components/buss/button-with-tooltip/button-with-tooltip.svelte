@@ -8,6 +8,7 @@
 		variant?: ButtonVariant;
 		size?: ButtonSize;
 		class?: string;
+		style?: string;
 		disabled?: boolean;
 		onclick?: (event: MouseEvent) => void;
 		children?: Snippet;
@@ -30,6 +31,7 @@
 		variant = "ghost",
 		size = "icon",
 		class: className,
+		style,
 		disabled,
 		onclick,
 		children,
@@ -40,7 +42,7 @@
 
 <TooltipProvider>
 	<Tooltip>
-		<TooltipTrigger class={cn(buttonClass, "group rounded-[10px]")} {disabled} {onclick}>
+		<TooltipTrigger class={cn(buttonClass, "group rounded-[10px]")} {disabled} {onclick} {style}>
 			{@render children?.()}
 		</TooltipTrigger>
 		<TooltipContent

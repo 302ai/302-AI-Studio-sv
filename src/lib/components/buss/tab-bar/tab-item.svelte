@@ -83,6 +83,7 @@
 			"overflow-hidden",
 			className,
 		)}
+		style="app-region: no-drag;"
 		onclick={() => onTabClick(tab)}
 		role="button"
 		tabindex={0}

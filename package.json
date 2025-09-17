@@ -92,6 +92,7 @@
 		"@sveltejs/adapter-static": "^3.0.9",
 		"date-fns": "^4.1.0",
 		"electron-squirrel-startup": "^1.0.1",
+		"electron-window-state": "^5.0.3",
 		"highlight.js": "^11.11.1",
 		"ldrs": "^1.1.7",
 		"mode-watcher": "^1.1.0",
