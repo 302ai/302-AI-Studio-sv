@@ -5,7 +5,6 @@
 		attachment: AttachmentFile;
 		isOpen: boolean;
 		onClose: () => void;
-		onDownload?: (attachment: AttachmentFile) => void;
 	}
 </script>
 
@@ -21,6 +20,10 @@
 		VideoViewer,
 	} from "./index";
 	import { formatFileSize, getViewerType } from "./viewer-utils";
+	import { Button } from "$lib/components/ui/button";
+	import { FolderOpen } from "@lucide/svelte";
+
+	const { attachmentsService } = window.service;
 
 	const { attachment, isOpen, onClose }: ViewerPanelProps = $props();
 
@@ -38,6 +41,17 @@
 			<span class="text-muted-foreground">
 				{formatFileSize(attachment.size)}
 			</span>
+
+			<Button
+				variant="ghost"
+				size="icon"
+				onclick={() => {
+					console.log("attachmentsService", attachmentsService);
+					attachmentsService.openExternal("https://302.ai");
+				}}
+			>
+				<FolderOpen />
+			</Button>
 		</div>
 
 		<div class="flex flex-1 items-center justify-center overflow-hidden">

@@ -1,12 +1,13 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
 
-import { app, BrowserWindow, ipcMain, nativeImage, nativeTheme, net, protocol } from "electron";
+import { app, BrowserWindow, ipcMain, nativeTheme, net, protocol } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import windowStateKeeper from "electron-window-state";
 import { PLATFORM, ENVIRONMENT, WINDOW_SIZE } from "../constants";
 import type { Theme } from "../shared/types";
 import { CONFIG } from "../constants";
+import { initMainBridge } from "../bridge";
 const { shouldUseDarkColors } = nativeTheme;
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
@@ -22,7 +23,9 @@ function updateTitleBarOverlay() {
 
 	BrowserWindow.getAllWindows().forEach((window) => {
 		window.setTitleBarOverlay(
-			nativeTheme.shouldUseDarkColors ? CONFIG.TITLE_BAR_OVERLAY.DARK : CONFIG.TITLE_BAR_OVERLAY.LIGHT,
+			nativeTheme.shouldUseDarkColors
+				? CONFIG.TITLE_BAR_OVERLAY.DARK
+				: CONFIG.TITLE_BAR_OVERLAY.LIGHT,
 		);
 	});
 }
@@ -97,6 +100,9 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
+	// Initialize the bridge for IPC communication
+	initMainBridge();
+
 	protocol.handle("app", (request) => {
 		const url = new URL(request.url);
 		const filePath = url.pathname.substring(1); // 移除开头的 /

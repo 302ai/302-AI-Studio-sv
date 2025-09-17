@@ -9,8 +9,7 @@
 	import { Paperclip } from "@lucide/svelte";
 	import { nanoid } from "nanoid";
 
-	let attachments = $derived(chatState.attachments);
-	let isMaxReached = $derived(attachments.length >= MAX_ATTACHMENT_COUNT);
+	let isMaxReached = $derived(chatState.attachments.length >= MAX_ATTACHMENT_COUNT);
 	let fileInput: HTMLInputElement;
 
 	async function generatePreview(file: File): Promise<string | undefined> {
@@ -74,11 +73,15 @@
 		const newAttachments: AttachmentFile[] = [];
 
 		for (const file of Array.from(files)) {
-			if (attachments.length + newAttachments.length >= MAX_ATTACHMENT_COUNT) {
+			if (chatState.attachments.length + newAttachments.length >= MAX_ATTACHMENT_COUNT) {
 				break;
 			}
 
 			const preview = await generatePreview(file);
+
+			// 获取文件的系统路径
+			const filePath = (file as File & { path?: string }).path || file.name;
+
 			const attachment: AttachmentFile = {
 				id: nanoid(),
 				name: file.name,
@@ -86,6 +89,7 @@
 				size: file.size,
 				file: file,
 				preview,
+				filePath,
 			};
 
 			newAttachments.push(attachment);
@@ -113,7 +117,7 @@
 
 <ButtonWithTooltip
 	class="hover:!bg-chat-action-hover"
-	tooltip={`${m.title_upload_attachment()} (${attachments.length}/${MAX_ATTACHMENT_COUNT})`}
+	tooltip={`${m.title_upload_attachment()} (${chatState.attachments.length}/${MAX_ATTACHMENT_COUNT})`}
 	disabled={isMaxReached}
 	onclick={handleClick}
 >

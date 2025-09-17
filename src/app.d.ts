@@ -11,6 +11,11 @@ declare global {
 				getCurrentTheme: () => Promise<Theme>;
 			};
 		};
+		service: {
+			attachmentsService: {
+				openExternal: (url: string) => Promise<void>;
+			};
+		};
 	}
 }
 

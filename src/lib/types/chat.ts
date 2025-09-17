@@ -23,6 +23,7 @@ export interface AttachmentFile {
 	size: number;
 	file: File;
 	preview?: string;
+	filePath: string;
 }
 
 export interface ChatMessage {

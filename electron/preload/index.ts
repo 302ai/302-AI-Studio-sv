@@ -1,12 +1,28 @@
+import { initPreloadBridge } from "../bridge";
 import { contextBridge, ipcRenderer } from "electron";
 import type { Theme } from "../shared/types";
 
-contextBridge.exposeInMainWorld("electronAPI", {
-	theme: {
-		setTheme: (theme: Theme) => ipcRenderer.send("app:theme:setTheme", theme),
-		onThemeChange: (callback: (theme: Theme) => void) => {
-			ipcRenderer.on("app:theme:setTheme", (_, theme) => callback(theme));
-		},
-		getCurrentTheme: () => ipcRenderer.invoke("app:theme:getCurrentTheme"),
-	},
-});
+const api = {};
+
+// Use `contextBridge` APIs to expose Electron APIs to
+// renderer only if context isolation is enabled, otherwise
+// just add to the DOM global.
+if (process.contextIsolated) {
+	try {
+		contextBridge.exposeInMainWorld("electronAPI", {
+			theme: {
+				setTheme: (theme: Theme) => ipcRenderer.send("app:theme:setTheme", theme),
+				onThemeChange: (callback: (theme: Theme) => void) => {
+					ipcRenderer.on("app:theme:setTheme", (_, theme) => callback(theme));
+				},
+				getCurrentTheme: () => ipcRenderer.invoke("app:theme:getCurrentTheme"),
+			},
+		});
+		contextBridge.exposeInMainWorld("service", initPreloadBridge());
+	} catch (error) {
+		console.error("Preload: Error exposing services", { error });
+	}
+} else {
+	// @ts-expect-error (define in dts)
+	window.api = api;
+}
