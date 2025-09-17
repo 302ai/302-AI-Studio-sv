@@ -16,7 +16,11 @@
 	];
 </script>
 
-<Sidebar.Root collapsible="offcanvas" variant="sidebar" class="top-10">
+<Sidebar.Root
+	collapsible="offcanvas"
+	variant="sidebar"
+	class="top-[calc(env(titlebar-area-height,40px)+1px)]"
+>
 	<Sidebar.Header>
 		<h2 class="px-4 text-lg font-semibold">AI Studio</h2>
 	</Sidebar.Header>

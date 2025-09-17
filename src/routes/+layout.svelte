@@ -124,7 +124,7 @@
 		onNewTab={handleNewTab}
 	/>
 
-	<main class="h-[calc(100vh---spacing(10))] overflow-hidden">
+	<main class="h-[calc(100vh-env(titlebar-area-height,40px)-1px)] overflow-hidden">
 		{@render children?.()}
 	</main>
 </div>
