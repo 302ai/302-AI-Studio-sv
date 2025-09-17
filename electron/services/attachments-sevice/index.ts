@@ -1,4 +1,4 @@
-import { ServiceRegister, ServiceHandler } from "../../reflect";
+import { ServiceRegister, ServiceHandler } from "@electron/reflect";
 import { shell } from "electron";
 
 @ServiceRegister("attachmentsService")

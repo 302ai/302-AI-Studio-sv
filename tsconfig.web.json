@@ -1,0 +1,14 @@
+{
+	"extends": [
+		"./tsconfig.json",
+		"./.svelte-kit/tsconfig.json",
+		"@electron-toolkit/tsconfig/tsconfig.web.json"
+	],
+	"compilerOptions": {
+		"paths": {
+			"$lib": ["src/lib"],
+			"$lib/*": ["src/lib/*"],
+			"$app/types": [".svelte-kit/types/index.d.ts"]
+		}
+	}
+}

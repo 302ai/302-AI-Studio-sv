@@ -1,4 +1,4 @@
-import type { Theme } from "../electron/shared/types";
+import type { Theme } from "@electron/shared/types";
 
 declare global {
 	namespace App {}

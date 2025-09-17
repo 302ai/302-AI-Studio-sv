@@ -1,11 +1,8 @@
 {
-	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
 		"allowJs": true,
 		"checkJs": true,
 		"esModuleInterop": true,
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true,
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
@@ -15,10 +12,16 @@
 		"baseUrl": ".",
 		"paths": {
 			"@shared/*": ["electron/shared/*"],
-			"$lib": ["src/lib"],
-			"$lib/*": ["src/lib/*"],
-			"$app/types": [".svelte-kit/types/index.d.ts"],
 			"@electron/*": ["./electron/*"]
 		}
-	}
+	},
+	"files": [],
+	"references": [
+		{
+			"path": "./tsconfig.node.json"
+		},
+		{
+			"path": "./tsconfig.web.json"
+		}
+	]
 }
