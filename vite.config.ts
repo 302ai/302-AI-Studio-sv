@@ -3,7 +3,7 @@ import { sveltekit } from "@sveltejs/kit/vite";
 import { defineConfig } from "vite";
 import { paraglideVitePlugin } from "@inlang/paraglide-js";
 import path from "path";
-import ipcServiceGenerator from "./vite-plugins/ipc-service-generator";
+import { ipcServiceGenerator } from "./vite-plugins/ipc-service-generator";
 
 export default defineConfig({
 	plugins: [
@@ -14,8 +14,8 @@ export default defineConfig({
 			outdir: "./src/lib/paraglide",
 		}),
 		ipcServiceGenerator({
-			servicesDir: "electron/services",
-			outputDir: "electron/generated",
+			servicesDir: "electron/main/services",
+			outputDir: "electron/main/generated",
 			channelPrefix: "app:",
 			formatCommand: "pnpm prettier --write",
 		}),

@@ -4,10 +4,10 @@ import { app, BrowserWindow, ipcMain, nativeTheme, net, protocol } from "electro
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import windowStateKeeper from "electron-window-state";
-import { PLATFORM, WINDOW_SIZE } from "../constants";
+import { ENVIRONMENT, PLATFORM, WINDOW_SIZE } from "./constants";
 import type { Theme } from "../shared/types";
-import { CONFIG } from "../constants";
-import { registerIpcHandlers } from "../generated/ipc-registration";
+import { CONFIG } from "./constants";
+import { registerIpcHandlers } from "./generated/ipc-registration";
 const { shouldUseDarkColors } = nativeTheme;
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
@@ -64,9 +64,7 @@ const createWindow = () => {
 		}),
 		webPreferences: {
 			preload: path.join(import.meta.dirname, "../preload/index.js"),
-			// sandbox: false,
-			// devTools: ENVIRONMENT.IS_DEV,
-			devTools: true,
+			devTools: ENVIRONMENT.IS_DEV,
 			webgl: true,
 		},
 		roundedCorners: true,

@@ -12,8 +12,8 @@ import type { IpcServiceGeneratorOptions } from "./types";
  */
 export function ipcServiceGenerator(options: IpcServiceGeneratorOptions = {}): Plugin {
 	const {
-		servicesDir = "electron/services",
-		outputDir = "generated",
+		servicesDir = "electron/main/services",
+		outputDir = "electron/main/generated",
 		formatCommand = false,
 	} = options;
 
@@ -105,6 +105,10 @@ export function ipcServiceGenerator(options: IpcServiceGeneratorOptions = {}): P
 		name: "ipc-service-generator",
 		configResolved(resolvedConfig) {
 			config = resolvedConfig;
+		},
+		buildStart() {
+			// Generate files at the start of build
+			generateFiles(config);
 		},
 		handleHotUpdate(ctx) {
 			// Only handle TypeScript files in the services directory
