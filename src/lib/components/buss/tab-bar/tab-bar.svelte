@@ -11,6 +11,7 @@
 		onNewTab: () => void;
 		class?: string;
 		autoStretch?: boolean;
+		showNewTabButton?: boolean;
 	}
 
 	const ANIMATION_CONSTANTS = {
@@ -46,9 +47,15 @@
 		onNewTab,
 		class: className,
 		autoStretch = false,
+		showNewTabButton = true,
 	}: Props = $props();
 
 	let draggedElementId = $state<string | null>(null);
+	let containerRef = $state<HTMLElement | null>(null);
+	let isDraggedOutside = $state(false);
+	let shouldDetachTab = $state(false);
+	let draggedTabData = $state<Tab | null>(null);
+	let lastMousePosition = $state<{ x: number; y: number } | null>(null);
 	const buttonSpring = new Spring({ opacity: 1, x: 0 }, { stiffness: 0.2, damping: 0.8 });
 	const buttonBounceSpring = new Spring({ x: 0 }, { stiffness: 0.4, damping: 0.6 });
 
@@ -58,6 +65,44 @@
 
 	const tabsCountDiff = $derived(tabs.length - previousTabsLength);
 	const shouldAnimateCloseTab = $derived(tabsCountDiff < 0 && !isAnimating);
+
+	function checkDragPosition(clientX: number, clientY: number): boolean {
+		if (!containerRef) return false;
+
+		const rect = containerRef.getBoundingClientRect();
+		const threshold = 0.5; // 50% threshold
+
+		// Check if dragged outside horizontally by 50%
+		const leftThreshold = rect.left - rect.width * threshold;
+		const rightThreshold = rect.right + rect.width * threshold;
+		const isOutsideHorizontally = clientX < leftThreshold || clientX > rightThreshold;
+
+		// Check if dragged outside vertically by 50%
+		const topThreshold = rect.top - rect.height * threshold;
+		const bottomThreshold = rect.bottom + rect.height * threshold;
+		const isOutsideVertically = clientY < topThreshold || clientY > bottomThreshold;
+
+		return isOutsideHorizontally || isOutsideVertically;
+	}
+
+	function handleDragMove(event: MouseEvent) {
+		if (!draggedElementId) return;
+
+		// Store mouse position for window creation
+		lastMousePosition = { x: event.clientX, y: event.clientY };
+
+		const shouldDetach = checkDragPosition(event.clientX, event.clientY);
+		if (shouldDetach !== isDraggedOutside) {
+			isDraggedOutside = shouldDetach;
+
+			// Visual feedback for detach state
+			if (shouldDetach && draggedTabData) {
+				document.body.style.cursor = 'grabbing';
+			} else {
+				document.body.style.cursor = '';
+			}
+		}
+	}
 
 	function handleNewTab() {
 		if (isAnimating) return;
@@ -85,8 +130,14 @@
 			buttonSpring.target = { opacity: 0.3, x: 8 };
 			const draggedTab = tabs.find((tab) => tab.id === info.id);
 			if (draggedTab) {
+				draggedTabData = draggedTab;
 				onTabClick(draggedTab);
 			}
+
+			// Add mouse move listener for detach detection
+			document.addEventListener('mousemove', handleDragMove);
+			isDraggedOutside = false;
+			shouldDetachTab = false;
 		}
 
 		const hasOrderChanged = newItems.some((item, index) => item.id !== tabs[index]?.id);
@@ -96,17 +147,76 @@
 		isDndFinalizing = true;
 
 		try {
+			// Remove mouse move listener
+			document.removeEventListener('mousemove', handleDragMove);
+			document.body.style.cursor = '';
+
+			// Check if tab should be detached to new window
+			if (isDraggedOutside && draggedTabData) {
+				shouldDetachTab = true;
+				handleTabDetach(draggedTabData);
+			} else {
+				// Normal reordering
+				tabs = e.detail.items;
+			}
+
 			draggedElementId = null;
-			tabs = e.detail.items;
+			draggedTabData = null;
+			isDraggedOutside = false;
+			lastMousePosition = null;
 			buttonSpring.target = { opacity: 1, x: 0 };
 		} catch (error) {
 			console.error("Error finalizing drag operation:", error);
 		} finally {
 			queueMicrotask(() => {
 				isDndFinalizing = false;
+				shouldDetachTab = false;
 			});
 		}
 	}
+
+	async function handleTabDetach(tab: Tab) {
+		try {
+			// Check if window API is available (in Electron environment)
+			if (window.electronAPI?.window?.createDetachedWindow) {
+				// Create a completely clean serializable version of the tab
+				const serializableTab = {
+					id: String(tab.id),
+					title: String(tab.title),
+					href: String(tab.href),
+					closable: Boolean(tab.closable)
+				};
+
+				// Create a clean serializable version of mouse position
+				const serializableMousePosition = lastMousePosition ? {
+					x: Number(lastMousePosition.x),
+					y: Number(lastMousePosition.y)
+				} : null;
+
+				console.log('Detaching tab:', JSON.stringify(serializableTab), 'at position:', JSON.stringify(serializableMousePosition));
+
+				if (serializableMousePosition) {
+					await window.electronAPI.window.createDetachedWindow(serializableTab, serializableMousePosition);
+				} else {
+					await window.electronAPI.window.createDetachedWindow(serializableTab);
+				}
+
+				// Remove the tab from current window
+				tabs = tabs.filter(t => t.id !== tab.id);
+
+				// Update active tab if necessary
+				if (activeTabId === tab.id && tabs.length > 0) {
+					const newActiveTab = tabs[Math.max(0, tabs.length - 1)];
+					activeTabId = newActiveTab.id;
+				}
+			} else {
+				console.warn('Tab detach functionality not available in this environment');
+			}
+		} catch (error) {
+			console.error('Error detaching tab:', error);
+		}
+	}
+
 	function transformDraggedElement(element?: HTMLElement) {
 		if (!element) return;
 
@@ -139,6 +249,7 @@
 	aria-label={m.label_button_new_tab() ?? "Tab bar"}
 >
 	<div
+		bind:this={containerRef}
 		class="gap-tab-gap px-tabbar-x flex min-w-0 items-center overflow-x-hidden w-[calc(env(titlebar-area-width,100%)-10px)]"
 		use:dndzone={{
 			items: tabs,
@@ -192,27 +303,29 @@
 			</div>
 		{/each}
 
-		<div
-			class="flex shrink-0 items-center"
-			style="opacity: {buttonSpring.current.opacity}; transform: translateX({buttonSpring.current
-				.x + buttonBounceSpring.current.x}px);"
-		>
-			<Separator
-				orientation="vertical"
-				class={cn("mx-0.5 !h-[20px] !w-0.5", tabs.length === 0 ? "opacity-0" : "opacity-100")}
-				style="cursor: none !important;"
-			/>
-			<ButtonWithTooltip
-				tooltip={m.label_button_new_tab()}
-				tooltipSide="bottom"
-				variant="ghost"
-				size="icon"
-				class="size-tab-new hover:!bg-tab-btn-hover-inactive bg-transparent transition-colors"
-				style="app-region: no-drag;"
-				onclick={handleNewTab}
+		{#if showNewTabButton}
+			<div
+				class="flex shrink-0 items-center"
+				style="opacity: {buttonSpring.current.opacity}; transform: translateX({buttonSpring.current
+					.x + buttonBounceSpring.current.x}px);"
 			>
-				<Plus class="size-tab-icon" />
-			</ButtonWithTooltip>
-		</div>
+				<Separator
+					orientation="vertical"
+					class={cn("mx-0.5 !h-[20px] !w-0.5", tabs.length === 0 ? "opacity-0" : "opacity-100")}
+					style="cursor: none !important;"
+				/>
+				<ButtonWithTooltip
+					tooltip={m.label_button_new_tab()}
+					tooltipSide="bottom"
+					variant="ghost"
+					size="icon"
+					class="size-tab-new hover:!bg-tab-btn-hover-inactive bg-transparent transition-colors"
+					style="app-region: no-drag;"
+					onclick={handleNewTab}
+				>
+					<Plus class="size-tab-icon" />
+				</ButtonWithTooltip>
+			</div>
+		{/if}
 	</div>
 </div>

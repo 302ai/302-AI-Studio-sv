@@ -37,6 +37,7 @@
 	]);
 
 	let activeTabId = $state("home");
+	let isDetachedWindow = $state(false);
 
 	$effect(() => {
 		const currentPath = page.url.pathname;
@@ -74,6 +75,9 @@
 	}
 
 	function handleNewTab() {
+		// Don't create new tabs in detached windows
+		if (isDetachedWindow) return;
+
 		const chatId = `chat-${Date.now()}`;
 		const newTab: Tab = {
 			id: chatId,
@@ -95,6 +99,56 @@
 				setMode(currentTheme);
 			} catch (error) {
 				console.warn("Failed to get current theme from Electron:", error);
+			}
+		}
+
+		// Check if this window was created from a detached tab
+		const urlParams = new URLSearchParams(window.location.search);
+		const detachedTabParam = urlParams.get('detachedTab');
+
+		console.log("URL params:", window.location.search);
+		console.log("Detached tab param:", detachedTabParam);
+
+		if (detachedTabParam) {
+			try {
+				const detachedTab = JSON.parse(decodeURIComponent(detachedTabParam));
+				console.log("Parsed detached tab:", detachedTab);
+
+				// Mark this as a detached window
+				isDetachedWindow = true;
+
+				// Restore the icon based on tab type/href
+				let icon = homeIcon; // default icon
+				if (detachedTab.href?.includes('/chat/')) {
+					icon = messageIcon;
+				} else if (detachedTab.href?.includes('/settings')) {
+					icon = settingsIcon;
+				} else if (detachedTab.href?.includes('/dashboard')) {
+					icon = layoutIcon;
+				}
+
+				// Replace current tabs with only the detached tab (make it non-closable since it's the only tab)
+				const detachedTabWithIcon = {
+					...detachedTab,
+					closable: false,
+					icon: icon
+				};
+				tabs = [detachedTabWithIcon];
+				activeTabId = detachedTab.id;
+
+				console.log("Setting tabs to:", tabs);
+				console.log("Setting active tab to:", activeTabId);
+
+				// Set window title to match tab title
+				if (detachedTab.title) {
+					document.title = `${detachedTab.title} - 302-AI-Studio-SV`;
+				}
+
+				// Navigate to the tab's href
+				console.log("Navigating to:", detachedTab.href);
+				goto(detachedTab.href);
+			} catch (error) {
+				console.error("Failed to parse detached tab data:", error);
 			}
 		}
 	});
@@ -135,6 +189,7 @@
 		onTabClose={handleTabClose}
 		onTabCloseAll={handleTabCloseAll}
 		onNewTab={handleNewTab}
+		showNewTabButton={!isDetachedWindow}
 	/>
 
 	<main class="h-[calc(100vh-env(titlebar-area-height,40px)-1px)] overflow-hidden">

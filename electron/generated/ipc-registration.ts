@@ -31,6 +31,9 @@ export function registerIpcHandlers() {
 		windowInstance.setWindowSize(event, width, height),
 	);
 	ipcMain.handle("app:window:sayHello", (event) => windowInstance.sayHello(event));
+	ipcMain.handle("app:window:createDetachedWindow", (event, tabData, mousePosition) =>
+		windowInstance.createDetachedWindow(event, tabData, mousePosition),
+	);
 }
 
 /**
@@ -48,4 +51,5 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("app:window:getWindowState");
 	ipcMain.removeHandler("app:window:setWindowSize");
 	ipcMain.removeHandler("app:window:sayHello");
+	ipcMain.removeHandler("app:window:createDetachedWindow");
 }
