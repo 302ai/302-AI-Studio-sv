@@ -1,5 +1,7 @@
 import { AttachmentsService } from "./attachments-sevice";
 import { WindowService } from "./window-service";
 import { AppService } from "./app-service";
+import { DeviceService } from "./device-service";
 import { StorageService } from "./storage-service";
-export { AttachmentsService, WindowService, AppService, StorageService };
+
+export { AttachmentsService, WindowService, AppService, StorageService, DeviceService };

@@ -140,8 +140,8 @@
 		showModelDialog = true;
 	}
 
-	function handleModelDelete(model: Model) {
-		const success = providerState.removeModel(model.id);
+	async function handleModelDelete(model: Model) {
+		const success = await providerState.removeModel(model.id);
 		if (success) {
 			modelsState = modelsState.filter((m) => m.id !== model.id);
 		}
@@ -159,12 +159,12 @@
 		editingModel = undefined;
 	}
 
-	function handleDialogSave(data: Model | ModelCreateInput) {
+	async function handleDialogSave(data: Model | ModelCreateInput) {
 		if (!currentProvider) return;
 
 		try {
 			if (dialogMode === "add") {
-				const newModel = providerState.addModel({
+				const newModel = await providerState.addModel({
 					id: data.id,
 					name: data.name,
 					remark: data.remark,
@@ -180,7 +180,7 @@
 
 				toast.success(m.text_model_add_success({ name: newModel.name }));
 			} else if (editingModel) {
-				const success = providerState.updateModel(editingModel.id, {
+				const success = await providerState.updateModel(editingModel.id, {
 					id: data.id,
 					name: data.name,
 					remark: data.remark,
@@ -206,8 +206,8 @@
 		}
 	}
 
-	function handleModelToggleCollected(model: Model) {
-		const success = providerState.toggleModelCollected(model.id);
+	async function handleModelToggleCollected(model: Model) {
+		const success = await providerState.toggleModelCollected(model.id);
 		if (success) {
 			const index = modelsState.findIndex((m) => m.id === model.id);
 			if (index !== -1) {
@@ -216,7 +216,7 @@
 		}
 	}
 
-	function handleModelDuplicate(model: Model) {
+	async function handleModelDuplicate(model: Model) {
 		if (!currentProvider) return;
 		let newId = `${model.id}_copy`;
 		let counter = 1;
@@ -224,7 +224,7 @@
 			newId = `${model.id}_copy_${counter}`;
 			counter++;
 		}
-		const duplicatedModel = providerState.addModel({
+		const duplicatedModel = await providerState.addModel({
 			id: newId,
 			name: `${model.name} (Copy)`,
 			remark: model.remark ? `${model.remark} (Copy)` : "",
@@ -238,9 +238,9 @@
 		modelsState = [...modelsState, duplicatedModel];
 	}
 
-	function handleClearModels() {
+	async function handleClearModels() {
 		if (!currentProvider) return;
-		const clearedCount = providerState.clearModelsByProvider(currentProvider.id);
+		const clearedCount = await providerState.clearModelsByProvider(currentProvider.id);
 		modelsState = [];
 		if (clearedCount > 0) {
 			toast.success(m.text_clear_models_success({ count: clearedCount.toString() }));

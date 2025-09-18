@@ -30,12 +30,15 @@
 	import { animateButtonBounce } from "$lib/utils/animation";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { Plus } from "@lucide/svelte";
-	import { onDestroy } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import { dndzone, TRIGGERS } from "svelte-dnd-action";
 	import { flip } from "svelte/animate";
 	import { Spring } from "svelte/motion";
 	import { scale } from "svelte/transition";
 	import TabItem from "./tab-item.svelte";
+	import type { Platform } from "@shared/types";
+
+	const { deviceService } = window.electronAPI;
 
 	let {
 		tabs = $bindable<Tab[]>(),
@@ -55,6 +58,7 @@
 	let previousTabsLength = $state(tabs.length);
 	let isAnimating = $state(false);
 	let isDndFinalizing = $state(false);
+	let isMac = $state(false);
 
 	const tabsCountDiff = $derived(tabs.length - previousTabsLength);
 	const shouldAnimateCloseTab = $derived(tabsCountDiff < 0 && !isAnimating);
@@ -121,6 +125,12 @@
 			console.warn("Error transforming dragged element:", error);
 		}
 	}
+
+	onMount(async () => {
+		const platform: Platform = await deviceService.getPlatform();
+		isMac = platform === "darwin";
+	});
+
 	onDestroy(() => {
 		buttonSpring.target = { opacity: 1, x: 0 };
 		buttonBounceSpring.target = { x: 0 };
@@ -139,7 +149,10 @@
 	aria-label={m.label_button_new_tab() ?? "Tab bar"}
 >
 	<div
-		class="gap-tab-gap px-tabbar-x flex min-w-0 items-center overflow-x-hidden w-[calc(env(titlebar-area-width,100%)-10px)]"
+		class={cn(
+			"gap-tab-gap px-tabbar-x flex min-w-0 items-center overflow-x-hidden w-[calc(env(titlebar-area-width,100%)-10px)]",
+			isMac && "pl-[80px]",
+		)}
 		use:dndzone={{
 			items: tabs,
 			flipDurationMs: 200,

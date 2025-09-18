@@ -61,8 +61,7 @@ export class TypeScriptServiceParser {
 	}
 
 	private getServiceName(className: string): string {
-		const serviceName = className.replace(/Service$/, "");
-		return serviceName.charAt(0).toLowerCase() + serviceName.slice(1);
+		return className.charAt(0).toLowerCase() + className.slice(1);
 	}
 
 	private getTypeText(typeNode: ts.TypeNode | undefined): string {

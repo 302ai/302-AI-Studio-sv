@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { resolve } from "$app/paths";
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
 	import { onMount } from "svelte";
@@ -95,7 +94,7 @@
 				{@const isSelected = isActiveTab(item.path)}
 				<a
 					bind:this={itemElements[index]}
-					href={resolve(item.path)}
+					href={item.path}
 					class={cn(
 						"px-settings-item-x py-settings-item-y flex w-full items-center rounded-lg text-sm font-medium whitespace-nowrap outline-hidden transition-colors",
 						"hover:bg-hover-primary",

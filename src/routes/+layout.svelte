@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
-	import { resolve } from "$app/paths";
 	import favicon from "$lib/assets/favicon.svg";
 	import { TabBar, type Tab } from "$lib/components/buss/tab-bar";
 	import { Toaster } from "$lib/components/ui/sonner";
@@ -14,7 +13,7 @@
 	import "../app.css";
 
 	const { children } = $props();
-	const { app } = window.electronAPI;
+	const { appService } = window.electronAPI;
 	const { onThemeChange } = window.electronIPC;
 
 	let tabs = $state<Tab[]>([
@@ -53,7 +52,7 @@
 
 	function handleTabClick(tab: Tab) {
 		activeTabId = tab.id;
-		goto(resolve(tab.href));
+		goto(tab.href);
 	}
 
 	function handleTabClose(tab: Tab) {
@@ -64,7 +63,7 @@
 				const newIndex = Math.min(index, tabs.length - 1);
 				const newTab = tabs[newIndex];
 				activeTabId = newTab.id;
-				goto(resolve(newTab.href));
+				goto(newTab.href);
 			}
 		}
 	}
@@ -74,7 +73,7 @@
 		if (unclosableTabs.length > 0) {
 			tabs = unclosableTabs;
 			activeTabId = unclosableTabs[0].id;
-			goto(resolve(unclosableTabs[0].href));
+			goto(unclosableTabs[0].href);
 		}
 	}
 
@@ -89,7 +88,7 @@
 		};
 		tabs = [...tabs, newTab];
 		activeTabId = newTab.id;
-		goto(resolve(newTab.href));
+		goto(newTab.href);
 	}
 
 	onMount(async () => {
@@ -97,9 +96,9 @@
 		await providerState.initialize();
 
 		// Get current theme from Electron and apply it
-		if (app) {
+		if (appService) {
 			try {
-				const currentTheme = await app.getCurrentTheme();
+				const currentTheme = await appService.getCurrentTheme();
 				setMode(currentTheme);
 			} catch (error) {
 				console.warn("Failed to get current theme from Electron:", error);

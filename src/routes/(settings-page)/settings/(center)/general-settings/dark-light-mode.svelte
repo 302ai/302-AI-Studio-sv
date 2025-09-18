@@ -7,7 +7,7 @@
 	import { onMount } from "svelte";
 	import type { Theme } from "@shared/types";
 
-	const { app } = window.electronAPI;
+	const { appService } = window.electronAPI;
 
 	let selectedKey = "system";
 	const themeOptions = [
@@ -36,16 +36,16 @@
 		setMode(key as "light" | "dark" | "system");
 
 		// Send theme change to electron main process
-		if (app) {
-			await app.setTheme(key as Theme);
+		if (appService) {
+			await appService.setTheme(key as Theme);
 		}
 	}
 
 	onMount(async () => {
 		// Get current theme from electron
-		if (app) {
+		if (appService) {
 			try {
-				const currentTheme = await app.getCurrentTheme();
+				const currentTheme = await appService.getCurrentTheme();
 				selectedKey = currentTheme;
 				setMode(currentTheme);
 			} catch (error) {

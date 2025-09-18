@@ -13,8 +13,6 @@
 		"target": "esnext",
 		"moduleResolution": "bundler",
 		"baseUrl": ".",
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata": true,
 		"paths": {
 			"@shared/*": ["./shared/*"],
 			"@electron/*": ["./electron/*"],
