@@ -5,7 +5,8 @@
 		"emitDecoratorMetadata": true,
 		"moduleResolution": "bundler",
 		"composite": true,
-		"noEmit": false
+		"noEmit": false,
+		"outDir": "./.tsout/node"
 	},
 	"include": ["electron/**/*"]
 }

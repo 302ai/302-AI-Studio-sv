@@ -9,7 +9,8 @@
 			"$lib/*": ["src/lib/*"],
 			"$app/types": [".svelte-kit/types/index.d.ts"],
 			"@shared/*": ["electron/shared/*"]
-		}
+		},
+		"outDir": "./.tsout/web"
 	},
 	"include": ["src/**/*", "electron/**/*"]
 }
