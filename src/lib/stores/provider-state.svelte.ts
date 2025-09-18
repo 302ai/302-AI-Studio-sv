@@ -5,49 +5,71 @@ import { nanoid } from "nanoid";
 import { getModelsByProvider, getAllModels } from "$lib/api/models.js";
 import { toast } from "svelte-sonner";
 import { m } from "$lib/paraglide/messages.js";
+import { asyncStorage } from "$lib/utils/storage-polyfill";
 
 class ProviderState {
 	providers = $state<ModelProvider[]>([]);
 	models = $state<Model[]>([]);
+	initialized = $state(false);
 
 	constructor() {
-		this.loadFromStorage();
+		// Don't auto-load in constructor, wait for explicit initialization
+		this.providers = [...DEFAULT_PROVIDERS];
+		this.models = [];
 	}
-	private loadFromStorage() {
-		const storedProviders = localStorage.getItem("ai-studio-providers");
-		if (storedProviders) {
-			try {
-				this.providers = JSON.parse(storedProviders);
-			} catch {
+
+	async initialize() {
+		if (!this.initialized) {
+			await this.loadFromStorage();
+		}
+	}
+	private async loadFromStorage() {
+		try {
+			const storedProviders = await asyncStorage.getItem("ai-studio-providers");
+			if (storedProviders) {
+				try {
+					this.providers = JSON.parse(storedProviders);
+				} catch {
+					this.providers = [...DEFAULT_PROVIDERS];
+				}
+			} else {
 				this.providers = [...DEFAULT_PROVIDERS];
 			}
-		} else {
-			this.providers = [...DEFAULT_PROVIDERS];
-		}
 
-		const storedModels = localStorage.getItem("ai-studio-models");
-		if (storedModels) {
-			try {
-				const parsedModels = JSON.parse(storedModels);
+			const storedModels = await asyncStorage.getItem("ai-studio-models");
+			if (storedModels) {
+				try {
+					const parsedModels = JSON.parse(storedModels);
 
-				this.models = parsedModels.map((model: { capabilities: string[] }) => ({
-					...model,
-					capabilities: new Set(model.capabilities || []),
-				}));
-			} catch {
+					this.models = parsedModels.map((model: { capabilities: string[] }) => ({
+						...model,
+						capabilities: new Set(model.capabilities || []),
+					}));
+				} catch {
+					this.models = [];
+				}
+			} else {
 				this.models = [];
 			}
-		} else {
+		} catch (error) {
+			console.warn("Failed to load from storage, using defaults:", error);
+			this.providers = [...DEFAULT_PROVIDERS];
 			this.models = [];
+		} finally {
+			this.initialized = true;
 		}
 	}
-	private saveToStorage() {
-		localStorage.setItem("ai-studio-providers", JSON.stringify(this.providers));
-		const modelsForStorage = this.models.map((model) => ({
-			...model,
-			capabilities: Array.from(model.capabilities),
-		}));
-		localStorage.setItem("ai-studio-models", JSON.stringify(modelsForStorage));
+	private async saveToStorage() {
+		try {
+			await asyncStorage.setItem("ai-studio-providers", JSON.stringify(this.providers));
+			const modelsForStorage = this.models.map((model) => ({
+				...model,
+				capabilities: Array.from(model.capabilities),
+			}));
+			await asyncStorage.setItem("ai-studio-models", JSON.stringify(modelsForStorage));
+		} catch (error) {
+			console.warn("Failed to save to storage:", error);
+		}
 	}
 	getProvider(id: string): ModelProvider | undefined {
 		return this.providers.find((p) => p.id === id);
@@ -55,21 +77,21 @@ class ProviderState {
 	getProviderByNameOrId(nameOrId: string): ModelProvider | undefined {
 		return this.providers.find((p) => p.name === nameOrId || p.id === nameOrId);
 	}
-	addProvider(provider: ModelProvider) {
+	async addProvider(provider: ModelProvider) {
 		this.providers = [...this.providers, provider];
-		this.saveToStorage();
+		await this.saveToStorage();
 	}
-	updateProvider(id: string, updates: Partial<ModelProvider>) {
+	async updateProvider(id: string, updates: Partial<ModelProvider>) {
 		this.providers = this.providers.map((p) => (p.id === id ? { ...p, ...updates } : p));
-		this.saveToStorage();
+		await this.saveToStorage();
 	}
-	removeProvider(id: string) {
+	async removeProvider(id: string) {
 		this.providers = this.providers.filter((p) => p.id !== id);
-		this.saveToStorage();
+		await this.saveToStorage();
 	}
-	reorderProviders(newOrder: ModelProvider[]) {
+	async reorderProviders(newOrder: ModelProvider[]) {
 		this.providers = [...newOrder];
-		this.saveToStorage();
+		await this.saveToStorage();
 	}
 	createCustomProvider(name: string = "自定义提供商"): ModelProvider {
 		const timestamp = Date.now();
@@ -92,9 +114,9 @@ class ProviderState {
 			icon: undefined,
 		};
 	}
-	resetToDefaults() {
+	async resetToDefaults() {
 		this.providers = [...DEFAULT_PROVIDERS];
-		this.saveToStorage();
+		await this.saveToStorage();
 	}
 	searchModelsByName(name: string): Model[] {
 		return this.models.filter((m) => m.name.toLowerCase().includes(name.toLowerCase()));
@@ -107,7 +129,7 @@ class ProviderState {
 			.filter((m) => m.providerId === providerId)
 			.sort((a, b) => a.name.localeCompare(b.name));
 	}
-	addModel(input: ModelCreateInput): Model {
+	async addModel(input: ModelCreateInput): Promise<Model> {
 		if (!input.id || !input.id.trim()) {
 			throw new Error("Model ID is required and cannot be empty");
 		}
@@ -129,10 +151,10 @@ class ProviderState {
 			collected: input.collected || false,
 		};
 		this.models = [...this.models, model];
-		this.saveToStorage();
+		await this.saveToStorage();
 		return model;
 	}
-	updateModel(id: string, updates: ModelUpdateInput): boolean {
+	async updateModel(id: string, updates: ModelUpdateInput): Promise<boolean> {
 		const modelIndex = this.models.findIndex((m) => m.id === id);
 		if (modelIndex === -1) return false;
 
@@ -145,19 +167,19 @@ class ProviderState {
 		}
 
 		this.models = this.models.map((m) => (m.id === id ? { ...m, ...updates } : m));
-		this.saveToStorage();
+		await this.saveToStorage();
 		return true;
 	}
-	removeModel(id: string): boolean {
+	async removeModel(id: string): Promise<boolean> {
 		const originalLength = this.models.length;
 		this.models = this.models.filter((m) => m.id !== id);
 		if (this.models.length !== originalLength) {
-			this.saveToStorage();
+			await this.saveToStorage();
 			return true;
 		}
 		return false;
 	}
-	addModels(models: ModelCreateInput[]): Model[] {
+	async addModels(models: ModelCreateInput[]): Promise<Model[]> {
 		const newModels: Model[] = models.map((input) => ({
 			id: nanoid(),
 			name: input.name,
@@ -170,45 +192,45 @@ class ProviderState {
 			collected: input.collected || false,
 		}));
 		this.models = [...this.models, ...newModels];
-		this.saveToStorage();
+		await this.saveToStorage();
 		return newModels;
 	}
-	toggleModelCollected(id: string): boolean {
+	async toggleModelCollected(id: string): Promise<boolean> {
 		const model = this.models.find((m) => m.id === id);
 		if (!model) return false;
 
 		this.models = this.models.map((m) => (m.id === id ? { ...m, collected: !m.collected } : m));
-		this.saveToStorage();
+		await this.saveToStorage();
 		return true;
 	}
-	toggleModelEnabled(id: string): boolean {
+	async toggleModelEnabled(id: string): Promise<boolean> {
 		const model = this.models.find((m) => m.id === id);
 		if (!model) return false;
 
 		this.models = this.models.map((m) => (m.id === id ? { ...m, enabled: !m.enabled } : m));
-		this.saveToStorage();
+		await this.saveToStorage();
 		return true;
 	}
-	removeModelsByProvider(providerId: string): number {
+	async removeModelsByProvider(providerId: string): Promise<number> {
 		const originalLength = this.models.length;
 		this.models = this.models.filter((m) => m.providerId !== providerId);
 		const removedCount = originalLength - this.models.length;
 		if (removedCount > 0) {
-			this.saveToStorage();
+			await this.saveToStorage();
 		}
 		return removedCount;
 	}
-	clearModelsByProvider(providerId: string): number {
-		return this.removeModelsByProvider(providerId);
+	async clearModelsByProvider(providerId: string): Promise<number> {
+		return await this.removeModelsByProvider(providerId);
 	}
 	async fetchModelsForProvider(provider: ModelProvider): Promise<boolean> {
 		try {
 			const result = await getModelsByProvider(provider);
 			if (result.success && result.data) {
-				this.updateProvider(provider.id, { status: "connected" });
-				this.removeModelsByProvider(provider.id);
+				await this.updateProvider(provider.id, { status: "connected" });
+				await this.removeModelsByProvider(provider.id);
 				this.models = [...this.models, ...result.data.models];
-				this.saveToStorage();
+				await this.saveToStorage();
 				toast.success(
 					m.text_fetch_models_success({
 						count: result.data.models.length.toString(),
@@ -217,7 +239,7 @@ class ProviderState {
 				);
 				return true;
 			} else {
-				this.updateProvider(provider.id, { status: "error" });
+				await this.updateProvider(provider.id, { status: "error" });
 				toast.error(m.text_fetch_models_error({ provider: provider.name }), {
 					description: result.error || m.text_fetch_models_unknown_error(),
 				});
@@ -225,7 +247,7 @@ class ProviderState {
 			}
 		} catch (error) {
 			console.error(`Failed to fetch models for provider ${provider.id}:`, error);
-			this.updateProvider(provider.id, { status: "error" });
+			await this.updateProvider(provider.id, { status: "error" });
 			toast.error(m.text_fetch_models_error({ provider: provider.name }), {
 				description: error instanceof Error ? error.message : m.text_fetch_models_network_error(),
 			});
@@ -237,7 +259,7 @@ class ProviderState {
 			const result = await getAllModels(this.providers);
 			if (result.success && result.data) {
 				this.models = result.data.models;
-				this.saveToStorage();
+				await this.saveToStorage();
 				return true;
 			}
 			return false;

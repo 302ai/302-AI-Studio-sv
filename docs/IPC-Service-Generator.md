@@ -21,26 +21,26 @@ import { defineConfig } from "vite";
 import ipcServiceGenerator from "./vite-plugins/ipc-service-generator";
 
 export default defineConfig({
-  plugins: [
-    ipcServiceGenerator({
-      servicesDir: "electron/services",    // 服务文件目录
-      outputDir: "electron/generated",     // 生成文件输出目录
-      channelPrefix: "app:",              // IPC 通道名称前缀
-      formatCommand: "pnpm prettier --write", // 代码格式化命令
-    }),
-  ],
+	plugins: [
+		ipcServiceGenerator({
+			servicesDir: "electron/services", // 服务文件目录
+			outputDir: "electron/generated", // 生成文件输出目录
+			channelPrefix: "app:", // IPC 通道名称前缀
+			formatCommand: "pnpm prettier --write", // 代码格式化命令
+		}),
+	],
 });
 ```
 
 ### 配置选项
 
-| 选项 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| `servicesDir` | `string` | `"electron/services"` | 服务文件所在目录 |
-| `outputDir` | `string` | `"generated"` | 生成文件的输出目录 |
-| `channelPrefix` | `string` | `""` | IPC 通道名称前缀 |
-| `methodFilter` | `(methodName: string) => boolean` | `undefined` | 方法过滤器函数 |
-| `formatCommand` | `string \| false` | `false` | 格式化命令，`false` 表示禁用格式化 |
+| 选项            | 类型                              | 默认值                | 描述                               |
+| --------------- | --------------------------------- | --------------------- | ---------------------------------- |
+| `servicesDir`   | `string`                          | `"electron/services"` | 服务文件所在目录                   |
+| `outputDir`     | `string`                          | `"generated"`         | 生成文件的输出目录                 |
+| `channelPrefix` | `string`                          | `""`                  | IPC 通道名称前缀                   |
+| `methodFilter`  | `(methodName: string) => boolean` | `undefined`           | 方法过滤器函数                     |
+| `formatCommand` | `string \| false`                 | `false`               | 格式化命令，`false` 表示禁用格式化 |
 
 ## 工作原理
 
@@ -52,35 +52,30 @@ export default defineConfig({
 
 ```typescript
 // electron/services/user-service/index.ts
-import { IpcMainInvokeEvent } from 'electron';
+import { IpcMainInvokeEvent } from "electron";
 
 export interface UserInfo {
-  id: number;
-  name: string;
-  email: string;
+	id: number;
+	name: string;
+	email: string;
 }
 
 export class UserService {
-  private users: UserInfo[] = [
-    { id: 1, name: 'Alice', email: 'alice@example.com' }
-  ];
+	private users: UserInfo[] = [{ id: 1, name: "Alice", email: "alice@example.com" }];
 
-  /**
-   * 获取用户信息 - 带IPC事件参数的方法
-   */
-  async getUserById(
-    _event: IpcMainInvokeEvent,
-    userId: number
-  ): Promise<UserInfo | null> {
-    return this.users.find(user => user.id === userId) || null;
-  }
+	/**
+	 * 获取用户信息 - 带IPC事件参数的方法
+	 */
+	async getUserById(_event: IpcMainInvokeEvent, userId: number): Promise<UserInfo | null> {
+		return this.users.find((user) => user.id === userId) || null;
+	}
 
-  /**
-   * 普通方法 - 不包含IPC事件参数，不会被插件处理
-   */
-  private validateEmail(email: string): boolean {
-    return email.includes('@');
-  }
+	/**
+	 * 普通方法 - 不包含IPC事件参数，不会被插件处理
+	 */
+	private validateEmail(email: string): boolean {
+		return email.includes("@");
+	}
 }
 ```
 
@@ -110,22 +105,22 @@ SourceFile
 ```typescript
 // parser.ts 中的核心逻辑
 ts.forEachChild(sourceFile, (node) => {
-  if (ts.isClassDeclaration(node) && node.name) {
-    const className = node.name.text; // "UserService"
-    const serviceName = this.getServiceName(className); // "userService"
+	if (ts.isClassDeclaration(node) && node.name) {
+		const className = node.name.text; // "UserService"
+		const serviceName = this.getServiceName(className); // "userService"
 
-    node.members.forEach((member) => {
-      if (ts.isMethodDeclaration(member) && member.name) {
-        const methodName = member.name.text; // "getUserById"
-        const parameters = this.parseMethodParameters(member);
-        const hasEventParam = parameters.some(p => p.isEventParam);
+		node.members.forEach((member) => {
+			if (ts.isMethodDeclaration(member) && member.name) {
+				const methodName = member.name.text; // "getUserById"
+				const parameters = this.parseMethodParameters(member);
+				const hasEventParam = parameters.some((p) => p.isEventParam);
 
-        if (hasEventParam) {
-          // 这个方法会被处理
-        }
-      }
-    });
-  }
+				if (hasEventParam) {
+					// 这个方法会被处理
+				}
+			}
+		});
+	}
 });
 ```
 
@@ -155,17 +150,17 @@ private isEventParameter(param: ts.ParameterDeclaration): boolean {
 
 ```typescript
 parameters: [
-  {
-    name: "_event",
-    type: "IpcMainInvokeEvent",
-    isEventParam: true  // 🔥 被标记为事件参数
-  },
-  {
-    name: "userId",
-    type: "number",
-    isEventParam: false // 业务参数
-  }
-]
+	{
+		name: "_event",
+		type: "IpcMainInvokeEvent",
+		isEventParam: true, // 🔥 被标记为事件参数
+	},
+	{
+		name: "userId",
+		type: "number",
+		isEventParam: false, // 业务参数
+	},
+];
 ```
 
 **5. 数据结构构建**
@@ -225,8 +220,9 @@ userService: {
 const userServiceInstance = new UserService();
 
 // 注册处理器（自动注入事件对象）
-ipcMain.handle('app:userService:getUserById', (event, userId) =>
-  userServiceInstance.getUserById(event, userId)  // 事件参数被重新注入
+ipcMain.handle(
+	"app:userService:getUserById",
+	(event, userId) => userServiceInstance.getUserById(event, userId), // 事件参数被重新注入
 );
 ```
 
@@ -250,7 +246,7 @@ ipcMain.handle('app:userService:getUserById', (event, userId) =>
 
 ```typescript
 // 在生成预加载接口时，插件过滤掉事件参数
-const businessParams = method.parameters.filter(p => !p.isEventParam);
+const businessParams = method.parameters.filter((p) => !p.isEventParam);
 // [_event, userId] → [userId]
 ```
 
@@ -274,61 +270,55 @@ const businessParams = method.parameters.filter(p => !p.isEventParam);
 #### `preload-services.ts` - 预加载服务接口
 
 ```typescript
-import { ipcRenderer } from 'electron';
+import { ipcRenderer } from "electron";
 
 /**
  * Auto-generated IPC service interfaces
  */
 export interface AutoGeneratedIpcServices {
-  window: {
-    maximize(): Promise<void>;
-    minimize(): Promise<void>;
-    close(): Promise<void>;
-  };
+	window: {
+		maximize(): Promise<void>;
+		minimize(): Promise<void>;
+		close(): Promise<void>;
+	};
 }
 
 /**
  * Auto-generated service implementations
  */
 export const autoGeneratedServices: AutoGeneratedIpcServices = {
-  window: {
-    maximize: () => ipcRenderer.invoke('app:window:maximize'),
-    minimize: () => ipcRenderer.invoke('app:window:minimize'),
-    close: () => ipcRenderer.invoke('app:window:close'),
-  },
+	window: {
+		maximize: () => ipcRenderer.invoke("app:window:maximize"),
+		minimize: () => ipcRenderer.invoke("app:window:minimize"),
+		close: () => ipcRenderer.invoke("app:window:close"),
+	},
 };
 ```
 
 #### `ipc-registration.ts` - 主进程注册代码
 
 ```typescript
-import { ipcMain } from 'electron';
-import { WindowService } from '../services';
+import { ipcMain } from "electron";
+import { WindowService } from "../services";
 
 /**
  * Auto-generated IPC main process registration
  */
 export function registerIpcHandlers() {
-  // window service registration
-  const windowInstance = new WindowService();
-  ipcMain.handle('app:window:maximize', (event) =>
-    windowInstance.maximize(event)
-  );
-  ipcMain.handle('app:window:minimize', (event) =>
-    windowInstance.minimize(event)
-  );
-  ipcMain.handle('app:window:close', (event) =>
-    windowInstance.close(event)
-  );
+	// window service registration
+	const windowInstance = new WindowService();
+	ipcMain.handle("app:window:maximize", (event) => windowInstance.maximize(event));
+	ipcMain.handle("app:window:minimize", (event) => windowInstance.minimize(event));
+	ipcMain.handle("app:window:close", (event) => windowInstance.close(event));
 }
 
 /**
  * Clean up IPC handlers
  */
 export function removeIpcHandlers() {
-  ipcMain.removeHandler('app:window:maximize');
-  ipcMain.removeHandler('app:window:minimize');
-  ipcMain.removeHandler('app:window:close');
+	ipcMain.removeHandler("app:window:maximize");
+	ipcMain.removeHandler("app:window:minimize");
+	ipcMain.removeHandler("app:window:close");
 }
 ```
 
@@ -339,24 +329,24 @@ export function removeIpcHandlers() {
 ```typescript
 // electron/services/window-service/index.ts
 export class WindowService {
-  async maximize(_event: Electron.IpcMainInvokeEvent): Promise<void> {
-    // 窗口最大化逻辑
-  }
+	async maximize(_event: Electron.IpcMainInvokeEvent): Promise<void> {
+		// 窗口最大化逻辑
+	}
 
-  async minimize(_event: Electron.IpcMainInvokeEvent): Promise<void> {
-    // 窗口最小化逻辑
-  }
+	async minimize(_event: Electron.IpcMainInvokeEvent): Promise<void> {
+		// 窗口最小化逻辑
+	}
 
-  async getWindowState(_event: Electron.IpcMainInvokeEvent): Promise<{
-    isMaximized: boolean;
-    isMinimized: boolean;
-  }> {
-    // 返回窗口状态
-    return {
-      isMaximized: true,
-      isMinimized: false,
-    };
-  }
+	async getWindowState(_event: Electron.IpcMainInvokeEvent): Promise<{
+		isMaximized: boolean;
+		isMinimized: boolean;
+	}> {
+		// 返回窗口状态
+		return {
+			isMaximized: true,
+			isMinimized: false,
+		};
+	}
 }
 ```
 
@@ -365,21 +355,18 @@ export class WindowService {
 ```typescript
 // electron/services/file-service/index.ts
 export class FileService {
-  async readFile(
-    _event: Electron.IpcMainInvokeEvent,
-    filePath: string
-  ): Promise<string> {
-    // 读取文件逻辑
-    return "file content";
-  }
+	async readFile(_event: Electron.IpcMainInvokeEvent, filePath: string): Promise<string> {
+		// 读取文件逻辑
+		return "file content";
+	}
 
-  async writeFile(
-    _event: Electron.IpcMainInvokeEvent,
-    filePath: string,
-    content: string
-  ): Promise<void> {
-    // 写入文件逻辑
-  }
+	async writeFile(
+		_event: Electron.IpcMainInvokeEvent,
+		filePath: string,
+		content: string,
+	): Promise<void> {
+		// 写入文件逻辑
+	}
 }
 ```
 
@@ -387,8 +374,8 @@ export class FileService {
 
 ```typescript
 // electron/services/index.ts
-export { WindowService } from './window-service';
-export { FileService } from './file-service';
+export { WindowService } from "./window-service";
+export { FileService } from "./file-service";
 ```
 
 ## 架构设计
@@ -443,10 +430,10 @@ graph TD
 
 ```typescript
 export class WindowService {
-  async maximize(_event: Electron.IpcMainInvokeEvent): Promise<void> {
-    const window = BrowserWindow.getFocusedWindow();
-    if (window) window.maximize();
-  }
+	async maximize(_event: Electron.IpcMainInvokeEvent): Promise<void> {
+		const window = BrowserWindow.getFocusedWindow();
+		if (window) window.maximize();
+	}
 }
 ```
 
@@ -454,12 +441,12 @@ export class WindowService {
 
 ```typescript
 export class FileSystemService {
-  async showOpenDialog(
-    _event: Electron.IpcMainInvokeEvent,
-    options: OpenDialogOptions
-  ): Promise<OpenDialogReturnValue> {
-    return dialog.showOpenDialog(options);
-  }
+	async showOpenDialog(
+		_event: Electron.IpcMainInvokeEvent,
+		options: OpenDialogOptions,
+	): Promise<OpenDialogReturnValue> {
+		return dialog.showOpenDialog(options);
+	}
 }
 ```
 
@@ -467,16 +454,13 @@ export class FileSystemService {
 
 ```typescript
 export class ConfigService {
-  async getConfig(_event: Electron.IpcMainInvokeEvent): Promise<AppConfig> {
-    return this.loadConfig();
-  }
+	async getConfig(_event: Electron.IpcMainInvokeEvent): Promise<AppConfig> {
+		return this.loadConfig();
+	}
 
-  async setConfig(
-    _event: Electron.IpcMainInvokeEvent,
-    config: Partial<AppConfig>
-  ): Promise<void> {
-    this.saveConfig(config);
-  }
+	async setConfig(_event: Electron.IpcMainInvokeEvent, config: Partial<AppConfig>): Promise<void> {
+		this.saveConfig(config);
+	}
 }
 ```
 
@@ -499,16 +483,13 @@ export class ConfigService {
 
 ```typescript
 export class FileService {
-  async readFile(
-    _event: Electron.IpcMainInvokeEvent,
-    filePath: string
-  ): Promise<string> {
-    try {
-      return await fs.readFile(filePath, 'utf-8');
-    } catch (error) {
-      throw new Error(`Failed to read file: ${error.message}`);
-    }
-  }
+	async readFile(_event: Electron.IpcMainInvokeEvent, filePath: string): Promise<string> {
+		try {
+			return await fs.readFile(filePath, "utf-8");
+		} catch (error) {
+			throw new Error(`Failed to read file: ${error.message}`);
+		}
+	}
 }
 ```
 
@@ -527,6 +508,7 @@ export class FileService {
 **问题**：服务方法没有被插件识别并生成代码
 
 **解决方案**：
+
 - 确认方法包含 IPC 事件参数（`_event`、`event` 或 `IpcMainInvokeEvent` 类型）
 - 检查类命名是否符合规范（以 `Service` 结尾）
 - 确认文件位于配置的服务目录中
@@ -536,6 +518,7 @@ export class FileService {
 **问题**：生成的代码缩进或格式不符合项目规范
 
 **解决方案**：
+
 - 配置正确的 `formatCommand` 选项
 - 确保格式化工具已安装并可用
 - 检查格式化命令的路径和参数
@@ -545,6 +528,7 @@ export class FileService {
 **问题**：生成的代码存在 TypeScript 类型错误
 
 **解决方案**：
+
 - 确认服务方法的参数和返回类型定义正确
 - 检查导入的类型是否可用
 - 更新 TypeScript 配置以支持生成的代码
@@ -561,25 +545,25 @@ export class FileService {
 
 ```typescript
 ipcServiceGenerator({
-  servicesDir: "electron/services",
-  outputDir: "electron/generated",
-  methodFilter: (methodName: string) => {
-    // 只包含以 'handle' 开头的方法
-    return methodName.startsWith('handle');
-  },
+	servicesDir: "electron/services",
+	outputDir: "electron/generated",
+	methodFilter: (methodName: string) => {
+		// 只包含以 'handle' 开头的方法
+		return methodName.startsWith("handle");
+	},
 });
 ```
 
 ### 多环境配置
 
 ```typescript
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = process.env.NODE_ENV === "development";
 
 ipcServiceGenerator({
-  servicesDir: "electron/services",
-  outputDir: "electron/generated",
-  channelPrefix: isDev ? "dev:" : "app:",
-  formatCommand: isDev ? "pnpm prettier --write" : false,
+	servicesDir: "electron/services",
+	outputDir: "electron/generated",
+	channelPrefix: isDev ? "dev:" : "app:",
+	formatCommand: isDev ? "pnpm prettier --write" : false,
 });
 ```
 

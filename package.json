@@ -108,7 +108,8 @@
 		"svelte-dnd-action": "^0.9.65",
 		"svelte-image-viewer": "^5.0.0",
 		"ts-pattern": "^5.8.0",
-		"unified": "^11.0.5"
+		"unified": "^11.0.5",
+		"unstorage": "^1.17.1"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [

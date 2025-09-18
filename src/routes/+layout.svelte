@@ -9,6 +9,8 @@
 	import { Ghost, Home, Layout, MessageCircle, Settings } from "@lucide/svelte";
 	import { ModeWatcher, setMode } from "mode-watcher";
 	import { onMount } from "svelte";
+	import { polyfillLocalStorage } from "$lib/utils/storage-polyfill";
+	import { providerState } from "$lib/stores/provider-state.svelte";
 	import "../app.css";
 
 	const { children } = $props();
@@ -91,6 +93,9 @@
 	}
 
 	onMount(async () => {
+		await polyfillLocalStorage();
+		await providerState.initialize();
+
 		// Get current theme from Electron and apply it
 		if (app) {
 			try {

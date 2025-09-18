@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import { AttachmentsService, AppService } from "../services";
+import { AttachmentsService, AppService, StorageService } from "../services";
 
 /**
  * Auto-generated IPC service interfaces
@@ -24,6 +24,18 @@ export function registerIpcHandlers() {
 	const appInstance = new AppService();
 	ipcMain.handle("app:setTheme", (event, theme) => appInstance.setTheme(event, theme));
 	ipcMain.handle("app:getCurrentTheme", (event) => appInstance.getCurrentTheme(event));
+
+	// storage service registration
+	const storageInstance = new StorageService();
+	ipcMain.handle("storage:getItem", (event, key) => storageInstance.getItem(event, key));
+	ipcMain.handle("storage:setItem", (event, key, value) =>
+		storageInstance.setItem(event, key, value),
+	);
+	ipcMain.handle("storage:removeItem", (event, key) => storageInstance.removeItem(event, key));
+	ipcMain.handle("storage:clear", (event) => storageInstance.clear(event));
+	ipcMain.handle("storage:key", (event, index) => storageInstance.key(event, index));
+	ipcMain.handle("storage:length", (event) => storageInstance.length(event));
+	ipcMain.handle("storage:keys", (event) => storageInstance.keys(event));
 }
 
 /**
@@ -36,4 +48,11 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("attachments:openExternal4");
 	ipcMain.removeHandler("app:setTheme");
 	ipcMain.removeHandler("app:getCurrentTheme");
+	ipcMain.removeHandler("storage:getItem");
+	ipcMain.removeHandler("storage:setItem");
+	ipcMain.removeHandler("storage:removeItem");
+	ipcMain.removeHandler("storage:clear");
+	ipcMain.removeHandler("storage:key");
+	ipcMain.removeHandler("storage:length");
+	ipcMain.removeHandler("storage:keys");
 }
