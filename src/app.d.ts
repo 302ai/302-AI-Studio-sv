@@ -1,4 +1,4 @@
-import type { Theme } from "@electron/shared/types";
+import type { Theme } from "@shared/types";
 import type { ElectronAPIExtension } from "../electron/main/generated/preload-services";
 
 declare global {

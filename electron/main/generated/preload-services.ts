@@ -1,4 +1,5 @@
 import { ipcRenderer } from "electron";
+import type { Theme } from "@shared/types";
 
 /**
  * Auto-generated IPC service interfaces

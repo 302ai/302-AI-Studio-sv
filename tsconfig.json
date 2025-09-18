@@ -14,7 +14,7 @@
 		"moduleResolution": "bundler",
 		"baseUrl": ".",
 		"paths": {
-			"@shared/*": ["electron/shared/*"],
+			"@shared/*": ["./shared/*"],
 			"@electron/*": ["./electron/*"]
 		}
 	},

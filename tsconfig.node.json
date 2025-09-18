@@ -8,5 +8,8 @@
 		"noEmit": false,
 		"outDir": "./.tsout/node"
 	},
-	"include": ["electron/**/*"]
+	"paths": {
+		"@shared/*": ["shared/*"]
+	},
+	"include": ["electron/**/*", "shared/**/*"]
 }

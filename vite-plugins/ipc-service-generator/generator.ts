@@ -11,6 +11,92 @@ export class IpcStructureGenerator {
 		private options: IpcServiceGeneratorOptions,
 	) {}
 
+	/**
+	 * Extract custom types used in service methods
+	 * Checks parameter types and return types for non-built-in types
+	 */
+	private extractCustomTypes(): Set<string> {
+		const customTypes = new Set<string>();
+		const builtInTypes = new Set([
+			"string",
+			"number",
+			"boolean",
+			"void",
+			"any",
+			"unknown",
+			"undefined",
+			"null",
+			"object",
+			"Array",
+			"Promise",
+			"IpcMainInvokeEvent",
+			"Electron.IpcMainInvokeEvent",
+		]);
+
+		this.methods.forEach((method) => {
+			// Check parameter types
+			method.parameters.forEach((param) => {
+				if (!param.isEventParam) {
+					const cleanType = this.cleanTypeString(param.type);
+					if (!builtInTypes.has(cleanType) && !this.isBuiltInComplexType(cleanType)) {
+						customTypes.add(cleanType);
+					}
+				}
+			});
+
+			// Check return type
+			const cleanReturnType = this.cleanTypeString(method.returnType);
+			if (!builtInTypes.has(cleanReturnType) && !this.isBuiltInComplexType(cleanReturnType)) {
+				customTypes.add(cleanReturnType);
+			}
+		});
+
+		return customTypes;
+	}
+
+	/**
+	 * Clean type string by removing Promise wrapper and array indicators
+	 */
+	private cleanTypeString(type: string): string {
+		// Remove Promise<T> wrapper
+		const promiseMatch = type.match(/^Promise<(.+)>$/);
+		if (promiseMatch) {
+			type = promiseMatch[1];
+		}
+
+		// Remove array indicators
+		type = type.replace(/\[\]$/, "").replace(/^Array<(.+)>$/, "$1");
+
+		// Remove union type syntax and extract base type
+		if (type.includes("|")) {
+			const types = type.split("|").map((t) => t.trim());
+			// For union types, we'll take the first non-primitive type
+			for (const unionType of types) {
+				if (!["string", "number", "boolean", "null", "undefined"].includes(unionType)) {
+					return unionType;
+				}
+			}
+			return types[0];
+		}
+
+		return type.trim();
+	}
+
+	/**
+	 * Check if type is a built-in complex type (like generics)
+	 */
+	private isBuiltInComplexType(type: string): boolean {
+		return (
+			type.startsWith("Array<") ||
+			type.startsWith("Promise<") ||
+			type.startsWith("Record<") ||
+			type.startsWith("Map<") ||
+			type.startsWith("Set<") ||
+			type.endsWith("[]") ||
+			type.includes("(") // function types
+		);
+	}
+
 	private generateChannelName(serviceName: string, methodName: string): string {
 		const prefix = this.options.channelPrefix || "";
 		return `${prefix}${serviceName}:${methodName}`;
@@ -103,8 +189,16 @@ export class IpcStructureGenerator {
 			)
 			.join("\n");
 
+		// Generate imports for custom types
+		const customTypes = this.extractCustomTypes();
+		const typeImports =
+			customTypes.size > 0
+				? `import type { ${Array.from(customTypes).join(", ")} } from '@shared/types';`
+				: "";
+
 		return dedent`
 			import { ipcRenderer } from 'electron';
+			${typeImports}
 
 			/**
       * Auto-generated IPC service interfaces
