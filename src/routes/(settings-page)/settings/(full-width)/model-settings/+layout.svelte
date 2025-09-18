@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import { resolve } from "$app/paths";
 	import { ProviderList } from "$lib/components/buss/provider-list";
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import { providerState } from "$lib/stores/provider-state.svelte.js";
@@ -24,14 +25,14 @@
 
 	function handleProviderClick(provider: ModelProvider) {
 		activeProviderId = provider.id;
-		goto(`/settings/model-settings/${provider.id}`);
+		goto(resolve(`/settings/model-settings/${provider.id}`));
 	}
 
 	function handleAddProvider() {
 		const newProvider = providerState.createCustomProvider();
 		providerState.addProvider(newProvider);
 		activeProviderId = newProvider.id;
-		goto(`/settings/model-settings/${newProvider.id}`);
+		goto(resolve(`/settings/model-settings/${newProvider.id}`));
 	}
 
 	function handleReorderProviders(newOrder: ModelProvider[]) {
@@ -39,7 +40,7 @@
 	}
 
 	function handleConfigureProvider(provider: ModelProvider) {
-		goto(`/settings/model-settings/${provider.id}`);
+		goto(resolve(`/settings/model-settings/${provider.id}`));
 	}
 
 	function handleRemoveProvider(provider: ModelProvider) {
@@ -55,13 +56,13 @@
 			`${m.text_context_remove_provider()}: ${provider.name}${removedModelCount > 0 ? ` (${removedModelCount} models removed)` : ""}`,
 		);
 		if (provider.id === activeProviderId && providerState.providers.length > 0) {
-			goto(`/settings/model-settings/${providerState.providers[0].id}`);
+			goto(resolve(`/settings/model-settings/${providerState.providers[0].id}`));
 		}
 	}
 
 	onMount(() => {
 		if (!page.params.provider && providerState.providers.length > 0) {
-			goto(`/settings/model-settings/${providerState.providers[0].id}`);
+			goto(resolve(`/settings/model-settings/${providerState.providers[0].id}`));
 		}
 	});
 </script>

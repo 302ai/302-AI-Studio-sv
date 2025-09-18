@@ -7,6 +7,8 @@
 	import { onMount } from "svelte";
 	import type { Theme } from "@shared/types";
 
+	const { app } = window.electronAPI;
+
 	let selectedKey = "system";
 	const themeOptions = [
 		{
@@ -34,18 +36,21 @@
 		setMode(key as "light" | "dark" | "system");
 
 		// Send theme change to electron main process
-		if (window.electronAPI) {
-			window.electronAPI.theme.setTheme(key as Theme);
+		if (app) {
+			await app.setTheme(key as Theme);
 		}
 	}
 
-	onMount(() => {
-		// Listen for theme changes from electron
-		if (window.electronAPI) {
-			window.electronAPI.theme.onThemeChange((theme: Theme) => {
-				selectedKey = theme;
-				setMode(theme);
-			});
+	onMount(async () => {
+		// Get current theme from electron
+		if (app) {
+			try {
+				const currentTheme = await app.getCurrentTheme();
+				selectedKey = currentTheme;
+				setMode(currentTheme);
+			} catch (error) {
+				console.warn("Failed to get current theme:", error);
+			}
 		}
 	});
 </script>

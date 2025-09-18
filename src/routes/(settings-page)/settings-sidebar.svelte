@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from "$app/state";
+	import { resolve } from "$app/paths";
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
 	import { onMount } from "svelte";
@@ -74,7 +75,7 @@
 	});
 </script>
 
-<div class="bg-setting flex h-full w-auto min-w-[var(--setting-width)] justify-end">
+<div class="bg-settings-sidebar-bg flex h-full w-auto min-w-[var(--setting-width)] justify-end">
 	<div class="flex w-full justify-end p-3">
 		<div
 			bind:this={containerElement}
@@ -94,7 +95,7 @@
 				{@const isSelected = isActiveTab(item.path)}
 				<a
 					bind:this={itemElements[index]}
-					href={item.path}
+					href={resolve(item.path)}
 					class={cn(
 						"px-settings-item-x py-settings-item-y flex w-full items-center rounded-lg text-sm font-medium whitespace-nowrap outline-hidden transition-colors",
 						"hover:bg-hover-primary",

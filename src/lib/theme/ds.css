@@ -202,6 +202,7 @@
 	--radius-tab: var(--ui-tab-radius);
 
 	/* Settings bridge */
+	--color-settings-sidebar-bg: var(--ui-settings-sidebar-bg);
 	--color-settings-item-bg: var(--ui-settings-item-bg);
 	--color-settings-switch-border: var(--ui-settings-switch-border);
 	--radius-settings-item: var(--ui-settings-item-radius);

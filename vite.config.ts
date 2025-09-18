@@ -16,7 +16,6 @@ export default defineConfig({
 		ipcServiceGenerator({
 			servicesDir: "electron/main/services",
 			outputDir: "electron/main/generated",
-			channelPrefix: "app:",
 			formatCommand: "pnpm prettier --write",
 		}),
 	],

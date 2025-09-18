@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
+	import { resolve } from "$app/paths";
 	import favicon from "$lib/assets/favicon.svg";
 	import { TabBar, type Tab } from "$lib/components/buss/tab-bar";
 	import { Toaster } from "$lib/components/ui/sonner";
@@ -11,6 +12,8 @@
 	import "../app.css";
 
 	const { children } = $props();
+	const { app } = window.electronAPI;
+	const { onThemeChange } = window.electronIPC;
 
 	let tabs = $state<Tab[]>([
 		{
@@ -48,7 +51,7 @@
 
 	function handleTabClick(tab: Tab) {
 		activeTabId = tab.id;
-		goto(tab.href);
+		goto(resolve(tab.href));
 	}
 
 	function handleTabClose(tab: Tab) {
@@ -59,7 +62,7 @@
 				const newIndex = Math.min(index, tabs.length - 1);
 				const newTab = tabs[newIndex];
 				activeTabId = newTab.id;
-				goto(newTab.href);
+				goto(resolve(newTab.href));
 			}
 		}
 	}
@@ -69,7 +72,7 @@
 		if (unclosableTabs.length > 0) {
 			tabs = unclosableTabs;
 			activeTabId = unclosableTabs[0].id;
-			goto(unclosableTabs[0].href);
+			goto(resolve(unclosableTabs[0].href));
 		}
 	}
 
@@ -84,18 +87,26 @@
 		};
 		tabs = [...tabs, newTab];
 		activeTabId = newTab.id;
-		goto(newTab.href);
+		goto(resolve(newTab.href));
 	}
 
 	onMount(async () => {
 		// Get current theme from Electron and apply it
-		if (window.electronAPI) {
+		if (app) {
 			try {
-				const currentTheme = await window.electronAPI.theme.getCurrentTheme();
+				const currentTheme = await app.getCurrentTheme();
 				setMode(currentTheme);
 			} catch (error) {
 				console.warn("Failed to get current theme from Electron:", error);
 			}
+		}
+
+		// Listen for theme changes from Electron
+		if (onThemeChange) {
+			onThemeChange((theme) => {
+				console.log("Theme changed from Electron:", theme);
+				setMode(theme);
+			});
 		}
 	});
 </script>

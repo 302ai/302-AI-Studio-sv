@@ -149,7 +149,7 @@
 				<div class="flex items-center gap-2">
 					<Select.Root type="single">
 						<Select.Trigger
-							class="bg-setting text-setting-fg h-11 rounded-[10px] inset-ring-transparent transition-none hover:inset-ring-transparent"
+							class="bg-settings-sidebar-bg text-setting-fg h-11 rounded-[10px] inset-ring-transparent transition-none hover:inset-ring-transparent"
 						/>
 						<Select.Content>
 							{#each shortcut.options as option (option.id)}

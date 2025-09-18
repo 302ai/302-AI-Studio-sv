@@ -1,11 +1,10 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
 
-import { app, BrowserWindow, ipcMain, nativeTheme, net, protocol } from "electron";
+import { app, BrowserWindow, nativeTheme, net, protocol } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import windowStateKeeper from "electron-window-state";
 import { ENVIRONMENT, PLATFORM, WINDOW_SIZE } from "./constants";
-import type { Theme } from "../shared/types";
 import { CONFIG } from "./constants";
 import { registerIpcHandlers } from "./generated/ipc-registration";
 const { shouldUseDarkColors } = nativeTheme;
@@ -73,15 +72,6 @@ const createWindow = () => {
 	mainWindowState.manage(mainWindow);
 	nativeTheme.on("updated", () => {
 		updateTitleBarOverlay();
-	});
-
-	ipcMain.on("app:theme:setTheme", (_, theme: Theme) => {
-		nativeTheme.themeSource = theme;
-		mainWindow.webContents.send("app:theme:setTheme", theme);
-	});
-
-	ipcMain.handle("app:theme:getCurrentTheme", () => {
-		return nativeTheme.themeSource;
 	});
 
 	// and load the index.html of the app.
