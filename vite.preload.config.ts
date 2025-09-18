@@ -12,9 +12,12 @@ export default defineConfig({
 	build: {
 		outDir: ".vite/build/preload",
 		lib: {
-			formats: ["es"],
+			formats: ["cjs"],
 			entry: "electron/preload/index.ts",
 			fileName: "index",
+		},
+		rollupOptions: {
+			external: ["electron"],
 		},
 	},
 });

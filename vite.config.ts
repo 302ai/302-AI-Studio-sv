@@ -17,6 +17,7 @@ export default defineConfig({
 			servicesDir: "electron/services",
 			outputDir: "electron/generated",
 			channelPrefix: "app:",
+			formatCommand: "pnpm prettier --write",
 		}),
 	],
 	resolve: {

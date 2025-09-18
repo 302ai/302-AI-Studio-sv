@@ -1,9 +1,5 @@
 {
-	"extends": [
-		"./tsconfig.json",
-		"./.svelte-kit/tsconfig.json",
-		"@electron-toolkit/tsconfig/tsconfig.web.json"
-	],
+	"extends": ["./tsconfig.json", "@electron-toolkit/tsconfig/tsconfig.web.json"],
 	"compilerOptions": {
 		"moduleResolution": "bundler",
 		"composite": true,

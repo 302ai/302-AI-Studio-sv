@@ -4,7 +4,7 @@ import { app, BrowserWindow, ipcMain, nativeTheme, net, protocol } from "electro
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import windowStateKeeper from "electron-window-state";
-import { PLATFORM, ENVIRONMENT, WINDOW_SIZE } from "../constants";
+import { PLATFORM, WINDOW_SIZE } from "../constants";
 import type { Theme } from "../shared/types";
 import { CONFIG } from "../constants";
 import { registerIpcHandlers } from "../generated/ipc-registration";
@@ -64,8 +64,9 @@ const createWindow = () => {
 		}),
 		webPreferences: {
 			preload: path.join(import.meta.dirname, "../preload/index.js"),
-			sandbox: false,
-			devTools: ENVIRONMENT.IS_DEV,
+			// sandbox: false,
+			// devTools: ENVIRONMENT.IS_DEV,
+			devTools: true,
 			webgl: true,
 		},
 		roundedCorners: true,
@@ -109,12 +110,12 @@ app.on("ready", () => {
 
 		if (!filePath || filePath === "localhost") {
 			return net.fetch(
-				`file://${path.join(import.meta.dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)}`,
+				`file://${path.join(import.meta.dirname, `../../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)}`,
 			);
 		}
 
 		return net.fetch(
-			`file://${path.join(import.meta.dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}`, filePath)}`,
+			`file://${path.join(import.meta.dirname, `../../renderer/${MAIN_WINDOW_VITE_NAME}`, filePath)}`,
 		);
 	});
 	createWindow();

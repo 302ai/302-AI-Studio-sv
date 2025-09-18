@@ -4,7 +4,8 @@
 		"experimentalDecorators": true,
 		"emitDecoratorMetadata": true,
 		"moduleResolution": "bundler",
-		"composite": true
+		"composite": true,
+		"noEmit": false
 	},
 	"include": ["electron/**/*"]
 }
