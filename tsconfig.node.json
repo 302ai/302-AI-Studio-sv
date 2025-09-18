@@ -5,8 +5,7 @@
 		"emitDecoratorMetadata": true,
 		"moduleResolution": "bundler",
 		"composite": true,
-		"noEmit": false,
-		"outDir": "./.tsout/node"
+		"noEmit": false
 	},
 	"paths": {
 		"@shared/*": ["shared/*"]
