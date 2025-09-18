@@ -42,14 +42,14 @@
 		goto(`/settings/model-settings/${provider.id}`);
 	}
 
-	function handleRemoveProvider(provider: ModelProvider) {
+	async function handleRemoveProvider(provider: ModelProvider) {
 		if (!provider.custom) {
 			toast.error(m.text_provider_remove_builtin_error());
 			return;
 		}
-		providerState.removeProvider(provider.id);
+		await providerState.removeProvider(provider.id);
 
-		const removedModelCount = providerState.removeModelsByProvider(provider.id);
+		const removedModelCount = await providerState.removeModelsByProvider(provider.id);
 
 		toast.success(
 			`${m.text_context_remove_provider()}: ${provider.name}${removedModelCount > 0 ? ` (${removedModelCount} models removed)` : ""}`,
