@@ -13,18 +13,16 @@
 		"target": "esnext",
 		"moduleResolution": "bundler",
 		"baseUrl": ".",
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
 		"paths": {
 			"@shared/*": ["./shared/*"],
-			"@electron/*": ["./electron/*"]
+			"@electron/*": ["./electron/*"],
+			"$lib": ["src/lib"],
+			"$lib/*": ["src/lib/*"],
+			"$app/types": [".svelte-kit/types/index.d.ts"]
 		}
 	},
-	"files": [],
-	"references": [
-		{
-			"path": "./tsconfig.node.json"
-		},
-		{
-			"path": "./tsconfig.web.json"
-		}
-	]
+	"include": ["src/**/*", "electron/**/*", "shared/**/*"],
+	"exclude": ["node_modules", ".svelte-kit", "dist", "out", ".tsout"]
 }
