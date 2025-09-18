@@ -1,38 +1,29 @@
 import { ipcMain } from "electron";
-import { AppService, DeviceService, StorageService } from "../services";
+import { appService, deviceService, storageService } from "../services";
 
 /**
  * Auto-generated IPC service interfaces
  */
 export function registerIpcHandlers() {
 	// appService service registration
-	const appServiceInstance = new AppService();
-	ipcMain.handle("appService:setTheme", (event, theme) =>
-		appServiceInstance.setTheme(event, theme),
-	);
-	ipcMain.handle("appService:getCurrentTheme", (event) =>
-		appServiceInstance.getCurrentTheme(event),
-	);
+	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
+	ipcMain.handle("appService:getCurrentTheme", (event) => appService.getCurrentTheme(event));
 
 	// deviceService service registration
-	const deviceServiceInstance = new DeviceService();
-	ipcMain.handle("deviceService:getPlatform", (event) => deviceServiceInstance.getPlatform(event));
+	ipcMain.handle("deviceService:getPlatform", (event) => deviceService.getPlatform(event));
 
 	// storageService service registration
-	const storageServiceInstance = new StorageService();
-	ipcMain.handle("storageService:getItem", (event, key) =>
-		storageServiceInstance.getItem(event, key),
-	);
+	ipcMain.handle("storageService:getItem", (event, key) => storageService.getItem(event, key));
 	ipcMain.handle("storageService:setItem", (event, key, value) =>
-		storageServiceInstance.setItem(event, key, value),
+		storageService.setItem(event, key, value),
 	);
 	ipcMain.handle("storageService:removeItem", (event, key) =>
-		storageServiceInstance.removeItem(event, key),
+		storageService.removeItem(event, key),
 	);
-	ipcMain.handle("storageService:clear", (event) => storageServiceInstance.clear(event));
-	ipcMain.handle("storageService:key", (event, index) => storageServiceInstance.key(event, index));
-	ipcMain.handle("storageService:length", (event) => storageServiceInstance.length(event));
-	ipcMain.handle("storageService:keys", (event) => storageServiceInstance.keys(event));
+	ipcMain.handle("storageService:clear", (event) => storageService.clear(event));
+	ipcMain.handle("storageService:key", (event, index) => storageService.key(event, index));
+	ipcMain.handle("storageService:length", (event) => storageService.length(event));
+	ipcMain.handle("storageService:keys", (event) => storageService.keys(event));
 }
 
 /**

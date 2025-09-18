@@ -1,5 +1,6 @@
 import type { ServiceMethod, GeneratedIpcStructure, IpcServiceGeneratorOptions } from "./types";
 import dedent from "dedent";
+import * as path from "path";
 
 /**
  * IPC structure generator
@@ -9,6 +10,10 @@ export class IpcStructureGenerator {
 	constructor(
 		private methods: ServiceMethod[],
 		private options: IpcServiceGeneratorOptions,
+		private paths: {
+			servicesDir: string;
+			outputDir: string;
+		},
 	) {}
 
 	/**
@@ -224,16 +229,21 @@ export class IpcStructureGenerator {
 	}
 
 	public generateMainProcessCode(structure: GeneratedIpcStructure): string {
-		// Collect all service classes that need to be imported
-		const serviceClasses = structure.services.map((service) => service.className);
+		// Collect all service instances that need to be imported
+		const serviceInstances = structure.services.map((service) => service.serviceName);
+
+		// Calculate relative path from output directory to services directory
+		const relativePath = path.relative(this.paths.outputDir, this.paths.servicesDir);
+		const importPath = relativePath.replace(/\\/g, "/"); // Ensure forward slashes for cross-platform compatibility
+
 		const imports =
-			serviceClasses.length > 0
-				? `import { ${serviceClasses.join(", ")} } from '../services';`
+			serviceInstances.length > 0
+				? `import { ${serviceInstances.join(", ")} } from '${importPath}';`
 				: "";
 
 		const registrations = structure.services
 			.map((service) => {
-				const instanceName = `${service.serviceName}Instance`;
+				const instanceName = service.serviceName;
 				const methods = service.methods
 					.map((method) => {
 						// Generate parameter list, excluding event parameter
@@ -242,18 +252,18 @@ export class IpcStructureGenerator {
 						const paramList = businessParams.length > 0 ? `, ${paramNames}` : "";
 						const handlerParams = businessParams.length > 0 ? `event, ${paramNames}` : "event";
 
-						return `\tipcMain.handle('${method.channelName}', (${handlerParams}) =>\n${instanceName}.${method.methodName}(event${paramList})\n);`;
+						return `\tipcMain.handle('${method.channelName}', (${handlerParams}) =>\n\t\t${instanceName}.${method.methodName}(event${paramList})\n\t);`;
 					})
 					.join("\n");
 
-				return `// ${service.serviceName} service registration\nconst ${instanceName} = new ${service.className}();\n${methods}`;
+				return `\t// ${service.serviceName} service registration\n${methods}`;
 			})
 			.join("\n\n");
 
 		const removeHandlers = structure.services
 			.map((service) =>
 				service.methods
-					.map((method) => `ipcMain.removeHandler('${method.channelName}');`)
+					.map((method) => `\tipcMain.removeHandler('${method.channelName}');`)
 					.join("\n"),
 			)
 			.join("\n");

@@ -5,3 +5,5 @@ export class DeviceService {
 		return process.platform;
 	}
 }
+
+export const deviceService = new DeviceService();

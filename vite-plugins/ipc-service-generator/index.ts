@@ -56,7 +56,10 @@ export function ipcServiceGenerator(options: IpcServiceGeneratorOptions = {}): P
 				return;
 			}
 
-			const generator = new IpcStructureGenerator(methods, options);
+			const generator = new IpcStructureGenerator(methods, options, {
+				servicesDir: resolvedServicesDir,
+				outputDir: resolvedOutputDir,
+			});
 			const structure = generator.generateStructure();
 
 			if (!fs.existsSync(resolvedOutputDir)) {

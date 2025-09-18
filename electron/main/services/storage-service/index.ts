@@ -54,3 +54,5 @@ export class StorageService {
 		return await this.storage.getKeys();
 	}
 }
+
+export const storageService = new StorageService();
