@@ -1,6 +1,6 @@
-import type { StorageValue } from "unstorage";
+import type { StorageValue } from "@302ai/unstorage";
 
-export * from "unstorage";
+export * from "@302ai/unstorage";
 
 export interface ThemeState {
 	theme: Theme;
@@ -32,5 +32,3 @@ export type SheetWindowConfig = {
 		y: number;
 	};
 };
-
-export type StorageValue = string | number | boolean | object;

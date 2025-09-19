@@ -5,71 +5,34 @@ import { nanoid } from "nanoid";
 import { getModelsByProvider, getAllModels } from "$lib/api/models.js";
 import { toast } from "svelte-sonner";
 import { m } from "$lib/paraglide/messages.js";
+import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+
+export const persistedProviderState = new PersistedState<ModelProvider[]>(
+	"app-providers",
+	DEFAULT_PROVIDERS,
+);
+export const persistedModelState = new PersistedState<Model[]>("app-models", []);
 
 class ProviderState {
-	providers = $state<ModelProvider[]>([]);
-	models = $state<Model[]>([]);
-
-	constructor() {
-		this.loadFromStorage();
-	}
-	private loadFromStorage() {
-		const storedProviders = localStorage.getItem("ai-studio-providers");
-		if (storedProviders) {
-			try {
-				this.providers = JSON.parse(storedProviders);
-			} catch {
-				this.providers = [...DEFAULT_PROVIDERS];
-			}
-		} else {
-			this.providers = [...DEFAULT_PROVIDERS];
-		}
-
-		const storedModels = localStorage.getItem("ai-studio-models");
-		if (storedModels) {
-			try {
-				const parsedModels = JSON.parse(storedModels);
-
-				this.models = parsedModels.map((model: { capabilities: string[] }) => ({
-					...model,
-					capabilities: new Set(model.capabilities || []),
-				}));
-			} catch {
-				this.models = [];
-			}
-		} else {
-			this.models = [];
-		}
-	}
-	private saveToStorage() {
-		localStorage.setItem("ai-studio-providers", JSON.stringify(this.providers));
-		const modelsForStorage = this.models.map((model) => ({
-			...model,
-			capabilities: Array.from(model.capabilities),
-		}));
-		localStorage.setItem("ai-studio-models", JSON.stringify(modelsForStorage));
-	}
 	getProvider(id: string): ModelProvider | undefined {
-		return this.providers.find((p) => p.id === id);
+		return persistedProviderState.current.find((p) => p.id === id);
 	}
 	getProviderByNameOrId(nameOrId: string): ModelProvider | undefined {
-		return this.providers.find((p) => p.name === nameOrId || p.id === nameOrId);
+		return persistedProviderState.current.find((p) => p.name === nameOrId || p.id === nameOrId);
 	}
 	addProvider(provider: ModelProvider) {
-		this.providers = [...this.providers, provider];
-		this.saveToStorage();
+		persistedProviderState.current = [...persistedProviderState.current, provider];
 	}
 	updateProvider(id: string, updates: Partial<ModelProvider>) {
-		this.providers = this.providers.map((p) => (p.id === id ? { ...p, ...updates } : p));
-		this.saveToStorage();
+		persistedProviderState.current = persistedProviderState.current.map((p) =>
+			p.id === id ? { ...p, ...updates } : p,
+		);
 	}
 	removeProvider(id: string) {
-		this.providers = this.providers.filter((p) => p.id !== id);
-		this.saveToStorage();
+		persistedProviderState.current = persistedProviderState.current.filter((p) => p.id !== id);
 	}
 	reorderProviders(newOrder: ModelProvider[]) {
-		this.providers = [...newOrder];
-		this.saveToStorage();
+		persistedProviderState.current = [...newOrder];
 	}
 	createCustomProvider(name: string = "自定义提供商"): ModelProvider {
 		const timestamp = Date.now();
@@ -93,26 +56,23 @@ class ProviderState {
 		};
 	}
 	resetToDefaults() {
-		this.providers = [...DEFAULT_PROVIDERS];
-		this.saveToStorage();
+		persistedProviderState.current = [...DEFAULT_PROVIDERS];
 	}
 	searchModelsByName(name: string): Model[] {
-		return this.models.filter((m) => m.name.toLowerCase().includes(name.toLowerCase()));
+		return persistedModelState.current.filter((m) =>
+			m.name.toLowerCase().includes(name.toLowerCase()),
+		);
 	}
 	getSortedModels(): Model[] {
-		return [...this.models].sort((a, b) => a.name.localeCompare(b.name));
+		return [...persistedModelState.current].sort((a, b) => a.name.localeCompare(b.name));
 	}
-	getSortedModelsByProvider(providerId: string): Model[] {
-		return this.models
-			.filter((m) => m.providerId === providerId)
-			.sort((a, b) => a.name.localeCompare(b.name));
-	}
+
 	addModel(input: ModelCreateInput): Model {
 		if (!input.id || !input.id.trim()) {
 			throw new Error("Model ID is required and cannot be empty");
 		}
 
-		const existingModel = this.models.find((m) => m.id === input.id);
+		const existingModel = persistedModelState.current.find((m) => m.id === input.id);
 		if (existingModel) {
 			throw new Error(`Model with ID "${input.id}" already exists`);
 		}
@@ -128,31 +88,32 @@ class ProviderState {
 			enabled: input.enabled ?? true,
 			collected: input.collected || false,
 		};
-		this.models = [...this.models, model];
-		this.saveToStorage();
+		persistedModelState.current = [...persistedModelState.current, model];
+
 		return model;
 	}
 	updateModel(id: string, updates: ModelUpdateInput): boolean {
-		const modelIndex = this.models.findIndex((m) => m.id === id);
+		const modelIndex = persistedModelState.current.findIndex((m) => m.id === id);
 		if (modelIndex === -1) return false;
 
 		if (updates.id && updates.id !== id) {
-			const existingModel = this.models.find((m) => m.id === updates.id);
+			const existingModel = persistedModelState.current.find((m) => m.id === updates.id);
 			if (existingModel) {
 				console.warn(`Model with ID "${updates.id}" already exists`);
 				return false;
 			}
 		}
 
-		this.models = this.models.map((m) => (m.id === id ? { ...m, ...updates } : m));
-		this.saveToStorage();
+		persistedModelState.current = persistedModelState.current.map((m) =>
+			m.id === id ? { ...m, ...updates } : m,
+		);
+
 		return true;
 	}
 	removeModel(id: string): boolean {
-		const originalLength = this.models.length;
-		this.models = this.models.filter((m) => m.id !== id);
-		if (this.models.length !== originalLength) {
-			this.saveToStorage();
+		const originalLength = persistedModelState.current.length;
+		persistedModelState.current = persistedModelState.current.filter((m) => m.id !== id);
+		if (persistedModelState.current.length !== originalLength) {
 			return true;
 		}
 		return false;
@@ -169,33 +130,36 @@ class ProviderState {
 			enabled: input.enabled ?? true,
 			collected: input.collected || false,
 		}));
-		this.models = [...this.models, ...newModels];
-		this.saveToStorage();
+		persistedModelState.current = [...persistedModelState.current, ...newModels];
+
 		return newModels;
 	}
 	toggleModelCollected(id: string): boolean {
-		const model = this.models.find((m) => m.id === id);
+		const model = persistedModelState.current.find((m) => m.id === id);
 		if (!model) return false;
 
-		this.models = this.models.map((m) => (m.id === id ? { ...m, collected: !m.collected } : m));
-		this.saveToStorage();
+		persistedModelState.current = persistedModelState.current.map((m) =>
+			m.id === id ? { ...m, collected: !m.collected } : m,
+		);
+
 		return true;
 	}
 	toggleModelEnabled(id: string): boolean {
-		const model = this.models.find((m) => m.id === id);
+		const model = persistedModelState.current.find((m) => m.id === id);
 		if (!model) return false;
 
-		this.models = this.models.map((m) => (m.id === id ? { ...m, enabled: !m.enabled } : m));
-		this.saveToStorage();
+		persistedModelState.current = persistedModelState.current.map((m) =>
+			m.id === id ? { ...m, enabled: !m.enabled } : m,
+		);
+
 		return true;
 	}
 	removeModelsByProvider(providerId: string): number {
-		const originalLength = this.models.length;
-		this.models = this.models.filter((m) => m.providerId !== providerId);
-		const removedCount = originalLength - this.models.length;
-		if (removedCount > 0) {
-			this.saveToStorage();
-		}
+		const originalLength = persistedModelState.current.length;
+		persistedModelState.current = persistedModelState.current.filter(
+			(m) => m.providerId !== providerId,
+		);
+		const removedCount = originalLength - persistedModelState.current.length;
 		return removedCount;
 	}
 	clearModelsByProvider(providerId: string): number {
@@ -207,8 +171,8 @@ class ProviderState {
 			if (result.success && result.data) {
 				this.updateProvider(provider.id, { status: "connected" });
 				this.removeModelsByProvider(provider.id);
-				this.models = [...this.models, ...result.data.models];
-				this.saveToStorage();
+				persistedModelState.current = [...persistedModelState.current, ...result.data.models];
+
 				toast.success(
 					m.text_fetch_models_success({
 						count: result.data.models.length.toString(),
@@ -234,10 +198,10 @@ class ProviderState {
 	}
 	async fetchAllModels(): Promise<boolean> {
 		try {
-			const result = await getAllModels(this.providers);
+			const result = await getAllModels(persistedProviderState.current);
 			if (result.success && result.data) {
-				this.models = result.data.models;
-				this.saveToStorage();
+				persistedModelState.current = result.data.models;
+
 				return true;
 			}
 			return false;

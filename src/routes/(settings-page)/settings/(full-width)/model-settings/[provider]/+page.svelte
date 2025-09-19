@@ -9,52 +9,11 @@
 	import { Label } from "$lib/components/ui/label/index.js";
 	import * as Select from "$lib/components/ui/select/index.js";
 	import { m } from "$lib/paraglide/messages.js";
-	import { providerState } from "$lib/stores/provider-state.svelte.js";
+	import { persistedModelState, providerState } from "$lib/stores/provider-state.svelte.js";
 	import type { ModelProvider } from "$lib/types/provider.js";
 	import { Eye, EyeOff } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 
-	const providerParam = $derived(page.params.provider);
-	const currentProvider = $derived(
-		providerParam ? providerState.getProviderByNameOrId(providerParam) : undefined,
-	);
-	let formData = $state<ModelProvider>({
-		id: "",
-		name: "",
-		apiType: "openai",
-		apiKey: "",
-		baseUrl: "",
-		enabled: true,
-		custom: false,
-		status: "pending",
-		websites: {
-			official: "",
-			apiKey: "",
-			docs: "",
-			models: "",
-			defaultBaseUrl: "",
-		},
-		icon: undefined,
-	});
-	$effect(() => {
-		if (currentProvider) {
-			formData = {
-				id: currentProvider.id,
-				name: currentProvider.name,
-				apiType: currentProvider.apiType,
-				apiKey: currentProvider.apiKey,
-				baseUrl: currentProvider.baseUrl,
-				enabled: currentProvider.enabled,
-				custom: currentProvider.custom || false,
-				status: currentProvider.status,
-				websites: { ...currentProvider.websites },
-				icon: currentProvider.icon,
-			};
-			modelsState = providerState.getSortedModelsByProvider(currentProvider.id);
-		}
-	});
-
-	let showApiKey = $state(false);
 	const apiTypes = [
 		{ value: "openai", label: "OpenAI" },
 		{ value: "anthropic", label: "Anthropic" },
@@ -64,53 +23,6 @@
 		{ value: "custom", label: m.common_custom() },
 	];
 
-	function handleIconChange(iconKey: string) {
-		formData.icon = iconKey;
-		saveFormData();
-	}
-
-	async function handleGetModels() {
-		console.log("Getting models for provider:", providerParam);
-
-		if (!currentProvider) {
-			console.error("No current provider found");
-			return;
-		}
-
-		console.log("Current provider:", currentProvider);
-		console.log("Provider details:", {
-			id: currentProvider.id,
-			name: currentProvider.name,
-			apiType: currentProvider.apiType,
-			apiKey: currentProvider.apiKey ? "***" : "empty",
-			baseUrl: currentProvider.baseUrl,
-			enabled: currentProvider.enabled,
-		});
-
-		isLoadingModels = true;
-		try {
-			const success = await providerState.fetchModelsForProvider(currentProvider);
-			console.log("Fetch result:", success);
-
-			if (success) {
-				const sortedModels = providerState.getSortedModelsByProvider(currentProvider.id);
-				console.log("Sorted models:", sortedModels);
-				modelsState = sortedModels;
-			} else {
-				console.error("Failed to fetch models");
-			}
-		} catch (error) {
-			console.error("Error fetching models:", error);
-		} finally {
-			isLoadingModels = false;
-		}
-	}
-
-	function handleAddModel() {
-		dialogMode = "add";
-		editingModel = undefined;
-		showModelDialog = true;
-	}
 	function getChatEndpointUrl(baseUrl: string, apiType: string): string {
 		const cleanBaseUrl = baseUrl.replace(/\/$/, "");
 
@@ -134,6 +46,94 @@
 		}
 	}
 
+	let isLoadingModels = $state(false);
+	let searchQuery = $state("");
+	let showModelDialog = $state(false);
+	let dialogMode = $state<"add" | "edit">("add");
+	let editingModel = $state<Model | undefined>(undefined);
+	const providerParam = $derived(page.params.provider);
+	const currentProvider = $derived(
+		providerParam ? providerState.getProviderByNameOrId(providerParam) : undefined,
+	);
+	let showApiKey = $state(false);
+
+	const persistedSoredModelState = $derived.by(() => {
+		return persistedModelState.current
+			.filter((m) => m.providerId === currentProvider?.id)
+			.sort((a, b) => a.name.localeCompare(b.name));
+	});
+	let formData = $derived.by<ModelProvider>(() => {
+		if (currentProvider) {
+			return {
+				id: currentProvider.id,
+				name: currentProvider.name,
+				apiType: currentProvider.apiType,
+				apiKey: currentProvider.apiKey,
+				baseUrl: currentProvider.baseUrl,
+				enabled: currentProvider.enabled,
+				custom: currentProvider.custom || false,
+				status: currentProvider.status,
+				websites: { ...currentProvider.websites },
+				icon: currentProvider.icon,
+			};
+		}
+
+		return {
+			id: "",
+			name: "",
+			apiType: "openai",
+			apiKey: "",
+			baseUrl: "",
+			enabled: true,
+			custom: false,
+			status: "pending",
+			websites: {
+				official: "",
+				apiKey: "",
+				docs: "",
+				models: "",
+				defaultBaseUrl: "",
+			},
+			icon: undefined,
+		};
+	});
+
+	function saveFormData() {
+		if (formData.id) {
+			providerState.updateProvider(formData.id, {
+				name: formData.name,
+				apiType: formData.apiType,
+				apiKey: formData.apiKey,
+				baseUrl: formData.baseUrl,
+				enabled: formData.enabled,
+				custom: formData.custom,
+				status: formData.status,
+				websites: formData.websites,
+				icon: formData.icon,
+			});
+		}
+	}
+
+	function handleIconChange(iconKey: string) {
+		formData.icon = iconKey;
+		saveFormData();
+	}
+
+	async function handleGetModels() {
+		if (!currentProvider) {
+			return;
+		}
+		isLoadingModels = true;
+		await providerState.fetchModelsForProvider(currentProvider);
+		isLoadingModels = false;
+	}
+
+	function handleAddModel() {
+		dialogMode = "add";
+		editingModel = undefined;
+		showModelDialog = true;
+	}
+
 	function handleModelEdit(model: Model) {
 		dialogMode = "edit";
 		editingModel = model;
@@ -141,18 +141,8 @@
 	}
 
 	async function handleModelDelete(model: Model) {
-		const success = await providerState.removeModel(model.id);
-		if (success) {
-			modelsState = modelsState.filter((m) => m.id !== model.id);
-		}
+		await providerState.removeModel(model.id);
 	}
-
-	let modelsState = $state<Model[]>([]);
-	let isLoadingModels = $state(false);
-	let searchQuery = $state("");
-	let showModelDialog = $state(false);
-	let dialogMode = $state<"add" | "edit">("add");
-	let editingModel = $state<Model | undefined>(undefined);
 
 	function handleDialogClose() {
 		showModelDialog = false;
@@ -176,8 +166,6 @@
 					collected: false,
 				});
 
-				modelsState = [...modelsState, newModel];
-
 				toast.success(m.text_model_add_success({ name: newModel.name }));
 			} else if (editingModel) {
 				const success = await providerState.updateModel(editingModel.id, {
@@ -190,11 +178,6 @@
 				});
 
 				if (success) {
-					const index = modelsState.findIndex((m) => m.id === editingModel!.id);
-					if (index !== -1) {
-						modelsState[index] = { ...modelsState[index], ...data };
-					}
-
 					toast.success(m.text_model_update_success({ name: data.name }));
 				} else {
 					toast.error(m.text_model_update_failed());
@@ -207,24 +190,19 @@
 	}
 
 	async function handleModelToggleCollected(model: Model) {
-		const success = await providerState.toggleModelCollected(model.id);
-		if (success) {
-			const index = modelsState.findIndex((m) => m.id === model.id);
-			if (index !== -1) {
-				modelsState[index].collected = !modelsState[index].collected;
-			}
-		}
+		await providerState.toggleModelCollected(model.id);
 	}
 
 	async function handleModelDuplicate(model: Model) {
 		if (!currentProvider) return;
 		let newId = `${model.id}_copy`;
 		let counter = 1;
-		while (providerState.models.find((m) => m.id === newId)) {
+		while (persistedModelState.current.find((m) => m.id === newId)) {
 			newId = `${model.id}_copy_${counter}`;
 			counter++;
 		}
-		const duplicatedModel = await providerState.addModel({
+		console.log(model.capabilities);
+		await providerState.addModel({
 			id: newId,
 			name: `${model.name} (Copy)`,
 			remark: model.remark ? `${model.remark} (Copy)` : "",
@@ -235,32 +213,16 @@
 			enabled: model.enabled,
 			collected: false,
 		});
-		modelsState = [...modelsState, duplicatedModel];
 	}
 
 	async function handleClearModels() {
 		if (!currentProvider) return;
 		const clearedCount = await providerState.clearModelsByProvider(currentProvider.id);
-		modelsState = [];
 		if (clearedCount > 0) {
 			toast.success(m.text_clear_models_success({ count: clearedCount.toString() }));
 		}
 	}
-	function saveFormData() {
-		if (formData.id) {
-			providerState.updateProvider(formData.id, {
-				name: formData.name,
-				apiType: formData.apiType,
-				apiKey: formData.apiKey,
-				baseUrl: formData.baseUrl,
-				enabled: formData.enabled,
-				custom: formData.custom,
-				status: formData.status,
-				websites: formData.websites,
-				icon: formData.icon,
-			});
-		}
-	}
+
 	let saveTimeout: NodeJS.Timeout;
 	function handleInputChange() {
 		clearTimeout(saveTimeout);
@@ -269,7 +231,7 @@
 		}, 500);
 	}
 	const filteredModels = $derived(
-		modelsState.filter(
+		persistedSoredModelState.filter(
 			(model) =>
 				searchQuery === "" ||
 				model.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -400,7 +362,7 @@
 				<Button
 					variant="destructive"
 					onclick={handleClearModels}
-					disabled={modelsState.length === 0}
+					disabled={persistedSoredModelState.length === 0}
 				>
 					{m.text_button_clear_models()}
 				</Button>

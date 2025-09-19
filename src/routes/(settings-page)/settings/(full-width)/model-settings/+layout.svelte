@@ -3,7 +3,7 @@
 	import { page } from "$app/state";
 	import { ProviderList } from "$lib/components/buss/provider-list";
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
-	import { providerState } from "$lib/stores/provider-state.svelte.js";
+	import { persistedProviderState, providerState } from "$lib/stores/provider-state.svelte.js";
 	import type { ModelProvider } from "$lib/types/provider";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -54,14 +54,14 @@
 		toast.success(
 			`${m.text_context_remove_provider()}: ${provider.name}${removedModelCount > 0 ? ` (${removedModelCount} models removed)` : ""}`,
 		);
-		if (provider.id === activeProviderId && providerState.providers.length > 0) {
-			goto(`/settings/model-settings/${providerState.providers[0].id}`);
+		if (provider.id === activeProviderId && persistedProviderState.current.length > 0) {
+			goto(`/settings/model-settings/${persistedProviderState.current[0].id}`);
 		}
 	}
 
 	onMount(() => {
-		if (!page.params.provider && providerState.providers.length > 0) {
-			goto(`/settings/model-settings/${providerState.providers[0].id}`);
+		if (!page.params.provider && persistedProviderState.current.length > 0) {
+			goto(`/settings/model-settings/${persistedProviderState.current[0].id}`);
 		}
 	});
 </script>
@@ -75,7 +75,7 @@
 			<ScrollArea class="h-full">
 				<div class="h-full px-4 pb-4">
 					<ProviderList
-						bind:providers={providerState.providers}
+						bind:providers={persistedProviderState.current}
 						bind:activeProviderId
 						onProviderClick={handleProviderClick}
 						onReorder={handleReorderProviders}

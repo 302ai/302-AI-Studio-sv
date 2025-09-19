@@ -1,6 +1,7 @@
 import { isEqual } from "es-toolkit";
 import { createSubscriber } from "svelte/reactivity";
-import type { StorageValue } from "unstorage";
+import type { StorageValue } from "@302ai/unstorage";
+import superjson from "superjson";
 
 class ElectronStorageAdapter<T extends StorageValue> {
 	private storageService = window.electronAPI.storageService;
@@ -10,7 +11,9 @@ class ElectronStorageAdapter<T extends StorageValue> {
 	}
 
 	async setItemAsync(key: string, value: T | null): Promise<void> {
-		await this.storageService.setItem(key, value);
+		// Convert proxies to plain objects for serialization
+		const serializedValue = value ? (superjson.parse(superjson.stringify(value)) as T) : value;
+		await this.storageService.setItem(key, serializedValue);
 	}
 
 	async removeItemAsync(key: string): Promise<void> {
@@ -120,6 +123,7 @@ export class PersistedState<T extends StorageValue> {
 
 	#store(value: T | undefined | null): void {
 		this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
+			console.log("Value", value);
 			console.error(
 				`Error when writing value from persisted store "${this.#key}" to Electron storage`,
 				error,

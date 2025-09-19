@@ -14,7 +14,7 @@
 <script lang="ts">
 	import { ModelIcon } from "$lib/components/buss/model-icon/index.js";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
-	import { providerState } from "$lib/stores/provider-state.svelte.js";
+	import { persistedModelState, providerState } from "$lib/stores/provider-state.svelte.js";
 	import { cn } from "$lib/utils";
 	import { AlertCircle, Cloud, X } from "@lucide/svelte";
 	import { m } from "$lib/paraglide/messages.js";
@@ -34,7 +34,9 @@
 		if (!provider.apiKey || provider.apiKey.trim() === "") {
 			return m.text_provider_not_configured();
 		}
-		const modelCount = providerState.models.filter((m) => m.providerId === provider.id).length;
+		const modelCount = persistedModelState.current.filter(
+			(m) => m.providerId === provider.id,
+		).length;
 		return m.text_provider_models_count({ count: modelCount.toString() });
 	});
 

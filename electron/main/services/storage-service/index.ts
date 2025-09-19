@@ -1,7 +1,7 @@
 import type { IpcMainInvokeEvent } from "electron";
 import { app } from "electron";
-import { createStorage, type StorageValue, type StorageMeta } from "unstorage";
-import fsLiteDriver from "unstorage/drivers/fs-lite";
+import { createStorage, type StorageValue, type StorageMeta } from "@302ai/unstorage";
+import fsLiteDriver from "@302ai/unstorage/drivers/fs-lite";
 import type { StorageMetadata, StorageOptions, StorageItem } from "@shared/types";
 import { join } from "path";
 
