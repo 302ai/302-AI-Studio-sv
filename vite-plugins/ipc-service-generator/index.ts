@@ -1,7 +1,7 @@
 import { type Plugin, type ResolvedConfig } from "vite";
 import * as fs from "fs";
 import * as path from "path";
-import { execSync } from "child_process";
+import { spawn } from "child_process";
 import { TypeScriptServiceParser } from "./parser";
 import { IpcStructureGenerator } from "./generator";
 import type { IpcServiceGeneratorOptions } from "./types";
@@ -18,25 +18,60 @@ export function ipcServiceGenerator(options: IpcServiceGeneratorOptions = {}): P
 	} = options;
 
 	/**
-	 * Format TypeScript file using the specified command
+	 * Format TypeScript files using the specified command in parallel
 	 */
-	function formatFile(filePath: string, projectRoot: string): void {
-		if (formatCommand === false) {
+	function formatFiles(filePaths: string[], projectRoot: string): void {
+		if (formatCommand === false || filePaths.length === 0) {
 			return;
 		}
 
-		try {
-			execSync(`${formatCommand} "${filePath}"`, {
-				cwd: projectRoot,
-				stdio: "pipe",
-			});
-			console.log(`🎨 Formatted: ${path.relative(projectRoot, filePath)}`);
-		} catch (error) {
-			console.warn(
-				`⚠️  Failed to format ${path.relative(projectRoot, filePath)}:`,
-				error instanceof Error ? error.message : "Unknown error",
-			);
-		}
+		// Execute format commands in parallel using Promise.allSettled
+		const formatPromises = filePaths.map(async (filePath) => {
+			try {
+				await new Promise<void>((resolve, reject) => {
+					const child = spawn(
+						formatCommand.split(" ")[0],
+						[...formatCommand.split(" ").slice(1), filePath],
+						{
+							cwd: projectRoot,
+							stdio: "pipe",
+						},
+					);
+
+					child.on("close", (code: number) => {
+						if (code === 0) {
+							resolve();
+						} else {
+							reject(new Error(`Format command exited with code ${code}`));
+						}
+					});
+
+					child.on("error", reject);
+				});
+
+				console.log(`🎨 Formatted: ${path.relative(projectRoot, filePath)}`);
+				return { status: "fulfilled", filePath };
+			} catch (error) {
+				console.warn(
+					`⚠️  Failed to format ${path.relative(projectRoot, filePath)}:`,
+					error instanceof Error ? error.message : "Unknown error",
+				);
+				return { status: "rejected", filePath, error };
+			}
+		});
+
+		// Wait for all format operations to complete
+		Promise.allSettled(formatPromises).then((results) => {
+			const successful = results.filter((r) => r.status === "fulfilled").length;
+			const failed = results.filter((r) => r.status === "rejected").length;
+
+			if (successful > 0) {
+				console.log(`✅ Successfully formatted ${successful} file(s)`);
+			}
+			if (failed > 0) {
+				console.warn(`⚠️  Failed to format ${failed} file(s)`);
+			}
+		});
 	}
 
 	function generateFiles(config: ResolvedConfig) {
@@ -70,13 +105,14 @@ export function ipcServiceGenerator(options: IpcServiceGeneratorOptions = {}): P
 			const servicesModuleCode = generator.generatePreloadServicesModule(structure);
 			const servicesModuleFile = path.join(resolvedOutputDir, "preload-services.ts");
 			fs.writeFileSync(servicesModuleFile, servicesModuleCode);
-			formatFile(servicesModuleFile, config.root);
 
 			// Generate main process registration code
 			const mainCode = generator.generateMainProcessCode(structure);
 			const mainFile = path.join(resolvedOutputDir, "ipc-registration.ts");
 			fs.writeFileSync(mainFile, mainCode);
-			formatFile(mainFile, config.root);
+
+			// Format all generated files in parallel
+			formatFiles([servicesModuleFile, mainFile], config.root);
 
 			console.log(`✅ IPC structure generated:`);
 			console.log(`├─ 📦 Service module: ${path.relative(config.root, servicesModuleFile)}`);
