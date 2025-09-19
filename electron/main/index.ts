@@ -1,13 +1,11 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
 
-import { app, BrowserWindow, nativeTheme, net, protocol } from "electron";
+import { app, BrowserWindow, net, protocol } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
-import windowStateKeeper from "electron-window-state";
-import { ENVIRONMENT, PLATFORM, WINDOW_SIZE } from "./constants";
-import { CONFIG } from "./constants";
 import { registerIpcHandlers } from "./generated/ipc-registration";
-const { shouldUseDarkColors } = nativeTheme;
+import { windowService } from "./services";
+
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
 ]);
@@ -16,74 +14,6 @@ protocol.registerSchemesAsPrivileged([
 if (started) {
 	app.quit();
 }
-
-function updateTitleBarOverlay() {
-	if (!PLATFORM.IS_WINDOWS && !PLATFORM.IS_LINUX) return;
-
-	BrowserWindow.getAllWindows().forEach((window) => {
-		window.setTitleBarOverlay(
-			nativeTheme.shouldUseDarkColors
-				? CONFIG.TITLE_BAR_OVERLAY.DARK
-				: CONFIG.TITLE_BAR_OVERLAY.LIGHT,
-		);
-	});
-}
-
-const createWindow = () => {
-	const mainWindowState = windowStateKeeper({
-		defaultWidth: WINDOW_SIZE.MIN_WIDTH,
-		defaultHeight: WINDOW_SIZE.MIN_HEIGHT,
-		fullScreen: false,
-		maximize: false,
-	});
-	// Create the browser window.
-	const mainWindow = new BrowserWindow({
-		x: mainWindowState.x,
-		y: mainWindowState.y,
-		width: mainWindowState.width,
-		height: mainWindowState.height,
-		minWidth: WINDOW_SIZE.MIN_WIDTH,
-		minHeight: WINDOW_SIZE.MIN_HEIGHT,
-		autoHideMenuBar: true,
-		transparent: PLATFORM.IS_MAC,
-		frame: PLATFORM.IS_LINUX ? false : undefined,
-		visualEffectState: "active",
-		titleBarStyle: PLATFORM.IS_MAC ? "hiddenInset" : "hidden",
-		titleBarOverlay: !PLATFORM.IS_MAC
-			? shouldUseDarkColors
-				? CONFIG.TITLE_BAR_OVERLAY.DARK
-				: CONFIG.TITLE_BAR_OVERLAY.LIGHT
-			: undefined,
-		backgroundColor: shouldUseDarkColors ? "#2d2d2d" : "#f1f1f1",
-		trafficLightPosition: PLATFORM.IS_MAC ? { x: 12, y: 12 } : undefined,
-		...(PLATFORM.IS_LINUX && {
-			thickFrame: false,
-			resizable: true,
-			skipTaskbar: false,
-		}),
-		webPreferences: {
-			preload: path.join(import.meta.dirname, "../preload/index.js"),
-			devTools: ENVIRONMENT.IS_DEV,
-			webgl: true,
-		},
-		roundedCorners: true,
-	});
-
-	mainWindowState.manage(mainWindow);
-	nativeTheme.on("updated", () => {
-		updateTitleBarOverlay();
-	});
-
-	// and load the index.html of the app.
-	if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-		mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-		mainWindow.webContents.on("did-frame-finish-load", () => {
-			mainWindow.webContents.openDevTools({ mode: "detach" });
-		});
-	} else {
-		mainWindow.loadURL("app://localhost");
-	}
-};
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -106,7 +36,8 @@ app.on("ready", () => {
 			`file://${path.join(import.meta.dirname, `../../renderer/${MAIN_WINDOW_VITE_NAME}`, filePath)}`,
 		);
 	});
-	createWindow();
+
+	windowService.createSheetWindow();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -122,7 +53,7 @@ app.on("activate", () => {
 	// On OS X it's common to re-create a window in the app when the
 	// dock icon is clicked and there are no other windows open.
 	if (BrowserWindow.getAllWindows().length === 0) {
-		createWindow();
+		windowService.createSheetWindow();
 	}
 });
 
