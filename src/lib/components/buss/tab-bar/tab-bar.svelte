@@ -1,9 +1,7 @@
 <script lang="ts" module>
 	import type { DndEvent } from "svelte-dnd-action";
-	import { type Tab } from "./tab-item.svelte";
 
 	interface Props {
-		tabs: Tab[];
 		activeTabId: string;
 		onTabClick: (tab: Tab) => void;
 		onTabClose: (tab: Tab) => void;
@@ -36,12 +34,12 @@
 	import { Spring } from "svelte/motion";
 	import { scale } from "svelte/transition";
 	import TabItem from "./tab-item.svelte";
-	import type { Platform } from "@shared/types";
+	import type { Platform, Tab } from "@shared/types";
+	import { persistedTabs } from "$lib/stores/tab-bar-state.svelte";
 
 	const { deviceService } = window.electronAPI;
 
 	let {
-		tabs = $bindable<Tab[]>(),
 		activeTabId = $bindable<string>(),
 		onTabClick,
 		onTabClose,
@@ -55,13 +53,33 @@
 	const buttonSpring = new Spring({ opacity: 1, x: 0 }, { stiffness: 0.2, damping: 0.8 });
 	const buttonBounceSpring = new Spring({ x: 0 }, { stiffness: 0.4, damping: 0.6 });
 
-	let previousTabsLength = $state(tabs.length);
+	let previousTabsLength = $state(persistedTabs.current.length);
 	let isAnimating = $state(false);
 	let isDndFinalizing = $state(false);
 	let isMac = $state(false);
 
-	const tabsCountDiff = $derived(tabs.length - previousTabsLength);
+	const tabsCountDiff = $derived(persistedTabs.current.length - previousTabsLength);
 	const shouldAnimateCloseTab = $derived(tabsCountDiff < 0 && !isAnimating);
+
+	// Debug: Check for duplicate IDs
+	$effect(() => {
+		const ids = persistedTabs.current.map(tab => tab.id);
+		const uniqueIds = new Set(ids);
+		if (ids.length !== uniqueIds.size) {
+			console.error('Duplicate tab IDs detected:', ids);
+			console.error('Tabs:', persistedTabs.current);
+			// Fix duplicate IDs by ensuring uniqueness
+			const seen = new Set<string>();
+			persistedTabs.current = persistedTabs.current.filter(tab => {
+				if (seen.has(tab.id)) {
+					console.warn(`Removing duplicate tab with ID: ${tab.id}`);
+					return false;
+				}
+				seen.add(tab.id);
+				return true;
+			});
+		}
+	});
 
 	function handleNewTab() {
 		if (isAnimating) return;
@@ -78,7 +96,7 @@
 		if (shouldAnimateCloseTab) {
 			animateButtonBounce(buttonBounceSpring, "close");
 		}
-		previousTabsLength = tabs.length;
+		previousTabsLength = persistedTabs.current.length;
 	});
 
 	function handleDndConsider(e: CustomEvent<TabDndEvent>) {
@@ -87,21 +105,23 @@
 		if (info.trigger === TRIGGERS.DRAG_STARTED) {
 			draggedElementId = info.id;
 			buttonSpring.target = { opacity: 0.3, x: 8 };
-			const draggedTab = tabs.find((tab) => tab.id === info.id);
+			const draggedTab = persistedTabs.current.find((tab) => tab.id === info.id);
 			if (draggedTab) {
 				onTabClick(draggedTab);
 			}
 		}
 
-		const hasOrderChanged = newItems.some((item, index) => item.id !== tabs[index]?.id);
-		if (hasOrderChanged) tabs = newItems;
+		const hasOrderChanged = newItems.some(
+			(item, index) => item.id !== persistedTabs.current[index]?.id,
+		);
+		if (hasOrderChanged) persistedTabs.current = newItems;
 	}
 	function handleDndFinalize(e: CustomEvent<TabDndEvent>) {
 		isDndFinalizing = true;
 
 		try {
 			draggedElementId = null;
-			tabs = e.detail.items;
+			persistedTabs.current = e.detail.items;
 			buttonSpring.target = { opacity: 1, x: 0 };
 		} catch (error) {
 			console.error("Error finalizing drag operation:", error);
@@ -154,7 +174,7 @@
 			isMac && "pl-[80px]",
 		)}
 		use:dndzone={{
-			items: tabs,
+			items: persistedTabs.current,
 			flipDurationMs: 200,
 			dropTargetStyle: {},
 			transformDraggedElement,
@@ -166,11 +186,11 @@
 		onconsider={handleDndConsider}
 		onfinalize={handleDndFinalize}
 	>
-		{#each tabs as tab, index (tab.id)}
+		{#each persistedTabs.current as tab, index (tab.id)}
 			{@const isCurrentActive = tab.id === activeTabId}
-			{@const nextTab = tabs[index + 1]}
+			{@const nextTab = persistedTabs.current[index + 1]}
 			{@const isNextActive = nextTab?.id === activeTabId}
-			{@const isLastTab = index === tabs.length - 1}
+			{@const isLastTab = index === persistedTabs.current.length - 1}
 			{@const shouldShowSeparator = !isLastTab && !isCurrentActive && !isNextActive}
 			<div
 				class={cn("flex min-w-0 items-center", autoStretch && "flex-1 basis-0")}
@@ -190,6 +210,7 @@
 					isActive={isCurrentActive}
 					isDragging={draggedElementId === tab.id}
 					stretch={autoStretch}
+					closable={persistedTabs.current.length > 0}
 					{onTabClick}
 					{onTabClose}
 					{onTabCloseAll}
@@ -212,7 +233,10 @@
 		>
 			<Separator
 				orientation="vertical"
-				class={cn("mx-0.5 !h-[20px] !w-0.5", tabs.length === 0 ? "opacity-0" : "opacity-100")}
+				class={cn(
+					"mx-0.5 !h-[20px] !w-0.5",
+					persistedTabs.current.length === 0 ? "opacity-0" : "opacity-100",
+				)}
 				style="cursor: none !important;"
 			/>
 			<ButtonWithTooltip

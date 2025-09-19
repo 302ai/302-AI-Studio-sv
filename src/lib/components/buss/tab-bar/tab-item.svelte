@@ -1,17 +1,10 @@
 <script lang="ts" module>
-	export type Tab = {
-		id: string;
-		title: string;
-		href: string;
-		closable?: boolean;
-		icon?: Snippet;
-	};
-
 	interface Props {
 		tab: Tab;
 		isActive: boolean;
 		isDragging?: boolean;
 		stretch?: boolean;
+		closable: boolean;
 		onTabClick: (tab: Tab) => void;
 		onTabClose: (tab: Tab) => void;
 		onTabCloseAll: () => void;
@@ -28,12 +21,15 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { X, CircleX } from "@lucide/svelte";
 	import { onDestroy, type Snippet } from "svelte";
+	import type { Tab } from "@shared/types";
+	import { Ghost, House, LayoutPanelLeft, MessageCircle, Settings } from "@lucide/svelte";
 
 	const {
 		tab,
 		isActive,
 		isDragging: _isDragging = false,
 		stretch = false,
+		closable,
 		onTabClick,
 		onTabClose,
 		onTabCloseAll,
@@ -71,6 +67,19 @@
 	});
 </script>
 
+{#snippet tabIcon()}
+	{@const tabType = tab.type}
+	{#if tabType === "chat"}
+		{#if tab.incognitoMode}
+			<Ghost />
+		{:else}
+			<MessageCircle />
+		{/if}
+	{:else if tabType === "settings"}
+		<Settings />
+	{/if}
+{/snippet}
+
 <ContextMenu.Root>
 	<ContextMenu.Trigger
 		class={cn(
@@ -89,15 +98,14 @@
 		tabindex={0}
 	>
 		<div bind:this={triggerRef} class="contents">
-			{#if tab.icon && !isCompact}
-				<div class="mr-tab-icon size-tab-item-icon flex shrink-0 items-center justify-center">
-					{@render tab.icon()}
-				</div>
-			{/if}
+			<div class="mr-tab-icon size-tab-item-icon flex shrink-0 items-center justify-center">
+				{@render tabIcon()}
+			</div>
+
 			{#if !isCompact}
 				<span class="max-w-tab-title min-w-0 flex-1 truncate">{tab.title}</span>
 			{/if}
-			{#if tab.closable !== false}
+			{#if closable}
 				<ButtonWithTooltip
 					tooltip={isCompact ? tab.title : m.label_button_close()}
 					tooltipSide="bottom"
@@ -120,7 +128,7 @@
 		</div>
 	</ContextMenu.Trigger>
 	<ContextMenu.Content class="w-48">
-		<ContextMenu.Item onclick={() => onTabClose(tab)}>
+		<ContextMenu.Item onclick={() => onTabClose(tab)} disabled={!closable}>
 			<X class="mr-2 h-4 w-4" />
 			{m.label_button_close()}
 		</ContextMenu.Item>

@@ -7,8 +7,6 @@
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { Ghost, House, LayoutPanelLeft, MessageCircle, Settings } from "@lucide/svelte";
 	import { ModeWatcher, setMode } from "mode-watcher";
-	import { onMount } from "svelte";
-	import { providerState } from "$lib/stores/provider-state.svelte";
 	import "../app.css";
 
 	const { children } = $props();
@@ -120,7 +118,6 @@
 
 <div class="flex h-screen flex-col">
 	<TabBar
-		bind:tabs
 		bind:activeTabId
 		onTabClick={handleTabClick}
 		onTabClose={handleTabClose}

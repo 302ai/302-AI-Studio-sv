@@ -32,3 +32,11 @@ export type SheetWindowConfig = {
 		y: number;
 	};
 };
+
+export type Tab = {
+	id: string;
+	title: string;
+	href: string;
+	incognitoMode?: boolean;
+	type: "chat" | "settings";
+};
