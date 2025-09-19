@@ -1,7 +1,7 @@
 import * as ts from "typescript";
 import * as path from "path";
 import { glob } from "glob";
-import type { ServiceMethod } from "./types";
+import type { ServiceMethod, GenericParameter } from "./types";
 
 /**
  * TypeScript service parser
@@ -111,6 +111,30 @@ export class TypeScriptServiceParser {
 		return "any";
 	}
 
+	private parseGenericParameters(method: ts.MethodDeclaration): GenericParameter[] {
+		if (!method.typeParameters) {
+			return [];
+		}
+
+		return method.typeParameters.map((typeParam) => {
+			const param: GenericParameter = {
+				name: typeParam.name.text,
+			};
+
+			// 解析约束 (extends)
+			if (typeParam.constraint) {
+				param.constraint = this.getTypeText(typeParam.constraint);
+			}
+
+			// 解析默认类型
+			if (typeParam.default) {
+				param.defaultType = this.getTypeText(typeParam.default);
+			}
+
+			return param;
+		});
+	}
+
 	public parseServices(): ServiceMethod[] {
 		const methods: ServiceMethod[] = [];
 
@@ -133,12 +157,14 @@ export class TypeScriptServiceParser {
 
 							if (hasEventParam) {
 								const returnType = this.parseMethodReturnType(member);
+								const genericParameters = this.parseGenericParameters(member);
 								methods.push({
 									serviceName,
 									className,
 									methodName,
 									parameters,
 									returnType,
+									genericParameters,
 									filePath: path.relative(process.cwd(), filePath),
 								});
 							}

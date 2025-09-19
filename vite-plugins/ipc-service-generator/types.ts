@@ -2,6 +2,12 @@
  * Type definitions for IPC service generator
  */
 
+export interface GenericParameter {
+	name: string;
+	constraint?: string; // extends constraint
+	defaultType?: string; // default type
+}
+
 export interface ServiceMethod {
 	serviceName: string;
 	className: string;
@@ -12,6 +18,7 @@ export interface ServiceMethod {
 		isEventParam: boolean;
 	}>;
 	returnType: string;
+	genericParameters: GenericParameter[]; // 泛型参数
 	filePath: string;
 }
 
@@ -28,6 +35,7 @@ export interface GeneratedIpcStructure {
 				type: string;
 			}>;
 			returnType: string;
+			genericParameters: GenericParameter[]; // 泛型参数
 		}>;
 	}>;
 }

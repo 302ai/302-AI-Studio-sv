@@ -5,7 +5,7 @@ import { BrowserWindow, nativeTheme } from "electron";
 import path from "node:path";
 
 export class WindowService {
-	windowMap: Map<number, BrowserWindow>;
+	private windowMap: Map<number, BrowserWindow>;
 
 	constructor() {
 		this.windowMap = new Map();

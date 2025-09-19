@@ -124,10 +124,16 @@ export function ipcServiceGenerator(options: IpcServiceGeneratorOptions = {}): P
 					`└─ 🏷️ ${service.serviceName} (${service.className}): ${service.methods.length} methods`,
 				);
 				service.methods.forEach((method, index) => {
+					const genericString =
+						method.genericParameters.length > 0
+							? `<${method.genericParameters.map((p) => `${p.name}${p.defaultType ? ` = ${p.defaultType}` : ""}`).join(", ")}>`
+							: "";
 					const params = method.parameters.map((p) => `${p.name}: ${p.type}`).join(", ");
 					const isLast = index === service.methods.length - 1;
 					const prefix = isLast ? "└─" : "├─";
-					console.log(`│   ${prefix} 📎 ${method.methodName}(${params}) ➡️ ${method.channelName}`);
+					console.log(
+						`│   ${prefix} 📎 ${method.methodName}${genericString}(${params}) ➡️ ${method.channelName}`,
+					);
 				});
 			});
 		} catch (error) {

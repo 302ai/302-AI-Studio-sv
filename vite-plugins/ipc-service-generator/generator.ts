@@ -1,4 +1,9 @@
-import type { ServiceMethod, GeneratedIpcStructure, IpcServiceGeneratorOptions } from "./types";
+import type {
+	ServiceMethod,
+	GeneratedIpcStructure,
+	IpcServiceGeneratorOptions,
+	GenericParameter,
+} from "./types";
 import dedent from "dedent";
 import * as path from "path";
 
@@ -39,12 +44,20 @@ export class IpcStructureGenerator {
 		]);
 
 		this.methods.forEach((method) => {
+			const hasGenericParams = method.genericParameters.length > 0;
+			const genericParamNames = hasGenericParams
+				? new Set(method.genericParameters.map((gp) => gp.name))
+				: new Set();
+
 			// Check parameter types
 			method.parameters.forEach((param) => {
 				if (!param.isEventParam) {
 					const cleanType = this.cleanTypeString(param.type);
 					if (!builtInTypes.has(cleanType) && !this.isBuiltInComplexType(cleanType)) {
-						customTypes.add(cleanType);
+						// Only exclude generic parameter names if this method actually has generics
+						if (!hasGenericParams || !genericParamNames.has(cleanType)) {
+							customTypes.add(cleanType);
+						}
 					}
 				}
 			});
@@ -52,7 +65,36 @@ export class IpcStructureGenerator {
 			// Check return type
 			const cleanReturnType = this.cleanTypeString(method.returnType);
 			if (!builtInTypes.has(cleanReturnType) && !this.isBuiltInComplexType(cleanReturnType)) {
-				customTypes.add(cleanReturnType);
+				// Only exclude generic parameter names if this method actually has generics
+				if (!hasGenericParams || !genericParamNames.has(cleanReturnType)) {
+					customTypes.add(cleanReturnType);
+				}
+			}
+
+			// Check generic parameter default types (only for methods that actually have generics)
+			if (hasGenericParams) {
+				method.genericParameters.forEach((genericParam) => {
+					if (genericParam.defaultType) {
+						const cleanDefaultType = this.cleanTypeString(genericParam.defaultType);
+						if (
+							!builtInTypes.has(cleanDefaultType) &&
+							!this.isBuiltInComplexType(cleanDefaultType)
+						) {
+							customTypes.add(cleanDefaultType);
+						}
+					}
+
+					// Check constraint types
+					if (genericParam.constraint) {
+						const cleanConstraintType = this.cleanTypeString(genericParam.constraint);
+						if (
+							!builtInTypes.has(cleanConstraintType) &&
+							!this.isBuiltInComplexType(cleanConstraintType)
+						) {
+							customTypes.add(cleanConstraintType);
+						}
+					}
+				});
 			}
 		});
 
@@ -88,6 +130,14 @@ export class IpcStructureGenerator {
 	}
 
 	/**
+	 * Check if a type is a generic parameter name (single uppercase letter typically)
+	 */
+	private isGenericParameterName(type: string): boolean {
+		// Generic parameters are typically single uppercase letters like T, U, K, V
+		return /^[A-Z]$/.test(type.trim()) || /^[A-Z][A-Za-z]*$/.test(type.trim());
+	}
+
+	/**
 	 * Check if type is a built-in complex type (like generics)
 	 */
 	private isBuiltInComplexType(type: string): boolean {
@@ -107,6 +157,29 @@ export class IpcStructureGenerator {
 		return `${prefix}${serviceName}:${methodName}`;
 	}
 
+	/**
+	 * Generate generic parameter string for TypeScript
+	 */
+	private generateGenericParametersString(genericParams: GenericParameter[]): string {
+		if (genericParams.length === 0) return "";
+
+		const params = genericParams.map((param) => {
+			let result = param.name;
+
+			if (param.constraint) {
+				result += ` extends ${param.constraint}`;
+			}
+
+			if (param.defaultType) {
+				result += ` = ${param.defaultType}`;
+			}
+
+			return result;
+		});
+
+		return `<${params.join(", ")}>`;
+	}
+
 	public generateStructure(): GeneratedIpcStructure {
 		const servicesMap = new Map<
 			string,
@@ -119,6 +192,7 @@ export class IpcStructureGenerator {
 					channelName: string;
 					parameters: Array<{ name: string; type: string }>;
 					returnType: string;
+					genericParameters: GenericParameter[];
 				}>;
 			}
 		>();
@@ -147,6 +221,7 @@ export class IpcStructureGenerator {
 				channelName: this.generateChannelName(method.serviceName, method.methodName),
 				parameters: businessParameters,
 				returnType: method.returnType,
+				genericParameters: method.genericParameters,
 			});
 		});
 
@@ -160,11 +235,12 @@ export class IpcStructureGenerator {
 			.map((service) => {
 				const methods = service.methods
 					.map((method) => {
+						const genericString = this.generateGenericParametersString(method.genericParameters);
 						const paramTypes =
 							method.parameters.length > 0
 								? method.parameters.map((p) => `${p.name}: ${p.type}`).join(", ")
 								: "";
-						return `${method.methodName}(${paramTypes}): ${method.returnType};`;
+						return `${method.methodName}${genericString}(${paramTypes}): ${method.returnType};`;
 					})
 					.join("\n");
 
@@ -176,11 +252,16 @@ export class IpcStructureGenerator {
 			.map((service) => {
 				const methods = service.methods
 					.map((method) => {
+						const genericString = this.generateGenericParametersString(method.genericParameters);
 						const params = method.parameters.map((p) => p.name).join(", ");
 						const paramDefs = method.parameters.map((p) => `${p.name}: ${p.type}`).join(", ");
 						const argsArray = method.parameters.length > 0 ? `, ${params}` : "";
 
-						return `${method.methodName}: (${paramDefs}) => ipcRenderer.invoke('${method.channelName}'${argsArray}),`;
+						// For generic methods, we need to add type assertion
+						const returnTypeAssertion =
+							method.genericParameters.length > 0 ? ` as ${method.returnType}` : "";
+
+						return `${method.methodName}: ${genericString}(${paramDefs}) => ipcRenderer.invoke('${method.channelName}'${argsArray})${returnTypeAssertion},`;
 					})
 					.join("\n");
 

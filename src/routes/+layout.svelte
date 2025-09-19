@@ -5,7 +5,7 @@
 	import { TabBar, type Tab } from "$lib/components/buss/tab-bar";
 	import { Toaster } from "$lib/components/ui/sonner";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { Ghost, Home, Layout, MessageCircle, Settings } from "@lucide/svelte";
+	import { Ghost, House, LayoutPanelLeft, MessageCircle, Settings } from "@lucide/svelte";
 	import { ModeWatcher, setMode } from "mode-watcher";
 	import { onMount } from "svelte";
 	import { polyfillLocalStorage } from "$lib/utils/storage-polyfill";
@@ -120,11 +120,11 @@
 </svelte:head>
 
 {#snippet homeIcon()}
-	<Home class="h-full w-full" />
+	<House class="h-full w-full" />
 {/snippet}
 
 {#snippet layoutIcon()}
-	<Layout class="h-full w-full" />
+	<LayoutPanelLeft class="h-full w-full" />
 {/snippet}
 
 {#snippet settingsIcon()}

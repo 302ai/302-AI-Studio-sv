@@ -8,3 +8,5 @@ export type SheetWindowConfig = {
 		y: number;
 	};
 };
+
+export type StorageValue = string | number | boolean | object;

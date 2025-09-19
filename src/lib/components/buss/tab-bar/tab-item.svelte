@@ -26,9 +26,8 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
-	import { X, XCircle } from "@lucide/svelte";
-	import type { Snippet } from "svelte";
-	import { onDestroy } from "svelte";
+	import { X, CircleX } from "@lucide/svelte";
+	import { onDestroy, type Snippet } from "svelte";
 
 	const {
 		tab,
@@ -126,7 +125,7 @@
 			{m.label_button_close()}
 		</ContextMenu.Item>
 		<ContextMenu.Item onclick={() => onTabCloseAll()}>
-			<XCircle class="mr-2 h-4 w-4" />
+			<CircleX class="mr-2 h-4 w-4" />
 			{m.label_button_close_all()}
 		</ContextMenu.Item>
 	</ContextMenu.Content>
