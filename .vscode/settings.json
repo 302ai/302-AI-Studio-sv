@@ -3,5 +3,15 @@
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": "explicit"
-	}
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.formatOnSave": true
+	},
+	"[svelte]": {
+		"editor.defaultFormatter": "svelte.svelte-vscode",
+		"editor.formatOnSave": true
+	},
+	"svelte.plugin.typescript.format.enable": true,
+	"svelte.plugin.typescript.diagnostics.enable": true
 }
