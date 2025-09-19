@@ -61,7 +61,7 @@
 >
 	{#if thumbStyle.left}
 		<div
-			class="h-seg-thumb bg-accent absolute z-1 rounded-md !transition-all duration-400 ease-in-out"
+			class="h-seg-thumb bg-accent absolute z-1 rounded-md transition-all duration-400 ease-in-out"
 			style="left: {thumbStyle.left}; width: {thumbStyle.width};"
 		></div>
 	{/if}

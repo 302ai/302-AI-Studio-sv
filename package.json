@@ -97,6 +97,7 @@
 		"dedent": "^1.7.0",
 		"electron-squirrel-startup": "^1.0.1",
 		"electron-window-state": "^5.0.3",
+		"es-toolkit": "^1.39.10",
 		"highlight.js": "^11.11.1",
 		"ldrs": "^1.1.7",
 		"mode-watcher": "^1.1.0",

@@ -34,6 +34,9 @@ importers:
       electron-window-state:
         specifier: ^5.0.3
         version: 5.0.3
+      es-toolkit:
+        specifier: ^1.39.10
+        version: 1.39.10
       highlight.js:
         specifier: ^11.11.1
         version: 11.11.1
@@ -2051,6 +2054,9 @@ packages:
 
   es-module-lexer@1.7.0:
     resolution: {integrity: sha512-jEQoCwk8hyb2AZziIOLhDqpm5+2ww5uIE6lkO/6jcOCusfk6LhMHpXXfBLXTZ7Ydyt0j4VoUQv6uGNYbdW+kBA==}
+
+  es-toolkit@1.39.10:
+    resolution: {integrity: sha512-E0iGnTtbDhkeczB0T+mxmoVlT4YNweEKBLq7oaU4p11mecdsZpNWOglI4895Vh4usbQ+LsJiuLuI2L0Vdmfm2w==}
 
   es6-error@4.1.1:
     resolution: {integrity: sha512-Um/+FxMr9CISWh0bi5Zv0iOD+4cFh5qLeks1qhAopKVAJw3drgKbKySikp7wGhDL0HPeaja0P5ULZrxLkniUVg==}
@@ -6573,6 +6579,8 @@ snapshots:
     optional: true
 
   es-module-lexer@1.7.0: {}
+
+  es-toolkit@1.39.10: {}
 
   es6-error@4.1.1:
     optional: true

@@ -3,13 +3,11 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 	import { m } from "$lib/paraglide/messages";
 	import { Laptop, Moon, Sun } from "@lucide/svelte";
-	import { setMode } from "mode-watcher";
-	import { onMount } from "svelte";
 	import type { Theme } from "@shared/types";
+	import { setTheme, persistedThemeState } from "$lib/stores/theme.state.svelte";
 
-	const { appService } = window.electronAPI;
+	let selectedKey = persistedThemeState.current.theme;
 
-	let selectedKey = "system";
 	const themeOptions = [
 		{
 			key: "light",
@@ -32,27 +30,9 @@
 	];
 
 	async function handleSelect(key: string) {
-		selectedKey = key;
-		setMode(key as "light" | "dark" | "system");
-
-		// Send theme change to electron main process
-		if (appService) {
-			await appService.setTheme(key as Theme);
-		}
+		selectedKey = key as Theme;
+		setTheme(selectedKey as Theme);
 	}
-
-	onMount(async () => {
-		// Get current theme from electron
-		if (appService) {
-			try {
-				const currentTheme = await appService.getCurrentTheme();
-				selectedKey = currentTheme;
-				setMode(currentTheme);
-			} catch (error) {
-				console.warn("Failed to get current theme:", error);
-			}
-		}
-	});
 </script>
 
 <div class="gap-settings-gap flex flex-col">

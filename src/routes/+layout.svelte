@@ -8,7 +8,6 @@
 	import { Ghost, House, LayoutPanelLeft, MessageCircle, Settings } from "@lucide/svelte";
 	import { ModeWatcher, setMode } from "mode-watcher";
 	import { onMount } from "svelte";
-	import { polyfillLocalStorage } from "$lib/utils/storage-polyfill";
 	import { providerState } from "$lib/stores/provider-state.svelte";
 	import "../app.css";
 
@@ -90,29 +89,6 @@
 		activeTabId = newTab.id;
 		goto(newTab.href);
 	}
-
-	onMount(async () => {
-		await polyfillLocalStorage();
-		await providerState.initialize();
-
-		// Get current theme from Electron and apply it
-		if (appService) {
-			try {
-				const currentTheme = await appService.getCurrentTheme();
-				setMode(currentTheme);
-			} catch (error) {
-				console.warn("Failed to get current theme from Electron:", error);
-			}
-		}
-
-		// Listen for theme changes from Electron
-		if (onThemeChange) {
-			onThemeChange((theme) => {
-				console.log("Theme changed from Electron:", theme);
-				setMode(theme);
-			});
-		}
-	});
 </script>
 
 <svelte:head>

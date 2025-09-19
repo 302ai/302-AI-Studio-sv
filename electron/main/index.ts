@@ -4,7 +4,7 @@ import { app, BrowserWindow, net, protocol } from "electron";
 import path from "node:path";
 import started from "electron-squirrel-startup";
 import { registerIpcHandlers } from "./generated/ipc-registration";
-import { windowService } from "./services";
+import { appService, windowService } from "./services";
 
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
@@ -15,12 +15,11 @@ if (started) {
 	app.quit();
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on("ready", () => {
+async function init() {
 	// Register auto-generated IPC handlers
 	registerIpcHandlers();
+
+	await appService.initFromStorage();
 
 	protocol.handle("app", (request) => {
 		const url = new URL(request.url);
@@ -38,6 +37,13 @@ app.on("ready", () => {
 	});
 
 	windowService.createSheetWindow();
+}
+
+// This method will be called when Electron has finished
+// initialization and is ready to create browser windows.
+// Some APIs can only be used after this event occurs.
+app.on("ready", () => {
+	init();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

@@ -119,7 +119,11 @@
 	--sidebar-border: oklch(1 0 0 / 10%);
 	--sidebar-ring: oklch(0.551 0.027 264.364);
 }
-
+.no-transition {
+	.transition-all {
+		transition-property: none;
+	}
+}
 @theme inline {
 	--radius-lg: 0.5rem;
 	--radius-xs: calc(var(--radius-lg) * 0.5);

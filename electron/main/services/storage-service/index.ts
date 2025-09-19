@@ -1,57 +1,118 @@
+import type { IpcMainInvokeEvent } from "electron";
 import { app } from "electron";
-import path from "path";
-import { createStorage } from "unstorage";
-import fsDriver from "unstorage/drivers/fs";
+import { createStorage, type StorageValue, type StorageMeta } from "unstorage";
+import fsLiteDriver from "unstorage/drivers/fs-lite";
+import type { StorageMetadata, StorageOptions, StorageItem } from "@shared/types";
+import { join } from "path";
 
 export class StorageService {
-	public storage;
+	private storage;
+	private watches = new Map<string, () => void>();
 
 	constructor() {
-		const userDataPath = app.getPath("userData");
-		const storagePath = path.join(userDataPath, "storage");
-		console.log(storagePath);
+		const storagePath = join(app.getPath("userData"), "storage");
 		this.storage = createStorage({
-			driver: fsDriver({
+			driver: fsLiteDriver({
 				base: storagePath,
 			}),
 		});
 	}
 
-	async getItem(_event: Electron.IpcMainInvokeEvent, key: string): Promise<string | null> {
-		const value = await this.storage.getItem(key);
-		if (value == null) {
-			return null;
-		}
-		if (typeof value === "string") {
-			return value;
-		}
-		return JSON.stringify(value);
-	}
-
-	async setItem(_event: Electron.IpcMainInvokeEvent, key: string, value: string): Promise<void> {
+	async setItem(_event: IpcMainInvokeEvent, key: string, value: StorageValue): Promise<void> {
 		await this.storage.setItem(key, value);
 	}
 
-	async removeItem(_event: Electron.IpcMainInvokeEvent, key: string): Promise<void> {
-		await this.storage.removeItem(key);
+	async getItem(_event: IpcMainInvokeEvent, key: string): Promise<StorageValue | null> {
+		return await this.storage.getItem(key);
 	}
 
-	async clear(_event: Electron.IpcMainInvokeEvent): Promise<void> {
-		await this.storage.clear();
+	async hasItem(_event: IpcMainInvokeEvent, key: string): Promise<boolean> {
+		return await this.storage.hasItem(key);
 	}
 
-	async key(_event: Electron.IpcMainInvokeEvent, index: number): Promise<string | null> {
-		const keys = await this.storage.getKeys();
-		return keys[index] || null;
+	async removeItem(
+		_event: IpcMainInvokeEvent,
+		key: string,
+		options: StorageOptions = {},
+	): Promise<void> {
+		await this.storage.removeItem(key, options);
 	}
 
-	async length(_event: Electron.IpcMainInvokeEvent): Promise<number> {
-		const keys = await this.storage.getKeys();
-		return keys.length;
+	async getKeys(_event: IpcMainInvokeEvent, base?: string): Promise<string[]> {
+		return await this.storage.getKeys(base);
 	}
 
-	async keys(_event: Electron.IpcMainInvokeEvent): Promise<string[]> {
-		return await this.storage.getKeys();
+	async clear(_event: IpcMainInvokeEvent, base?: string): Promise<void> {
+		await this.storage.clear(base);
+	}
+
+	async getMeta(_event: IpcMainInvokeEvent, key: string): Promise<StorageMetadata> {
+		return await this.storage.getMeta(key);
+	}
+
+	async setMeta(_event: IpcMainInvokeEvent, key: string, metadata: StorageMeta): Promise<void> {
+		await this.storage.setMeta(key, metadata);
+	}
+
+	async removeMeta(_event: IpcMainInvokeEvent, key: string): Promise<void> {
+		await this.storage.removeMeta(key);
+	}
+
+	async getItems(_event: IpcMainInvokeEvent, keys: string[]): Promise<StorageItem[]> {
+		const items = await this.storage.getItems(keys);
+		return items.map((item) => ({
+			key: item.key,
+			value: item.value,
+		}));
+	}
+
+	async setItems(_event: IpcMainInvokeEvent, items: StorageItem[]): Promise<void> {
+		const formattedItems = items.map((item) => ({
+			key: item.key,
+			value: item.value,
+			options: {},
+		}));
+		await this.storage.setItems(formattedItems);
+	}
+
+	async watch(_event: IpcMainInvokeEvent, watchKey: string): Promise<void> {
+		if (this.watches.has(watchKey)) return;
+		const unwatch = await this.storage.watch(async (event, key) => {
+			if (key === watchKey) {
+				// const newValue = await this.storage.getItem<T>(watchKey);
+				// TODO
+			}
+		});
+		this.watches.set(watchKey, unwatch);
+	}
+
+	async unwatch(_event: IpcMainInvokeEvent, watchKey: string): Promise<void> {
+		const unwatch = this.watches.get(watchKey);
+		if (unwatch) {
+			unwatch();
+			this.watches.delete(watchKey);
+		}
+	}
+
+	async dispose(): Promise<void> {
+		await this.storage.dispose();
+	}
+
+	// Internal methods for main process usage (without IPC event parameter)
+	async getItemInternal<T = StorageValue>(key: string): Promise<T | null> {
+		return await this.storage.getItem<T>(key);
+	}
+
+	async setItemInternal(key: string, value: StorageValue): Promise<void> {
+		await this.storage.setItem(key, value);
+	}
+
+	async hasItemInternal(key: string): Promise<boolean> {
+		return await this.storage.hasItem(key);
+	}
+
+	async removeItemInternal(key: string, options: StorageOptions = {}): Promise<void> {
+		await this.storage.removeItem(key, options);
 	}
 }
 
