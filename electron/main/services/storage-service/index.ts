@@ -22,8 +22,8 @@ export class StorageService {
 		await this.storage.setItem(key, value);
 	}
 
-	async getItem(_event: IpcMainInvokeEvent, key: string): Promise<StorageValue | null> {
-		return await this.storage.getItem(key);
+	async getItem<T = StorageValue>(_event: IpcMainInvokeEvent, key: string): Promise<T | null> {
+		return await this.storage.getItem<T>(key);
 	}
 
 	async hasItem(_event: IpcMainInvokeEvent, key: string): Promise<boolean> {
