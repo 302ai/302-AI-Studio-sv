@@ -29,7 +29,8 @@
 		"quality:fix": "npm run lint:fix && npm run format",
 		"test:unit": "vitest",
 		"test:e2e": "playwright test",
-		"test": "npm run test:unit -- --run && npm run test:e2e"
+		"test": "npm run test:unit -- --run && npm run test:e2e",
+		"postinstall": "pre-commit install --install-hooks --hook-type commit-msg"
 	},
 	"devDependencies": {
 		"@electron-forge/cli": "^7.9.0",
