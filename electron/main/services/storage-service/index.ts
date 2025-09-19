@@ -18,7 +18,11 @@ export class StorageService {
 		});
 	}
 
-	async setItem(_event: IpcMainInvokeEvent, key: string, value: StorageValue): Promise<void> {
+	async setItem(
+		_event: IpcMainInvokeEvent,
+		key: string,
+		value: StorageValue | null,
+	): Promise<void> {
 		await this.storage.setItem(key, value);
 	}
 
