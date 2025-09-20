@@ -6,15 +6,15 @@ import type { StorageMetadata, StorageOptions, StorageItem } from "@shared/types
 import { join } from "path";
 import { isDev } from "@electron/main/constants";
 
-export class StorageService {
-	private storage;
-	private watches = new Map<string, () => void>();
+export class StorageService<T extends StorageValue> {
+	protected storage;
+	protected watches = new Map<string, () => void>();
 
 	constructor() {
 		const storagePath = isDev
 			? join(process.cwd(), "storage")
 			: join(app.getPath("userData"), "storage");
-		this.storage = createStorage({
+		this.storage = createStorage<T>({
 			driver: fsLiteDriver({
 				base: storagePath,
 			}),
@@ -25,16 +25,12 @@ export class StorageService {
 		return key.endsWith(".json") ? key : `${key}.json`;
 	}
 
-	async setItem(
-		_event: IpcMainInvokeEvent,
-		key: string,
-		value: StorageValue | null,
-	): Promise<void> {
+	async setItem(_event: IpcMainInvokeEvent, key: string, value: T): Promise<void> {
 		await this.storage.setItem(this.ensureJsonExtension(key), value);
 	}
 
-	async getItem<T = StorageValue>(_event: IpcMainInvokeEvent, key: string): Promise<T | null> {
-		return await this.storage.getItem<T>(this.ensureJsonExtension(key));
+	async getItem(_event: IpcMainInvokeEvent, key: string): Promise<T | null> {
+		return await this.storage.getItem(this.ensureJsonExtension(key));
 	}
 
 	async hasItem(_event: IpcMainInvokeEvent, key: string): Promise<boolean> {
@@ -69,7 +65,7 @@ export class StorageService {
 		await this.storage.removeMeta(this.ensureJsonExtension(key));
 	}
 
-	async getItems(_event: IpcMainInvokeEvent, keys: string[]): Promise<StorageItem[]> {
+	async getItems(_event: IpcMainInvokeEvent, keys: string[]): Promise<StorageItem<T>[]> {
 		const jsonKeys = keys.map((key) => this.ensureJsonExtension(key));
 		const items = await this.storage.getItems(jsonKeys);
 		return items.map((item) => ({
@@ -78,7 +74,7 @@ export class StorageService {
 		}));
 	}
 
-	async setItems(_event: IpcMainInvokeEvent, items: StorageItem[]): Promise<void> {
+	async setItems(_event: IpcMainInvokeEvent, items: StorageItem<T>[]): Promise<void> {
 		const formattedItems = items.map((item) => ({
 			key: this.ensureJsonExtension(item.key),
 			value: item.value,
@@ -112,11 +108,11 @@ export class StorageService {
 	}
 
 	// Internal methods for main process usage (without IPC event parameter)
-	async getItemInternal<T = StorageValue>(key: string): Promise<T | null> {
+	async getItemInternal(key: string): Promise<T | null> {
 		return await this.storage.getItem<T>(this.ensureJsonExtension(key));
 	}
 
-	async setItemInternal(key: string, value: StorageValue): Promise<void> {
+	async setItemInternal(key: string, value: T): Promise<void> {
 		await this.storage.setItem(this.ensureJsonExtension(key), value);
 	}
 

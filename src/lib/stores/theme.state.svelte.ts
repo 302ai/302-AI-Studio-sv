@@ -13,7 +13,7 @@ const getSystemTheme = (): ThemeState => {
 export const transitionState = $state({
 	isTransitioning: false,
 });
-export const persistedThemeState = new PersistedState("app-theme-state", getSystemTheme());
+export const persistedThemeState = new PersistedState("ThemeStorage:state", getSystemTheme());
 
 $effect.root(() => {
 	$effect(() => {

@@ -64,9 +64,24 @@ export class TypeScriptServiceParser {
 		return className.charAt(0).toLowerCase() + className.slice(1);
 	}
 
-	private getTypeText(typeNode: ts.TypeNode | undefined): string {
+	private getTypeText(
+		typeNode: ts.TypeNode | undefined,
+		classGenericParams?: GenericParameter[],
+	): string {
 		if (!typeNode) return "any";
-		const typeText = typeNode.getText();
+		let typeText = typeNode.getText();
+
+		// Handle class-level generics substitution
+		if (classGenericParams && classGenericParams.length > 0) {
+			classGenericParams.forEach((genericParam) => {
+				// Replace generic parameter with its constraint or default type if available
+				const replacement = genericParam.constraint || genericParam.defaultType || "StorageValue";
+				// Use word boundaries to ensure we only replace standalone type parameters
+				const regex = new RegExp(`\\b${genericParam.name}\\b`, "g");
+				typeText = typeText.replace(regex, replacement);
+			});
+		}
+
 		const typeMap: Record<string, string> = {
 			"Electron.IpcMainInvokeEvent": "IpcMainInvokeEvent",
 			IpcMainInvokeEvent: "IpcMainInvokeEvent",
@@ -86,27 +101,44 @@ export class TypeScriptServiceParser {
 		return false;
 	}
 
-	private parseMethodParameters(method: ts.MethodDeclaration): Array<{
+	private parseMethodParameters(
+		method: ts.MethodDeclaration,
+		classGenericParams?: GenericParameter[],
+	): Array<{
 		name: string;
 		type: string;
 		isEventParam: boolean;
 	}> {
 		return method.parameters.map((param) => {
 			const name = param.name.getText();
-			const type = this.getTypeText(param.type);
+			const type = this.getTypeText(param.type, classGenericParams);
 			const isEventParam = this.isEventParameter(param);
 			return { name, type, isEventParam };
 		});
 	}
 
-	private parseMethodReturnType(method: ts.MethodDeclaration): string {
+	private parseMethodReturnType(
+		method: ts.MethodDeclaration,
+		classGenericParams?: GenericParameter[],
+	): string {
 		if (method.type) {
-			return this.getTypeText(method.type);
+			return this.getTypeText(method.type, classGenericParams);
 		}
 		const signature = this.checker.getSignatureFromDeclaration(method);
 		if (signature) {
 			const returnType = this.checker.getReturnTypeOfSignature(signature);
-			return this.checker.typeToString(returnType);
+			let returnTypeString = this.checker.typeToString(returnType);
+
+			// Apply class-level generic substitution to the type string
+			if (classGenericParams && classGenericParams.length > 0) {
+				classGenericParams.forEach((genericParam) => {
+					const replacement = genericParam.constraint || genericParam.defaultType || "StorageValue";
+					const regex = new RegExp(`\\b${genericParam.name}\\b`, "g");
+					returnTypeString = returnTypeString.replace(regex, replacement);
+				});
+			}
+
+			return returnTypeString;
 		}
 		return "any";
 	}
@@ -117,6 +149,30 @@ export class TypeScriptServiceParser {
 		}
 
 		return method.typeParameters.map((typeParam) => {
+			const param: GenericParameter = {
+				name: typeParam.name.text,
+			};
+
+			// 解析约束 (extends)
+			if (typeParam.constraint) {
+				param.constraint = this.getTypeText(typeParam.constraint);
+			}
+
+			// 解析默认类型
+			if (typeParam.default) {
+				param.defaultType = this.getTypeText(typeParam.default);
+			}
+
+			return param;
+		});
+	}
+
+	private parseClassGenericParameters(classDeclaration: ts.ClassDeclaration): GenericParameter[] {
+		if (!classDeclaration.typeParameters) {
+			return [];
+		}
+
+		return classDeclaration.typeParameters.map((typeParam) => {
 			const param: GenericParameter = {
 				name: typeParam.name.text,
 			};
@@ -149,14 +205,17 @@ export class TypeScriptServiceParser {
 					const className = node.name.text;
 					const serviceName = this.getServiceName(className);
 
+					// Parse class-level generic parameters
+					const classGenericParams = this.parseClassGenericParameters(node);
+
 					node.members.forEach((member) => {
 						if (ts.isMethodDeclaration(member) && member.name && ts.isIdentifier(member.name)) {
 							const methodName = member.name.text;
-							const parameters = this.parseMethodParameters(member);
+							const parameters = this.parseMethodParameters(member, classGenericParams);
 							const hasEventParam = parameters.some((p) => p.isEventParam);
 
 							if (hasEventParam) {
-								const returnType = this.parseMethodReturnType(member);
+								const returnType = this.parseMethodReturnType(member, classGenericParams);
 								const genericParameters = this.parseGenericParameters(member);
 								methods.push({
 									serviceName,

@@ -1,11 +1,11 @@
-import { nativeTheme, BrowserWindow, type IpcMainInvokeEvent } from "electron";
-import type { Theme, ThemeState } from "@shared/types";
+import type { Theme } from "@shared/types";
+import { BrowserWindow, nativeTheme, type IpcMainInvokeEvent } from "electron";
 import { CONFIG, isMac } from "../../constants";
-import { storageService } from "../storage-service";
+import { themeStorage } from "../storage-service/theme-storage";
 
 export class AppService {
 	async initFromStorage() {
-		const state = (await storageService.getItemInternal("app-theme-state")) as ThemeState | null;
+		const state = await themeStorage.getThemeState();
 		console.log(`state = ${JSON.stringify(state)}, ${typeof state}`);
 
 		if (state == null) {
@@ -16,7 +16,6 @@ export class AppService {
 		nativeTheme.themeSource = state.theme;
 	}
 	async setTheme(_event: IpcMainInvokeEvent, theme: Theme): Promise<void> {
-		console.log("settheme");
 		nativeTheme.themeSource = theme;
 		const allWindows = BrowserWindow.getAllWindows();
 		allWindows.forEach((window) => {

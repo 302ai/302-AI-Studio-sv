@@ -1,11 +1,7 @@
 import type { StorageValue } from "@302ai/unstorage";
 
 export * from "@302ai/unstorage";
-
-export interface ThemeState {
-	theme: Theme;
-	shouldUseDarkColors: boolean;
-}
+export * from "./storage/theme";
 
 export interface StorageMetadata {
 	mtime?: Date;
@@ -17,12 +13,11 @@ export interface StorageOptions {
 	removeMeta?: boolean;
 }
 
-export interface StorageItem<T = StorageValue> {
+export interface StorageItem<T extends StorageValue> {
 	key: string;
 	value: T;
 }
 
-export type Theme = "light" | "dark" | "system";
 export type Platform = "win32" | "darwin" | "linux";
 
 export type SheetWindowConfig = {

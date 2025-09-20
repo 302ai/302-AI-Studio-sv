@@ -94,6 +94,7 @@
 		"@inlang/paraglide-js": "^2.3.2",
 		"@lobehub/icons-static-svg": "^1.66.0",
 		"@sveltejs/adapter-static": "^3.0.9",
+		"arktype": "^2.1.22",
 		"date-fns": "^4.1.0",
 		"dedent": "^1.7.0",
 		"electron-squirrel-startup": "^1.0.1",

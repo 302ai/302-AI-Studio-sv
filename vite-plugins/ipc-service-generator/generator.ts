@@ -52,47 +52,50 @@ export class IpcStructureGenerator {
 			// Check parameter types
 			method.parameters.forEach((param) => {
 				if (!param.isEventParam) {
-					const cleanType = this.cleanTypeString(param.type);
-					if (!builtInTypes.has(cleanType) && !this.isBuiltInComplexType(cleanType)) {
-						// Only exclude generic parameter names if this method actually has generics
-						if (!hasGenericParams || !genericParamNames.has(cleanType)) {
-							customTypes.add(cleanType);
+					// Extract all types from the parameter type string
+					const typesInParam = this.extractTypesFromString(param.type);
+					typesInParam.forEach((type) => {
+						if (!builtInTypes.has(type) && !this.isBuiltInComplexType(type)) {
+							// Only exclude generic parameter names if this method actually has generics
+							if (!hasGenericParams || !genericParamNames.has(type)) {
+								customTypes.add(type);
+							}
 						}
-					}
+					});
 				}
 			});
 
 			// Check return type
-			const cleanReturnType = this.cleanTypeString(method.returnType);
-			if (!builtInTypes.has(cleanReturnType) && !this.isBuiltInComplexType(cleanReturnType)) {
-				// Only exclude generic parameter names if this method actually has generics
-				if (!hasGenericParams || !genericParamNames.has(cleanReturnType)) {
-					customTypes.add(cleanReturnType);
+			const typesInReturn = this.extractTypesFromString(method.returnType);
+			typesInReturn.forEach((type) => {
+				if (!builtInTypes.has(type) && !this.isBuiltInComplexType(type)) {
+					// Only exclude generic parameter names if this method actually has generics
+					if (!hasGenericParams || !genericParamNames.has(type)) {
+						customTypes.add(type);
+					}
 				}
-			}
+			});
 
 			// Check generic parameter default types (only for methods that actually have generics)
 			if (hasGenericParams) {
 				method.genericParameters.forEach((genericParam) => {
 					if (genericParam.defaultType) {
-						const cleanDefaultType = this.cleanTypeString(genericParam.defaultType);
-						if (
-							!builtInTypes.has(cleanDefaultType) &&
-							!this.isBuiltInComplexType(cleanDefaultType)
-						) {
-							customTypes.add(cleanDefaultType);
-						}
+						const typesInDefault = this.extractTypesFromString(genericParam.defaultType);
+						typesInDefault.forEach((type) => {
+							if (!builtInTypes.has(type) && !this.isBuiltInComplexType(type)) {
+								customTypes.add(type);
+							}
+						});
 					}
 
 					// Check constraint types
 					if (genericParam.constraint) {
-						const cleanConstraintType = this.cleanTypeString(genericParam.constraint);
-						if (
-							!builtInTypes.has(cleanConstraintType) &&
-							!this.isBuiltInComplexType(cleanConstraintType)
-						) {
-							customTypes.add(cleanConstraintType);
-						}
+						const typesInConstraint = this.extractTypesFromString(genericParam.constraint);
+						typesInConstraint.forEach((type) => {
+							if (!builtInTypes.has(type) && !this.isBuiltInComplexType(type)) {
+								customTypes.add(type);
+							}
+						});
 					}
 				});
 			}
@@ -127,6 +130,46 @@ export class IpcStructureGenerator {
 		}
 
 		return type.trim();
+	}
+
+	/**
+	 * Extract all types from a type string, including generic types
+	 */
+	private extractTypesFromString(typeString: string): Set<string> {
+		const types = new Set<string>();
+
+		// Match generic types like StorageItem<T>, Promise<StorageValue>, etc.
+		const genericTypeRegex = /(\w+)<([^<>]+(?:<[^<>]*>)*)>/g;
+		let match;
+
+		while ((match = genericTypeRegex.exec(typeString)) !== null) {
+			const baseType = match[1];
+			const genericArgs = match[2];
+
+			// Add the base type (e.g., StorageItem from StorageItem<T>)
+			types.add(baseType);
+
+			// Recursively extract types from generic arguments
+			if (genericArgs) {
+				const innerTypes = this.extractTypesFromString(genericArgs);
+				innerTypes.forEach((t) => types.add(t));
+			}
+		}
+
+		// If no generic types found, check if it's a simple type
+		if (types.size === 0) {
+			const cleanType = this.cleanTypeString(typeString);
+			if (cleanType && cleanType !== typeString) {
+				// Type was cleaned, extract from the cleaned version
+				const innerTypes = this.extractTypesFromString(cleanType);
+				innerTypes.forEach((t) => types.add(t));
+			} else {
+				// Simple type, add as is
+				types.add(cleanType);
+			}
+		}
+
+		return types;
 	}
 
 	/**

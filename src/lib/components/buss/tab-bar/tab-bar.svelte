@@ -17,24 +17,24 @@
 </script>
 
 <script lang="ts">
+	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { Separator } from "$lib/components/ui/separator/index.js";
 	import { m } from "$lib/paraglide/messages.js";
+	import {
+		persistedActiveTabId,
+		persistedTabs,
+		tabBarState,
+	} from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { animateButtonBounce } from "$lib/utils/animation";
-	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { Plus } from "@lucide/svelte";
+	import type { Tab } from "@shared/types";
 	import { onDestroy, onMount } from "svelte";
 	import { dndzone, TRIGGERS } from "svelte-dnd-action";
 	import { flip } from "svelte/animate";
 	import { Spring } from "svelte/motion";
 	import { scale } from "svelte/transition";
 	import TabItem from "./tab-item.svelte";
-	import type { Platform, Tab } from "@shared/types";
-	import {
-		persistedActiveTabId,
-		persistedTabs,
-		tabBarState,
-	} from "$lib/stores/tab-bar-state.svelte";
 
 	const { deviceService } = window.electronAPI;
 
@@ -57,14 +57,14 @@
 
 	// Debug: Check for duplicate IDs
 	$effect(() => {
-		const ids = tabs.map((tab) => tab.id);
+		const ids = persistedTabs.current.map((tab) => tab.id);
 		const uniqueIds = new Set(ids);
 		if (ids.length !== uniqueIds.size) {
 			console.error("Duplicate tab IDs detected:", ids);
-			console.error("Tabs:", tabs);
+			console.error("Tabs:", persistedTabs.current);
 			// Fix duplicate IDs by ensuring uniqueness
 			const seen = new Set<string>();
-			persistedTabs.current = tabs.filter((tab) => {
+			persistedTabs.current = persistedTabs.current.filter((tab) => {
 				if (seen.has(tab.id)) {
 					console.warn(`Removing duplicate tab with ID: ${tab.id}`);
 					return false;
