@@ -12,13 +12,12 @@
 		"module": "esnext",
 		"target": "esnext",
 		"moduleResolution": "bundler",
-		"baseUrl": ".",
 		"paths": {
 			"@shared/*": ["./shared/*"],
 			"@electron/*": ["./electron/*"],
-			"$lib": ["src/lib"],
-			"$lib/*": ["src/lib/*"],
-			"$app/types": [".svelte-kit/types/index.d.ts"]
+			"$lib": ["./src/lib"],
+			"$lib/*": ["./src/lib/*"],
+			"$app/types": ["./.svelte-kit/types/index.d.ts"]
 		}
 	},
 	"include": ["src/**/*", "electron/**/*", "shared/**/*"],

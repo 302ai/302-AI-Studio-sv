@@ -2,6 +2,7 @@
 	"editor.formatOnSave": true,
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
 	"editor.codeActionsOnSave": {
+		"source.organizeImports": "explicit",
 		"source.fixAll.eslint": "explicit"
 	},
 	"[typescript]": {
@@ -12,6 +13,8 @@
 		"editor.defaultFormatter": "svelte.svelte-vscode",
 		"editor.formatOnSave": true
 	},
-	"svelte.plugin.typescript.format.enable": true,
-	"svelte.plugin.typescript.diagnostics.enable": true
+	"svelte.plugin.typescript.diagnostics.enable": true,
+	"i18n-ally.localesPaths": ["messages"],
+	"i18n-ally.sourceLanguage": "zh",
+	"i18n-ally.keystyle": "flat"
 }

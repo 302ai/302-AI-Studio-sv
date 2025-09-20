@@ -33,10 +33,11 @@ export type SheetWindowConfig = {
 	};
 };
 
+export type TabType = "chat" | "settings" | "302ai-tool";
 export type Tab = {
 	id: string;
 	title: string;
 	href: string;
 	incognitoMode?: boolean;
-	type: "chat" | "settings";
+	type: TabType;
 };

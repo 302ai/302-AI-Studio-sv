@@ -14,9 +14,9 @@
 <script lang="ts">
 	import { ModelIcon } from "$lib/components/buss/model-icon/index.js";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
-	import { persistedModelState, providerState } from "$lib/stores/provider-state.svelte.js";
+	import { persistedModelState } from "$lib/stores/provider-state.svelte.js";
 	import { cn } from "$lib/utils";
-	import { AlertCircle, Cloud, X } from "@lucide/svelte";
+	import { CircleAlert, Cloud, X } from "@lucide/svelte";
 	import { m } from "$lib/paraglide/messages.js";
 
 	const {
@@ -84,7 +84,7 @@
 				)}
 			>
 				{#if provider.status === "error"}
-					<AlertCircle class="h-3 w-3 shrink-0" />
+					<CircleAlert class="h-3 w-3 shrink-0" />
 				{/if}
 				<span class="truncate">{description}</span>
 			</div>

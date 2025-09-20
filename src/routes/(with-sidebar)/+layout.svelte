@@ -1,9 +1,10 @@
 <script lang="ts">
-	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
+	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { useSidebar } from "$lib/components/ui/sidebar";
 	import { m } from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Ghost, Settings } from "@lucide/svelte";
 	import AppSidebar from "./app-sidebar.svelte";
@@ -43,15 +44,14 @@
 					/>
 				</ButtonWithTooltip>
 
-				<a href="/settings/general-settings">
-					<ButtonWithTooltip
-						tooltip={m.title_settings()}
-						class="hover:!bg-icon-btn-hover"
-						tooltipSide="bottom"
-					>
-						<Settings class="size-5" />
-					</ButtonWithTooltip>
-				</a>
+				<ButtonWithTooltip
+					tooltip={m.title_settings()}
+					class="hover:!bg-icon-btn-hover"
+					tooltipSide="bottom"
+					onclick={() => tabBarState.handleNewTab("settings")}
+				>
+					<Settings class="size-5" />
+				</ButtonWithTooltip>
 			</div>
 		</div>
 		<div class="flex-1 overflow-auto py-6">

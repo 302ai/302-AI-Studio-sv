@@ -1,6 +1,6 @@
 import { nativeTheme, BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import type { Theme, ThemeState } from "@shared/types";
-import { CONFIG } from "../../constants";
+import { CONFIG, isMac } from "../../constants";
 import { storageService } from "../storage-service";
 
 export class AppService {
@@ -21,11 +21,13 @@ export class AppService {
 		const allWindows = BrowserWindow.getAllWindows();
 		allWindows.forEach((window) => {
 			window.setBackgroundColor(nativeTheme.shouldUseDarkColors ? "#1A1A1A" : "#F9F9F9");
-			window.setTitleBarOverlay(
-				nativeTheme.shouldUseDarkColors
-					? CONFIG.TITLE_BAR_OVERLAY.DARK
-					: CONFIG.TITLE_BAR_OVERLAY.LIGHT,
-			);
+			if (!isMac) {
+				window.setTitleBarOverlay(
+					nativeTheme.shouldUseDarkColors
+						? CONFIG.TITLE_BAR_OVERLAY.DARK
+						: CONFIG.TITLE_BAR_OVERLAY.LIGHT,
+				);
+			}
 		});
 	}
 }

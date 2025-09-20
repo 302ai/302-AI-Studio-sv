@@ -15,14 +15,13 @@
 </script>
 
 <script lang="ts">
+	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
-	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
-	import { X, CircleX } from "@lucide/svelte";
-	import { onDestroy, type Snippet } from "svelte";
+	import { CircleX, Ghost, MessageCircle, Settings, X } from "@lucide/svelte";
 	import type { Tab } from "@shared/types";
-	import { Ghost, House, LayoutPanelLeft, MessageCircle, Settings } from "@lucide/svelte";
+	import { onDestroy } from "svelte";
 
 	const {
 		tab,
@@ -132,7 +131,7 @@
 			<X class="mr-2 h-4 w-4" />
 			{m.label_button_close()}
 		</ContextMenu.Item>
-		<ContextMenu.Item onclick={() => onTabCloseAll()}>
+		<ContextMenu.Item onclick={() => onTabCloseAll()} disabled={!closable}>
 			<CircleX class="mr-2 h-4 w-4" />
 			{m.label_button_close_all()}
 		</ContextMenu.Item>

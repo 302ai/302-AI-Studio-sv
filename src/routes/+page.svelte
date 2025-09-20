@@ -1,28 +1,24 @@
 <script lang="ts">
-	import Button from "$lib/components/ui/button/button.svelte";
+	import { goto } from "$app/navigation";
+	import { persistedActiveTabId, persistedTabs } from "$lib/stores/tab-bar-state.svelte";
+	import { onMount } from "svelte";
+
+	onMount(() => {
+		const activeTabId = persistedActiveTabId.current;
+		const tabs = persistedTabs.current;
+		const activeTab = tabs.find((tab) => tab.id === activeTabId);
+
+		if (activeTab) {
+			goto(activeTab.href, { replaceState: true });
+		}
+	});
 </script>
 
-<div class="container mx-auto p-8">
-	<h1 class="mb-4 text-4xl font-bold">Welcome to AI Studio</h1>
-	<p class="text-muted-foreground mb-8 text-lg">
-		Choose a layout from the tabs above to see different layout options
-	</p>
-
-	<div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2">
-		<div class="rounded-lg border p-6">
-			<h2 class="mb-3 text-2xl font-semibold">With Sidebar Layout</h2>
-			<p class="text-muted-foreground mb-4">
-				Navigate to the Dashboard tab to see a layout with a collapsible sidebar
-			</p>
-			<Button onclick={() => (window.location.href = "/dashboard")}>Go to Dashboard</Button>
-		</div>
-
-		<div class="rounded-lg border p-6">
-			<h2 class="mb-3 text-2xl font-semibold">Full Width Layout</h2>
-			<p class="text-muted-foreground mb-4">
-				Navigate to the Full Width tab to see a layout without sidebar
-			</p>
-			<Button onclick={() => (window.location.href = "/full")}>Go to Full Width</Button>
-		</div>
+<div class="flex h-screen items-center justify-center">
+	<div class="text-center">
+		<div class="mb-4 text-lg">Redirecting...</div>
+		<div
+			class="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent"
+		></div>
 	</div>
 </div>

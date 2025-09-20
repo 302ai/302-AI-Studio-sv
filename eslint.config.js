@@ -39,7 +39,7 @@ export default [
 		},
 	},
 	{
-		files: ["**/*.svelte"],
+		files: ["**/*.svelte.ts", "**/*.svelte"],
 		languageOptions: {
 			parserOptions: {
 				projectService: true,
