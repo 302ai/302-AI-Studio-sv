@@ -1,7 +1,5 @@
-import { goto } from "$app/navigation";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
-import type { Tab, TabType } from "@shared/types";
-import { nanoid } from "nanoid";
+import type { Tab, TabState, TabType } from "@shared/types";
 
 type TabConfig = {
 	title: string;
@@ -16,20 +14,19 @@ const TAB_CONFIGS: Record<TabType, TabConfig> = {
 
 const getTabConfig = (type: TabType) => TAB_CONFIGS[type] || TAB_CONFIGS.chat;
 
-export function newTab(type: TabType = "chat"): Tab {
-	const id = nanoid();
-	const { title, getHref } = getTabConfig(type);
+export const persistedTabState = new PersistedState<TabState>("TabStorage:tabs", []);
 
-	return { id, title, href: getHref(id), type };
-}
-
-export const persistedTabs = new PersistedState<Tab[]>("app-tab-state", [newTab()]);
-export const persistedActiveTabId = new PersistedState<string>("app-active-tab-id", "");
+const { tabService } = window.electronAPI;
 
 class TabBarState {
+	private newTab(tabId: string, type: TabType = "chat") {
+		const { title, getHref } = getTabConfig(type);
+
+		return { id: tabId, title, href: getHref(tabId), type };
+	}
+
 	handleTabClick(tab: Tab) {
 		persistedActiveTabId.current = tab.id;
-		goto(tab.href);
 	}
 
 	handleTabClose(tab: Tab) {
@@ -44,7 +41,6 @@ class TabBarState {
 			const newIndex = Math.min(targetIndex, remainingTabs.length - 1);
 			const newTab = remainingTabs[newIndex];
 			persistedActiveTabId.current = newTab.id;
-			goto(newTab.href);
 		}
 	}
 
@@ -55,11 +51,13 @@ class TabBarState {
 		}, 10);
 	}
 
-	handleNewTab(type: TabType = "chat") {
-		const tab = newTab(type);
+	async handleNewTab(type: TabType = "chat") {
+		const tabId = await tabService.handleNewTab();
+		if (!tabId) return;
+
+		const tab = this.newTab(tabId, type);
 		persistedTabs.current = [...persistedTabs.current, tab];
 		persistedActiveTabId.current = tab.id;
-		goto(tab.href);
 	}
 }
 

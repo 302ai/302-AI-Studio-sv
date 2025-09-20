@@ -20,11 +20,7 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { Separator } from "$lib/components/ui/separator/index.js";
 	import { m } from "$lib/paraglide/messages.js";
-	import {
-		persistedActiveTabId,
-		persistedTabs,
-		tabBarState,
-	} from "$lib/stores/tab-bar-state.svelte";
+	import { persistedActiveTabId, persistedTabs, tabBarState } from "$lib/stores/tab-state.svelte";
 	import { cn } from "$lib/utils";
 	import { animateButtonBounce } from "$lib/utils/animation";
 	import { Plus } from "@lucide/svelte";
@@ -152,7 +148,7 @@
 
 <div
 	class={cn(
-		"h-[calc(env(titlebar-area-height,40px)+1px)] bg-tabbar-bg flex  items-center border-b",
+		"h-[calc(env(titlebar-area-height,40px)+1px)] bg-tabbar-bg flex items-center border-b",
 		className,
 	)}
 	role="tablist"

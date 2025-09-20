@@ -18,15 +18,17 @@ export const WINDOW_SIZE = {
 	MIN_WIDTH: 1120,
 };
 
+export const TITLE_BAR_HEIGHT = 40;
+
 export const CONFIG = {
 	TITLE_BAR_OVERLAY: {
 		DARK: {
-			height: 40,
+			height: TITLE_BAR_HEIGHT,
 			color: isWin ? "rgba(0,0,0,0)" : "rgba(255,255,255,0)",
 			symbolColor: "#fff",
 		},
 		LIGHT: {
-			height: 40,
+			height: TITLE_BAR_HEIGHT,
 			color: "rgba(255,255,255,0)",
 			symbolColor: "#000",
 		},

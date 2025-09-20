@@ -1,1 +1,1 @@
-export let ssr = false;
+export const ssr = false;

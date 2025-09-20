@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { House, Inbox, Settings } from "@lucide/svelte";
 	import * as Sidebar from "$lib/components/ui/sidebar";
+	import { House, Inbox, Settings } from "@lucide/svelte";
 
 	const items = [
 		{
@@ -16,11 +16,7 @@
 	];
 </script>
 
-<Sidebar.Root
-	collapsible="offcanvas"
-	variant="sidebar"
-	class="top-[calc(env(titlebar-area-height,40px)+1px)]"
->
+<Sidebar.Root collapsible="offcanvas" variant="sidebar">
 	<Sidebar.Header>
 		<h2 class="px-4 text-lg font-semibold">AI Studio</h2>
 	</Sidebar.Header>

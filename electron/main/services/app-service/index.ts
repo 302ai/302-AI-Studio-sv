@@ -9,7 +9,7 @@ export class AppService {
 		console.log(`state = ${JSON.stringify(state)}, ${typeof state}`);
 
 		if (state == null) {
-			console.warn("Unable to laod themeState from storage");
+			console.warn("Unable to load themeState from storage");
 			return;
 		}
 

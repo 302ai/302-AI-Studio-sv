@@ -1,8 +1,8 @@
 import type { SheetWindowConfig } from "@shared/types";
-import windowStateKeeper from "electron-window-state";
-import { WINDOW_SIZE, PLATFORM, ENVIRONMENT, CONFIG } from "../../constants";
 import { BrowserWindow, nativeTheme } from "electron";
+import windowStateKeeper from "electron-window-state";
 import path from "node:path";
+import { CONFIG, ENVIRONMENT, PLATFORM, WINDOW_SIZE } from "../../constants";
 
 export class WindowService {
 	private windowMap: Map<number, BrowserWindow>;
@@ -57,12 +57,12 @@ export class WindowService {
 		mainWindowState.manage(shellWindow);
 
 		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-			shellWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+			shellWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL + "/shell");
 			shellWindow.webContents.on("did-frame-finish-load", () => {
 				shellWindow.webContents.openDevTools({ mode: "detach" });
 			});
 		} else {
-			shellWindow.loadURL("app://localhost");
+			shellWindow.loadURL("app://localhost/shell");
 		}
 	}
 }

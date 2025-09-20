@@ -1,8 +1,8 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
 
 import { app, BrowserWindow, net, protocol } from "electron";
-import path from "node:path";
 import started from "electron-squirrel-startup";
+import path from "node:path";
 import { registerIpcHandlers } from "./generated/ipc-registration";
 import { appService, windowService } from "./services";
 

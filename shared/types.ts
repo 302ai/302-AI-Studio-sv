@@ -3,6 +3,7 @@
 import type { StorageValue } from "@302ai/unstorage";
 
 export * from "@302ai/unstorage";
+export * from "./storage/tab";
 export * from "./storage/theme";
 
 export interface StorageMetadata {
@@ -30,14 +31,15 @@ export type SheetWindowConfig = {
 	};
 };
 
-export type TabType = "chat" | "settings" | "302ai-tool";
-export type Tab = {
-	id: string;
-	title: string;
-	href: string;
-	incognitoMode?: boolean;
-	type: TabType;
-};
+// export type TabType = "chat" | "settings" | "302ai-tool";
+// export type Tab = {
+// 	id: string;
+// 	title: string;
+// 	href: string;
+// 	incognitoMode?: boolean;
+// 	type: TabType;
+// };
+// export type TabState = Tab[] & string;
 
 export interface MigrationConfig<T extends StorageValue = StorageValue> {
 	version: number;

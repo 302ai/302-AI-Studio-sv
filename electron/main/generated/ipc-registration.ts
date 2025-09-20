@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import { storageService, appService, deviceService } from "../services";
+import { storageService, appService, deviceService, tabService } from "../services";
 
 /**
  * Auto-generated IPC service interfaces
@@ -39,6 +39,13 @@ export function registerIpcHandlers() {
 
 	// deviceService service registration
 	ipcMain.handle("deviceService:getPlatform", (event) => deviceService.getPlatform(event));
+
+	// tabService service registration
+	ipcMain.handle("tabService:handleNewTab", (event) => tabService.handleNewTab(event));
+	ipcMain.handle("tabService:handleActivateTab", (event, tabId) =>
+		tabService.handleActivateTab(event, tabId),
+	);
+	ipcMain.handle("tabService:getActiveTab", (event) => tabService.getActiveTab(event));
 }
 
 /**
@@ -60,4 +67,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:unwatch");
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("deviceService:getPlatform");
+	ipcMain.removeHandler("tabService:handleNewTab");
+	ipcMain.removeHandler("tabService:handleActivateTab");
+	ipcMain.removeHandler("tabService:getActiveTab");
 }

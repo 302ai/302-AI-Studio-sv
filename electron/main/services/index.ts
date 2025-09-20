@@ -1,11 +1,12 @@
-import { AttachmentsService, attachmentsService } from "./attachments-sevice";
-import { WindowService, windowService } from "./window-service";
 import { AppService, appService } from "./app-service";
+import { AttachmentsService, attachmentsService } from "./attachments-sevice";
 import { DeviceService, deviceService } from "./device-service";
 import { StorageService, storageService } from "./storage-service";
+import { TabService, tabService } from "./tab-service";
+import { WindowService, windowService } from "./window-service";
 
 // Export service classes for type definitions
-export { AttachmentsService, WindowService, AppService, StorageService, DeviceService };
+export { AppService, AttachmentsService, DeviceService, StorageService, TabService, WindowService };
 
 // Export service instances for use in IPC registration
-export { attachmentsService, windowService, appService, storageService, deviceService };
+export { appService, attachmentsService, deviceService, storageService, tabService, windowService };
