@@ -130,12 +130,14 @@ class ChatState {
 
 	// Derived state
 	sendMessageEnabled = $derived(
-		(this.inputValue.trim() !== "" || this.attachments.length > 0) && !!this.selectedModel
+		(this.inputValue.trim() !== "" || this.attachments.length > 0) && !!this.selectedModel,
 	);
 	providerType = $derived(this.selectedModel?.provider.name ?? null);
 
 	// Actions
-	sendMessage = () => { /* implementation */ };
+	sendMessage = () => {
+		/* implementation */
+	};
 }
 
 // Singleton instance
@@ -168,14 +170,12 @@ export class WindowService {
 // Auto-generated preload API
 window.electronAPI = {
 	windowService: {
-		maximize: () => ipcRenderer.invoke('windowService:maximize')
-	}
+		maximize: () => ipcRenderer.invoke("windowService:maximize"),
+	},
 };
 
 // Auto-generated main process registration
-ipcMain.handle('windowService:maximize', (event) =>
-	windowServiceInstance.maximize(event)
-);
+ipcMain.handle("windowService:maximize", (event) => windowServiceInstance.maximize(event));
 ```
 
 ## Build Configuration

@@ -21,20 +21,24 @@ export class StorageService {
 		});
 	}
 
+	private ensureJsonExtension(key: string): string {
+		return key.endsWith(".json") ? key : `${key}.json`;
+	}
+
 	async setItem(
 		_event: IpcMainInvokeEvent,
 		key: string,
 		value: StorageValue | null,
 	): Promise<void> {
-		await this.storage.setItem(key, value);
+		await this.storage.setItem(this.ensureJsonExtension(key), value);
 	}
 
 	async getItem<T = StorageValue>(_event: IpcMainInvokeEvent, key: string): Promise<T | null> {
-		return await this.storage.getItem<T>(key);
+		return await this.storage.getItem<T>(this.ensureJsonExtension(key));
 	}
 
 	async hasItem(_event: IpcMainInvokeEvent, key: string): Promise<boolean> {
-		return await this.storage.hasItem(key);
+		return await this.storage.hasItem(this.ensureJsonExtension(key));
 	}
 
 	async removeItem(
@@ -42,7 +46,7 @@ export class StorageService {
 		key: string,
 		options: StorageOptions = {},
 	): Promise<void> {
-		await this.storage.removeItem(key, options);
+		await this.storage.removeItem(this.ensureJsonExtension(key), options);
 	}
 
 	async getKeys(_event: IpcMainInvokeEvent, base?: string): Promise<string[]> {
@@ -54,19 +58,20 @@ export class StorageService {
 	}
 
 	async getMeta(_event: IpcMainInvokeEvent, key: string): Promise<StorageMetadata> {
-		return await this.storage.getMeta(key);
+		return await this.storage.getMeta(this.ensureJsonExtension(key));
 	}
 
 	async setMeta(_event: IpcMainInvokeEvent, key: string, metadata: StorageMeta): Promise<void> {
-		await this.storage.setMeta(key, metadata);
+		await this.storage.setMeta(this.ensureJsonExtension(key), metadata);
 	}
 
 	async removeMeta(_event: IpcMainInvokeEvent, key: string): Promise<void> {
-		await this.storage.removeMeta(key);
+		await this.storage.removeMeta(this.ensureJsonExtension(key));
 	}
 
 	async getItems(_event: IpcMainInvokeEvent, keys: string[]): Promise<StorageItem[]> {
-		const items = await this.storage.getItems(keys);
+		const jsonKeys = keys.map((key) => this.ensureJsonExtension(key));
+		const items = await this.storage.getItems(jsonKeys);
 		return items.map((item) => ({
 			key: item.key,
 			value: item.value,
@@ -75,7 +80,7 @@ export class StorageService {
 
 	async setItems(_event: IpcMainInvokeEvent, items: StorageItem[]): Promise<void> {
 		const formattedItems = items.map((item) => ({
-			key: item.key,
+			key: this.ensureJsonExtension(item.key),
 			value: item.value,
 			options: {},
 		}));
@@ -83,10 +88,11 @@ export class StorageService {
 	}
 
 	async watch(_event: IpcMainInvokeEvent, watchKey: string): Promise<void> {
+		const jsonKey = this.ensureJsonExtension(watchKey);
 		if (this.watches.has(watchKey)) return;
-		const unwatch = await this.storage.watch(async (event, key) => {
-			if (key === watchKey) {
-				// const newValue = await this.storage.getItem<T>(watchKey);
+		const unwatch = await this.storage.watch(async (_event, key) => {
+			if (key === jsonKey) {
+				// const newValue = await this.storage.getItem<T>(jsonKey);
 				// TODO
 			}
 		});
@@ -107,19 +113,19 @@ export class StorageService {
 
 	// Internal methods for main process usage (without IPC event parameter)
 	async getItemInternal<T = StorageValue>(key: string): Promise<T | null> {
-		return await this.storage.getItem<T>(key);
+		return await this.storage.getItem<T>(this.ensureJsonExtension(key));
 	}
 
 	async setItemInternal(key: string, value: StorageValue): Promise<void> {
-		await this.storage.setItem(key, value);
+		await this.storage.setItem(this.ensureJsonExtension(key), value);
 	}
 
 	async hasItemInternal(key: string): Promise<boolean> {
-		return await this.storage.hasItem(key);
+		return await this.storage.hasItem(this.ensureJsonExtension(key));
 	}
 
 	async removeItemInternal(key: string, options: StorageOptions = {}): Promise<void> {
-		await this.storage.removeItem(key, options);
+		await this.storage.removeItem(this.ensureJsonExtension(key), options);
 	}
 }
 
