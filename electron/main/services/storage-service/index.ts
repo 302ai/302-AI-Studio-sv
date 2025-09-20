@@ -4,13 +4,16 @@ import { createStorage, type StorageValue, type StorageMeta } from "@302ai/unsto
 import fsLiteDriver from "@302ai/unstorage/drivers/fs-lite";
 import type { StorageMetadata, StorageOptions, StorageItem } from "@shared/types";
 import { join } from "path";
+import { isDev } from "@electron/main/constants";
 
 export class StorageService {
 	private storage;
 	private watches = new Map<string, () => void>();
 
 	constructor() {
-		const storagePath = join(app.getPath("userData"), "storage");
+		const storagePath = isDev
+			? join(process.cwd(), "storage")
+			: join(app.getPath("userData"), "storage");
 		this.storage = createStorage({
 			driver: fsLiteDriver({
 				base: storagePath,

@@ -27,3 +27,5 @@ vite.config.ts.timestamp-*
 out
 
 paraglide/
+
+storage
