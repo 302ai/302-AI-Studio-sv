@@ -108,6 +108,7 @@
 		"remark-gfm": "^4.0.1",
 		"remark-parse": "^11.0.0",
 		"remark-rehype": "^11.1.2",
+		"runed": "^0.31.1",
 		"superjson": "^2.2.2",
 		"svelte-dnd-action": "^0.9.65",
 		"svelte-image-viewer": "^5.0.0",

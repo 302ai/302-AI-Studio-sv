@@ -67,6 +67,9 @@ importers:
       remark-rehype:
         specifier: ^11.1.2
         version: 11.1.2
+      runed:
+        specifier: ^0.31.1
+        version: 0.31.1(svelte@5.39.2)
       superjson:
         specifier: ^2.2.2
         version: 2.2.2
