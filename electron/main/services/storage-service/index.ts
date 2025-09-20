@@ -2,15 +2,17 @@ import type { IpcMainInvokeEvent } from "electron";
 import { app } from "electron";
 import { createStorage, type StorageValue, type StorageMeta } from "@302ai/unstorage";
 import fsLiteDriver from "@302ai/unstorage/drivers/fs-lite";
-import type { StorageMetadata, StorageOptions, StorageItem } from "@shared/types";
+import type { StorageMetadata, StorageOptions, StorageItem, MigrationConfig } from "@shared/types";
 import { join } from "path";
 import { isDev } from "@electron/main/constants";
+import { getStorageVersion, setStorageVersion } from "./migration-utils";
 
 export class StorageService<T extends StorageValue> {
 	protected storage;
 	protected watches = new Map<string, () => void>();
+	protected migrationConfig?: MigrationConfig<T>;
 
-	constructor() {
+	constructor(migrationConfig?: MigrationConfig<T>) {
 		const storagePath = isDev
 			? join(process.cwd(), "storage")
 			: join(app.getPath("userData"), "storage");
@@ -19,6 +21,7 @@ export class StorageService<T extends StorageValue> {
 				base: storagePath,
 			}),
 		});
+		this.migrationConfig = migrationConfig;
 	}
 
 	private ensureJsonExtension(key: string): string {
@@ -26,11 +29,13 @@ export class StorageService<T extends StorageValue> {
 	}
 
 	async setItem(_event: IpcMainInvokeEvent, key: string, value: T): Promise<void> {
-		await this.storage.setItem(this.ensureJsonExtension(key), value);
+		const versionedValue = this.addVersionIfNeeded(value);
+		await this.storage.setItem(this.ensureJsonExtension(key), versionedValue);
 	}
 
 	async getItem(_event: IpcMainInvokeEvent, key: string): Promise<T | null> {
-		return await this.storage.getItem(this.ensureJsonExtension(key));
+		const value = await this.storage.getItem<T>(this.ensureJsonExtension(key));
+		return await this.migrateIfNeeded(key, value);
 	}
 
 	async hasItem(_event: IpcMainInvokeEvent, key: string): Promise<boolean> {
@@ -109,11 +114,13 @@ export class StorageService<T extends StorageValue> {
 
 	// Internal methods for main process usage (without IPC event parameter)
 	async getItemInternal(key: string): Promise<T | null> {
-		return await this.storage.getItem<T>(this.ensureJsonExtension(key));
+		const value = await this.storage.getItem<T>(this.ensureJsonExtension(key));
+		return await this.migrateIfNeeded(key, value);
 	}
 
 	async setItemInternal(key: string, value: T): Promise<void> {
-		await this.storage.setItem(this.ensureJsonExtension(key), value);
+		const versionedValue = this.addVersionIfNeeded(value);
+		await this.storage.setItem(this.ensureJsonExtension(key), versionedValue);
 	}
 
 	async hasItemInternal(key: string): Promise<boolean> {
@@ -122,6 +129,52 @@ export class StorageService<T extends StorageValue> {
 
 	async removeItemInternal(key: string, options: StorageOptions = {}): Promise<void> {
 		await this.storage.removeItem(this.ensureJsonExtension(key), options);
+	}
+
+	private async migrateIfNeeded(key: string, value: T | null): Promise<T | null> {
+		if (!value || !this.migrationConfig) {
+			return value;
+		}
+
+		try {
+			const currentVersion = this.migrationConfig.version;
+			const persistedVersion = getStorageVersion(value);
+
+			if (persistedVersion === currentVersion) {
+				return value;
+			}
+
+			if (this.migrationConfig.debug) {
+				console.log(
+					`[StorageService] Migrating from version ${persistedVersion} to ${currentVersion}`,
+				);
+			}
+
+			const migratedValue = this.migrationConfig.migrate(value, currentVersion);
+
+			// 保存迁移后的数据回原位置
+			if (migratedValue !== value) {
+				await this.storage.setItem(this.ensureJsonExtension(key), migratedValue);
+				if (this.migrationConfig.debug) {
+					console.log(`[StorageService] Migration completed and saved for key: ${key}`);
+				}
+			}
+
+			return migratedValue;
+		} catch (error) {
+			if (this.migrationConfig.debug) {
+				console.error("[StorageService] Migration failed:", error);
+			}
+			return value;
+		}
+	}
+
+	private addVersionIfNeeded(value: T): T {
+		if (!this.migrationConfig) {
+			return value;
+		}
+
+		return setStorageVersion(value, this.migrationConfig.version);
 	}
 }
 

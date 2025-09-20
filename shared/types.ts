@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import type { StorageValue } from "@302ai/unstorage";
 
 export * from "@302ai/unstorage";
@@ -36,3 +38,13 @@ export type Tab = {
 	incognitoMode?: boolean;
 	type: TabType;
 };
+
+export interface MigrationConfig<T extends StorageValue = StorageValue> {
+	version: number;
+	migrate: (persistedState: any, currentVersion: number) => T;
+	debug?: boolean;
+}
+
+export interface VersionedStorageValue {
+	_version?: number;
+}
