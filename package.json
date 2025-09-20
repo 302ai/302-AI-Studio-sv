@@ -7,8 +7,8 @@
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
-		"name": "Pandoks_",
-		"email": "35944715+Pandoks@users.noreply.github.com"
+		"name": "302.AI",
+		"email": "support@302.ai"
 	},
 	"scripts": {
 		"prepare": "svelte-kit sync || echo ''",
