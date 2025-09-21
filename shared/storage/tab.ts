@@ -13,5 +13,12 @@ export const Tab = type({
 });
 export type Tab = typeof Tab.infer;
 
-export const TabState = Tab.array().array();
+export const WindowTabs = type({
+	tabs: Tab.array(),
+});
+export type WindowTabs = typeof WindowTabs.infer;
+
+export const TabState = type({
+	"[string]": WindowTabs
+});
 export type TabState = typeof TabState.infer;

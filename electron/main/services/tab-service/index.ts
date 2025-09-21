@@ -52,10 +52,12 @@ export class TabService {
 		view.setBounds({ x: 0, y: TITLE_BAR_HEIGHT, width, height: height - TITLE_BAR_HEIGHT });
 	}
 
-	async getActiveTab(_event: IpcMainInvokeEvent): Promise<Tab | null> {
+	async getActiveTab(event: IpcMainInvokeEvent): Promise<Tab | null> {
+		const window = BrowserWindow.fromWebContents(event.sender);
+		if (!window) return null;
 		const [tabs, activeTabId] = await Promise.all([
-			tabStorage.getTabs(),
-			tabStorage.getActiveTabId(),
+			tabStorage.getTabs(window.id.toString()),
+			tabStorage.getActiveTabId(window.id.toString()),
 		]);
 
 		if (!tabs || !activeTabId) return null;

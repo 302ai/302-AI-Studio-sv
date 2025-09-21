@@ -196,7 +196,12 @@ export class TypeScriptServiceParser {
 
 		for (const sourceFile of this.program.getSourceFiles()) {
 			if (sourceFile.isDeclarationFile) continue;
-			if (!sourceFile.fileName.includes(this.servicesDir)) continue;
+			
+			// Normalize paths for cross-platform comparison
+			const normalizedFileName = sourceFile.fileName.replace(/\\/g, "/");
+			const normalizedServicesDir = this.servicesDir.replace(/\\/g, "/");
+			
+			if (!normalizedFileName.includes(normalizedServicesDir)) continue;
 
 			const filePath = sourceFile.fileName;
 

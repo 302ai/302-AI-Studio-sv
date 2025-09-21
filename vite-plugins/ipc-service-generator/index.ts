@@ -29,9 +29,15 @@ export function ipcServiceGenerator(options: IpcServiceGeneratorOptions = {}): P
 		const formatPromises = filePaths.map(async (filePath) => {
 			try {
 				await new Promise<void>((resolve, reject) => {
+					const commandParts = formatCommand.split(" ");
+					const command = commandParts[0];
+					const args = [...commandParts.slice(1), filePath];
+					
+					// On Windows, spawn npm/pnpm/yarn commands through shell
+					const isWindows = process.platform === "win32";
 					const child = spawn(
-						formatCommand.split(" ")[0],
-						[...formatCommand.split(" ").slice(1), filePath],
+						isWindows ? "cmd" : command,
+						isWindows ? ["/c", command, ...args] : args,
 						{
 							cwd: projectRoot,
 							stdio: "pipe",

@@ -4,7 +4,7 @@
 	import { useSidebar } from "$lib/components/ui/sidebar";
 	import { m } from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { tabBarState } from "$lib/stores/tab-state.svelte";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Ghost, Settings } from "@lucide/svelte";
 	import AppSidebar from "./app-sidebar.svelte";

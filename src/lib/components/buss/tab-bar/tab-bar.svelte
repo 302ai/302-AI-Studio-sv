@@ -20,7 +20,7 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { Separator } from "$lib/components/ui/separator/index.js";
 	import { m } from "$lib/paraglide/messages.js";
-	import { persistedActiveTabId, persistedTabs, tabBarState } from "$lib/stores/tab-state.svelte";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { animateButtonBounce } from "$lib/utils/animation";
 	import { Plus } from "@lucide/svelte";
@@ -40,34 +40,34 @@
 	const buttonSpring = new Spring({ opacity: 1, x: 0 }, { stiffness: 0.2, damping: 0.8 });
 	const buttonBounceSpring = new Spring({ x: 0 }, { stiffness: 0.4, damping: 0.6 });
 
-	let previousTabsLength = $state(persistedTabs.current.length);
+	let previousTabsLength = $state(tabBarState.tabs.length);
 	let isAnimating = $state(false);
 	let isDndFinalizing = $state(false);
 	let isMac = $state(false);
 
-	const tabsCountDiff = $derived(persistedTabs.current.length - previousTabsLength);
+	const tabsCountDiff = $derived(tabBarState.tabs.length - previousTabsLength);
 	const shouldAnimateCloseTab = $derived(tabsCountDiff < 0 && !isAnimating);
-	const tabs = $derived(persistedTabs.current);
-	const activeTabId = $derived(persistedActiveTabId.current);
-	const closable = $derived(tabs.length > 1);
+	const closable = $derived(previousTabsLength > 1);
 
 	// Debug: Check for duplicate IDs
 	$effect(() => {
-		const ids = persistedTabs.current.map((tab) => tab.id);
+		const ids = tabBarState.tabs.map((tab) => tab.id);
 		const uniqueIds = new Set(ids);
 		if (ids.length !== uniqueIds.size) {
 			console.error("Duplicate tab IDs detected:", ids);
-			console.error("Tabs:", persistedTabs.current);
+			console.error("Tabs:", tabBarState.tabs);
 			// Fix duplicate IDs by ensuring uniqueness
 			const seen = new Set<string>();
-			persistedTabs.current = persistedTabs.current.filter((tab) => {
-				if (seen.has(tab.id)) {
-					console.warn(`Removing duplicate tab with ID: ${tab.id}`);
-					return false;
-				}
-				seen.add(tab.id);
-				return true;
-			});
+			tabBarState.updatePersistedTabs(
+				tabBarState.tabs.filter((tab) => {
+					if (seen.has(tab.id)) {
+						console.warn(`Removing duplicate tab with ID: ${tab.id}`);
+						return false;
+					}
+					seen.add(tab.id);
+					return true;
+				}),
+			);
 		}
 	});
 
@@ -86,7 +86,7 @@
 		if (shouldAnimateCloseTab) {
 			animateButtonBounce(buttonBounceSpring, "close");
 		}
-		previousTabsLength = persistedTabs.current.length;
+		previousTabsLength = tabBarState.tabs.length;
 	});
 
 	function handleDndConsider(e: CustomEvent<TabDndEvent>) {
@@ -95,21 +95,21 @@
 		if (info.trigger === TRIGGERS.DRAG_STARTED) {
 			draggedElementId = info.id;
 			buttonSpring.target = { opacity: 0.3, x: 8 };
-			const draggedTab = persistedTabs.current.find((tab) => tab.id === info.id);
+			const draggedTab = tabBarState.tabs.find((tab) => tab.id === info.id);
 			if (draggedTab) {
 				tabBarState.handleTabClick(draggedTab);
 			}
 		}
 
-		const hasOrderChanged = newItems.some((item, index) => item.id !== tabs[index]?.id);
-		if (hasOrderChanged) persistedTabs.current = newItems;
+		const hasOrderChanged = newItems.some((item, index) => item.id !== tabBarState.tabs[index]?.id);
+		if (hasOrderChanged) tabBarState.updatePersistedTabs(newItems);
 	}
 	function handleDndFinalize(e: CustomEvent<TabDndEvent>) {
 		isDndFinalizing = true;
 
 		try {
 			draggedElementId = null;
-			persistedTabs.current = e.detail.items;
+			tabBarState.updatePersistedTabs(e.detail.items);
 			buttonSpring.target = { opacity: 1, x: 0 };
 		} catch (error) {
 			console.error("Error finalizing drag operation:", error);
@@ -161,7 +161,7 @@
 			isMac && "pl-[80px]",
 		)}
 		use:dndzone={{
-			items: tabs,
+			items: tabBarState.tabs,
 			flipDurationMs: 200,
 			dropTargetStyle: {},
 			transformDraggedElement,
@@ -173,11 +173,11 @@
 		onconsider={handleDndConsider}
 		onfinalize={handleDndFinalize}
 	>
-		{#each tabs as tab, index (tab.id)}
-			{@const isCurrentActive = tab.id === activeTabId}
-			{@const nextTab = tabs[index + 1]}
-			{@const isNextActive = nextTab?.id === activeTabId}
-			{@const isLastTab = index === tabs.length - 1}
+		{#each tabBarState.tabs as tab, index (tab.id)}
+			{@const isCurrentActive = tab.active}
+			{@const nextTab = tabBarState.tabs[index + 1]}
+			{@const isNextActive = nextTab?.active}
+			{@const isLastTab = index === tabBarState.tabs.length - 1}
 			{@const shouldShowSeparator = !isLastTab && !isCurrentActive && !isNextActive}
 			<div
 				class={cn("flex min-w-0 items-center", autoStretch && "flex-1 basis-0")}
@@ -220,7 +220,10 @@
 		>
 			<Separator
 				orientation="vertical"
-				class={cn("mx-0.5 !h-[20px] !w-0.5", tabs.length === 0 ? "opacity-0" : "opacity-100")}
+				class={cn(
+					"mx-0.5 !h-[20px] !w-0.5",
+					tabBarState.tabs.length === 0 ? "opacity-0" : "opacity-100",
+				)}
 				style="cursor: none !important;"
 			/>
 			<ButtonWithTooltip

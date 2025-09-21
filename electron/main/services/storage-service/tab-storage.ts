@@ -1,6 +1,4 @@
 import { prefixStorage, type Tab, type TabState } from "@shared/types";
-import { isString } from "es-toolkit";
-import { isArray } from "es-toolkit/compat";
 import { StorageService } from ".";
 
 export class TabStorage extends StorageService<TabState> {
@@ -9,16 +7,18 @@ export class TabStorage extends StorageService<TabState> {
 		this.storage = prefixStorage(this.storage, "TabStorage");
 	}
 
-	async getTabs(): Promise<Tab[] | null> {
-		const result = await this.getItemInternal("tabs");
+	async getTabs(windowId: string): Promise<Tab[] | null> {
+		const result = await this.getItemInternal("tab-bar-state");
 
-		return isArray(result) ? (result as Tab[]) : null;
+		return result ? result[windowId].tabs : null;
 	}
 
-	async getActiveTabId(): Promise<string | null> {
-		const result = await this.getItemInternal("active-tab-id");
+	async getActiveTabId(windowId: string): Promise<string | null> {
+		const result = await this.getItemInternal("tab-bar-state");
+		if (!result) return null;
 
-		return isString(result) ? result : null;
+		const activeTabId = result[windowId].tabs.find((t) => t.active)?.id;
+		return activeTabId ?? null;
 	}
 }
 

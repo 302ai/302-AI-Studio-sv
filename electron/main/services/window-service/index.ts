@@ -1,5 +1,5 @@
 import type { SheetWindowConfig } from "@shared/types";
-import { BrowserWindow, nativeTheme } from "electron";
+import { BrowserWindow, nativeTheme, type IpcMainInvokeEvent } from "electron";
 import windowStateKeeper from "electron-window-state";
 import path from "node:path";
 import { CONFIG, ENVIRONMENT, PLATFORM, WINDOW_SIZE } from "../../constants";
@@ -64,6 +64,12 @@ export class WindowService {
 		} else {
 			shellWindow.loadURL("app://localhost/shell");
 		}
+	}
+
+	async getWindowsId(event: IpcMainInvokeEvent): Promise<string | null> {
+		const window = BrowserWindow.fromWebContents(event.sender);
+		if (!window) return null;
+		return window.id.toString();
 	}
 }
 
