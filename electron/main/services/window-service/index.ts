@@ -1,9 +1,9 @@
 import type { SheetWindowConfig, Tab } from "@shared/types";
-import { BrowserWindow, nativeTheme, type IpcMainInvokeEvent } from "electron";
+import { BrowserWindow, nativeTheme, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import windowStateKeeper from "electron-window-state";
 import { isNull } from "es-toolkit";
 import path from "node:path";
-import { CONFIG, ENVIRONMENT, PLATFORM, WINDOW_SIZE } from "../../constants";
+import { CONFIG, PLATFORM, WINDOW_SIZE } from "../../constants";
 import { tabStorage } from "../storage-service/tab-storage";
 import { tabService } from "../tab-service";
 
@@ -19,10 +19,11 @@ export class WindowService {
 		const newWindowIds: number[] = [];
 		const updatedWindowsTabs: Tab[][] = [];
 		for (const tabs of windowsTabs) {
-			const window = await this.createSheetWindow();
-			windows.push(window);
-			newWindowIds.push(window.id);
-			const updatedTabs = await tabService.initWindowTabs(window, tabs);
+			const { shellWindow, shellView } = await this.createSheetWindow();
+			tabService.shellView = shellView;
+			windows.push(shellWindow);
+			newWindowIds.push(shellWindow.id);
+			const updatedTabs = await tabService.initWindowTabs(shellWindow, tabs);
 			updatedWindowsTabs.push(updatedTabs);
 		}
 
@@ -31,7 +32,9 @@ export class WindowService {
 		windows.forEach((window) => window.show());
 	}
 
-	async createSheetWindow(shellWindowConfig?: SheetWindowConfig): Promise<BrowserWindow> {
+	async createSheetWindow(
+		shellWindowConfig?: SheetWindowConfig,
+	): Promise<{ shellWindow: BrowserWindow; shellView: WebContentsView }> {
 		const { shouldUseDarkColors } = nativeTheme;
 
 		const mainWindowState = windowStateKeeper({
@@ -67,7 +70,7 @@ export class WindowService {
 			}),
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
-				devTools: ENVIRONMENT.IS_DEV,
+				// devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
 			},
 			roundedCorners: true,
@@ -76,16 +79,32 @@ export class WindowService {
 
 		mainWindowState.manage(shellWindow);
 
+		const shellWebContentsView = new WebContentsView({
+			webPreferences: {
+				preload: path.join(import.meta.dirname, "../preload/index.js"),
+				// devTools: ENVIRONMENT.IS_DEV,
+				webgl: true,
+			},
+		});
+		shellWindow.contentView.addChildView(shellWebContentsView);
+		shellWebContentsView.setBounds({
+			x: 0,
+			y: 0,
+			width: shellWindow.getContentBounds().width,
+			height: shellWindow.getContentBounds().height,
+		});
+		shellWebContentsView.setBackgroundColor("#00000000");
+
 		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-			shellWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL + "/shell");
-			shellWindow.webContents.on("did-frame-finish-load", () => {
-				shellWindow.webContents.openDevTools({ mode: "detach" });
-			});
+			shellWebContentsView.webContents.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL + "/shell");
+			// shellWebContentsView.webContents.on("did-frame-finish-load", () => {
+			// 	shellWebContentsView.webContents.openDevTools({ mode: "detach" });
+			// });
 		} else {
-			shellWindow.loadURL("app://localhost/shell");
+			shellWebContentsView.webContents.loadURL("app://localhost/shell");
 		}
 
-		return shellWindow;
+		return { shellWindow, shellView: shellWebContentsView };
 	}
 
 	async getWindowsId(event: IpcMainInvokeEvent): Promise<string | null> {

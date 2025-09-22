@@ -2,12 +2,13 @@ import type { Tab } from "@shared/types";
 import { BrowserWindow, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import { isNull, isUndefined } from "es-toolkit";
 import path from "node:path";
-import { ENVIRONMENT, TITLE_BAR_HEIGHT } from "../../constants";
+import { TITLE_BAR_HEIGHT } from "../../constants";
 import { tabStorage } from "../storage-service/tab-storage";
 
 export class TabService {
 	private tabMap: Map<string, WebContentsView>;
 	private currentActiveTabId: string | null = null;
+	shellView: WebContentsView | null = null;
 
 	constructor() {
 		this.tabMap = new Map();
@@ -17,7 +18,7 @@ export class TabService {
 		const view = new WebContentsView({
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
-				devTools: ENVIRONMENT.IS_DEV,
+				// devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
 			},
 		});
@@ -27,9 +28,9 @@ export class TabService {
 
 		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
 			view.webContents.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-			view.webContents.on("did-frame-finish-load", () => {
-				view.webContents.openDevTools({ mode: "detach" });
-			});
+			// view.webContents.on("did-frame-finish-load", () => {
+			// 	view.webContents.openDevTools({ mode: "detach" });
+			// });
 		} else {
 			view.webContents.loadURL("app://localhost");
 		}
@@ -40,7 +41,26 @@ export class TabService {
 	private attachViewToWindow(view: WebContentsView, window: BrowserWindow) {
 		window.contentView.addChildView(view);
 		const { width, height } = window.getContentBounds();
-		view.setBounds({ x: 0, y: TITLE_BAR_HEIGHT, width, height: height - TITLE_BAR_HEIGHT });
+		view.setBounds({ x: 0, y: TITLE_BAR_HEIGHT + 1, width, height: height - TITLE_BAR_HEIGHT - 1 });
+
+		if (!isNull(this.shellView)) {
+			window.contentView.addChildView(this.shellView);
+
+			if (!this.shellView.webContents.isFocused()) {
+				this.shellView.webContents.focus();
+			}
+
+			// this.shellView.webContents.addListener("before-mouse-event", (_event, input) => {
+			// 	// window.contentView.addChildView(view);
+			// 	console.log("before-input-event", input);
+			// 	const { y } = input;
+			// 	if (y > TITLE_BAR_HEIGHT) {
+			// 		window.contentView.addChildView(view);
+			// 	} else {
+			// 		window.contentView.addChildView(this.shellView!);
+			// 	}
+			// });
+		}
 	}
 
 	private switchActiveTab(newActiveTabId: string) {
