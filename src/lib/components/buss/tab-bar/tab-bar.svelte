@@ -112,6 +112,18 @@
 		}
 	}
 
+	async function handleTabClick(tab: Tab) {
+		await tabBarState.handleTabClick(tab);
+	}
+
+	async function handleTabClose(tab: Tab) {
+		await tabBarState.handleTabClose(tab);
+	}
+
+	async function handleTabCloseAll() {
+		await tabBarState.handleTabCloseAll();
+	}
+
 	onMount(async () => {
 		isMac = (await deviceService.getPlatform()) === "darwin";
 	});
@@ -176,9 +188,9 @@
 					isDragging={draggedElementId === tab.id}
 					stretch={autoStretch}
 					{closable}
-					onTabClick={() => tabBarState.handleTabClick(tab)}
-					onTabClose={() => tabBarState.handleTabClose(tab)}
-					onTabCloseAll={() => tabBarState.handleTabCloseAll()}
+					onTabClick={(tab) => handleTabClick(tab)}
+					onTabClose={(tab) => handleTabClose(tab)}
+					onTabCloseAll={() => handleTabCloseAll()}
 				/>
 				<div class="shrink-0 px-0.5" style="cursor: pointer !important;">
 					<Separator

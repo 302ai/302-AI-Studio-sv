@@ -57,30 +57,38 @@ class TabBarState {
 		await tabService.handleActivateTab(tab.id);
 	}
 
-	handleTabClose(tab: Tab) {
+	async handleTabClose(tab: Tab) {
 		if (!this.windowId) return;
 
 		const currentTabs = this.tabs;
 		const targetIndex = currentTabs.findIndex((t) => t.id === tab.id);
 		if (targetIndex === -1) return;
 
+		let newActiveTabId: string | null = null;
+
 		const remainingTabs = currentTabs
 			.filter((t) => t.id !== tab.id)
 			.map((t, index, filteredTabs) => {
 				if (tab.active && filteredTabs.length > 0) {
 					const newActiveIndex = targetIndex > 0 ? targetIndex - 1 : 0;
+					newActiveTabId = filteredTabs[newActiveIndex].id;
 					return { ...t, active: index === newActiveIndex };
 				}
 				return t;
 			});
 
 		persistedTabState.current[this.windowId].tabs = remainingTabs;
+
+		await tabService.handleTabClose(tab.id, newActiveTabId);
 	}
 
-	handleTabCloseAll() {
+	async handleTabCloseAll() {
 		if (!this.windowId) return;
 
 		persistedTabState.current[this.windowId].tabs = [];
+
+		await tabService.handleTabCloseAll();
+
 		setTimeout(() => {
 			this.handleNewTab();
 		}, 10);

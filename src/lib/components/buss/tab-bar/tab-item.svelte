@@ -23,6 +23,8 @@
 	import type { Tab } from "@shared/types";
 	import { onDestroy } from "svelte";
 
+	const { tabService } = window.electronAPI;
+
 	const {
 		tab,
 		isActive,
@@ -64,6 +66,10 @@
 	onDestroy(() => {
 		window.cancelAnimationFrame?.(0);
 	});
+
+	const handleOpenChange = async (open: boolean) => {
+		await tabService.handleShellViewLevel(open);
+	};
 </script>
 
 {#snippet tabIcon()}
@@ -79,7 +85,7 @@
 	{/if}
 {/snippet}
 
-<ContextMenu.Root>
+<ContextMenu.Root onOpenChange={handleOpenChange}>
 	<ContextMenu.Trigger
 		class={cn(
 			"h-tab rounded-tab px-tab-x relative flex cursor-pointer items-center text-sm",

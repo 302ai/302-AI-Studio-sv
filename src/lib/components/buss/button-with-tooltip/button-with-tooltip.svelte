@@ -25,6 +25,8 @@
 	} from "$lib/components/ui/tooltip/index.js";
 	import { cn } from "$lib/utils.js";
 
+	const { tabService } = window.electronAPI;
+
 	const {
 		tooltip,
 		tooltipSide = "top",
@@ -38,10 +40,14 @@
 	}: ButtonWithTooltipProps = $props();
 
 	const buttonClass = $derived(cn(buttonVariants({ variant, size }), className));
+
+	const handleOpenChange = async (open: boolean) => {
+		await tabService.handleShellViewLevel(open);
+	};
 </script>
 
 <TooltipProvider>
-	<Tooltip>
+	<Tooltip onOpenChange={handleOpenChange}>
 		<TooltipTrigger class={cn(buttonClass, "group rounded-[10px]")} {disabled} {onclick} {style}>
 			{@render children?.()}
 		</TooltipTrigger>

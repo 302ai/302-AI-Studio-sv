@@ -8,7 +8,7 @@ export class AppService {
 		const state = await themeStorage.getThemeState();
 		console.log(`state = ${JSON.stringify(state)}, ${typeof state}`);
 
-		if (state == null) {
+		if (state === null) {
 			console.warn("Unable to load themeState from storage");
 			return;
 		}

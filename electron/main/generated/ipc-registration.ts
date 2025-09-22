@@ -46,6 +46,13 @@ export function registerIpcHandlers() {
 		tabService.handleActivateTab(event, tabId),
 	);
 	ipcMain.handle("tabService:getActiveTab", (event) => tabService.getActiveTab(event));
+	ipcMain.handle("tabService:handleTabClose", (event, tabId, newActiveTabId) =>
+		tabService.handleTabClose(event, tabId, newActiveTabId),
+	);
+	ipcMain.handle("tabService:handleTabCloseAll", (event) => tabService.handleTabCloseAll(event));
+	ipcMain.handle("tabService:handleShellViewLevel", (event, up) =>
+		tabService.handleShellViewLevel(event, up),
+	);
 
 	// windowService service registration
 	ipcMain.handle("windowService:getWindowsId", (event) => windowService.getWindowsId(event));
@@ -73,5 +80,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");
 	ipcMain.removeHandler("tabService:getActiveTab");
+	ipcMain.removeHandler("tabService:handleTabClose");
+	ipcMain.removeHandler("tabService:handleTabCloseAll");
+	ipcMain.removeHandler("tabService:handleShellViewLevel");
 	ipcMain.removeHandler("windowService:getWindowsId");
 }

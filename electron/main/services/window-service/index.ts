@@ -3,7 +3,7 @@ import { BrowserWindow, nativeTheme, WebContentsView, type IpcMainInvokeEvent } 
 import windowStateKeeper from "electron-window-state";
 import { isNull } from "es-toolkit";
 import path from "node:path";
-import { CONFIG, PLATFORM, WINDOW_SIZE } from "../../constants";
+import { CONFIG, ENVIRONMENT, PLATFORM, WINDOW_SIZE } from "../../constants";
 import { tabStorage } from "../storage-service/tab-storage";
 import { tabService } from "../tab-service";
 
@@ -20,7 +20,7 @@ export class WindowService {
 		const updatedWindowsTabs: Tab[][] = [];
 		for (const tabs of windowsTabs) {
 			const { shellWindow, shellView } = await this.createSheetWindow();
-			tabService.shellView = shellView;
+			tabService.initWindowShellView(shellWindow.id, shellView);
 			windows.push(shellWindow);
 			newWindowIds.push(shellWindow.id);
 			const updatedTabs = await tabService.initWindowTabs(shellWindow, tabs);
@@ -70,7 +70,7 @@ export class WindowService {
 			}),
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
-				// devTools: ENVIRONMENT.IS_DEV,
+				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
 			},
 			roundedCorners: true,
@@ -82,24 +82,25 @@ export class WindowService {
 		const shellWebContentsView = new WebContentsView({
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
-				// devTools: ENVIRONMENT.IS_DEV,
+				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
 			},
 		});
 		shellWindow.contentView.addChildView(shellWebContentsView);
+		const { width, height } = shellWindow.getContentBounds();
 		shellWebContentsView.setBounds({
 			x: 0,
 			y: 0,
-			width: shellWindow.getContentBounds().width,
-			height: shellWindow.getContentBounds().height,
+			width: width,
+			height: height,
 		});
 		shellWebContentsView.setBackgroundColor("#00000000");
 
 		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
 			shellWebContentsView.webContents.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL + "/shell");
-			// shellWebContentsView.webContents.on("did-frame-finish-load", () => {
-			// 	shellWebContentsView.webContents.openDevTools({ mode: "detach" });
-			// });
+			shellWebContentsView.webContents.on("did-frame-finish-load", () => {
+				shellWebContentsView.webContents.openDevTools({ mode: "detach" });
+			});
 		} else {
 			shellWebContentsView.webContents.loadURL("app://localhost/shell");
 		}
