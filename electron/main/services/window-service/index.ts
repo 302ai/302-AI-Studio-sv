@@ -1,17 +1,37 @@
-import type { SheetWindowConfig } from "@shared/types";
+import type { SheetWindowConfig, Tab } from "@shared/types";
 import { BrowserWindow, nativeTheme, type IpcMainInvokeEvent } from "electron";
 import windowStateKeeper from "electron-window-state";
+import { isNull } from "es-toolkit";
 import path from "node:path";
 import { CONFIG, ENVIRONMENT, PLATFORM, WINDOW_SIZE } from "../../constants";
+import { tabStorage } from "../storage-service/tab-storage";
+import { tabService } from "../tab-service";
 
 export class WindowService {
-	private windowMap: Map<number, BrowserWindow>;
+	async initShellWindows() {
+		const windowsTabs = await tabStorage.getAllWindowsTabs();
+		if (isNull(windowsTabs)) {
+			await this.createSheetWindow();
+			return;
+		}
 
-	constructor() {
-		this.windowMap = new Map();
+		const windows: BrowserWindow[] = [];
+		const newWindowIds: number[] = [];
+		const updatedWindowsTabs: Tab[][] = [];
+		for (const tabs of windowsTabs) {
+			const window = await this.createSheetWindow();
+			windows.push(window);
+			newWindowIds.push(window.id);
+			const updatedTabs = await tabService.initWindowTabs(window, tabs);
+			updatedWindowsTabs.push(updatedTabs);
+		}
+
+		await tabStorage.updateWindowMapping(newWindowIds, updatedWindowsTabs);
+
+		windows.forEach((window) => window.show());
 	}
 
-	async createSheetWindow(shellWindowConfig?: SheetWindowConfig) {
+	async createSheetWindow(shellWindowConfig?: SheetWindowConfig): Promise<BrowserWindow> {
 		const { shouldUseDarkColors } = nativeTheme;
 
 		const mainWindowState = windowStateKeeper({
@@ -51,9 +71,9 @@ export class WindowService {
 				webgl: true,
 			},
 			roundedCorners: true,
+			show: false,
 		});
 
-		this.windowMap.set(shellWindow.id, shellWindow);
 		mainWindowState.manage(shellWindow);
 
 		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -64,6 +84,8 @@ export class WindowService {
 		} else {
 			shellWindow.loadURL("app://localhost/shell");
 		}
+
+		return shellWindow;
 	}
 
 	async getWindowsId(event: IpcMainInvokeEvent): Promise<string | null> {

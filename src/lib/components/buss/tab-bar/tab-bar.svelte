@@ -49,33 +49,11 @@
 	const shouldAnimateCloseTab = $derived(tabsCountDiff < 0 && !isAnimating);
 	const closable = $derived(previousTabsLength > 1);
 
-	// Debug: Check for duplicate IDs
-	$effect(() => {
-		const ids = tabBarState.tabs.map((tab) => tab.id);
-		const uniqueIds = new Set(ids);
-		if (ids.length !== uniqueIds.size) {
-			console.error("Duplicate tab IDs detected:", ids);
-			console.error("Tabs:", tabBarState.tabs);
-			// Fix duplicate IDs by ensuring uniqueness
-			const seen = new Set<string>();
-			tabBarState.updatePersistedTabs(
-				tabBarState.tabs.filter((tab) => {
-					if (seen.has(tab.id)) {
-						console.warn(`Removing duplicate tab with ID: ${tab.id}`);
-						return false;
-					}
-					seen.add(tab.id);
-					return true;
-				}),
-			);
-		}
-	});
-
-	function handleNewTab() {
+	async function handleNewTab() {
 		if (isAnimating) return;
 
 		isAnimating = true;
-		tabBarState.handleNewTab();
+		await tabBarState.handleNewTab();
 
 		animateButtonBounce(buttonBounceSpring, "new").then(() => {
 			isAnimating = false;

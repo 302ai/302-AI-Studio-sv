@@ -1,17 +1,19 @@
 import type { Tab } from "@shared/types";
 import { BrowserWindow, WebContentsView, type IpcMainInvokeEvent } from "electron";
+import { isNull, isUndefined } from "es-toolkit";
 import path from "node:path";
 import { ENVIRONMENT, TITLE_BAR_HEIGHT } from "../../constants";
 import { tabStorage } from "../storage-service/tab-storage";
 
 export class TabService {
 	private tabMap: Map<string, WebContentsView>;
+	private currentActiveTabId: string | null = null;
 
 	constructor() {
 		this.tabMap = new Map();
 	}
 
-	async handleNewTab(event: IpcMainInvokeEvent): Promise<string | null> {
+	private newWebContentsView(): { view: WebContentsView; tabId: string } {
 		const view = new WebContentsView({
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
@@ -19,6 +21,9 @@ export class TabService {
 				webgl: true,
 			},
 		});
+
+		const tabId = view.webContents.id.toString();
+		this.tabMap.set(tabId, view);
 
 		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
 			view.webContents.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
@@ -29,41 +34,90 @@ export class TabService {
 			view.webContents.loadURL("app://localhost");
 		}
 
-		const tabId = view.webContents.id.toString();
-		this.tabMap.set(tabId, view);
+		return { view, tabId };
+	}
 
-		const window = BrowserWindow.fromWebContents(event.sender);
-		if (!window) return null;
+	private attachViewToWindow(view: WebContentsView, window: BrowserWindow) {
 		window.contentView.addChildView(view);
 		const { width, height } = window.getContentBounds();
 		view.setBounds({ x: 0, y: TITLE_BAR_HEIGHT, width, height: height - TITLE_BAR_HEIGHT });
+	}
+
+	private switchActiveTab(newActiveTabId: string) {
+		if (this.currentActiveTabId) {
+			const prevView = this.tabMap.get(this.currentActiveTabId);
+			if (prevView) {
+				prevView.setVisible(false);
+			}
+		}
+
+		const newView = this.tabMap.get(newActiveTabId);
+		if (newView) {
+			newView.setVisible(true);
+		}
+
+		this.currentActiveTabId = newActiveTabId;
+	}
+
+	async initWindowTabs(window: BrowserWindow, tabs: Tab[]): Promise<Tab[]> {
+		let activeTabView: WebContentsView | null = null;
+		let activeTabId: string | null = null;
+
+		const updatedTabs = tabs.map((tab) => {
+			const { view, tabId } = this.newWebContentsView();
+			if (tab.active) {
+				activeTabView = view;
+				activeTabId = tabId;
+			} else {
+				this.attachViewToWindow(view, window);
+			}
+			return {
+				...tab,
+				id: tabId,
+			};
+		});
+
+		if (activeTabView && activeTabId) {
+			this.attachViewToWindow(activeTabView, window);
+			this.switchActiveTab(activeTabId);
+		}
+
+		return updatedTabs;
+	}
+
+	async handleNewTab(event: IpcMainInvokeEvent): Promise<string | null> {
+		const { view, tabId } = this.newWebContentsView();
+		const window = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(window)) return null;
+		this.attachViewToWindow(view, window);
+		this.switchActiveTab(tabId);
 
 		return tabId;
 	}
 
 	async handleActivateTab(event: IpcMainInvokeEvent, tabId: string) {
 		const view = this.tabMap.get(tabId);
-		if (!view) return;
+		if (isUndefined(view)) return;
 
 		const window = BrowserWindow.fromWebContents(event.sender);
-		if (!window) return;
-		window.contentView.addChildView(view);
-		const { width, height } = window.getContentBounds();
-		view.setBounds({ x: 0, y: TITLE_BAR_HEIGHT, width, height: height - TITLE_BAR_HEIGHT });
+		if (isNull(window)) return;
+
+		this.attachViewToWindow(view, window);
+		this.switchActiveTab(tabId);
 	}
 
 	async getActiveTab(event: IpcMainInvokeEvent): Promise<Tab | null> {
 		const window = BrowserWindow.fromWebContents(event.sender);
-		if (!window) return null;
+		if (isNull(window)) return null;
 		const [tabs, activeTabId] = await Promise.all([
 			tabStorage.getTabs(window.id.toString()),
 			tabStorage.getActiveTabId(window.id.toString()),
 		]);
 
-		if (!tabs || !activeTabId) return null;
+		if (isNull(tabs) || isNull(activeTabId)) return null;
 
 		const tab = tabs.find((tab) => tab.id === activeTabId);
-		if (!tab) return null;
+		if (isUndefined(tab)) return null;
 
 		return tab;
 	}

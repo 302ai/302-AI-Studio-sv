@@ -36,7 +36,7 @@ async function init() {
 		);
 	});
 
-	windowService.createSheetWindow();
+	windowService.initShellWindows();
 }
 
 // This method will be called when Electron has finished

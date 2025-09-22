@@ -22,9 +22,9 @@ export const persistedTabState = new PersistedState<TabState>(
 const { tabService, windowService } = window.electronAPI;
 
 class TabBarState {
-	private windowId: string | null = null;
+	private windowId = $state<string | null>(null);
 	tabs = $derived<Tab[]>(
-		this.windowId ? (persistedTabState.current[this.windowId].tabs ?? []) : [],
+		this.windowId ? (persistedTabState.current[this.windowId]?.tabs ?? []) : [],
 	);
 
 	constructor() {
@@ -33,6 +33,7 @@ class TabBarState {
 
 	private async initState() {
 		this.windowId = await windowService.getWindowsId();
+		console.log("this.windowId", this.windowId);
 	}
 
 	private newTab(tabId: string, type: TabType = "chat", active = true): Tab {
@@ -41,7 +42,7 @@ class TabBarState {
 		return { id: tabId, title, href: getHref(tabId), type, active };
 	}
 
-	handleTabClick(tab: Tab) {
+	async handleTabClick(tab: Tab) {
 		if (!this.windowId) return;
 
 		const targetTab = this.tabs.find((t) => t.id === tab.id);
@@ -52,6 +53,8 @@ class TabBarState {
 			active: t.id === tab.id,
 		}));
 		persistedTabState.current[this.windowId].tabs = updatedTabs;
+
+		await tabService.handleActivateTab(tab.id);
 	}
 
 	handleTabClose(tab: Tab) {

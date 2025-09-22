@@ -10,6 +10,8 @@
 	import AppSidebar from "./app-sidebar.svelte";
 
 	const { children } = $props();
+
+	const handleNewSettingsTab = async () => await tabBarState.handleNewTab("settings");
 </script>
 
 <Sidebar.Provider class="h-full min-h-fit">
@@ -48,7 +50,7 @@
 					tooltip={m.title_settings()}
 					class="hover:!bg-icon-btn-hover"
 					tooltipSide="bottom"
-					onclick={() => tabBarState.handleNewTab("settings")}
+					onclick={handleNewSettingsTab}
 				>
 					<Settings class="size-5" />
 				</ButtonWithTooltip>
