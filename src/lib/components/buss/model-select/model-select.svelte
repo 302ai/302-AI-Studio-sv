@@ -16,9 +16,15 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as Command from "$lib/components/ui/command";
 	import * as ScrollArea from "$lib/components/ui/scroll-area";
-	import { mockModels } from "$lib/datas/models";
 	import { m } from "$lib/paraglide/messages";
 	import { type Model } from "$lib/stores/chat-state.svelte";
+	import {
+		providerState,
+		persistedProviderState,
+		persistedModelState,
+	} from "$lib/stores/provider-state.svelte";
+	import type { Model as ProviderModel } from "$lib/types/model";
+	import type { ModelProvider } from "$lib/types/provider";
 	import { cn } from "$lib/utils";
 	import { Check, ChevronRight } from "@lucide/svelte";
 
@@ -34,10 +40,52 @@
 		onclick: () => (isOpen = true),
 	};
 
+	// Transform provider-state data to UI format
+	const transformedModels = $derived.by(() => {
+		const providers = persistedProviderState.current;
+		const models = persistedModelState.current;
+
+		return models
+			.filter((model) => model.enabled) // Only show enabled models
+			.map((model): Model | null => {
+				const provider = providers.find((p) => p.id === model.providerId);
+				if (!provider) return null;
+
+				return {
+					id: model.id,
+					name: model.name,
+					type: mapModelType(model.type),
+					provider: {
+						id: provider.id,
+						name: provider.name,
+					},
+				};
+			})
+			.filter((model): model is Model => model !== null);
+	});
+
+	// Map provider-state model types to chat types
+	function mapModelType(type: ProviderModel["type"]): Model["type"] {
+		switch (type) {
+			case "language":
+				return "llm";
+			case "tts":
+				return "tts";
+			case "embedding":
+				return "text-embedding";
+			case "rerank":
+				return "rerank";
+			case "image-generation":
+				return "llm"; // Map to llm for now, could add new type later
+			default:
+				return "llm";
+		}
+	}
+
 	const groupedModels = $derived(() => {
 		const groups: Record<string, Model[]> = {};
 
-		mockModels.forEach((model) => {
+		transformedModels.forEach((model) => {
 			if (
 				searchValue &&
 				!model.name.toLowerCase().includes(searchValue.toLowerCase()) &&
