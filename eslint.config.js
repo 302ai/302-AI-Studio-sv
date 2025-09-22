@@ -1,9 +1,10 @@
 import js from "@eslint/js";
+import tsParser from "@typescript-eslint/parser";
+import prettier from "eslint-config-prettier";
 import svelte from "eslint-plugin-svelte";
 import globals from "globals";
 import ts from "typescript-eslint";
 import svelteConfig from "./svelte.config.js";
-import prettier from "eslint-config-prettier";
 
 export default [
 	js.configs.recommended,
@@ -56,7 +57,7 @@ export default [
 		languageOptions: {
 			parserOptions: {
 				projectService: true,
-				parser: ts.parser,
+				parser: tsParser,
 			},
 		},
 	},
