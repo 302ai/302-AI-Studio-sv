@@ -18,13 +18,8 @@
 	import * as ScrollArea from "$lib/components/ui/scroll-area";
 	import { m } from "$lib/paraglide/messages";
 	import { type Model } from "$lib/stores/chat-state.svelte";
-	import {
-		providerState,
-		persistedProviderState,
-		persistedModelState,
-	} from "$lib/stores/provider-state.svelte";
+	import { persistedProviderState, persistedModelState } from "$lib/stores/provider-state.svelte";
 	import type { Model as ProviderModel } from "$lib/types/model";
-	import type { ModelProvider } from "$lib/types/provider";
 	import { cn } from "$lib/utils";
 	import { Check, ChevronRight } from "@lucide/svelte";
 
