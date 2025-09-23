@@ -23,16 +23,13 @@ export interface ChatMessage {
 }
 
 // Chat parameters interface
-interface ChatParams {
+interface ThreadParmas {
+	title: string;
 	temperature: number | null;
 	topP: number | null;
 	frequencyPenalty: number | null;
 	presencePenalty: number | null;
 	maxTokens: number | null;
-}
-
-// UI state interface
-interface ChatUIState {
 	inputValue: string;
 	attachments: AttachmentFile[];
 	mcpServers: MCPServer[];
@@ -44,41 +41,42 @@ interface ChatUIState {
 }
 
 export const persistedMessagesState = new PersistedState<ChatMessage[]>(
-	"app-chat-messages" + window.tab.threadId,
+	"app-chat-messages:" + window.tab.threadId,
 	[],
 );
-export const persistedChatParamsState = new PersistedState<ChatParams>("app-chat-params", {
-	temperature: null,
-	topP: null,
-	frequencyPenalty: null,
-	presencePenalty: null,
-	maxTokens: null,
-});
-export const persistedChatUIState = new PersistedState<ChatUIState>("app-chat-ui", {
-	inputValue: "",
-	attachments: [],
-	mcpServers: [],
-	isThinkingActive: false,
-	isOnlineSearchActive: false,
-	isMCPActive: false,
-	selectedModel: null,
-	isPrivateChatActive: false,
-});
+export const persistedChatParamsState = new PersistedState<ThreadParmas>(
+	"app-thread:" + window.tab.threadId,
+	{
+		title: "",
+		temperature: null,
+		topP: null,
+		frequencyPenalty: null,
+		presencePenalty: null,
+		maxTokens: null,
+		inputValue: "",
+		attachments: [],
+		mcpServers: [],
+		isThinkingActive: false,
+		isOnlineSearchActive: false,
+		isMCPActive: false,
+		selectedModel: null,
+		isPrivateChatActive: false,
+	},
+);
 
 class ChatState {
-	// Computed properties accessing persistent state
 	get inputValue(): string {
-		return persistedChatUIState.current.inputValue;
+		return persistedChatParamsState.current.inputValue;
 	}
 	set inputValue(value: string) {
-		persistedChatUIState.current.inputValue = value;
+		persistedChatParamsState.current.inputValue = value;
 	}
 
 	get attachments(): AttachmentFile[] {
-		return persistedChatUIState.current.attachments;
+		return persistedChatParamsState.current.attachments;
 	}
 	set attachments(value: AttachmentFile[]) {
-		persistedChatUIState.current.attachments = value;
+		persistedChatParamsState.current.attachments = value;
 	}
 
 	get messages(): ChatMessage[] {
@@ -89,45 +87,45 @@ class ChatState {
 	}
 
 	get mcpServers(): MCPServer[] {
-		return persistedChatUIState.current.mcpServers;
+		return persistedChatParamsState.current.mcpServers;
 	}
 	set mcpServers(value: MCPServer[]) {
-		persistedChatUIState.current.mcpServers = value;
+		persistedChatParamsState.current.mcpServers = value;
 	}
 
 	get isThinkingActive(): boolean {
-		return persistedChatUIState.current.isThinkingActive;
+		return persistedChatParamsState.current.isThinkingActive;
 	}
 	set isThinkingActive(value: boolean) {
-		persistedChatUIState.current.isThinkingActive = value;
+		persistedChatParamsState.current.isThinkingActive = value;
 	}
 
 	get isOnlineSearchActive(): boolean {
-		return persistedChatUIState.current.isOnlineSearchActive;
+		return persistedChatParamsState.current.isOnlineSearchActive;
 	}
 	set isOnlineSearchActive(value: boolean) {
-		persistedChatUIState.current.isOnlineSearchActive = value;
+		persistedChatParamsState.current.isOnlineSearchActive = value;
 	}
 
 	get isMCPActive(): boolean {
-		return persistedChatUIState.current.isMCPActive;
+		return persistedChatParamsState.current.isMCPActive;
 	}
 	set isMCPActive(value: boolean) {
-		persistedChatUIState.current.isMCPActive = value;
+		persistedChatParamsState.current.isMCPActive = value;
 	}
 
 	get selectedModel(): Model | null {
-		return persistedChatUIState.current.selectedModel;
+		return persistedChatParamsState.current.selectedModel;
 	}
 	set selectedModel(value: Model | null) {
-		persistedChatUIState.current.selectedModel = value;
+		persistedChatParamsState.current.selectedModel = value;
 	}
 
 	get isPrivateChatActive(): boolean {
-		return persistedChatUIState.current.isPrivateChatActive;
+		return persistedChatParamsState.current.isPrivateChatActive;
 	}
 	set isPrivateChatActive(value: boolean) {
-		persistedChatUIState.current.isPrivateChatActive = value;
+		persistedChatParamsState.current.isPrivateChatActive = value;
 	}
 
 	// Chat Parameters
