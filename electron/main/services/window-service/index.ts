@@ -102,7 +102,7 @@ export class WindowService {
 				shellWebContentsView.webContents.openDevTools({ mode: "detach" });
 			});
 		} else {
-			shellWebContentsView.webContents.loadURL("app://localhost/shell");
+			shellWebContentsView.webContents.loadURL("app://localhost?route=shell");
 		}
 
 		return { shellWindow, shellView: shellWebContentsView };

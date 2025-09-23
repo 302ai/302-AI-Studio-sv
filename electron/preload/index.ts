@@ -8,8 +8,8 @@ const api = {};
 const tabdata = process.argv.find((arg) => arg.startsWith("--tab="))?.split("=")[1];
 
 const tab = tabdata ? parse(tabdata ?? "") : tabdata;
-const windowId =
-	process.argv.find((arg) => arg.startsWith("--shell-window-id="))?.split("=")[1] ?? "";
+const windowId = process.argv.find((arg) => arg.startsWith("--window-id="))?.split("=")[1] ?? "";
+
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.

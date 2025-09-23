@@ -37,13 +37,13 @@ export class TabService {
 
 	// ******************************* Private Methods ******************************* //
 
-	private newWebContentsView(tab: Tab): WebContentsView {
+	private newWebContentsView(windowId: number, tab: Tab): WebContentsView {
 		const view = new WebContentsView({
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
 				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
-				additionalArguments: [`--tab=${stringify(tab)}`],
+				additionalArguments: [`--window-id=${windowId}`, `--tab=${stringify(tab)}`],
 			},
 		});
 
@@ -92,7 +92,7 @@ export class TabService {
 		const views: WebContentsView[] = [];
 
 		tabs.forEach((tab) => {
-			const tabView = this.newWebContentsView(tab);
+			const tabView = this.newWebContentsView(window.id, tab);
 			if (tab.active) {
 				activeTabView = tabView;
 				activeTabId = tab.id;
@@ -140,6 +140,9 @@ export class TabService {
 		type: TabType = "chat",
 		active: boolean = true,
 	): Promise<string | null> {
+		const window = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(window)) return null;
+
 		const { title: tabTitle, getHref } = getTabConfig(type);
 		const newTabId = nanoid();
 		const newTab: Tab = {
@@ -150,9 +153,7 @@ export class TabService {
 			active,
 			threadId: nanoid(),
 		};
-		const view = this.newWebContentsView(newTab);
-		const window = BrowserWindow.fromWebContents(event.sender);
-		if (isNull(window)) return null;
+		const view = this.newWebContentsView(window.id, newTab);
 		this.attachViewToWindow(window, view);
 		this.switchActiveTab(window, newTab.id);
 

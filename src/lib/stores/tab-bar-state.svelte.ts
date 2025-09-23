@@ -14,7 +14,6 @@ class TabBarState {
 
 	constructor() {
 		console.log("windowId", this.windowId);
-		console.log("tab", window.tab);
 	}
 
 	async handleTabClick(tab: Tab) {

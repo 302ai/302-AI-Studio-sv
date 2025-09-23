@@ -11,7 +11,9 @@
 
 	const { children } = $props();
 
-	const handleNewSettingsTab = async () => await tabBarState.handleNewTab("settings");
+	async function handleNewSettingsTab() {
+		await tabBarState.handleNewTab("Settings", "settings");
+	}
 </script>
 
 <Sidebar.Provider class="h-full min-h-fit">
@@ -50,7 +52,7 @@
 					tooltip={m.title_settings()}
 					class="hover:!bg-icon-btn-hover"
 					tooltipSide="bottom"
-					onclick={handleNewSettingsTab}
+					onclick={() => handleNewSettingsTab()}
 				>
 					<Settings class="size-5" />
 				</ButtonWithTooltip>
