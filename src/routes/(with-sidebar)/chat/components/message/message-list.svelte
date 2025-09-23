@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
-	import type { ChatMessage } from "$lib/stores/chat-state.svelte";
+	import type { ChatMessage } from "$lib/types/chat";
 	import AssistantMessage from "./assistant-message.svelte";
 	import UserMessage from "./user-message.svelte";
 
@@ -16,17 +16,9 @@
 		<div class="w-full max-w-[720px] space-y-4 py-8">
 			{#each messages as message (message.id)}
 				{#if message.role === "user"}
-					<UserMessage
-						message={{ ...message, role: "user" as const, attachments: message.attachments ?? [] }}
-					/>
+					<UserMessage message={{ ...message, role: "user" as const, attachments: [] }} />
 				{:else if message.role === "assistant"}
-					<AssistantMessage
-						message={{
-							...message,
-							role: "assistant" as const,
-							status: message.status,
-						}}
-					/>
+					<AssistantMessage message={{ ...message, role: "assistant" as const }} />
 				{/if}
 			{/each}
 		</div>

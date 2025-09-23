@@ -45,7 +45,13 @@
 			</div>
 		{/if}
 
-		<span class="whitespace-pre-wrap">{message.content}</span>
+		<div>
+			{#each message.parts as part, partIndex (partIndex)}
+				{#if part.type === "text"}
+					<div>{part.text}</div>
+				{/if}
+			{/each}
+		</div>
 	</div>
 
 	{@render messageFooter()}
