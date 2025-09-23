@@ -83,7 +83,7 @@ export class WindowService {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
 				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
-				additionalArguments: [`--shell-window-id=${shellWindow.id.toString()}`],
+				additionalArguments: [`--window-id=${shellWindow.id.toString()}`],
 			},
 		});
 		shellWindow.contentView.addChildView(shellWebContentsView);
