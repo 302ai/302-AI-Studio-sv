@@ -43,9 +43,10 @@ interface ChatUIState {
 	isPrivateChatActive: boolean;
 }
 
-// Persistent state instances
-export const persistedThread = new PersistedState<Thread[]>("app-chat-thread", []);
-export const persistedMessagesState = new PersistedState<ChatMessage[]>("app-chat-messages", []);
+export const persistedMessagesState = new PersistedState<ChatMessage[]>(
+	"app-chat-messages" + window.tab.threadId,
+	[],
+);
 export const persistedChatParamsState = new PersistedState<ChatParams>("app-chat-params", {
 	temperature: null,
 	topP: null,

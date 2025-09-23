@@ -3,6 +3,7 @@ import { BrowserWindow, WebContentsView, type IpcMainInvokeEvent } from "electro
 import { isNull, isUndefined } from "es-toolkit";
 import { nanoid } from "nanoid";
 import path from "node:path";
+import { stringify } from "superjson";
 import { ENVIRONMENT, isMac, TITLE_BAR_HEIGHT } from "../../constants";
 import { tabStorage } from "../storage-service/tab-storage";
 
@@ -42,7 +43,7 @@ export class TabService {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
 				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
-				additionalArguments: [`--tab=${JSON.stringify(tab)}`],
+				additionalArguments: [`--tab=${stringify(tab)}`],
 			},
 		});
 

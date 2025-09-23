@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
-	import type { ChatMessage } from "$lib/types/chat";
+	import type { ChatMessage } from "$lib/stores/chat-state.svelte";
 	import AssistantMessage from "./assistant-message.svelte";
 	import UserMessage from "./user-message.svelte";
 

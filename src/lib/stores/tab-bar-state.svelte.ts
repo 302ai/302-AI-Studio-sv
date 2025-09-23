@@ -7,16 +7,14 @@ export const persistedTabState = new PersistedState<TabState>(
 );
 
 const { tabService } = window.electronAPI;
-const { getId } = window.shellWindowArgs;
-const { getTab } = window.tabViewArgs;
 
 class TabBarState {
-	private windowId = $state<string>(getId());
+	private windowId = $state<string>(window.windowId);
 	tabs = $derived<Tab[]>(persistedTabState.current[this.windowId]?.tabs ?? []);
 
 	constructor() {
 		console.log("windowId", this.windowId);
-		console.log("tab", getTab());
+		console.log("tab", window.tab);
 	}
 
 	async handleTabClick(tab: Tab) {

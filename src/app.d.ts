@@ -1,4 +1,4 @@
-import type { Theme } from "@shared/types";
+import type { Tab, Theme } from "@shared/types";
 import type { ElectronAPIExtension } from "../electron/main/generated/preload-services";
 
 declare global {
@@ -9,12 +9,8 @@ declare global {
 		electronIPC: {
 			onThemeChange: (callback: (theme: Theme) => void) => void;
 		};
-		shellWindowArgs: {
-			getId: () => string;
-		};
-		tabViewArgs: {
-			getTab: () => string;
-		};
+		windowId: string;
+		tab: Tab;
 	}
 }
 

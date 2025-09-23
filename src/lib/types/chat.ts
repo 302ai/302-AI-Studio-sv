@@ -25,13 +25,3 @@ export interface AttachmentFile {
 	preview?: string;
 	filePath: string;
 }
-
-export interface ChatMessage {
-	id: string;
-	role: "user" | "assistant";
-	content: string;
-	status: messageStatus;
-	model: Model;
-	attachments?: AttachmentFile[];
-	createAt: Date;
-}
