@@ -9,6 +9,12 @@ declare global {
 		electronIPC: {
 			onThemeChange: (callback: (theme: Theme) => void) => void;
 		};
+		shellWindowArgs: {
+			getId: () => string;
+		};
+		tabViewArgs: {
+			getTab: () => string;
+		};
 	}
 }
 

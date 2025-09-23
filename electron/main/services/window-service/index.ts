@@ -1,5 +1,5 @@
-import type { SheetWindowConfig, Tab } from "@shared/types";
-import { BrowserWindow, nativeTheme, WebContentsView, type IpcMainInvokeEvent } from "electron";
+import type { SheetWindowConfig } from "@shared/types";
+import { BrowserWindow, nativeTheme, WebContentsView } from "electron";
 import windowStateKeeper from "electron-window-state";
 import { isNull } from "es-toolkit";
 import path from "node:path";
@@ -17,17 +17,16 @@ export class WindowService {
 
 		const windows: BrowserWindow[] = [];
 		const newWindowIds: number[] = [];
-		const updatedWindowsTabs: Tab[][] = [];
+
 		for (const tabs of windowsTabs) {
 			const { shellWindow, shellView } = await this.createSheetWindow();
 			tabService.initWindowShellView(shellWindow.id, shellView);
 			windows.push(shellWindow);
 			newWindowIds.push(shellWindow.id);
-			const updatedTabs = await tabService.initWindowTabs(shellWindow, tabs);
-			updatedWindowsTabs.push(updatedTabs);
+			await tabService.initWindowTabs(shellWindow, tabs);
 		}
 
-		await tabStorage.updateWindowMapping(newWindowIds, updatedWindowsTabs);
+		await tabStorage.updateWindowMapping(newWindowIds, windowsTabs);
 
 		windows.forEach((window) => window.show());
 	}
@@ -84,6 +83,7 @@ export class WindowService {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
 				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
+				additionalArguments: [`--shell-window-id=${shellWindow.id.toString()}`],
 			},
 		});
 		shellWindow.contentView.addChildView(shellWebContentsView);
@@ -106,12 +106,6 @@ export class WindowService {
 		}
 
 		return { shellWindow, shellView: shellWebContentsView };
-	}
-
-	async getWindowsId(event: IpcMainInvokeEvent): Promise<string | null> {
-		const window = BrowserWindow.fromWebContents(event.sender);
-		if (!window) return null;
-		return window.id.toString();
 	}
 }
 

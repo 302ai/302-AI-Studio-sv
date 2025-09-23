@@ -34,6 +34,7 @@ export class TabStorage extends StorageService<TabState> {
 				href: `/chat/${tabId}`,
 				type: "chat",
 				active: true,
+				threadId: nanoid(),
 			};
 			allWindowsTabs.push([initTab]);
 
@@ -58,7 +59,7 @@ export class TabStorage extends StorageService<TabState> {
 			const tabs = windowsTabsArray[index];
 			if (tabs) {
 				newTabState[windowId.toString()] = {
-					tabs: tabs,
+					tabs,
 				};
 			}
 		});

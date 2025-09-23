@@ -1,45 +1,22 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import type { Tab, TabState, TabType } from "@shared/types";
 
-type TabConfig = {
-	title: string;
-	getHref: (id: string) => string;
-};
-
-const TAB_CONFIGS: Record<TabType, TabConfig> = {
-	chat: { title: "New Chat", getHref: (id) => `/chat/${id}` },
-	settings: { title: "Settings", getHref: () => "/settings/general-settings" },
-	"302ai-tool": { title: "302AI Tool", getHref: (id) => `/tool/${id}` },
-} as const;
-
-const getTabConfig = (type: TabType) => TAB_CONFIGS[type] || TAB_CONFIGS.chat;
-
 export const persistedTabState = new PersistedState<TabState>(
 	"TabStorage:tab-bar-state",
 	{} as TabState,
 );
 
-const { tabService, windowService } = window.electronAPI;
+const { tabService } = window.electronAPI;
+const { getId } = window.shellWindowArgs;
+const { getTab } = window.tabViewArgs;
 
 class TabBarState {
-	private windowId = $state<string | null>(null);
-	tabs = $derived<Tab[]>(
-		this.windowId ? (persistedTabState.current[this.windowId]?.tabs ?? []) : [],
-	);
+	private windowId = $state<string>(getId());
+	tabs = $derived<Tab[]>(persistedTabState.current[this.windowId]?.tabs ?? []);
 
 	constructor() {
-		this.initState();
-	}
-
-	private async initState() {
-		this.windowId = await windowService.getWindowsId();
-		console.log("this.windowId", this.windowId);
-	}
-
-	private newTab(tabId: string, type: TabType = "chat", active = true): Tab {
-		const { title, getHref } = getTabConfig(type);
-
-		return { id: tabId, title, href: getHref(tabId), type, active };
+		console.log("windowId", this.windowId);
+		console.log("tab", getTab());
 	}
 
 	async handleTabClick(tab: Tab) {
@@ -94,16 +71,17 @@ class TabBarState {
 		}, 10);
 	}
 
-	async handleNewTab(type: TabType = "chat", active = true) {
+	async handleNewTab(title: string = "New Chat", type: TabType = "chat", active = true) {
 		if (!this.windowId) return;
 
-		const tabId = await tabService.handleNewTab();
-		if (!tabId) return;
+		const unserializedTab = await tabService.handleNewTab(title, type, active);
+		if (!unserializedTab) return;
 
-		const newTab = this.newTab(tabId, type, active);
+		const tab = JSON.parse(unserializedTab);
+
 		const updatedTabs = active
-			? [...this.tabs.map((t) => ({ ...t, active: false })), newTab]
-			: [...this.tabs, newTab];
+			? [...this.tabs.map((t) => ({ ...t, active: false })), tab]
+			: [...this.tabs, tab];
 
 		persistedTabState.current[this.windowId].tabs = updatedTabs;
 	}

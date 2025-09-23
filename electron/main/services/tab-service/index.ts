@@ -1,9 +1,23 @@
-import type { Tab } from "@shared/types";
+import type { Tab, TabType } from "@shared/types";
 import { BrowserWindow, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import { isNull, isUndefined } from "es-toolkit";
+import { nanoid } from "nanoid";
 import path from "node:path";
 import { ENVIRONMENT, isMac, TITLE_BAR_HEIGHT } from "../../constants";
 import { tabStorage } from "../storage-service/tab-storage";
+
+type TabConfig = {
+	title: string;
+	getHref: (id: string) => string;
+};
+
+const TAB_CONFIGS: Record<TabType, TabConfig> = {
+	chat: { title: "New Chat", getHref: (id) => `/chat/${id}` },
+	settings: { title: "Settings", getHref: () => "/settings/general-settings" },
+	"302ai-tool": { title: "302AI Tool", getHref: (id) => `/tool/${id}` },
+} as const;
+
+const getTabConfig = (type: TabType) => TAB_CONFIGS[type] || TAB_CONFIGS.chat;
 
 export class TabService {
 	private tabViewMap: Map<string, WebContentsView>;
@@ -22,17 +36,17 @@ export class TabService {
 
 	// ******************************* Private Methods ******************************* //
 
-	private newWebContentsView(): { view: WebContentsView; tabId: string } {
+	private newWebContentsView(tab: Tab): WebContentsView {
 		const view = new WebContentsView({
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
 				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
+				additionalArguments: [`--tab=${JSON.stringify(tab)}`],
 			},
 		});
 
-		const tabId = view.webContents.id.toString();
-		this.tabViewMap.set(tabId, view);
+		this.tabViewMap.set(tab.id, view);
 
 		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
 			view.webContents.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
@@ -43,7 +57,7 @@ export class TabService {
 			view.webContents.loadURL("app://localhost");
 		}
 
-		return { view, tabId };
+		return view;
 	}
 
 	private attachViewToWindow(window: BrowserWindow, view: WebContentsView) {
@@ -71,28 +85,21 @@ export class TabService {
 
 	// ******************************* Main Process Methods ******************************* //
 
-	async initWindowTabs(window: BrowserWindow, tabs: Tab[]): Promise<Tab[]> {
+	async initWindowTabs(window: BrowserWindow, tabs: Tab[]): Promise<void> {
 		let activeTabView: WebContentsView | null = null;
 		let activeTabId: string | null = null;
 		const views: WebContentsView[] = [];
 
-		const updatedTabs = tabs.map((tab) => {
-			const { view, tabId } = this.newWebContentsView();
-
+		tabs.forEach((tab) => {
+			const tabView = this.newWebContentsView(tab);
 			if (tab.active) {
-				activeTabView = view;
-				activeTabId = tabId;
+				activeTabView = tabView;
+				activeTabId = tab.id;
 			} else {
-				this.attachViewToWindow(window, view);
+				this.attachViewToWindow(window, tabView);
 			}
-
-			this.tabMap.set(tabId, tab);
-			views.push(view);
-
-			return {
-				...tab,
-				id: tabId,
-			};
+			this.tabMap.set(tab.id, tab);
+			views.push(tabView);
 		});
 
 		this.windowTabView.set(window.id, views);
@@ -118,8 +125,6 @@ export class TabService {
 				});
 			});
 		});
-
-		return updatedTabs;
 	}
 
 	initWindowShellView(shellWindowId: number, shellView: WebContentsView) {
@@ -128,14 +133,31 @@ export class TabService {
 
 	// ******************************* IPC Methods ******************************* //
 
-	async handleNewTab(event: IpcMainInvokeEvent): Promise<string | null> {
-		const { view, tabId } = this.newWebContentsView();
+	async handleNewTab(
+		event: IpcMainInvokeEvent,
+		title: string = "New Chat",
+		type: TabType = "chat",
+		active: boolean = true,
+	): Promise<string | null> {
+		const { title: tabTitle, getHref } = getTabConfig(type);
+		const newTabId = nanoid();
+		const newTab: Tab = {
+			id: newTabId,
+			title: title ?? tabTitle,
+			href: getHref(newTabId),
+			type,
+			active,
+			threadId: nanoid(),
+		};
+		const view = this.newWebContentsView(newTab);
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return null;
 		this.attachViewToWindow(window, view);
-		this.switchActiveTab(window, tabId);
+		this.switchActiveTab(window, newTab.id);
 
-		return tabId;
+		this.tabMap.set(newTab.id, newTab);
+
+		return JSON.stringify(newTab);
 	}
 
 	async handleActivateTab(event: IpcMainInvokeEvent, tabId: string) {
