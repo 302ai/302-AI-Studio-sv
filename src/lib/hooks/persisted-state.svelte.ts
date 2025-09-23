@@ -1,7 +1,9 @@
-import { isEqual } from "es-toolkit";
-import { createSubscriber } from "svelte/reactivity";
 import type { StorageValue } from "@302ai/unstorage";
+import { isEqual } from "es-toolkit";
 import superjson from "superjson";
+import { createSubscriber } from "svelte/reactivity";
+
+const { ipcRenderer } = window.electron;
 
 class ElectronStorageAdapter<T extends StorageValue> {
 	private storageService = window.electronAPI.storageService;
@@ -66,6 +68,7 @@ export class PersistedState<T extends StorageValue> {
 	#subscribe?: VoidFunction;
 	#update: VoidFunction | undefined;
 	#proxies = new WeakMap();
+	#syncing = false;
 
 	constructor(key: string, initialValue: T) {
 		this.#current = initialValue;
@@ -76,6 +79,14 @@ export class PersistedState<T extends StorageValue> {
 
 		this.#subscribe = createSubscriber((update) => {
 			this.#update = update;
+
+			ipcRenderer.on(`sync:${key}`, (_event, newValue) => {
+				console.log("Synced value:", newValue);
+				if (this.#syncing) return;
+				this.#syncing = true;
+				this.#current = newValue;
+				this.#update?.();
+			});
 
 			return () => {
 				this.#update = undefined;
@@ -122,6 +133,10 @@ export class PersistedState<T extends StorageValue> {
 	}
 
 	#store(value: T | undefined | null): void {
+		if (this.#syncing) {
+			this.#syncing = false;
+			return;
+		}
 		this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
 			console.log("Value", value);
 			console.error(

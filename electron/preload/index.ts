@@ -1,3 +1,4 @@
+import { electronAPI as electrontToolkitAPI } from "@electron-toolkit/preload";
 import type { Theme } from "@shared/types";
 import { contextBridge, ipcRenderer } from "electron";
 import { parse } from "superjson";
@@ -15,6 +16,7 @@ const windowId = process.argv.find((arg) => arg.startsWith("--window-id="))?.spl
 // just add to the DOM global.
 if (process.contextIsolated) {
 	try {
+		contextBridge.exposeInMainWorld("electron", electrontToolkitAPI);
 		contextBridge.exposeInMainWorld("electronAPI", {
 			theme: {
 				setTheme: (theme: Theme) => ipcRenderer.send("app:theme:setTheme", theme),
@@ -42,4 +44,5 @@ if (process.contextIsolated) {
 } else {
 	// @ts-expect-error (define in dts)
 	window.api = api;
+	window.electron = electrontToolkitAPI;
 }

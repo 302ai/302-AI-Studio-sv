@@ -125,6 +125,9 @@ importers:
       '@electron-forge/plugin-vite':
         specifier: ^7.9.0
         version: 7.9.0
+      '@electron-toolkit/preload':
+        specifier: ^3.0.2
+        version: 3.0.2(electron@38.1.2)
       '@electron-toolkit/tsconfig':
         specifier: ^1.0.1
         version: 1.0.1(@types/node@24.5.2)
@@ -522,6 +525,11 @@ packages:
   '@electron-forge/tracer@7.9.0':
     resolution: {integrity: sha512-7itsjW1WJQADg7Ly61ggI5CCRt+QDVx3HOZC1w69jMUtnipKyPRCbvTBf1oplsNqbIzZxceXdfex6W53YNehvA==}
     engines: {node: '>= 14.17.5'}
+
+  '@electron-toolkit/preload@3.0.2':
+    resolution: {integrity: sha512-TWWPToXd8qPRfSXwzf5KVhpXMfONaUuRAZJHsKthKgZR/+LqX1dZVSSClQ8OTAEduvLGdecljCsoT2jSshfoUg==}
+    peerDependencies:
+      electron: '>=13.0.0'
 
   '@electron-toolkit/tsconfig@1.0.1':
     resolution: {integrity: sha512-M0Mol3odspvtCuheyujLNAW7bXq7KFNYVMRtpjFa4ZfES4MuklXBC7Nli/omvc+PRKlrklgAGx3l4VakjNo8jg==}
@@ -4937,6 +4945,10 @@ snapshots:
   '@electron-forge/tracer@7.9.0':
     dependencies:
       chrome-trace-event: 1.0.4
+
+  '@electron-toolkit/preload@3.0.2(electron@38.1.2)':
+    dependencies:
+      electron: 38.1.2
 
   '@electron-toolkit/tsconfig@1.0.1(@types/node@24.5.2)':
     dependencies:

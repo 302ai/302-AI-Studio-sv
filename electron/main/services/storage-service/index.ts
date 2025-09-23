@@ -1,10 +1,10 @@
-import type { IpcMainInvokeEvent } from "electron";
-import { app } from "electron";
-import { createStorage, type StorageValue, type StorageMeta } from "@302ai/unstorage";
+import { createStorage, type StorageMeta, type StorageValue } from "@302ai/unstorage";
 import fsLiteDriver from "@302ai/unstorage/drivers/fs-lite";
-import type { StorageMetadata, StorageOptions, StorageItem, MigrationConfig } from "@shared/types";
-import { join } from "path";
 import { isDev } from "@electron/main/constants";
+import type { MigrationConfig, StorageItem, StorageMetadata, StorageOptions } from "@shared/types";
+import type { IpcMainInvokeEvent } from "electron";
+import { app, webContents } from "electron";
+import { join } from "path";
 import { getStorageVersion, setStorageVersion } from "./migration-utils";
 
 export class StorageService<T extends StorageValue> {
@@ -28,9 +28,16 @@ export class StorageService<T extends StorageValue> {
 		return key.endsWith(".json") ? key : `${key}.json`;
 	}
 
-	async setItem(_event: IpcMainInvokeEvent, key: string, value: T): Promise<void> {
+	async setItem(event: IpcMainInvokeEvent, key: string, value: T): Promise<void> {
 		const versionedValue = this.addVersionIfNeeded(value);
 		await this.storage.setItem(this.ensureJsonExtension(key), versionedValue);
+
+		const allWebContents = webContents.getAllWebContents();
+		allWebContents.forEach((wc) => {
+			if (wc !== event.sender && !wc.isDestroyed()) {
+				wc.send(`sync:${key}`, versionedValue);
+			}
+		});
 	}
 
 	async getItem(_event: IpcMainInvokeEvent, key: string): Promise<T | null> {
