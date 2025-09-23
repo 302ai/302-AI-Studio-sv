@@ -2,7 +2,7 @@ import type { Tab } from "@shared/types";
 import { BrowserWindow, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import { isNull, isUndefined } from "es-toolkit";
 import path from "node:path";
-import { ENVIRONMENT, TITLE_BAR_HEIGHT } from "../../constants";
+import { ENVIRONMENT, isMac, TITLE_BAR_HEIGHT } from "../../constants";
 import { tabStorage } from "../storage-service/tab-storage";
 
 export class TabService {
@@ -74,7 +74,7 @@ export class TabService {
 	async initWindowTabs(window: BrowserWindow, tabs: Tab[]): Promise<Tab[]> {
 		let activeTabView: WebContentsView | null = null;
 		let activeTabId: string | null = null;
-		let views: WebContentsView[] = [];
+		const views: WebContentsView[] = [];
 
 		const updatedTabs = tabs.map((tab) => {
 			const { view, tabId } = this.newWebContentsView();
@@ -218,12 +218,18 @@ export class TabService {
 
 		if (up) {
 			window.contentView.addChildView(shellView);
+			if (isMac) {
+				shellView.webContents.focus();
+			}
 		} else {
 			const activeTabId = this.windowActiveTabId.get(window.id);
 			if (isUndefined(activeTabId)) return;
 			const activeTabView = this.tabViewMap.get(activeTabId);
 			if (isUndefined(activeTabView)) return;
 			window.contentView.addChildView(activeTabView);
+			if (isMac) {
+				activeTabView.webContents.focus();
+			}
 		}
 	}
 }

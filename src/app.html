@@ -7,5 +7,19 @@
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<div style="display: contents">%sveltekit.body%</div>
+		<script>
+			(function () {
+				const urlParams = new URLSearchParams(window.location.search);
+				const route = urlParams.get("route");
+
+				if (route) {
+					const newUrl = new URL(window.location);
+					newUrl.search = "";
+					window.history.replaceState({}, "", newUrl);
+					window.history.pushState({}, "", `/${route}`);
+					window.dispatchEvent(new PopStateEvent("popstate"));
+				}
+			})();
+		</script>
 	</body>
 </html>
