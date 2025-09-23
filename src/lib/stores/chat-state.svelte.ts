@@ -1,26 +1,171 @@
-import type { AttachmentFile, ChatMessage, MCPServer, Model } from "$lib/types/chat";
+import type { AttachmentFile, MCPServer, messageStatus } from "$lib/types/chat";
+import type { Model } from "$lib/types/model";
 import { nanoid } from "nanoid";
+import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { providerState } from "./provider-state.svelte";
 
-export type { AttachmentFile, ChatMessage, MCPServer, Model } from "$lib/types/chat";
+export type { AttachmentFile, MCPServer } from "$lib/types/chat";
+export type { Model } from "$lib/types/model";
+
+// Updated ChatMessage interface using the standardized Model type
+export interface ChatMessage {
+	id: string;
+	role: "user" | "assistant";
+	content: string;
+	status: messageStatus;
+	model: Model;
+	attachments?: AttachmentFile[];
+	createAt: Date;
+}
+
+// Chat parameters interface
+interface ChatParams {
+	temperature: number | null;
+	topP: number | null;
+	frequencyPenalty: number | null;
+	presencePenalty: number | null;
+	maxTokens: number | null;
+}
+
+// UI state interface
+interface ChatUIState {
+	inputValue: string;
+	attachments: AttachmentFile[];
+	mcpServers: MCPServer[];
+	isThinkingActive: boolean;
+	isOnlineSearchActive: boolean;
+	isMCPActive: boolean;
+	selectedModel: Model | null;
+	isPrivateChatActive: boolean;
+}
+
+// Persistent state instances
+export const persistedMessagesState = new PersistedState<ChatMessage[]>("app-chat-messages", []);
+export const persistedChatParamsState = new PersistedState<ChatParams>("app-chat-params", {
+	temperature: null,
+	topP: null,
+	frequencyPenalty: null,
+	presencePenalty: null,
+	maxTokens: null,
+});
+export const persistedChatUIState = new PersistedState<ChatUIState>("app-chat-ui", {
+	inputValue: "",
+	attachments: [],
+	mcpServers: [],
+	isThinkingActive: false,
+	isOnlineSearchActive: false,
+	isMCPActive: false,
+	selectedModel: null,
+	isPrivateChatActive: false,
+});
 
 class ChatState {
-	inputValue = $state("");
-	attachments = $state<AttachmentFile[]>([]);
-	messages = $state<ChatMessage[]>([]);
-	mcpServers = $state<MCPServer[]>([]);
-	isThinkingActive = $state(false);
-	isOnlineSearchActive = $state(false);
-	isMCPActive = $state(false);
-	selectedModel = $state<Model | null>(null);
-	isPrivateChatActive = $state(false);
-	// Chat Parameters
-	temperature = $state<number | null>(null);
-	topP = $state<number | null>(null);
-	frequencyPenalty = $state<number | null>(null);
-	presencePenalty = $state<number | null>(null);
-	maxTokens = $state<number | null>(null);
+	// Computed properties accessing persistent state
+	get inputValue(): string {
+		return persistedChatUIState.current.inputValue;
+	}
+	set inputValue(value: string) {
+		persistedChatUIState.current.inputValue = value;
+	}
 
-	providerType = $derived<string | null>(this.selectedModel?.provider.name ?? null);
+	get attachments(): AttachmentFile[] {
+		return persistedChatUIState.current.attachments;
+	}
+	set attachments(value: AttachmentFile[]) {
+		persistedChatUIState.current.attachments = value;
+	}
+
+	get messages(): ChatMessage[] {
+		return persistedMessagesState.current;
+	}
+	set messages(value: ChatMessage[]) {
+		persistedMessagesState.current = value;
+	}
+
+	get mcpServers(): MCPServer[] {
+		return persistedChatUIState.current.mcpServers;
+	}
+	set mcpServers(value: MCPServer[]) {
+		persistedChatUIState.current.mcpServers = value;
+	}
+
+	get isThinkingActive(): boolean {
+		return persistedChatUIState.current.isThinkingActive;
+	}
+	set isThinkingActive(value: boolean) {
+		persistedChatUIState.current.isThinkingActive = value;
+	}
+
+	get isOnlineSearchActive(): boolean {
+		return persistedChatUIState.current.isOnlineSearchActive;
+	}
+	set isOnlineSearchActive(value: boolean) {
+		persistedChatUIState.current.isOnlineSearchActive = value;
+	}
+
+	get isMCPActive(): boolean {
+		return persistedChatUIState.current.isMCPActive;
+	}
+	set isMCPActive(value: boolean) {
+		persistedChatUIState.current.isMCPActive = value;
+	}
+
+	get selectedModel(): Model | null {
+		return persistedChatUIState.current.selectedModel;
+	}
+	set selectedModel(value: Model | null) {
+		persistedChatUIState.current.selectedModel = value;
+	}
+
+	get isPrivateChatActive(): boolean {
+		return persistedChatUIState.current.isPrivateChatActive;
+	}
+	set isPrivateChatActive(value: boolean) {
+		persistedChatUIState.current.isPrivateChatActive = value;
+	}
+
+	// Chat Parameters
+	get temperature(): number | null {
+		return persistedChatParamsState.current.temperature;
+	}
+	set temperature(value: number | null) {
+		persistedChatParamsState.current.temperature = value;
+	}
+
+	get topP(): number | null {
+		return persistedChatParamsState.current.topP;
+	}
+	set topP(value: number | null) {
+		persistedChatParamsState.current.topP = value;
+	}
+
+	get frequencyPenalty(): number | null {
+		return persistedChatParamsState.current.frequencyPenalty;
+	}
+	set frequencyPenalty(value: number | null) {
+		persistedChatParamsState.current.frequencyPenalty = value;
+	}
+
+	get presencePenalty(): number | null {
+		return persistedChatParamsState.current.presencePenalty;
+	}
+	set presencePenalty(value: number | null) {
+		persistedChatParamsState.current.presencePenalty = value;
+	}
+
+	get maxTokens(): number | null {
+		return persistedChatParamsState.current.maxTokens;
+	}
+	set maxTokens(value: number | null) {
+		persistedChatParamsState.current.maxTokens = value;
+	}
+
+	// Get provider name by looking up the provider from the model's providerId
+	providerType = $derived<string | null>(
+		this.selectedModel
+			? (providerState.getProvider(this.selectedModel.providerId)?.name ?? null)
+			: null,
+	);
 	sendMessageEnabled = $derived<boolean>(
 		(this.inputValue.trim() !== "" || this.attachments.length > 0) && !!this.selectedModel,
 	);
