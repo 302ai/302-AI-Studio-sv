@@ -25,6 +25,9 @@ async function init() {
 		const url = new URL(request.url);
 		const filePath = url.pathname.substring(1); // 移除开头的 /
 
+		// console.log("url", url);
+		// console.log("filePath", filePath);
+
 		if (!filePath || filePath === "localhost") {
 			return net.fetch(
 				`file://${path.join(import.meta.dirname, `../../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)}`,

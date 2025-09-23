@@ -32,7 +32,7 @@
 	import { scale } from "svelte/transition";
 	import TabItem from "./tab-item.svelte";
 
-	const { deviceService } = window.electronAPI;
+	const { deviceService, tabService } = window.electronAPI;
 
 	let { class: className, autoStretch = false }: Props = $props();
 
@@ -122,6 +122,10 @@
 
 	async function handleTabCloseAll() {
 		await tabBarState.handleTabCloseAll();
+	}
+
+	async function handleOpenChange(open: boolean) {
+		await tabService.handleShellViewLevel(open);
 	}
 
 	onMount(async () => {
@@ -224,6 +228,7 @@
 				class="size-tab-new hover:!bg-tab-btn-hover-inactive bg-transparent transition-colors"
 				style="app-region: no-drag;"
 				onclick={handleNewTab}
+				onOpenChange={handleOpenChange}
 			>
 				<Plus class="size-tab-icon" />
 			</ButtonWithTooltip>

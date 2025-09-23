@@ -63,13 +63,13 @@
 		}
 	});
 
+	async function handleOpenChange(open: boolean) {
+		await tabService.handleShellViewLevel(open);
+	}
+
 	onDestroy(() => {
 		window.cancelAnimationFrame?.(0);
 	});
-
-	const handleOpenChange = async (open: boolean) => {
-		await tabService.handleShellViewLevel(open);
-	};
 </script>
 
 {#snippet tabIcon()}
@@ -126,6 +126,7 @@
 						e.stopPropagation();
 						onTabClose(tab);
 					}}
+					onOpenChange={handleOpenChange}
 				>
 					<X class="size-tab-close-icon" />
 				</ButtonWithTooltip>
