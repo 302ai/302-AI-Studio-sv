@@ -7,9 +7,7 @@
 
 	onMount(async () => {
 		const activeTab = await tabService.getActiveTab();
-		if (activeTab) {
-			goto(activeTab.href);
-		}
+		goto("/demo");
 	});
 </script>
 

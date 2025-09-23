@@ -1,11 +1,15 @@
+import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import type { AttachmentFile, MCPServer, messageStatus } from "$lib/types/chat";
 import type { Model } from "$lib/types/model";
 import { nanoid } from "nanoid";
-import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { providerState } from "./provider-state.svelte";
 
 export type { AttachmentFile, MCPServer } from "$lib/types/chat";
 export type { Model } from "$lib/types/model";
+
+export interface Thread {
+	id: string;
+}
 
 // Updated ChatMessage interface using the standardized Model type
 export interface ChatMessage {
@@ -40,6 +44,7 @@ interface ChatUIState {
 }
 
 // Persistent state instances
+export const persistedThread = new PersistedState<Thread[]>("app-chat-thread", []);
 export const persistedMessagesState = new PersistedState<ChatMessage[]>("app-chat-messages", []);
 export const persistedChatParamsState = new PersistedState<ChatParams>("app-chat-params", {
 	temperature: null,
