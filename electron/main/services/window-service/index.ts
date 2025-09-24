@@ -1,7 +1,7 @@
 import type { SheetWindowConfig } from "@shared/types";
-import { BrowserWindow, nativeTheme, WebContentsView } from "electron";
+import { BrowserWindow, nativeTheme, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import windowStateKeeper from "electron-window-state";
-import { isNull } from "es-toolkit";
+import { isNull, isUndefined } from "es-toolkit";
 import path from "node:path";
 import { CONFIG, ENVIRONMENT, PLATFORM, WINDOW_SIZE } from "../../constants";
 import { tabStorage } from "../storage-service/tab-storage";
@@ -26,7 +26,7 @@ export class WindowService {
 			await tabService.initWindowTabs(shellWindow, tabs);
 		}
 
-		await tabStorage.updateWindowMapping(newWindowIds, windowsTabs);
+		await tabStorage.initWindowMapping(newWindowIds, windowsTabs);
 
 		windows.forEach((window) => window.show());
 	}
@@ -106,6 +106,21 @@ export class WindowService {
 		}
 
 		return { shellWindow, shellView: shellWebContentsView };
+	}
+
+	// ******************************* IPC Methods ******************************* //
+	async handleSplitShellWindow(_event: IpcMainInvokeEvent, triggerTabId: string) {
+		const triggerTab = tabService.getTabById(triggerTabId);
+		if (isUndefined(triggerTab)) return;
+
+		const { shellWindow, shellView } = await this.createSheetWindow();
+		const newShellWindowId = shellWindow.id;
+		const newShellWindowTabs = [triggerTab];
+		await tabStorage.updateWindowTabs(newShellWindowId.toString(), newShellWindowTabs);
+		tabService.initWindowShellView(newShellWindowId, shellView);
+		await tabService.initWindowTabs(shellWindow, newShellWindowTabs);
+
+		shellWindow.show();
 	}
 }
 

@@ -33,7 +33,7 @@
 	import { scale } from "svelte/transition";
 	import TabItem from "./tab-item.svelte";
 
-	const { tabService } = window.electronAPI;
+	const { tabService, windowService } = window.electronAPI;
 
 	let { class: className, autoStretch = false }: Props = $props();
 
@@ -67,7 +67,7 @@
 		previousTabsLength = tabBarState.tabs.length;
 	});
 
-	function handleDndConsider(e: CustomEvent<TabDndEvent>) {
+	async function handleDndConsider(e: CustomEvent<TabDndEvent>) {
 		const { info, items: newItems } = e.detail;
 
 		if (info.trigger === TRIGGERS.DRAG_STARTED) {
@@ -75,19 +75,30 @@
 			buttonSpring.target = { opacity: 0.3, x: 8 };
 			const draggedTab = tabBarState.tabs.find((tab) => tab.id === info.id);
 			if (draggedTab) {
-				tabBarState.handleTabClick(draggedTab);
+				await tabBarState.handleTabClick(draggedTab);
 			}
+
+			await handleTabBarLevel(true);
 		}
 
 		const hasOrderChanged = newItems.some((item, index) => item.id !== tabBarState.tabs[index]?.id);
 		if (hasOrderChanged) tabBarState.updatePersistedTabs(newItems);
 	}
-	function handleDndFinalize(e: CustomEvent<TabDndEvent>) {
+
+	async function handleDndFinalize(e: CustomEvent<TabDndEvent>) {
 		isDndFinalizing = true;
 
 		try {
 			draggedElementId = null;
-			tabBarState.updatePersistedTabs(e.detail.items);
+
+			const finalTabs = e.detail.items.map((t) => {
+				return {
+					...t,
+					active: e.detail.info.id === t.id,
+				};
+			});
+
+			tabBarState.updatePersistedTabs(finalTabs);
 			buttonSpring.target = { opacity: 1, x: 0 };
 		} catch (error) {
 			console.error("Error finalizing drag operation:", error);
@@ -96,7 +107,10 @@
 				isDndFinalizing = false;
 			});
 		}
+		await handleTabBarLevel(false);
+		// await windowService.handleSplitShellWindow(e.detail.info.id);
 	}
+
 	function transformDraggedElement(element?: HTMLElement) {
 		if (!element) return;
 
@@ -124,8 +138,8 @@
 		await tabBarState.handleTabCloseAll();
 	}
 
-	async function handleOpenChange(open: boolean) {
-		await tabService.handleShellViewLevel(open);
+	async function handleTabBarLevel(up: boolean) {
+		await tabService.handleShellViewLevel(up);
 	}
 
 	onDestroy(() => {
@@ -153,7 +167,7 @@
 		)}
 		use:dndzone={{
 			items: tabBarState.tabs,
-			flipDurationMs: 200,
+			flipDurationMs: 100,
 			dropTargetStyle: {},
 			transformDraggedElement,
 			morphDisabled: true,
@@ -192,7 +206,7 @@
 					onTabClick={handleTabClick}
 					onTabClose={handleTabClose}
 					onTabCloseAll={handleTabCloseAll}
-					onOpenChange={handleOpenChange}
+					onOpenChange={handleTabBarLevel}
 				/>
 				<div class="shrink-0 px-0.5" style="cursor: pointer !important;">
 					<Separator
@@ -226,7 +240,7 @@
 				class="size-tab-new hover:!bg-tab-btn-hover-inactive bg-transparent transition-colors"
 				style="app-region: no-drag;"
 				onclick={handleNewTab}
-				onOpenChange={handleOpenChange}
+				onOpenChange={handleTabBarLevel}
 			>
 				<Plus class="size-tab-icon" />
 			</ButtonWithTooltip>

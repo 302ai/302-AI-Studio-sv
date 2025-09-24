@@ -52,7 +52,7 @@ export class TabStorage extends StorageService<TabState> {
 		return allWindowsTabs;
 	}
 
-	async updateWindowMapping(newWindowIds: number[], windowsTabsArray: Tab[][]): Promise<void> {
+	async initWindowMapping(newWindowIds: number[], windowsTabsArray: Tab[][]): Promise<void> {
 		const newTabState: TabState = {};
 
 		newWindowIds.forEach((windowId, index) => {
@@ -65,6 +65,14 @@ export class TabStorage extends StorageService<TabState> {
 		});
 
 		await this.setItemInternal("tab-bar-state", newTabState);
+	}
+
+	async updateWindowTabs(windowId: string, tabs: Tab[]) {
+		const tabState = await this.getItemInternal("tab-bar-state");
+		if (isNull(tabState)) return;
+		tabState[windowId] ??= { tabs: [] };
+		tabState[windowId].tabs = tabs;
+		await this.setItemInternal("tab-bar-state", tabState);
 	}
 }
 

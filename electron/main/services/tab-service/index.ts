@@ -133,6 +133,10 @@ export class TabService {
 		this.windowShellView.set(shellWindowId, shellView);
 	}
 
+	getTabById(tabId: string): Tab | undefined {
+		return this.tabMap.get(tabId);
+	}
+
 	// ******************************* IPC Methods ******************************* //
 
 	async handleNewTab(

@@ -24,8 +24,6 @@
 	import type { Tab } from "@shared/types";
 	import { onDestroy } from "svelte";
 
-	const { tabService } = window.electronAPI;
-
 	const {
 		tab,
 		isActive,
@@ -64,10 +62,6 @@
 			return;
 		}
 	});
-
-	async function handleOpenChange(open: boolean) {
-		await tabService.handleShellViewLevel(open);
-	}
 
 	onDestroy(() => {
 		window.cancelAnimationFrame?.(0);

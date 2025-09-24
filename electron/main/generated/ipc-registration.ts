@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import { storageService, appService, tabService } from "../services";
+import { storageService, appService, tabService, windowService } from "../services";
 
 /**
  * Auto-generated IPC service interfaces
@@ -52,6 +52,11 @@ export function registerIpcHandlers() {
 	ipcMain.handle("tabService:handleShellViewLevel", (event, up) =>
 		tabService.handleShellViewLevel(event, up),
 	);
+
+	// windowService service registration
+	ipcMain.handle("windowService:handleSplitShellWindow", (event, triggerTabId) =>
+		windowService.handleSplitShellWindow(event, triggerTabId),
+	);
 }
 
 /**
@@ -78,4 +83,5 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:handleTabClose");
 	ipcMain.removeHandler("tabService:handleTabCloseAll");
 	ipcMain.removeHandler("tabService:handleShellViewLevel");
+	ipcMain.removeHandler("windowService:handleSplitShellWindow");
 }
