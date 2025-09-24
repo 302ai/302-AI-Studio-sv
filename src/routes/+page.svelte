@@ -3,13 +3,8 @@
 	import { LdrsLoader } from "$lib/components/buss/ldrs-loader";
 	import { onMount } from "svelte";
 
-	const { tabService } = window.electronAPI;
-
-	onMount(async () => {
-		const activeTab = await tabService.getActiveTab();
-		if (activeTab) {
-			goto(activeTab.href);
-		}
+	onMount(() => {
+		goto(window.tab.href);
 	});
 </script>
 

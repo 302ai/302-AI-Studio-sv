@@ -13,6 +13,9 @@ declare global {
 		};
 		windowId: string;
 		tab: Tab;
+		app: {
+			platform: string;
+		};
 	}
 }
 

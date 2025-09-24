@@ -77,7 +77,7 @@ export class TabService {
 		}
 
 		const newView = this.tabViewMap.get(newActiveTabId);
-		if (newView) {
+		if (!isUndefined(newView)) {
 			newView.setVisible(true);
 		}
 
@@ -98,6 +98,7 @@ export class TabService {
 				activeTabId = tab.id;
 			} else {
 				this.attachViewToWindow(window, tabView);
+				tabView.setVisible(false);
 			}
 			this.tabMap.set(tab.id, tab);
 			views.push(tabView);

@@ -23,16 +23,17 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { animateButtonBounce } from "$lib/utils/animation";
+	import { isMac, isWindows } from "$lib/utils/platform";
 	import { Plus } from "@lucide/svelte";
 	import type { Tab } from "@shared/types";
-	import { onDestroy, onMount } from "svelte";
+	import { onDestroy } from "svelte";
 	import { dndzone, TRIGGERS } from "svelte-dnd-action";
 	import { flip } from "svelte/animate";
 	import { Spring } from "svelte/motion";
 	import { scale } from "svelte/transition";
 	import TabItem from "./tab-item.svelte";
 
-	const { deviceService, tabService } = window.electronAPI;
+	const { tabService } = window.electronAPI;
 
 	let { class: className, autoStretch = false }: Props = $props();
 
@@ -43,7 +44,6 @@
 	let previousTabsLength = $state(tabBarState.tabs.length);
 	let isAnimating = $state(false);
 	let isDndFinalizing = $state(false);
-	let isMac = $state(false);
 
 	const tabsCountDiff = $derived(tabBarState.tabs.length - previousTabsLength);
 	const shouldAnimateCloseTab = $derived(tabsCountDiff < 0 && !isAnimating);
@@ -125,18 +125,8 @@
 	}
 
 	async function handleOpenChange(open: boolean) {
-		if (open) {
-			await tabService.handleShellViewLevel(open);
-			return;
-		}
-		setTimeout(() => {
-			tabService.handleShellViewLevel(open);
-		}, 100);
+		await tabService.handleShellViewLevel(open);
 	}
-
-	onMount(async () => {
-		isMac = (await deviceService.getPlatform()) === "darwin";
-	});
 
 	onDestroy(() => {
 		buttonSpring.target = { opacity: 1, x: 0 };
@@ -159,6 +149,7 @@
 		class={cn(
 			"gap-tab-gap px-tabbar-x flex min-w-0 items-center overflow-x-hidden w-[calc(env(titlebar-area-width,100%)-10px)]",
 			isMac && "pl-[80px]",
+			isWindows && "pr-[130px]",
 		)}
 		use:dndzone={{
 			items: tabBarState.tabs,
