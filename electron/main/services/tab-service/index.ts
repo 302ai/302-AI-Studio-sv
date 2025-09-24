@@ -174,7 +174,8 @@ export class TabService {
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return;
 
-		this.attachViewToWindow(window, view);
+		window.contentView.removeChildView(view);
+		window.contentView.addChildView(view);
 		this.switchActiveTab(window, tabId);
 	}
 
@@ -246,6 +247,7 @@ export class TabService {
 		if (isUndefined(shellView)) return;
 
 		if (up) {
+			window.contentView.removeChildView(shellView);
 			window.contentView.addChildView(shellView);
 			if (isMac) {
 				shellView.webContents.focus();
@@ -255,6 +257,7 @@ export class TabService {
 			if (isUndefined(activeTabId)) return;
 			const activeTabView = this.tabViewMap.get(activeTabId);
 			if (isUndefined(activeTabView)) return;
+			window.contentView.removeChildView(activeTabView);
 			window.contentView.addChildView(activeTabView);
 			if (isMac) {
 				activeTabView.webContents.focus();

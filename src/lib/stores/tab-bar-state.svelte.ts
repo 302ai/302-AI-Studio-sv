@@ -75,7 +75,6 @@ class TabBarState {
 		if (!unserializedTab) return;
 
 		const tab = JSON.parse(unserializedTab);
-
 		const updatedTabs = active
 			? [...this.tabs.map((t) => ({ ...t, active: false })), tab]
 			: [...this.tabs, tab];

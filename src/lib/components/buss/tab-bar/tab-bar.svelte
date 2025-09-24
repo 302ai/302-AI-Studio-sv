@@ -33,7 +33,7 @@
 	import { scale } from "svelte/transition";
 	import TabItem from "./tab-item.svelte";
 
-	const { tabService, windowService } = window.electronAPI;
+	const { tabService } = window.electronAPI;
 
 	let { class: className, autoStretch = false }: Props = $props();
 
@@ -48,6 +48,7 @@
 	const tabsCountDiff = $derived(tabBarState.tabs.length - previousTabsLength);
 	const shouldAnimateCloseTab = $derived(tabsCountDiff < 0 && !isAnimating);
 	const closable = $derived(previousTabsLength > 1);
+	const isDragDisabled = $derived(tabBarState.tabs.length <= 1);
 
 	async function handleNewTab() {
 		if (isAnimating) return;
@@ -82,7 +83,15 @@
 		}
 
 		const hasOrderChanged = newItems.some((item, index) => item.id !== tabBarState.tabs[index]?.id);
-		if (hasOrderChanged) tabBarState.updatePersistedTabs(newItems);
+		if (hasOrderChanged) {
+			const orderChangedTabs = newItems.map((t) => {
+				return {
+					...t,
+					active: t.id === info.id,
+				};
+			});
+			tabBarState.updatePersistedTabs(orderChangedTabs);
+		}
 	}
 
 	async function handleDndFinalize(e: CustomEvent<TabDndEvent>) {
@@ -108,7 +117,6 @@
 			});
 		}
 		await handleTabBarLevel(false);
-		// await windowService.handleSplitShellWindow(e.detail.info.id);
 	}
 
 	function transformDraggedElement(element?: HTMLElement) {
@@ -174,6 +182,7 @@
 			autoAriaDisabled: false,
 			zoneTabIndex: 0,
 			zoneItemTabIndex: 0,
+			dragDisabled: isDragDisabled,
 		}}
 		onconsider={handleDndConsider}
 		onfinalize={handleDndFinalize}
@@ -203,6 +212,7 @@
 					isDragging={draggedElementId === tab.id}
 					stretch={autoStretch}
 					{closable}
+					{isDragDisabled}
 					onTabClick={handleTabClick}
 					onTabClose={handleTabClose}
 					onTabCloseAll={handleTabCloseAll}

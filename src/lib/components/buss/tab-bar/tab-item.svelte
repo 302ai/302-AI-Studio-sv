@@ -5,6 +5,7 @@
 		isDragging?: boolean;
 		stretch?: boolean;
 		closable: boolean;
+		isDragDisabled?: boolean;
 		onTabClick: (tab: Tab) => void;
 		onTabClose: (tab: Tab) => void;
 		onTabCloseAll: () => void;
@@ -30,6 +31,7 @@
 		isDragging: _isDragging = false,
 		stretch = false,
 		closable,
+		isDragDisabled = false,
 		onTabClick,
 		onTabClose,
 		onTabCloseAll,
@@ -93,7 +95,7 @@
 			"overflow-hidden",
 			className,
 		)}
-		style="app-region: no-drag;"
+		style="app-region: {isDragDisabled ? 'drag' : 'no-drag'};"
 		onclick={() => onTabClick(tab)}
 		role="button"
 		tabindex={0}
