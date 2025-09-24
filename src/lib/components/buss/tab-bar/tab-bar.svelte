@@ -125,7 +125,13 @@
 	}
 
 	async function handleOpenChange(open: boolean) {
-		await tabService.handleShellViewLevel(open);
+		if (open) {
+			await tabService.handleShellViewLevel(open);
+			return;
+		}
+		setTimeout(() => {
+			tabService.handleShellViewLevel(open);
+		}, 100);
 	}
 
 	onMount(async () => {
@@ -192,9 +198,10 @@
 					isDragging={draggedElementId === tab.id}
 					stretch={autoStretch}
 					{closable}
-					onTabClick={(tab) => handleTabClick(tab)}
-					onTabClose={(tab) => handleTabClose(tab)}
-					onTabCloseAll={() => handleTabCloseAll()}
+					onTabClick={handleTabClick}
+					onTabClose={handleTabClose}
+					onTabCloseAll={handleTabCloseAll}
+					onOpenChange={handleOpenChange}
 				/>
 				<div class="shrink-0 px-0.5" style="cursor: pointer !important;">
 					<Separator

@@ -8,6 +8,7 @@
 		onTabClick: (tab: Tab) => void;
 		onTabClose: (tab: Tab) => void;
 		onTabCloseAll: () => void;
+		onOpenChange?: (open: boolean) => void;
 		class?: string;
 	}
 
@@ -34,6 +35,7 @@
 		onTabClick,
 		onTabClose,
 		onTabCloseAll,
+		onOpenChange,
 		class: className,
 	}: Props = $props();
 
@@ -85,7 +87,7 @@
 	{/if}
 {/snippet}
 
-<ContextMenu.Root onOpenChange={handleOpenChange}>
+<ContextMenu.Root {onOpenChange}>
 	<ContextMenu.Trigger
 		class={cn(
 			"h-tab rounded-tab px-tab-x relative flex cursor-pointer items-center text-sm",
@@ -126,7 +128,7 @@
 						e.stopPropagation();
 						onTabClose(tab);
 					}}
-					onOpenChange={handleOpenChange}
+					{onOpenChange}
 				>
 					<X class="size-tab-close-icon" />
 				</ButtonWithTooltip>
