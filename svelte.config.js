@@ -8,6 +8,14 @@ const config = {
 			pages: ".vite/renderer/main_window",
 			fallback: "index.html",
 		}),
+		alias: {
+			"$lib": "src/lib",
+			"$lib/*": "src/lib/*",
+			"@shared": "shared",
+			"@shared/*": "shared/*",
+			"@electron": "electron",
+			"@electron/*": "electron/*",
+		},
 	},
 };
 

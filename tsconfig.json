@@ -11,14 +11,7 @@
 		"strict": true,
 		"module": "esnext",
 		"target": "esnext",
-		"moduleResolution": "bundler",
-		"paths": {
-			"@shared/*": ["./shared/*"],
-			"@electron/*": ["./electron/*"],
-			"$lib": ["./src/lib"],
-			"$lib/*": ["./src/lib/*"],
-			"$app/types": ["./.svelte-kit/types/index.d.ts"]
-		}
+		"moduleResolution": "bundler"
 	},
 	"include": ["src/**/*", "electron/**/*", "shared/**/*"],
 	"exclude": ["node_modules", ".svelte-kit", "dist", "out", ".tsout"]

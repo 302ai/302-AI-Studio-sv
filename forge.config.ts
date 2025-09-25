@@ -15,8 +15,8 @@ const rebuildTargets = ["volume", "macos-alias", "ds-store", "appdmg"];
 
 let nativePackagingDepsBuilt = false;
 
-const ensureNativePackagingDeps = (platform: NodeJS.Platform) => {
-	if (nativePackagingDepsBuilt || (platform !== "darwin" && platform !== "mas")) {
+const ensureNativePackagingDeps = (platform: NodeJS.Platform = process.platform) => {
+	if (nativePackagingDepsBuilt || platform !== "darwin") {
 		return;
 	}
 
@@ -29,7 +29,7 @@ const ensureNativePackagingDeps = (platform: NodeJS.Platform) => {
 		})
 		: spawnSync("pnpm", rebuildArgs, { stdio: "inherit" });
 
-	if (result.status !== 0) {
+	if (result.status !== 0 || result.error) {
 		throw new Error("Failed to rebuild native macOS packaging dependencies required for DMG creation.");
 	}
 
@@ -69,8 +69,8 @@ const config: ForgeConfig = {
 		}),
 	],
 	hooks: {
-		preMake: async (_forgeConfig, makeOptions) => {
-			ensureNativePackagingDeps(makeOptions.platform);
+		preMake: async () => {
+			ensureNativePackagingDeps();
 		},
 	},
 	publishers: [
