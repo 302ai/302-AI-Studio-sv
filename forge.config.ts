@@ -1,6 +1,8 @@
 import { MakerDeb } from "@electron-forge/maker-deb";
+import { MakerDMG } from "@electron-forge/maker-dmg";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
+import { MakerWix } from "@electron-forge/maker-wix";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { VitePlugin } from "@electron-forge/plugin-vite";
@@ -15,12 +17,19 @@ const config: ForgeConfig = {
 	},
 	rebuildConfig: {},
 	makers: [
-		new MakerSquirrel({
-			name: "302-ai-studio",
-			setupIcon: "static/icon.ico",
-			iconUrl: "https://file.302.ai/gpt/playground/20250925/69b7db4b8f154fe7ad9397ba50f827b9.ico",
-		}, ["win32"]),
-		new MakerZIP({}, ["darwin"]),
+		new MakerSquirrel(
+			{
+				name: "302-ai-studio",
+				setupIcon: "static/icon.ico",
+				iconUrl: "https://file.302.ai/gpt/playground/20250925/69b7db4b8f154fe7ad9397ba50f827b9.ico",
+			},
+			["win32"],
+		),
+		new MakerWix({}),
+		new MakerZIP({}, ["darwin", "win32"]),
+		new MakerDMG({
+			format: "ULFO",
+		}),
 		new MakerRpm({
 			options: {
 				icon: "static/icon.png",
