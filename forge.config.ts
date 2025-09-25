@@ -1,3 +1,5 @@
+import { spawnSync } from "node:child_process";
+
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerDMG } from "@electron-forge/maker-dmg";
 import { MakerRpm } from "@electron-forge/maker-rpm";
@@ -8,6 +10,31 @@ import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { VitePlugin } from "@electron-forge/plugin-vite";
 import type { ForgeConfig } from "@electron-forge/shared-types";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
+
+const rebuildTargets = ["volume", "macos-alias", "ds-store", "appdmg"];
+
+let nativePackagingDepsBuilt = false;
+
+const ensureNativePackagingDeps = (platform: NodeJS.Platform) => {
+	if (nativePackagingDepsBuilt || (platform !== "darwin" && platform !== "mas")) {
+		return;
+	}
+
+	const npmExecPath = process.env.npm_execpath;
+	const rebuildArgs = ["rebuild", ...rebuildTargets];
+	console.info("Rebuilding native macOS packaging dependencies via pnpm rebuild ...");
+	const result = npmExecPath
+		? spawnSync(process.execPath, [npmExecPath, ...rebuildArgs], {
+			stdio: "inherit",
+		})
+		: spawnSync("pnpm", rebuildArgs, { stdio: "inherit" });
+
+	if (result.status !== 0) {
+		throw new Error("Failed to rebuild native macOS packaging dependencies required for DMG creation.");
+	}
+
+	nativePackagingDepsBuilt = true;
+};
 
 const config: ForgeConfig = {
 	packagerConfig: {
@@ -41,6 +68,11 @@ const config: ForgeConfig = {
 			},
 		}),
 	],
+	hooks: {
+		preMake: async (_forgeConfig, makeOptions) => {
+			ensureNativePackagingDeps(makeOptions.platform);
+		},
+	},
 	publishers: [
 		{
 			name: "@electron-forge/publisher-github",
