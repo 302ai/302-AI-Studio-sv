@@ -42,6 +42,18 @@ jobs:
           pnpm run lint
           pnpm run check
 
+      - name: Create GitHub release (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Extract version from tag
+          VERSION=${GITHUB_REF#refs/tags/}
+          # Create release if it doesn't exist
+          if ! gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release create "$VERSION" --title "$VERSION" --notes "Release $VERSION" --prerelease
+          fi
+
       - name: Build and release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

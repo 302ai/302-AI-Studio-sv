@@ -32,8 +32,8 @@ const config: ForgeConfig = {
 			name: "@electron-forge/publisher-github",
 			config: {
 				repository: {
-					owner: "302.AI",
-					name: "302.AI.STUDIO",
+					owner: "302ai",
+					name: "302-AI-Studio-sv",
 				},
 				prerelease: true,
 				draft: false,
