@@ -15,7 +15,11 @@ const config: ForgeConfig = {
 	},
 	rebuildConfig: {},
 	makers: [
-		new MakerSquirrel({ setupIcon: "static/icon.ico" }),
+		new MakerSquirrel({
+			name: "302-ai-studio",
+			setupIcon: "static/icon.ico",
+			iconUrl: "static/icon.ico",
+		}),
 		new MakerZIP({}, ["darwin"]),
 		new MakerRpm({
 			options: {
