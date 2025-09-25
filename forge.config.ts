@@ -11,6 +11,7 @@ const config: ForgeConfig = {
 	packagerConfig: {
 		asar: true,
 		icon: "static/icon",
+		executableName: "302-ai-studio",
 	},
 	rebuildConfig: {},
 	makers: [
