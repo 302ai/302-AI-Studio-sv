@@ -1,4 +1,9 @@
 import { spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
+import path from "node:path";
+
+const require = createRequire(import.meta.url);
 
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerDMG } from "@electron-forge/maker-dmg";
@@ -11,7 +16,7 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 import type { ForgeConfig } from "@electron-forge/shared-types";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
 
-const rebuildTargets = ["volume", "macos-alias", "ds-store", "appdmg"];
+const rebuildTargets = ["macos-alias", "ds-store", "appdmg"];
 
 let nativePackagingDepsBuilt = false;
 
@@ -31,6 +36,32 @@ const ensureNativePackagingDeps = (platform: NodeJS.Platform = process.platform)
 
 	if (result.status !== 0 || result.error) {
 		throw new Error("Failed to rebuild native macOS packaging dependencies required for DMG creation.");
+	}
+
+	const macosAliasDir = path.dirname(require.resolve("macos-alias/package.json"));
+	const macosAliasBinary = path.join(macosAliasDir, "build", "Release", "volume.node");
+	if (!existsSync(macosAliasBinary)) {
+		console.info("macos-alias binary missing after pnpm rebuild; running node-gyp rebuild manually...");
+		const rebuildMacAlias = npmExecPath
+			? spawnSync(
+				process.execPath,
+				[npmExecPath, "exec", "node-gyp", "rebuild"],
+				{ stdio: "inherit", cwd: macosAliasDir },
+			)
+			: spawnSync("pnpm", ["exec", "node-gyp", "rebuild"], {
+				cwd: macosAliasDir,
+				stdio: "inherit",
+			});
+
+		if (rebuildMacAlias.status !== 0 || rebuildMacAlias.error) {
+			throw new Error("Failed to rebuild macos-alias native module.");
+		}
+
+		if (!existsSync(macosAliasBinary)) {
+			throw new Error(
+				"macos-alias native module is still missing after rebuild; check build logs for details.",
+			);
+		}
 	}
 
 	nativePackagingDepsBuilt = true;
