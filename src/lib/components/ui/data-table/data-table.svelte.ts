@@ -3,6 +3,7 @@ import {
 	type TableOptions,
 	type TableOptionsResolved,
 	type TableState,
+	type Updater,
 	createTable,
 } from "@tanstack/table-core";
 import { SvelteSet } from "svelte/reactivity";
@@ -34,19 +35,15 @@ import { SvelteSet } from "svelte/reactivity";
  * ```
  */
 export function createSvelteTable<TData extends RowData>(options: TableOptions<TData>) {
+	const defaultOptions: Partial<TableOptionsResolved<TData>> = {
+		state: {},
+		onStateChange() {},
+		renderFallbackValue: null,
+	};
+
 	const resolvedOptions: TableOptionsResolved<TData> = mergeObjects(
-		{
-			state: {},
-			onStateChange() {},
-			renderFallbackValue: null,
-			mergeOptions: (
-				defaultOptions: TableOptions<TData>,
-				options: Partial<TableOptions<TData>>,
-			) => {
-				return mergeObjects(defaultOptions, options);
-			},
-		},
-		options,
+		defaultOptions as TableOptionsResolved<TData>,
+		options as Partial<TableOptionsResolved<TData>>,
 	);
 
 	const table = createTable(resolvedOptions);
@@ -54,15 +51,26 @@ export function createSvelteTable<TData extends RowData>(options: TableOptions<T
 
 	function updateOptions() {
 		table.setOptions((prev) => {
-			return mergeObjects(prev, options, {
-				state: mergeObjects(state, options.state || {}),
-				onStateChange: (updater: unknown) => {
-					if (updater instanceof Function) state = updater(state);
-					else state = mergeObjects(state, updater);
+			const mergedOptions = mergeObjects(
+				prev,
+				options as Partial<TableOptionsResolved<TData>>,
+			) as TableOptionsResolved<TData>;
+
+			// Override with our custom state handling
+			return {
+				...mergedOptions,
+				state: {
+					...table.initialState,
+					...state,
+					...(options.state || {}),
+				},
+				onStateChange: (updater: Updater<TableState>) => {
+					if (updater instanceof Function) state = updater(state as TableState);
+					else state = { ...state, ...updater };
 
 					options.onStateChange?.(updater);
 				},
-			});
+			};
 		});
 	}
 
@@ -87,9 +95,9 @@ type Intersection<T extends readonly unknown[]> = (T extends [infer H, ...infer 
  * Proxy-based to avoid known WebKit recursion issue.
  */
 
-export function mergeObjects<Sources extends readonly MaybeThunk<Record<string, unknown>>[]>(
+export function mergeObjects<Sources extends readonly MaybeThunk<object>[]>(
 	...sources: Sources
-): Intersection<{ [K in keyof Sources]: Sources[K] }> {
+): Intersection<Sources> {
 	const resolve = <T extends object>(src: MaybeThunk<T>): T | undefined =>
 		typeof src === "function" ? (src() ?? undefined) : src;
 

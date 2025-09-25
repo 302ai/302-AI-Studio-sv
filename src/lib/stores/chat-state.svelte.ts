@@ -6,7 +6,7 @@ import type { Model } from "$lib/types/model";
 import { Chat } from "@ai-sdk/svelte";
 import { providerState } from "./provider-state.svelte";
 
-export type { AttachmentFile, MCPServer } from "$lib/types/chat";
+export type { AttachmentFile, ChatMessage, MCPServer } from "$lib/types/chat";
 export type { Model } from "$lib/types/model";
 
 export interface Thread {

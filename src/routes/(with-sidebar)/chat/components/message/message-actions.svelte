@@ -5,6 +5,14 @@
 		message: ChatMessage;
 		enabledActions?: ActionType[];
 	}
+
+	// Helper function to extract text content from UIMessage
+	function getMessageContent(message: ChatMessage): string {
+		return message.parts
+			.filter((part) => part.type === "text")
+			.map((part) => part.text)
+			.join("");
+	}
 </script>
 
 <script lang="ts">
@@ -24,7 +32,7 @@
 	let editContent = $state("");
 
 	function handleEditClick() {
-		editContent = message.content;
+		editContent = getMessageContent(message);
 		isEditDialogOpen = true;
 	}
 
@@ -46,7 +54,7 @@
 </script>
 
 {#snippet actionCopy()}
-	<CopyButton content={message.content} />
+	<CopyButton content={getMessageContent(message)} />
 {/snippet}
 
 {#snippet actionRegenerate()}
@@ -100,7 +108,7 @@
 					<Button
 						variant="default"
 						onclick={handleEditConfirm}
-						disabled={editContent.trim() === message.content}
+						disabled={editContent.trim() === getMessageContent(message)}
 					>
 						{m.text_button_confirm_edit()}
 					</Button>

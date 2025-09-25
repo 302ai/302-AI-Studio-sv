@@ -27,7 +27,7 @@
 					customParam: "example-value",
 				},
 			}),
-		})
+		}),
 	);
 
 	let input = $state("");

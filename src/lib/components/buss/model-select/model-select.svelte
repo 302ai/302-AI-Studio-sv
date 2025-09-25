@@ -50,10 +50,12 @@
 					id: model.id,
 					name: model.name,
 					type: mapModelType(model.type),
-					provider: {
-						id: provider.id,
-						name: provider.name,
-					},
+					providerId: provider.id,
+					capabilities: model.capabilities,
+					custom: model.custom,
+					enabled: model.enabled,
+					collected: model.collected,
+					remark: model.remark,
 				};
 			})
 			.filter((model): model is Model => model !== null);
@@ -63,21 +65,22 @@
 	function mapModelType(type: ProviderModel["type"]): Model["type"] {
 		switch (type) {
 			case "language":
-				return "llm";
+				return "language";
 			case "tts":
 				return "tts";
 			case "embedding":
-				return "text-embedding";
+				return "embedding";
 			case "rerank":
 				return "rerank";
 			case "image-generation":
-				return "llm"; // Map to llm for now, could add new type later
+				return "image-generation";
 			default:
-				return "llm";
+				return "language";
 		}
 	}
 
 	const groupedModels = $derived(() => {
+		const providers = persistedProviderState.current;
 		const groups: Record<string, Model[]> = {};
 
 		transformedModels.forEach((model) => {
@@ -88,10 +91,14 @@
 			)
 				return;
 
-			if (!groups[model.provider.name]) {
-				groups[model.provider.name] = [];
+			// Find the provider name by providerId
+			const provider = providers.find((p) => p.id === model.providerId);
+			if (!provider) return;
+
+			if (!groups[provider.name]) {
+				groups[provider.name] = [];
 			}
-			groups[model.provider.name].push(model);
+			groups[provider.name].push(model);
 		});
 
 		Object.keys(groups).forEach((key) => {
