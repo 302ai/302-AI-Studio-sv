@@ -54,6 +54,10 @@ jobs:
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         run: pnpm install --frozen-lockfile --ignore-scripts
 
+      - name: Generate paraglide files
+        if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
+        run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
+
       - name: Run quality checks
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         run: |
