@@ -82,6 +82,7 @@ jobs:
         with:
           name: macos-build-${{ github.run_number }}
           path: |
+            out/make/*.dmg
             out/make/zip/**/*
 
       - name: Upload Linux artifacts
