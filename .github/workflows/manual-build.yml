@@ -47,7 +47,7 @@ jobs:
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         uses: actions/setup-node@v5
         with:
-          node-version: 24
+          node-version: 20
           cache: "pnpm"
 
       - name: Install dependencies
