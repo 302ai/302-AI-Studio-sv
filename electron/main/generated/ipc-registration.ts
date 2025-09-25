@@ -48,6 +48,20 @@ export function registerIpcHandlers() {
 	ipcMain.handle("tabService:handleTabClose", (event, tabId, newActiveTabId) =>
 		tabService.handleTabClose(event, tabId, newActiveTabId),
 	);
+	ipcMain.handle("tabService:handleTabCloseOthers", (event, tabId, tabIdsToClose) =>
+		tabService.handleTabCloseOthers(event, tabId, tabIdsToClose),
+	);
+	ipcMain.handle(
+		"tabService:handleTabCloseOffside",
+		(event, tabId, tabIdsToClose, remainingTabIds, shouldSwitchActive) =>
+			tabService.handleTabCloseOffside(
+				event,
+				tabId,
+				tabIdsToClose,
+				remainingTabIds,
+				shouldSwitchActive,
+			),
+	);
 	ipcMain.handle("tabService:handleTabCloseAll", (event) => tabService.handleTabCloseAll(event));
 	ipcMain.handle("tabService:handleShellViewLevel", (event, up) =>
 		tabService.handleShellViewLevel(event, up),
@@ -81,6 +95,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:handleActivateTab");
 	ipcMain.removeHandler("tabService:getActiveTab");
 	ipcMain.removeHandler("tabService:handleTabClose");
+	ipcMain.removeHandler("tabService:handleTabCloseOthers");
+	ipcMain.removeHandler("tabService:handleTabCloseOffside");
 	ipcMain.removeHandler("tabService:handleTabCloseAll");
 	ipcMain.removeHandler("tabService:handleShellViewLevel");
 	ipcMain.removeHandler("windowService:handleSplitShellWindow");

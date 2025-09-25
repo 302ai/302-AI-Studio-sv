@@ -140,6 +140,14 @@
 		await tabBarState.handleTabClose(tab);
 	}
 
+	async function handleTabCloseOthers(tab: Tab) {
+		await tabBarState.handleTabCloseOthers(tab);
+	}
+
+	async function handleTabCloseOffside(tab: Tab) {
+		await tabBarState.handleTabCloseOffside(tab);
+	}
+
 	async function handleTabCloseAll() {
 		await tabBarState.handleTabCloseAll();
 	}
@@ -187,6 +195,7 @@
 			{@const isNextActive = nextTab?.active}
 			{@const isLastTab = index === tabBarState.tabs.length - 1}
 			{@const shouldShowSeparator = !isLastTab && !isCurrentActive && !isNextActive}
+			{@const offsideClosable = index !== tabBarState.tabs.length - 1}
 			<div
 				class={cn("flex min-w-0 items-center", autoStretch && "flex-1 basis-0")}
 				data-id={tab.id}
@@ -206,9 +215,13 @@
 					isDragging={draggedElementId === tab.id}
 					stretch={autoStretch}
 					{closable}
+					{offsideClosable}
 					{isDragDisabled}
 					onTabClick={handleTabClick}
+					onTabNew={handleNewTab}
 					onTabClose={handleTabClose}
+					onTabCloseOthers={handleTabCloseOthers}
+					onTabCloseOffside={handleTabCloseOffside}
 					onTabCloseAll={handleTabCloseAll}
 					onOpenChange={(open) => tabBarState.handleTabOverlayChange(tab.id, open)}
 				/>

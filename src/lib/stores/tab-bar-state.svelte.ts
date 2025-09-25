@@ -62,6 +62,50 @@ class TabBarState {
 		await tabService.handleTabClose(tab.id, newActiveTabId);
 	}
 
+	async handleTabCloseOthers(tab: Tab) {
+		if (!this.windowId) return;
+
+		const currentTabs = this.tabs;
+		const targetTab = currentTabs.find((t) => t.id === tab.id);
+		if (!targetTab) return;
+
+		const tabIdsToClose = currentTabs.filter((t) => t.id !== tab.id).map((t) => t.id);
+		const remainingTabs = [{ ...targetTab, active: true }];
+
+		persistedTabState.current[this.windowId].tabs = remainingTabs;
+
+		await tabService.handleTabCloseOthers(tab.id, tabIdsToClose);
+	}
+
+	async handleTabCloseOffside(tab: Tab) {
+		if (!this.windowId) return;
+
+		const currentTabs = this.tabs;
+		const targetIndex = currentTabs.findIndex((t) => t.id === tab.id);
+		if (targetIndex === -1) return;
+
+		const tabsToClose = currentTabs.slice(targetIndex + 1);
+		const tabIdsToClose = tabsToClose.map((t) => t.id);
+		const remainingTabs = currentTabs.slice(0, targetIndex + 1);
+		const activeTab = currentTabs.find((t) => t.active);
+		const activeTabIndex = activeTab ? currentTabs.findIndex((t) => t.id === activeTab.id) : -1;
+		const isActiveTabBeingClosed = activeTabIndex > targetIndex;
+		const updatedTabs = remainingTabs.map((t) => {
+			return isActiveTabBeingClosed ? { ...t, active: t.id === tab.id } : t;
+		});
+
+		const remainingTabIds = updatedTabs.map((t) => t.id);
+
+		persistedTabState.current[this.windowId].tabs = updatedTabs;
+
+		await tabService.handleTabCloseOffside(
+			tab.id,
+			tabIdsToClose,
+			remainingTabIds,
+			isActiveTabBeingClosed,
+		);
+	}
+
 	async handleTabCloseAll() {
 		if (!this.windowId) return;
 

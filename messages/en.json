@@ -297,5 +297,11 @@
 	"toast_no_model": "No model selected",
 	"toast_unknown_error": "An unknown error occurred",
 	"version_information": "Version",
-	"version_update": "Version update"
+	"version_update": "Version update",
+	"label_button_incognito_model": "Incognito Mode",
+	"label_button_move_tab": "Move the Tab into Another Window",
+	"label_button_open_new_window": "Open a New Window",
+	"label_button_move_tab_into_window": "{firstTab} and other {surplus} tabs",
+	"label_button_close_others": "Close Other Tabs",
+	"label_button_close_offside": "Close the Offside Tabs"
 }

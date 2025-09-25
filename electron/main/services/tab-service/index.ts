@@ -224,6 +224,59 @@ export class TabService {
 		}
 	}
 
+	async handleTabCloseOthers(event: IpcMainInvokeEvent, tabId: string, tabIdsToClose: string[]) {
+		const window = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(window)) return;
+
+		for (const tabIdToClose of tabIdsToClose) {
+			const view = this.tabViewMap.get(tabIdToClose);
+			if (!isUndefined(view)) {
+				window.contentView.removeChildView(view);
+				view.webContents.close();
+			}
+			this.tabViewMap.delete(tabIdToClose);
+			this.tabMap.delete(tabIdToClose);
+		}
+
+		const targetView = this.tabViewMap.get(tabId);
+		if (!isUndefined(targetView)) {
+			this.windowTabView.set(window.id, [targetView]);
+		}
+
+		this.switchActiveTab(window, tabId);
+	}
+
+	async handleTabCloseOffside(
+		event: IpcMainInvokeEvent,
+		tabId: string,
+		tabIdsToClose: string[],
+		remainingTabIds: string[],
+		shouldSwitchActive: boolean,
+	) {
+		const window = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(window)) return;
+
+		for (const tabIdToClose of tabIdsToClose) {
+			const view = this.tabViewMap.get(tabIdToClose);
+			if (!isUndefined(view)) {
+				window.contentView.removeChildView(view);
+				view.webContents.close();
+			}
+			this.tabViewMap.delete(tabIdToClose);
+			this.tabMap.delete(tabIdToClose);
+		}
+
+		const remainingViews = remainingTabIds
+			.map((tabId) => this.tabViewMap.get(tabId))
+			.filter((view) => !isUndefined(view));
+
+		this.windowTabView.set(window.id, remainingViews);
+
+		if (shouldSwitchActive) {
+			this.switchActiveTab(window, tabId);
+		}
+	}
+
 	async handleTabCloseAll(event: IpcMainInvokeEvent) {
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return;

@@ -293,5 +293,11 @@
 	"toast_no_model": "模型未配置",
 	"toast_unknown_error": "发生未知错误",
 	"version_information": "版本信息",
-	"version_update": "版本更新"
+	"version_update": "版本更新",
+	"label_button_incognito_model": "切换为隐私模式",
+	"label_button_move_tab": "将标签页移动至另一个窗口",
+	"label_button_open_new_window": "打开新的窗口",
+	"label_button_move_tab_into_window": "{firstTab} 及另外 {surplus} 个标签页",
+	"label_button_close_others": "关闭其他标签页",
+	"label_button_close_offside": "关闭右侧标签页"
 }

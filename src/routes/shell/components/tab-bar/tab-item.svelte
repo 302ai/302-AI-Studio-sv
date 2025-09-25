@@ -5,9 +5,13 @@
 		isDragging?: boolean;
 		stretch?: boolean;
 		closable: boolean;
+		offsideClosable: boolean;
 		isDragDisabled?: boolean;
 		onTabClick: (tab: Tab) => void;
+		onTabNew: () => void;
 		onTabClose: (tab: Tab) => void;
+		onTabCloseOthers: (tab: Tab) => void;
+		onTabCloseOffside: (tab: Tab) => void;
 		onTabCloseAll: () => void;
 		onOpenChange: (open: boolean) => void;
 		class?: string;
@@ -21,7 +25,7 @@
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
-	import { CircleX, Ghost, MessageCircle, Settings, X } from "@lucide/svelte";
+	import { Ghost, MessageCircle, Settings, X } from "@lucide/svelte";
 	import type { Tab } from "@shared/types";
 	import { onDestroy } from "svelte";
 
@@ -31,9 +35,13 @@
 		isDragging: _isDragging = false,
 		stretch = false,
 		closable,
+		offsideClosable,
 		isDragDisabled = false,
 		onTabClick,
+		onTabNew,
 		onTabClose,
+		onTabCloseOthers,
+		onTabCloseOffside,
 		onTabCloseAll,
 		onOpenChange,
 		class: className,
@@ -129,13 +137,52 @@
 			{/if}
 		</div>
 	</ContextMenu.Trigger>
-	<ContextMenu.Content class="w-48">
-		<ContextMenu.Item onclick={() => onTabClose(tab)} disabled={!closable}>
-			<X class="mr-2 h-4 w-4" />
+	<ContextMenu.Content>
+		<ContextMenu.Item onSelect={() => onTabNew()}>
+			{m.label_button_new_tab()}
+		</ContextMenu.Item>
+
+		<ContextMenu.Sub>
+			<ContextMenu.SubTrigger onSelect={() => {}}>
+				{m.label_button_move_tab()}
+			</ContextMenu.SubTrigger>
+			<ContextMenu.SubContent align="start">
+				<ContextMenu.Item onSelect={() => {}}>{m.label_button_open_new_window()}</ContextMenu.Item>
+
+				<ContextMenu.Separator />
+
+				{#each ["window1", "window2", "window3"] as item (item)}
+					<ContextMenu.Item onSelect={() => {}}
+						>{m.label_button_move_tab_into_window({
+							firstTab: item,
+							surplus: 1,
+						})}</ContextMenu.Item
+					>
+				{/each}
+			</ContextMenu.SubContent>
+		</ContextMenu.Sub>
+
+		<ContextMenu.Separator />
+
+		<ContextMenu.Item onSelect={() => {}}>
+			{m.label_button_incognito_model()}
+		</ContextMenu.Item>
+
+		<ContextMenu.Separator />
+
+		<ContextMenu.Item onSelect={() => onTabClose(tab)} disabled={!closable}>
 			{m.label_button_close()}
 		</ContextMenu.Item>
-		<ContextMenu.Item onclick={() => onTabCloseAll()} disabled={!closable}>
-			<CircleX class="mr-2 h-4 w-4" />
+
+		<ContextMenu.Item onSelect={() => onTabCloseOthers(tab)} disabled={!closable}>
+			{m.label_button_close_others()}
+		</ContextMenu.Item>
+
+		<ContextMenu.Item onSelect={() => onTabCloseOffside(tab)} disabled={!offsideClosable}>
+			{m.label_button_close_offside()}
+		</ContextMenu.Item>
+
+		<ContextMenu.Item onSelect={() => onTabCloseAll()} disabled={!closable}>
 			{m.label_button_close_all()}
 		</ContextMenu.Item>
 	</ContextMenu.Content>
