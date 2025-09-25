@@ -76,6 +76,7 @@ export class TabStorage extends StorageService<TabState> {
 	}
 
 	async removeWindowState(windowId: string) {
+		console.log("removeWindowState", windowId);
 		const tabState = await this.getItemInternal("tab-bar-state");
 		if (isNull(tabState)) return;
 		delete tabState[windowId];

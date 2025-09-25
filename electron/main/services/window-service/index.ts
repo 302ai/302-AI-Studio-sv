@@ -159,6 +159,7 @@ export class WindowService {
 		shellWindow.addListener("close", (e) => {
 			const windowCount = this.windows.length;
 			const currentWindowId = shellWindow.id;
+			const isMainWindow = this.mainWindowId === currentWindowId;
 			if (windowCount === 1) {
 				if (!isMac) return;
 
@@ -169,14 +170,17 @@ export class WindowService {
 				}
 			}
 
-			if (windowCount > 1 && this.mainWindowId === currentWindowId) {
-				const nextWindowId = this.getNextWindowId(currentWindowId);
+			let nextWindowId: number | null = null;
+			if (windowCount > 1 && isMainWindow) {
+				nextWindowId = this.getNextWindowId(currentWindowId);
 				if (nextWindowId) {
 					this.setMainWindow(nextWindowId);
 				}
 			}
 
-			tabStorage.removeWindowState(currentWindowId.toString());
+			if (!isMainWindow && !this.isForceQuitting) {
+				tabStorage.removeWindowState(currentWindowId.toString());
+			}
 		});
 
 		shellWindow.addListener("closed", () => {
