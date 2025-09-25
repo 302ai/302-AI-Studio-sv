@@ -24,6 +24,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import { m } from "$lib/paraglide/messages.js";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Ghost, MessageCircle, Settings, X } from "@lucide/svelte";
 	import type { Tab } from "@shared/types";
@@ -49,6 +50,7 @@
 
 	let triggerRef = $state<HTMLElement | null>(null);
 	let isCompact = $state(false);
+	let windowTabsInfo = $state(tabBarState.windowTabsInfo);
 
 	$effect(() => {
 		if (!triggerRef?.parentElement) return;
@@ -105,8 +107,6 @@
 		)}
 		style="app-region: {isDragDisabled ? 'drag' : 'no-drag'};"
 		onclick={() => onTabClick(tab)}
-		role="button"
-		tabindex={0}
 	>
 		<div bind:this={triggerRef} class="contents">
 			<div class="mr-tab-icon size-tab-item-icon flex shrink-0 items-center justify-center">
@@ -137,36 +137,50 @@
 			{/if}
 		</div>
 	</ContextMenu.Trigger>
-	<ContextMenu.Content>
+	<ContextMenu.Content class="min-w-48">
 		<ContextMenu.Item onSelect={() => onTabNew()}>
 			{m.label_button_new_tab()}
 		</ContextMenu.Item>
 
-		<ContextMenu.Sub>
-			<ContextMenu.SubTrigger onSelect={() => {}}>
-				{m.label_button_move_tab()}
-			</ContextMenu.SubTrigger>
-			<ContextMenu.SubContent align="start">
-				<ContextMenu.Item onSelect={() => {}}>{m.label_button_open_new_window()}</ContextMenu.Item>
-
-				<ContextMenu.Separator />
-
-				{#each ["window1", "window2", "window3"] as item (item)}
-					<ContextMenu.Item onSelect={() => {}}
-						>{m.label_button_move_tab_into_window({
-							firstTab: item,
-							surplus: 1,
-						})}</ContextMenu.Item
+		{#if windowTabsInfo.length > 0}
+			<ContextMenu.Sub>
+				<ContextMenu.SubTrigger>
+					{m.label_button_move_tab()}
+				</ContextMenu.SubTrigger>
+				<ContextMenu.SubContent align="start">
+					<ContextMenu.Item
+						onSelect={() => tabBarState.handleMoveTabIntoNewWindow(tab.id)}
+						disabled={tabBarState.tabs.length === 1}
 					>
-				{/each}
-			</ContextMenu.SubContent>
-		</ContextMenu.Sub>
+						{m.label_button_open_new_window()}
+					</ContextMenu.Item>
 
-		<ContextMenu.Separator />
+					<ContextMenu.Separator />
+
+					{#each windowTabsInfo as item (item.windowId)}
+						<ContextMenu.Item onSelect={() => {}}>
+							{m.label_button_move_tab_into_existing_window({
+								firstTab: item.firstTabTitle,
+								surplus: item.tabs.length,
+							})}
+						</ContextMenu.Item>
+					{/each}
+				</ContextMenu.SubContent>
+			</ContextMenu.Sub>
+		{:else}
+			<ContextMenu.Item
+				onSelect={() => tabBarState.handleMoveTabIntoNewWindow(tab.id)}
+				disabled={tabBarState.tabs.length === 1}
+			>
+				{m.label_button_move_tab_into_new_window()}
+			</ContextMenu.Item>
+		{/if}
+
+		<!-- <ContextMenu.Separator />
 
 		<ContextMenu.Item onSelect={() => {}}>
 			{m.label_button_incognito_model()}
-		</ContextMenu.Item>
+		</ContextMenu.Item> -->
 
 		<ContextMenu.Separator />
 

@@ -1,8 +1,9 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
 
-import { app, BrowserWindow, net, protocol } from "electron";
+import { app, net, protocol } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
+import { isMac } from "./constants";
 import { registerIpcHandlers } from "./generated/ipc-registration";
 import { appService, windowService } from "./services";
 
@@ -35,8 +36,6 @@ async function init() {
 			`file://${path.join(import.meta.dirname, `../../renderer/${MAIN_WINDOW_VITE_NAME}`, filePath)}`,
 		);
 	});
-
-	await windowService.initShellWindows();
 }
 
 // This method will be called when Electron has finished
@@ -44,24 +43,33 @@ async function init() {
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
 	init();
+	windowService.initShellWindows();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on("window-all-closed", () => {
-	if (process.platform !== "darwin") {
-		app.quit();
-	}
+	if (!isMac) app.quit();
 });
+
+// macOS specific handling for Cmd+Q to ensure proper cleanup
+if (isMac) {
+	// Handle Cmd+Q (or menu quit) - ensure window close listeners fire
+	app.on("before-quit", (_event) => {
+		// Enable force quitting mode to bypass macOS hide behavior
+		windowService.setForceQuitting(true);
+
+		// Close windows in reverse order so main window closes last
+		const windows = windowService.getOrderedWindows().reverse();
+		windows.forEach((window) => {
+			window.close();
+		});
+	});
+}
 
 app.on("activate", () => {
-	// On OS X it's common to re-create a window in the app when the
-	// dock icon is clicked and there are no other windows open.
-	if (BrowserWindow.getAllWindows().length === 0) {
-		windowService.createSheetWindow();
-	}
+	const mainWindow = windowService.getMainWindow();
+	if (mainWindow) mainWindow.show();
+	else windowService.initShellWindows();
 });
-
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and import them here.

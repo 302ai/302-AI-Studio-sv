@@ -3,27 +3,75 @@ import { BrowserWindow, nativeTheme, WebContentsView, type IpcMainInvokeEvent } 
 import windowStateKeeper from "electron-window-state";
 import { isNull, isUndefined } from "es-toolkit";
 import path from "node:path";
-import { CONFIG, ENVIRONMENT, PLATFORM, WINDOW_SIZE } from "../../constants";
+import { CONFIG, ENVIRONMENT, isMac, PLATFORM, WINDOW_SIZE } from "../../constants";
 import { tabStorage } from "../storage-service/tab-storage";
 import { tabService } from "../tab-service";
 
 export class WindowService {
+	private mainWindowId: number | null = null;
+	private windows: BrowserWindow[] = [];
+	private isForceQuitting = false;
+
+	// ******************************* Private Methods ******************************* //
+	private setMainWindow(windowId: number) {
+		this.mainWindowId = windowId;
+	}
+
+	private addWindow(window: BrowserWindow) {
+		this.windows.push(window);
+	}
+
+	private removeWindow(windowId: number) {
+		const index = this.windows.findIndex((win) => win.id === windowId);
+		if (index !== -1) {
+			this.windows.splice(index, 1);
+		}
+	}
+
+	private getNextWindowId(currentWindowId: number): number | null {
+		const filteredWindows = this.windows.filter((win) => win.id !== currentWindowId);
+		return filteredWindows.length > 0 ? filteredWindows[0].id : null;
+	}
+
+	// ******************************* Public Methods ******************************* //
+	getOrderedWindows(): BrowserWindow[] {
+		return [...this.windows];
+	}
+
+	getMainWindow(): BrowserWindow | null {
+		const mainWindow = this.windows.find((win) => win.id === this.mainWindowId);
+		if (isUndefined(mainWindow)) {
+			console.error("Main window not found");
+			return null;
+		}
+		return mainWindow;
+	}
+
+	setForceQuitting(value: boolean) {
+		this.isForceQuitting = value;
+	}
+
 	async initShellWindows() {
 		const windowsTabs = await tabStorage.getAllWindowsTabs();
 		if (isNull(windowsTabs)) {
-			await this.createSheetWindow();
+			const { shellWindow } = await this.createShellWindow();
+			this.setMainWindow(shellWindow.id);
 			return;
 		}
 
 		const windows: BrowserWindow[] = [];
 		const newWindowIds: number[] = [];
 
-		for (const tabs of windowsTabs) {
-			const { shellWindow, shellView } = await this.createSheetWindow();
+		for (const [index, tabs] of windowsTabs.entries()) {
+			const { shellWindow, shellView } = await this.createShellWindow();
 			tabService.initWindowShellView(shellWindow.id, shellView);
 			windows.push(shellWindow);
 			newWindowIds.push(shellWindow.id);
 			await tabService.initWindowTabs(shellWindow, tabs);
+
+			if (index === 0) {
+				this.setMainWindow(shellWindow.id);
+			}
 		}
 
 		await tabStorage.initWindowMapping(newWindowIds, windowsTabs);
@@ -31,7 +79,7 @@ export class WindowService {
 		windows.forEach((window) => window.show());
 	}
 
-	async createSheetWindow(
+	async createShellWindow(
 		shellWindowConfig?: SheetWindowConfig,
 	): Promise<{ shellWindow: BrowserWindow; shellView: WebContentsView }> {
 		const { shouldUseDarkColors } = nativeTheme;
@@ -106,6 +154,36 @@ export class WindowService {
 			shellWebContentsView.webContents.loadURL("app://localhost?route=shell");
 		}
 
+		this.addWindow(shellWindow);
+
+		shellWindow.addListener("close", (e) => {
+			const windowCount = this.windows.length;
+			const currentWindowId = shellWindow.id;
+			if (windowCount === 1) {
+				if (!isMac) return;
+
+				if (!this.isForceQuitting) {
+					e.preventDefault();
+					shellWindow.hide();
+					return;
+				}
+			}
+
+			if (windowCount > 1 && this.mainWindowId === currentWindowId) {
+				const nextWindowId = this.getNextWindowId(currentWindowId);
+				if (nextWindowId) {
+					this.setMainWindow(nextWindowId);
+				}
+			}
+
+			tabStorage.removeWindowState(currentWindowId.toString());
+		});
+
+		shellWindow.addListener("closed", () => {
+			this.removeWindow(shellWindow.id);
+			shellWindow.destroy();
+		});
+
 		return { shellWindow, shellView: shellWebContentsView };
 	}
 
@@ -114,7 +192,7 @@ export class WindowService {
 		const triggerTab = tabService.getTabById(triggerTabId);
 		if (isUndefined(triggerTab)) return;
 
-		const { shellWindow, shellView } = await this.createSheetWindow();
+		const { shellWindow, shellView } = await this.createShellWindow();
 		const newShellWindowId = shellWindow.id;
 		const newShellWindowTabs = [triggerTab];
 		await tabStorage.updateWindowTabs(newShellWindowId.toString(), newShellWindowTabs);

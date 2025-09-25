@@ -36,7 +36,6 @@ export class TabService {
 	}
 
 	// ******************************* Private Methods ******************************* //
-
 	private newWebContentsView(windowId: number, tab: Tab): WebContentsView {
 		const view = new WebContentsView({
 			webPreferences: {
@@ -85,7 +84,6 @@ export class TabService {
 	}
 
 	// ******************************* Main Process Methods ******************************* //
-
 	async initWindowTabs(window: BrowserWindow, tabs: Tab[]): Promise<void> {
 		let activeTabView: WebContentsView | null = null;
 		let activeTabId: string | null = null;
@@ -138,7 +136,6 @@ export class TabService {
 	}
 
 	// ******************************* IPC Methods ******************************* //
-
 	async handleNewTab(
 		event: IpcMainInvokeEvent,
 		title: string = "New Chat",
@@ -304,7 +301,6 @@ export class TabService {
 				window.contentView.removeChildView(shellView);
 			}
 			window.contentView.addChildView(shellView);
-			console.log("window.contentView.addChildView ---- shellView");
 			if (isMac) {
 				shellView.webContents.focus();
 			}
@@ -318,7 +314,6 @@ export class TabService {
 				window.contentView.removeChildView(activeTabView);
 			}
 			window.contentView.addChildView(activeTabView);
-			console.log("window.contentView.addChildView ---- activeTabView");
 			if (isMac) {
 				activeTabView.webContents.focus();
 			}

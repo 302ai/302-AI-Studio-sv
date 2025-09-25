@@ -74,6 +74,13 @@ export class TabStorage extends StorageService<TabState> {
 		tabState[windowId].tabs = tabs;
 		await this.setItemInternal("tab-bar-state", tabState);
 	}
+
+	async removeWindowState(windowId: string) {
+		const tabState = await this.getItemInternal("tab-bar-state");
+		if (isNull(tabState)) return;
+		delete tabState[windowId];
+		await this.setItemInternal("tab-bar-state", tabState);
+	}
 }
 
 export const tabStorage = new TabStorage();
