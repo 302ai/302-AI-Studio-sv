@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "0.0.14",
+	"version": "0.0.15",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -11,6 +11,14 @@
 		"email": "support@302.ai"
 	},
 	"license": "AGPL-3.0",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/302ai/302-AI-Studio-sv.git"
+	},
+	"homepage": "https://github.com/302ai/302-AI-Studio-sv",
+	"bugs": {
+		"url": "https://github.com/302ai/302-AI-Studio-sv/issues"
+	},
 	"scripts": {
 		"prepare": "svelte-kit sync || echo ''",
 		"dev": "electron-forge start",
