@@ -41,12 +41,14 @@ const ensureNativePackagingDeps = (platform: NodeJS.Platform = process.platform)
 	console.info("Rebuilding native macOS packaging dependencies via pnpm rebuild ...");
 	const result = npmExecPath
 		? spawnSync(process.execPath, [npmExecPath, ...rebuildArgs], {
-			stdio: "inherit",
-		})
+				stdio: "inherit",
+			})
 		: spawnSync("pnpm", rebuildArgs, { stdio: "inherit" });
 
 	if (result.status !== 0 || result.error) {
-		throw new Error("Failed to rebuild native macOS packaging dependencies required for DMG creation.");
+		throw new Error(
+			"Failed to rebuild native macOS packaging dependencies required for DMG creation.",
+		);
 	}
 
 	for (const { moduleName, binaryRelPath } of nativeBinaryChecks) {
@@ -63,17 +65,18 @@ const ensureNativePackagingDeps = (platform: NodeJS.Platform = process.platform)
 			continue;
 		}
 
-		console.info(`${moduleName} binary missing after pnpm rebuild; running node-gyp rebuild manually...`);
+		console.info(
+			`${moduleName} binary missing after pnpm rebuild; running node-gyp rebuild manually...`,
+		);
 		const rebuildResult = npmExecPath
-			? spawnSync(
-				process.execPath,
-				[npmExecPath, "exec", "node-gyp", "rebuild"],
-				{ stdio: "inherit", cwd: moduleDir },
-			)
+			? spawnSync(process.execPath, [npmExecPath, "exec", "node-gyp", "rebuild"], {
+					stdio: "inherit",
+					cwd: moduleDir,
+				})
 			: spawnSync("pnpm", ["exec", "node-gyp", "rebuild"], {
-				cwd: moduleDir,
-				stdio: "inherit",
-			});
+					cwd: moduleDir,
+					stdio: "inherit",
+				});
 
 		if (rebuildResult.status !== 0 || rebuildResult.error) {
 			throw new Error(`Failed to rebuild ${moduleName} native module.`);

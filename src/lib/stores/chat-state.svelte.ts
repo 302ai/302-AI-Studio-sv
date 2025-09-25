@@ -4,7 +4,7 @@ import { FChatTransport } from "$lib/transport/f-chat-transport";
 import type { AttachmentFile, ChatMessage, MCPServer } from "$lib/types/chat";
 import type { Model } from "$lib/types/model";
 import { Chat } from "@ai-sdk/svelte";
-import { providerState } from "./provider-state.svelte";
+import { persistedProviderState, providerState } from "./provider-state.svelte";
 
 export type { AttachmentFile, ChatMessage, MCPServer } from "$lib/types/chat";
 export type { Model } from "$lib/types/model";
@@ -188,7 +188,9 @@ class ChatState {
 				{ text: this.inputValue },
 				{
 					body: {
-						model: currentModel,
+						model: currentModel.id,
+						apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
+							?.apiKey,
 					},
 				},
 			);
