@@ -105,7 +105,7 @@
 			"overflow-hidden",
 			className,
 		)}
-		style="app-region: {isDragDisabled ? 'drag' : 'no-drag'};"
+		style="app-region: no-drag;"
 		onclick={() => onTabClick(tab)}
 	>
 		<div bind:this={triggerRef} class="contents">
