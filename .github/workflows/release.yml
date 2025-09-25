@@ -33,6 +33,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
 
       - name: Generate paraglide files
         run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
