@@ -16,7 +16,18 @@ import { VitePlugin } from "@electron-forge/plugin-vite";
 import type { ForgeConfig } from "@electron-forge/shared-types";
 import { FuseV1Options, FuseVersion } from "@electron/fuses";
 
-const rebuildTargets = ["macos-alias", "ds-store", "appdmg"];
+const rebuildTargets = ["macos-alias", "fs-xattr", "ds-store", "appdmg"];
+
+const nativeBinaryChecks = [
+	{
+		moduleName: "macos-alias",
+		binaryRelPath: "build/Release/volume.node",
+	},
+	{
+		moduleName: "fs-xattr",
+		binaryRelPath: "build/Release/xattr.node",
+	},
+];
 
 let nativePackagingDepsBuilt = false;
 
@@ -38,28 +49,39 @@ const ensureNativePackagingDeps = (platform: NodeJS.Platform = process.platform)
 		throw new Error("Failed to rebuild native macOS packaging dependencies required for DMG creation.");
 	}
 
-	const macosAliasDir = path.dirname(require.resolve("macos-alias/package.json"));
-	const macosAliasBinary = path.join(macosAliasDir, "build", "Release", "volume.node");
-	if (!existsSync(macosAliasBinary)) {
-		console.info("macos-alias binary missing after pnpm rebuild; running node-gyp rebuild manually...");
-		const rebuildMacAlias = npmExecPath
+	for (const { moduleName, binaryRelPath } of nativeBinaryChecks) {
+		let moduleDir: string | undefined;
+		try {
+			moduleDir = path.dirname(require.resolve(`${moduleName}/package.json`));
+		} catch (_error) {
+			// Optional dependency not installed (non-darwin platforms). Skip.
+			continue;
+		}
+
+		const binaryPath = path.join(moduleDir, binaryRelPath);
+		if (existsSync(binaryPath)) {
+			continue;
+		}
+
+		console.info(`${moduleName} binary missing after pnpm rebuild; running node-gyp rebuild manually...`);
+		const rebuildResult = npmExecPath
 			? spawnSync(
 				process.execPath,
 				[npmExecPath, "exec", "node-gyp", "rebuild"],
-				{ stdio: "inherit", cwd: macosAliasDir },
+				{ stdio: "inherit", cwd: moduleDir },
 			)
 			: spawnSync("pnpm", ["exec", "node-gyp", "rebuild"], {
-				cwd: macosAliasDir,
+				cwd: moduleDir,
 				stdio: "inherit",
 			});
 
-		if (rebuildMacAlias.status !== 0 || rebuildMacAlias.error) {
-			throw new Error("Failed to rebuild macos-alias native module.");
+		if (rebuildResult.status !== 0 || rebuildResult.error) {
+			throw new Error(`Failed to rebuild ${moduleName} native module.`);
 		}
 
-		if (!existsSync(macosAliasBinary)) {
+		if (!existsSync(binaryPath)) {
 			throw new Error(
-				"macos-alias native module is still missing after rebuild; check build logs for details.",
+				`${moduleName} native module is still missing after rebuild; check build logs for details.`,
 			);
 		}
 	}
