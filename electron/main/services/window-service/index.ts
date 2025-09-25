@@ -74,6 +74,7 @@ export class WindowService {
 			},
 			roundedCorners: true,
 			show: false,
+			icon: path.join(import.meta.dirname, "../../renderer/main_window/icon.png"),
 		});
 
 		mainWindowState.manage(shellWindow);
