@@ -1,9 +1,9 @@
 {
-	"name": "electron-svelte",
-	"productName": "electron-svelte",
-	"description": "Electron Svelte",
+	"name": "302-ai-studio",
+	"productName": "302 AI Studio",
+	"description": "302 AI Studio",
 	"private": true,
-	"version": "0.0.10",
+	"version": "0.0.11",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
