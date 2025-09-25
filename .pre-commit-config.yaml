@@ -32,11 +32,11 @@ repos:
         files: \.(js|ts|svelte)$
         exclude: '^(src/lib/paraglide/.*|\.svelte-kit/.*|build/.*|node_modules/.*)$'
 
-      - id: sort-messages
-        name: sort-messages
-        entry: node scripts/sort-messages.js
-        language: system
-        files: ^messages/.*\.json$
+      # - id: sort-messages
+      #   name: sort-messages
+      #   entry: node scripts/sort-messages.js
+      #   language: system
+      #   files: ^messages/.*\.json$
 
   - repo: https://github.com/compilerla/conventional-pre-commit
     rev: v4.2.0

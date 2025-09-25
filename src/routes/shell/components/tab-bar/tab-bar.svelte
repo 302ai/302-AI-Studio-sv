@@ -17,7 +17,7 @@
 </script>
 
 <script lang="ts">
-	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
+	import { Button } from "$lib/components/ui/button";
 	import { Separator } from "$lib/components/ui/separator/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
@@ -77,7 +77,7 @@
 				await tabBarState.handleTabClick(draggedTab);
 			}
 
-			await handleGeneralOverlayChange(true);
+			await tabBarState.handleGeneralOverlayChange(true);
 		}
 
 		const hasOrderChanged = newItems.some((item, index) => item.id !== tabBarState.tabs[index]?.id);
@@ -114,7 +114,7 @@
 				isDndFinalizing = false;
 			});
 		}
-		await handleGeneralOverlayChange(false);
+		await tabBarState.handleGeneralOverlayChange(false);
 	}
 
 	function transformDraggedElement(element?: HTMLElement) {
@@ -142,14 +142,6 @@
 
 	async function handleTabCloseAll() {
 		await tabBarState.handleTabCloseAll();
-	}
-
-	async function handleTabOverlayChange(tabId: string, open: boolean) {
-		await tabBarState.handleTabOverlayChange(tabId, open);
-	}
-
-	async function handleGeneralOverlayChange(open: boolean) {
-		await tabBarState.handleGeneralOverlayChange(open);
 	}
 
 	onDestroy(() => {
@@ -218,7 +210,7 @@
 					onTabClick={handleTabClick}
 					onTabClose={handleTabClose}
 					onTabCloseAll={handleTabCloseAll}
-					onOpenChange={(open) => handleTabOverlayChange(tab.id, open)}
+					onOpenChange={(open) => tabBarState.handleTabOverlayChange(tab.id, open)}
 				/>
 				<div class="shrink-0 px-0.5" style="cursor: pointer !important;">
 					<Separator
@@ -244,18 +236,16 @@
 				)}
 				style="cursor: none !important;"
 			/>
-			<ButtonWithTooltip
-				tooltip={m.label_button_new_tab()}
-				tooltipSide="bottom"
+			<Button
+				title={m.label_button_new_tab()}
 				variant="ghost"
 				size="icon"
 				class="size-tab-new hover:!bg-tab-btn-hover-inactive bg-transparent transition-colors"
 				style="app-region: no-drag;"
 				onclick={handleNewTab}
-				onOpenChange={handleGeneralOverlayChange}
 			>
 				<Plus class="size-tab-icon" />
-			</ButtonWithTooltip>
+			</Button>
 		</div>
 	</div>
 </div>

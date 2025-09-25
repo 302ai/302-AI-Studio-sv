@@ -17,7 +17,7 @@
 </script>
 
 <script lang="ts">
-	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
+	import { Button } from "$lib/components/ui/button";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
@@ -109,9 +109,8 @@
 				<span class="max-w-tab-title min-w-0 flex-1 truncate">{tab.title}</span>
 			{/if}
 			{#if closable}
-				<ButtonWithTooltip
-					tooltip={isCompact ? tab.title : m.label_button_close()}
-					tooltipSide="bottom"
+				<Button
+					title={isCompact ? tab.title : m.label_button_close()}
 					variant="ghost"
 					size="icon"
 					class={cn(
@@ -124,10 +123,9 @@
 						e.stopPropagation();
 						onTabClose(tab);
 					}}
-					{onOpenChange}
 				>
 					<X class="size-tab-close-icon" />
-				</ButtonWithTooltip>
+				</Button>
 			{/if}
 		</div>
 	</ContextMenu.Trigger>
