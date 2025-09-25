@@ -3,7 +3,7 @@
 	"productName": "electron-svelte",
 	"description": "Electron Svelte",
 	"private": true,
-	"version": "0.0.8",
+	"version": "0.0.10",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
