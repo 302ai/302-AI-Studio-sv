@@ -52,7 +52,7 @@ jobs:
 
       - name: Install dependencies
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Run quality checks
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
