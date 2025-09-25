@@ -1,0 +1,90 @@
+name: Manual Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: "Platform to build for"
+        required: true
+        default: "all"
+        type: choice
+        options:
+          - all
+          - windows
+          - macos
+          - linux
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+          - os: macos-latest
+            platform: macos
+          - os: ubuntu-latest
+            platform: linux
+
+    steps:
+      - name: Check platform selection
+        if: github.event.inputs.platform != 'all' && github.event.inputs.platform != matrix.platform
+        run: exit 0
+
+      - name: Checkout repository
+        if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+
+      - name: Setup Node.js
+        if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Install dependencies
+        if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
+        run: pnpm install --frozen-lockfile
+
+      - name: Run quality checks
+        if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
+        run: |
+          pnpm run lint
+          pnpm run check
+
+      - name: Build application
+        if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
+        run: pnpm run make
+
+      - name: Upload Windows artifacts
+        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows') && matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-build-${{ github.run_number }}
+          path: |
+            out/make/squirrel.windows/**/*
+
+      - name: Upload macOS artifacts
+        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.os == 'macos-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-build-${{ github.run_number }}
+          path: |
+            out/make/zip/**/*
+
+      - name: Upload Linux artifacts
+        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux') && matrix.os == 'ubuntu-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build-${{ github.run_number }}
+          path: |
+            out/make/deb/**/*
+            out/make/rpm/**/*
