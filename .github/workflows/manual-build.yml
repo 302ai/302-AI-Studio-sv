@@ -54,6 +54,10 @@ jobs:
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         run: pnpm install --frozen-lockfile --ignore-scripts
 
+      - name: Rebuild Windows native modules
+        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows') && matrix.os == 'windows-latest'
+        run: pnpm rebuild electron-winstaller @bitdisaster/exe-icon-extractor electron-wix-msi
+
       - name: Generate paraglide files
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide

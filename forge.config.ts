@@ -105,7 +105,9 @@ const config: ForgeConfig = {
 			},
 			["win32"],
 		),
-		new MakerWix({}),
+		new MakerWix({
+			icon: "static/icon.ico",
+		}),
 		new MakerZIP({}, ["darwin", "win32"]),
 		new MakerDMG({
 			format: "ULFO",

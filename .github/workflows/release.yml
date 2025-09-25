@@ -36,6 +36,10 @@ jobs:
         env:
           NODE_OPTIONS: --max-old-space-size=8192
 
+      - name: Rebuild Windows native modules
+        if: matrix.os == 'windows-latest'
+        run: pnpm rebuild electron-winstaller @bitdisaster/exe-icon-extractor electron-wix-msi
+
       - name: Generate paraglide files
         run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
 
