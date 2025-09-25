@@ -9,7 +9,7 @@
 		onTabClick: (tab: Tab) => void;
 		onTabClose: (tab: Tab) => void;
 		onTabCloseAll: () => void;
-		onOpenChange?: (open: boolean) => void;
+		onOpenChange: (open: boolean) => void;
 		class?: string;
 	}
 

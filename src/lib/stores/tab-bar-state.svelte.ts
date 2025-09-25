@@ -1,5 +1,7 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import type { Tab, TabState, TabType } from "@shared/types";
+import { isNull } from "es-toolkit/predicate";
+import { match } from "ts-pattern";
 
 export const persistedTabState = new PersistedState<TabState>(
 	"TabStorage:tab-bar-state",
@@ -11,6 +13,10 @@ const { tabService } = window.electronAPI;
 class TabBarState {
 	private windowId = $state<string>(window.windowId);
 	tabs = $derived<Tab[]>(persistedTabState.current[this.windowId]?.tabs ?? []);
+
+	// Shell view level management for context menus and tooltips
+	private activeOverlayId = $state<string | null>(null);
+	private isShellViewElevated = $state<boolean>(false);
 
 	constructor() {
 		console.log("windowId", this.windowId);
@@ -85,6 +91,47 @@ class TabBarState {
 	updatePersistedTabs(tabs: Tab[]) {
 		if (!this.windowId) return;
 		persistedTabState.current[this.windowId].tabs = tabs;
+	}
+
+	async handleTabOverlayChange(tabId: string, open: boolean) {
+		if (open) {
+			if (!isNull(this.activeOverlayId) && this.activeOverlayId !== tabId) {
+				this.activeOverlayId = tabId;
+			} else if (isNull(this.activeOverlayId)) {
+				this.activeOverlayId = tabId;
+				if (!this.isShellViewElevated) {
+					this.isShellViewElevated = true;
+					await tabService.handleShellViewLevel(true);
+				}
+			}
+		} else {
+			if (this.activeOverlayId === tabId) {
+				this.activeOverlayId = null;
+				if (this.isShellViewElevated) {
+					this.isShellViewElevated = false;
+					await tabService.handleShellViewLevel(false);
+				}
+			}
+		}
+	}
+
+	async handleGeneralOverlayChange(open: boolean) {
+		await match({
+			open,
+			isElevated: this.isShellViewElevated,
+			hasActiveOverlay: !isNull(this.activeOverlayId),
+		})
+			.with({ open: true, isElevated: false }, async () => {
+				this.isShellViewElevated = true;
+				await tabService.handleShellViewLevel(true);
+			})
+			.with({ open: true, isElevated: true }, () => {})
+			.with({ open: false, isElevated: true, hasActiveOverlay: false }, async () => {
+				this.isShellViewElevated = false;
+				await tabService.handleShellViewLevel(false);
+			})
+			.with({ open: false }, () => {})
+			.exhaustive();
 	}
 }
 

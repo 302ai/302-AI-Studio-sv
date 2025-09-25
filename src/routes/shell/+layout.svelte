@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { TabBar } from "$lib/components/buss/tab-bar";
 	import { ModeWatcher } from "mode-watcher";
 	import "../../app.css";
+	import TabBar from "./components/tab-bar/tab-bar.svelte";
 
 	const { children } = $props();
 </script>

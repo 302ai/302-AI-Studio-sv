@@ -247,8 +247,11 @@ export class TabService {
 		if (isUndefined(shellView)) return;
 
 		if (up) {
-			window.contentView.removeChildView(shellView);
+			if (!isMac) {
+				window.contentView.removeChildView(shellView);
+			}
 			window.contentView.addChildView(shellView);
+			console.log("window.contentView.addChildView ---- shellView");
 			if (isMac) {
 				shellView.webContents.focus();
 			}
@@ -257,8 +260,12 @@ export class TabService {
 			if (isUndefined(activeTabId)) return;
 			const activeTabView = this.tabViewMap.get(activeTabId);
 			if (isUndefined(activeTabView)) return;
-			window.contentView.removeChildView(activeTabView);
+
+			if (!isMac) {
+				window.contentView.removeChildView(activeTabView);
+			}
 			window.contentView.addChildView(activeTabView);
+			console.log("window.contentView.addChildView ---- activeTabView");
 			if (isMac) {
 				activeTabView.webContents.focus();
 			}

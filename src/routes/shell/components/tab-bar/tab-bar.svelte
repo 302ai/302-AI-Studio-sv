@@ -33,8 +33,6 @@
 	import { scale } from "svelte/transition";
 	import TabItem from "./tab-item.svelte";
 
-	const { tabService } = window.electronAPI;
-
 	let { class: className, autoStretch = false }: Props = $props();
 
 	let draggedElementId = $state<string | null>(null);
@@ -79,7 +77,7 @@
 				await tabBarState.handleTabClick(draggedTab);
 			}
 
-			await handleTabBarLevel(true);
+			await handleGeneralOverlayChange(true);
 		}
 
 		const hasOrderChanged = newItems.some((item, index) => item.id !== tabBarState.tabs[index]?.id);
@@ -116,7 +114,7 @@
 				isDndFinalizing = false;
 			});
 		}
-		await handleTabBarLevel(false);
+		await handleGeneralOverlayChange(false);
 	}
 
 	function transformDraggedElement(element?: HTMLElement) {
@@ -146,8 +144,12 @@
 		await tabBarState.handleTabCloseAll();
 	}
 
-	async function handleTabBarLevel(up: boolean) {
-		await tabService.handleShellViewLevel(up);
+	async function handleTabOverlayChange(tabId: string, open: boolean) {
+		await tabBarState.handleTabOverlayChange(tabId, open);
+	}
+
+	async function handleGeneralOverlayChange(open: boolean) {
+		await tabBarState.handleGeneralOverlayChange(open);
 	}
 
 	onDestroy(() => {
@@ -216,7 +218,7 @@
 					onTabClick={handleTabClick}
 					onTabClose={handleTabClose}
 					onTabCloseAll={handleTabCloseAll}
-					onOpenChange={handleTabBarLevel}
+					onOpenChange={(open) => handleTabOverlayChange(tab.id, open)}
 				/>
 				<div class="shrink-0 px-0.5" style="cursor: pointer !important;">
 					<Separator
@@ -250,7 +252,7 @@
 				class="size-tab-new hover:!bg-tab-btn-hover-inactive bg-transparent transition-colors"
 				style="app-region: no-drag;"
 				onclick={handleNewTab}
-				onOpenChange={handleTabBarLevel}
+				onOpenChange={handleGeneralOverlayChange}
 			>
 				<Plus class="size-tab-icon" />
 			</ButtonWithTooltip>
