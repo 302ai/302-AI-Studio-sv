@@ -1,5 +1,5 @@
 import { createStorage, type StorageMeta, type StorageValue } from "@302ai/unstorage";
-import fsLiteDriver from "@302ai/unstorage/drivers/fs-lite";
+import fsDriver from "@302ai/unstorage/drivers/fs";
 import { isDev } from "@electron/main/constants";
 import type { MigrationConfig, StorageItem, StorageMetadata, StorageOptions } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
@@ -17,7 +17,7 @@ export class StorageService<T extends StorageValue> {
 			? join(process.cwd(), "storage")
 			: join(app.getPath("userData"), "storage");
 		this.storage = createStorage<T>({
-			driver: fsLiteDriver({
+			driver: fsDriver({
 				base: storagePath,
 			}),
 		});
