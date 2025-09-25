@@ -3,7 +3,7 @@
 	"productName": "electron-svelte",
 	"description": "Electron Svelte",
 	"private": true,
-	"version": "0.0.1",
+	"version": "0.0.8",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -47,6 +47,7 @@
 		"@electron-forge/plugin-auto-unpack-natives": "^7.9.0",
 		"@electron-forge/plugin-fuses": "^7.9.0",
 		"@electron-forge/plugin-vite": "^7.9.0",
+		"@electron-forge/publisher-github": "^7.9.0",
 		"@electron-toolkit/preload": "^3.0.2",
 		"@electron-toolkit/tsconfig": "^1.0.1",
 		"@electron/fuses": "^2.0.0",

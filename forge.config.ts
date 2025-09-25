@@ -27,6 +27,19 @@ const config: ForgeConfig = {
 			},
 		}),
 	],
+	publishers: [
+		{
+			name: "@electron-forge/publisher-github",
+			config: {
+				repository: {
+					owner: "302.AI",
+					name: "302.AI.STUDIO",
+				},
+				prerelease: true,
+				draft: false,
+			},
+		},
+	],
 	plugins: [
 		new VitePlugin({
 			// `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
