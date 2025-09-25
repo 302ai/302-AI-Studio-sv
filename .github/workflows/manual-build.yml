@@ -79,6 +79,8 @@ jobs:
           name: windows-build-${{ github.run_number }}
           path: |
             out/make/squirrel.windows/**/*
+            out/make/zip/win32/**/*
+            out/make/wix/win32/**/*
 
       - name: Upload macOS artifacts
         if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.os == 'macos-latest'
