@@ -8,7 +8,7 @@
 <script lang="ts">
 	import ViewerBase from "./viewer-base.svelte";
 
-	const { fileName }: DocumentViewerProps = $props();
+	const { src, fileName }: DocumentViewerProps = $props();
 </script>
 
 <ViewerBase>
@@ -18,6 +18,9 @@
 			<p class="text-muted-foreground mt-2 text-sm">Document viewer will be implemented here</p>
 			{#if fileName}
 				<p class="text-muted-foreground mt-2 text-xs">File: {fileName}</p>
+			{/if}
+			{#if src}
+				<p class="text-muted-foreground mt-2 text-xs">Source: {src}</p>
 			{/if}
 		</div>
 	</div>

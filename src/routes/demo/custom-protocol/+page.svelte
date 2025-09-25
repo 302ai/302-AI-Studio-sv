@@ -12,11 +12,8 @@
 	}
 
 	// 创建chat实例，使用自定义transport
-	let chat = $state<Chat | null>(null);
-	FChatTransport;
-	// 当selectedHandler改变时重新创建chat实例
-	$effect(() => {
-		chat = new Chat({
+	const chat = $derived(
+		new Chat({
 			transport: new FChatTransport({
 				handler: getHandler(),
 				// 自定义headers示例
@@ -30,8 +27,8 @@
 					customParam: "example-value",
 				},
 			}),
-		});
-	});
+		})
+	);
 
 	let input = $state("");
 
