@@ -40,3 +40,74 @@ export interface MigrationConfig<T extends StorageValue = StorageValue> {
 export interface VersionedStorageValue {
 	_version?: number;
 }
+
+export type ModelType = "language" | "image-generation" | "tts" | "embedding" | "rerank";
+
+export type ModelCapability = string;
+
+export interface Model {
+	id: string;
+	name: string;
+	remark: string;
+	providerId: string;
+	capabilities: Set<ModelCapability>;
+	type: ModelType;
+	custom: boolean;
+	enabled: boolean;
+	collected: boolean;
+}
+
+export interface ModelCreateInput {
+	id: string;
+	name: string;
+	remark?: string;
+	providerId: string;
+	capabilities?: Set<ModelCapability>;
+	type?: ModelType;
+	custom?: boolean;
+	enabled?: boolean;
+	collected?: boolean;
+}
+
+export interface ModelUpdateInput {
+	id?: string;
+	name?: string;
+	remark?: string;
+	providerId?: string;
+	capabilities?: Set<ModelCapability>;
+	type?: ModelType;
+	custom?: boolean;
+	enabled?: boolean;
+	collected?: boolean;
+}
+
+export interface MCPServer {
+	id: string;
+}
+
+export interface AttachmentFile {
+	id: string;
+	name: string;
+	type: string;
+	size: number;
+	file: File;
+	preview?: string;
+	filePath: string;
+}
+
+export interface ThreadParmas {
+	title: string;
+	temperature: number | null;
+	topP: number | null;
+	frequencyPenalty: number | null;
+	presencePenalty: number | null;
+	maxTokens: number | null;
+	inputValue: string;
+	attachments: AttachmentFile[];
+	mcpServers: MCPServer[];
+	isThinkingActive: boolean;
+	isOnlineSearchActive: boolean;
+	isMCPActive: boolean;
+	selectedModel: Model | null;
+	isPrivateChatActive: boolean;
+}

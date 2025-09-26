@@ -1,10 +1,11 @@
-import type { Tab, TabType } from "@shared/types";
+import type { Tab, TabType, ThreadParmas } from "@shared/types";
 import { BrowserWindow, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import { isNull, isUndefined } from "es-toolkit";
 import { nanoid } from "nanoid";
 import path from "node:path";
 import { stringify } from "superjson";
 import { ENVIRONMENT, isMac, TITLE_BAR_HEIGHT } from "../../constants";
+import { storageService } from "../storage-service";
 import { tabStorage } from "../storage-service/tab-storage";
 
 type TabConfig = {
@@ -36,13 +37,20 @@ export class TabService {
 	}
 
 	// ******************************* Private Methods ******************************* //
-	private newWebContentsView(windowId: number, tab: Tab): WebContentsView {
+	private async newWebContentsView(windowId: number, tab: Tab): Promise<WebContentsView> {
+		const thread = await storageService.getItemInternal("app-thread:" + tab.threadId);
+		const messages = await storageService.getItemInternal("app-chat-messages:" + tab.threadId);
 		const view = new WebContentsView({
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.js"),
 				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
-				additionalArguments: [`--window-id=${windowId}`, `--tab=${stringify(tab)}`],
+				additionalArguments: [
+					`--window-id=${windowId}`,
+					`--tab=${stringify(tab)}`,
+					`--thread=${stringify(thread)}`,
+					`--messages=${stringify(messages)}`,
+				],
 			},
 		});
 
@@ -89,8 +97,8 @@ export class TabService {
 		let activeTabId: string | null = null;
 		const views: WebContentsView[] = [];
 
-		tabs.forEach((tab) => {
-			const tabView = this.newWebContentsView(window.id, tab);
+		tabs.forEach(async (tab) => {
+			const tabView = await this.newWebContentsView(window.id, tab);
 			if (tab.active) {
 				activeTabView = tabView;
 				activeTabId = tab.id;
@@ -155,7 +163,27 @@ export class TabService {
 			active,
 			threadId: nanoid(),
 		};
-		const view = this.newWebContentsView(window.id, newTab);
+		const newThread: ThreadParmas = {
+			title: "new tab",
+			temperature: 0,
+			topP: 1,
+			frequencyPenalty: 0,
+			presencePenalty: 0,
+			maxTokens: 1000,
+			inputValue: "",
+			attachments: [],
+			mcpServers: [],
+			isThinkingActive: false,
+			isOnlineSearchActive: false,
+			isMCPActive: false,
+			selectedModel: null,
+			isPrivateChatActive: false,
+		};
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const newMessages: any = [];
+		await storageService.setItemInternal("app-thread:" + newTab.threadId, newThread);
+		await storageService.setItemInternal("app-chat-messages:" + newTab.threadId, newMessages);
+		const view = await this.newWebContentsView(window.id, newTab);
 		this.attachViewToWindow(window, view);
 		this.switchActiveTab(window, newTab.id);
 

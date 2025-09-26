@@ -1,11 +1,11 @@
+import { getAllModels, getModelsByProvider } from "$lib/api/models.js";
 import { DEFAULT_PROVIDERS } from "$lib/datas/providers.js";
-import type { ModelProvider } from "$lib/types/provider.js";
-import type { Model, ModelCreateInput, ModelUpdateInput } from "$lib/types/model.js";
-import { nanoid } from "nanoid";
-import { getModelsByProvider, getAllModels } from "$lib/api/models.js";
-import { toast } from "svelte-sonner";
-import { m } from "$lib/paraglide/messages.js";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { m } from "$lib/paraglide/messages.js";
+import type { ModelProvider } from "$lib/types/provider.js";
+import type { Model, ModelCreateInput, ModelUpdateInput } from "@shared/types";
+import { nanoid } from "nanoid";
+import { toast } from "svelte-sonner";
 
 export const persistedProviderState = new PersistedState<ModelProvider[]>(
 	"app-providers",

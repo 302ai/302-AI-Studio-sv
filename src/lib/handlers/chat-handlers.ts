@@ -10,7 +10,6 @@ export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
 		model?: string;
 		apiKey?: string;
 	} = body;
-	console.log(model, apiKey);
 	const openai = createOpenAI({
 		baseURL: "https://api.302.ai/v1",
 		apiKey: apiKey || "[REDACTED:sk-secret]",
@@ -21,8 +20,6 @@ export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
 		messages: convertToModelMessages(messages),
 		abortSignal,
 	});
-
-	console.log("dsadasdas");
 
 	return result.toUIMessageStream();
 };

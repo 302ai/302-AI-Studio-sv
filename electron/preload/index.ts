@@ -13,6 +13,8 @@ const tabdata = getAdditionalArgv("tab");
 const tab = tabdata ? parse(tabdata ?? "") : tabdata;
 
 const windowId = getAdditionalArgv("window-id") ?? "";
+const thread = parse(getAdditionalArgv("thread") ?? "{}");
+const messages = parse(getAdditionalArgv("messages") ?? "{}");
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
@@ -42,6 +44,8 @@ if (process.contextIsolated) {
 		contextBridge.exposeInMainWorld("windowId", windowId);
 		contextBridge.exposeInMainWorld("tab", tab);
 		contextBridge.exposeInMainWorld("app", app);
+		contextBridge.exposeInMainWorld("thread", thread);
+		contextBridge.exposeInMainWorld("messages", messages);
 	} catch (error) {
 		console.error("Preload: Error exposing services", { error });
 	}

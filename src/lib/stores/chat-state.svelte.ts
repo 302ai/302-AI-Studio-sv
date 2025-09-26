@@ -1,13 +1,12 @@
 import { openaiHandler } from "$lib/handlers/chat-handlers";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { FChatTransport } from "$lib/transport/f-chat-transport";
-import type { AttachmentFile, ChatMessage, MCPServer } from "$lib/types/chat";
-import type { Model } from "$lib/types/model";
-import { Chat } from "@ai-sdk/svelte";
-import { persistedProviderState, providerState } from "./provider-state.svelte";
+import type { ChatMessage } from "$lib/types/chat";
 
-export type { AttachmentFile, ChatMessage, MCPServer } from "$lib/types/chat";
-export type { Model } from "$lib/types/model";
+import { clone } from "$lib/utils/clone";
+import { Chat } from "@ai-sdk/svelte";
+import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
+import { persistedProviderState, providerState } from "./provider-state.svelte";
 
 export interface Thread {
 	id: string;
@@ -15,45 +14,15 @@ export interface Thread {
 
 // Updated ChatMessage interface using the standardized Model type
 // Chat parameters interface
-interface ThreadParmas {
-	title: string;
-	temperature: number | null;
-	topP: number | null;
-	frequencyPenalty: number | null;
-	presencePenalty: number | null;
-	maxTokens: number | null;
-	inputValue: string;
-	attachments: AttachmentFile[];
-	mcpServers: MCPServer[];
-	isThinkingActive: boolean;
-	isOnlineSearchActive: boolean;
-	isMCPActive: boolean;
-	selectedModel: Model | null;
-	isPrivateChatActive: boolean;
-}
 
+console.log("app-chat-messages:" + window.tab.threadId);
 export const persistedMessagesState = new PersistedState<ChatMessage[]>(
 	"app-chat-messages:" + window.tab.threadId,
-	[],
+	clone(window.messages),
 );
 export const persistedChatParamsState = new PersistedState<ThreadParmas>(
 	"app-thread:" + window.tab.threadId,
-	{
-		title: "",
-		temperature: null,
-		topP: null,
-		frequencyPenalty: null,
-		presencePenalty: null,
-		maxTokens: null,
-		inputValue: "",
-		attachments: [],
-		mcpServers: [],
-		isThinkingActive: false,
-		isOnlineSearchActive: false,
-		isMCPActive: false,
-		selectedModel: null,
-		isPrivateChatActive: false,
-	},
+	clone(window.thread),
 );
 
 export const chat = new Chat({
@@ -64,6 +33,7 @@ export const chat = new Chat({
 		},
 	}),
 	onFinish: ({ messages }) => {
+		console.log("更新完成", $state.snapshot(messages));
 		persistedMessagesState.current = messages;
 	},
 });
