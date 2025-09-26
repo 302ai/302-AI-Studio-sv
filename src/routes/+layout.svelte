@@ -1,6 +1,7 @@
 <script lang="ts">
 	import favicon from "$lib/assets/favicon.svg";
 	import { Toaster } from "$lib/components/ui/sonner";
+	import { FpsDisplay } from "$lib/components/ui/fps-display";
 	import { ModeWatcher } from "mode-watcher";
 	import "../app.css";
 
@@ -18,4 +19,5 @@
 	<main class="h-full overflow-hidden">
 		{@render children?.()}
 	</main>
+	<FpsDisplay />
 </div>
