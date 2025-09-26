@@ -26,6 +26,7 @@ export const persistedChatParamsState = new PersistedState<ThreadParmas>(
 );
 
 export const chat = new Chat({
+	messages: persistedMessagesState.current,
 	transport: new FChatTransport<ChatMessage>({
 		handler: openaiHandler,
 		body: {

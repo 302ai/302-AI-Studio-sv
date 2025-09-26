@@ -116,9 +116,10 @@ export class WindowService {
 				skipTaskbar: false,
 			}),
 			webPreferences: {
-				preload: path.join(import.meta.dirname, "../preload/index.js"),
+				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
 				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
+				sandbox: false,
 			},
 			roundedCorners: true,
 			show: false,
@@ -129,10 +130,11 @@ export class WindowService {
 
 		const shellWebContentsView = new WebContentsView({
 			webPreferences: {
-				preload: path.join(import.meta.dirname, "../preload/index.js"),
+				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
 				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
 				additionalArguments: [`--window-id=${shellWindow.id.toString()}`],
+				sandbox: false,
 			},
 		});
 		shellWindow.contentView.addChildView(shellWebContentsView);

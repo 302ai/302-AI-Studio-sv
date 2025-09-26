@@ -14,10 +14,14 @@ export default defineConfig({
 		lib: {
 			formats: ["cjs"],
 			entry: "electron/preload/index.ts",
-			fileName: "index",
+			fileName: () => "index.cjs",
 		},
 		rollupOptions: {
-			external: ["electron"],
+			external: ["electron", "node:fs"],
+			output: {
+				entryFileNames: "[name].cjs",
+				chunkFileNames: "[name].cjs",
+			},
 		},
 	},
 });

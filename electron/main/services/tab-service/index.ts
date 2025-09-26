@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import path from "node:path";
 import { stringify } from "superjson";
 import { ENVIRONMENT, isMac, TITLE_BAR_HEIGHT } from "../../constants";
+import { TempStorage } from "../../utils/temp-storage";
 import { storageService } from "../storage-service";
 import { tabStorage } from "../storage-service/tab-storage";
 
@@ -27,6 +28,7 @@ export class TabService {
 	private windowTabView: Map<number, WebContentsView[]>;
 	private windowActiveTabId: Map<number, string>;
 	private windowShellView: Map<number, WebContentsView>;
+	private tempFileRegistry: Map<string, string[]>; // tabId -> tempFilePaths[]
 
 	constructor() {
 		this.tabViewMap = new Map();
@@ -34,23 +36,31 @@ export class TabService {
 		this.windowTabView = new Map();
 		this.windowActiveTabId = new Map();
 		this.windowShellView = new Map();
+		this.tempFileRegistry = new Map();
 	}
 
 	// ******************************* Private Methods ******************************* //
 	private async newWebContentsView(windowId: number, tab: Tab): Promise<WebContentsView> {
 		const thread = await storageService.getItemInternal("app-thread:" + tab.threadId);
 		const messages = await storageService.getItemInternal("app-chat-messages:" + tab.threadId);
+
+		const threadFilePath = TempStorage.writeData(thread, "thread");
+		const messagesFilePath = TempStorage.writeData(messages, "messages");
+
+		this.tempFileRegistry.set(tab.id, [threadFilePath, messagesFilePath]);
+
 		const view = new WebContentsView({
 			webPreferences: {
-				preload: path.join(import.meta.dirname, "../preload/index.js"),
+				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
 				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
 				additionalArguments: [
 					`--window-id=${windowId}`,
 					`--tab=${stringify(tab)}`,
-					`--thread=${stringify(thread)}`,
-					`--messages=${stringify(messages)}`,
+					`--thread-file=${threadFilePath}`,
+					`--messages-file=${messagesFilePath}`,
 				],
+				sandbox: false,
 			},
 		});
 
@@ -89,6 +99,16 @@ export class TabService {
 		}
 
 		this.windowActiveTabId.set(window.id, newActiveTabId);
+	}
+
+	private cleanupTabTempFiles(tabId: string) {
+		const tempFiles = this.tempFileRegistry.get(tabId);
+		if (tempFiles) {
+			tempFiles.forEach((filePath) => {
+				TempStorage.cleanupFile(filePath);
+			});
+			this.tempFileRegistry.delete(tabId);
+		}
 	}
 
 	// ******************************* Main Process Methods ******************************* //
@@ -230,6 +250,8 @@ export class TabService {
 			view.webContents.close();
 		}
 
+		this.cleanupTabTempFiles(tabId);
+
 		this.tabViewMap.delete(tabId);
 		this.tabMap.delete(tabId);
 
@@ -259,6 +281,8 @@ export class TabService {
 				window.contentView.removeChildView(view);
 				view.webContents.close();
 			}
+
+			this.cleanupTabTempFiles(tabIdToClose);
 			this.tabViewMap.delete(tabIdToClose);
 			this.tabMap.delete(tabIdToClose);
 		}
@@ -287,6 +311,7 @@ export class TabService {
 				window.contentView.removeChildView(view);
 				view.webContents.close();
 			}
+			this.cleanupTabTempFiles(tabIdToClose);
 			this.tabViewMap.delete(tabIdToClose);
 			this.tabMap.delete(tabIdToClose);
 		}
@@ -308,6 +333,7 @@ export class TabService {
 
 		this.tabViewMap.entries().forEach(([tabId, view]) => {
 			window.contentView.removeChildView(view);
+			this.cleanupTabTempFiles(tabId);
 			this.tabViewMap.delete(tabId);
 			this.tabMap.delete(tabId);
 
