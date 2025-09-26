@@ -41,6 +41,8 @@
 	{#each message.parts as part, partIndex (partIndex)}
 		{#if part.type === "text"}
 			<MarkdownRenderer content={part.text} />
+		{:else if part.type === "reasoning"}
+			<div class="text-xs text-muted-foreground">{part.text}</div>
 		{/if}
 	{/each}
 
