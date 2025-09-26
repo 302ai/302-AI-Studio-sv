@@ -17,6 +17,8 @@ export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
 		maxTokens,
 		frequencyPenalty,
 		presencePenalty,
+		isThinkingActive,
+		isOnlineSearchActive,
 	}: {
 		baseUrl?: string;
 		model?: string;
@@ -26,6 +28,10 @@ export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
 		maxTokens?: number;
 		frequencyPenalty?: number;
 		presencePenalty?: number;
+
+		isThinkingActive?: boolean;
+		isOnlineSearchActive?: boolean;
+		isMCPActive?: boolean;
 	} = body;
 	const openai = createOpenAICompatible({
 		name: "302.AI",
@@ -39,6 +45,7 @@ export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
 			extractReasoningMiddleware({ tagName: "think" }),
 			extractReasoningMiddleware({ tagName: "thinking" }),
 		],
+		providerId: "302.AI",
 	});
 
 	const result = streamText({
@@ -50,6 +57,13 @@ export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
 		maxOutputTokens: maxTokens,
 		frequencyPenalty,
 		presencePenalty,
+		providerOptions: {
+			"302": {
+				"r1-fusion": isThinkingActive ?? false,
+				"web-search": isOnlineSearchActive ?? false,
+				"search-service": "search1api",
+			},
+		},
 	});
 
 	return result.toUIMessageStream({

@@ -235,6 +235,10 @@ export const chat = new Chat({
 			maxTokens: persistedChatParamsState.current.maxTokens,
 			frequencyPenalty: persistedChatParamsState.current.frequencyPenalty,
 			presencePenalty: persistedChatParamsState.current.presencePenalty,
+
+			isThinkingActive: persistedChatParamsState.current.isThinkingActive,
+			isOnlineSearchActive: persistedChatParamsState.current.isOnlineSearchActive,
+			isMCPActive: persistedChatParamsState.current.isMCPActive,
 		}),
 	}),
 	onFinish: ({ messages }) => {
