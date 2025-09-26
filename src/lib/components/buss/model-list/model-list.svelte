@@ -1,6 +1,4 @@
 <script lang="ts" module>
-	import type { Model } from "$lib/types/model.js";
-
 	interface Props {
 		models: Model[];
 		onModelEdit?: (model: Model) => void;
@@ -11,8 +9,9 @@
 </script>
 
 <script lang="ts">
-	import { m } from "$lib/paraglide/messages.js";
 	import { VirtualList } from "$lib/components/ui/virtual-list/index.js";
+	import { m } from "$lib/paraglide/messages.js";
+	import type { Model } from "@shared/types.js";
 	import { ModelListItem } from "./index.js";
 
 	const { models, onModelEdit, onModelDelete, onModelToggleCollected, onModelDuplicate }: Props =

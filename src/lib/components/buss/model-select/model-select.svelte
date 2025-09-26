@@ -17,11 +17,10 @@
 	import * as Command from "$lib/components/ui/command";
 	import * as ScrollArea from "$lib/components/ui/scroll-area";
 	import { m } from "$lib/paraglide/messages";
-	import { type Model } from "$lib/stores/chat-state.svelte";
-	import { persistedProviderState, persistedModelState } from "$lib/stores/provider-state.svelte";
-	import type { Model as ProviderModel } from "$lib/types/model";
+	import { persistedModelState, persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Check, ChevronRight } from "@lucide/svelte";
+	import type { Model, Model as ProviderModel } from "@shared/types";
 
 	const { trigger, selectedModel, onModelSelect }: ModelSelectProps = $props();
 	let isOpen = $state(false);

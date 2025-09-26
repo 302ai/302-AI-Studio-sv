@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import type { AttachmentFile } from "$lib/stores/chat-state.svelte";
+	import type { AttachmentFile } from "@shared/types";
 
 	export interface TextViewerProps {
 		attachment: AttachmentFile;

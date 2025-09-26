@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getFileIcon } from "$lib/components/buss/viewer/viewer-utils.js";
-	import type { AttachmentFile } from "$lib/types/chat";
+	import type { AttachmentFile } from "@shared/types";
 
 	import { cn } from "$lib/utils";
 	interface Props {

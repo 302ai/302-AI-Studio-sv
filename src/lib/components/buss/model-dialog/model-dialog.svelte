@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import type { Model, ModelCapability, ModelCreateInput, ModelType } from "$lib/types/model.js";
+	import type { Model, ModelCapability, ModelCreateInput, ModelType } from "@shared/types";
 
 	export interface Props {
 		open: boolean;

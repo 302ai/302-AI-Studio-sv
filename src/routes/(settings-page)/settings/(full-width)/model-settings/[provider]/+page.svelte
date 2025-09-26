@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { page } from "$app/state";
 	import { IconPicker } from "$lib/components/buss/icon-picker/index.js";
-	import { ModelList, type Model } from "$lib/components/buss/model-list/index.js";
-	import type { ModelCreateInput } from "$lib/types/model.js";
 	import { ModelDialog } from "$lib/components/buss/model-dialog/index.js";
+	import { ModelList } from "$lib/components/buss/model-list/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Input } from "$lib/components/ui/input/index.js";
 	import { Label } from "$lib/components/ui/label/index.js";
@@ -12,6 +11,7 @@
 	import { persistedModelState, providerState } from "$lib/stores/provider-state.svelte.js";
 	import type { ModelProvider } from "$lib/types/provider.js";
 	import { Eye, EyeOff } from "@lucide/svelte";
+	import type { Model, ModelCreateInput } from "@shared/types";
 	import { toast } from "svelte-sonner";
 
 	const apiTypes = [

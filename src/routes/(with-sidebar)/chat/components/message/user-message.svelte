@@ -11,7 +11,8 @@
 
 <script lang="ts">
 	import { ViewerPanel } from "$lib/components/buss/viewer/index.js";
-	import type { AttachmentFile, ChatMessage } from "$lib/types/chat";
+	import type { ChatMessage } from "$lib/types/chat";
+	import type { AttachmentFile } from "@shared/types";
 	import MessageActions from "./message-actions.svelte";
 	import MessageAttachment from "./message-attachment.svelte";
 

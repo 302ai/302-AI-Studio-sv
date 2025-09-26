@@ -1,6 +1,4 @@
 <script lang="ts" module>
-	import type { Model } from "$lib/types/model.js";
-
 	interface Props {
 		model: Model;
 		isLast?: boolean;
@@ -12,22 +10,23 @@
 </script>
 
 <script lang="ts">
-	import { cn } from "$lib/utils";
-	import { m } from "$lib/paraglide/messages.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
+	import { m } from "$lib/paraglide/messages.js";
+	import { cn } from "$lib/utils";
 	import {
-		Lightbulb,
-		Image,
-		Music,
-		Play,
-		Hammer,
-		PenLine,
-		Trash2,
-		Star,
 		Copy,
 		Files,
+		Hammer,
+		Image,
+		Lightbulb,
+		Music,
+		PenLine,
+		Play,
+		Star,
+		Trash2,
 	} from "@lucide/svelte";
+	import type { Model } from "@shared/types";
 	import { toast } from "svelte-sonner";
 
 	const {

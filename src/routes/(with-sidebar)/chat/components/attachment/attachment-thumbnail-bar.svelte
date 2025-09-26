@@ -2,9 +2,9 @@
 	import { ViewerPanel } from "$lib/components/buss/viewer/index.js";
 	import { formatFileSize, getFileIcon } from "$lib/components/buss/viewer/viewer-utils.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import type { AttachmentFile } from "$lib/types/chat";
 	import { cn } from "$lib/utils";
 	import { Eye, Trash2 } from "@lucide/svelte";
+	import type { AttachmentFile } from "@shared/types";
 
 	let attachments = $derived(chatState.attachments);
 	let selectedAttachment = $state<AttachmentFile | null>(null);

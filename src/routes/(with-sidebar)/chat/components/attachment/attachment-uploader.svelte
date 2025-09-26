@@ -3,10 +3,11 @@
 </script>
 
 <script lang="ts">
-	import { m } from "$lib/paraglide/messages.js";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
-	import { chatState, type AttachmentFile } from "$lib/stores/chat-state.svelte";
+	import { m } from "$lib/paraglide/messages.js";
+	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { Paperclip } from "@lucide/svelte";
+	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
 
 	let isMaxReached = $derived(chatState.attachments.length >= MAX_ATTACHMENT_COUNT);

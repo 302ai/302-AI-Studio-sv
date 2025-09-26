@@ -1,4 +1,3 @@
-import type { AttachmentFile } from "$lib/stores/chat-state.svelte";
 import {
 	File,
 	FileCode,
@@ -9,6 +8,7 @@ import {
 	Video,
 	type IconProps,
 } from "@lucide/svelte";
+import type { AttachmentFile } from "@shared/types";
 import type { Component } from "svelte";
 
 export type ViewerType = "image" | "audio" | "video" | "code" | "document" | "text" | "unknown";

@@ -1,9 +1,9 @@
 <script lang="ts">
+	import { ModelSelect } from "$lib/components/buss/model-select";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { m } from "$lib/paraglide/messages.js";
-	import { ModelSelect } from "$lib/components/buss/model-select";
-	import type { Model } from "$lib/stores/chat-state.svelte";
 	import { cn } from "$lib/utils";
+	import type { Model } from "@shared/types";
 
 	let selectedModel = $state<Model | null>(null);
 	function handleModelSelect(model: Model) {
