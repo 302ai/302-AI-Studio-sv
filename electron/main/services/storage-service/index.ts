@@ -2,7 +2,7 @@ import { createStorage, type StorageMeta, type StorageValue } from "@302ai/unsto
 import fsDriver from "@302ai/unstorage/drivers/fs";
 import { isDev } from "@electron/main/constants";
 import type { MigrationConfig, StorageItem, StorageMetadata, StorageOptions } from "@shared/types";
-import type { IpcMainInvokeEvent } from "electron";
+import type { IpcMainInvokeEvent, WebContents } from "electron";
 import { app, webContents } from "electron";
 import { join } from "path";
 import { getStorageVersion, setStorageVersion } from "./migration-utils";
@@ -24,7 +24,7 @@ export class StorageService<T extends StorageValue> {
 		this.migrationConfig = migrationConfig;
 	}
 
-	private ensureJsonExtension(key: string): string {
+	protected ensureJsonExtension(key: string): string {
 		return key.endsWith(".json") ? key : `${key}.json`;
 	}
 
@@ -131,7 +131,9 @@ export class StorageService<T extends StorageValue> {
 		await this.storage.setItem(this.ensureJsonExtension(key), versionedValue);
 		const allWebContents = webContents.getAllWebContents();
 		allWebContents.forEach((wc) => {
-			wc.send(`sync:${key}`, versionedValue);
+			if (!wc.isDestroyed()) {
+				wc.send(`sync:${key}`, versionedValue);
+			}
 		});
 	}
 
@@ -181,7 +183,7 @@ export class StorageService<T extends StorageValue> {
 		}
 	}
 
-	private addVersionIfNeeded(value: T): T {
+	protected addVersionIfNeeded(value: T): T {
 		if (!this.migrationConfig) {
 			return value;
 		}

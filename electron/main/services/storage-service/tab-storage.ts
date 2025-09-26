@@ -1,4 +1,5 @@
 import { prefixStorage, type Tab, type TabState } from "@shared/types";
+import { webContents } from "electron";
 import { isNull } from "es-toolkit";
 import { nanoid } from "nanoid";
 import { StorageService } from ".";
@@ -77,11 +78,26 @@ export class TabStorage extends StorageService<TabState> {
 	}
 
 	async removeWindowState(windowId: string) {
-		console.log("removeWindowState", windowId);
 		const tabState = await this.getItemInternal("tab-bar-state");
 		if (isNull(tabState)) return;
 		delete tabState[windowId];
 		await this.setItemInternal("tab-bar-state", tabState);
+	}
+
+	// Override setItemInternal to use the prefixed key for sync messages
+	async setItemInternal(key: string, value: TabState): Promise<void> {
+		const versionedValue = this.addVersionIfNeeded(value);
+		await this.storage.setItem(this.ensureJsonExtension(key), versionedValue);
+
+		// Use the prefixed key for sync messages to match frontend expectations
+		const prefixedKey = `TabStorage:${key}`;
+		const allWebContents = webContents.getAllWebContents();
+		allWebContents.forEach((wc) => {
+			if (!wc.isDestroyed()) {
+				wc.send(`sync:${prefixedKey}`, versionedValue);
+				console.log(`Sending sync message: sync:${prefixedKey}`, JSON.stringify(versionedValue));
+			}
+		});
 	}
 }
 

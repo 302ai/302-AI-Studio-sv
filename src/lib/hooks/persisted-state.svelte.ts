@@ -80,16 +80,18 @@ export class PersistedState<T extends StorageValue> {
 		this.#subscribe = createSubscriber((update) => {
 			this.#update = update;
 
-			ipcRenderer.on(`sync:${key}`, (_event, newValue) => {
+			const unsub = ipcRenderer.on(`sync:${key}`, (_event, newValue) => {
 				console.log("Synced key:", key, "Synced value:", newValue);
 				if (this.#syncing) return;
 				this.#syncing = true;
 				this.#current = newValue;
 				this.#update?.();
+				this.#syncing = false;
 			});
 
 			return () => {
 				this.#update = undefined;
+				unsub();
 			};
 		});
 	}
