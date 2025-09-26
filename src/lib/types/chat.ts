@@ -3,6 +3,7 @@ import { z } from "zod/v4";
 
 export const messageMetadataSchema = z.object({
 	createdAt: z.string(),
+	model: z.string(),
 });
 
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>;

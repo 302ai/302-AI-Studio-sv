@@ -38,5 +38,8 @@ export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
 		presencePenalty,
 	});
 
-	return result.toUIMessageStream();
+	return result.toUIMessageStream({
+		originalMessages: messages,
+		messageMetadata: () => ({ model: model, createdAt: new Date().toISOString() }),
+	});
 };

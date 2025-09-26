@@ -1,10 +1,11 @@
+import type { ChatMessage } from "$lib/types/chat";
 import type { Resolvable } from "@ai-sdk/provider-utils";
 import { resolve } from "@ai-sdk/provider-utils";
 import type { ChatTransport, UIMessage, UIMessageChunk } from "ai";
 
 export type HF = (options: {
 	chatId: string;
-	messages: UIMessage[];
+	messages: ChatMessage[];
 	body: Record<string, unknown>;
 	headers: Record<string, string>;
 	abortSignal?: AbortSignal;
@@ -52,7 +53,7 @@ export type FChatTransportOptions<UI_MESSAGE extends UIMessage> = {
 	prepareReconnectToStreamRequest?: PrepareReconnectToStreamRequest;
 };
 
-export class FChatTransport<UI_MESSAGE extends UIMessage> implements ChatTransport<UI_MESSAGE> {
+export class FChatTransport<UI_MESSAGE extends ChatMessage> implements ChatTransport<UI_MESSAGE> {
 	protected handler: HF;
 	protected headers: FChatTransportOptions<UI_MESSAGE>["headers"];
 	protected body: FChatTransportOptions<UI_MESSAGE>["body"];
