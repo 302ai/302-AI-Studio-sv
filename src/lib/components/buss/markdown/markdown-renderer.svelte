@@ -6,7 +6,7 @@
 		PresetName,
 	} from "markdown-it";
 	import markdownIt from "markdown-it";
-	import Token from "markdown-it/lib/token.mjs";
+	import type Token from "markdown-it/lib/token.mjs";
 	type MarkdownItInstance = ReturnType<typeof markdownIt>;
 	type MarkdownEnvironment = Record<string, unknown>;
 	type MarkdownPlugin = PluginSimple | PluginWithOptions<unknown>;
@@ -24,6 +24,11 @@
 	}
 	type TransformRenderedHtml = (html: string, context: TransformContext) => string;
 	type InstanceCallback = (instance: MarkdownItInstance) => void;
+	interface RenderedBlock {
+		id: string;
+		html: string;
+		tokens: Token[];
+	}
 	interface Props {
 		content: string;
 		preset?: PresetName | null;
@@ -40,6 +45,50 @@
 		linkify: true,
 		typographer: true,
 	});
+	const hashString = (input: string): string => {
+		let hash = 2166136261;
+		for (let index = 0; index < input.length; index += 1) {
+			hash ^= input.charCodeAt(index);
+			hash = Math.imul(hash, 16777619);
+		}
+		return (hash >>> 0).toString(36);
+	};
+	const createBlockId = (tokens: Token[], index: number): string => {
+		const signature = tokens
+			.map((token) => `${token.type}:${token.tag}:${token.level}:${token.nesting}:${token.content}`)
+			.join("|");
+		return `${index}-${hashString(signature)}`;
+	};
+	const segmentTokens = (tokens: Token[]): Token[][] => {
+		const segments: Token[][] = [];
+		let cursor = 0;
+		while (cursor < tokens.length) {
+			const token = tokens[cursor];
+			if (!token.block || token.level !== 0 || token.nesting === -1) {
+				cursor += 1;
+				continue;
+			}
+			if (token.nesting === 0) {
+				segments.push([token]);
+				cursor += 1;
+				continue;
+			}
+			const start = cursor;
+			let depth = token.nesting;
+			cursor += 1;
+			while (cursor < tokens.length && depth > 0) {
+				const current = tokens[cursor];
+				if (current.nesting === 1) {
+					depth += 1;
+				} else if (current.nesting === -1) {
+					depth -= 1;
+				}
+				cursor += 1;
+			}
+			segments.push(tokens.slice(start, cursor));
+		}
+		return segments;
+	};
 	const normalizePlugins = (plugins: MarkdownPluginInput[] = []): MarkdownPluginObject[] =>
 		plugins.map((entry) => {
 			if (typeof entry === "function") {
@@ -88,16 +137,41 @@
 		inline: boolean;
 		env: MarkdownEnvironment | undefined;
 		transform: TransformRenderedHtml | undefined;
-	}): string => {
-		const source = content;
+	}): RenderedBlock[] => {
 		const envState: MarkdownEnvironment = env ? { ...env } : {};
-		const tokens = inline
-			? instance.parseInline(source, envState)
-			: instance.parse(source, envState);
-		const html = inline
-			? instance.renderer.renderInline(tokens, instance.options, envState)
-			: instance.renderer.render(tokens, instance.options, envState);
-		return transform?.(html, { env: envState, tokens, renderer: instance }) ?? html;
+		if (inline) {
+			const inlineTokens = instance.parseInline(content, envState);
+			const html = instance.renderer.renderInline(inlineTokens, instance.options, envState);
+			const transformed =
+				transform?.(html, {
+					env: envState,
+					tokens: inlineTokens,
+					renderer: instance,
+				}) ?? html;
+			return [
+				{
+					id: createBlockId(inlineTokens, 0),
+					html: transformed,
+					tokens: inlineTokens,
+				},
+			];
+		}
+		const tokens = instance.parse(content, envState);
+		const blocks = segmentTokens(tokens);
+		return blocks.map((blockTokens, index) => {
+			const blockHtml = instance.renderer.render(blockTokens, instance.options, envState);
+			const transformed =
+				transform?.(blockHtml, {
+					env: envState,
+					tokens: blockTokens,
+					renderer: instance,
+				}) ?? blockHtml;
+			return {
+				id: createBlockId(blockTokens, index),
+				html: transformed,
+				tokens: blockTokens,
+			};
+		});
 	};
 	const props: Props = $props();
 
@@ -111,7 +185,7 @@
 		}),
 	);
 
-	const rendered = $derived.by(() =>
+	const renderedBlocks = $derived.by(() =>
 		renderMarkdown({
 			instance: renderer,
 			content: props.content,
@@ -123,5 +197,8 @@
 </script>
 
 <div class="prose max-w-none">
-	{@html rendered}
+	{#each renderedBlocks as block (block.id)}
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+		{@html block.html}
+	{/each}
 </div>
