@@ -1,11 +1,11 @@
 <script lang="ts">
 	import sendMessageIcon from "$lib/assets/send-message.svg";
-	import { m } from "$lib/paraglide/messages.js";
 	import { ModelSelect } from "$lib/components/buss/model-select";
 	import { Button } from "$lib/components/ui/button";
 	import { Separator } from "$lib/components/ui/separator";
 	import { Textarea } from "$lib/components/ui/textarea";
-	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { m } from "$lib/paraglide/messages.js";
+	import { chat, chatState } from "$lib/stores/chat-state.svelte";
 	import { cn } from "$lib/utils";
 	import { toast } from "svelte-sonner";
 	import { match } from "ts-pattern";
@@ -92,6 +92,7 @@
 				/>
 
 				<button
+					disabled={chat.status === "streaming"}
 					class={cn(
 						"flex size-9 items-center justify-center rounded-[10px] bg-chat-send-message-button text-foreground hover:!bg-chat-send-message-button/80",
 						"disabled:cursor-not-allowed disabled:bg-chat-send-message-button/50 disabled:hover:!bg-chat-send-message-button/50",

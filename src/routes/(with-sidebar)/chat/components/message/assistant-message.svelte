@@ -12,6 +12,7 @@
 	import { MarkdownRenderer } from "$lib/components/buss/markdown/index.js";
 	import { ModelIcon } from "$lib/components/buss/model-icon/index.js";
 	import { getLocale } from "$lib/paraglide/runtime";
+	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
 	import MessageActions from "./message-actions.svelte";
 	import { formatTimeAgo } from "./utils";
@@ -40,7 +41,12 @@
 
 	{#each message.parts as part, partIndex (partIndex)}
 		{#if part.type === "text"}
-			<MarkdownRenderer content={part.text} />
+			<MarkdownRenderer
+				content={part.text}
+				codeTheme={persistedThemeState.current.shouldUseDarkColors
+					? "vitesse-dark"
+					: "vitesse-light"}
+			/>
 		{:else if part.type === "reasoning"}
 			<div class="text-xs text-muted-foreground">{part.text}</div>
 		{/if}
