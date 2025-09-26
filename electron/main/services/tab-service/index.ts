@@ -155,17 +155,6 @@ export class TabService {
 		}
 	}
 
-	private removeTab(window: BrowserWindow, tabId: string) {
-		const view = this.tabViewMap.get(tabId);
-		if (!isUndefined(view)) {
-			window.contentView.removeChildView(view);
-			view.webContents.close({ waitForBeforeUnload: true });
-		} else {
-			this.tabViewMap.delete(tabId);
-			this.tabMap.delete(tabId);
-		}
-	}
-
 	// ******************************* Main Process Methods ******************************* //
 	async initWindowTabs(window: BrowserWindow, tabs: Tab[]): Promise<void> {
 		let activeTabView: WebContentsView | null = null;
@@ -199,27 +188,6 @@ export class TabService {
 
 	getTabById(tabId: string): Tab | undefined {
 		return this.tabMap.get(tabId);
-	}
-
-	transferTabToNewWindow(fromWindowId: number, tabId: string): void {
-		const fromWindow = BrowserWindow.fromId(fromWindowId);
-		if (isNull(fromWindow)) return;
-
-		const view = this.tabViewMap.get(tabId);
-		if (isUndefined(view)) return;
-
-		fromWindow.contentView.removeChildView(view);
-
-		const windowViews = this.windowTabView.get(fromWindowId);
-		if (!isUndefined(windowViews)) {
-			const updatedViews = windowViews.filter((v) => v !== view);
-			this.windowTabView.set(fromWindowId, updatedViews);
-		}
-
-		const activeTabId = this.windowActiveTabId.get(fromWindowId);
-		if (activeTabId === tabId) {
-			this.windowActiveTabId.delete(fromWindowId);
-		}
 	}
 
 	async removeWindowTabs(windowId: number) {
@@ -256,6 +224,18 @@ export class TabService {
 				height: height - TITLE_BAR_HEIGHT - 1,
 			});
 		});
+	}
+
+	removeTab(window: BrowserWindow, tabId: string) {
+		console.log("Removing Tab --->", tabId);
+		const view = this.tabViewMap.get(tabId);
+		if (!isUndefined(view)) {
+			window.contentView.removeChildView(view);
+			view.webContents.close({ waitForBeforeUnload: true });
+		} else {
+			this.tabViewMap.delete(tabId);
+			this.tabMap.delete(tabId);
+		}
 	}
 
 	// ******************************* IPC Methods ******************************* //

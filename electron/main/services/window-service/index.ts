@@ -174,13 +174,18 @@ export class WindowService {
 		});
 
 		shellWindow.addListener("close", async (e) => {
+			e.preventDefault();
+
 			const windowCount = this.windows.length;
 			const currentWindowId = shellWindow.id;
 			const isMainWindow = this.mainWindowId === currentWindowId;
 			const isLastWindow = windowCount === 1;
 			const isQuittingApp = this.isCMDQ;
 
-			console.log("close", windowCount, currentWindowId, isMainWindow);
+			console.log("closing --->", currentWindowId);
+			console.log("isMainWindow --->", isMainWindow);
+			console.log("isLastWindow --->", isLastWindow);
+			console.log("isQuittingApp --->", isQuittingApp);
 
 			// macOS: Hide the last window instead of closing it (unless quitting with CMD+Q)
 			if (isLastWindow && isMac && !isQuittingApp) {
@@ -201,13 +206,16 @@ export class WindowService {
 			// Clean up window data (skip cleanup when quitting app as entire app will exit)
 			const shouldCleanup = !isQuittingApp && (!isMainWindow || windowCount > 1);
 			if (shouldCleanup) {
+				console.log("shouldCleanup ---", true);
 				await tabService.removeWindowTabs(currentWindowId);
 				tabStorage.removeWindowState(currentWindowId.toString());
 			}
+
+			shellWindow.destroy();
 		});
 
 		shellWindow.addListener("closed", () => {
-			console.log("window closed", shellWindow.id);
+			console.log("window closed, id: ", shellWindow.id);
 			this.removeWindow(shellWindow.id);
 		});
 
@@ -221,7 +229,7 @@ export class WindowService {
 		const triggerTab = tabService.getTabById(triggerTabId);
 		if (isUndefined(triggerTab)) return;
 
-		tabService.transferTabToNewWindow(fromWindow.id, triggerTabId);
+		tabService.removeTab(fromWindow, triggerTabId);
 
 		const { shellWindow, shellView } = await this.createShellWindow();
 		const newShellWindowId = shellWindow.id;

@@ -36,6 +36,7 @@ export class StorageService<T extends StorageValue> {
 		allWebContents.forEach((wc) => {
 			if (wc !== event.sender && !wc.isDestroyed()) {
 				wc.send(`sync:${key}`, versionedValue);
+				console.log("versionedValue", JSON.stringify(versionedValue));
 			}
 		});
 	}
@@ -128,6 +129,10 @@ export class StorageService<T extends StorageValue> {
 	async setItemInternal(key: string, value: T): Promise<void> {
 		const versionedValue = this.addVersionIfNeeded(value);
 		await this.storage.setItem(this.ensureJsonExtension(key), versionedValue);
+		const allWebContents = webContents.getAllWebContents();
+		allWebContents.forEach((wc) => {
+			wc.send(`sync:${key}`, versionedValue);
+		});
 	}
 
 	async hasItemInternal(key: string): Promise<boolean> {
