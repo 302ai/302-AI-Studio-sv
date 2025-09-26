@@ -97,7 +97,7 @@ export class TabService {
 		let activeTabId: string | null = null;
 		const views: WebContentsView[] = [];
 
-		tabs.forEach(async (tab) => {
+		for (const tab of tabs) {
 			const tabView = await this.newWebContentsView(window.id, tab);
 			if (tab.active) {
 				activeTabView = tabView;
@@ -108,7 +108,7 @@ export class TabService {
 			}
 			this.tabMap.set(tab.id, tab);
 			views.push(tabView);
-		});
+		}
 
 		this.windowTabView.set(window.id, views);
 
