@@ -119,21 +119,14 @@
 		"electron-squirrel-startup": "^1.0.1",
 		"electron-window-state": "^5.0.3",
 		"es-toolkit": "^1.39.10",
-		"highlight.js": "^11.11.1",
 		"ldrs": "^1.1.7",
 		"mode-watcher": "^1.1.0",
 		"nanoid": "^5.1.5",
-		"rehype-highlight": "^7.0.2",
-		"rehype-stringify": "^10.0.1",
-		"remark-gfm": "^4.0.1",
-		"remark-parse": "^11.0.0",
-		"remark-rehype": "^11.1.2",
 		"runed": "^0.31.1",
 		"superjson": "^2.2.2",
 		"svelte-dnd-action": "^0.9.65",
 		"svelte-image-viewer": "^5.0.0",
-		"ts-pattern": "^5.8.0",
-		"unified": "^11.0.5"
+		"ts-pattern": "^5.8.0"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": [
