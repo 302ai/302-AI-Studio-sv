@@ -125,6 +125,8 @@
 		"mode-watcher": "^1.1.0",
 		"nanoid": "^5.1.5",
 		"runed": "^0.31.1",
+		"shiki": "^3.13.0",
+		"shiki-stream": "^0.1.2",
 		"superjson": "^2.2.2",
 		"svelte-dnd-action": "^0.9.65",
 		"svelte-image-viewer": "^5.0.0",

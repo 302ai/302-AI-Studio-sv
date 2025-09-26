@@ -1,4 +1,3 @@
-/* Markdown Prose Styles */
 .prose {
 	color: #374151;
 	max-width: 65ch;
@@ -62,25 +61,6 @@
 	font-size: 0.875rem;
 	font-weight: 600;
 	color: #111827;
-}
-
-.prose pre {
-	background-color: #f9fafb;
-	border-radius: 0.5rem;
-	padding: 1rem;
-	overflow-x: auto;
-	font-size: 0.875rem;
-	line-height: 1.714;
-	margin-top: 1.714rem;
-	margin-bottom: 1.714rem;
-}
-
-.prose pre code {
-	background-color: transparent;
-	padding: 0;
-	border-radius: 0;
-	font-weight: 400;
-	color: inherit;
 }
 
 .prose ul {
@@ -183,6 +163,41 @@
 	padding-right: 0.571rem;
 	padding-bottom: 0.571rem;
 	padding-left: 0.571rem;
+}
+
+.prose pre.shiki {
+	background-color: #f9fafb;
+	border-radius: 0.5rem;
+	padding: 1rem;
+	margin-top: 1.714rem;
+	margin-bottom: 1.714rem;
+	border-radius: 0.75rem;
+	overflow-x: auto;
+	background-color: var(--shiki-background, inherit);
+	color: var(--shiki-foreground, inherit);
+}
+
+.prose pre.shiki code {
+	background-color: transparent;
+	display: block;
+	white-space: normal;
+	line-height: 1.45;
+	border-radius: 0;
+	font-weight: 400;
+	color: inherit;
+}
+
+.prose pre.shiki .line {
+	display: block;
+	white-space: pre;
+	margin: 0;
+	padding: 0;
+}
+
+.prose pre.shiki .line > span,
+.prose pre.shiki .token {
+	display: inline;
+	white-space: pre;
 }
 
 /* Dark Mode Support */

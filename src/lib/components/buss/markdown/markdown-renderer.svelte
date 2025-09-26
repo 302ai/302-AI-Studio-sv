@@ -1,12 +1,15 @@
 <script lang="ts">
-	import type {
-		Options as MarkdownItOptions,
-		PluginSimple,
-		PluginWithOptions,
-		PresetName,
+	import markdownIt, {
+		type Options as MarkdownItOptions,
+		type PluginSimple,
+		type PluginWithOptions,
+		type PresetName,
 	} from "markdown-it";
-	import markdownIt from "markdown-it";
 	import type Token from "markdown-it/lib/token.mjs";
+	import { onMount } from "svelte";
+	import CodeBlock from "./code-block.svelte";
+	import { DEFAULT_THEME, ensureHighlighter } from "./highlighter";
+
 	type MarkdownItInstance = ReturnType<typeof markdownIt>;
 	type MarkdownEnvironment = Record<string, unknown>;
 	type MarkdownPlugin = PluginSimple | PluginWithOptions<unknown>;
@@ -24,11 +27,7 @@
 	}
 	type TransformRenderedHtml = (html: string, context: TransformContext) => string;
 	type InstanceCallback = (instance: MarkdownItInstance) => void;
-	interface RenderedBlock {
-		id: string;
-		html: string;
-		tokens: Token[];
-	}
+
 	interface Props {
 		content: string;
 		preset?: PresetName | null;
@@ -39,59 +38,33 @@
 		configure?: ConfigureMarkdownIt;
 		onInstance?: InstanceCallback;
 		transform?: TransformRenderedHtml;
+		codeTheme?: string;
 	}
+
+	type BlockDescriptor =
+		| { id: string; kind: "html"; html: string }
+		| {
+				id: string;
+				kind: "code";
+				code: string;
+				language: string | null;
+				meta: string | null;
+		  };
+
 	const DEFAULT_OPTIONS: Readonly<MarkdownItOptions> = Object.freeze({
 		html: false,
 		linkify: true,
 		typographer: true,
 	});
-	const hashString = (input: string): string => {
-		let hash = 2166136261;
-		for (let index = 0; index < input.length; index += 1) {
-			hash ^= input.charCodeAt(index);
-			hash = Math.imul(hash, 16777619);
-		}
-		return (hash >>> 0).toString(36);
-	};
-	const tokensSignature = (tokens: Token[]): string =>
-		tokens
-			.map((token) => `${token.type}:${token.tag}:${token.level}:${token.nesting}:${token.content}`)
-			.join("|");
-	const allocateBlockId = (signature: string, counts: Map<string, number>): string => {
-		const occurrence = counts.get(signature) ?? 0;
-		counts.set(signature, occurrence + 1);
-		return `${hashString(signature)}-${occurrence}`;
-	};
-	const segmentTokens = (tokens: Token[]): Token[][] => {
-		const segments: Token[][] = [];
-		let cursor = 0;
-		while (cursor < tokens.length) {
-			const token = tokens[cursor];
-			if (!token.block || token.level !== 0 || token.nesting === -1) {
-				cursor += 1;
-				continue;
-			}
-			if (token.nesting === 0) {
-				segments.push([token]);
-				cursor += 1;
-				continue;
-			}
-			const start = cursor;
-			let depth = token.nesting;
-			cursor += 1;
-			while (cursor < tokens.length && depth > 0) {
-				const current = tokens[cursor];
-				if (current.nesting === 1) {
-					depth += 1;
-				} else if (current.nesting === -1) {
-					depth -= 1;
-				}
-				cursor += 1;
-			}
-			segments.push(tokens.slice(start, cursor));
-		}
-		return segments;
-	};
+
+	const props: Props = $props();
+	void props.content;
+
+	let renderer: MarkdownItInstance;
+	let blocks = $state<BlockDescriptor[]>([]);
+	let lastConfigSignature = "";
+	let lastContentSnapshot = "";
+
 	const normalizePlugins = (plugins: MarkdownPluginInput[] = []): MarkdownPluginObject[] =>
 		plugins.map((entry) => {
 			if (typeof entry === "function") {
@@ -103,110 +76,124 @@
 			}
 			return entry as MarkdownPluginObject;
 		});
-	const createInstance = ({
-		preset,
-		options,
-		plugins,
-		configure,
-		onInstance,
-	}: {
-		preset: PresetName | null | undefined;
-		options: MarkdownItOptions | undefined;
-		plugins: MarkdownPluginInput[] | undefined;
-		configure: ConfigureMarkdownIt | undefined;
-		onInstance: InstanceCallback | undefined;
-	}): MarkdownItInstance => {
+
+	const createRenderer = (): MarkdownItInstance => {
 		const effectiveOptions = {
 			...DEFAULT_OPTIONS,
-			...(options ?? {}),
+			...(props.options ?? {}),
 		};
-		const instance = preset ? markdownIt(preset, effectiveOptions) : markdownIt(effectiveOptions);
-		for (const { plugin, options: pluginOptions } of normalizePlugins(plugins)) {
-			instance.use(plugin as PluginWithOptions<unknown>, pluginOptions);
+		const instance = props.preset
+			? markdownIt(props.preset, effectiveOptions)
+			: markdownIt(effectiveOptions);
+		for (const { plugin, options } of normalizePlugins(props.plugins ?? [])) {
+			instance.use(plugin as PluginWithOptions<unknown>, options);
 		}
-		configure?.(instance);
-		onInstance?.(instance);
+		props.configure?.(instance);
+		props.onInstance?.(instance);
 		return instance;
 	};
-	const renderMarkdown = ({
-		instance,
-		content,
-		inline,
-		env,
-		transform,
-	}: {
-		instance: MarkdownItInstance;
-		content: string;
-		inline: boolean;
-		env: MarkdownEnvironment | undefined;
-		transform: TransformRenderedHtml | undefined;
-	}): RenderedBlock[] => {
-		const envState: MarkdownEnvironment = env ? { ...env } : {};
-		if (inline) {
-			const inlineTokens = instance.parseInline(content, envState);
-			const signatureCounts = new Map<string, number>();
-			const signature = tokensSignature(inlineTokens);
-			const html = instance.renderer.renderInline(inlineTokens, instance.options, envState);
-			const transformed =
-				transform?.(html, {
-					env: envState,
-					tokens: inlineTokens,
-					renderer: instance,
-				}) ?? html;
-			return [
+
+	const collectBlocks = (markdown: string) => {
+		renderer = createRenderer();
+
+		const envState: MarkdownEnvironment = props.env ? { ...props.env } : {};
+		const tokens = props.inline
+			? renderer.parseInline(markdown, envState)
+			: renderer.parse(markdown, envState);
+
+		if (props.inline) {
+			const html = renderer.renderer.render(tokens, renderer.options, envState);
+			blocks = [
 				{
-					id: allocateBlockId(signature, signatureCounts),
-					html: transformed,
-					tokens: inlineTokens,
+					id: "inline-html",
+					kind: "html",
+					html: props.transform?.(html, { env: envState, tokens, renderer }) ?? html,
 				},
 			];
+			return;
 		}
-		const tokens = instance.parse(content, envState);
-		const blocks = segmentTokens(tokens);
-		const signatureCounts = new Map<string, number>();
-		return blocks.map((blockTokens) => {
-			const signature = tokensSignature(blockTokens);
-			const id = allocateBlockId(signature, signatureCounts);
-			const blockHtml = instance.renderer.render(blockTokens, instance.options, envState);
+
+		const descriptors: BlockDescriptor[] = [];
+		let sliceStart = 0;
+		let htmlEnv = { ...envState };
+		let codeIndex = 0;
+
+		const pushHtml = (tokenSlice: Token[]) => {
+			if (!tokenSlice.length) return;
+			const html = renderer.renderer.render(tokenSlice, renderer.options, htmlEnv);
 			const transformed =
-				transform?.(blockHtml, {
-					env: envState,
-					tokens: blockTokens,
-					renderer: instance,
-				}) ?? blockHtml;
-			return {
-				id,
-				html: transformed,
-				tokens: blockTokens,
-			};
-		});
+				props.transform?.(html, {
+					env: htmlEnv,
+					tokens: tokenSlice,
+					renderer,
+				}) ?? html;
+			descriptors.push({ id: `html-${descriptors.length}`, kind: "html", html: transformed });
+			htmlEnv = { ...envState };
+		};
+
+		for (let index = 0; index < tokens.length; index += 1) {
+			const token = tokens[index];
+			if (token.type === "fence" && token.tag === "code") {
+				const slice = tokens.slice(sliceStart, index);
+				pushHtml(slice);
+
+				descriptors.push({
+					id: `code-${codeIndex}`,
+					kind: "code",
+					code: token.content ?? "",
+					language: (token.info || "").split(/\s+/)[0] || null,
+					meta: token.info?.replace(/^\s*\S+\s*/, "")?.trim() || null,
+				});
+				codeIndex += 1;
+				sliceStart = index + 1;
+			}
+		}
+
+		if (sliceStart < tokens.length) {
+			const remaining = tokens.slice(sliceStart);
+			pushHtml(remaining);
+		}
+
+		blocks = descriptors;
 	};
-	const props: Props = $props();
 
-	const renderer = $derived.by(() =>
-		createInstance({
-			preset: props.preset ?? "default",
-			options: props.options,
-			plugins: props.plugins ?? [],
-			configure: props.configure,
-			onInstance: props.onInstance,
-		}),
-	);
+	onMount(() => {
+		ensureHighlighter().catch((error) => {
+			console.error("Failed to warm up highlighter", error);
+		});
+	});
 
-	const renderedBlocks = $derived.by(() =>
-		renderMarkdown({
-			instance: renderer,
-			content: props.content,
-			inline: props.inline ?? false,
-			env: props.env,
-			transform: props.transform,
-		}),
-	);
+	$effect(() => {
+		const configSignature = JSON.stringify([
+			props.preset ?? "default",
+			props.codeTheme ?? DEFAULT_THEME,
+			props.options ?? null,
+			props.plugins ?? null,
+			props.configure ? true : false,
+			props.inline ? "inline" : "block",
+		]);
+		const { content } = props;
+		if (configSignature !== lastConfigSignature || content !== lastContentSnapshot) {
+			lastConfigSignature = configSignature;
+			lastContentSnapshot = content;
+			collectBlocks(content);
+		}
+	});
 </script>
 
 <div class="prose max-w-none">
-	{#each renderedBlocks as block (block.id)}
-		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-		{@html block.html}
+	{#each blocks as block (block.id)}
+		{#if block.kind === "code"}
+			<CodeBlock
+				blockId={block.id}
+				code={block.code}
+				language={block.language}
+				meta={block.meta}
+				theme={props.codeTheme ?? DEFAULT_THEME}
+			/>
+		{:else}
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html block.html}
+		{/if}
 	{/each}
 </div>
