@@ -1,6 +1,7 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import type { Tab, TabState, TabType } from "@shared/types";
 import { isNull, isUndefined } from "es-toolkit/predicate";
+import { parse } from "superjson";
 import { match } from "ts-pattern";
 
 export const persistedTabState = new PersistedState<TabState>(
@@ -58,7 +59,9 @@ class TabBarState {
 		}));
 	}
 
+	// ******************************* Public Methods ******************************* //
 	async handleTabClick(tab: Tab) {
+		if (this.tabs.length === 1) return;
 		const targetTab = this.tabs.find((t) => t.id === tab.id);
 		if (isUndefined(targetTab)) return;
 
@@ -147,7 +150,7 @@ class TabBarState {
 		const unserializedTab = await tabService.handleNewTab(title, type, active);
 		if (!unserializedTab) return;
 
-		const tab = JSON.parse(unserializedTab);
+		const tab = parse<Tab>(unserializedTab);
 		const updatedTabs = active
 			? [...this.tabs.map((t) => ({ ...t, active: false })), tab]
 			: [...this.tabs, tab];

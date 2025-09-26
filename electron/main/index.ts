@@ -56,15 +56,18 @@ app.on("window-all-closed", () => {
 // macOS specific handling for Cmd+Q to ensure proper cleanup
 if (isMac) {
 	// Handle Cmd+Q (or menu quit) - ensure window close listeners fire
-	app.on("before-quit", (_event) => {
+	app.on("before-quit", (event) => {
+		event.preventDefault();
 		// Enable force quitting mode to bypass macOS hide behavior
-		windowService.setForceQuitting(true);
+		windowService.setCMDQ(true);
 
 		// Close windows in reverse order so main window closes last
 		const windows = windowService.getOrderedWindows().reverse();
 		windows.forEach((window) => {
 			window.close();
 		});
+
+		app.exit();
 	});
 }
 

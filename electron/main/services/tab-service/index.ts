@@ -68,12 +68,56 @@ export class TabService {
 
 		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
 			view.webContents.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-			view.webContents.on("did-frame-finish-load", () => {
+			view.webContents.once("did-frame-finish-load", () => {
 				view.webContents.openDevTools({ mode: "detach" });
 			});
 		} else {
 			view.webContents.loadURL("app://localhost");
 		}
+
+		const capturedTabId = tab.id;
+		const capturedWindowId = windowId;
+		view.webContents.on("destroyed", () => {
+			console.log(`Tab ${capturedTabId} webContents destroyed, cleaning up all mappings`);
+			this.tabViewMap.delete(capturedTabId);
+			this.tabMap.delete(capturedTabId);
+
+			const windowViews = this.windowTabView.get(capturedWindowId);
+			if (!isUndefined(windowViews)) {
+				const updatedViews = windowViews.filter((v) => v !== view);
+				this.windowTabView.set(capturedWindowId, updatedViews);
+			}
+
+			const activeTabId = this.windowActiveTabId.get(capturedWindowId);
+			if (activeTabId === capturedTabId) {
+				this.windowActiveTabId.delete(capturedWindowId);
+			}
+
+			this.cleanupTabTempFiles(capturedTabId);
+
+			// Check if all mappings related to the destroyed tab have been properly cleaned up
+			console.log(
+				"Checking tabViewMap ---> ",
+				this.tabViewMap.has(capturedTabId) ? "failed" : "passed",
+			);
+			console.log("Checking tabMap ---> ", this.tabMap.has(capturedTabId) ? "failed" : "passed");
+			console.log(
+				"Checking windowTabView ---> ",
+				(this.windowTabView.get(capturedWindowId)?.includes(view) ?? false) ? "failed" : "passed",
+			);
+			console.log(
+				"Checking windowActiveTabId ---> ",
+				this.windowActiveTabId.get(capturedWindowId) === capturedTabId ? "failed" : "passed",
+			);
+			console.log(
+				"Checking tempFileRegistry ---> ",
+				this.tempFileRegistry.has(capturedTabId) ? "failed" : "passed",
+			);
+		});
+
+		view.webContents.on("will-prevent-unload", () => {
+			console.log("view will prevent unload");
+		});
 
 		return view;
 	}
@@ -111,6 +155,17 @@ export class TabService {
 		}
 	}
 
+	private removeTab(window: BrowserWindow, tabId: string) {
+		const view = this.tabViewMap.get(tabId);
+		if (!isUndefined(view)) {
+			window.contentView.removeChildView(view);
+			view.webContents.close({ waitForBeforeUnload: true });
+		} else {
+			this.tabViewMap.delete(tabId);
+			this.tabMap.delete(tabId);
+		}
+	}
+
 	// ******************************* Main Process Methods ******************************* //
 	async initWindowTabs(window: BrowserWindow, tabs: Tab[]): Promise<void> {
 		let activeTabView: WebContentsView | null = null;
@@ -136,23 +191,6 @@ export class TabService {
 			this.attachViewToWindow(window, activeTabView);
 			this.switchActiveTab(window, activeTabId);
 		}
-
-		window.addListener("resize", () => {
-			const shellView = this.windowShellView.get(window.id);
-			const tabViews = this.windowTabView.get(window.id);
-			if (isUndefined(shellView) || isUndefined(tabViews)) return;
-
-			const { width, height } = window.getContentBounds();
-			shellView.setBounds({ x: 0, y: 0, width, height });
-			tabViews.forEach((view) => {
-				view.setBounds({
-					x: 0,
-					y: TITLE_BAR_HEIGHT + 1,
-					width,
-					height: height - TITLE_BAR_HEIGHT - 1,
-				});
-			});
-		});
 	}
 
 	initWindowShellView(shellWindowId: number, shellView: WebContentsView) {
@@ -161,6 +199,63 @@ export class TabService {
 
 	getTabById(tabId: string): Tab | undefined {
 		return this.tabMap.get(tabId);
+	}
+
+	transferTabToNewWindow(fromWindowId: number, tabId: string): void {
+		const fromWindow = BrowserWindow.fromId(fromWindowId);
+		if (isNull(fromWindow)) return;
+
+		const view = this.tabViewMap.get(tabId);
+		if (isUndefined(view)) return;
+
+		fromWindow.contentView.removeChildView(view);
+
+		const windowViews = this.windowTabView.get(fromWindowId);
+		if (!isUndefined(windowViews)) {
+			const updatedViews = windowViews.filter((v) => v !== view);
+			this.windowTabView.set(fromWindowId, updatedViews);
+		}
+
+		const activeTabId = this.windowActiveTabId.get(fromWindowId);
+		if (activeTabId === tabId) {
+			this.windowActiveTabId.delete(fromWindowId);
+		}
+	}
+
+	async removeWindowTabs(windowId: number) {
+		const windowTabs = await tabStorage.getTabs(windowId.toString());
+		if (isNull(windowTabs)) return;
+		const window = BrowserWindow.fromId(windowId);
+		if (isNull(window)) return;
+		windowTabs.forEach((tab) => {
+			this.removeTab(window, tab.id);
+		});
+
+		const shellView = this.windowShellView.get(windowId);
+		if (!isUndefined(shellView)) {
+			shellView.webContents.close();
+			this.windowShellView.delete(windowId);
+		}
+
+		this.windowTabView.delete(windowId);
+		this.windowActiveTabId.delete(windowId);
+	}
+
+	handleWindowResize(window: BrowserWindow) {
+		const shellView = this.windowShellView.get(window.id);
+		const tabViews = this.windowTabView.get(window.id);
+		if (isUndefined(shellView) || isUndefined(tabViews)) return;
+
+		const { width, height } = window.getContentBounds();
+		shellView.setBounds({ x: 0, y: 0, width, height });
+		tabViews.forEach((view) => {
+			view.setBounds({
+				x: 0,
+				y: TITLE_BAR_HEIGHT + 1,
+				width,
+				height: height - TITLE_BAR_HEIGHT - 1,
+			});
+		});
 	}
 
 	// ******************************* IPC Methods ******************************* //
@@ -209,7 +304,7 @@ export class TabService {
 
 		this.tabMap.set(newTab.id, newTab);
 
-		return JSON.stringify(newTab);
+		return stringify(newTab);
 	}
 
 	async handleActivateTab(event: IpcMainInvokeEvent, tabId: string) {
@@ -243,87 +338,42 @@ export class TabService {
 	async handleTabClose(event: IpcMainInvokeEvent, tabId: string, newActiveTabId: string | null) {
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return;
+
 		const view = this.tabViewMap.get(tabId);
+		if (isUndefined(view)) return;
 
-		if (!isUndefined(view)) {
-			window.contentView.removeChildView(view);
-			view.webContents.close();
+		if (newActiveTabId && this.windowActiveTabId.get(window.id) === tabId) {
+			this.switchActiveTab(window, newActiveTabId);
 		}
 
-		this.cleanupTabTempFiles(tabId);
-
-		this.tabViewMap.delete(tabId);
-		this.tabMap.delete(tabId);
-
-		const windowViews = this.windowTabView.get(window.id);
-		if (!isUndefined(windowViews)) {
-			const updatedViews = windowViews.filter((v) => v !== view);
-			this.windowTabView.set(window.id, updatedViews);
-		}
-
-		const activeTabId = this.windowActiveTabId.get(window.id);
-		if (activeTabId === tabId) {
-			if (newActiveTabId) {
-				this.switchActiveTab(window, newActiveTabId);
-			} else {
-				this.windowActiveTabId.delete(window.id);
-			}
-		}
+		this.removeTab(window, tabId);
 	}
 
 	async handleTabCloseOthers(event: IpcMainInvokeEvent, tabId: string, tabIdsToClose: string[]) {
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return;
 
-		for (const tabIdToClose of tabIdsToClose) {
-			const view = this.tabViewMap.get(tabIdToClose);
-			if (!isUndefined(view)) {
-				window.contentView.removeChildView(view);
-				view.webContents.close();
-			}
-
-			this.cleanupTabTempFiles(tabIdToClose);
-			this.tabViewMap.delete(tabIdToClose);
-			this.tabMap.delete(tabIdToClose);
-		}
-
-		const targetView = this.tabViewMap.get(tabId);
-		if (!isUndefined(targetView)) {
-			this.windowTabView.set(window.id, [targetView]);
-		}
-
 		this.switchActiveTab(window, tabId);
+		for (const tabIdToClose of tabIdsToClose) {
+			this.removeTab(window, tabIdToClose);
+		}
 	}
 
 	async handleTabCloseOffside(
 		event: IpcMainInvokeEvent,
 		tabId: string,
 		tabIdsToClose: string[],
-		remainingTabIds: string[],
+		_remainingTabIds: string[],
 		shouldSwitchActive: boolean,
 	) {
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return;
 
-		for (const tabIdToClose of tabIdsToClose) {
-			const view = this.tabViewMap.get(tabIdToClose);
-			if (!isUndefined(view)) {
-				window.contentView.removeChildView(view);
-				view.webContents.close();
-			}
-			this.cleanupTabTempFiles(tabIdToClose);
-			this.tabViewMap.delete(tabIdToClose);
-			this.tabMap.delete(tabIdToClose);
-		}
-
-		const remainingViews = remainingTabIds
-			.map((tabId) => this.tabViewMap.get(tabId))
-			.filter((view) => !isUndefined(view));
-
-		this.windowTabView.set(window.id, remainingViews);
-
 		if (shouldSwitchActive) {
 			this.switchActiveTab(window, tabId);
+		}
+		for (const tabIdToClose of tabIdsToClose) {
+			this.removeTab(window, tabIdToClose);
 		}
 	}
 
@@ -331,17 +381,16 @@ export class TabService {
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return;
 
-		this.tabViewMap.entries().forEach(([tabId, view]) => {
-			window.contentView.removeChildView(view);
-			this.cleanupTabTempFiles(tabId);
-			this.tabViewMap.delete(tabId);
-			this.tabMap.delete(tabId);
-
-			view.webContents.close();
-		});
-
-		this.windowTabView.delete(window.id);
 		this.windowActiveTabId.delete(window.id);
+
+		const windowViews = this.windowTabView.get(window.id);
+		if (!isUndefined(windowViews)) {
+			windowViews.forEach((view) => {
+				window.contentView.removeChildView(view);
+				view.webContents.close();
+			});
+		}
+		this.windowTabView.delete(window.id);
 	}
 
 	async handleShellViewLevel(event: IpcMainInvokeEvent, up: boolean) {
@@ -350,27 +399,23 @@ export class TabService {
 		const shellView = this.windowShellView.get(window.id);
 		if (isUndefined(shellView)) return;
 
-		if (up) {
+		const handleShellViewLevel = (view: WebContentsView) => {
 			if (!isMac) {
-				window.contentView.removeChildView(shellView);
+				window.contentView.removeChildView(view);
 			}
-			window.contentView.addChildView(shellView);
-			console.log("window.contentView.addChildView ---- shellView");
+			window.contentView.addChildView(view);
+			view.webContents.focus();
+		};
 
-			shellView.webContents.focus();
+		if (up) {
+			handleShellViewLevel(shellView);
 		} else {
 			const activeTabId = this.windowActiveTabId.get(window.id);
 			if (isUndefined(activeTabId)) return;
 			const activeTabView = this.tabViewMap.get(activeTabId);
 			if (isUndefined(activeTabView)) return;
 
-			if (!isMac) {
-				window.contentView.removeChildView(activeTabView);
-			}
-			window.contentView.addChildView(activeTabView);
-			console.log("window.contentView.addChildView ---- activeTabView");
-
-			activeTabView.webContents.focus();
+			handleShellViewLevel(activeTabView);
 		}
 	}
 }

@@ -6,7 +6,6 @@
 		stretch?: boolean;
 		closable: boolean;
 		offsideClosable: boolean;
-		isDragDisabled?: boolean;
 		onTabClick: (tab: Tab) => void;
 		onTabNew: () => void;
 		onTabClose: (tab: Tab) => void;
@@ -37,7 +36,6 @@
 		stretch = false,
 		closable,
 		offsideClosable,
-		isDragDisabled = false,
 		onTabClick,
 		onTabNew,
 		onTabClose,
@@ -107,6 +105,7 @@
 		)}
 		style="app-region: no-drag;"
 		onclick={() => onTabClick(tab)}
+		role="button"
 	>
 		<div bind:this={triggerRef} class="contents">
 			<div class="mr-tab-icon size-tab-item-icon flex shrink-0 items-center justify-center">

@@ -53,12 +53,12 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle(
 		"tabService:handleTabCloseOffside",
-		(event, tabId, tabIdsToClose, remainingTabIds, shouldSwitchActive) =>
+		(event, tabId, tabIdsToClose, _remainingTabIds, shouldSwitchActive) =>
 			tabService.handleTabCloseOffside(
 				event,
 				tabId,
 				tabIdsToClose,
-				remainingTabIds,
+				_remainingTabIds,
 				shouldSwitchActive,
 			),
 	);

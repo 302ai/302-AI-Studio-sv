@@ -81,7 +81,7 @@ export class PersistedState<T extends StorageValue> {
 			this.#update = update;
 
 			ipcRenderer.on(`sync:${key}`, (_event, newValue) => {
-				console.log("Synced value:", newValue);
+				console.log("Synced key:", key, "Synced value:", newValue);
 				if (this.#syncing) return;
 				this.#syncing = true;
 				this.#current = newValue;

@@ -10,7 +10,7 @@ import { tabService } from "../tab-service";
 export class WindowService {
 	private mainWindowId: number | null = null;
 	private windows: BrowserWindow[] = [];
-	private isForceQuitting = false;
+	private isCMDQ = false;
 
 	// ******************************* Private Methods ******************************* //
 	private setMainWindow(windowId: number) {
@@ -28,11 +28,6 @@ export class WindowService {
 		}
 	}
 
-	private getNextWindowId(currentWindowId: number): number | null {
-		const filteredWindows = this.windows.filter((win) => win.id !== currentWindowId);
-		return filteredWindows.length > 0 ? filteredWindows[0].id : null;
-	}
-
 	// ******************************* Public Methods ******************************* //
 	getOrderedWindows(): BrowserWindow[] {
 		return [...this.windows];
@@ -47,8 +42,8 @@ export class WindowService {
 		return mainWindow;
 	}
 
-	setForceQuitting(value: boolean) {
-		this.isForceQuitting = value;
+	setCMDQ(value: boolean) {
+		this.isCMDQ = value;
 	}
 
 	async initShellWindows() {
@@ -75,8 +70,6 @@ export class WindowService {
 		}
 
 		await tabStorage.initWindowMapping(newWindowIds, windowsTabs);
-
-		windows.forEach((window) => window.show());
 	}
 
 	async createShellWindow(
@@ -148,55 +141,87 @@ export class WindowService {
 		shellWebContentsView.setBackgroundColor("#00000000");
 
 		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-			shellWebContentsView.webContents.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL + "/shell");
-			shellWebContentsView.webContents.on("did-frame-finish-load", () => {
+			shellWebContentsView.webContents.loadURL(
+				MAIN_WINDOW_VITE_DEV_SERVER_URL + `/shell/${shellWindow.id}`,
+			);
+			shellWebContentsView.webContents.once("did-frame-finish-load", () => {
 				shellWebContentsView.webContents.openDevTools({ mode: "detach" });
 			});
 		} else {
-			shellWebContentsView.webContents.loadURL("app://localhost?route=shell");
+			shellWebContentsView.webContents.loadURL(`app://localhost?route=shell/${shellWindow.id}`);
 		}
+		shellWebContentsView.webContents.once("did-finish-load", () => {
+			shellWindow.show();
+		});
 
 		this.addWindow(shellWindow);
 
-		shellWindow.addListener("close", (e) => {
+		shellWindow.addListener("focus", () => {
+			console.log(
+				`window ${shellWindow.id} focus --- windows: ${this.windows.map((win) => win.id)}`,
+			);
+		});
+
+		shellWindow.addListener("blur", () => {
+			console.log(
+				`window ${shellWindow.id} blur --- windows: ${this.windows.map((win) => win.id)}`,
+			);
+		});
+
+		shellWindow.addListener("resize", () => {
+			console.log("resize", shellWindow.id);
+			tabService.handleWindowResize(shellWindow);
+		});
+
+		shellWindow.addListener("close", async (e) => {
 			const windowCount = this.windows.length;
 			const currentWindowId = shellWindow.id;
 			const isMainWindow = this.mainWindowId === currentWindowId;
-			if (windowCount === 1) {
-				if (!isMac) return;
+			const isLastWindow = windowCount === 1;
+			const isQuittingApp = this.isCMDQ;
 
-				if (!this.isForceQuitting) {
-					e.preventDefault();
-					shellWindow.hide();
-					return;
-				}
+			console.log("close", windowCount, currentWindowId, isMainWindow);
+
+			// macOS: Hide the last window instead of closing it (unless quitting with CMD+Q)
+			if (isLastWindow && isMac && !isQuittingApp) {
+				e.preventDefault();
+				shellWindow.hide();
+				return;
 			}
 
-			let nextWindowId: number | null = null;
+			// Transfer main window identity if closing main window with other windows remaining
 			if (windowCount > 1 && isMainWindow) {
-				nextWindowId = this.getNextWindowId(currentWindowId);
-				if (nextWindowId) {
-					this.setMainWindow(nextWindowId);
+				const filteredWindows = this.windows.filter((win) => win.id !== currentWindowId);
+				const successorWindowId = filteredWindows.length > 0 ? filteredWindows[0].id : null;
+				if (successorWindowId) {
+					this.setMainWindow(successorWindowId);
 				}
 			}
 
-			if (!isMainWindow && !this.isForceQuitting) {
+			// Clean up window data (skip cleanup when quitting app as entire app will exit)
+			const shouldCleanup = !isQuittingApp && (!isMainWindow || windowCount > 1);
+			if (shouldCleanup) {
+				await tabService.removeWindowTabs(currentWindowId);
 				tabStorage.removeWindowState(currentWindowId.toString());
 			}
 		});
 
 		shellWindow.addListener("closed", () => {
+			console.log("window closed", shellWindow.id);
 			this.removeWindow(shellWindow.id);
-			shellWindow.destroy();
 		});
 
 		return { shellWindow, shellView: shellWebContentsView };
 	}
 
 	// ******************************* IPC Methods ******************************* //
-	async handleSplitShellWindow(_event: IpcMainInvokeEvent, triggerTabId: string) {
+	async handleSplitShellWindow(event: IpcMainInvokeEvent, triggerTabId: string) {
+		const fromWindow = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(fromWindow)) return;
 		const triggerTab = tabService.getTabById(triggerTabId);
 		if (isUndefined(triggerTab)) return;
+
+		tabService.transferTabToNewWindow(fromWindow.id, triggerTabId);
 
 		const { shellWindow, shellView } = await this.createShellWindow();
 		const newShellWindowId = shellWindow.id;
@@ -204,8 +229,6 @@ export class WindowService {
 		await tabStorage.updateWindowTabs(newShellWindowId.toString(), newShellWindowTabs);
 		tabService.initWindowShellView(newShellWindowId, shellView);
 		await tabService.initWindowTabs(shellWindow, newShellWindowTabs);
-
-		shellWindow.show();
 	}
 }
 

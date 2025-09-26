@@ -46,7 +46,6 @@
 	const tabsCountDiff = $derived(tabBarState.tabs.length - previousTabsLength);
 	const shouldAnimateCloseTab = $derived(tabsCountDiff < 0 && !isAnimating);
 	const closable = $derived(previousTabsLength > 1);
-	const isDragDisabled = $derived(tabBarState.tabs.length <= 1);
 
 	async function handleNewTab() {
 		if (isAnimating) return;
@@ -184,7 +183,6 @@
 			autoAriaDisabled: false,
 			zoneTabIndex: 0,
 			zoneItemTabIndex: 0,
-			dragDisabled: isDragDisabled,
 		}}
 		onconsider={handleDndConsider}
 		onfinalize={handleDndFinalize}
@@ -216,7 +214,6 @@
 					stretch={autoStretch}
 					{closable}
 					{offsideClosable}
-					{isDragDisabled}
 					onTabClick={handleTabClick}
 					onTabNew={handleNewTab}
 					onTabClose={handleTabClose}
