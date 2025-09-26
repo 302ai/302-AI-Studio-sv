@@ -17,7 +17,7 @@ export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
 	});
 
 	const result = streamText({
-		model: openai(model),
+		model: openai.chat(model),
 		messages: convertToModelMessages(messages),
 		abortSignal,
 	});

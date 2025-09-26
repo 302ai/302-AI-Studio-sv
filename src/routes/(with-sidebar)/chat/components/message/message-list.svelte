@@ -9,9 +9,81 @@
 	}
 
 	let { messages }: Props = $props();
+	let scrollAreaRef: HTMLElement | null = $state(null);
+
+	let shouldAutoScroll = $state(true);
+	let mutationObserver: MutationObserver | null = null;
+
+	const getViewportElement = (): HTMLElement | null => {
+		if (!scrollAreaRef) return null;
+		return scrollAreaRef.querySelector('[data-slot="scroll-area-viewport"]') as HTMLElement;
+	};
+
+	const scrollToBottom = (viewport: HTMLElement): void => {
+		viewport.scrollTop = viewport.scrollHeight;
+	};
+
+	const isScrolledNearBottom = (viewport: HTMLElement): boolean => {
+		const threshold = 50;
+		return viewport.scrollTop + viewport.offsetHeight >= viewport.scrollHeight - threshold;
+	};
+
+	$effect(() => {
+		console.log("be updated");
+		const viewport = getViewportElement();
+		if (!viewport) return;
+
+		const messagesContainer = viewport.firstElementChild as HTMLElement;
+		if (!messagesContainer) return;
+
+		mutationObserver = new MutationObserver(() => {
+			if (shouldAutoScroll) {
+				scrollToBottom(viewport);
+			}
+		});
+
+		mutationObserver.observe(messagesContainer, {
+			childList: true,
+			subtree: true,
+			characterData: true,
+			attributes: true,
+		});
+
+		return () => {
+			if (mutationObserver) {
+				mutationObserver.disconnect();
+				mutationObserver = null;
+			}
+		};
+	});
+
+	$effect(() => {
+		console.log("messae");
+		const viewport = getViewportElement();
+		if (!viewport) return;
+
+		messages;
+
+		scrollToBottom(viewport);
+	});
+
+	$effect(() => {
+		const viewport = getViewportElement();
+		if (!viewport) return;
+
+		const handleScroll = (): void => {
+			shouldAutoScroll = isScrolledNearBottom(viewport);
+		};
+
+		viewport.addEventListener("scroll", handleScroll, { passive: true });
+
+		return () => {
+			viewport.removeEventListener("scroll", handleScroll);
+		};
+	});
 </script>
 
-<ScrollArea class="h-full w-full">
+<ScrollArea bind:ref={scrollAreaRef} class="h-full w-full">
 	<div class="flex w-full justify-center">
 		<div class="w-full max-w-[720px] space-y-4 py-8">
 			{#each messages as message (message.id)}

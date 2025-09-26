@@ -301,9 +301,9 @@ export class TabService {
 				window.contentView.removeChildView(shellView);
 			}
 			window.contentView.addChildView(shellView);
-			if (isMac) {
-				shellView.webContents.focus();
-			}
+			console.log("window.contentView.addChildView ---- shellView");
+
+			shellView.webContents.focus();
 		} else {
 			const activeTabId = this.windowActiveTabId.get(window.id);
 			if (isUndefined(activeTabId)) return;
@@ -314,9 +314,9 @@ export class TabService {
 				window.contentView.removeChildView(activeTabView);
 			}
 			window.contentView.addChildView(activeTabView);
-			if (isMac) {
-				activeTabView.webContents.focus();
-			}
+			console.log("window.contentView.addChildView ---- activeTabView");
+
+			activeTabView.webContents.focus();
 		}
 	}
 }
