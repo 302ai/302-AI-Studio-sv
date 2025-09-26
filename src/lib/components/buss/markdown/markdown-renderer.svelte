@@ -53,11 +53,14 @@
 		}
 		return (hash >>> 0).toString(36);
 	};
-	const createBlockId = (tokens: Token[], index: number): string => {
-		const signature = tokens
+	const tokensSignature = (tokens: Token[]): string =>
+		tokens
 			.map((token) => `${token.type}:${token.tag}:${token.level}:${token.nesting}:${token.content}`)
 			.join("|");
-		return `${index}-${hashString(signature)}`;
+	const allocateBlockId = (signature: string, counts: Map<string, number>): string => {
+		const occurrence = counts.get(signature) ?? 0;
+		counts.set(signature, occurrence + 1);
+		return `${hashString(signature)}-${occurrence}`;
 	};
 	const segmentTokens = (tokens: Token[]): Token[][] => {
 		const segments: Token[][] = [];
@@ -141,6 +144,8 @@
 		const envState: MarkdownEnvironment = env ? { ...env } : {};
 		if (inline) {
 			const inlineTokens = instance.parseInline(content, envState);
+			const signatureCounts = new Map<string, number>();
+			const signature = tokensSignature(inlineTokens);
 			const html = instance.renderer.renderInline(inlineTokens, instance.options, envState);
 			const transformed =
 				transform?.(html, {
@@ -150,7 +155,7 @@
 				}) ?? html;
 			return [
 				{
-					id: createBlockId(inlineTokens, 0),
+					id: allocateBlockId(signature, signatureCounts),
 					html: transformed,
 					tokens: inlineTokens,
 				},
@@ -158,7 +163,10 @@
 		}
 		const tokens = instance.parse(content, envState);
 		const blocks = segmentTokens(tokens);
-		return blocks.map((blockTokens, index) => {
+		const signatureCounts = new Map<string, number>();
+		return blocks.map((blockTokens) => {
+			const signature = tokensSignature(blockTokens);
+			const id = allocateBlockId(signature, signatureCounts);
 			const blockHtml = instance.renderer.render(blockTokens, instance.options, envState);
 			const transformed =
 				transform?.(blockHtml, {
@@ -167,7 +175,7 @@
 					renderer: instance,
 				}) ?? blockHtml;
 			return {
-				id: createBlockId(blockTokens, index),
+				id,
 				html: transformed,
 				tokens: blockTokens,
 			};
