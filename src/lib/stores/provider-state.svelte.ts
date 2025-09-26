@@ -14,8 +14,8 @@ export const persistedProviderState = new PersistedState<ModelProvider[]>(
 export const persistedModelState = new PersistedState<Model[]>("app-models", []);
 
 class ProviderState {
-	getProvider(id: string): ModelProvider | undefined {
-		return persistedProviderState.current.find((p) => p.id === id);
+	getProvider(id: string): ModelProvider | null {
+		return persistedProviderState.current.find((p) => p.id === id) || null;
 	}
 	getProviderByNameOrId(nameOrId: string): ModelProvider | undefined {
 		return persistedProviderState.current.find((p) => p.name === nameOrId || p.id === nameOrId);

@@ -3,6 +3,7 @@ import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { FChatTransport } from "$lib/transport/f-chat-transport";
 import type { ChatMessage } from "$lib/types/chat";
 
+import type { ModelProvider } from "$lib/types/provider";
 import { clone } from "$lib/utils/clone";
 import { Chat } from "@ai-sdk/svelte";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
@@ -24,20 +25,6 @@ export const persistedChatParamsState = new PersistedState<ThreadParmas>(
 	"app-thread:" + window.tab.threadId,
 	clone(window.thread),
 );
-
-export const chat = new Chat({
-	messages: persistedMessagesState.current,
-	transport: new FChatTransport<ChatMessage>({
-		handler: openaiHandler,
-		body: {
-			temperature: 0.7,
-		},
-	}),
-	onFinish: ({ messages }) => {
-		console.log("更新完成", $state.snapshot(messages));
-		persistedMessagesState.current = messages;
-	},
-});
 
 class ChatState {
 	get inputValue(): string {
@@ -146,6 +133,9 @@ class ChatState {
 			? (providerState.getProvider(this.selectedModel.providerId)?.name ?? null)
 			: null,
 	);
+	currentProvider = $derived<ModelProvider | null>(
+		this.selectedModel ? providerState.getProvider(this.selectedModel.providerId) : null,
+	);
 	sendMessageEnabled = $derived<boolean>(
 		(this.inputValue.trim() !== "" || this.attachments.length > 0) && !!this.selectedModel,
 	);
@@ -233,3 +223,22 @@ class ChatState {
 }
 
 export const chatState = new ChatState();
+
+export const chat = new Chat({
+	messages: persistedMessagesState.current,
+	transport: new FChatTransport<ChatMessage>({
+		handler: openaiHandler,
+		body: () => ({
+			baseUrl: chatState.currentProvider?.baseUrl,
+			temperature: persistedChatParamsState.current.temperature,
+			topP: persistedChatParamsState.current.topP,
+			maxTokens: persistedChatParamsState.current.maxTokens,
+			frequencyPenalty: persistedChatParamsState.current.frequencyPenalty,
+			presencePenalty: persistedChatParamsState.current.presencePenalty,
+		}),
+	}),
+	onFinish: ({ messages }) => {
+		console.log("更新完成", $state.snapshot(messages));
+		persistedMessagesState.current = messages;
+	},
+});
