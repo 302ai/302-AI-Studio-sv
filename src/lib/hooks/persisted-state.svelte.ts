@@ -136,7 +136,6 @@ export class PersistedState<T extends StorageValue> {
 
 	#store(value: T | undefined | null): void {
 		if (this.#syncing) {
-			this.#syncing = false;
 			return;
 		}
 		this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {

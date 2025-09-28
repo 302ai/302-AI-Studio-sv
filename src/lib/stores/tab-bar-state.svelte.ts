@@ -45,18 +45,30 @@ class TabBarState {
 
 	#selectNewActiveTabAfterRemoval(
 		tabs: Tab[],
-		removedTabIndex: number,
 		removedTabId: string,
-	): Tab[] {
-		const remainingTabs = tabs.filter((t) => t.id !== removedTabId);
-		if (remainingTabs.length === 0) return remainingTabs;
+	): { tabs: Tab[]; newActiveTabId: string | null } {
+		const remainingTabs: Tab[] = [];
+		let newActiveTabId: string | null = null;
+		let removedTabIndex = -1;
+
+		tabs.forEach((tab, i) => {
+			if (tab.id === removedTabId) {
+				removedTabIndex = i;
+			} else {
+				remainingTabs.push({ ...tab, active: false });
+			}
+		});
+
+		if (remainingTabs.length === 0) {
+			return { tabs: remainingTabs, newActiveTabId };
+		}
 
 		const newActiveIndex =
 			removedTabIndex < remainingTabs.length ? removedTabIndex : remainingTabs.length - 1;
-		return remainingTabs.map((t, index) => ({
-			...t,
-			active: index === newActiveIndex,
-		}));
+		remainingTabs[newActiveIndex].active = true;
+		newActiveTabId = remainingTabs[newActiveIndex].id;
+
+		return { tabs: remainingTabs, newActiveTabId };
 	}
 
 	// ******************************* Public Methods ******************************* //
@@ -75,18 +87,13 @@ class TabBarState {
 		if (!this.#windowId) return;
 
 		const currentTabs = this.tabs;
-		const targetIndex = currentTabs.findIndex((t) => t.id === tab.id);
-		if (targetIndex === -1) return;
-
 		let remainingTabs: Tab[];
 		let newActiveTabId: string | null = null;
 
 		if (tab.active) {
-			remainingTabs = this.#selectNewActiveTabAfterRemoval(currentTabs, targetIndex, tab.id);
-			if (remainingTabs.length > 0) {
-				const newActiveTab = remainingTabs.find((t) => t.active);
-				newActiveTabId = newActiveTab?.id ?? null;
-			}
+			const result = this.#selectNewActiveTabAfterRemoval(currentTabs, tab.id);
+			remainingTabs = result.tabs;
+			newActiveTabId = result.newActiveTabId;
 		} else {
 			remainingTabs = currentTabs.filter((t) => t.id !== tab.id);
 		}
@@ -205,21 +212,27 @@ class TabBarState {
 
 	async handleMoveTabIntoNewWindow(tabId: string) {
 		const currentTabs = this.tabs;
-		const targetIndex = currentTabs.findIndex((t) => t.id === tabId);
-		if (targetIndex === -1) return;
+		const targetTab = currentTabs.find((t) => t.id === tabId);
+		if (!targetTab) return;
 
-		const targetTab = currentTabs[targetIndex];
 		const isTargetTabActive = targetTab.active;
 
 		let remainingTabs: Tab[];
+		let newActiveTabId: string | null = null;
 
 		if (isTargetTabActive && currentTabs.length > 1) {
-			remainingTabs = this.#selectNewActiveTabAfterRemoval(currentTabs, targetIndex, tabId);
+			const result = this.#selectNewActiveTabAfterRemoval(currentTabs, tabId);
+			remainingTabs = result.tabs;
+			newActiveTabId = result.newActiveTabId;
 		} else {
 			remainingTabs = currentTabs.filter((t) => t.id !== tabId);
 		}
 
 		persistedTabState.current[this.#windowId].tabs = remainingTabs;
+
+		if (!isNull(newActiveTabId)) {
+			await tabService.handleActivateTab(newActiveTabId);
+		}
 
 		await windowService.handleSplitShellWindow(tabId);
 	}
