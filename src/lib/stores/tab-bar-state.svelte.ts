@@ -161,28 +161,35 @@ class TabBarState {
 		}, 10);
 	}
 
+	async #createNewTab(title: string, type: TabType, active: boolean) {
+		const unserializedTab = await tabService.handleNewTab(title, type, active);
+		if (!unserializedTab) return;
+
+		const tab = parse<Tab>(unserializedTab);
+		const updatedTabs = active
+			? [...this.tabs.map((t) => ({ ...t, active: false })), tab]
+			: [...this.tabs, tab];
+
+		persistedTabState.current[this.#windowId].tabs = updatedTabs;
+	}
+
 	async handleNewTab(title: string = "New Chat", type: TabType = "chat", active = true) {
-		match(type)
+		const shouldCreateNewTab = await match(type)
 			.with("settings", async () => {
 				const existingSettingsTab = this.tabs.find((tab) => tab.type === "settings");
 				if (existingSettingsTab) {
 					await this.handleActivateTab(existingSettingsTab.id);
-					return;
+					return false;
 				}
+				return true;
 			})
-			.with("chat", async () => {
-				const unserializedTab = await tabService.handleNewTab(title, type, active);
-				if (!unserializedTab) return;
-
-				const tab = parse<Tab>(unserializedTab);
-				const updatedTabs = active
-					? [...this.tabs.map((t) => ({ ...t, active: false })), tab]
-					: [...this.tabs, tab];
-
-				persistedTabState.current[this.#windowId].tabs = updatedTabs;
-			})
-			.with("302ai-tool", () => {})
+			.with("chat", () => true)
+			.with("302ai-tool", () => false)
 			.exhaustive();
+
+		if (shouldCreateNewTab) {
+			await this.#createNewTab(title, type, active);
+		}
 	}
 
 	updatePersistedTabs(tabs: Tab[]) {
