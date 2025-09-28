@@ -39,24 +39,25 @@
 			</span>
 		</div>
 
-		<div class="flex flex-1 items-center justify-center overflow-hidden">
-			<div style="height: 70vh; width: 70vw; position: relative;">
-				{#if viewerType === "image" && attachment.preview}
-					<ImageViewer src={attachment.preview} alt={attachment.name} />
-				{:else if viewerType === "audio"}
-					<AudioViewer src={attachment.preview} />
-				{:else if viewerType === "video"}
-					<VideoViewer src={URL.createObjectURL(attachment.file)} />
-				{:else if viewerType === "code"}
-					<CodeViewer {attachment} fileName={attachment.name} />
-				{:else if viewerType === "document"}
-					<DocumentViewer src={attachment.preview} fileName={attachment.name} />
-				{:else if viewerType === "text"}
-					<TextViewer {attachment} />
-				{:else}
-					<UnknownViewer />
-				{/if}
-			</div>
+		<div
+			class="flex flex-1 items-center justify-center overflow-hidden"
+			style="height: 70vh; width: 70vw; position: relative;"
+		>
+			{#if viewerType === "image" && attachment.preview}
+				<ImageViewer src={attachment.preview} alt={attachment.name} />
+			{:else if viewerType === "audio"}
+				<AudioViewer src={attachment.preview} />
+			{:else if viewerType === "video"}
+				<VideoViewer src={URL.createObjectURL(attachment.file)} />
+			{:else if viewerType === "code"}
+				<CodeViewer {attachment} fileName={attachment.name} />
+			{:else if viewerType === "document"}
+				<DocumentViewer src={attachment.preview} fileName={attachment.name} />
+			{:else if viewerType === "text"}
+				<TextViewer {attachment} />
+			{:else}
+				<UnknownViewer />
+			{/if}
 		</div>
 	</Dialog.Content>
 </Dialog.Root>

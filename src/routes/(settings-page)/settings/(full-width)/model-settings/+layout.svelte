@@ -2,12 +2,11 @@
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { ProviderList } from "$lib/components/buss/provider-list";
-	import { ScrollArea } from "$lib/components/ui/scroll-area";
+	import { m } from "$lib/paraglide/messages.js";
 	import { persistedProviderState, providerState } from "$lib/stores/provider-state.svelte.js";
 	import type { ModelProvider } from "$lib/types/provider";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { m } from "$lib/paraglide/messages.js";
 	import Header from "./header.svelte";
 
 	const { children } = $props();
@@ -71,20 +70,18 @@
 		<div class="flex-shrink-0 p-4">
 			<Header onClick={handleAddProvider} />
 		</div>
-		<div class="min-h-0 flex-1">
-			<ScrollArea class="h-full">
-				<div class="h-full px-4 pb-4">
-					<ProviderList
-						bind:providers={persistedProviderState.current}
-						bind:activeProviderId
-						onProviderClick={handleProviderClick}
-						onReorder={handleReorderProviders}
-						onConfigure={handleConfigureProvider}
-						onRemove={handleRemoveProvider}
-						class="h-full"
-					/>
-				</div>
-			</ScrollArea>
+		<div class="min-h-0 flex-1 overflow-auto">
+			<div class="h-full px-4 pb-4">
+				<ProviderList
+					bind:providers={persistedProviderState.current}
+					bind:activeProviderId
+					onProviderClick={handleProviderClick}
+					onReorder={handleReorderProviders}
+					onConfigure={handleConfigureProvider}
+					onRemove={handleRemoveProvider}
+					class="h-full"
+				/>
+			</div>
 		</div>
 	</div>
 
