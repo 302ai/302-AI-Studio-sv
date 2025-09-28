@@ -2,7 +2,7 @@ import { createStorage, type StorageMeta, type StorageValue } from "@302ai/unsto
 import fsDriver from "@302ai/unstorage/drivers/fs";
 import { isDev } from "@electron/main/constants";
 import type { MigrationConfig, StorageItem, StorageMetadata, StorageOptions } from "@shared/types";
-import type { IpcMainInvokeEvent, WebContents } from "electron";
+import type { IpcMainInvokeEvent } from "electron";
 import { app, webContents } from "electron";
 import { join } from "path";
 import { getStorageVersion, setStorageVersion } from "./migration-utils";
@@ -36,7 +36,6 @@ export class StorageService<T extends StorageValue> {
 		allWebContents.forEach((wc) => {
 			if (wc !== event.sender && !wc.isDestroyed()) {
 				wc.send(`sync:${key}`, versionedValue);
-				console.log("versionedValue", JSON.stringify(versionedValue));
 			}
 		});
 	}

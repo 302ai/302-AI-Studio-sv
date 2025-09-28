@@ -2,9 +2,14 @@ import type { Tab, TabType, ThreadParmas } from "@shared/types";
 import { BrowserWindow, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import { isNull, isUndefined } from "es-toolkit";
 import { nanoid } from "nanoid";
-import path from "node:path";
 import { stringify } from "superjson";
-import { ENVIRONMENT, isMac, TITLE_BAR_HEIGHT } from "../../constants";
+import { isMac, TITLE_BAR_HEIGHT } from "../../constants";
+import { WebContentsFactory } from "../../factories/web-contents-factory";
+import {
+	withDevToolsShortcuts,
+	withLoadHandlers,
+	withLifecycleHandlers,
+} from "../../mixins/web-contents-mixins";
 import { TempStorage } from "../../utils/temp-storage";
 import { storageService } from "../storage-service";
 import { tabStorage } from "../storage-service/tab-storage";
@@ -49,74 +54,70 @@ export class TabService {
 
 		this.tempFileRegistry.set(tab.id, [threadFilePath, messagesFilePath]);
 
-		const view = new WebContentsView({
-			webPreferences: {
-				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
-				devTools: ENVIRONMENT.IS_DEV,
-				webgl: true,
-				additionalArguments: [
-					`--window-id=${windowId}`,
-					`--tab=${stringify(tab)}`,
-					`--thread-file=${threadFilePath}`,
-					`--messages-file=${messagesFilePath}`,
-				],
-				sandbox: false,
-			},
+		// Create view using factory
+		const view = WebContentsFactory.createTabView({
+			windowId,
+			type: "tab",
+			tab,
+			threadFilePath,
+			messagesFilePath,
 		});
 
 		this.tabViewMap.set(tab.id, view);
 
-		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-			view.webContents.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-			view.webContents.once("did-frame-finish-load", () => {
-				view.webContents.openDevTools({ mode: "detach" });
-			});
-		} else {
-			view.webContents.loadURL("app://localhost");
-		}
+		// Add devTools shortcuts
+		withDevToolsShortcuts(view);
 
-		const capturedTabId = tab.id;
-		const capturedWindowId = windowId;
-		view.webContents.on("destroyed", () => {
-			console.log(`Tab ${capturedTabId} webContents destroyed, cleaning up all mappings`);
-			this.tabViewMap.delete(capturedTabId);
-			this.tabMap.delete(capturedTabId);
-
-			const windowViews = this.windowTabView.get(capturedWindowId);
-			if (!isUndefined(windowViews)) {
-				const updatedViews = windowViews.filter((v) => v !== view);
-				this.windowTabView.set(capturedWindowId, updatedViews);
-			}
-
-			const activeTabId = this.windowActiveTabId.get(capturedWindowId);
-			if (activeTabId === capturedTabId) {
-				this.windowActiveTabId.delete(capturedWindowId);
-			}
-
-			this.cleanupTabTempFiles(capturedTabId);
-
-			// Check if all mappings related to the destroyed tab have been properly cleaned up
-			console.log(
-				"Checking tabViewMap ---> ",
-				this.tabViewMap.has(capturedTabId) ? "failed" : "passed",
-			);
-			console.log("Checking tabMap ---> ", this.tabMap.has(capturedTabId) ? "failed" : "passed");
-			console.log(
-				"Checking windowTabView ---> ",
-				(this.windowTabView.get(capturedWindowId)?.includes(view) ?? false) ? "failed" : "passed",
-			);
-			console.log(
-				"Checking windowActiveTabId ---> ",
-				this.windowActiveTabId.get(capturedWindowId) === capturedTabId ? "failed" : "passed",
-			);
-			console.log(
-				"Checking tempFileRegistry ---> ",
-				this.tempFileRegistry.has(capturedTabId) ? "failed" : "passed",
-			);
+		// Add load handlers
+		withLoadHandlers(view, {
+			baseUrl: MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost",
+			autoOpenDevTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
 		});
 
-		view.webContents.on("will-prevent-unload", () => {
-			console.log("view will prevent unload");
+		// Add lifecycle handlers
+		const capturedTabId = tab.id;
+		const capturedWindowId = windowId;
+		withLifecycleHandlers(view, {
+			onDestroyed: () => {
+				console.log(`Tab ${capturedTabId} webContents destroyed, cleaning up all mappings`);
+				this.tabViewMap.delete(capturedTabId);
+				this.tabMap.delete(capturedTabId);
+
+				const windowViews = this.windowTabView.get(capturedWindowId);
+				if (!isUndefined(windowViews)) {
+					const updatedViews = windowViews.filter((v) => v !== view);
+					this.windowTabView.set(capturedWindowId, updatedViews);
+				}
+
+				const activeTabId = this.windowActiveTabId.get(capturedWindowId);
+				if (activeTabId === capturedTabId) {
+					this.windowActiveTabId.delete(capturedWindowId);
+				}
+
+				this.cleanupTabTempFiles(capturedTabId);
+
+				// Check if all mappings related to the destroyed tab have been properly cleaned up
+				console.log(
+					"Checking tabViewMap ---> ",
+					this.tabViewMap.has(capturedTabId) ? "failed" : "passed",
+				);
+				console.log("Checking tabMap ---> ", this.tabMap.has(capturedTabId) ? "failed" : "passed");
+				console.log(
+					"Checking windowTabView ---> ",
+					(this.windowTabView.get(capturedWindowId)?.includes(view) ?? false) ? "failed" : "passed",
+				);
+				console.log(
+					"Checking windowActiveTabId ---> ",
+					this.windowActiveTabId.get(capturedWindowId) === capturedTabId ? "failed" : "passed",
+				);
+				console.log(
+					"Checking tempFileRegistry ---> ",
+					this.tempFileRegistry.has(capturedTabId) ? "failed" : "passed",
+				);
+			},
+			onWillPreventUnload: () => {
+				console.log("view will prevent unload");
+			},
 		});
 
 		return view;

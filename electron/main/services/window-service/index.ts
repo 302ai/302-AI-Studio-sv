@@ -4,6 +4,8 @@ import windowStateKeeper from "electron-window-state";
 import { isNull, isUndefined } from "es-toolkit";
 import path from "node:path";
 import { CONFIG, ENVIRONMENT, isMac, PLATFORM, WINDOW_SIZE } from "../../constants";
+import { WebContentsFactory } from "../../factories/web-contents-factory";
+import { withDevToolsShortcuts, withLoadHandlers } from "../../mixins/web-contents-mixins";
 import { tabStorage } from "../storage-service/tab-storage";
 import { tabService } from "../tab-service";
 
@@ -121,35 +123,36 @@ export class WindowService {
 
 		mainWindowState.manage(shellWindow);
 
-		const shellWebContentsView = new WebContentsView({
-			webPreferences: {
-				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
-				devTools: ENVIRONMENT.IS_DEV,
-				webgl: true,
-				additionalArguments: [`--window-id=${shellWindow.id.toString()}`],
-				sandbox: false,
-			},
+		// Create shell view using factory
+		const shellWebContentsView = WebContentsFactory.createShellView({
+			windowId: shellWindow.id,
+			type: "shell",
 		});
+
 		shellWindow.contentView.addChildView(shellWebContentsView);
 		const { width, height } = shellWindow.getContentBounds();
 		shellWebContentsView.setBounds({
 			x: 0,
 			y: 0,
-			width: width,
-			height: height,
+			width,
+			height,
 		});
 		shellWebContentsView.setBackgroundColor("#00000000");
 
-		if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
-			shellWebContentsView.webContents.loadURL(
-				MAIN_WINDOW_VITE_DEV_SERVER_URL + `/shell/${shellWindow.id}`,
-			);
-			shellWebContentsView.webContents.once("did-frame-finish-load", () => {
-				shellWebContentsView.webContents.openDevTools({ mode: "detach" });
-			});
-		} else {
-			shellWebContentsView.webContents.loadURL(`app://localhost?route=shell/${shellWindow.id}`);
-		}
+		// Add devTools shortcuts
+		withDevToolsShortcuts(shellWebContentsView);
+
+		// Add load handlers
+		const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost";
+		const routePath = MAIN_WINDOW_VITE_DEV_SERVER_URL
+			? `/shell/${shellWindow.id}`
+			: `?route=shell/${shellWindow.id}`;
+
+		withLoadHandlers(shellWebContentsView, {
+			baseUrl,
+			routePath,
+			autoOpenDevTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
+		});
 		shellWebContentsView.webContents.once("did-finish-load", () => {
 			shellWindow.show();
 		});

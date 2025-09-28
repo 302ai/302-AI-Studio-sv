@@ -95,7 +95,6 @@ export class TabStorage extends StorageService<TabState> {
 		allWebContents.forEach((wc) => {
 			if (!wc.isDestroyed()) {
 				wc.send(`sync:${prefixedKey}`, versionedValue);
-				console.log(`Sending sync message: sync:${prefixedKey}`, JSON.stringify(versionedValue));
 			}
 		});
 	}
