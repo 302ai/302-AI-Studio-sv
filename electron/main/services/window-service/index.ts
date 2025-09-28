@@ -241,6 +241,36 @@ export class WindowService {
 		tabService.initWindowShellView(newShellWindowId, shellView);
 		await tabService.initWindowTabs(shellWindow, newShellWindowTabs);
 	}
+
+	async handleMoveTabIntoExistingWindow(
+		event: IpcMainInvokeEvent,
+		triggerTabId: string,
+		windowId: string,
+	) {
+		const fromWindow = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(fromWindow)) return;
+
+		const triggerTab = tabService.getTabById(triggerTabId);
+		if (isUndefined(triggerTab)) return;
+
+		const targetWindow = BrowserWindow.fromId(parseInt(windowId));
+		if (isNull(targetWindow)) return;
+
+		tabService.removeTab(fromWindow, triggerTabId);
+
+		const currentTabs = await tabStorage.getTabs(windowId);
+		if (isNull(currentTabs)) return;
+
+		const updatedCurrentTabs = currentTabs.map((tab) => ({ ...tab, active: false }));
+
+		const movedTab = { ...triggerTab, active: true };
+
+		const newTargetWindowTabs = [...updatedCurrentTabs, movedTab];
+
+		await tabStorage.updateWindowTabs(windowId, newTargetWindowTabs);
+
+		await tabService.addTabToWindow(targetWindow, movedTab);
+	}
 }
 
 export const windowService = new WindowService();

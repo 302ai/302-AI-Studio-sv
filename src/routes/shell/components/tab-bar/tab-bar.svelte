@@ -73,7 +73,7 @@
 			buttonSpring.target = { opacity: 0.3, x: 8 };
 			const draggedTab = tabBarState.tabs.find((tab) => tab.id === info.id);
 			if (draggedTab) {
-				await tabBarState.handleTabClick(draggedTab);
+				await tabBarState.handleActivateTab(draggedTab.id);
 			}
 
 			await tabBarState.handleGeneralOverlayChange(true);
@@ -131,20 +131,20 @@
 		}
 	}
 
-	async function handleTabClick(tab: Tab) {
-		await tabBarState.handleTabClick(tab);
+	async function handleTabClick(tabId: string) {
+		await tabBarState.handleActivateTab(tabId);
 	}
 
-	async function handleTabClose(tab: Tab) {
-		await tabBarState.handleTabClose(tab);
+	async function handleTabClose(tabId: string) {
+		await tabBarState.handleTabClose(tabId);
 	}
 
-	async function handleTabCloseOthers(tab: Tab) {
-		await tabBarState.handleTabCloseOthers(tab);
+	async function handleTabCloseOthers(tabId: string) {
+		await tabBarState.handleTabCloseOthers(tabId);
 	}
 
-	async function handleTabCloseOffside(tab: Tab) {
-		await tabBarState.handleTabCloseOffside(tab);
+	async function handleTabCloseOffside(tabId: string) {
+		await tabBarState.handleTabCloseOffside(tabId);
 	}
 
 	async function handleTabCloseAll() {

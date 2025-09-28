@@ -12,7 +12,7 @@ export const persistedTabState = new PersistedState<TabState>(
 const { tabService, windowService } = window.electronAPI;
 
 class TabBarState {
-	#windowId = $state<string>(window.windowId);
+	readonly #windowId = $state<string>(window.windowId);
 	#activeOverlayId = $state<string | null>(null);
 	#isShellViewElevated = $state<boolean>(false);
 
@@ -43,82 +43,90 @@ class TabBarState {
 		}));
 	}
 
-	#selectNewActiveTabAfterRemoval(
-		tabs: Tab[],
-		removedTabId: string,
-	): { tabs: Tab[]; newActiveTabId: string | null } {
-		const remainingTabs: Tab[] = [];
-		let newActiveTabId: string | null = null;
-		let removedTabIndex = -1;
-
-		tabs.forEach((tab, i) => {
-			if (tab.id === removedTabId) {
-				removedTabIndex = i;
-			} else {
-				remainingTabs.push({ ...tab, active: false });
-			}
-		});
-
-		if (remainingTabs.length === 0) {
-			return { tabs: remainingTabs, newActiveTabId };
-		}
-
-		const newActiveIndex =
-			removedTabIndex < remainingTabs.length ? removedTabIndex : remainingTabs.length - 1;
-		remainingTabs[newActiveIndex].active = true;
-		newActiveTabId = remainingTabs[newActiveIndex].id;
-
-		return { tabs: remainingTabs, newActiveTabId };
-	}
-
-	// ******************************* Public Methods ******************************* //
-	async handleTabClick(tab: Tab) {
-		if (this.tabs.length === 1) return;
-		const targetTab = this.tabs.find((t) => t.id === tab.id);
-		if (isUndefined(targetTab)) return;
-
-		const updatedTabs = this.#setActiveTab(this.tabs, tab.id);
-		persistedTabState.current[this.#windowId].tabs = updatedTabs;
-
-		await tabService.handleActivateTab(tab.id);
-	}
-
-	async handleTabClose(tab: Tab) {
-		if (!this.#windowId) return;
-
+	async #handleTabRemovalWithActiveState(tabId: string): Promise<string | null> {
 		const currentTabs = this.tabs;
+		const targetTab = currentTabs.find((t) => t.id === tabId);
+		if (!targetTab) return null;
+
+		const isTargetTabActive = targetTab.active;
 		let remainingTabs: Tab[];
 		let newActiveTabId: string | null = null;
 
-		if (tab.active) {
-			const result = this.#selectNewActiveTabAfterRemoval(currentTabs, tab.id);
-			remainingTabs = result.tabs;
-			newActiveTabId = result.newActiveTabId;
+		if (isTargetTabActive) {
+			// Find the removed tab index and create remaining tabs
+			const remainingTabsList: Tab[] = [];
+			let removedTabIndex = -1;
+
+			currentTabs.forEach((tab, i) => {
+				if (tab.id === tabId) {
+					removedTabIndex = i;
+				} else {
+					remainingTabsList.push({ ...tab, active: false });
+				}
+			});
+
+			if (remainingTabsList.length > 0) {
+				// Select new active tab
+				const newActiveIndex =
+					removedTabIndex < remainingTabsList.length
+						? removedTabIndex
+						: remainingTabsList.length - 1;
+				remainingTabsList[newActiveIndex].active = true;
+				newActiveTabId = remainingTabsList[newActiveIndex].id;
+			}
+
+			remainingTabs = remainingTabsList;
 		} else {
-			remainingTabs = currentTabs.filter((t) => t.id !== tab.id);
+			remainingTabs = currentTabs.filter((t) => t.id !== tabId);
 		}
 
+		// Update persisted state
 		persistedTabState.current[this.#windowId].tabs = remainingTabs;
 
-		await tabService.handleTabClose(tab.id, newActiveTabId);
+		// Activate new tab if needed
+		if (!isNull(newActiveTabId)) {
+			await tabService.handleActivateTab(newActiveTabId);
+		}
+
+		return newActiveTabId;
 	}
 
-	async handleTabCloseOthers(tab: Tab) {
-		const currentTabs = this.tabs;
-		const targetTab = currentTabs.find((t) => t.id === tab.id);
+	// ******************************* Public Methods ******************************* //
+	async handleActivateTab(tabId: string) {
+		if (this.tabs.length === 1) return;
+		const targetTab = this.tabs.find((t) => t.id === tabId);
 		if (isUndefined(targetTab)) return;
 
-		const tabIdsToClose = currentTabs.filter((t) => t.id !== tab.id).map((t) => t.id);
+		const updatedTabs = this.#setActiveTab(this.tabs, tabId);
+		persistedTabState.current[this.#windowId].tabs = updatedTabs;
+
+		await tabService.handleActivateTab(tabId);
+	}
+
+	async handleTabClose(tabId: string) {
+		if (!this.#windowId) return;
+
+		const newActiveTabId = await this.#handleTabRemovalWithActiveState(tabId);
+
+		await tabService.handleTabClose(tabId, newActiveTabId);
+	}
+
+	async handleTabCloseOthers(tabId: string) {
+		const currentTabs = this.tabs;
+		const targetTab = currentTabs.find((t) => t.id === tabId);
+		if (isUndefined(targetTab)) return;
+
+		const tabIdsToClose = currentTabs.filter((t) => t.id !== tabId).map((t) => t.id);
 		const remainingTabs = [{ ...targetTab, active: true }];
 
 		persistedTabState.current[this.#windowId].tabs = remainingTabs;
 
-		await tabService.handleTabCloseOthers(tab.id, tabIdsToClose);
+		await tabService.handleTabCloseOthers(tabId, tabIdsToClose);
 	}
 
-	async handleTabCloseOffside(tab: Tab) {
+	async handleTabCloseOffside(tabId: string) {
 		const currentTabs = this.tabs;
-		const targetIndex = currentTabs.findIndex((t) => t.id === tab.id);
+		const targetIndex = currentTabs.findIndex((t) => t.id === tabId);
 		if (targetIndex === -1) return;
 
 		const tabsToClose = currentTabs.slice(targetIndex + 1);
@@ -128,7 +136,7 @@ class TabBarState {
 		const isActiveTabBeingClosed = activeTabIndex > targetIndex;
 
 		const updatedTabs = isActiveTabBeingClosed
-			? this.#setActiveTab(remainingTabs, tab.id)
+			? this.#setActiveTab(remainingTabs, tabId)
 			: remainingTabs;
 
 		const remainingTabIds = updatedTabs.map((t) => t.id);
@@ -136,7 +144,7 @@ class TabBarState {
 		persistedTabState.current[this.#windowId].tabs = updatedTabs;
 
 		await tabService.handleTabCloseOffside(
-			tab.id,
+			tabId,
 			tabIdsToClose,
 			remainingTabIds,
 			isActiveTabBeingClosed,
@@ -154,15 +162,27 @@ class TabBarState {
 	}
 
 	async handleNewTab(title: string = "New Chat", type: TabType = "chat", active = true) {
-		const unserializedTab = await tabService.handleNewTab(title, type, active);
-		if (!unserializedTab) return;
+		match(type)
+			.with("settings", async () => {
+				const existingSettingsTab = this.tabs.find((tab) => tab.type === "settings");
+				if (existingSettingsTab) {
+					await this.handleActivateTab(existingSettingsTab.id);
+					return;
+				}
+			})
+			.with("chat", async () => {
+				const unserializedTab = await tabService.handleNewTab(title, type, active);
+				if (!unserializedTab) return;
 
-		const tab = parse<Tab>(unserializedTab);
-		const updatedTabs = active
-			? [...this.tabs.map((t) => ({ ...t, active: false })), tab]
-			: [...this.tabs, tab];
+				const tab = parse<Tab>(unserializedTab);
+				const updatedTabs = active
+					? [...this.tabs.map((t) => ({ ...t, active: false })), tab]
+					: [...this.tabs, tab];
 
-		persistedTabState.current[this.#windowId].tabs = updatedTabs;
+				persistedTabState.current[this.#windowId].tabs = updatedTabs;
+			})
+			.with("302ai-tool", () => {})
+			.exhaustive();
 	}
 
 	updatePersistedTabs(tabs: Tab[]) {
@@ -210,31 +230,18 @@ class TabBarState {
 			.exhaustive();
 	}
 
-	async handleMoveTabIntoNewWindow(tabId: string) {
-		const currentTabs = this.tabs;
-		const targetTab = currentTabs.find((t) => t.id === tabId);
-		if (!targetTab) return;
+	async handleMoveTab(
+		tabId: string,
+		type: "new-window" | "existing-window",
+		targetWindowId?: string,
+	) {
+		await this.#handleTabRemovalWithActiveState(tabId);
 
-		const isTargetTabActive = targetTab.active;
-
-		let remainingTabs: Tab[];
-		let newActiveTabId: string | null = null;
-
-		if (isTargetTabActive && currentTabs.length > 1) {
-			const result = this.#selectNewActiveTabAfterRemoval(currentTabs, tabId);
-			remainingTabs = result.tabs;
-			newActiveTabId = result.newActiveTabId;
-		} else {
-			remainingTabs = currentTabs.filter((t) => t.id !== tabId);
+		if (type === "existing-window" && targetWindowId) {
+			await windowService.handleMoveTabIntoExistingWindow(tabId, targetWindowId);
+		} else if (type === "new-window") {
+			await windowService.handleSplitShellWindow(tabId);
 		}
-
-		persistedTabState.current[this.#windowId].tabs = remainingTabs;
-
-		if (!isNull(newActiveTabId)) {
-			await tabService.handleActivateTab(newActiveTabId);
-		}
-
-		await windowService.handleSplitShellWindow(tabId);
 	}
 }
 

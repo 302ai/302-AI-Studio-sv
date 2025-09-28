@@ -14,5 +14,5 @@
 		"moduleResolution": "bundler"
 	},
 	"include": ["src/**/*", "electron/**/*", "shared/**/*"],
-	"exclude": ["node_modules", ".svelte-kit", "dist", "out", ".tsout"]
+	"exclude": ["node_modules", ".svelte-kit", "dist", "out", ".tsout", "src/routes/demo"]
 }

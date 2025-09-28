@@ -239,6 +239,27 @@ export class TabService {
 		}
 	}
 
+	async addTabToWindow(window: BrowserWindow, tab: Tab): Promise<void> {
+		console.log("Adding Tab to Window --->", tab.id, "to window", window.id);
+
+		// Create view for the tab
+		const view = await this.newWebContentsView(window.id, tab);
+
+		// Attach view to window
+		this.attachViewToWindow(window, view);
+
+		// Add to tab map
+		this.tabMap.set(tab.id, tab);
+
+		// Add to window's view list
+		const windowViews = this.windowTabView.get(window.id) || [];
+		windowViews.push(view);
+		this.windowTabView.set(window.id, windowViews);
+
+		// Switch to this tab
+		this.switchActiveTab(window, tab.id);
+	}
+
 	// ******************************* IPC Methods ******************************* //
 	async handleNewTab(
 		event: IpcMainInvokeEvent,

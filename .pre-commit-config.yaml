@@ -14,7 +14,7 @@ repos:
     hooks:
       - id: svelte-check
         name: svelte-check
-        entry: bash -c 'pnpm exec svelte-check --no-tsconfig --ignore "src/lib/paraglide" "$@"' --
+        entry: bash -c 'pnpm exec svelte-check --no-tsconfig --ignore "src/lib/paraglide,src/routes/demo" "$@"' --
         language: system
         files: \.(svelte)$
 
@@ -23,7 +23,7 @@ repos:
         entry: bash -c 'pnpm exec prettier --write "$@"' --
         language: system
         files: \.(js|ts|svelte|json|yaml|yml|html|css|scss)$
-        exclude: '^(pnpm-lock\.yaml|src/lib/paraglide/.*|\.svelte-kit/.*|build/.*|node_modules/.*)$'
+        exclude: '^(pnpm-lock\.yaml|src/lib/paraglide/.*|src/routes/demo/.*|\.svelte-kit/.*|build/.*|node_modules/.*)$'
 
       - id: eslint
         name: eslint

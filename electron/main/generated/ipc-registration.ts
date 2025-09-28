@@ -71,6 +71,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("windowService:handleSplitShellWindow", (event, triggerTabId) =>
 		windowService.handleSplitShellWindow(event, triggerTabId),
 	);
+	ipcMain.handle("windowService:handleMoveTabIntoExistingWindow", (event, triggerTabId, windowId) =>
+		windowService.handleMoveTabIntoExistingWindow(event, triggerTabId, windowId),
+	);
 }
 
 /**
@@ -100,4 +103,5 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:handleTabCloseAll");
 	ipcMain.removeHandler("tabService:handleShellViewLevel");
 	ipcMain.removeHandler("windowService:handleSplitShellWindow");
+	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");
 }

@@ -6,11 +6,11 @@
 		stretch?: boolean;
 		closable: boolean;
 		offsideClosable: boolean;
-		onTabClick: (tab: Tab) => void;
+		onTabClick: (tabId: string) => void;
 		onTabNew: () => void;
-		onTabClose: (tab: Tab) => void;
-		onTabCloseOthers: (tab: Tab) => void;
-		onTabCloseOffside: (tab: Tab) => void;
+		onTabClose: (tabId: string) => void;
+		onTabCloseOthers: (tabId: string) => void;
+		onTabCloseOffside: (tabId: string) => void;
 		onTabCloseAll: () => void;
 		onOpenChange: (open: boolean) => void;
 		class?: string;
@@ -48,7 +48,7 @@
 
 	let triggerRef = $state<HTMLElement | null>(null);
 	let isCompact = $state(false);
-	let windowTabsInfo = $state(tabBarState.windowTabsInfo);
+	let windowTabsInfo = $derived(tabBarState.windowTabsInfo);
 
 	$effect(() => {
 		if (!triggerRef?.parentElement) return;
@@ -104,7 +104,7 @@
 			className,
 		)}
 		style="app-region: no-drag;"
-		onclick={() => onTabClick(tab)}
+		onclick={() => onTabClick(tab.id)}
 		role="button"
 	>
 		<div bind:this={triggerRef} class="contents">
@@ -128,7 +128,7 @@
 					)}
 					onclick={(e) => {
 						e.stopPropagation();
-						onTabClose(tab);
+						onTabClose(tab.id);
 					}}
 				>
 					<X class="size-tab-close-icon" />
@@ -148,7 +148,7 @@
 				</ContextMenu.SubTrigger>
 				<ContextMenu.SubContent align="start">
 					<ContextMenu.Item
-						onSelect={() => tabBarState.handleMoveTabIntoNewWindow(tab.id)}
+						onSelect={() => tabBarState.handleMoveTab(tab.id, "new-window")}
 						disabled={tabBarState.tabs.length === 1}
 					>
 						{m.label_button_open_new_window()}
@@ -156,19 +156,23 @@
 
 					<ContextMenu.Separator />
 
-					{#each windowTabsInfo as item (item.windowId)}
-						<ContextMenu.Item onSelect={() => {}}>
-							{m.label_button_move_tab_into_existing_window({
-								firstTab: item.firstTabTitle,
-								surplus: item.tabs.length,
-							})}
+					{#each windowTabsInfo as { windowId, tabs, firstTabTitle } (windowId)}
+						<ContextMenu.Item
+							onSelect={() => tabBarState.handleMoveTab(tab.id, "existing-window", windowId)}
+						>
+							{tabs.length === 1
+								? firstTabTitle
+								: m.label_button_move_tab_into_existing_window({
+										firstTab: firstTabTitle,
+										surplus: tabs.length - 1,
+									})}
 						</ContextMenu.Item>
 					{/each}
 				</ContextMenu.SubContent>
 			</ContextMenu.Sub>
 		{:else}
 			<ContextMenu.Item
-				onSelect={() => tabBarState.handleMoveTabIntoNewWindow(tab.id)}
+				onSelect={() => tabBarState.handleMoveTab(tab.id, "new-window")}
 				disabled={tabBarState.tabs.length === 1}
 			>
 				{m.label_button_move_tab_into_new_window()}
@@ -183,15 +187,15 @@
 
 		<ContextMenu.Separator />
 
-		<ContextMenu.Item onSelect={() => onTabClose(tab)} disabled={!closable}>
+		<ContextMenu.Item onSelect={() => onTabClose(tab.id)} disabled={!closable}>
 			{m.label_button_close()}
 		</ContextMenu.Item>
 
-		<ContextMenu.Item onSelect={() => onTabCloseOthers(tab)} disabled={!closable}>
+		<ContextMenu.Item onSelect={() => onTabCloseOthers(tab.id)} disabled={!closable}>
 			{m.label_button_close_others()}
 		</ContextMenu.Item>
 
-		<ContextMenu.Item onSelect={() => onTabCloseOffside(tab)} disabled={!offsideClosable}>
+		<ContextMenu.Item onSelect={() => onTabCloseOffside(tab.id)} disabled={!offsideClosable}>
 			{m.label_button_close_offside()}
 		</ContextMenu.Item>
 
