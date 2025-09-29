@@ -144,7 +144,12 @@
 	$effect(() => {
 		if (isOpen && selectedModel) {
 			Object.entries(groupedModels()).forEach(([provider, models]) => {
-				if (models.some((model) => model.id === selectedModel.id)) {
+				if (
+					models.some(
+						(model) =>
+							model.id === selectedModel.id && model.providerId === selectedModel.providerId,
+					)
+				) {
 					collapsedProviders[provider] = false;
 				}
 			});
@@ -164,7 +169,7 @@
 
 				if (selectedModel) {
 					const selectedItem = listRef.querySelector(
-						`[data-model-id="${selectedModel.id}"]`,
+						`[data-model-id="${selectedModel.providerId}-${selectedModel.id}"]`,
 					) as HTMLElement;
 					if (selectedItem) {
 						selectedItem.scrollIntoView({
@@ -210,19 +215,23 @@
 						{/if}
 					</button>
 					{#if !collapsedProviders[provider] || searchValue}
-						{#each models as model (model.id)}
+						{#each models as model (`${model.providerId}-${model.id}`)}
 							<Command.Item
 								onSelect={() => handleModelSelect(model)}
 								value={model.name}
-								data-model-id={model.id}
+								data-model-id="{model.providerId}-{model.id}"
 								class={cn(
 									"my-1 h-12",
-									selectedModel?.id === model.id ? "!bg-accent !text-accent-foreground" : "",
-									selectedModel?.id !== model.id && hoveredItemId !== model.id
+									selectedModel?.id === model.id && selectedModel?.providerId === model.providerId
+										? "!bg-accent !text-accent-foreground"
+										: "",
+									(selectedModel?.id !== model.id ||
+										selectedModel?.providerId !== model.providerId) &&
+										hoveredItemId !== `${model.providerId}-${model.id}`
 										? "aria-selected:text-foreground aria-selected:bg-transparent"
 										: "",
 								)}
-								onmouseenter={() => handleItemMouseEnter(model.id)}
+								onmouseenter={() => handleItemMouseEnter(`${model.providerId}-${model.id}`)}
 								onmouseleave={handleItemMouseLeave}
 							>
 								<div class="flex w-full flex-row items-center justify-between pl-2">
@@ -230,7 +239,7 @@
 										{model.name}
 										<span class="text-muted-foreground text-sm">{model.type}</span>
 									</div>
-									{#if selectedModel?.id === model.id}
+									{#if selectedModel?.id === model.id && selectedModel?.providerId === model.providerId}
 										<Check class="h-4 w-4" />
 									{/if}
 								</div>
