@@ -370,7 +370,7 @@
 				<Input
 					bind:value={searchQuery}
 					placeholder={m.placeholder_input_search_model()}
-					class="rounded-settings-item bg-settings-item-bg hover:ring-ring w-64 hover:ring-1"
+					class="rounded-settings-item bg-settings-item-bg! hover:ring-ring w-64 hover:ring-1"
 				/>
 			</div>
 		</div>

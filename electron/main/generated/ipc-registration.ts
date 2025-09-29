@@ -1,5 +1,5 @@
 import { ipcMain } from "electron";
-import { storageService, appService, tabService, windowService } from "../services";
+import { storageService, appService, threadService, tabService, windowService } from "../services";
 
 /**
  * Auto-generated IPC service interfaces
@@ -37,7 +37,25 @@ export function registerIpcHandlers() {
 	// appService service registration
 	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
 
+	// threadService service registration
+	ipcMain.handle("threadService:getThreads", (event) => threadService.getThreads(event));
+	ipcMain.handle("threadService:toggleThreadFavorite", (event, threadId) =>
+		threadService.toggleThreadFavorite(event, threadId),
+	);
+	ipcMain.handle("threadService:addThread", (event, threadId) =>
+		threadService.addThread(event, threadId),
+	);
+	ipcMain.handle("threadService:removeThread", (event, threadId) =>
+		threadService.removeThread(event, threadId),
+	);
+	ipcMain.handle("threadService:isFavorite", (event, threadId) =>
+		threadService.isFavorite(event, threadId),
+	);
+
 	// tabService service registration
+	ipcMain.handle("tabService:handleNewTabWithThread", (event, threadId, title, type, active) =>
+		tabService.handleNewTabWithThread(event, threadId, title, type, active),
+	);
 	ipcMain.handle("tabService:handleNewTab", (event, title, type, active) =>
 		tabService.handleNewTab(event, title, type, active),
 	);
@@ -94,6 +112,12 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:watch");
 	ipcMain.removeHandler("storageService:unwatch");
 	ipcMain.removeHandler("appService:setTheme");
+	ipcMain.removeHandler("threadService:getThreads");
+	ipcMain.removeHandler("threadService:toggleThreadFavorite");
+	ipcMain.removeHandler("threadService:addThread");
+	ipcMain.removeHandler("threadService:removeThread");
+	ipcMain.removeHandler("threadService:isFavorite");
+	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");
 	ipcMain.removeHandler("tabService:getActiveTab");

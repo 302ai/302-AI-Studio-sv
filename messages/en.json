@@ -304,5 +304,6 @@
 	"label_button_move_tab_into_existing_window": "{firstTab} and other {surplus} tabs",
 	"label_button_move_tab_into_new_window": "Move the Tab into New Window",
 	"label_button_close_others": "Close Other Tabs",
-	"label_button_close_offside": "Close the Offside Tabs"
+	"label_button_close_offside": "Close the Offside Tabs",
+	"placeholder_input_search": "Search..."
 }

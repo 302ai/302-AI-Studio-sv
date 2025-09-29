@@ -5,6 +5,7 @@ import type { StorageValue } from "@302ai/unstorage";
 export * from "@302ai/unstorage";
 export * from "./storage/tab";
 export * from "./storage/theme";
+export * from "./storage/thread";
 
 export interface StorageMetadata {
 	mtime?: Date;
@@ -110,4 +111,11 @@ export interface ThreadParmas {
 	isMCPActive: boolean;
 	selectedModel: Model | null;
 	isPrivateChatActive: boolean;
+	updatedAt: Date;
+}
+
+export interface ThreadData {
+	threadId: string;
+	thread: ThreadParmas;
+	isFavorite: boolean;
 }

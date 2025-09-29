@@ -300,5 +300,6 @@
 	"label_button_move_tab_into_existing_window": "{firstTab} 及另外 {surplus} 个标签页",
 	"label_button_move_tab_into_new_window": "将标签页移动至新窗口",
 	"label_button_close_others": "关闭其他标签页",
-	"label_button_close_offside": "关闭右侧标签页"
+	"label_button_close_offside": "关闭右侧标签页",
+	"placeholder_input_search": "搜索..."
 }

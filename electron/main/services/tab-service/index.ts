@@ -7,12 +7,13 @@ import { isMac, TITLE_BAR_HEIGHT } from "../../constants";
 import { WebContentsFactory } from "../../factories/web-contents-factory";
 import {
 	withDevToolsShortcuts,
-	withLoadHandlers,
 	withLifecycleHandlers,
+	withLoadHandlers,
 } from "../../mixins/web-contents-mixins";
 import { TempStorage } from "../../utils/temp-storage";
 import { storageService } from "../storage-service";
 import { tabStorage } from "../storage-service/tab-storage";
+import { threadStorage } from "../storage-service/thread-storage";
 
 type TabConfig = {
 	title: string;
@@ -261,6 +262,44 @@ export class TabService {
 	}
 
 	// ******************************* IPC Methods ******************************* //
+	async handleNewTabWithThread(
+		event: IpcMainInvokeEvent,
+		threadId: string,
+		title: string = "Chat",
+		type: TabType = "chat",
+		active: boolean = true,
+	): Promise<string | null> {
+		const window = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(window)) return null;
+
+		const { getHref } = getTabConfig(type);
+		const newTabId = nanoid();
+		const newTab: Tab = {
+			id: newTabId,
+			title,
+			href: getHref(newTabId),
+			type,
+			active,
+			threadId, // 使用现有的threadId
+		};
+
+		// 不需要创建新的thread和messages，因为它们已经存在
+		// 但需要确保threadId在metadata中注册（可能是新窗口首次访问此thread）
+		try {
+			await threadStorage.addThread(threadId);
+		} catch (error) {
+			console.warn("Failed to register existing thread in metadata:", error);
+		}
+
+		const view = await this.newWebContentsView(window.id, newTab);
+		this.attachViewToWindow(window, view);
+		this.switchActiveTab(window, newTab.id);
+
+		this.tabMap.set(newTab.id, newTab);
+
+		return stringify(newTab);
+	}
+
 	async handleNewTab(
 		event: IpcMainInvokeEvent,
 		title: string = "New Chat",
@@ -280,26 +319,30 @@ export class TabService {
 			active,
 			threadId: nanoid(),
 		};
-		const newThread: ThreadParmas = {
-			title: "new tab",
-			temperature: 0,
-			topP: 1,
-			frequencyPenalty: 0,
-			presencePenalty: 0,
-			maxTokens: 1000,
-			inputValue: "",
-			attachments: [],
-			mcpServers: [],
-			isThinkingActive: false,
-			isOnlineSearchActive: false,
-			isMCPActive: false,
-			selectedModel: null,
-			isPrivateChatActive: false,
-		};
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const newMessages: any = [];
-		await storageService.setItemInternal("app-thread:" + newTab.threadId, newThread);
-		await storageService.setItemInternal("app-chat-messages:" + newTab.threadId, newMessages);
+		if (type === "chat") {
+			const newThread: ThreadParmas = {
+				title: "new tab",
+				temperature: 0,
+				topP: 1,
+				frequencyPenalty: 0,
+				presencePenalty: 0,
+				maxTokens: 1000,
+				inputValue: "",
+				attachments: [],
+				mcpServers: [],
+				isThinkingActive: false,
+				isOnlineSearchActive: false,
+				isMCPActive: false,
+				selectedModel: null,
+				isPrivateChatActive: false,
+				updatedAt: new Date(),
+			};
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const newMessages: any = [];
+			await storageService.setItemInternal("app-thread:" + newTab.threadId, newThread);
+			await storageService.setItemInternal("app-chat-messages:" + newTab.threadId, newMessages);
+			await threadStorage.addThread(newTab.threadId);
+		}
 		const view = await this.newWebContentsView(window.id, newTab);
 		this.attachViewToWindow(window, view);
 		this.switchActiveTab(window, newTab.id);
