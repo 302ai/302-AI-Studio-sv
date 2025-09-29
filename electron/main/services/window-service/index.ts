@@ -171,10 +171,26 @@ export class WindowService {
 			);
 		});
 
+		const syncWindowViews = () => {
+			if (shellWindow.isDestroyed()) return;
+			setImmediate(() => {
+				if (shellWindow.isDestroyed()) return;
+				tabService.handleWindowResize(shellWindow);
+			});
+		};
+
 		shellWindow.addListener("resize", () => {
 			console.log("resize", shellWindow.id);
-			tabService.handleWindowResize(shellWindow);
+			syncWindowViews();
 		});
+
+		shellWindow.addListener("maximize", syncWindowViews);
+		shellWindow.addListener("unmaximize", syncWindowViews);
+		shellWindow.addListener("minimize", syncWindowViews);
+		shellWindow.addListener("restore", syncWindowViews);
+		shellWindow.addListener("enter-full-screen", syncWindowViews);
+		shellWindow.addListener("leave-full-screen", syncWindowViews);
+		shellWindow.addListener("show", syncWindowViews);
 
 		shellWindow.addListener("close", async (e) => {
 			e.preventDefault();
