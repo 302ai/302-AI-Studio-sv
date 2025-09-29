@@ -13,6 +13,7 @@
 	import { match } from "ts-pattern";
 	import { AttachmentThumbnailBar } from "../attachment";
 	import ChatActions from "./chat-actions.svelte";
+	import StreamingIndicator from "./streaming-indicator.svelte";
 
 	let openModelSelect = $state<() => void>();
 
@@ -71,6 +72,7 @@
 
 <div class="w-full max-w-chat-max-w" data-layoutid="chat-input-container">
 	<AttachmentThumbnailBar />
+	<StreamingIndicator />
 	<div
 		class={cn(
 			"transition-[color,box-shadow]",

@@ -156,6 +156,8 @@ class ChatState {
 	);
 	lastAssistantMessage = $derived(this.messages.findLast((msg) => msg.role === "assistant"));
 
+	isLastMessageStreaming = $derived(this.isStreaming && this.hasMessages);
+
 	sendMessage = () => {
 		if (this.sendMessageEnabled) {
 			const currentModel = this.selectedModel!;
@@ -196,6 +198,10 @@ class ChatState {
 		} catch (error) {
 			console.error("Failed to regenerate message:", error);
 		}
+	};
+
+	stopGeneration = () => {
+		chat.stop();
 	};
 
 	clearMessages() {

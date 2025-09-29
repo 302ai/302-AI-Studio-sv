@@ -9,17 +9,19 @@
 </script>
 
 <script lang="ts">
+	import { LdrsLoader } from "$lib/components/buss/ldrs-loader/index.js";
 	import { MarkdownRenderer } from "$lib/components/buss/markdown/index.js";
 	import { ModelIcon } from "$lib/components/buss/model-icon/index.js";
-	import { getLocale } from "$lib/paraglide/runtime";
-	import { m } from "$lib/paraglide/messages.js";
-	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
-	import type { ChatMessage } from "$lib/types/chat";
 	import {
 		Collapsible,
 		CollapsibleContent,
 		CollapsibleTrigger,
 	} from "$lib/components/ui/collapsible";
+	import { m } from "$lib/paraglide/messages.js";
+	import { getLocale } from "$lib/paraglide/runtime";
+	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
+	import type { ChatMessage } from "$lib/types/chat";
 	import { ChevronDown, Lightbulb } from "@lucide/svelte";
 	import MessageActions from "./message-actions.svelte";
 	import { formatTimeAgo } from "./utils";
@@ -27,6 +29,25 @@
 	let { message }: Props = $props();
 
 	let isReasoningExpanded = $state(false);
+
+	$effect(() => {
+		if (isStreamingReasoning) {
+			isReasoningExpanded = true;
+		}
+	});
+
+	const isCurrentMessageStreaming = $derived(
+		chatState.isLastMessageStreaming && chatState.lastAssistantMessage?.id === message.id,
+	);
+
+	const hasReasoningContent = $derived(message.parts.some((part) => part.type === "reasoning"));
+	const hasTextContent = $derived(message.parts.some((part) => part.type === "text"));
+	const isStreamingReasoning = $derived(
+		isCurrentMessageStreaming && hasReasoningContent && !hasTextContent,
+	);
+	const isStreamingText = $derived(
+		isCurrentMessageStreaming && (hasTextContent || (!hasReasoningContent && !hasTextContent)),
+	);
 </script>
 
 {#snippet messageHeader(model: string)}
@@ -75,10 +96,39 @@
 					<div class="pt-3 text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
 						{part.text}
 					</div>
+
+					{#if isStreamingReasoning}
+						<div class="flex items-center gap-2 pt-2 animate-in fade-in duration-300">
+							<LdrsLoader
+								type="dot-pulse"
+								size={16}
+								speed={1.2}
+								color={persistedThemeState.current.shouldUseDarkColors ? "#a1a1aa" : "#71717a"}
+							/>
+							<span class="text-xs text-muted-foreground italic">
+								{m.title_thinking()}...
+							</span>
+						</div>
+					{/if}
 				</CollapsibleContent>
 			</Collapsible>
 		{/if}
 	{/each}
+	{#if isStreamingText}
+		<div class="flex items-center gap-3 py-3 animate-in fade-in duration-300">
+			<div class="flex items-center justify-center">
+				<LdrsLoader
+					type="dot-pulse"
+					size={24}
+					speed={1.2}
+					color={persistedThemeState.current.shouldUseDarkColors ? "#a1a1aa" : "#71717a"}
+				/>
+			</div>
+			<span class="text-sm text-muted-foreground italic">
+				{m.text_chat_responding()}...
+			</span>
+		</div>
+	{/if}
 
 	{@render messageFooter()}
 </div>
