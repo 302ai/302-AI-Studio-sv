@@ -45,6 +45,14 @@ export class TabService {
 		this.tempFileRegistry = new Map();
 	}
 
+	private scheduleWindowResize(window: BrowserWindow) {
+		if (window.isDestroyed()) return;
+		setTimeout(() => {
+			if (window.isDestroyed()) return;
+			this.handleWindowResize(window);
+		}, 0);
+	}
+
 	// ******************************* Private Methods ******************************* //
 	private async newWebContentsView(windowId: number, tab: Tab): Promise<WebContentsView> {
 		const thread = await storageService.getItemInternal("app-thread:" + tab.threadId);
@@ -182,6 +190,8 @@ export class TabService {
 			this.attachViewToWindow(window, activeTabView);
 			this.switchActiveTab(window, activeTabId);
 		}
+
+		this.scheduleWindowResize(window);
 	}
 
 	initWindowShellView(shellWindowId: number, shellView: WebContentsView) {
@@ -254,11 +264,15 @@ export class TabService {
 
 		// Add to window's view list
 		const windowViews = this.windowTabView.get(window.id) || [];
-		windowViews.push(view);
-		this.windowTabView.set(window.id, windowViews);
+		if (!windowViews.includes(view)) {
+			windowViews.push(view);
+			this.windowTabView.set(window.id, windowViews);
+		}
 
 		// Switch to this tab
 		this.switchActiveTab(window, tab.id);
+
+		this.scheduleWindowResize(window);
 	}
 
 	/**
@@ -362,6 +376,14 @@ export class TabService {
 
 		this.tabMap.set(newTab.id, newTab);
 
+		const windowViews = this.windowTabView.get(window.id) || [];
+		if (!windowViews.includes(view)) {
+			windowViews.push(view);
+			this.windowTabView.set(window.id, windowViews);
+		}
+
+		this.scheduleWindowResize(window);
+
 		return stringify(newTab);
 	}
 
@@ -415,6 +437,14 @@ export class TabService {
 		this.switchActiveTab(window, newTab.id);
 
 		this.tabMap.set(newTab.id, newTab);
+
+		const windowViews = this.windowTabView.get(window.id) || [];
+		if (!windowViews.includes(view)) {
+			windowViews.push(view);
+			this.windowTabView.set(window.id, windowViews);
+		}
+
+		this.scheduleWindowResize(window);
 
 		return stringify(newTab);
 	}

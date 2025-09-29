@@ -88,7 +88,7 @@
 
 <div class="flex h-chat-bar items-center gap-chat-bar-gap">
 	{@render actionUploadAttachment()}
-	{#if chatState.providerType === '302ai'}
+	{#if chatState.providerType === "302ai"}
 		{@render actionEnableThinking()}
 		{@render actionEnableOnlineSearch()}
 	{/if}
