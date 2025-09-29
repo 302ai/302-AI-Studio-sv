@@ -175,6 +175,7 @@
 	overflow-x: auto;
 	background-color: var(--shiki-background, inherit);
 	color: var(--shiki-foreground, inherit);
+	line-height: 0;
 }
 
 .prose pre.shiki code {

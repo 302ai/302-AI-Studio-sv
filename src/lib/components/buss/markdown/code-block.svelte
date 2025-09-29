@@ -5,6 +5,9 @@
 	import { SvelteMap } from "svelte/reactivity";
 	import type { ShikiHighlighter } from "./highlighter";
 	import { DEFAULT_THEME, ensureHighlighter } from "./highlighter";
+	import { CopyButton } from "$lib/components/buss/copy-button";
+	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
+	import { ChevronDown } from "@lucide/svelte";
 
 	interface RenderedToken {
 		id: string;
@@ -37,6 +40,7 @@
 	let preStyle = $state<string | undefined>(undefined);
 	let codeStyle = $state<string | undefined>(undefined);
 	let lines = $state<RenderedLine[]>([]);
+	let isCollapsed = $state(false);
 
 	const FONT_STYLE = {
 		Italic: 1,
@@ -66,6 +70,58 @@
 
 	const formatTokenContent = (content: string): string =>
 		escapeHtml(content).replace(/\t/g, "&nbsp;&nbsp;&nbsp;&nbsp;").replace(/ /g, "&nbsp;");
+
+	const formatLanguageName = (lang: string): string => {
+		if (!lang || lang === "plaintext") return "Text";
+
+		const languageNames: Record<string, string> = {
+			js: "JavaScript",
+			jsx: "JavaScript",
+			ts: "TypeScript",
+			tsx: "TypeScript",
+			py: "Python",
+			python: "Python",
+			html: "HTML",
+			css: "CSS",
+			scss: "SCSS",
+			sass: "Sass",
+			less: "Less",
+			json: "JSON",
+			xml: "XML",
+			yaml: "YAML",
+			yml: "YAML",
+			md: "Markdown",
+			markdown: "Markdown",
+			sh: "Shell",
+			bash: "Bash",
+			zsh: "Zsh",
+			fish: "Fish",
+			powershell: "PowerShell",
+			sql: "SQL",
+			java: "Java",
+			cpp: "C++",
+			c: "C",
+			cs: "C#",
+			php: "PHP",
+			rb: "Ruby",
+			ruby: "Ruby",
+			go: "Go",
+			rust: "Rust",
+			swift: "Swift",
+			kotlin: "Kotlin",
+			dart: "Dart",
+			vue: "Vue",
+			svelte: "Svelte",
+			angular: "Angular",
+			react: "React",
+		};
+
+		return languageNames[lang.toLowerCase()] || lang.charAt(0).toUpperCase() + lang.slice(1);
+	};
+
+	const toggleCollapse = () => {
+		isCollapsed = !isCollapsed;
+	};
 
 	const buildTokenStyle = (token: ThemedToken): string | undefined => {
 		if (token.htmlStyle) {
@@ -318,24 +374,75 @@
 </script>
 
 {#if !highlighter}
-	<pre class="shiki" data-theme={props.theme ?? DEFAULT_THEME} data-meta={props.meta ?? undefined}>
-		<code>{props.code}</code>
-	</pre>
-{:else}
-	<pre
-		class="shiki"
-		data-language={resolvedLanguage}
-		data-theme={resolvedTheme}
-		data-meta={props.meta ?? undefined}
-		style={preStyle}>
-		<code style={codeStyle}>
-			{#each lines as line (line.id)}
-				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-				<span
-					class="line"
-					data-line={line.number}>{@html line.html}</span
+	{#if props.code.trim()}
+		<div class="rounded-xl overflow-hidden border border-border my-7 bg-card">
+			<div
+				class="flex justify-between items-center px-4 py-2 bg-muted border-b border-border min-h-10"
+			>
+				<span class="text-sm font-medium text-muted-foreground select-none">Text</span>
+				<div class="flex items-center gap-1">
+					<CopyButton content={props.code} position="bottom" />
+					<ButtonWithTooltip
+						class="text-muted-foreground hover:!bg-chat-action-hover"
+						tooltip="Toggle collapse"
+						tooltipSide="bottom"
+						onclick={toggleCollapse}
+					>
+						<ChevronDown
+							class={`transition-transform duration-200 ${isCollapsed ? "rotate-180" : ""}`}
+						/>
+					</ButtonWithTooltip>
+				</div>
+			</div>
+			{#if !isCollapsed}
+				<pre
+					class="shiki !m-0 !rounded-none !border-0"
+					data-theme={props.theme ?? DEFAULT_THEME}
+					data-meta={props.meta ?? undefined}>
+					<code>{props.code}</code>
+				</pre>
+			{/if}
+		</div>
+	{/if}
+{:else if props.code.trim() && lines.length > 0}
+	<div class="rounded-xl overflow-hidden border border-border my-7 bg-card">
+		<div
+			class="flex justify-between items-center px-4 py-2 bg-muted border-b border-border min-h-10"
+		>
+			<span class="text-sm font-medium text-muted-foreground select-none"
+				>{formatLanguageName(resolvedLanguage)}</span
+			>
+			<div class="flex items-center gap-1">
+				<CopyButton content={props.code} position="bottom" />
+				<ButtonWithTooltip
+					class="text-muted-foreground hover:!bg-chat-action-hover"
+					tooltip="Toggle collapse"
+					tooltipSide="bottom"
+					onclick={toggleCollapse}
 				>
-			{/each}
-		</code>
-	</pre>
+					<ChevronDown
+						class={`transition-transform duration-200 ${isCollapsed ? "rotate-180" : ""}`}
+					/>
+				</ButtonWithTooltip>
+			</div>
+		</div>
+		{#if !isCollapsed}
+			<pre
+				class="shiki !m-0 !rounded-none !border-0"
+				data-language={resolvedLanguage}
+				data-theme={resolvedTheme}
+				data-meta={props.meta ?? undefined}
+				style={preStyle}>
+				<code style={codeStyle}>
+					{#each lines as line (line.id)}
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+						<span
+							class="line"
+							data-line={line.number}>{@html line.html}</span
+						>
+					{/each}
+				</code>
+			</pre>
+		{/if}
+	</div>
 {/if}
