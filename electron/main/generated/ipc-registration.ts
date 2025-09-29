@@ -42,6 +42,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("threadService:getThread", (event, threadId) =>
 		threadService.getThread(event, threadId),
 	);
+	ipcMain.handle("threadService:deleteThread", (event, threadId) =>
+		threadService.deleteThread(event, threadId),
+	);
 
 	// tabService service registration
 	ipcMain.handle("tabService:handleNewTabWithThread", (event, threadId, title, type, active) =>
@@ -105,6 +108,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("threadService:getThreads");
 	ipcMain.removeHandler("threadService:getThread");
+	ipcMain.removeHandler("threadService:deleteThread");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");

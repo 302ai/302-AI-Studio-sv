@@ -20,6 +20,16 @@ export class ThreadService {
 			return null;
 		}
 	}
+
+	async deleteThread(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
+		try {
+			await threadStorage.deleteThread(threadId);
+			return true;
+		} catch (error) {
+			console.error("ThreadService: Failed to delete thread:", error);
+			return false;
+		}
+	}
 }
 
 export const threadService = new ThreadService();

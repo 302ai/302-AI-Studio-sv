@@ -52,6 +52,33 @@ class ThreadsState {
 			this.#addFavorite(threadId);
 		}
 	}, 100);
+
+	async deleteThread(threadId: string): Promise<boolean> {
+		try {
+			const success = await threadService.deleteThread(threadId);
+			if (success) {
+				// Remove from local state immediately for UI responsiveness
+				const currentMetadata = persistedThreadState.current;
+				const threadIndex = currentMetadata.threadIds.indexOf(threadId);
+				if (threadIndex > -1) {
+					currentMetadata.threadIds.splice(threadIndex, 1);
+				}
+				const favoriteIndex = currentMetadata.favorites.indexOf(threadId);
+				if (favoriteIndex > -1) {
+					currentMetadata.favorites.splice(favoriteIndex, 1);
+				}
+
+				// If the deleted thread was the active one, clear the active thread
+				if (this.activeThreadId === threadId) {
+					this.activeThreadId = "";
+				}
+			}
+			return success;
+		} catch (error) {
+			console.error("Failed to delete thread:", error);
+			return false;
+		}
+	}
 }
 
 export const threadsState = new ThreadsState();

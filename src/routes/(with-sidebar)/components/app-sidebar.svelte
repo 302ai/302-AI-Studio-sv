@@ -6,6 +6,7 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { threadsState } from "$lib/stores/threads-state.svelte";
 	import { ChevronDown } from "@lucide/svelte";
+	import { cn } from "tailwind-variants";
 	import ThreadItem from "./thread-item.svelte";
 
 	type TimeGroup = "today" | "yesterday" | "last7days" | "last30days" | "earlier";
@@ -93,6 +94,22 @@
 
 		threadsState.toggleFavorite(threadId);
 	}
+
+	async function handleThreadDelete(threadId: string) {
+		// Check if there's a tab associated with this thread
+		const relatedTab = tabBarState.tabs.find((tab) => tab.threadId === threadId);
+
+		// Close the related tab first if it exists
+		if (relatedTab) {
+			await tabBarState.handleTabClose(relatedTab.id);
+		}
+
+		// Then delete the thread
+		const success = await threadsState.deleteThread(threadId);
+		if (!success) {
+			console.error("Failed to delete thread:", threadId);
+		}
+	}
 </script>
 
 <Sidebar.Root collapsible="offcanvas" variant="sidebar">
@@ -116,6 +133,7 @@
 								isActive={threadId === threadsState.activeThreadId}
 								onThreadClick={handleThreadClick}
 								onToggleFavorite={handleToggleFavorite}
+								onThreadDelete={handleThreadDelete}
 							/>
 						{/each}
 					{/await}
@@ -135,11 +153,10 @@
 										>
 											<span>{getGroupLabel(gk)}</span>
 											<ChevronDown
-												class="size-4 transition-transform duration-200 ease-in-out {groupCollapsedState[
-													gk
-												]
-													? 'rotate-180'
-													: 'rotate-0'}"
+												class={cn(
+													"size-4 transition-transform duration-200 ease-in-out",
+													groupCollapsedState[gk] ? "rotate-180" : "rotate-0",
+												)}
 											/>
 										</Collapsible.Trigger>
 										<Collapsible.Content class="flex flex-col gap-y-1">
@@ -151,6 +168,7 @@
 													isActive={threadId === threadsState.activeThreadId}
 													onThreadClick={handleThreadClick}
 													onToggleFavorite={handleToggleFavorite}
+													onThreadDelete={handleThreadDelete}
 												/>
 											{/each}
 										</Collapsible.Content>

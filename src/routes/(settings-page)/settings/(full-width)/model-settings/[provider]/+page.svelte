@@ -15,6 +15,7 @@
 	import { toast } from "svelte-sonner";
 
 	const apiTypes = [
+		{ value: "302ai", label: "302.AI" },
 		{ value: "openai", label: "OpenAI" },
 		{ value: "anthropic", label: "Anthropic" },
 		{ value: "gemini", label: "Google Gemini" },
@@ -336,7 +337,7 @@
 						type="single"
 						bind:value={formData.apiType}
 						onValueChange={(value) => {
-							formData.apiType = value || "openai";
+							formData.apiType = (value as ModelProvider["apiType"]) || "openai";
 							saveFormData();
 						}}
 					>

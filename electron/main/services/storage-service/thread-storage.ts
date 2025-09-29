@@ -51,6 +51,20 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 		}
 	}
 
+	async deleteThread(threadId: string): Promise<void> {
+		try {
+			// Remove from metadata first
+			await this.removeThread(threadId);
+
+			// Delete the actual thread data file
+			const threadKey = "app-thread:" + threadId;
+			await storageService.removeItemInternal(threadKey);
+		} catch (error) {
+			console.error(`Failed to delete thread ${threadId}:`, error);
+			throw error;
+		}
+	}
+
 	async getThread(threadId: string): Promise<ThreadData | null> {
 		try {
 			const metadata = await this.getThreadMetadata();
