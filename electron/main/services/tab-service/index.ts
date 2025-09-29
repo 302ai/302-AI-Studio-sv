@@ -261,6 +261,79 @@ export class TabService {
 		this.switchActiveTab(window, tab.id);
 	}
 
+	/**
+	 * Transfer a tab from one window to another while preserving the WebContentsView
+	 */
+	transferTabToWindow(
+		fromWindow: BrowserWindow,
+		toWindow: BrowserWindow,
+		tabId: string,
+		tab: Tab,
+	): void {
+		console.log(`Transferring Tab ${tabId} from window ${fromWindow.id} to window ${toWindow.id}`);
+
+		const view = this.tabViewMap.get(tabId);
+		if (isUndefined(view)) return;
+
+		// Remove view from source window
+		fromWindow.contentView.removeChildView(view);
+
+		// Remove from source window's view list
+		const fromWindowViews = this.windowTabView.get(fromWindow.id);
+		if (!isUndefined(fromWindowViews)) {
+			const updatedFromViews = fromWindowViews.filter((v) => v !== view);
+			this.windowTabView.set(fromWindow.id, updatedFromViews);
+		}
+
+		// Remove from source window's active tab if it was active
+		const activeTabId = this.windowActiveTabId.get(fromWindow.id);
+		if (activeTabId === tabId) {
+			this.windowActiveTabId.delete(fromWindow.id);
+		}
+
+		// Add to target window
+		this.attachViewToWindow(toWindow, view);
+
+		// Update tab data
+		this.tabMap.set(tabId, tab);
+
+		// Add to target window's view list
+		const toWindowViews = this.windowTabView.get(toWindow.id) || [];
+		toWindowViews.push(view);
+		this.windowTabView.set(toWindow.id, toWindowViews);
+
+		// Switch to this tab in target window
+		this.switchActiveTab(toWindow, tabId);
+	}
+
+	/**
+	 * Remove a tab from window without destroying the WebContentsView (for transfer purposes)
+	 */
+	detachTabFromWindow(window: BrowserWindow, tabId: string): void {
+		console.log(`Detaching Tab ${tabId} from window ${window.id}`);
+
+		const view = this.tabViewMap.get(tabId);
+		if (isUndefined(view)) return;
+
+		// Remove view from window but don't destroy webContents
+		window.contentView.removeChildView(view);
+
+		// Remove from window's view list
+		const windowViews = this.windowTabView.get(window.id);
+		if (!isUndefined(windowViews)) {
+			const updatedViews = windowViews.filter((v) => v !== view);
+			this.windowTabView.set(window.id, updatedViews);
+		}
+
+		// Remove from window's active tab if it was active
+		const activeTabId = this.windowActiveTabId.get(window.id);
+		if (activeTabId === tabId) {
+			this.windowActiveTabId.delete(window.id);
+		}
+
+		// Keep the view and tab data intact for potential reuse
+	}
+
 	// ******************************* IPC Methods ******************************* //
 	async handleNewTabWithThread(
 		event: IpcMainInvokeEvent,

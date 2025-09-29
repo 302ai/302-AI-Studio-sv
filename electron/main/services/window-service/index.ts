@@ -232,14 +232,15 @@ export class WindowService {
 		const triggerTab = tabService.getTabById(triggerTabId);
 		if (isUndefined(triggerTab)) return;
 
-		tabService.removeTab(fromWindow, triggerTabId);
-
 		const { shellWindow, shellView } = await this.createShellWindow();
 		const newShellWindowId = shellWindow.id;
-		const newShellWindowTabs = [triggerTab];
-		await tabStorage.updateWindowTabs(newShellWindowId.toString(), newShellWindowTabs);
+
 		tabService.initWindowShellView(newShellWindowId, shellView);
-		await tabService.initWindowTabs(shellWindow, newShellWindowTabs);
+
+		tabService.transferTabToWindow(fromWindow, shellWindow, triggerTabId, triggerTab);
+
+		const newShellWindowTabs = [{ ...triggerTab, active: true }];
+		await tabStorage.updateWindowTabs(newShellWindowId.toString(), newShellWindowTabs);
 	}
 
 	async handleMoveTabIntoExistingWindow(
@@ -256,20 +257,19 @@ export class WindowService {
 		const targetWindow = BrowserWindow.fromId(parseInt(windowId));
 		if (isNull(targetWindow)) return;
 
-		tabService.removeTab(fromWindow, triggerTabId);
-
 		const currentTabs = await tabStorage.getTabs(windowId);
 		if (isNull(currentTabs)) return;
 
-		const updatedCurrentTabs = currentTabs.map((tab) => ({ ...tab, active: false }));
-
+		// Prepare the moved tab data
 		const movedTab = { ...triggerTab, active: true };
 
+		// Transfer the tab to the target window (preserving WebContentsView)
+		tabService.transferTabToWindow(fromWindow, targetWindow, triggerTabId, movedTab);
+
+		// Update tab storage for the target window
+		const updatedCurrentTabs = currentTabs.map((tab) => ({ ...tab, active: false }));
 		const newTargetWindowTabs = [...updatedCurrentTabs, movedTab];
-
 		await tabStorage.updateWindowTabs(windowId, newTargetWindowTabs);
-
-		await tabService.addTabToWindow(targetWindow, movedTab);
 	}
 }
 
