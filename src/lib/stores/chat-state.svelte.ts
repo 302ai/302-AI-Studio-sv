@@ -135,7 +135,7 @@ class ChatState {
 	}
 	providerType = $derived<string | null>(
 		this.selectedModel
-			? (providerState.getProvider(this.selectedModel.providerId)?.name ?? null)
+			? (providerState.getProvider(this.selectedModel.providerId)?.apiType ?? null)
 			: null,
 	);
 	currentProvider = $derived<ModelProvider | null>(
