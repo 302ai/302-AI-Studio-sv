@@ -11,6 +11,25 @@ import {
 	wrapLanguageModel,
 } from "ai";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function addDefinedParams(options: any, params: any) {
+	if (params.temperature !== undefined && params.temperature !== null) {
+		options.temperature = params.temperature;
+	}
+	if (params.topP !== undefined && params.topP !== null) {
+		options.topP = params.topP;
+	}
+	if (params.maxTokens !== undefined && params.maxTokens !== null) {
+		options.maxOutputTokens = params.maxTokens;
+	}
+	if (params.frequencyPenalty !== undefined && params.frequencyPenalty !== null) {
+		options.frequencyPenalty = params.frequencyPenalty;
+	}
+	if (params.presencePenalty !== undefined && params.presencePenalty !== null) {
+		options.presencePenalty = params.presencePenalty;
+	}
+}
+
 export const ai302Handler: HF = async ({ messages, abortSignal, body }) => {
 	const {
 		baseUrl,
@@ -52,15 +71,10 @@ export const ai302Handler: HF = async ({ messages, abortSignal, body }) => {
 		providerId: "302.AI",
 	});
 
-	const result = streamText({
+	const streamTextOptions = {
 		model: wrapModel,
 		messages: convertToModelMessages(messages),
 		abortSignal,
-		temperature,
-		topP,
-		maxOutputTokens: maxTokens,
-		frequencyPenalty,
-		presencePenalty,
 		providerOptions: {
 			"302": {
 				"r1-fusion": isThinkingActive ?? false,
@@ -68,7 +82,17 @@ export const ai302Handler: HF = async ({ messages, abortSignal, body }) => {
 				"search-service": "search1api",
 			},
 		},
+	};
+
+	addDefinedParams(streamTextOptions, {
+		temperature,
+		topP,
+		maxTokens,
+		frequencyPenalty,
+		presencePenalty,
 	});
+
+	const result = streamText(streamTextOptions);
 
 	return result.toUIMessageStream({
 		originalMessages: messages,
@@ -110,16 +134,21 @@ export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
 		],
 	});
 
-	const result = streamText({
+	const streamTextOptions = {
 		model: wrapModel,
 		messages: convertToModelMessages(messages),
 		abortSignal,
+	};
+
+	addDefinedParams(streamTextOptions, {
 		temperature,
 		topP,
-		maxOutputTokens: maxTokens,
+		maxTokens,
 		frequencyPenalty,
 		presencePenalty,
 	});
+
+	const result = streamText(streamTextOptions);
 
 	return result.toUIMessageStream({
 		originalMessages: messages,
@@ -161,16 +190,21 @@ export const anthropicHandler: HF = async ({ messages, abortSignal, body }) => {
 		],
 	});
 
-	const result = streamText({
+	const streamTextOptions = {
 		model: wrapModel,
 		messages: convertToModelMessages(messages),
 		abortSignal,
+	};
+
+	addDefinedParams(streamTextOptions, {
 		temperature,
 		topP,
-		maxOutputTokens: maxTokens,
+		maxTokens,
 		frequencyPenalty,
 		presencePenalty,
 	});
+
+	const result = streamText(streamTextOptions);
 
 	return result.toUIMessageStream({
 		originalMessages: messages,
@@ -212,16 +246,21 @@ export const googleHandler: HF = async ({ messages, abortSignal, body }) => {
 		],
 	});
 
-	const result = streamText({
+	const streamTextOptions = {
 		model: wrapModel,
 		messages: convertToModelMessages(messages),
 		abortSignal,
+	};
+
+	addDefinedParams(streamTextOptions, {
 		temperature,
 		topP,
-		maxOutputTokens: maxTokens,
+		maxTokens,
 		frequencyPenalty,
 		presencePenalty,
 	});
+
+	const result = streamText(streamTextOptions);
 
 	return result.toUIMessageStream({
 		originalMessages: messages,
