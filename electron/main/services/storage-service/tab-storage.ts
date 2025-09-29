@@ -1,8 +1,9 @@
-import { prefixStorage, type Tab, type TabState } from "@shared/types";
+import { prefixStorage, type Tab, type TabState, type ThreadParmas } from "@shared/types";
 import { webContents } from "electron";
 import { isNull } from "es-toolkit";
 import { nanoid } from "nanoid";
-import { StorageService } from ".";
+import { storageService, StorageService } from ".";
+import { threadStorage } from "./thread-storage";
 
 export class TabStorage extends StorageService<TabState> {
 	constructor() {
@@ -30,13 +31,32 @@ export class TabStorage extends StorageService<TabState> {
 		const result = await this.getItemInternal("tab-bar-state");
 		if (isNull(result)) {
 			const tabId = nanoid();
+			const threadId = nanoid();
 			const initTab: Tab = {
 				id: tabId,
 				title: "New Chat",
 				href: `/chat/${tabId}`,
 				type: "chat",
 				active: true,
-				threadId: nanoid(),
+				threadId,
+			};
+			const initThread: ThreadParmas = {
+				id: threadId,
+				title: "New Chat",
+				temperature: 0,
+				topP: 1,
+				frequencyPenalty: 0,
+				presencePenalty: 0,
+				maxTokens: 1000,
+				inputValue: "",
+				attachments: [],
+				mcpServers: [],
+				isThinkingActive: false,
+				isOnlineSearchActive: false,
+				isMCPActive: false,
+				selectedModel: null,
+				isPrivateChatActive: false,
+				updatedAt: new Date(),
 			};
 			allWindowsTabs.push([initTab]);
 
@@ -45,6 +65,9 @@ export class TabStorage extends StorageService<TabState> {
 					tabs: [initTab],
 				},
 			});
+			await storageService.setItemInternal("app-thread:" + initTab.threadId, initThread);
+			await storageService.setItemInternal("app-chat-messages:" + initTab.threadId, []);
+			await threadStorage.addThread(initTab.threadId);
 		} else {
 			Object.values(result).forEach((windowTabs) => {
 				allWindowsTabs.push(windowTabs.tabs);

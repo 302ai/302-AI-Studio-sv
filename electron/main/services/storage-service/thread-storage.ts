@@ -1,6 +1,11 @@
-import { prefixStorage, type ThreadMetadata, type ThreadParmas } from "@shared/types";
+import {
+	prefixStorage,
+	type ThreadData,
+	type ThreadMetadata,
+	type ThreadParmas,
+} from "@shared/types";
 import { webContents } from "electron";
-import { StorageService, storageService } from ".";
+import { storageService, StorageService } from ".";
 
 export class ThreadStorage extends StorageService<ThreadMetadata> {
 	constructor() {
@@ -46,66 +51,46 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 		}
 	}
 
-	async addFavorite(threadId: string): Promise<void> {
-		const metadata = await this.getThreadMetadata();
-		if (metadata && !metadata.favorites.includes(threadId)) {
-			metadata.favorites.push(threadId);
-			await this.setItemInternal("thread-metadata", metadata);
-		}
-	}
-
-	async removeFavorite(threadId: string): Promise<void> {
-		const metadata = await this.getThreadMetadata();
-		if (metadata) {
-			const index = metadata.favorites.indexOf(threadId);
-			if (index > -1) {
-				metadata.favorites.splice(index, 1);
-				await this.setItemInternal("thread-metadata", metadata);
+	async getThread(threadId: string): Promise<ThreadData | null> {
+		try {
+			const metadata = await this.getThreadMetadata();
+			if (!metadata || !metadata.threadIds.includes(threadId)) {
+				return null;
 			}
-		}
-	}
 
-	async toggleFavorite(threadId: string): Promise<boolean> {
-		const metadata = await this.getThreadMetadata();
-		if (metadata) {
-			const index = metadata.favorites.indexOf(threadId);
-			if (index > -1) {
-				metadata.favorites.splice(index, 1);
-				await this.setItemInternal("thread-metadata", metadata);
-				return false;
-			} else {
-				metadata.favorites.push(threadId);
-				await this.setItemInternal("thread-metadata", metadata);
-				return true;
+			const thread = (await storageService.getItemInternal(
+				"app-thread:" + threadId,
+			)) as ThreadParmas;
+			if (!thread || !thread.updatedAt) {
+				return null;
 			}
+
+			return {
+				threadId,
+				thread,
+				isFavorite: metadata.favorites.includes(threadId),
+			};
+		} catch (error) {
+			console.error("Failed to get thread:", error);
+			return null;
 		}
-		return false;
 	}
 
-	async isFavorite(threadId: string): Promise<boolean> {
-		const metadata = await this.getThreadMetadata();
-		return metadata ? metadata.favorites.includes(threadId) : false;
-	}
-
-	async getThreadsData(): Promise<Array<{
-		threadId: string;
-		thread: ThreadParmas;
-		isFavorite: boolean;
-	}> | null> {
+	async getThreadsData(): Promise<Array<ThreadData> | null> {
 		try {
 			const metadata = await this.getThreadMetadata();
 			if (!metadata || metadata.threadIds.length === 0) {
 				return [];
 			}
 
-			const allThreads: Array<{ threadId: string; thread: ThreadParmas; isFavorite: boolean }> = [];
+			const allThreads: Array<ThreadData> = [];
 
 			for (const threadId of metadata.threadIds) {
 				try {
 					const thread = (await storageService.getItemInternal(
 						"app-thread:" + threadId,
 					)) as ThreadParmas;
-					if (thread && thread.updatedAt) {
+					if (thread) {
 						allThreads.push({
 							threadId,
 							thread,

@@ -97,6 +97,7 @@ export interface AttachmentFile {
 }
 
 export interface ThreadParmas {
+	id: string;
 	title: string;
 	temperature: number | null;
 	topP: number | null;

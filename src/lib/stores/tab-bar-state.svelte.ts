@@ -9,7 +9,7 @@ export const persistedTabState = new PersistedState<TabState>(
 	{} as TabState,
 );
 
-const { tabService, windowService } = window.electronAPI;
+const { tabService, windowService, threadService } = window.electronAPI;
 
 class TabBarState {
 	readonly #windowId = $state<string>(window.windowId);
@@ -190,6 +190,24 @@ class TabBarState {
 		if (shouldCreateNewTab) {
 			await this.#createNewTab(title, type, active);
 		}
+	}
+
+	async handleNewTabForExistingThread(threadId: string) {
+		const threadData = await threadService.getThread(threadId);
+		if (!threadData) return;
+
+		const unserializedTab = await tabService.handleNewTabWithThread(
+			threadId,
+			threadData.thread.title,
+			"chat",
+			true,
+		);
+		if (!unserializedTab) return;
+
+		const newTab = parse<Tab>(unserializedTab);
+		const updatedTabs = [...this.tabs.map((t) => ({ ...t, active: false })), newTab];
+
+		persistedTabState.current[this.#windowId].tabs = updatedTabs;
 	}
 
 	updatePersistedTabs(tabs: Tab[]) {

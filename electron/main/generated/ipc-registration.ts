@@ -39,17 +39,8 @@ export function registerIpcHandlers() {
 
 	// threadService service registration
 	ipcMain.handle("threadService:getThreads", (event) => threadService.getThreads(event));
-	ipcMain.handle("threadService:toggleThreadFavorite", (event, threadId) =>
-		threadService.toggleThreadFavorite(event, threadId),
-	);
-	ipcMain.handle("threadService:addThread", (event, threadId) =>
-		threadService.addThread(event, threadId),
-	);
-	ipcMain.handle("threadService:removeThread", (event, threadId) =>
-		threadService.removeThread(event, threadId),
-	);
-	ipcMain.handle("threadService:isFavorite", (event, threadId) =>
-		threadService.isFavorite(event, threadId),
+	ipcMain.handle("threadService:getThread", (event, threadId) =>
+		threadService.getThread(event, threadId),
 	);
 
 	// tabService service registration
@@ -113,10 +104,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:unwatch");
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("threadService:getThreads");
-	ipcMain.removeHandler("threadService:toggleThreadFavorite");
-	ipcMain.removeHandler("threadService:addThread");
-	ipcMain.removeHandler("threadService:removeThread");
-	ipcMain.removeHandler("threadService:isFavorite");
+	ipcMain.removeHandler("threadService:getThread");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");

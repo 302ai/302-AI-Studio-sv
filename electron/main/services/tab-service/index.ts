@@ -280,16 +280,8 @@ export class TabService {
 			href: getHref(newTabId),
 			type,
 			active,
-			threadId, // 使用现有的threadId
+			threadId,
 		};
-
-		// 不需要创建新的thread和messages，因为它们已经存在
-		// 但需要确保threadId在metadata中注册（可能是新窗口首次访问此thread）
-		try {
-			await threadStorage.addThread(threadId);
-		} catch (error) {
-			console.warn("Failed to register existing thread in metadata:", error);
-		}
 
 		const view = await this.newWebContentsView(window.id, newTab);
 		this.attachViewToWindow(window, view);
@@ -311,17 +303,19 @@ export class TabService {
 
 		const { title: tabTitle, getHref } = getTabConfig(type);
 		const newTabId = nanoid();
+		const newThreadId = nanoid();
 		const newTab: Tab = {
 			id: newTabId,
 			title: title ?? tabTitle,
 			href: getHref(newTabId),
 			type,
 			active,
-			threadId: nanoid(),
+			threadId: newThreadId,
 		};
 		if (type === "chat") {
 			const newThread: ThreadParmas = {
-				title: "new tab",
+				id: newThreadId,
+				title: title,
 				temperature: 0,
 				topP: 1,
 				frequencyPenalty: 0,

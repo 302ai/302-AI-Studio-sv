@@ -1,6 +1,6 @@
-import type { ChatMessage, ThreadParmas } from "$lib/stores/chat-state.svelte";
+import type { ChatMessage } from "$lib/stores/chat-state.svelte";
 import type { ElectronAPI } from "@electron-toolkit/preload";
-import type { Tab, Theme } from "@shared/types";
+import type { Tab, Theme, ThreadParmas } from "@shared/types";
 import type { ElectronAPIExtension } from "../electron/main/generated/preload-services";
 
 declare global {
