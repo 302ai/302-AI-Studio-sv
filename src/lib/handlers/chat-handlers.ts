@@ -1,5 +1,9 @@
 import type { HF } from "$lib/transport/f-chat-transport";
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
+
 import {
 	convertToModelMessages,
 	extractReasoningMiddleware,
@@ -7,7 +11,7 @@ import {
 	wrapLanguageModel,
 } from "ai";
 
-export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
+export const ai302Handler: HF = async ({ messages, abortSignal, body }) => {
 	const {
 		baseUrl,
 		model = "gpt-4o",
@@ -64,6 +68,159 @@ export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
 				"search-service": "search1api",
 			},
 		},
+	});
+
+	return result.toUIMessageStream({
+		originalMessages: messages,
+		messageMetadata: () => ({ model: model, createdAt: new Date().toISOString() }),
+	});
+};
+
+export const openaiHandler: HF = async ({ messages, abortSignal, body }) => {
+	const {
+		baseUrl,
+		model = "gpt-4o",
+		apiKey,
+		temperature,
+		topP,
+		maxTokens,
+		frequencyPenalty,
+		presencePenalty,
+	}: {
+		baseUrl?: string;
+		model?: string;
+		apiKey?: string;
+		temperature?: number;
+		topP?: number;
+		maxTokens?: number;
+		frequencyPenalty?: number;
+		presencePenalty?: number;
+		isMCPActive?: boolean;
+	} = body;
+	const openai = createOpenAI({
+		baseURL: baseUrl || "https://api.openai.com/v1",
+		apiKey: apiKey || "[REDACTED:sk-secret]",
+	});
+
+	const wrapModel = wrapLanguageModel({
+		model: openai.chat(model),
+		middleware: [
+			extractReasoningMiddleware({ tagName: "think" }),
+			extractReasoningMiddleware({ tagName: "thinking" }),
+		],
+	});
+
+	const result = streamText({
+		model: wrapModel,
+		messages: convertToModelMessages(messages),
+		abortSignal,
+		temperature,
+		topP,
+		maxOutputTokens: maxTokens,
+		frequencyPenalty,
+		presencePenalty,
+	});
+
+	return result.toUIMessageStream({
+		originalMessages: messages,
+		messageMetadata: () => ({ model: model, createdAt: new Date().toISOString() }),
+	});
+};
+
+export const anthropicHandler: HF = async ({ messages, abortSignal, body }) => {
+	const {
+		baseUrl,
+		model = "claude-sonnet-4-20250514",
+		apiKey,
+		temperature,
+		topP,
+		maxTokens,
+		frequencyPenalty,
+		presencePenalty,
+	}: {
+		baseUrl?: string;
+		model?: string;
+		apiKey?: string;
+		temperature?: number;
+		topP?: number;
+		maxTokens?: number;
+		frequencyPenalty?: number;
+		presencePenalty?: number;
+		isMCPActive?: boolean;
+	} = body;
+	const openai = createAnthropic({
+		baseURL: baseUrl || "https://api.anthropic.com/v1",
+		apiKey: apiKey || "[REDACTED:sk-secret]",
+	});
+
+	const wrapModel = wrapLanguageModel({
+		model: openai.chat(model),
+		middleware: [
+			extractReasoningMiddleware({ tagName: "think" }),
+			extractReasoningMiddleware({ tagName: "thinking" }),
+		],
+	});
+
+	const result = streamText({
+		model: wrapModel,
+		messages: convertToModelMessages(messages),
+		abortSignal,
+		temperature,
+		topP,
+		maxOutputTokens: maxTokens,
+		frequencyPenalty,
+		presencePenalty,
+	});
+
+	return result.toUIMessageStream({
+		originalMessages: messages,
+		messageMetadata: () => ({ model: model, createdAt: new Date().toISOString() }),
+	});
+};
+
+export const googleHandler: HF = async ({ messages, abortSignal, body }) => {
+	const {
+		baseUrl,
+		model = "gpt-4o",
+		apiKey,
+		temperature,
+		topP,
+		maxTokens,
+		frequencyPenalty,
+		presencePenalty,
+	}: {
+		baseUrl?: string;
+		model?: string;
+		apiKey?: string;
+		temperature?: number;
+		topP?: number;
+		maxTokens?: number;
+		frequencyPenalty?: number;
+		presencePenalty?: number;
+		isMCPActive?: boolean;
+	} = body;
+	const openai = createGoogleGenerativeAI({
+		baseURL: baseUrl || "https://generativelanguage.googleapis.com/v1beta",
+		apiKey: apiKey || "[REDACTED:sk-secret]",
+	});
+
+	const wrapModel = wrapLanguageModel({
+		model: openai.chat(model),
+		middleware: [
+			extractReasoningMiddleware({ tagName: "think" }),
+			extractReasoningMiddleware({ tagName: "thinking" }),
+		],
+	});
+
+	const result = streamText({
+		model: wrapModel,
+		messages: convertToModelMessages(messages),
+		abortSignal,
+		temperature,
+		topP,
+		maxOutputTokens: maxTokens,
+		frequencyPenalty,
+		presencePenalty,
 	});
 
 	return result.toUIMessageStream({

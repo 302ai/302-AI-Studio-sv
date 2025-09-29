@@ -1,4 +1,9 @@
-import { openaiHandler } from "$lib/handlers/chat-handlers";
+import {
+	ai302Handler,
+	anthropicHandler,
+	googleHandler,
+	openaiHandler,
+} from "$lib/handlers/chat-handlers";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { FChatTransport } from "$lib/transport/f-chat-transport";
 import type { ChatMessage } from "$lib/types/chat";
@@ -227,7 +232,20 @@ export const chatState = new ChatState();
 export const chat = new Chat({
 	messages: persistedMessagesState.current,
 	transport: new FChatTransport<ChatMessage>({
-		handler: openaiHandler,
+		handler: () => {
+			switch (chatState.currentProvider?.apiType) {
+				case "302ai":
+					return ai302Handler;
+				case "openai":
+					return openaiHandler;
+				case "anthropic":
+					return anthropicHandler;
+				case "gemini":
+					return googleHandler;
+				default:
+					return ai302Handler;
+			}
+		},
 		body: () => ({
 			baseUrl: chatState.currentProvider?.baseUrl,
 			temperature: persistedChatParamsState.current.temperature,

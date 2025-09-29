@@ -32,6 +32,9 @@ function getModelsEndpoint(provider: ModelProvider): string {
 			}
 			return `${baseUrl}/v1/models?llm=1`;
 		case "anthropic":
+			if (baseUrl.endsWith("/v1")) {
+				return `${baseUrl}/models`;
+			}
 			return `${baseUrl}/v1/models`;
 		case "gemini":
 		case "google":

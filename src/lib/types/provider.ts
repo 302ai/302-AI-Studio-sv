@@ -11,7 +11,7 @@ export type ModelProviderStatus = "pending" | "connected" | "error" | "disabled"
 export interface ModelProvider {
 	id: string;
 	name: string;
-	apiType: string;
+	apiType: "302ai" | "openai" | "anthropic" | "gemini";
 	apiKey: string;
 	baseUrl: string;
 	enabled: boolean;

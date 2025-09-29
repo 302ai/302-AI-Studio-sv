@@ -111,6 +111,7 @@
 	},
 	"dependencies": {
 		"@302ai/unstorage": "^1.18.0",
+		"@ai-sdk/google": "^2.0.17",
 		"@ai-sdk/openai-compatible": "^1.0.19",
 		"@inlang/paraglide-js": "^2.3.2",
 		"@lobehub/icons-static-svg": "^1.66.0",

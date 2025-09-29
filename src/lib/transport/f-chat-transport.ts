@@ -46,7 +46,7 @@ export type PrepareReconnectToStreamRequest = (options: {
 	  }>;
 
 export type FChatTransportOptions<UI_MESSAGE extends UIMessage> = {
-	handler: HF;
+	handler: HF | (() => HF);
 	headers?: Resolvable<Record<string, string>>;
 	body?: Resolvable<Record<string, unknown>>;
 	prepareSendMessagesRequest?: PrepareSendMessagesRequest<UI_MESSAGE>;
@@ -54,7 +54,7 @@ export type FChatTransportOptions<UI_MESSAGE extends UIMessage> = {
 };
 
 export class FChatTransport<UI_MESSAGE extends ChatMessage> implements ChatTransport<UI_MESSAGE> {
-	protected handler: HF;
+	protected handler: HF | (() => HF);
 	protected headers: FChatTransportOptions<UI_MESSAGE>["headers"];
 	protected body: FChatTransportOptions<UI_MESSAGE>["body"];
 	protected prepareSendMessagesRequest?: PrepareSendMessagesRequest<UI_MESSAGE>;
@@ -109,7 +109,10 @@ export class FChatTransport<UI_MESSAGE extends ChatMessage> implements ChatTrans
 		const finalHeaders = preparedRequest?.headers ?? mergedHeaders;
 		const finalBody = preparedRequest?.body ?? mergedBody;
 
-		return await this.handler({
+		const resolvedHandler =
+			typeof this.handler === "function" ? (this.handler as () => HF)() : (this.handler as HF);
+
+		return await resolvedHandler({
 			chatId: options.chatId,
 			messages: options.messages,
 			body: finalBody,
