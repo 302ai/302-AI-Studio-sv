@@ -7,6 +7,8 @@ import {
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { FChatTransport } from "$lib/transport/f-chat-transport";
 import type { ChatMessage } from "$lib/types/chat";
+import { ChatErrorHandler, type ChatError } from "$lib/utils/error-handler";
+import { notificationState } from "./notification-state.svelte";
 
 import type { ModelProvider } from "$lib/types/provider";
 import { clone } from "$lib/utils/clone";
@@ -17,9 +19,6 @@ import { persistedProviderState, providerState } from "./provider-state.svelte";
 export interface Thread {
 	id: string;
 }
-
-// Updated ChatMessage interface using the standardized Model type
-// Chat parameters interface
 
 console.log("app-chat-messages:" + window.tab.threadId);
 export const persistedMessagesState = new PersistedState<ChatMessage[]>(
@@ -32,6 +31,9 @@ export const persistedChatParamsState = new PersistedState<ThreadParmas>(
 );
 
 class ChatState {
+	private lastError: ChatError | null = $state(null);
+	private retryInProgress = $state(false);
+
 	get inputValue(): string {
 		return persistedChatParamsState.current.inputValue;
 	}
@@ -158,23 +160,87 @@ class ChatState {
 
 	isLastMessageStreaming = $derived(this.isStreaming && this.hasMessages);
 
+	get hasError(): boolean {
+		return this.lastError !== null;
+	}
+
+	get canRetry(): boolean {
+		return (
+			this.hasError &&
+			!this.retryInProgress &&
+			this.lastError !== null &&
+			ChatErrorHandler.isRetryable(this.lastError) &&
+			notificationState.canRetry
+		);
+	}
+
+	private handleChatError = (error: unknown) => {
+		const chatError = ChatErrorHandler.createError(error, {
+			provider: this.currentProvider?.name,
+			model: this.selectedModel?.id,
+			action: "send_message",
+			retryable: true,
+		});
+
+		this.lastError = chatError;
+		notificationState.setError(chatError);
+		ChatErrorHandler.showErrorNotification(chatError);
+	};
+
+	private resetError = () => {
+		this.lastError = null;
+		notificationState.clearError();
+	};
+
+	retryLastMessage = async () => {
+		if (!this.canRetry || !this.lastError) {
+			return;
+		}
+
+		this.retryInProgress = true;
+		notificationState.incrementRetryCount();
+
+		try {
+			const retryDelay = ChatErrorHandler.getRetryDelay(this.lastError);
+			if (retryDelay > 0) {
+				await new Promise((resolve) => setTimeout(resolve, retryDelay));
+			}
+
+			this.resetError();
+
+			if (this.hasMessages && this.messages.length > 0) {
+				await this.regenerateMessage();
+			}
+		} catch (error) {
+			this.handleChatError(error);
+		} finally {
+			this.retryInProgress = false;
+		}
+	};
+
 	sendMessage = () => {
 		if (this.sendMessageEnabled) {
-			const currentModel = this.selectedModel!;
+			try {
+				const currentModel = this.selectedModel!;
 
-			chat.sendMessage(
-				{ text: this.inputValue },
-				{
-					body: {
-						model: currentModel.id,
-						apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
-							?.apiKey,
+				this.resetError();
+
+				chat.sendMessage(
+					{ text: this.inputValue },
+					{
+						body: {
+							model: currentModel.id,
+							apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
+								?.apiKey,
+						},
 					},
-				},
-			);
+				);
 
-			this.inputValue = "";
-			this.attachments = [];
+				this.inputValue = "";
+				this.attachments = [];
+			} catch (error) {
+				this.handleChatError(error);
+			}
 		}
 	};
 
@@ -187,6 +253,8 @@ class ChatState {
 		const currentModel = this.selectedModel!;
 
 		try {
+			this.resetError();
+
 			await chat.regenerate({
 				...(messageId && { messageId }),
 				body: {
@@ -197,6 +265,7 @@ class ChatState {
 			});
 		} catch (error) {
 			console.error("Failed to regenerate message:", error);
+			this.handleChatError(error);
 		}
 	};
 
