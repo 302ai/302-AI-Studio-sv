@@ -28,6 +28,11 @@
 
 	let isHovered = $state(false);
 	let shouldShowStar = $derived(isFavorite || isHovered);
+
+	function handleClick(threadId: string) {
+		if (isActive) return;
+		onThreadClick(threadId);
+	}
 </script>
 
 <ContextMenu.Root>
@@ -36,11 +41,11 @@
 			"w-full text-left h-10 relative flex items-center pl-4 pr-2 rounded-[10px]",
 			isActive ? "bg-accent" : "hover:bg-secondary",
 		)}
-		onclick={() => onThreadClick(threadId)}
+		onclick={() => handleClick(threadId)}
 		onkeydown={(e) => {
 			if (e.key === "Enter" || e.key === " ") {
 				e.preventDefault();
-				onThreadClick(threadId);
+				handleClick(threadId);
 			}
 		}}
 		onmouseenter={() => (isHovered = true)}

@@ -305,6 +305,19 @@ export class TabService {
 			this.windowActiveTabId.delete(fromWindow.id);
 		}
 
+		// Update window ID in WebContents to fix state management issues
+		view.webContents.executeJavaScript(`
+			window.windowId = "${toWindow.id}";
+			// Trigger TabBarState to refresh window ID
+			if (window.dispatchEvent) {
+				window.dispatchEvent(new CustomEvent('windowIdChanged', { 
+					detail: { newWindowId: "${toWindow.id}" } 
+				}));
+			}
+		`).catch((error) => {
+			console.error(`Failed to update window ID for tab ${tabId}:`, error);
+		});
+
 		// Add to target window
 		this.attachViewToWindow(toWindow, view);
 
@@ -318,34 +331,6 @@ export class TabService {
 
 		// Switch to this tab in target window
 		this.switchActiveTab(toWindow, tabId);
-	}
-
-	/**
-	 * Remove a tab from window without destroying the WebContentsView (for transfer purposes)
-	 */
-	detachTabFromWindow(window: BrowserWindow, tabId: string): void {
-		console.log(`Detaching Tab ${tabId} from window ${window.id}`);
-
-		const view = this.tabViewMap.get(tabId);
-		if (isUndefined(view)) return;
-
-		// Remove view from window but don't destroy webContents
-		window.contentView.removeChildView(view);
-
-		// Remove from window's view list
-		const windowViews = this.windowTabView.get(window.id);
-		if (!isUndefined(windowViews)) {
-			const updatedViews = windowViews.filter((v) => v !== view);
-			this.windowTabView.set(window.id, updatedViews);
-		}
-
-		// Remove from window's active tab if it was active
-		const activeTabId = this.windowActiveTabId.get(window.id);
-		if (activeTabId === tabId) {
-			this.windowActiveTabId.delete(window.id);
-		}
-
-		// Keep the view and tab data intact for potential reuse
 	}
 
 	// ******************************* IPC Methods ******************************* //
@@ -370,7 +355,8 @@ export class TabService {
 			threadId,
 		};
 
-		const view = await this.newWebContentsView(window.id, newTab);
+		const tabs = await tabStorage.getTabs(window.id.toString());
+		const view = await this.newWebContentsView(window.id, newTab, tabs ?? []);
 		this.attachViewToWindow(window, view);
 		this.switchActiveTab(window, newTab.id);
 
@@ -432,7 +418,8 @@ export class TabService {
 			await storageService.setItemInternal("app-chat-messages:" + newTab.threadId, newMessages);
 			await threadStorage.addThread(newTab.threadId);
 		}
-		const view = await this.newWebContentsView(window.id, newTab);
+		const tabs = await tabStorage.getTabs(window.id.toString());
+		const view = await this.newWebContentsView(window.id, newTab, tabs ?? []);
 		this.attachViewToWindow(window, view);
 		this.switchActiveTab(window, newTab.id);
 

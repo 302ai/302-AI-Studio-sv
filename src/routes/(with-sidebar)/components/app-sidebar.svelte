@@ -79,14 +79,11 @@
 
 	async function handleThreadClick(threadId: string) {
 		const existingTab = tabBarState.tabs.find((tab) => tab.threadId === threadId);
-
 		if (existingTab) {
 			await tabBarState.handleActivateTab(existingTab.id);
 		} else {
 			await tabBarState.handleNewTabForExistingThread(threadId);
 		}
-
-		threadsState.activeThreadId = threadId;
 	}
 
 	function handleToggleFavorite(threadId: string, event: Event) {

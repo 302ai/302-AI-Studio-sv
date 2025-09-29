@@ -242,11 +242,14 @@ export class WindowService {
 	}
 
 	// ******************************* IPC Methods ******************************* //
-	async handleSplitShellWindow(event: IpcMainInvokeEvent, triggerTabId: string) {
+	async handleSplitShellWindow(
+		event: IpcMainInvokeEvent,
+		triggerTabId: string,
+	): Promise<string | null> {
 		const fromWindow = BrowserWindow.fromWebContents(event.sender);
-		if (isNull(fromWindow)) return;
+		if (isNull(fromWindow)) return null;
 		const triggerTab = tabService.getTabById(triggerTabId);
-		if (isUndefined(triggerTab)) return;
+		if (isUndefined(triggerTab)) return null;
 
 		const { shellWindow, shellView } = await this.createShellWindow();
 		const newShellWindowId = shellWindow.id;
@@ -257,6 +260,8 @@ export class WindowService {
 
 		const newShellWindowTabs = [{ ...triggerTab, active: true }];
 		await tabStorage.updateWindowTabs(newShellWindowId.toString(), newShellWindowTabs);
+
+		return newShellWindowId.toString();
 	}
 
 	async handleMoveTabIntoExistingWindow(

@@ -11,6 +11,8 @@ const app = {
 
 const tabdata = getAdditionalArgv("tab");
 const tab = tabdata ? parse(tabdata ?? "") : tabdata;
+const tabsData = getAdditionalArgv("tabs");
+const tabs = tabsData ? parse(tabsData ?? "") : [];
 
 const windowId = getAdditionalArgv("window-id") ?? "";
 
@@ -47,6 +49,7 @@ if (process.contextIsolated) {
 		// Expose shell window ID from process arguments
 		contextBridge.exposeInMainWorld("windowId", windowId);
 		contextBridge.exposeInMainWorld("tab", tab);
+		contextBridge.exposeInMainWorld("tabs", tabs);
 		contextBridge.exposeInMainWorld("app", app);
 		contextBridge.exposeInMainWorld("thread", thread);
 		contextBridge.exposeInMainWorld("messages", messages);

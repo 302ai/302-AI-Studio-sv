@@ -14,6 +14,7 @@ declare global {
 		};
 		windowId: string;
 		tab: Tab;
+		tabs: Tab[];
 		thread: ThreadParmas;
 		messages: ChatMessage[];
 		app: {

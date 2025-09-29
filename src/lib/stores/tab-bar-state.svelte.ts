@@ -12,7 +12,7 @@ export const persistedTabState = new PersistedState<TabState>(
 const { tabService, windowService, threadService } = window.electronAPI;
 
 class TabBarState {
-	readonly #windowId = $state<string>(window.windowId);
+	#windowId = $state<string>(window.windowId);
 	#activeOverlayId = $state<string | null>(null);
 	#isShellViewElevated = $state<boolean>(false);
 
@@ -33,6 +33,17 @@ class TabBarState {
 
 	constructor() {
 		console.log("windowId", this.#windowId);
+		console.log("tabs", this.tabs);
+
+		// Listen for window ID changes when tab is moved between windows
+		if (typeof window !== 'undefined') {
+			window.addEventListener('windowIdChanged', (event: Event) => {
+				const customEvent = event as CustomEvent<{ newWindowId: string }>;
+				const { newWindowId } = customEvent.detail;
+				console.log(`Window ID changed from ${this.#windowId} to ${newWindowId}`);
+				this.#windowId = newWindowId;
+			});
+		}
 	}
 
 	// ******************************* Private Methods ******************************* //
