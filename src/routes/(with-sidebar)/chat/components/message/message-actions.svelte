@@ -6,12 +6,29 @@
 		enabledActions?: ActionType[];
 	}
 
-	// Helper function to extract text content from UIMessage
 	function getMessageContent(message: ChatMessage): string {
 		return message.parts
 			.filter((part) => part.type === "text")
 			.map((part) => part.text)
 			.join("");
+	}
+	function getAssistantMessageContent(message: ChatMessage): string {
+		const textParts = message.parts.filter((part) => part.type === "text");
+		const reasoningParts = message.parts.filter((part) => part.type === "reasoning");
+
+		const textContent = textParts.map((part) => part.text).join("");
+		const reasoningContent = reasoningParts
+			.map((part) => `<thinking>\n${part.text}\n</thinking>`)
+			.join("\n");
+
+		if (reasoningContent && textContent) {
+			return `${reasoningContent}\n\n${textContent}`;
+		} else if (textContent) {
+			return textContent;
+		} else if (reasoningContent) {
+			return reasoningContent;
+		}
+		return "";
 	}
 </script>
 
@@ -54,7 +71,11 @@
 </script>
 
 {#snippet actionCopy()}
-	<CopyButton content={getMessageContent(message)} />
+	<CopyButton
+		content={message.role === "assistant"
+			? getAssistantMessageContent(message)
+			: getMessageContent(message)}
+	/>
 {/snippet}
 
 {#snippet actionRegenerate()}
