@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 	import sendMessageIcon from "$lib/assets/send-message.svg";
 	import { ModelSelect } from "$lib/components/buss/model-select";
 	import { Button } from "$lib/components/ui/button";
@@ -6,6 +7,7 @@
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { m } from "$lib/paraglide/messages.js";
 	import { chat, chatState } from "$lib/stores/chat-state.svelte";
+	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
 	import { toast } from "svelte-sonner";
 	import { match } from "ts-pattern";
@@ -14,19 +16,46 @@
 
 	let openModelSelect = $state<() => void>();
 
+	// Check if any providers are properly configured with API keys
+	const hasConfiguredProviders = $derived(() => {
+		return persistedProviderState.current.some(
+			(provider) => provider.enabled && provider.apiKey && provider.apiKey.trim() !== "",
+		);
+	});
+
 	function handleSendMessage() {
 		match({
 			isEmpty: chatState.inputValue.trim() === "" && chatState.attachments.length === 0,
+			noProviders: !hasConfiguredProviders(),
 			noModel: chatState.selectedModel === null,
 		})
 			.with({ isEmpty: true }, () => {
 				toast.warning(m.toast_empty_message());
 			})
+			.with({ noProviders: true }, () => {
+				toast.info(m.toast_no_provider_configured(), {
+					action: {
+						label: m.text_button_go_to_settings(),
+						onClick: () => goto("/settings/model-settings"),
+					},
+				});
+			})
 			.with({ noModel: true }, () => {
 				toast.warning(m.toast_no_model(), {
 					action: {
 						label: m.text_button_select_model(),
-						onClick: () => openModelSelect?.(),
+						onClick: () => {
+							if (!hasConfiguredProviders()) {
+								toast.info(m.toast_no_provider_configured(), {
+									action: {
+										label: m.text_button_go_to_settings(),
+										onClick: () => goto("/settings/model-settings"),
+									},
+								});
+								return;
+							}
+							openModelSelect?.();
+						},
 					},
 				});
 			})
@@ -75,11 +104,34 @@
 					onModelSelect={(model) => chatState.handleSelectedModelChange(model)}
 				>
 					{#snippet trigger({ onclick })}
-						{((openModelSelect = onclick), "")}
+						{((openModelSelect = () => {
+							if (!hasConfiguredProviders()) {
+								toast.info(m.toast_no_provider_configured(), {
+									action: {
+										label: m.text_button_go_to_settings(),
+										onClick: () => goto("/settings/model-settings"),
+									},
+								});
+								return;
+							}
+							onclick();
+						}),
+						"")}
 						<Button
 							variant="ghost"
 							class="text-sm text-foreground/50 hover:!bg-chat-action-hover"
-							{onclick}
+							onclick={() => {
+								if (!hasConfiguredProviders()) {
+									toast.info(m.toast_no_provider_configured(), {
+										action: {
+											label: m.text_button_go_to_settings(),
+											onClick: () => goto("/settings/model-settings"),
+										},
+									});
+									return;
+								}
+								openModelSelect?.();
+							}}
 						>
 							{chatState.selectedModel?.name ?? m.text_button_select_model()}
 						</Button>
