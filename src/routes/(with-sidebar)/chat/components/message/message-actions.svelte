@@ -65,8 +65,13 @@
 	}
 
 	function handleRegenerate() {
-		// TODO: 实现重新生成功能
-		console.log("Regenerate message:", message.id);
+		if (isEditDialogOpen && editContent.trim() !== getMessageContent(message)) {
+			chatState.updateMessage(message.id, editContent.trim());
+			isEditDialogOpen = false;
+			editContent = "";
+		}
+
+		chatState.regenerateMessage(message.id);
 	}
 </script>
 
@@ -84,8 +89,9 @@
 		class="text-muted-foreground hover:!bg-chat-action-hover"
 		tooltip={m.title_regenerate()}
 		onclick={handleRegenerate}
+		disabled={!chatState.canRegenerate || chatState.isStreaming}
 	>
-		<RefreshCcw />
+		<RefreshCcw class={chatState.isStreaming ? "animate-spin" : ""} />
 	</ButtonWithTooltip>
 {/snippet}
 
@@ -122,7 +128,16 @@
 				</Button>
 				<div class="flex gap-2">
 					{#if message.role === "user"}
-						<Button variant="secondary" onclick={handleRegenerate}>
+						<Button
+							variant="secondary"
+							onclick={handleRegenerate}
+							disabled={!chatState.canRegenerate ||
+								chatState.isStreaming ||
+								editContent.trim() === ""}
+						>
+							{#if chatState.isStreaming}
+								<RefreshCcw class="animate-spin mr-2 h-4 w-4" />
+							{/if}
 							{m.title_regenerate()}
 						</Button>
 					{/if}

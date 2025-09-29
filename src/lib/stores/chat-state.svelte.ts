@@ -131,8 +131,6 @@ class ChatState {
 	set maxTokens(value: number | null) {
 		persistedChatParamsState.current.maxTokens = value;
 	}
-
-	// Get provider name by looking up the provider from the model's providerId
 	providerType = $derived<string | null>(
 		this.selectedModel
 			? (providerState.getProvider(this.selectedModel.providerId)?.name ?? null)
@@ -145,6 +143,18 @@ class ChatState {
 		(this.inputValue.trim() !== "" || this.attachments.length > 0) && !!this.selectedModel,
 	);
 	hasMessages = $derived(this.messages.length > 0);
+
+	isStreaming = $derived(chat.status === "streaming");
+	isSubmitted = $derived(chat.status === "submitted");
+	isReady = $derived(chat.status === "ready");
+	isError = $derived(chat.status === "error");
+	canRegenerate = $derived(
+		(this.isReady || this.isError) &&
+			this.hasMessages &&
+			!!this.selectedModel &&
+			this.messages.some((msg) => msg.role === "assistant"),
+	);
+	lastAssistantMessage = $derived(this.messages.findLast((msg) => msg.role === "assistant"));
 
 	sendMessage = () => {
 		if (this.sendMessageEnabled) {
@@ -166,12 +176,46 @@ class ChatState {
 		}
 	};
 
+	regenerateMessage = async (messageId?: string) => {
+		if (!this.canRegenerate) {
+			console.warn("Cannot regenerate: chat is not ready or no model selected");
+			return;
+		}
+
+		const currentModel = this.selectedModel!;
+
+		try {
+			await chat.regenerate({
+				...(messageId && { messageId }),
+				body: {
+					model: currentModel.id,
+					apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
+						?.apiKey,
+				},
+			});
+		} catch (error) {
+			console.error("Failed to regenerate message:", error);
+		}
+	};
+
 	clearMessages() {
 		this.messages = [];
 	}
 
 	updateMessage(messageId: string, content: string) {
-		this.messages = this.messages.map((msg) => (msg.id === messageId ? { ...msg, content } : msg));
+		const updatedMessages = this.messages.map((msg) => {
+			if (msg.id === messageId) {
+				return {
+					...msg,
+					parts: msg.parts.map((part) =>
+						part.type === "text" ? { ...part, text: content } : part,
+					),
+				};
+			}
+			return msg;
+		});
+
+		chat.messages = updatedMessages;
 	}
 
 	addAttachment(attachment: AttachmentFile) {
