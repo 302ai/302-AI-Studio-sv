@@ -99,6 +99,7 @@ const getPackagerConfig = () => {
 		asar: true,
 		icon: "static/icon",
 		executableName: "302-ai-studio",
+		appBundleId: "com.302ai.302aistudio",
 	};
 
 	if (process.platform === "darwin") {
