@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "0.0.30",
+	"version": "0.0.31",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
