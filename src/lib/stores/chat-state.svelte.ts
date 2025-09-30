@@ -16,6 +16,8 @@ import { Chat } from "@ai-sdk/svelte";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 
+const { broadcastService } = window.electronAPI;
+
 export interface Thread {
 	id: string;
 }
@@ -392,7 +394,8 @@ export const chat = new Chat({
 		// Update thread title with first user message if title is empty or default
 		const isFirstMessage = messages.length === 2; // User message + AI response
 		const currentTitle = persistedChatParamsState.current.title;
-		const isDefaultTitle = !currentTitle || currentTitle === "New Chat" || currentTitle === "新对话";
+		const isDefaultTitle =
+			!currentTitle || currentTitle === "New Chat" || currentTitle === "新对话";
 
 		if (isFirstMessage && isDefaultTitle) {
 			const firstUserMessage = messages.find((msg) => msg.role === "user");
@@ -411,5 +414,7 @@ export const chat = new Chat({
 		// Update the updatedAt timestamp
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		persistedChatParamsState.current.updatedAt = new Date();
+
+		broadcastService.broadcastExcludeSource("threads-updated", {});
 	},
 });

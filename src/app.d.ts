@@ -11,6 +11,7 @@ declare global {
 		electronAPI: ElectronAPIExtension;
 		electronIPC: {
 			onThemeChange: (callback: (theme: Theme) => void) => void;
+			onBroadcastEvent: (callback: (eventData: BroadcastEventData) => void) => void;
 		};
 		windowId: string;
 		tab: Tab;

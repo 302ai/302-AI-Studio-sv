@@ -36,14 +36,12 @@ class TabBarState {
 		console.log("tabs", this.tabs);
 
 		// Listen for window ID changes when tab is moved between windows
-		if (typeof window !== 'undefined') {
-			window.addEventListener('windowIdChanged', (event: Event) => {
-				const customEvent = event as CustomEvent<{ newWindowId: string }>;
-				const { newWindowId } = customEvent.detail;
-				console.log(`Window ID changed from ${this.#windowId} to ${newWindowId}`);
-				this.#windowId = newWindowId;
-			});
-		}
+		window.addEventListener("windowIdChanged", (event: Event) => {
+			const customEvent = event as CustomEvent<{ newWindowId: string }>;
+			const { newWindowId } = customEvent.detail;
+			console.log(`Window ID changed from ${this.#windowId} to ${newWindowId}`);
+			this.#windowId = newWindowId;
+		});
 	}
 
 	// ******************************* Private Methods ******************************* //

@@ -1,8 +1,10 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import type { ThreadMetadata } from "@shared/types";
 import { debounce } from "es-toolkit";
+import { persistedChatParamsState } from "./chat-state.svelte";
 
-const { threadService } = window.electronAPI;
+const { threadService, broadcastService } = window.electronAPI;
+const { onBroadcastEvent } = window.electronIPC;
 
 export const persistedThreadState = new PersistedState<ThreadMetadata>(
 	"ThreadStorage:thread-metadata",
@@ -15,9 +17,31 @@ export const persistedThreadState = new PersistedState<ThreadMetadata>(
 class ThreadsState {
 	#threadIds = $derived(persistedThreadState.current.threadIds);
 	#favorites = $derived(persistedThreadState.current.favorites);
+	#updatedAt = $derived(persistedChatParamsState.current.updatedAt);
+	#lastSyncTime = $state(Date.now());
+
+	constructor() {
+		onBroadcastEvent((eventData) => {
+			console.log("Received broadcast event:", eventData);
+
+			if (eventData.broadcastEvent === "threads-updated") {
+				console.log("Threads updated from other tab, triggering sync");
+				this.#lastSyncTime = Date.now();
+			}
+		});
+	}
 
 	threads = $derived.by(async () => {
 		const threadIds = this.#threadIds;
+		const updatedAt = this.#updatedAt;
+		const lastSyncTime = this.#lastSyncTime;
+
+		console.log("Thread recalculation triggered by:", {
+			threadIdsLength: threadIds.length,
+			updatedAt: updatedAt,
+			lastSyncTime: lastSyncTime,
+		});
+
 		if (threadIds.length === 0) return [];
 		try {
 			const threadsData = await threadService.getThreads();
@@ -72,6 +96,9 @@ class ThreadsState {
 				if (this.activeThreadId === threadId) {
 					this.activeThreadId = "";
 				}
+
+				// Broadcast to other tabs about the deletion
+				await broadcastService.broadcastExcludeSource("threads-updated", { threadId });
 			}
 			return success;
 		} catch (error) {

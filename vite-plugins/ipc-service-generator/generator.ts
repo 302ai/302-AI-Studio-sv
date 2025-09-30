@@ -1,11 +1,11 @@
-import type {
-	ServiceMethod,
-	GeneratedIpcStructure,
-	IpcServiceGeneratorOptions,
-	GenericParameter,
-} from "./types";
 import dedent from "dedent";
 import * as path from "path";
+import type {
+	GeneratedIpcStructure,
+	GenericParameter,
+	IpcServiceGeneratorOptions,
+	ServiceMethod,
+} from "./types";
 
 /**
  * IPC structure generator
@@ -326,6 +326,7 @@ export class IpcStructureGenerator {
 				: "";
 
 		return dedent`
+      /* eslint-disable @typescript-eslint/no-explicit-any */
 			import { ipcRenderer } from 'electron';
 			${typeImports}
 

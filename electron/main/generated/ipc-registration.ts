@@ -1,5 +1,12 @@
 import { ipcMain } from "electron";
-import { storageService, appService, threadService, tabService, windowService } from "../services";
+import {
+	storageService,
+	appService,
+	broadcastService,
+	threadService,
+	tabService,
+	windowService,
+} from "../services";
 
 /**
  * Auto-generated IPC service interfaces
@@ -36,6 +43,11 @@ export function registerIpcHandlers() {
 
 	// appService service registration
 	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
+
+	// broadcastService service registration
+	ipcMain.handle("broadcastService:broadcastExcludeSource", (event, broadcastEvent, data) =>
+		broadcastService.broadcastExcludeSource(event, broadcastEvent, data),
+	);
 
 	// threadService service registration
 	ipcMain.handle("threadService:getThreads", (event) => threadService.getThreads(event));
@@ -106,6 +118,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:watch");
 	ipcMain.removeHandler("storageService:unwatch");
 	ipcMain.removeHandler("appService:setTheme");
+	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
 	ipcMain.removeHandler("threadService:getThreads");
 	ipcMain.removeHandler("threadService:getThread");
 	ipcMain.removeHandler("threadService:deleteThread");

@@ -120,3 +120,12 @@ export interface ThreadData {
 	thread: ThreadParmas;
 	isFavorite: boolean;
 }
+
+// Broadcast system types
+export type BroadcastEvent = "threads-updated" | "theme-changed" | "settings-updated";
+
+export interface BroadcastEventData {
+	broadcastEvent: BroadcastEvent;
+	data?: unknown;
+	sourceWebContentsId?: number;
+}
