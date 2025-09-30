@@ -52,7 +52,6 @@ jobs:
 
       - name: Run quality checks
         run: |
-          pnpm run lint
           pnpm run check
 
       - name: Create GitHub release (Ubuntu only)

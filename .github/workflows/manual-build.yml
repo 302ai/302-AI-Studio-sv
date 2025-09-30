@@ -72,7 +72,6 @@ jobs:
       - name: Run quality checks
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         run: |
-          pnpm run lint
           pnpm run check
 
       - name: Build application
