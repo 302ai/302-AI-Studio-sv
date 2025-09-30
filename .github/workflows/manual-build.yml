@@ -72,7 +72,7 @@ jobs:
       - name: Run quality checks
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         run: |
-          pnpm run lint -- electron/main/
+          npx eslint electron/main/
           pnpm run check
 
       - name: Build application

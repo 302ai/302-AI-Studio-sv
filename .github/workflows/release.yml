@@ -52,7 +52,7 @@ jobs:
 
       - name: Run quality checks
         run: |
-          pnpm run lint -- electron/main/
+          npx eslint electron/main/
           pnpm run check
 
       - name: Create GitHub release (Ubuntu only)
