@@ -60,7 +60,7 @@
 		"@electron-toolkit/preload": "^3.0.2",
 		"@electron-toolkit/tsconfig": "^1.0.1",
 		"@electron/fuses": "^2.0.0",
-		"@electron/notarize": "^3.1.0",
+		"@electron/notarize": "3.1.0",
 		"@electron/osx-sign": "^2.2.0",
 		"@eslint/compat": "^1.4.0",
 		"@eslint/js": "^9.35.0",
@@ -143,7 +143,11 @@
 			"electron-winstaller"
 		],
 		"patchedDependencies": {
-			"@sveltejs/kit": "patches/@sveltejs__kit.patch"
+			"@sveltejs/kit": "patches/@sveltejs__kit.patch",
+			"@electron/notarize@3.1.0": "patches/@electron__notarize@3.1.0.patch"
+		},
+		"overrides": {
+			"@electron/notarize": "3.1.0"
 		},
 		"ignoredBuiltDependencies": [
 			"@tailwindcss/oxide"
