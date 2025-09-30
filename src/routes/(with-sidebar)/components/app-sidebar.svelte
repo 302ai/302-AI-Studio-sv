@@ -131,6 +131,7 @@
 								onThreadClick={handleThreadClick}
 								onToggleFavorite={handleToggleFavorite}
 								onThreadDelete={handleThreadDelete}
+								deletable={threads.length > 1}
 							/>
 						{/each}
 					{/await}
@@ -166,6 +167,7 @@
 													onThreadClick={handleThreadClick}
 													onToggleFavorite={handleToggleFavorite}
 													onThreadDelete={handleThreadDelete}
+													deletable={group.length > 1}
 												/>
 											{/each}
 										</Collapsible.Content>

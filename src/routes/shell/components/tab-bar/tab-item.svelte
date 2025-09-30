@@ -11,7 +11,6 @@
 		onTabClose: (tabId: string) => void;
 		onTabCloseOthers: (tabId: string) => void;
 		onTabCloseOffside: (tabId: string) => void;
-		onTabCloseAll: () => void;
 		onOpenChange: (open: boolean) => void;
 		class?: string;
 	}
@@ -41,7 +40,6 @@
 		onTabClose,
 		onTabCloseOthers,
 		onTabCloseOffside,
-		onTabCloseAll,
 		onOpenChange,
 		class: className,
 	}: Props = $props();
@@ -197,10 +195,6 @@
 
 		<ContextMenu.Item onSelect={() => onTabCloseOffside(tab.id)} disabled={!offsideClosable}>
 			{m.label_button_close_offside()}
-		</ContextMenu.Item>
-
-		<ContextMenu.Item onSelect={() => onTabCloseAll()} disabled={!closable}>
-			{m.label_button_close_all()}
 		</ContextMenu.Item>
 	</ContextMenu.Content>
 </ContextMenu.Root>

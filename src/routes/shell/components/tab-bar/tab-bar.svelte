@@ -147,10 +147,6 @@
 		await tabBarState.handleTabCloseOffside(tabId);
 	}
 
-	async function handleTabCloseAll() {
-		await tabBarState.handleTabCloseAll();
-	}
-
 	onDestroy(() => {
 		buttonSpring.target = { opacity: 1, x: 0 };
 		buttonBounceSpring.target = { x: 0 };
@@ -219,7 +215,6 @@
 					onTabClose={handleTabClose}
 					onTabCloseOthers={handleTabCloseOthers}
 					onTabCloseOffside={handleTabCloseOffside}
-					onTabCloseAll={handleTabCloseAll}
 					onOpenChange={(open) => tabBarState.handleTabOverlayChange(tab.id, open)}
 				/>
 				<div class="shrink-0 px-0.5" style="cursor: pointer !important;">
