@@ -98,6 +98,13 @@ class ChatState {
 		persistedChatParamsState.current.isPrivateChatActive = value;
 	}
 
+	get title(): string {
+		return persistedChatParamsState.current.title;
+	}
+	set title(value: string) {
+		persistedChatParamsState.current.title = value;
+	}
+
 	// Chat Parameters
 	get temperature(): number | null {
 		return persistedChatParamsState.current.temperature;
@@ -381,5 +388,28 @@ export const chat = new Chat({
 	onFinish: ({ messages }) => {
 		console.log("更新完成", $state.snapshot(messages));
 		persistedMessagesState.current = messages;
+
+		// Update thread title with first user message if title is empty or default
+		const isFirstMessage = messages.length === 2; // User message + AI response
+		const currentTitle = persistedChatParamsState.current.title;
+		const isDefaultTitle = !currentTitle || currentTitle === "New Chat" || currentTitle === "新对话";
+
+		if (isFirstMessage && isDefaultTitle) {
+			const firstUserMessage = messages.find((msg) => msg.role === "user");
+			if (firstUserMessage) {
+				// Extract text content from the first text part
+				const textPart = firstUserMessage.parts.find((part) => part.type === "text");
+				if (textPart && "text" in textPart) {
+					// Get first 10 characters (considering emoji and multibyte characters)
+					const text = textPart.text.trim();
+					const titleText = [...text].slice(0, 10).join("");
+					persistedChatParamsState.current.title = titleText;
+				}
+			}
+		}
+
+		// Update the updatedAt timestamp
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		persistedChatParamsState.current.updatedAt = new Date();
 	},
 });
