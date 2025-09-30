@@ -12,7 +12,12 @@
 	const { children } = $props();
 
 	async function handleNewSettingsTab() {
-		await tabBarState.handleNewTab("Settings", "settings");
+		await tabBarState.handleNewTab(
+			m.title_settings(),
+			"settings",
+			true,
+			"/settings/general-settings",
+		);
 	}
 </script>
 

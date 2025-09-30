@@ -233,7 +233,7 @@ export class IpcStructureGenerator {
 				methods: Array<{
 					methodName: string;
 					channelName: string;
-					parameters: Array<{ name: string; type: string }>;
+					parameters: Array<{ name: string; type: string; isOptional: boolean }>;
 					returnType: string;
 					genericParameters: GenericParameter[];
 				}>;
@@ -257,7 +257,7 @@ export class IpcStructureGenerator {
 			const service = servicesMap.get(method.serviceName)!;
 			const businessParameters = method.parameters
 				.filter((p) => !p.isEventParam)
-				.map((p) => ({ name: p.name, type: p.type }));
+				.map((p) => ({ name: p.name, type: p.type, isOptional: p.isOptional }));
 
 			service.methods.push({
 				methodName: method.methodName,
@@ -281,7 +281,9 @@ export class IpcStructureGenerator {
 						const genericString = this.generateGenericParametersString(method.genericParameters);
 						const paramTypes =
 							method.parameters.length > 0
-								? method.parameters.map((p) => `${p.name}: ${p.type}`).join(", ")
+								? method.parameters
+										.map((p) => `${p.name}${p.isOptional ? "?" : ""}: ${p.type}`)
+										.join(", ")
 								: "";
 						return `${method.methodName}${genericString}(${paramTypes}): ${method.returnType};`;
 					})
@@ -297,7 +299,9 @@ export class IpcStructureGenerator {
 					.map((method) => {
 						const genericString = this.generateGenericParametersString(method.genericParameters);
 						const params = method.parameters.map((p) => p.name).join(", ");
-						const paramDefs = method.parameters.map((p) => `${p.name}: ${p.type}`).join(", ");
+						const paramDefs = method.parameters
+							.map((p) => `${p.name}${p.isOptional ? "?" : ""}: ${p.type}`)
+							.join(", ");
 						const argsArray = method.parameters.length > 0 ? `, ${params}` : "";
 
 						// For generic methods, we need to add type assertion

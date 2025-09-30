@@ -16,6 +16,7 @@ export interface ServiceMethod {
 		name: string;
 		type: string;
 		isEventParam: boolean;
+		isOptional: boolean; // 是否为可选参数
 	}>;
 	returnType: string;
 	genericParameters: GenericParameter[]; // 泛型参数
@@ -33,6 +34,7 @@ export interface GeneratedIpcStructure {
 			parameters: Array<{
 				name: string;
 				type: string;
+				isOptional: boolean; // 是否为可选参数
 			}>;
 			returnType: string;
 			genericParameters: GenericParameter[]; // 泛型参数

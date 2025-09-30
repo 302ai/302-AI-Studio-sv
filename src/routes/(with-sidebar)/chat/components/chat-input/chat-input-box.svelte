@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
 	import sendMessageIcon from "$lib/assets/send-message.svg";
 	import { ModelSelect } from "$lib/components/buss/model-select";
 	import { Button } from "$lib/components/ui/button";
@@ -8,6 +7,7 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { chat, chatState } from "$lib/stores/chat-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { toast } from "svelte-sonner";
 	import { match } from "ts-pattern";
@@ -24,6 +24,15 @@
 		);
 	});
 
+	async function handleGoToModelSettings() {
+		await tabBarState.handleNewTab(
+			m.title_settings(),
+			"settings",
+			true,
+			"/settings/model-settings",
+		);
+	}
+
 	function handleSendMessage() {
 		match({
 			isEmpty: chatState.inputValue.trim() === "" && chatState.attachments.length === 0,
@@ -37,7 +46,7 @@
 				toast.info(m.toast_no_provider_configured(), {
 					action: {
 						label: m.text_button_go_to_settings(),
-						onClick: () => goto("/settings/model-settings"),
+						onClick: () => handleGoToModelSettings(),
 					},
 				});
 			})
@@ -50,7 +59,7 @@
 								toast.info(m.toast_no_provider_configured(), {
 									action: {
 										label: m.text_button_go_to_settings(),
-										onClick: () => goto("/settings/model-settings"),
+										onClick: () => handleGoToModelSettings(),
 									},
 								});
 								return;
@@ -111,7 +120,7 @@
 								toast.info(m.toast_no_provider_configured(), {
 									action: {
 										label: m.text_button_go_to_settings(),
-										onClick: () => goto("/settings/model-settings"),
+										onClick: () => handleGoToModelSettings(),
 									},
 								});
 								return;
@@ -127,7 +136,7 @@
 									toast.info(m.toast_no_provider_configured(), {
 										action: {
 											label: m.text_button_go_to_settings(),
-											onClick: () => goto("/settings/model-settings"),
+											onClick: () => handleGoToModelSettings(),
 										},
 									});
 									return;

@@ -381,6 +381,7 @@ export class TabService {
 		title: string = "New Chat",
 		type: TabType = "chat",
 		active: boolean = true,
+		href?: string,
 	): Promise<string | null> {
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return null;
@@ -391,7 +392,7 @@ export class TabService {
 		const newTab: Tab = {
 			id: newTabId,
 			title: title ?? tabTitle,
-			href: getHref(newTabId),
+			href: href ?? getHref(newTabId),
 			type,
 			active,
 			threadId: newThreadId,

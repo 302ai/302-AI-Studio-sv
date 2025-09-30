@@ -108,12 +108,14 @@ export class TypeScriptServiceParser {
 		name: string;
 		type: string;
 		isEventParam: boolean;
+		isOptional: boolean;
 	}> {
 		return method.parameters.map((param) => {
 			const name = param.name.getText();
 			const type = this.getTypeText(param.type, classGenericParams);
 			const isEventParam = this.isEventParameter(param);
-			return { name, type, isEventParam };
+			const isOptional = !!param.questionToken; // 检测可选参数标识符 ?
+			return { name, type, isEventParam, isOptional };
 		});
 	}
 
