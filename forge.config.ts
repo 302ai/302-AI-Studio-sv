@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -92,12 +93,40 @@ const ensureNativePackagingDeps = (platform: NodeJS.Platform = process.platform)
 	nativePackagingDepsBuilt = true;
 };
 
-const config: ForgeConfig = {
-	packagerConfig: {
+// 构建 packagerConfig 的函数
+const getPackagerConfig = () => {
+	const baseConfig = {
 		asar: true,
 		icon: "static/icon",
 		executableName: "302-ai-studio",
-	},
+	};
+
+	if (process.platform === "darwin") {
+		const macConfig: any = {
+			...baseConfig,
+			osxSign: {
+				identity: "Developer ID Application: SONIER PTE. LTD.",
+				"hardened-runtime": true,
+				"gatekeeper-assess": false,
+				entitlements: "entitlements.plist",
+				"entitlements-inherit": "entitlements.plist",
+			},
+		};
+
+		macConfig.osxNotarize = {
+			appleId: process.env.APPLE_ID,
+			appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
+			teamId: process.env.APPLE_TEAM_ID,
+		};
+
+		return macConfig;
+	}
+
+	return baseConfig;
+};
+
+const config: ForgeConfig = {
+	packagerConfig: getPackagerConfig(),
 	rebuildConfig: {},
 	makers: [
 		new MakerSquirrel(

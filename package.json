@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "0.0.27",
+	"version": "0.0.28",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -60,6 +60,8 @@
 		"@electron-toolkit/preload": "^3.0.2",
 		"@electron-toolkit/tsconfig": "^1.0.1",
 		"@electron/fuses": "^2.0.0",
+		"@electron/notarize": "^3.1.0",
+		"@electron/osx-sign": "^2.2.0",
 		"@eslint/compat": "^1.4.0",
 		"@eslint/js": "^9.35.0",
 		"@internationalized/date": "^3.9.0",
