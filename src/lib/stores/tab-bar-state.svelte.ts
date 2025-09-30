@@ -115,9 +115,18 @@ class TabBarState {
 	async handleTabClose(tabId: string) {
 		if (!this.#windowId) return;
 
-		const newActiveTabId = await this.#handleTabRemovalWithActiveState(tabId);
+		const currentTabs = this.tabs;
 
-		await tabService.handleTabClose(tabId, newActiveTabId);
+		if (currentTabs.length > 1) {
+			const newActiveTabId = await this.#handleTabRemovalWithActiveState(tabId);
+
+			await tabService.handleTabClose(tabId, newActiveTabId);
+		} else {
+			persistedTabState.current[this.#windowId].tabs = [];
+			console.log("handleTabClose: currentTabs.length === 1");
+
+			this.handleNewTab();
+		}
 	}
 
 	async handleTabCloseOthers(tabId: string) {
@@ -165,9 +174,7 @@ class TabBarState {
 
 		await tabService.handleTabCloseAll();
 
-		setTimeout(() => {
-			this.handleNewTab();
-		}, 10);
+		this.handleNewTab();
 	}
 
 	async #createNewTab(title: string, type: TabType, active: boolean, href?: string) {

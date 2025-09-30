@@ -13,7 +13,6 @@ import {
 import { TempStorage } from "../../utils/temp-storage";
 import { storageService } from "../storage-service";
 import { tabStorage } from "../storage-service/tab-storage";
-import { threadStorage } from "../storage-service/thread-storage";
 
 type TabConfig = {
 	title: string;
@@ -420,7 +419,6 @@ export class TabService {
 			const newMessages: any = [];
 			await storageService.setItemInternal("app-thread:" + newTab.threadId, newThread);
 			await storageService.setItemInternal("app-chat-messages:" + newTab.threadId, newMessages);
-			await threadStorage.addThread(newTab.threadId);
 		}
 		const view = await this.newWebContentsView(window.id, newTab);
 		this.attachViewToWindow(window, view);

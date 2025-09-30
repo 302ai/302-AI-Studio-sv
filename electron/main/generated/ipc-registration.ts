@@ -50,6 +50,9 @@ export function registerIpcHandlers() {
 	);
 
 	// threadService service registration
+	ipcMain.handle("threadService:addThread", (event, threadId) =>
+		threadService.addThread(event, threadId),
+	);
 	ipcMain.handle("threadService:getThreads", (event) => threadService.getThreads(event));
 	ipcMain.handle("threadService:getThread", (event, threadId) =>
 		threadService.getThread(event, threadId),
@@ -119,6 +122,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:unwatch");
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
+	ipcMain.removeHandler("threadService:addThread");
 	ipcMain.removeHandler("threadService:getThreads");
 	ipcMain.removeHandler("threadService:getThread");
 	ipcMain.removeHandler("threadService:deleteThread");

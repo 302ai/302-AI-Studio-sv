@@ -22,8 +22,6 @@ class ThreadsState {
 
 	constructor() {
 		onBroadcastEvent((eventData) => {
-			console.log("Received broadcast event:", eventData);
-
 			if (eventData.broadcastEvent === "threads-updated") {
 				console.log("Threads updated from other tab, triggering sync");
 				this.#lastSyncTime = Date.now();

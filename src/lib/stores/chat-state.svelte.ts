@@ -16,7 +16,7 @@ import { Chat } from "@ai-sdk/svelte";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 
-const { broadcastService } = window.electronAPI;
+const { broadcastService, threadService } = window.electronAPI;
 
 export interface Thread {
 	id: string;
@@ -244,6 +244,8 @@ class ChatState {
 						},
 					},
 				);
+
+				threadService.addThread(persistedChatParamsState.current.id);
 
 				this.inputValue = "";
 				this.attachments = [];

@@ -14,7 +14,6 @@
 		onThreadClick: (threadId: string) => void;
 		onToggleFavorite: (threadId: string, event: Event) => void;
 		onThreadDelete: (threadId: string) => void;
-		deletable: boolean;
 	}
 
 	let {
@@ -25,7 +24,6 @@
 		onThreadClick,
 		onToggleFavorite,
 		onThreadDelete,
-		deletable,
 	}: Props = $props();
 
 	let isHovered = $state(false);
@@ -90,7 +88,7 @@
 
 		<ContextMenu.Separator />
 
-		<ContextMenu.Item onSelect={() => onThreadDelete(threadId)} disabled={!deletable}>
+		<ContextMenu.Item onSelect={() => onThreadDelete(threadId)}>
 			{m.title_button_delete()}
 		</ContextMenu.Item>
 	</ContextMenu.Content>

@@ -3,6 +3,16 @@ import type { IpcMainInvokeEvent } from "electron";
 import { threadStorage } from "../storage-service/thread-storage";
 
 export class ThreadService {
+	async addThread(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
+		try {
+			await threadStorage.addThread(threadId);
+			return true;
+		} catch (error) {
+			console.error("ThreadService: Failed to add thread:", error);
+			return false;
+		}
+	}
+
 	async getThreads(_event: IpcMainInvokeEvent): Promise<ThreadData[] | null> {
 		try {
 			return await threadStorage.getThreadsData();

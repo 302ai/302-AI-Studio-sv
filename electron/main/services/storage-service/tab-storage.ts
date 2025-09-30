@@ -3,7 +3,6 @@ import { webContents } from "electron";
 import { isNull } from "es-toolkit";
 import { nanoid } from "nanoid";
 import { storageService, StorageService } from ".";
-import { threadStorage } from "./thread-storage";
 
 export class TabStorage extends StorageService<TabState> {
 	constructor() {
@@ -67,7 +66,6 @@ export class TabStorage extends StorageService<TabState> {
 			});
 			await storageService.setItemInternal("app-thread:" + initTab.threadId, initThread);
 			await storageService.setItemInternal("app-chat-messages:" + initTab.threadId, []);
-			await threadStorage.addThread(initTab.threadId);
 		} else {
 			Object.values(result).forEach((windowTabs) => {
 				allWindowsTabs.push(windowTabs.tabs);
