@@ -306,17 +306,21 @@ export class TabService {
 		}
 
 		// Update window ID in WebContents to fix state management issues
-		view.webContents.executeJavaScript(`
+		view.webContents
+			.executeJavaScript(
+				`
 			window.windowId = "${toWindow.id}";
 			// Trigger TabBarState to refresh window ID
 			if (window.dispatchEvent) {
-				window.dispatchEvent(new CustomEvent('windowIdChanged', { 
-					detail: { newWindowId: "${toWindow.id}" } 
+				window.dispatchEvent(new CustomEvent('windowIdChanged', {
+					detail: { newWindowId: "${toWindow.id}" }
 				}));
 			}
-		`).catch((error) => {
-			console.error(`Failed to update window ID for tab ${tabId}:`, error);
-		});
+		`,
+			)
+			.catch((error) => {
+				console.error(`Failed to update window ID for tab ${tabId}:`, error);
+			});
 
 		// Add to target window
 		this.attachViewToWindow(toWindow, view);
@@ -355,8 +359,7 @@ export class TabService {
 			threadId,
 		};
 
-		const tabs = await tabStorage.getTabs(window.id.toString());
-		const view = await this.newWebContentsView(window.id, newTab, tabs ?? []);
+		const view = await this.newWebContentsView(window.id, newTab);
 		this.attachViewToWindow(window, view);
 		this.switchActiveTab(window, newTab.id);
 
@@ -418,8 +421,7 @@ export class TabService {
 			await storageService.setItemInternal("app-chat-messages:" + newTab.threadId, newMessages);
 			await threadStorage.addThread(newTab.threadId);
 		}
-		const tabs = await tabStorage.getTabs(window.id.toString());
-		const view = await this.newWebContentsView(window.id, newTab, tabs ?? []);
+		const view = await this.newWebContentsView(window.id, newTab);
 		this.attachViewToWindow(window, view);
 		this.switchActiveTab(window, newTab.id);
 
