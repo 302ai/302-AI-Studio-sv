@@ -16,6 +16,7 @@
 	import StreamingIndicator from "./streaming-indicator.svelte";
 
 	let openModelSelect = $state<() => void>();
+	let isComposing = $state(false); // 跟踪输入法composition状态
 
 	// Check if any providers are properly configured with API keys
 	const hasConfiguredProviders = $derived(() => {
@@ -99,10 +100,16 @@
 			bind:value={chatState.inputValue}
 			placeholder={m.placeholder_input_chat()}
 			onkeydown={(e) => {
-				if (e.key === "Enter" && !e.shiftKey) {
+				if (e.key === "Enter" && !e.shiftKey && !isComposing) {
 					handleSendMessage();
 					e.preventDefault();
 				}
+			}}
+			oncompositionstart={() => {
+				isComposing = true;
+			}}
+			oncompositionend={() => {
+				isComposing = false;
 			}}
 		/>
 
