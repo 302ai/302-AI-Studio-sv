@@ -1,11 +1,11 @@
 import { ipcMain } from "electron";
 import {
+	storageService,
 	appService,
 	broadcastService,
-	shortcutService,
-	storageService,
-	tabService,
 	threadService,
+	shortcutService,
+	tabService,
 	windowService,
 } from "../services";
 
@@ -147,7 +147,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("threadService:getThreads");
 	ipcMain.removeHandler("threadService:getThread");
 	ipcMain.removeHandler("threadService:deleteThread");
-
 	ipcMain.removeHandler("threadService:renameThread");
 	ipcMain.removeHandler("shortcutService:init");
 	ipcMain.removeHandler("shortcutService:updateShortcuts");

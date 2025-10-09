@@ -1,4 +1,5 @@
 <script lang="ts">
+	import "$lib/stores/shortcut-settings.state.svelte";
 	import "$lib/utils/key-manager";
 	import "$lib/utils/shortcut-actions-handler";
 	import favicon from "$lib/assets/favicon.svg";
