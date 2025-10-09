@@ -40,6 +40,20 @@ export class ThreadService {
 			return false;
 		}
 	}
+
+	async renameThread(
+		_event: IpcMainInvokeEvent,
+		threadId: string,
+		newName: string,
+	): Promise<boolean> {
+		try {
+			await threadStorage.renameThread(threadId, newName);
+			return true;
+		} catch (error) {
+			console.error("ThreadService: Failed to rename thread:", error);
+			return false;
+		}
+	}
 }
 
 export const threadService = new ThreadService();

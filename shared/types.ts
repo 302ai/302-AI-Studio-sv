@@ -122,7 +122,7 @@ export interface ThreadData {
 }
 
 // Broadcast system types
-export type BroadcastEvent = "threads-updated" | "theme-changed" | "settings-updated";
+export type BroadcastEvent = "thread-list-updated" | "theme-changed" | "settings-updated";
 
 export interface BroadcastEventData {
 	broadcastEvent: BroadcastEvent;

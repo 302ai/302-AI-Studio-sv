@@ -12,7 +12,8 @@
 		isActive: boolean;
 		isFavorite: boolean;
 		onThreadClick: (threadId: string) => void;
-		onToggleFavorite: (threadId: string, event: Event) => void;
+		onToggleFavorite: (threadId: string) => void;
+		onRenameThread: (threadId: string, currentName: string) => void;
 		onThreadDelete: (threadId: string) => void;
 	}
 
@@ -23,6 +24,7 @@
 		isFavorite,
 		onThreadClick,
 		onToggleFavorite,
+		onRenameThread,
 		onThreadDelete,
 	}: Props = $props();
 
@@ -32,6 +34,11 @@
 	function handleClick(threadId: string) {
 		if (isActive) return;
 		onThreadClick(threadId);
+	}
+
+	function handleToggleFavorite(threadId: string, e: Event) {
+		e.stopPropagation();
+		onToggleFavorite(threadId);
 	}
 </script>
 
@@ -63,10 +70,7 @@
 				shouldShowStar ? "opacity-100" : "opacity-0",
 				"hover:!bg-transparent",
 			)}
-			onclick={(e) => {
-				e.stopPropagation();
-				onToggleFavorite(threadId, e);
-			}}
+			onclick={(e) => handleToggleFavorite(threadId, e)}
 		>
 			<Star
 				size={16}
@@ -82,7 +86,11 @@
 	</ContextMenu.Trigger>
 
 	<ContextMenu.Content>
-		<ContextMenu.Item onSelect={(e) => onToggleFavorite(threadId, e)}>
+		<ContextMenu.Item onSelect={() => onRenameThread(threadId, thread.title)}>
+			{m.title_button_rename()}
+		</ContextMenu.Item>
+
+		<ContextMenu.Item onSelect={(e) => handleToggleFavorite(threadId, e)}>
 			{isFavorite ? m.title_button_unstar() : m.title_button_star()}
 		</ContextMenu.Item>
 

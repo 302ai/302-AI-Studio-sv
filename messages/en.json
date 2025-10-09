@@ -323,5 +323,9 @@
 	"label_yesterday": "Yesterday",
 	"label_last_7_days": "Last 7 Days",
 	"label_last_30_days": "Last 30 Days",
-	"label_earlier": "Earlier"
+	"label_earlier": "Earlier",
+	"title_button_rename": "Rename",
+	"title_rename": "Rename Conversation",
+	"text_description_rename": "Please enter a new conversation name",
+	"placeholder_input_rename": "New conversation name..."
 }

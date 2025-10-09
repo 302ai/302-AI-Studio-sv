@@ -48,10 +48,9 @@ if (process.contextIsolated) {
 			onBroadcastEvent: (callback: (eventData: BroadcastEventData) => void) => {
 				ipcRenderer.on("broadcast-event", (_, eventData) => callback(eventData));
 			},
-			// Legacy support - can be removed later
-			onThreadsUpdate: (callback: () => void) => {
+			onThreadListUpdate: (callback: () => void) => {
 				ipcRenderer.on("broadcast-event", (_, eventData: BroadcastEventData) => {
-					if (eventData.broadcastEvent === "threads-updated") {
+					if (eventData.broadcastEvent === "thread-list-updated") {
 						callback();
 					}
 				});

@@ -22,6 +22,17 @@ export class BroadcastService {
 			);
 	}
 
+	async broadcastToAll(
+		_event: IpcMainInvokeEvent,
+		broadcastEvent: BroadcastEvent,
+		data: any,
+	): Promise<void> {
+		const allWebContents = this.getAllWebContents();
+		allWebContents.forEach((webContents) =>
+			this.sendBroadcast(webContents, broadcastEvent, data, -1),
+		);
+	}
+
 	private getAllWebContents(): WebContents[] {
 		return BrowserWindow.getAllWindows().flatMap((window) => [
 			window.webContents,

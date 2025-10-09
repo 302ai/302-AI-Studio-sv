@@ -48,6 +48,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("broadcastService:broadcastExcludeSource", (event, broadcastEvent, data) =>
 		broadcastService.broadcastExcludeSource(event, broadcastEvent, data),
 	);
+	ipcMain.handle("broadcastService:broadcastToAll", (event, broadcastEvent, data) =>
+		broadcastService.broadcastToAll(event, broadcastEvent, data),
+	);
 
 	// threadService service registration
 	ipcMain.handle("threadService:addThread", (event, threadId) =>
@@ -59,6 +62,9 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("threadService:deleteThread", (event, threadId) =>
 		threadService.deleteThread(event, threadId),
+	);
+	ipcMain.handle("threadService:renameThread", (event, threadId, newName) =>
+		threadService.renameThread(event, threadId, newName),
 	);
 
 	// tabService service registration
@@ -122,10 +128,12 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:unwatch");
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
+	ipcMain.removeHandler("broadcastService:broadcastToAll");
 	ipcMain.removeHandler("threadService:addThread");
 	ipcMain.removeHandler("threadService:getThreads");
 	ipcMain.removeHandler("threadService:getThread");
 	ipcMain.removeHandler("threadService:deleteThread");
+	ipcMain.removeHandler("threadService:renameThread");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");

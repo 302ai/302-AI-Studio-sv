@@ -65,6 +65,20 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 		}
 	}
 
+	async renameThread(threadId: string, newName: string): Promise<void> {
+		try {
+			const threadKey = "app-thread:" + threadId;
+			await storageService.setItemInternal(threadKey, {
+				...((await storageService.getItemInternal(threadKey)) as ThreadParmas),
+				title: newName,
+				updatedAt: new Date(),
+			});
+		} catch (error) {
+			console.error(`Failed to rename thread ${threadId}:`, error);
+			throw error;
+		}
+	}
+
 	async getThread(threadId: string): Promise<ThreadData | null> {
 		try {
 			const metadata = await this.getThreadMetadata();

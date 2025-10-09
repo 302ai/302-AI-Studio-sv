@@ -7,6 +7,7 @@
 	import { threadsState } from "$lib/stores/threads-state.svelte";
 	import { ChevronDown } from "@lucide/svelte";
 	import { cn } from "tailwind-variants";
+	import RenameDialog from "./rename-dialog.svelte";
 	import ThreadItem from "./thread-item.svelte";
 
 	type TimeGroup = "today" | "yesterday" | "last7days" | "last30days" | "earlier";
@@ -19,6 +20,9 @@
 		last30days: true,
 		earlier: true,
 	});
+	let renameDialogOpen = $state(false);
+	let renameTargetThreadId = $state<string | null>(null);
+	let renameTargetName = $state("");
 
 	function getTimeGroup(date: Date): TimeGroup {
 		const now = new Date();
@@ -74,6 +78,12 @@
 			groups[group].push(threadData);
 		});
 
+		(Object.keys(groups) as TimeGroup[]).forEach((groupKey) => {
+			groups[groupKey].sort(
+				(a, b) => new Date(b.thread.updatedAt).getTime() - new Date(a.thread.updatedAt).getTime(),
+			);
+		});
+
 		return groups;
 	});
 
@@ -86,26 +96,42 @@
 		}
 	}
 
-	function handleToggleFavorite(threadId: string, event: Event) {
-		event.stopPropagation();
-
-		threadsState.toggleFavorite(threadId);
-	}
-
 	async function handleThreadDelete(threadId: string) {
-		// Check if there's a tab associated with this thread
 		const relatedTab = tabBarState.tabs.find((tab) => tab.threadId === threadId);
-
-		// Close the related tab first if it exists
 		if (relatedTab) {
 			await tabBarState.handleTabClose(relatedTab.id);
 		}
 
-		// Then delete the thread
 		const success = await threadsState.deleteThread(threadId);
 		if (!success) {
 			console.error("Failed to delete thread:", threadId);
 		}
+	}
+
+	function openRenameDialog() {
+		renameDialogOpen = true;
+	}
+
+	function closeRenameDialog() {
+		renameDialogOpen = false;
+		renameTargetThreadId = null;
+		renameTargetName = "";
+	}
+
+	function handleRenameThread(threadId: string, currentName: string) {
+		renameTargetThreadId = threadId;
+		renameTargetName = currentName;
+		openRenameDialog();
+	}
+
+	async function handleRenameConfirm(newName: string) {
+		if (!renameTargetThreadId) return;
+
+		const trimmedName = newName.trim();
+		if (!trimmedName) return;
+
+		await threadsState.renameThread(renameTargetThreadId, trimmedName);
+		closeRenameDialog();
 	}
 </script>
 
@@ -129,7 +155,8 @@
 								{isFavorite}
 								isActive={threadId === threadsState.activeThreadId}
 								onThreadClick={handleThreadClick}
-								onToggleFavorite={handleToggleFavorite}
+								onToggleFavorite={() => threadsState.toggleFavorite(threadId)}
+								onRenameThread={handleRenameThread}
 								onThreadDelete={handleThreadDelete}
 							/>
 						{/each}
@@ -164,7 +191,8 @@
 													{isFavorite}
 													isActive={threadId === threadsState.activeThreadId}
 													onThreadClick={handleThreadClick}
-													onToggleFavorite={handleToggleFavorite}
+													onToggleFavorite={() => threadsState.toggleFavorite(threadId)}
+													onRenameThread={handleRenameThread}
 													onThreadDelete={handleThreadDelete}
 												/>
 											{/each}
@@ -179,3 +207,13 @@
 		</Sidebar.Group>
 	</Sidebar.Content>
 </Sidebar.Root>
+
+<RenameDialog
+	bind:open={renameDialogOpen}
+	initialValue={renameTargetName}
+	onClose={closeRenameDialog}
+	onConfirm={(value) => {
+		renameTargetName = value;
+		handleRenameConfirm(value);
+	}}
+/>

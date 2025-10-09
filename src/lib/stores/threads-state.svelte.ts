@@ -1,10 +1,9 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import type { ThreadMetadata } from "@shared/types";
 import { debounce } from "es-toolkit";
-import { persistedChatParamsState } from "./chat-state.svelte";
 
 const { threadService, broadcastService } = window.electronAPI;
-const { onBroadcastEvent } = window.electronIPC;
+const { onThreadListUpdate } = window.electronIPC;
 
 export const persistedThreadState = new PersistedState<ThreadMetadata>(
 	"ThreadStorage:thread-metadata",
@@ -17,26 +16,21 @@ export const persistedThreadState = new PersistedState<ThreadMetadata>(
 class ThreadsState {
 	#threadIds = $derived(persistedThreadState.current.threadIds);
 	#favorites = $derived(persistedThreadState.current.favorites);
-	#updatedAt = $derived(persistedChatParamsState.current.updatedAt);
 	#lastSyncTime = $state(Date.now());
 
 	constructor() {
-		onBroadcastEvent((eventData) => {
-			if (eventData.broadcastEvent === "threads-updated") {
-				console.log("Threads updated from other tab, triggering sync");
-				this.#lastSyncTime = Date.now();
-			}
+		onThreadListUpdate(() => {
+			console.log("Threads updated from other tab, triggering sync");
+			this.#lastSyncTime = Date.now();
 		});
 	}
 
 	threads = $derived.by(async () => {
 		const threadIds = this.#threadIds;
-		const updatedAt = this.#updatedAt;
 		const lastSyncTime = this.#lastSyncTime;
 
 		console.log("Thread recalculation triggered by:", {
 			threadIdsLength: threadIds.length,
-			updatedAt: updatedAt,
 			lastSyncTime: lastSyncTime,
 		});
 
@@ -75,6 +69,11 @@ class ThreadsState {
 		}
 	}, 100);
 
+	async renameThread(threadId: string, newName: string): Promise<void> {
+		await threadService.renameThread(threadId, newName);
+		await broadcastService.broadcastToAll("thread-list-updated", { threadId });
+	}
+
 	async deleteThread(threadId: string): Promise<boolean> {
 		try {
 			const success = await threadService.deleteThread(threadId);
@@ -96,7 +95,7 @@ class ThreadsState {
 				}
 
 				// Broadcast to other tabs about the deletion
-				await broadcastService.broadcastExcludeSource("threads-updated", { threadId });
+				await broadcastService.broadcastExcludeSource("thread-list-updated", { threadId });
 			}
 			return success;
 		} catch (error) {

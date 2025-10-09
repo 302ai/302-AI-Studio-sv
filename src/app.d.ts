@@ -12,6 +12,7 @@ declare global {
 		electronIPC: {
 			onThemeChange: (callback: (theme: Theme) => void) => void;
 			onBroadcastEvent: (callback: (eventData: BroadcastEventData) => void) => void;
+			onThreadListUpdate: (callback: (eventData: BroadcastEventData) => void) => void;
 		};
 		windowId: string;
 		tab: Tab;

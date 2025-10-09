@@ -319,5 +319,9 @@
 	"label_yesterday": "昨天",
 	"label_last_7_days": "最近7天",
 	"label_last_30_days": "最近30天",
-	"label_earlier": "更早"
+	"label_earlier": "更早",
+	"title_button_rename": "重命名",
+	"title_rename": "重命名会话",
+	"text_description_rename": "请输入新的会话名称",
+	"placeholder_input_rename": "新的会话名称..."
 }
