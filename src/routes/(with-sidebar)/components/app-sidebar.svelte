@@ -131,6 +131,7 @@
 		if (!trimmedName) return;
 
 		await threadsState.renameThread(renameTargetThreadId, trimmedName);
+		tabBarState.updateTabTitle(renameTargetThreadId, trimmedName);
 		closeRenameDialog();
 	}
 </script>
