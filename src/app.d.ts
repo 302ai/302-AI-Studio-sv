@@ -20,6 +20,7 @@ declare global {
 		messages: ChatMessage[];
 		app: {
 			platform: string;
+			isDev: boolean;
 		};
 	}
 }

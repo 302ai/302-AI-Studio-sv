@@ -7,6 +7,7 @@ import { getAdditionalArgv, loadDataFromTempFile } from "../main/utils";
 
 const app = {
 	platform: process.platform,
+	isDev: process.env.NODE_ENV === "development",
 };
 
 const tabdata = getAdditionalArgv("tab");
