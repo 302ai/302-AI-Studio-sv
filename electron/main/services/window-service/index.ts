@@ -3,7 +3,14 @@ import { BrowserWindow, nativeTheme, WebContentsView, type IpcMainInvokeEvent } 
 import windowStateKeeper from "electron-window-state";
 import { isNull, isUndefined } from "es-toolkit";
 import path from "node:path";
-import { CONFIG, ENVIRONMENT, isMac, PLATFORM, WINDOW_SIZE } from "../../constants";
+import {
+	CONFIG,
+	ENVIRONMENT,
+	isMac,
+	PLATFORM,
+	SHELL_WINDOW_FULLSCREEN_CHANGED,
+	WINDOW_SIZE,
+} from "../../constants";
 import { WebContentsFactory } from "../../factories/web-contents-factory";
 import { withDevToolsShortcuts, withLoadHandlers } from "../../mixins/web-contents-mixins";
 import { tabStorage } from "../storage-service/tab-storage";
@@ -179,6 +186,17 @@ export class WindowService {
 			});
 		};
 
+		const handleFullScreenEvent = (isFullScreen: boolean) => {
+			syncWindowViews();
+			if (isMac) {
+				if (!shellWebContentsView.webContents.isDestroyed()) {
+					shellWebContentsView.webContents.send(SHELL_WINDOW_FULLSCREEN_CHANGED, {
+						isFullScreen,
+					});
+				}
+			}
+		};
+
 		shellWindow.addListener("resize", () => {
 			console.log("resize", shellWindow.id);
 			syncWindowViews();
@@ -188,8 +206,8 @@ export class WindowService {
 		shellWindow.addListener("unmaximize", syncWindowViews);
 		shellWindow.addListener("minimize", syncWindowViews);
 		shellWindow.addListener("restore", syncWindowViews);
-		shellWindow.addListener("enter-full-screen", syncWindowViews);
-		shellWindow.addListener("leave-full-screen", syncWindowViews);
+		shellWindow.addListener("enter-full-screen", () => handleFullScreenEvent(true));
+		shellWindow.addListener("leave-full-screen", () => handleFullScreenEvent(false));
 		shellWindow.addListener("show", syncWindowViews);
 
 		shellWindow.addListener("close", async (e) => {

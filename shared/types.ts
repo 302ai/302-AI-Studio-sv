@@ -129,3 +129,8 @@ export interface BroadcastEventData {
 	data?: unknown;
 	sourceWebContentsId?: number;
 }
+
+export interface ShellWindowFullscreenChange {
+	windowId: number;
+	isFullScreen: boolean;
+}

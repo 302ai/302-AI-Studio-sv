@@ -34,3 +34,5 @@ export const CONFIG = {
 		},
 	},
 };
+
+export const SHELL_WINDOW_FULLSCREEN_CHANGED = "shell-window:fullscreen-changed";

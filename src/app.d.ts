@@ -1,6 +1,12 @@
 import type { ChatMessage } from "$lib/stores/chat-state.svelte";
 import type { ElectronAPI } from "@electron-toolkit/preload";
-import type { Tab, Theme, ThreadParmas } from "@shared/types";
+import type {
+	BroadcastEventData,
+	ShellWindowFullscreenChange,
+	Tab,
+	Theme,
+	ThreadParmas,
+} from "@shared/types";
 import type { ElectronAPIExtension } from "../electron/main/generated/preload-services";
 
 declare global {
@@ -13,6 +19,9 @@ declare global {
 			onThemeChange: (callback: (theme: Theme) => void) => void;
 			onBroadcastEvent: (callback: (eventData: BroadcastEventData) => void) => void;
 			onThreadListUpdate: (callback: (eventData: BroadcastEventData) => void) => void;
+			onShellWindowFullscreenChange: (
+				callback: (payload: ShellWindowFullscreenChange) => void,
+			) => () => void;
 		};
 		windowId: string;
 		tab: Tab;

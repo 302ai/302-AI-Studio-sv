@@ -14,6 +14,8 @@
 	} as const;
 
 	type TabDndEvent = DndEvent<Tab>;
+
+	const { onShellWindowFullscreenChange } = window.electronIPC;
 </script>
 
 <script lang="ts">
@@ -26,7 +28,7 @@
 	import { isMac, isWindows } from "$lib/utils/platform";
 	import { Plus } from "@lucide/svelte";
 	import type { Tab } from "@shared/types";
-	import { onDestroy } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import { dndzone, TRIGGERS } from "svelte-dnd-action";
 	import { flip } from "svelte/animate";
 	import { Spring } from "svelte/motion";
@@ -42,6 +44,7 @@
 	let previousTabsLength = $state(tabBarState.tabs.length);
 	let isAnimating = $state(false);
 	let isDndFinalizing = $state(false);
+	let isMaximized = $state(false);
 
 	const tabsCountDiff = $derived(tabBarState.tabs.length - previousTabsLength);
 	const shouldAnimateCloseTab = $derived(tabsCountDiff < 0 && !isAnimating);
@@ -147,6 +150,16 @@
 		await tabBarState.handleTabCloseOffside(tabId);
 	}
 
+	onMount(() => {
+		const unsub = onShellWindowFullscreenChange(({ isFullScreen }) => {
+			isMaximized = isFullScreen;
+		});
+
+		return () => {
+			unsub();
+		};
+	});
+
 	onDestroy(() => {
 		buttonSpring.target = { opacity: 1, x: 0 };
 		buttonBounceSpring.target = { x: 0 };
@@ -167,7 +180,9 @@
 	<div
 		class={cn(
 			"gap-tab-gap px-tabbar-x flex min-w-0 items-center overflow-x-hidden w-[calc(env(titlebar-area-width,100%)-10px)]",
-			isMac && "pl-[80px]",
+			isMac &&
+				"transition-[padding-left] duration-200 ease-in-out" &&
+				(isMaximized ? "pl-[10px]" : "pl-[75px]"),
 			isWindows && "pr-[130px]",
 		)}
 		use:dndzone={{
