@@ -3,7 +3,7 @@
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { m } from "$lib/paraglide/messages.js";
-	let autoInherit = $state(false);
+	import { generalSettings } from "$lib/stores/general-settings.state.svelte";
 
 	function handleCheckUpdate() {
 		console.log("Checking for updates...");
@@ -12,7 +12,11 @@
 
 <div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.version_update()}</Label>
-	<SettingSwitchItem label={m.auto_update()} bind:checked={autoInherit} />
+	<SettingSwitchItem
+		label={m.auto_update()}
+		checked={generalSettings.autoUpdate}
+		onCheckedChange={(v) => generalSettings.setAutoUpdate(v)}
+	/>
 	{#snippet updateButton()}
 		<Button size="sm" onclick={handleCheckUpdate}>{m.check_update()}</Button>
 	{/snippet}

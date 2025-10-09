@@ -3,7 +3,7 @@
 	import SettingSelect from "$lib/components/buss/settings/setting-select.svelte";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { m } from "$lib/paraglide/messages.js";
-	import { getLocale, setLocale } from "$lib/paraglide/runtime";
+	import { generalSettings, type LanguageCode } from "$lib/stores/general-settings.state.svelte";
 
 	const languages = [
 		{
@@ -23,19 +23,15 @@
 		label: lang.nativeName,
 		value: lang.key,
 	}));
-
-	function handleLanguageChange(selectedValue: string) {
-		setLocale(selectedValue as "zh" | "en");
-	}
 </script>
 
 <div class="gap-settings-gap flex flex-col">
 	<Label id="language" class="text-label-fg">{m.language()}</Label>
 	<SettingSelect
 		name="language"
-		value={getLocale()}
+		value={generalSettings.language}
 		{options}
 		placeholder={m.select_language()}
-		onValueChange={handleLanguageChange}
+		onValueChange={(v) => generalSettings.setLanguage(v as LanguageCode)}
 	/>
 </div>

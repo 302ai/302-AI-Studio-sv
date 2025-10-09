@@ -5,12 +5,19 @@
 		label: string;
 		id?: string;
 		checked?: boolean;
+		onCheckedChange?: (checked: boolean) => void;
 	}
 
-	let { label, id = crypto.randomUUID(), checked = $bindable(false) }: Props = $props();
+	let {
+		label,
+		id = crypto.randomUUID(),
+		checked = $bindable(false),
+		onCheckedChange,
+	}: Props = $props();
 
 	function handleCheckedChange(newChecked: boolean) {
 		checked = newChecked;
+		onCheckedChange?.(newChecked);
 	}
 </script>
 

@@ -14,10 +14,7 @@
 		"editor.formatOnSave": true
 	},
 	"svelte.plugin.typescript.diagnostics.enable": true,
-	"i18n-ally.localesPaths": [
-		"messages",
-		"src/lib/paraglide/messages"
-	],
+	"i18n-ally.localesPaths": ["messages", "src/lib/paraglide/messages"],
 	"i18n-ally.sourceLanguage": "zh",
 	"i18n-ally.keystyle": "flat"
 }

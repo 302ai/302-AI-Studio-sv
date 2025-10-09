@@ -1,6 +1,7 @@
 # AGENTS.md - AI Agent Development Guide
 
 ## Essential Commands
+
 - **Dev**: `pnpm run dev` - Start Electron app with hot reload
 - **Build**: `pnpm run build` - Build SvelteKit for production
 - **Typecheck**: `pnpm run check` - Run Svelte type checking (run after changes)
@@ -11,6 +12,7 @@
 - **Single test**: `pnpm run test:unit -- <file>` or `pnpm run test:e2e -- <file>`
 
 ## Architecture
+
 - **Stack**: SvelteKit 5 + Electron 38 + TypeScript + TailwindCSS 4.x
 - **State**: Svelte 5 runes (`$state`, `$derived`) in singleton classes (e.g., `src/lib/stores/chat-state.svelte.ts`)
 - **UI**: Shadcn-Svelte (bits-ui) in `src/lib/components/ui/`, business components in `src/lib/components/buss/`
@@ -19,6 +21,7 @@
 - **Routes**: `src/routes/(with-sidebar)/` for main app, `src/routes/(settings-page)/settings/` for settings
 
 ## Code Style & Conventions
+
 - **Package Manager**: MUST use `pnpm` (includes critical patches)
 - **State Management**: Singleton class instances with Svelte 5 runes (not stores), use `$state()` and `$derived()` properties
 - **Imports**: Use `$lib` alias for `src/lib`, check existing imports before adding new libraries

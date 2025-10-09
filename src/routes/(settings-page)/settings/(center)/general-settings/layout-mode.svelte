@@ -3,6 +3,7 @@
 	import SettingSelect from "$lib/components/buss/settings/setting-select.svelte";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { m } from "$lib/paraglide/messages.js";
+	import { generalSettings, type LayoutMode } from "$lib/stores/general-settings.state.svelte";
 
 	const layouts = [
 		{
@@ -22,8 +23,6 @@
 		},
 	];
 
-	let value = $state("default");
-
 	const options: SelectOption[] = layouts.map((layout) => ({
 		key: layout.key,
 		label: layout.label,
@@ -33,5 +32,10 @@
 
 <div class="gap-settings-gap flex flex-col">
 	<Label id="layout" class="text-label-fg">{m.layout()}</Label>
-	<SettingSelect name="layout" bind:value {options} />
+	<SettingSelect
+		name="layout"
+		value={generalSettings.layoutMode}
+		{options}
+		onValueChange={(v) => generalSettings.setLayoutMode(v as LayoutMode)}
+	/>
 </div>
