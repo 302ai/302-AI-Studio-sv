@@ -15,6 +15,7 @@ import { clone } from "$lib/utils/clone";
 import { Chat } from "@ai-sdk/svelte";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
+import { tabBarState } from "./tab-bar-state.svelte";
 
 const { broadcastService, threadService } = window.electronAPI;
 
@@ -409,6 +410,7 @@ export const chat = new Chat({
 					const text = textPart.text.trim();
 					const titleText = [...text].slice(0, 10).join("");
 					persistedChatParamsState.current.title = titleText;
+					tabBarState.updateTabTitle(persistedChatParamsState.current.id, titleText);
 				}
 			}
 		}

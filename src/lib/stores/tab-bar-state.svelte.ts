@@ -309,6 +309,16 @@ class TabBarState {
 			await windowService.handleSplitShellWindow(tabId);
 		}
 	}
+
+	async updateTabTitle(threadId: string, title: string) {
+		const updatedTabs = this.tabs.map((tab) => {
+			if (tab.threadId === threadId) {
+				return { ...tab, title };
+			}
+			return tab;
+		});
+		this.updatePersistedTabs(updatedTabs);
+	}
 }
 
 export const tabBarState = new TabBarState();
