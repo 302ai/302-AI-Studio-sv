@@ -1,6 +1,7 @@
 import type { ShortcutContext } from "@shared/types/shortcut";
-import { BrowserWindow, webContents } from "electron";
+import { BrowserWindow } from "electron";
 import { isNull } from "es-toolkit";
+import { tabService } from "../tab-service";
 
 export class ShortcutActionsHandler {
 	async handle(action: string, ctx: ShortcutContext): Promise<void> {
@@ -216,30 +217,22 @@ export class ShortcutActionsHandler {
 	}
 
 	private getShellViewWebContents(windowId: number): Electron.WebContents | null {
-		const window = BrowserWindow.fromId(windowId);
-		if (isNull(window)) return null;
-
-		const allWebContents = webContents.getAllWebContents();
-		for (const wc of allWebContents) {
-			if (wc.getURL().includes(`/shell/${windowId}`) && !wc.isDestroyed()) {
-				return wc;
-			}
-		}
-		return null;
+		const shellView = tabService.getShellView(windowId);
+		if (!shellView || shellView.webContents.isDestroyed()) return null;
+		return shellView.webContents;
 	}
 
 	private getActiveTabWebContents(windowId: number): Electron.WebContents | null {
-		const window = BrowserWindow.fromId(windowId);
-		if (isNull(window)) return null;
+		const activeTabId = tabService.getActiveTabId(windowId);
+		if (!activeTabId) return null;
 
-		const allWebContents = webContents.getAllWebContents();
-		for (const wc of allWebContents) {
-			const url = wc.getURL();
-			if (url.includes("/chat/") && !wc.isDestroyed()) {
-				return wc;
-			}
-		}
-		return null;
+		const tab = tabService.getTabById(activeTabId);
+		if (!tab || tab.type !== "chat") return null;
+
+		const view = tabService.getTabView(activeTabId);
+		if (!view || view.webContents.isDestroyed()) return null;
+
+		return view.webContents;
 	}
 }
 
