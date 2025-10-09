@@ -11,8 +11,8 @@ const config = {
 		alias: {
 			$lib: "src/lib",
 			"$lib/*": "src/lib/*",
-			"@shared": "shared",
-			"@shared/*": "shared/*",
+			"@shared": "src/shared",
+			"@shared/*": "src/shared/*",
 			"@electron": "electron",
 			"@electron/*": "electron/*",
 		},

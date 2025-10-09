@@ -1,0 +1,246 @@
+import type { ShortcutContext } from "@shared/types/shortcut";
+import { BrowserWindow, webContents } from "electron";
+import { isNull } from "es-toolkit";
+
+export class ShortcutActionsHandler {
+	async handle(action: string, ctx: ShortcutContext): Promise<void> {
+		const { windowId } = ctx;
+
+		try {
+			switch (action) {
+				case "newTab":
+					await this.handleNewTab(windowId);
+					break;
+				case "closeCurrentTab":
+					await this.handleCloseCurrentTab(windowId);
+					break;
+				case "nextTab":
+					await this.handleNextTab(windowId);
+					break;
+				case "previousTab":
+					await this.handlePreviousTab(windowId);
+					break;
+				case "restoreLastTab":
+					break;
+
+				case "switchToTab1":
+				case "switchToTab2":
+				case "switchToTab3":
+				case "switchToTab4":
+				case "switchToTab5":
+				case "switchToTab6":
+				case "switchToTab7":
+				case "switchToTab8":
+				case "switchToTab9":
+					await this.handleSwitchToTab(windowId, action);
+					break;
+
+				case "openSettings":
+					await this.handleOpenSettings(windowId);
+					break;
+				case "toggleSidebar":
+					await this.handleToggleSidebar(windowId);
+					break;
+				case "toggleModelPanel":
+					await this.handleToggleModelPanel(windowId);
+					break;
+
+				case "newChat":
+					await this.handleNewChat(windowId);
+					break;
+				case "clearMessages":
+					await this.handleClearMessages(windowId, ctx);
+					break;
+				case "stopGeneration":
+					await this.handleStopGeneration(windowId, ctx);
+					break;
+				case "regenerateResponse":
+					await this.handleRegenerateResponse(windowId, ctx);
+					break;
+				case "createBranch":
+					await this.handleCreateBranch(windowId, ctx);
+					break;
+				case "branchAndSend":
+					await this.handleBranchAndSend(windowId, ctx);
+					break;
+
+				default:
+					console.warn(`Unknown shortcut action: ${action}`);
+			}
+		} catch (error) {
+			console.error(`Error handling shortcut action ${action}:`, error);
+		}
+	}
+
+	private async handleNewTab(windowId: number): Promise<void> {
+		const window = BrowserWindow.fromId(windowId);
+		if (isNull(window)) return;
+
+		const shellView = this.getShellViewWebContents(windowId);
+		if (shellView && !shellView.isDestroyed()) {
+			shellView.send("shortcut:action", {
+				action: "newTab",
+				ctx: { windowId },
+			});
+		}
+	}
+
+	private async handleCloseCurrentTab(windowId: number): Promise<void> {
+		const shellView = this.getShellViewWebContents(windowId);
+		if (shellView && !shellView.isDestroyed()) {
+			shellView.send("shortcut:action", {
+				action: "closeCurrentTab",
+				ctx: { windowId },
+			});
+		}
+	}
+
+	private async handleNextTab(windowId: number): Promise<void> {
+		const shellView = this.getShellViewWebContents(windowId);
+		if (shellView && !shellView.isDestroyed()) {
+			shellView.send("shortcut:action", {
+				action: "nextTab",
+				ctx: { windowId },
+			});
+		}
+	}
+
+	private async handlePreviousTab(windowId: number): Promise<void> {
+		const shellView = this.getShellViewWebContents(windowId);
+		if (shellView && !shellView.isDestroyed()) {
+			shellView.send("shortcut:action", {
+				action: "previousTab",
+				ctx: { windowId },
+			});
+		}
+	}
+
+	private async handleSwitchToTab(windowId: number, action: string): Promise<void> {
+		const shellView = this.getShellViewWebContents(windowId);
+		if (shellView && !shellView.isDestroyed()) {
+			shellView.send("shortcut:action", {
+				action,
+				ctx: { windowId },
+			});
+		}
+	}
+
+	private async handleOpenSettings(windowId: number): Promise<void> {
+		const shellView = this.getShellViewWebContents(windowId);
+		if (shellView && !shellView.isDestroyed()) {
+			shellView.send("shortcut:action", {
+				action: "openSettings",
+				ctx: { windowId },
+			});
+		}
+	}
+
+	private async handleToggleSidebar(windowId: number): Promise<void> {
+		const shellView = this.getShellViewWebContents(windowId);
+		if (shellView && !shellView.isDestroyed()) {
+			shellView.send("shortcut:action", {
+				action: "toggleSidebar",
+				ctx: { windowId },
+			});
+		}
+	}
+
+	private async handleToggleModelPanel(windowId: number): Promise<void> {
+		const activeView = this.getActiveTabWebContents(windowId);
+		if (activeView && !activeView.isDestroyed()) {
+			activeView.send("shortcut:action", {
+				action: "toggleModelPanel",
+				ctx: { windowId },
+			});
+		}
+	}
+
+	private async handleNewChat(windowId: number): Promise<void> {
+		const shellView = this.getShellViewWebContents(windowId);
+		if (shellView && !shellView.isDestroyed()) {
+			shellView.send("shortcut:action", {
+				action: "newChat",
+				ctx: { windowId },
+			});
+		}
+	}
+
+	private async handleClearMessages(windowId: number, ctx: ShortcutContext): Promise<void> {
+		const activeView = this.getActiveTabWebContents(windowId);
+		if (activeView && !activeView.isDestroyed()) {
+			activeView.send("shortcut:action", {
+				action: "clearMessages",
+				ctx,
+			});
+		}
+	}
+
+	private async handleStopGeneration(windowId: number, ctx: ShortcutContext): Promise<void> {
+		const activeView = this.getActiveTabWebContents(windowId);
+		if (activeView && !activeView.isDestroyed()) {
+			activeView.send("shortcut:action", {
+				action: "stopGeneration",
+				ctx,
+			});
+		}
+	}
+
+	private async handleRegenerateResponse(windowId: number, ctx: ShortcutContext): Promise<void> {
+		const activeView = this.getActiveTabWebContents(windowId);
+		if (activeView && !activeView.isDestroyed()) {
+			activeView.send("shortcut:action", {
+				action: "regenerateResponse",
+				ctx,
+			});
+		}
+	}
+
+	private async handleCreateBranch(windowId: number, ctx: ShortcutContext): Promise<void> {
+		const activeView = this.getActiveTabWebContents(windowId);
+		if (activeView && !activeView.isDestroyed()) {
+			activeView.send("shortcut:action", {
+				action: "createBranch",
+				ctx,
+			});
+		}
+	}
+
+	private async handleBranchAndSend(windowId: number, ctx: ShortcutContext): Promise<void> {
+		const activeView = this.getActiveTabWebContents(windowId);
+		if (activeView && !activeView.isDestroyed()) {
+			activeView.send("shortcut:action", {
+				action: "branchAndSend",
+				ctx,
+			});
+		}
+	}
+
+	private getShellViewWebContents(windowId: number): Electron.WebContents | null {
+		const window = BrowserWindow.fromId(windowId);
+		if (isNull(window)) return null;
+
+		const allWebContents = webContents.getAllWebContents();
+		for (const wc of allWebContents) {
+			if (wc.getURL().includes(`/shell/${windowId}`) && !wc.isDestroyed()) {
+				return wc;
+			}
+		}
+		return null;
+	}
+
+	private getActiveTabWebContents(windowId: number): Electron.WebContents | null {
+		const window = BrowserWindow.fromId(windowId);
+		if (isNull(window)) return null;
+
+		const allWebContents = webContents.getAllWebContents();
+		for (const wc of allWebContents) {
+			const url = wc.getURL();
+			if (url.includes("/chat/") && !wc.isDestroyed()) {
+				return wc;
+			}
+		}
+		return null;
+	}
+}
+
+export const shortcutActionsHandler = new ShortcutActionsHandler();

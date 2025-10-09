@@ -8,6 +8,8 @@
 	import { cn } from "$lib/utils";
 	import { Ghost, Settings } from "@lucide/svelte";
 	import AppSidebar from "./components/app-sidebar.svelte";
+	import type { ShortcutActionEvent } from "@shared/types/shortcut";
+	import { onMount } from "svelte";
 
 	const { children } = $props();
 
@@ -19,18 +21,25 @@
 			"/settings/general-settings",
 		);
 	}
+
+	onMount(() => {
+		window.electronAPI?.shortcut?.onShortcutAction?.((event: ShortcutActionEvent) => {
+			if (event.action === "toggleSidebar") {
+				useSidebar().toggle();
+			}
+		});
+	});
 </script>
 
 <Sidebar.Provider class="h-full min-h-fit">
 	<AppSidebar />
 
-	{@const sidebarState = useSidebar()}
 	<Sidebar.Inset class="relative flex-1">
 		<div
 			class="absolute z-50 flex h-12 w-full flex-row items-center justify-between bg-transparent px-2"
 		>
 			<ButtonWithTooltip
-				tooltip={sidebarState.state === "expanded"
+				tooltip={useSidebar().state === "expanded"
 					? m.title_sidebar_close()
 					: m.title_sidebar_open()}
 				tooltipSide="bottom"
@@ -64,7 +73,7 @@
 			</div>
 		</div>
 		<div class="flex-1 overflow-auto py-6">
-			{@render children()}
+			{@render children?.()}
 		</div>
 	</Sidebar.Inset>
 </Sidebar.Provider>

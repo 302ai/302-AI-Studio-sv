@@ -5,6 +5,7 @@ import { StorageService, storageService } from "./storage-service";
 import { ThreadService, threadService } from "./thread-service";
 import { TabService, tabService } from "./tab-service";
 import { WindowService, windowService } from "./window-service";
+import { ShortcutService, shortcutService } from "./shortcut-service";
 
 // Export service classes for type definitions
 export {
@@ -15,6 +16,7 @@ export {
 	ThreadService,
 	TabService,
 	WindowService,
+	ShortcutService,
 };
 
 // Export service instances for use in IPC registration
@@ -26,4 +28,5 @@ export {
 	threadService,
 	tabService,
 	windowService,
+	shortcutService,
 };

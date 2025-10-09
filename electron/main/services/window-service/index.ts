@@ -15,6 +15,7 @@ import { WebContentsFactory } from "../../factories/web-contents-factory";
 import { withDevToolsShortcuts, withLoadHandlers } from "../../mixins/web-contents-mixins";
 import { tabStorage } from "../storage-service/tab-storage";
 import { tabService } from "../tab-service";
+import { shortcutService } from "../shortcut-service";
 
 export class WindowService {
 	private mainWindowId: number | null = null;
@@ -135,6 +136,9 @@ export class WindowService {
 			windowId: shellWindow.id,
 			type: "shell",
 		});
+
+		// Attach shortcut engine to shell view
+		shortcutService.getEngine().attachToView(shellWebContentsView, shellWindow.id, "shell");
 
 		shellWindow.contentView.addChildView(shellWebContentsView);
 		const { width, height } = shellWindow.getContentBounds();

@@ -13,6 +13,6 @@
 		"target": "esnext",
 		"moduleResolution": "bundler"
 	},
-	"include": ["src/**/*", "electron/**/*", "shared/**/*"],
+	"include": ["src/**/*", "electron/**/*"],
 	"exclude": ["node_modules", ".svelte-kit", "dist", "out", ".tsout", "src/routes/demo"]
 }

@@ -13,6 +13,7 @@ import {
 import { TempStorage } from "../../utils/temp-storage";
 import { storageService } from "../storage-service";
 import { tabStorage } from "../storage-service/tab-storage";
+import { shortcutService } from "../shortcut-service";
 
 type TabConfig = {
 	title: string;
@@ -70,6 +71,9 @@ export class TabService {
 			threadFilePath,
 			messagesFilePath,
 		});
+
+		// Attach shortcut engine to tab view
+		shortcutService.getEngine().attachToView(view, windowId, tab.id);
 
 		this.tabViewMap.set(tab.id, view);
 
@@ -568,6 +572,41 @@ export class TabService {
 
 			handleShellViewLevel(activeTabView);
 		}
+	}
+
+	// ******************************* Shortcut Helper Methods ******************************* //
+	getWindowTabs(windowId: number): Map<string, Tab> {
+		const windowViews = this.windowTabView.get(windowId);
+		const tabs = new Map<string, Tab>();
+		if (windowViews) {
+			windowViews.forEach((view) => {
+				this.tabMap.forEach((tab, tabId) => {
+					const tabView = this.tabViewMap.get(tabId);
+					if (tabView === view) {
+						tabs.set(tabId, tab);
+					}
+				});
+			});
+		}
+		return tabs;
+	}
+
+	getActiveTabId(windowId: number): string | undefined {
+		return this.windowActiveTabId.get(windowId);
+	}
+
+	getTabView(tabId: string): WebContentsView | undefined {
+		return this.tabViewMap.get(tabId);
+	}
+
+	getShellView(windowId: number): WebContentsView | undefined {
+		return this.windowShellView.get(windowId);
+	}
+
+	selectTab(windowId: number, tabId: string): void {
+		const window = BrowserWindow.fromId(windowId);
+		if (!window) return;
+		this.switchActiveTab(window, tabId);
 	}
 }
 

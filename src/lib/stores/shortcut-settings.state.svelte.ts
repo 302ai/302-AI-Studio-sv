@@ -1,9 +1,6 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
-import {
-	DEFAULT_SHORTCUTS,
-	type ShortcutAction,
-	type ShortcutScope,
-} from "$lib/shortcut/shortcut-config";
+import { type ShortcutAction, type ShortcutScope } from "$lib/shortcut/shortcut-config";
+import { DEFAULT_SHORTCUTS } from "@shared/config/default-shortcuts";
 
 export interface ShortcutBinding {
 	id: string;
@@ -68,3 +65,22 @@ class ShortcutSettingsManager {
 }
 
 export const shortcutSettings = new ShortcutSettingsManager();
+
+// Sync shortcuts to main process when they change
+if (typeof window !== "undefined" && window.electronAPI) {
+	$effect.root(() => {
+		$effect(() => {
+			const state = persistedShortcutSettings.current;
+			const serializableShortcuts = state.shortcuts.map((s) => ({
+				id: s.id,
+				action: s.action,
+				keys: [...s.keys],
+				scope: s.scope,
+				order: s.order,
+			}));
+			window.electronAPI.shortcutService.updateShortcuts(serializableShortcuts).catch((err) => {
+				console.error("Failed to sync shortcuts:", err);
+			});
+		});
+	});
+}

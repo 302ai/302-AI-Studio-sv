@@ -5,7 +5,9 @@ import started from "electron-squirrel-startup";
 import path from "node:path";
 import { isMac } from "./constants";
 import { registerIpcHandlers } from "./generated/ipc-registration";
-import { appService, windowService } from "./services";
+import { appService, shortcutService, windowService } from "./services";
+import { DEFAULT_SHORTCUTS } from "@shared/config/default-shortcuts";
+import type { ShortcutBinding, ShortcutScope } from "@shared/types/shortcut";
 
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
@@ -21,6 +23,20 @@ async function init() {
 	registerIpcHandlers();
 
 	await appService.initFromStorage();
+
+	// Initialize shortcut system
+	const defaultShortcuts: ShortcutBinding[] = DEFAULT_SHORTCUTS.map((s) => ({
+		id: s.id,
+		action: s.action,
+		keys: Array.from(s.keys),
+		scope: s.scope as ShortcutScope,
+		order: s.order,
+		requiresNonEditable: true,
+	}));
+	shortcutService.getEngine().init(defaultShortcuts, async (action, ctx) => {
+		const { shortcutActionsHandler } = await import("./services/shortcut-service/actions-handler");
+		await shortcutActionsHandler.handle(action, ctx);
+	});
 
 	protocol.handle("app", (request) => {
 		const url = new URL(request.url);

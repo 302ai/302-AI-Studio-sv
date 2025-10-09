@@ -7,6 +7,11 @@ import type {
 	Theme,
 	ThreadParmas,
 } from "@shared/types";
+import type {
+	ShortcutActionEvent,
+	ShortcutKeyPressEvent,
+	ShortcutSyncEvent,
+} from "@shared/types/shortcut";
 import type { ElectronAPIExtension } from "../electron/main/generated/preload-services";
 
 declare global {
@@ -14,7 +19,18 @@ declare global {
 
 	interface Window {
 		electron: ElectronAPI;
-		electronAPI: ElectronAPIExtension;
+		electronAPI: ElectronAPIExtension & {
+			theme: {
+				setTheme: (theme: Theme) => void;
+				onThemeChange: (callback: (theme: Theme) => void) => void;
+				getCurrentTheme: () => Promise<Theme>;
+			};
+			shortcut: {
+				onShortcutSync: (callback: (data: ShortcutSyncEvent) => void) => void;
+				onShortcutAction: (callback: (event: ShortcutActionEvent) => void) => void;
+				sendShortcutKeyPressed: (event: ShortcutKeyPressEvent) => void;
+			};
+		};
 		electronIPC: {
 			onThemeChange: (callback: (theme: Theme) => void) => void;
 			onBroadcastEvent: (callback: (eventData: BroadcastEventData) => void) => void;

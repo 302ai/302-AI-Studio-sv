@@ -23,14 +23,40 @@ export interface Thread {
 	id: string;
 }
 
-console.log("app-chat-messages:" + window.tab.threadId);
+const tab = window?.tab ?? null;
+const threadId = tab?.threadId ?? "shell";
+console.log("app-chat-messages:" + threadId);
+
+const initialMessages = Array.isArray(window?.messages) ? clone(window.messages) : [];
+
+const initialThread: ThreadParmas = clone(
+	window?.thread ?? {
+		id: threadId,
+		title: "New Chat",
+		inputValue: "",
+		attachments: [],
+		mcpServers: [],
+		isThinkingActive: false,
+		isOnlineSearchActive: false,
+		isMCPActive: false,
+		isPrivateChatActive: false,
+		selectedModel: null,
+		temperature: null,
+		topP: null,
+		maxTokens: null,
+		frequencyPenalty: null,
+		presencePenalty: null,
+		updatedAt: new Date(),
+	},
+);
+
 export const persistedMessagesState = new PersistedState<ChatMessage[]>(
-	"app-chat-messages:" + window.tab.threadId,
-	clone(window.messages),
+	"app-chat-messages:" + threadId,
+	initialMessages,
 );
 export const persistedChatParamsState = new PersistedState<ThreadParmas>(
-	"app-thread:" + window.tab.threadId,
-	clone(window.thread),
+	"app-thread:" + threadId,
+	initialThread,
 );
 
 class ChatState {

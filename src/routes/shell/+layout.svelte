@@ -2,8 +2,102 @@
 	import { ModeWatcher } from "mode-watcher";
 	import "../../app.css";
 	import TabBar from "./components/tab-bar/tab-bar.svelte";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
+	import type { ShortcutActionEvent } from "@shared/types/shortcut";
+	import { onMount } from "svelte";
+	import { m } from "$lib/paraglide/messages";
 
 	const { children } = $props();
+
+	onMount(() => {
+		window.electronAPI?.shortcut?.onShortcutAction?.((event: ShortcutActionEvent) => {
+			handleShortcutAction(event.action);
+		});
+	});
+
+	function handleShortcutAction(action: string) {
+		switch (action) {
+			case "newTab":
+				handleNewTab();
+				break;
+			case "closeCurrentTab":
+				handleCloseCurrentTab();
+				break;
+			case "closeOtherTabs":
+				handleCloseOtherTabs();
+				break;
+			case "nextTab":
+				handleNextTab();
+				break;
+			case "previousTab":
+				handlePreviousTab();
+				break;
+			case "switchToTab1":
+			case "switchToTab2":
+			case "switchToTab3":
+			case "switchToTab4":
+			case "switchToTab5":
+			case "switchToTab6":
+			case "switchToTab7":
+			case "switchToTab8":
+			case "switchToTab9":
+				handleSwitchToTab(parseInt(action.replace("switchToTab", "")) - 1);
+				break;
+			case "openSettings":
+				handleOpenSettings();
+				break;
+			default:
+				// Other actions handled by chat-specific or sidebar-specific handlers
+				break;
+		}
+	}
+
+	function handleNewTab() {
+		tabBarState.handleNewTab();
+	}
+
+	function handleCloseCurrentTab() {
+		const activeTab = tabBarState.tabs.find((t) => t.active);
+		if (activeTab) {
+			tabBarState.handleTabClose(activeTab.id);
+		}
+	}
+
+	function handleCloseOtherTabs() {
+		const activeTab = tabBarState.tabs.find((t) => t.active);
+		if (activeTab) {
+			tabBarState.handleTabCloseOthers(activeTab.id);
+		}
+	}
+
+	function handleNextTab() {
+		const tabs = tabBarState.tabs;
+		if (tabs.length <= 1) return;
+
+		const currentIndex = tabs.findIndex((t) => t.active);
+		const nextIndex = (currentIndex + 1) % tabs.length;
+		tabBarState.handleActivateTab(tabs[nextIndex].id);
+	}
+
+	function handlePreviousTab() {
+		const tabs = tabBarState.tabs;
+		if (tabs.length <= 1) return;
+
+		const currentIndex = tabs.findIndex((t) => t.active);
+		const prevIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
+		tabBarState.handleActivateTab(tabs[prevIndex].id);
+	}
+
+	function handleSwitchToTab(index: number) {
+		const tabs = tabBarState.tabs;
+		if (index >= 0 && index < tabs.length) {
+			tabBarState.handleActivateTab(tabs[index].id);
+		}
+	}
+
+	function handleOpenSettings() {
+		tabBarState.handleNewTab(m.title_settings(), "settings", true, "/settings/general-settings");
+	}
 </script>
 
 <ModeWatcher />

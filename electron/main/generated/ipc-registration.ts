@@ -1,10 +1,11 @@
 import { ipcMain } from "electron";
 import {
-	storageService,
 	appService,
 	broadcastService,
-	threadService,
+	shortcutService,
+	storageService,
 	tabService,
+	threadService,
 	windowService,
 } from "../services";
 
@@ -66,6 +67,16 @@ export function registerIpcHandlers() {
 	ipcMain.handle("threadService:renameThread", (event, threadId, newName) =>
 		threadService.renameThread(event, threadId, newName),
 	);
+
+	// shortcutService service registration
+	ipcMain.handle("shortcutService:init", (event, shortcuts) =>
+		shortcutService.init(event, shortcuts),
+	);
+	ipcMain.handle("shortcutService:updateShortcuts", (event, shortcuts) =>
+		shortcutService.updateShortcuts(event, shortcuts),
+	);
+	ipcMain.handle("shortcutService:getConflicts", (event) => shortcutService.getConflicts(event));
+	ipcMain.handle("shortcutService:getSyncInfo", (event) => shortcutService.getSyncInfo(event));
 
 	// tabService service registration
 	ipcMain.handle("tabService:handleNewTabWithThread", (event, threadId, title, type, active) =>
@@ -136,7 +147,12 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("threadService:getThreads");
 	ipcMain.removeHandler("threadService:getThread");
 	ipcMain.removeHandler("threadService:deleteThread");
+
 	ipcMain.removeHandler("threadService:renameThread");
+	ipcMain.removeHandler("shortcutService:init");
+	ipcMain.removeHandler("shortcutService:updateShortcuts");
+	ipcMain.removeHandler("shortcutService:getConflicts");
+	ipcMain.removeHandler("shortcutService:getSyncInfo");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");

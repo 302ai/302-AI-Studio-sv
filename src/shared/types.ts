@@ -6,6 +6,7 @@ export * from "@302ai/unstorage";
 export * from "./storage/tab";
 export * from "./storage/theme";
 export * from "./storage/thread";
+export * from "./types/shortcut";
 
 export interface StorageMetadata {
 	mtime?: Date;
