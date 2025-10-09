@@ -214,6 +214,26 @@ class TabBarState {
 	}
 
 	async handleNewTabForExistingThread(threadId: string) {
+		const tabStateEntries = Object.entries(persistedTabState.current);
+		if (tabStateEntries.length > 1) {
+			for (const [windowId, windowTabs] of tabStateEntries) {
+				if (windowId === this.#windowId) continue;
+				if (!windowTabs) continue;
+
+				const targetTab = windowTabs.tabs.find((tab) => tab.threadId === threadId);
+				if (!targetTab) continue;
+
+				const updatedTabs = windowTabs.tabs.map((tab) => ({
+					...tab,
+					active: tab.id === targetTab.id,
+				}));
+				persistedTabState.current[windowId].tabs = updatedTabs;
+
+				await windowService.focusWindow(windowId, targetTab.id);
+				return;
+			}
+		}
+
 		const threadData = await threadService.getThread(threadId);
 		if (!threadData) return;
 

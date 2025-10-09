@@ -417,6 +417,6 @@ export const chat = new Chat({
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		persistedChatParamsState.current.updatedAt = new Date();
 
-		broadcastService.broadcastExcludeSource("thread-list-updated", {});
+		broadcastService.broadcastToAll("thread-list-updated", {});
 	},
 });

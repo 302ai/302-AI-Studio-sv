@@ -336,6 +336,27 @@ export class TabService {
 		this.switchActiveTab(toWindow, tabId);
 	}
 
+	focusTabInWindow(window: BrowserWindow, tabId: string): void {
+		if (window.isDestroyed()) return;
+
+		const view = this.tabViewMap.get(tabId);
+		if (isUndefined(view)) return;
+
+		// Ensure the view is attached to the window and visible
+		if (view.webContents.isDestroyed()) {
+			this.tabViewMap.delete(tabId);
+			this.tabMap.delete(tabId);
+			return;
+		}
+
+		window.contentView.removeChildView(view);
+		window.contentView.addChildView(view);
+
+		this.switchActiveTab(window, tabId);
+
+		view.webContents.focus();
+	}
+
 	// ******************************* IPC Methods ******************************* //
 	async handleNewTabWithThread(
 		event: IpcMainInvokeEvent,

@@ -242,6 +242,31 @@ export class WindowService {
 	}
 
 	// ******************************* IPC Methods ******************************* //
+	async focusWindow(_event: IpcMainInvokeEvent, windowId: string, tabId?: string): Promise<void> {
+		const numericWindowId = Number.parseInt(windowId, 10);
+		if (Number.isNaN(numericWindowId)) return;
+
+		const targetWindow = BrowserWindow.fromId(numericWindowId);
+		if (isNull(targetWindow) || targetWindow.isDestroyed()) return;
+
+		if (targetWindow.isMinimized()) {
+			targetWindow.restore();
+		}
+
+		if (!targetWindow.isVisible()) {
+			targetWindow.show();
+		}
+
+		targetWindow.focus();
+
+		if (tabId) {
+			const tab = tabService.getTabById(tabId);
+			if (isUndefined(tab)) return;
+
+			tabService.focusTabInWindow(targetWindow, tabId);
+		}
+	}
+
 	async handleSplitShellWindow(
 		event: IpcMainInvokeEvent,
 		triggerTabId: string,
