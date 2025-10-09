@@ -2,17 +2,29 @@
 	import { SettingSwitchItem } from "$lib/components/buss/settings";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { m } from "$lib/paraglide/messages.js";
-
-	let autoHideCode = $state(false);
-	let autoHideReason = $state(false);
-	let autoCollapseThink = $state(false);
-	let autoDisableMarkdown = $state(false);
+	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 </script>
 
 <div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.settings_chatSetting()}</Label>
-	<SettingSwitchItem label={m.settings_hideCode()} bind:checked={autoHideCode} />
-	<SettingSwitchItem label={m.settings_hideReason()} bind:checked={autoHideReason} />
-	<SettingSwitchItem label={m.settings_collapseThink()} bind:checked={autoCollapseThink} />
-	<SettingSwitchItem label={m.settings_disableMarkdown()} bind:checked={autoDisableMarkdown} />
+	<SettingSwitchItem
+		label={m.settings_hideCode()}
+		checked={preferencesSettings.autoHideCode}
+		onCheckedChange={(v) => preferencesSettings.setAutoHideCode(v)}
+	/>
+	<SettingSwitchItem
+		label={m.settings_hideReason()}
+		checked={preferencesSettings.autoHideReason}
+		onCheckedChange={(v) => preferencesSettings.setAutoHideReason(v)}
+	/>
+	<SettingSwitchItem
+		label={m.settings_collapseThink()}
+		checked={preferencesSettings.autoCollapseThink}
+		onCheckedChange={(v) => preferencesSettings.setAutoCollapseThink(v)}
+	/>
+	<SettingSwitchItem
+		label={m.settings_disableMarkdown()}
+		checked={preferencesSettings.autoDisableMarkdown}
+		onCheckedChange={(v) => preferencesSettings.setAutoDisableMarkdown(v)}
+	/>
 </div>

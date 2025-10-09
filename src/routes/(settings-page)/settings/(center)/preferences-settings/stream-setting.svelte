@@ -3,9 +3,10 @@
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { Rabbit, Timer, Zap } from "@lucide/svelte";
-
-	let autoStreamOutput = $state(false);
-	let speed = $state("normal");
+	import {
+		preferencesSettings,
+		type StreamSpeed,
+	} from "$lib/stores/preferences-settings.state.svelte";
 
 	const speedOptions = [
 		{
@@ -29,19 +30,27 @@
 	];
 
 	function handleSelect(key: string) {
-		speed = key;
+		preferencesSettings.setStreamSpeed(key as StreamSpeed);
 	}
 </script>
 
 <div class="gap-settings-gap flex flex-col">
 	<div class="space-y-2">
 		<Label class="text-label-fg">{m.settings_streamOutputLabel()}</Label>
-		<SettingSwitchItem label={m.settings_streamOutputEnable()} bind:checked={autoStreamOutput} />
+		<SettingSwitchItem
+			label={m.settings_streamOutputEnable()}
+			checked={preferencesSettings.streamOutputEnabled}
+			onCheckedChange={(v) => preferencesSettings.setStreamOutputEnabled(v)}
+		/>
 	</div>
-	{#if autoStreamOutput}
+	{#if preferencesSettings.streamOutputEnabled}
 		<div class="space-y-2">
 			<Label class="text-label-fg">{m.settings_streamOutputSpeed()}</Label>
-			<SegButton options={speedOptions} selectedKey={speed} onSelect={handleSelect} />
+			<SegButton
+				options={speedOptions}
+				selectedKey={preferencesSettings.streamSpeed}
+				onSelect={handleSelect}
+			/>
 		</div>
 	{/if}
 </div>

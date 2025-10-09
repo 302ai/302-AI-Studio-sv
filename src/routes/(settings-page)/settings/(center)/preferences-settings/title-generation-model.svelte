@@ -4,10 +4,10 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
 	import type { Model } from "@shared/types";
+	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 
-	let selectedModel = $state<Model | null>(null);
 	function handleModelSelect(model: Model) {
-		selectedModel = model;
+		preferencesSettings.setTitleGenerationModel(model);
 	}
 </script>
 
@@ -18,12 +18,17 @@
 		)}
 		{onclick}
 	>
-		{selectedModel?.name || m.settings_titleGenerationModel_placeholder()}
+		{preferencesSettings.titleGenerationModel?.name ||
+			m.settings_titleGenerationModel_placeholder()}
 	</button>
 {/snippet}
 
 <div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.settings_titleGenerationModel()}</Label>
 
-	<ModelSelect {selectedModel} {trigger} onModelSelect={handleModelSelect} />
+	<ModelSelect
+		selectedModel={preferencesSettings.titleGenerationModel}
+		{trigger}
+		onModelSelect={handleModelSelect}
+	/>
 </div>

@@ -4,10 +4,10 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
 	import type { Model } from "@shared/types";
+	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 
-	let selectedModel = $state<Model | null>(null);
 	function handleModelSelect(model: Model) {
-		selectedModel = model;
+		preferencesSettings.setNewSessionModel(model);
 	}
 </script>
 
@@ -18,12 +18,16 @@
 		)}
 		{onclick}
 	>
-		{selectedModel?.name || m.settings_newSessionModelPlaceholder()}
+		{preferencesSettings.newSessionModel?.name || m.settings_newSessionModelPlaceholder()}
 	</button>
 {/snippet}
 
 <div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.settings_newSessionModel()}</Label>
 
-	<ModelSelect {selectedModel} {trigger} onModelSelect={handleModelSelect} />
+	<ModelSelect
+		selectedModel={preferencesSettings.newSessionModel}
+		{trigger}
+		onModelSelect={handleModelSelect}
+	/>
 </div>

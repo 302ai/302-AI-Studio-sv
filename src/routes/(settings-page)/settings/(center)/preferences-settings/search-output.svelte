@@ -2,6 +2,10 @@
 	import SettingSelect from "$lib/components/buss/settings/setting-select.svelte";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { m } from "$lib/paraglide/messages.js";
+	import {
+		preferencesSettings,
+		type SearchProvider,
+	} from "$lib/stores/preferences-settings.state.svelte";
 
 	const searchServices = [
 		{ label: "search1api", value: "search1api" },
@@ -9,16 +13,15 @@
 		{ label: "exa", value: "exa" },
 		{ label: "bochaai", value: "bochaai" },
 	];
-
-	let value = $state("search1api");
 </script>
 
 <div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.settings_searchProvider()}</Label>
 	<SettingSelect
 		name="searchProvider"
-		bind:value
+		value={preferencesSettings.searchProvider}
 		options={searchServices}
 		placeholder={m.select_language()}
+		onValueChange={(v) => preferencesSettings.setSearchProvider(v as SearchProvider)}
 	/>
 </div>
