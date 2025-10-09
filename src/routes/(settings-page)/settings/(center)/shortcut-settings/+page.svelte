@@ -5,7 +5,6 @@
 	import { m } from "$lib/paraglide/messages";
 
 	import {
-		DEFAULT_SHORTCUTS,
 		formatShortcutLabel,
 		SHORTCUT_MODES,
 		SHORTCUT_OPTIONS,
@@ -14,6 +13,7 @@
 		type ShortcutOption,
 		type ShortcutScope,
 	} from "$lib/shortcut/shortcut-config";
+	import { shortcutSettings } from "$lib/stores/shortcut-settings.state.svelte";
 	import ShortcutRecorder from "./shortcut-recorder.svelte";
 
 	interface ShortcutSetting {
@@ -28,7 +28,7 @@
 		groupedShortcuts?: ShortcutSetting[];
 	}
 
-	const shortcutSettings = $derived((): ShortcutSetting[] => {
+	const shortcutSettingsList = $derived((): ShortcutSetting[] => {
 		const shortcutHints: Record<ShortcutActionWithoutSendMessage, string> = {
 			newChat: "settings_shortcut_hints_newChat",
 			clearMessages: "settings_shortcut_hints_clearMessages",
@@ -60,15 +60,17 @@
 			switchToTab9: "settings_shortcut_hints_switchToTab9",
 		};
 
-		const allSettings = DEFAULT_SHORTCUTS.map((shortcut) => ({
-			id: shortcut.id,
-			action: shortcut.action,
-			keys: Array.from(shortcut.keys),
-			scope: shortcut.scope,
-			mode: SHORTCUT_MODES[shortcut.action],
-			options: SHORTCUT_OPTIONS[shortcut.action],
-			hint: shortcutHints[shortcut.action as ShortcutActionWithoutSendMessage],
-		}));
+		const allSettings = shortcutSettings.shortcuts.map(
+			(shortcut): ShortcutSetting => ({
+				id: shortcut.id,
+				action: shortcut.action,
+				keys: shortcut.keys,
+				scope: shortcut.scope,
+				mode: SHORTCUT_MODES[shortcut.action],
+				options: SHORTCUT_OPTIONS[shortcut.action],
+				hint: shortcutHints[shortcut.action as ShortcutActionWithoutSendMessage],
+			}),
+		);
 		const tabSwitchActions = [
 			"switchToTab1",
 			"switchToTab2",
@@ -81,12 +83,12 @@
 			"switchToTab9",
 		];
 
-		const tabSwitchSettings = allSettings.filter((setting) =>
+		const tabSwitchSettings = allSettings.filter((setting): setting is ShortcutSetting =>
 			tabSwitchActions.includes(setting.action),
 		);
 
 		const otherSettings = allSettings.filter(
-			(setting) => !tabSwitchActions.includes(setting.action),
+			(setting): setting is ShortcutSetting => !tabSwitchActions.includes(setting.action),
 		);
 		if (tabSwitchSettings.length > 0) {
 			const groupedTabSwitch: ShortcutSetting = {
@@ -115,7 +117,7 @@
 {/snippet} -->
 
 <div class="flex flex-col gap-4 py-[18px]">
-	{#each shortcutSettings() as shortcut (shortcut.id)}
+	{#each shortcutSettingsList() as shortcut (shortcut.id)}
 		<div class="flex max-w-[528px] min-w-[528px] flex-col">
 			<Label class="text-label-fg mb-2">
 				{shortcut.isGroup
@@ -163,10 +165,7 @@
 					</Select.Root>
 				</div>
 			{:else if shortcut.mode === "display"}
-				<!-- 仅显示模式 -->
-
 				{#if shortcut.keys.length > 0}
-					<!-- <Label class="text-label-fg">切换</Label> -->
 					<SettingInfoItem label={formatShortcutLabel(shortcut.keys)} />
 				{:else}
 					{m.settings_shortcut_noShortcut()}
@@ -174,14 +173,14 @@
 			{:else}
 				<ShortcutRecorder
 					value={shortcut.keys}
-					onValueChange={(_keys) => {}}
+					onValueChange={(keys) => shortcutSettings.updateShortcut(shortcut.action, keys)}
 					onRecordingChange={(_isRecording) => {}}
 					disabled={false}
-					allShortcuts={shortcutSettings()?.map((s) => ({
+					allShortcuts={shortcutSettingsList()?.map((s) => ({
 						action: s.action,
 						keys: s.keys,
 					}))}
-					onReset={() => {}}
+					onReset={() => shortcutSettings.resetShortcut(shortcut.action)}
 					className="flex-1"
 				/>
 			{/if}
