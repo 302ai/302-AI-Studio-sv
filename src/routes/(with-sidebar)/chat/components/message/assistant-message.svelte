@@ -21,6 +21,7 @@
 	import { getLocale } from "$lib/paraglide/runtime";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
+	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
 	import { ChevronDown, Lightbulb } from "@lucide/svelte";
 	import MessageActions from "./message-actions.svelte";
@@ -28,11 +29,14 @@
 
 	let { message }: Props = $props();
 
-	let isReasoningExpanded = $state(false);
+	let isReasoningExpanded = $state(!preferencesSettings.autoCollapseThink);
 
 	$effect(() => {
 		if (isStreamingReasoning) {
 			isReasoningExpanded = true;
+		} else if (!isCurrentMessageStreaming) {
+			// When streaming ends, restore to the initial state based on settings
+			isReasoningExpanded = !preferencesSettings.autoCollapseThink;
 		}
 	});
 
@@ -71,47 +75,55 @@
 
 	{#each message.parts as part, partIndex (partIndex)}
 		{#if part.type === "text"}
-			<MarkdownRenderer
-				content={part.text}
-				codeTheme={persistedThemeState.current.shouldUseDarkColors
-					? "vitesse-dark"
-					: "vitesse-light"}
-			/>
+			{#if preferencesSettings.autoDisableMarkdown}
+				<div class="whitespace-pre-wrap text-sm leading-relaxed">
+					{part.text}
+				</div>
+			{:else}
+				<MarkdownRenderer
+					content={part.text}
+					codeTheme={persistedThemeState.current.shouldUseDarkColors
+						? "vitesse-dark"
+						: "vitesse-light"}
+				/>
+			{/if}
 		{:else if part.type === "reasoning"}
-			<Collapsible bind:open={isReasoningExpanded} class="rounded-lg border bg-muted/30 p-3">
-				<CollapsibleTrigger
-					class="flex w-full items-center justify-between text-left transition-colors hover:bg-muted/20 rounded-md p-2 -m-2"
-				>
-					<div class="flex items-center gap-2">
-						<Lightbulb class="h-4 w-4 text-muted-foreground" />
-						<span class="text-sm font-medium text-muted-foreground">{m.title_thinking()}</span>
-					</div>
-					<ChevronDown
-						class="h-4 w-4 text-muted-foreground transition-transform duration-200 {isReasoningExpanded
-							? 'rotate-180'
-							: ''}"
-					/>
-				</CollapsibleTrigger>
-				<CollapsibleContent class="space-y-2">
-					<div class="pt-3 text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
-						{part.text}
-					</div>
-
-					{#if isStreamingReasoning}
-						<div class="flex items-center gap-2 pt-2 animate-in fade-in duration-300">
-							<LdrsLoader
-								type="dot-pulse"
-								size={16}
-								speed={1.2}
-								color={persistedThemeState.current.shouldUseDarkColors ? "#a1a1aa" : "#71717a"}
-							/>
-							<span class="text-xs text-muted-foreground italic">
-								{m.title_thinking()}...
-							</span>
+			{#if !preferencesSettings.autoHideReason}
+				<Collapsible bind:open={isReasoningExpanded} class="rounded-lg border bg-muted/30 p-3">
+					<CollapsibleTrigger
+						class="flex w-full items-center justify-between text-left transition-colors hover:bg-muted/20 rounded-md p-2 -m-2"
+					>
+						<div class="flex items-center gap-2">
+							<Lightbulb class="h-4 w-4 text-muted-foreground" />
+							<span class="text-sm font-medium text-muted-foreground">{m.title_thinking()}</span>
 						</div>
-					{/if}
-				</CollapsibleContent>
-			</Collapsible>
+						<ChevronDown
+							class="h-4 w-4 text-muted-foreground transition-transform duration-200 {isReasoningExpanded
+								? 'rotate-180'
+								: ''}"
+						/>
+					</CollapsibleTrigger>
+					<CollapsibleContent class="space-y-2">
+						<div class="pt-3 text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+							{part.text}
+						</div>
+
+						{#if isStreamingReasoning}
+							<div class="flex items-center gap-2 pt-2 animate-in fade-in duration-300">
+								<LdrsLoader
+									type="dot-pulse"
+									size={16}
+									speed={1.2}
+									color={persistedThemeState.current.shouldUseDarkColors ? "#a1a1aa" : "#71717a"}
+								/>
+								<span class="text-xs text-muted-foreground italic">
+									{m.title_thinking()}...
+								</span>
+							</div>
+						{/if}
+					</CollapsibleContent>
+				</Collapsible>
+			{/if}
 		{/if}
 	{/each}
 	{#if isStreamingText}

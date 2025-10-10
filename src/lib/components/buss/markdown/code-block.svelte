@@ -8,6 +8,7 @@
 	import { CopyButton } from "$lib/components/buss/copy-button";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { ChevronDown } from "@lucide/svelte";
+	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 
 	interface RenderedToken {
 		id: string;
@@ -40,7 +41,7 @@
 	let preStyle = $state<string | undefined>(undefined);
 	let codeStyle = $state<string | undefined>(undefined);
 	let lines = $state<RenderedLine[]>([]);
-	let isCollapsed = $state(false);
+	let isCollapsed = $state(preferencesSettings.autoHideCode);
 
 	const FONT_STYLE = {
 		Italic: 1,
