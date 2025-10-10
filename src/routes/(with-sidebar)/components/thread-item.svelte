@@ -45,7 +45,7 @@
 <ContextMenu.Root>
 	<ContextMenu.Trigger
 		class={cn(
-			"w-full text-left h-10 relative flex items-center pl-4 pr-2 rounded-[10px]",
+			"w-full text-left h-10 relative flex items-center pl-4 pr-2 rounded-[10px] cursor-default",
 			isActive ? "bg-accent" : "hover:bg-secondary",
 		)}
 		onclick={() => handleClick(threadId)}
@@ -78,8 +78,8 @@
 					isFavorite
 						? "fill-star-favorite text-star-favorite"
 						: isActive
-							? "fill-star-unfavorite_active text-star-unfavorite_active"
-							: "fill-star-unfavorite_inactive text-star-unfavorite_inactive",
+							? "fill-star-unfavorite-active text-star-unfavorite-active"
+							: "fill-star-unfavorite-inactive text-star-unfavorite-inactive",
 				)}
 			/>
 		</ButtonWithTooltip>

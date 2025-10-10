@@ -6,7 +6,6 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { threadsState } from "$lib/stores/threads-state.svelte";
 	import { ChevronDown } from "@lucide/svelte";
-	import { cn } from "tailwind-variants";
 	import RenameDialog from "./rename-dialog.svelte";
 	import ThreadItem from "./thread-item.svelte";
 
@@ -136,8 +135,8 @@
 	}
 </script>
 
-<Sidebar.Root collapsible="offcanvas" variant="sidebar">
-	<Sidebar.Header>
+<Sidebar.Root collapsible="offcanvas" variant="sidebar" class="border-none">
+	<Sidebar.Header class="px-4 pb-0">
 		<Input
 			class="bg-background! h-10"
 			bind:value={searchQuery}
@@ -146,7 +145,7 @@
 	</Sidebar.Header>
 	<Sidebar.Content>
 		<Sidebar.Group>
-			<Sidebar.GroupContent class="flex flex-col gap-y-1">
+			<Sidebar.GroupContent class="flex flex-col gap-y-1 px-3">
 				{#if searchQuery.trim()}
 					{#await filteredThreadList then threads}
 						{#each threads as { threadId, thread, isFavorite } (threadId)}
@@ -178,10 +177,7 @@
 										>
 											<span>{getGroupLabel(gk)}</span>
 											<ChevronDown
-												class={cn(
-													"size-4 transition-transform duration-200 ease-in-out",
-													groupCollapsedState[gk] ? "rotate-180" : "rotate-0",
-												)}
+												class="size-4 transition-transform duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-180 group-data-[state=closed]/collapsible:rotate-0"
 											/>
 										</Collapsible.Trigger>
 										<Collapsible.Content class="flex flex-col gap-y-1">

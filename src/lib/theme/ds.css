@@ -68,8 +68,8 @@
     Fallbacks keep the dynamic color-mix behavior for future flexibility.
   */
 	--ui-tab-hover-bg: var(--color-muted);
-	--ui-tab-btn-hover-active: var(--hover-2);
-	--ui-tab-btn-hover-inactive: var(--hover-2);
+	--ui-tab-btn-hover-active: #ece9ff;
+	--ui-tab-btn-hover-inactive: #e6e6e6;
 	--ui-tab-btn-hover-fg: var(--hover-fg);
 	--ui-tabbar-bg: var(--ui-surface-muted);
 
@@ -141,8 +141,8 @@
 	--ui-provider-icon-color: var(--ui-text-muted);
 
 	--ui-star-favorite: var(--color-yellow-500);
-	--ui-star-unfavorite_active: #e5e3ff;
-	--ui-star-unfavorite_inactive: #e5e5e5;
+	--ui-star-unfavorite-active: #e5e3ff;
+	--ui-star-unfavorite-inactive: #e5e5e5;
 }
 
 .dark {
@@ -152,11 +152,14 @@
 	--ui-chat-action-hover: var(--ui-icon-btn-hover);
 	--ui-chat-action-active: var(--ui-icon-btn-active);
 
+	--ui-tab-btn-hover-active: #503a6c;
+	--ui-tab-btn-hover-inactive: #383838;
+
 	/* Settings shortcut text - dark mode */
 	--ui-settings-shortcut-hint-color: #5c5c5c;
 
-	--ui-star-unfavorite_active: #211530;
-	--ui-star-unfavorite_inactive: #5c5c5c;
+	--ui-star-unfavorite-active: #211530;
+	--ui-star-unfavorite-inactive: #5c5c5c;
 }
 
 /* 2) Tailwind v4 theme bridge: generates utilities like bg-*, h-*, px-*, gap-*, size-*, rounded-* */
@@ -295,6 +298,6 @@
 	--color-provider-icon-color: var(--ui-provider-icon-color);
 
 	--color-star-favorite: var(--ui-star-favorite);
-	--color-star-unfavorite_active: var(--ui-star-unfavorite_active);
-	--color-star-unfavorite_inactive: var(--ui-star-unfavorite_inactive);
+	--color-star-unfavorite-active: var(--ui-star-unfavorite-active);
+	--color-star-unfavorite-inactive: var(--ui-star-unfavorite-inactive);
 }

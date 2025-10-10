@@ -92,7 +92,7 @@
 <ContextMenu.Root {onOpenChange}>
 	<ContextMenu.Trigger
 		class={cn(
-			"h-tab rounded-tab px-tab-x relative flex cursor-pointer items-center text-sm",
+			"h-tab rounded-[10px] px-tab-x relative flex cursor-pointer items-center text-sm",
 			isCompact ? "justify-center" : "gap-tab-gap justify-between",
 			stretch ? "min-w-tab-min-w w-auto" : "w-tab-w",
 			isActive
@@ -111,7 +111,7 @@
 			</div>
 
 			{#if !isCompact}
-				<span class="max-w-tab-title min-w-0 flex-1 truncate">{tab.title}</span>
+				<span class="max-w-tab-title min-w-0 flex-1 truncate text-xs">{tab.title}</span>
 			{/if}
 			{#if closable}
 				<Button
@@ -122,7 +122,7 @@
 						"p-tab-close h-auto w-auto shrink-0 rounded bg-transparent transition-colors",
 						isActive
 							? "hover:bg-tab-btn-hover-active dark:hover:bg-tab-btn-hover-active"
-							: "hover:bg-tab-btn-hover-inactive hover:text-tab-btn-hover-fg dark:hover:bg-tab-btn-hover-inactive",
+							: "hover:bg-tab-btn-hover-inactive dark:hover:bg-tab-btn-hover-inactive hover:text-tab-btn-hover-fg dark:hover:text-tab-btn-hover-fg",
 					)}
 					onclick={(e) => {
 						e.stopPropagation();
