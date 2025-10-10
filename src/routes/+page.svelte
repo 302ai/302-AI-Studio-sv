@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { LdrsLoader } from "$lib/components/buss/ldrs-loader";
+	// import { LdrsLoader } from "$lib/components/buss/ldrs-loader";
 	import { onMount } from "svelte";
 
 	onMount(() => {
@@ -8,6 +8,6 @@
 	});
 </script>
 
-<div class="flex h-screen items-center justify-center">
+<!-- <div class="flex h-screen items-center justify-center">
 	<LdrsLoader type="waveform" />
-</div>
+</div> -->

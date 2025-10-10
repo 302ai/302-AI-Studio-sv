@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { ModeWatcher } from "mode-watcher";
-	import "../../app.css";
-	import TabBar from "./components/tab-bar/tab-bar.svelte";
+	import { m } from "$lib/paraglide/messages";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import type { ShortcutActionEvent } from "@shared/types/shortcut";
+	import { ModeWatcher } from "mode-watcher";
 	import { onMount } from "svelte";
-	import { m } from "$lib/paraglide/messages";
+	import "../../app.css";
+	import TabBar from "./components/tab-bar/tab-bar.svelte";
 
 	const { children } = $props();
 
@@ -105,7 +105,7 @@
 <div class="flex w-screen h-screen flex-col">
 	<TabBar />
 
-	<main>
+	<main class="flex-1">
 		{@render children?.()}
 	</main>
 </div>
