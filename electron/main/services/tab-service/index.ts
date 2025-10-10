@@ -422,6 +422,9 @@ export class TabService {
 			threadId: newThreadId,
 		};
 		if (type === "chat") {
+			const preferencesSettings = (await storageService.getItemInternal(
+				"PreferencesSettingsStorage:state",
+			)) as unknown as { newSessionModel?: ThreadParmas["selectedModel"] } | null;
 			const newThread: ThreadParmas = {
 				id: newThreadId,
 				title: title,
@@ -436,7 +439,7 @@ export class TabService {
 				isThinkingActive: false,
 				isOnlineSearchActive: false,
 				isMCPActive: false,
-				selectedModel: null,
+				selectedModel: preferencesSettings?.newSessionModel ?? null,
 				isPrivateChatActive: false,
 				updatedAt: new Date(),
 			};
