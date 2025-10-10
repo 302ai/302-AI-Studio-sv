@@ -210,9 +210,24 @@ export class TabService {
 		if (isNull(windowTabs)) return;
 		const window = BrowserWindow.fromId(windowId);
 		if (isNull(window)) return;
-		windowTabs.forEach((tab) => {
+
+		// Check each tab and delete private chat data
+		for (const tab of windowTabs) {
+			if (tab.type === "chat" && tab.threadId) {
+				const thread = (await storageService.getItemInternal(
+					"app-thread:" + tab.threadId,
+				)) as ThreadParmas | null;
+
+				// If this is a private chat, delete all related data
+				if (thread?.isPrivateChatActive) {
+					console.log(`[Privacy] Deleting private chat data for tab ${tab.id}, thread ${tab.threadId}`);
+					await storageService.removeItemInternal("app-thread:" + tab.threadId);
+					await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
+				}
+			}
+
 			this.removeTab(window, tab.id);
-		});
+		}
 
 		const shellView = this.windowShellView.get(windowId);
 		if (!isUndefined(shellView)) {
@@ -222,6 +237,98 @@ export class TabService {
 
 		this.windowTabView.delete(windowId);
 		this.windowActiveTabId.delete(windowId);
+	}
+
+	/**
+	 * Cleanup private chat data for all tabs in a window without removing the tabs themselves.
+	 * Used when closing the last window to ensure private data is deleted.
+	 */
+	async cleanupPrivateChatData(windowId: number) {
+		const windowTabs = await tabStorage.getTabs(windowId.toString());
+		if (isNull(windowTabs)) return;
+
+		console.log(`[Privacy] Cleaning up private chat data for window ${windowId}`);
+
+		const tabsToKeep: Tab[] = [];
+		let removedActiveTabIndex = -1;
+
+		// Check each tab and delete private chat data
+		for (let i = 0; i < windowTabs.length; i++) {
+			const tab = windowTabs[i];
+			let isPrivateChat = false;
+
+			if (tab.type === "chat" && tab.threadId) {
+				const thread = (await storageService.getItemInternal(
+					"app-thread:" + tab.threadId,
+				)) as ThreadParmas | null;
+
+				// If this is a private chat, delete all related data
+				if (thread?.isPrivateChatActive) {
+					console.log(`[Privacy] Deleting private chat data for tab ${tab.id}, thread ${tab.threadId}`);
+					await storageService.removeItemInternal("app-thread:" + tab.threadId);
+					await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
+					isPrivateChat = true;
+
+					// Track if we removed the active tab
+					if (tab.active) {
+						removedActiveTabIndex = i;
+					}
+				}
+			}
+
+			// Keep non-private tabs
+			if (!isPrivateChat) {
+				tabsToKeep.push(tab);
+			}
+		}
+
+		// Update tab storage to remove private tabs
+		if (tabsToKeep.length !== windowTabs.length) {
+			console.log(
+				`[Privacy] Removed ${windowTabs.length - tabsToKeep.length} private tab(s) from storage`,
+			);
+
+			// If we removed the active tab, set a new active tab
+			if (removedActiveTabIndex !== -1 && tabsToKeep.length > 0) {
+				console.log(`[Privacy] Removed active tab at index ${removedActiveTabIndex}, reassigning active tab`);
+				
+				// Clear all active flags first
+				tabsToKeep.forEach((tab) => {
+					tab.active = false;
+				});
+
+				// Find the appropriate tab to activate
+				// Try to find the tab that was after the removed tab
+				let newActiveIndex = 0;
+				
+				for (let i = 0; i < tabsToKeep.length; i++) {
+					// Count how many tabs were before this one in the original list
+					const originalTab = tabsToKeep[i];
+					const origIndex = windowTabs.findIndex(t => t.id === originalTab.id);
+					
+					if (origIndex > removedActiveTabIndex) {
+						// This tab was after the removed tab, use it
+						newActiveIndex = i;
+						break;
+					}
+					
+					// If we're at the last tab and haven't found one after, use the last one (the one before)
+					if (i === tabsToKeep.length - 1) {
+						newActiveIndex = i;
+					}
+				}
+
+				tabsToKeep[newActiveIndex].active = true;
+				console.log(`[Privacy] Set tab at index ${newActiveIndex} as active`);
+			}
+
+			// If there are no tabs left, create a new default tab
+			if (tabsToKeep.length === 0) {
+				console.log(`[Privacy] No tabs left, will create default tab on next launch`);
+			}
+
+			await tabStorage.updateWindowTabs(windowId.toString(), tabsToKeep);
+		}
 	}
 
 	handleWindowResize(window: BrowserWindow) {
@@ -526,6 +633,20 @@ export class TabService {
 			this.switchActiveTab(window, newActiveTabId);
 		}
 
+		// Check if this tab is a private chat and delete its data
+		const tab = this.tabMap.get(tabId);
+		if (tab?.type === "chat" && tab.threadId) {
+			const thread = (await storageService.getItemInternal(
+				"app-thread:" + tab.threadId,
+			)) as ThreadParmas | null;
+
+			if (thread?.isPrivateChatActive) {
+				console.log(`[Privacy] Deleting private chat data for tab ${tabId}, thread ${tab.threadId}`);
+				await storageService.removeItemInternal("app-thread:" + tab.threadId);
+				await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
+			}
+		}
+
 		this.removeTab(window, tabId);
 	}
 
@@ -534,7 +655,22 @@ export class TabService {
 		if (isNull(window)) return;
 
 		this.switchActiveTab(window, tabId);
+
+		// Check each tab and delete private chat data before removing
 		for (const tabIdToClose of tabIdsToClose) {
+			const tab = this.tabMap.get(tabIdToClose);
+			if (tab?.type === "chat" && tab.threadId) {
+				const thread = (await storageService.getItemInternal(
+					"app-thread:" + tab.threadId,
+				)) as ThreadParmas | null;
+
+				if (thread?.isPrivateChatActive) {
+					console.log(`[Privacy] Deleting private chat data for tab ${tabIdToClose}, thread ${tab.threadId}`);
+					await storageService.removeItemInternal("app-thread:" + tab.threadId);
+					await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
+				}
+			}
+
 			this.removeTab(window, tabIdToClose);
 		}
 	}
@@ -552,7 +688,22 @@ export class TabService {
 		if (shouldSwitchActive) {
 			this.switchActiveTab(window, tabId);
 		}
+
+		// Check each tab and delete private chat data before removing
 		for (const tabIdToClose of tabIdsToClose) {
+			const tab = this.tabMap.get(tabIdToClose);
+			if (tab?.type === "chat" && tab.threadId) {
+				const thread = (await storageService.getItemInternal(
+					"app-thread:" + tab.threadId,
+				)) as ThreadParmas | null;
+
+				if (thread?.isPrivateChatActive) {
+					console.log(`[Privacy] Deleting private chat data for tab ${tabIdToClose}, thread ${tab.threadId}`);
+					await storageService.removeItemInternal("app-thread:" + tab.threadId);
+					await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
+				}
+			}
+
 			this.removeTab(window, tabIdToClose);
 		}
 	}
