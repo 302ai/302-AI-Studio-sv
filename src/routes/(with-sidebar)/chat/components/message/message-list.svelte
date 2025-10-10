@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import type { ChatMessage } from "$lib/types/chat";
+	import { generalSettings } from "$lib/stores/general-settings.state.svelte";
+	import { cn } from "$lib/utils";
 	import AssistantMessage from "./assistant-message.svelte";
 	import UserMessage from "./user-message.svelte";
 
@@ -13,6 +15,17 @@
 
 	let shouldAutoScroll = $state(true);
 	let mutationObserver: MutationObserver | null = null;
+
+	const containerClass = $derived.by(() => {
+		switch (generalSettings.layoutMode) {
+			case "wide":
+				return "max-w-[960px] px-8";
+			case "ultra-wide":
+				return "max-w-[1440px] px-6";
+			default:
+				return "max-w-[720px]";
+		}
+	});
 
 	const getViewportElement = (): HTMLElement | null => {
 		if (!scrollAreaRef) return null;
@@ -85,7 +98,7 @@
 
 <ScrollArea bind:ref={scrollAreaRef} class="h-full w-full">
 	<div class="flex w-full justify-center">
-		<div class="w-full max-w-[720px] space-y-4 py-8">
+		<div class={cn("w-full space-y-4 py-8", containerClass)}>
 			{#each messages as message (message.id)}
 				{#if message.role === "user"}
 					<UserMessage message={{ ...message, role: "user" as const, attachments: [] }} />
