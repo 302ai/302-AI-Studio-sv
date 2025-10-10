@@ -3,7 +3,8 @@
 	import SettingSelect from "$lib/components/buss/settings/setting-select.svelte";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { m } from "$lib/paraglide/messages.js";
-	import { generalSettings, type LayoutMode } from "$lib/stores/general-settings.state.svelte";
+	import { generalSettings } from "$lib/stores/general-settings.state.svelte";
+	import type { LayoutMode } from "@shared/storage/general-settings";
 
 	const layouts = [
 		{

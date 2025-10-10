@@ -1,16 +1,11 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { getLocale, setLocale } from "$lib/paraglide/runtime";
+import type {
+	GeneralSettingsState,
+	LanguageCode,
+	LayoutMode,
+} from "@shared/storage/general-settings";
 import { untrack } from "svelte";
-
-export type LayoutMode = "default" | "wide" | "ultra-wide";
-export type LanguageCode = "zh" | "en";
-
-export interface GeneralSettingsState {
-	layoutMode: LayoutMode;
-	language: LanguageCode;
-	privacyAutoInherit: boolean;
-	autoUpdate: boolean;
-}
 
 const getDefaults = (): GeneralSettingsState => ({
 	layoutMode: "default",

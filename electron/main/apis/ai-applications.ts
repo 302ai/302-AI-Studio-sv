@@ -67,9 +67,17 @@ export async function fetch302AIToolList(
 					Lang: lang,
 				},
 			})
-			.json();
+			.json<Ai302ToolsList>();
 
-		const validated = ai302ToolListSchema(response);
+		const filteredResponse = {
+			data: {
+				data: response.data.data.filter((tool) => {
+					return tool.enable && tool.tool_id !== 9;
+				}),
+			},
+		};
+
+		const validated = ai302ToolListSchema(filteredResponse);
 		if (validated instanceof type.errors) {
 			console.error("Failed to validate 302.AI tools list:", validated.summary);
 			throw new Error("Invalid response format from 302.AI tools list API");

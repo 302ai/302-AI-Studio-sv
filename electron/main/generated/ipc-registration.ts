@@ -3,9 +3,9 @@ import {
 	storageService,
 	appService,
 	broadcastService,
-	threadService,
-	shortcutService,
 	tabService,
+	shortcutService,
+	threadService,
 	windowService,
 } from "../services";
 
@@ -53,31 +53,6 @@ export function registerIpcHandlers() {
 		broadcastService.broadcastToAll(event, broadcastEvent, data),
 	);
 
-	// threadService service registration
-	ipcMain.handle("threadService:addThread", (event, threadId) =>
-		threadService.addThread(event, threadId),
-	);
-	ipcMain.handle("threadService:getThreads", (event) => threadService.getThreads(event));
-	ipcMain.handle("threadService:getThread", (event, threadId) =>
-		threadService.getThread(event, threadId),
-	);
-	ipcMain.handle("threadService:deleteThread", (event, threadId) =>
-		threadService.deleteThread(event, threadId),
-	);
-	ipcMain.handle("threadService:renameThread", (event, threadId, newName) =>
-		threadService.renameThread(event, threadId, newName),
-	);
-
-	// shortcutService service registration
-	ipcMain.handle("shortcutService:init", (event, shortcuts) =>
-		shortcutService.init(event, shortcuts),
-	);
-	ipcMain.handle("shortcutService:updateShortcuts", (event, shortcuts) =>
-		shortcutService.updateShortcuts(event, shortcuts),
-	);
-	ipcMain.handle("shortcutService:getConflicts", (event) => shortcutService.getConflicts(event));
-	ipcMain.handle("shortcutService:getSyncInfo", (event) => shortcutService.getSyncInfo(event));
-
 	// tabService service registration
 	ipcMain.handle("tabService:handleNewTabWithThread", (event, threadId, title, type, active) =>
 		tabService.handleNewTabWithThread(event, threadId, title, type, active),
@@ -114,6 +89,31 @@ export function registerIpcHandlers() {
 		tabService.replaceTabContent(event, tabId, newThreadId),
 	);
 
+	// shortcutService service registration
+	ipcMain.handle("shortcutService:init", (event, shortcuts) =>
+		shortcutService.init(event, shortcuts),
+	);
+	ipcMain.handle("shortcutService:updateShortcuts", (event, shortcuts) =>
+		shortcutService.updateShortcuts(event, shortcuts),
+	);
+	ipcMain.handle("shortcutService:getConflicts", (event) => shortcutService.getConflicts(event));
+	ipcMain.handle("shortcutService:getSyncInfo", (event) => shortcutService.getSyncInfo(event));
+
+	// threadService service registration
+	ipcMain.handle("threadService:addThread", (event, threadId) =>
+		threadService.addThread(event, threadId),
+	);
+	ipcMain.handle("threadService:getThreads", (event) => threadService.getThreads(event));
+	ipcMain.handle("threadService:getThread", (event, threadId) =>
+		threadService.getThread(event, threadId),
+	);
+	ipcMain.handle("threadService:deleteThread", (event, threadId) =>
+		threadService.deleteThread(event, threadId),
+	);
+	ipcMain.handle("threadService:renameThread", (event, threadId, newName) =>
+		threadService.renameThread(event, threadId, newName),
+	);
+
 	// windowService service registration
 	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
 		windowService.focusWindow(event, windowId, tabId),
@@ -146,15 +146,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
 	ipcMain.removeHandler("broadcastService:broadcastToAll");
-	ipcMain.removeHandler("threadService:addThread");
-	ipcMain.removeHandler("threadService:getThreads");
-	ipcMain.removeHandler("threadService:getThread");
-	ipcMain.removeHandler("threadService:deleteThread");
-	ipcMain.removeHandler("threadService:renameThread");
-	ipcMain.removeHandler("shortcutService:init");
-	ipcMain.removeHandler("shortcutService:updateShortcuts");
-	ipcMain.removeHandler("shortcutService:getConflicts");
-	ipcMain.removeHandler("shortcutService:getSyncInfo");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");
@@ -165,6 +156,15 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:handleTabCloseAll");
 	ipcMain.removeHandler("tabService:handleShellViewLevel");
 	ipcMain.removeHandler("tabService:replaceTabContent");
+	ipcMain.removeHandler("shortcutService:init");
+	ipcMain.removeHandler("shortcutService:updateShortcuts");
+	ipcMain.removeHandler("shortcutService:getConflicts");
+	ipcMain.removeHandler("shortcutService:getSyncInfo");
+	ipcMain.removeHandler("threadService:addThread");
+	ipcMain.removeHandler("threadService:getThreads");
+	ipcMain.removeHandler("threadService:getThread");
+	ipcMain.removeHandler("threadService:deleteThread");
+	ipcMain.removeHandler("threadService:renameThread");
 	ipcMain.removeHandler("windowService:focusWindow");
 	ipcMain.removeHandler("windowService:handleSplitShellWindow");
 	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");
