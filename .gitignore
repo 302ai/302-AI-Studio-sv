@@ -29,4 +29,4 @@ out
 paraglide/
 
 storage
-!/shared/storage
+!src/shared/storage

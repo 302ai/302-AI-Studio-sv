@@ -5,19 +5,18 @@
 	import { m } from "$lib/paraglide/messages";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { threadsState } from "$lib/stores/threads-state.svelte";
+	import { TimeGroup, TIME_GROUP_ORDER } from "$lib/types/time-group";
 	import { ChevronDown } from "@lucide/svelte";
 	import RenameDialog from "./rename-dialog.svelte";
 	import ThreadItem from "./thread-item.svelte";
 
-	type TimeGroup = "today" | "yesterday" | "last7days" | "last30days" | "earlier";
-
 	let searchQuery = $state("");
 	let groupCollapsedState = $state<Record<TimeGroup, boolean>>({
-		today: true,
-		yesterday: true,
-		last7days: true,
-		last30days: true,
-		earlier: true,
+		[TimeGroup.TODAY]: true,
+		[TimeGroup.YESTERDAY]: true,
+		[TimeGroup.LAST_7_DAYS]: true,
+		[TimeGroup.LAST_30_DAYS]: true,
+		[TimeGroup.EARLIER]: true,
 	});
 	let renameDialogOpen = $state(false);
 	let renameTargetThreadId = $state<string | null>(null);
@@ -28,24 +27,24 @@
 		const diffTime = now.getTime() - new Date(date).getTime();
 		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-		if (diffDays === 0) return "today";
-		if (diffDays === 1) return "yesterday";
-		if (diffDays < 7) return "last7days";
-		if (diffDays < 30) return "last30days";
-		return "earlier";
+		if (diffDays === 0) return TimeGroup.TODAY;
+		if (diffDays === 1) return TimeGroup.YESTERDAY;
+		if (diffDays < 7) return TimeGroup.LAST_7_DAYS;
+		if (diffDays < 30) return TimeGroup.LAST_30_DAYS;
+		return TimeGroup.EARLIER;
 	}
 
 	function getGroupLabel(group: TimeGroup): string {
 		switch (group) {
-			case "today":
+			case TimeGroup.TODAY:
 				return m.label_today();
-			case "yesterday":
+			case TimeGroup.YESTERDAY:
 				return m.label_yesterday();
-			case "last7days":
+			case TimeGroup.LAST_7_DAYS:
 				return m.label_last_7_days();
-			case "last30days":
+			case TimeGroup.LAST_30_DAYS:
 				return m.label_last_30_days();
-			case "earlier":
+			case TimeGroup.EARLIER:
 				return m.label_earlier();
 		}
 	}
@@ -65,11 +64,11 @@
 
 		const threads = await threadsState.threads;
 		const groups: Record<TimeGroup, typeof threads> = {
-			today: [],
-			yesterday: [],
-			last7days: [],
-			last30days: [],
-			earlier: [],
+			[TimeGroup.TODAY]: [],
+			[TimeGroup.YESTERDAY]: [],
+			[TimeGroup.LAST_7_DAYS]: [],
+			[TimeGroup.LAST_30_DAYS]: [],
+			[TimeGroup.EARLIER]: [],
 		};
 
 		threads.forEach((threadData) => {
@@ -164,18 +163,17 @@
 				{:else}
 					{#await groupedThreadList then groupedThreads}
 						{#if groupedThreads}
-							{#each ["today", "yesterday", "last7days", "last30days", "earlier"] as groupKey (groupKey)}
-								{@const gk = groupKey as TimeGroup}
-								{@const group = groupedThreads[gk]}
+							{#each TIME_GROUP_ORDER as groupKey (groupKey)}
+								{@const group = groupedThreads[groupKey]}
 								{#if group.length > 0}
 									<Collapsible.Root
-										bind:open={groupCollapsedState[gk]}
+										bind:open={groupCollapsedState[groupKey]}
 										class="group/collapsible flex flex-col gap-y-1"
 									>
 										<Collapsible.Trigger
 											class="text-muted-foreground flex items-center justify-between text-start w-full h-10 rounded-[10px] px-3 hover:bg-secondary"
 										>
-											<span>{getGroupLabel(gk)}</span>
+											<span>{getGroupLabel(groupKey)}</span>
 											<ChevronDown
 												class="size-4 transition-transform duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-180 group-data-[state=closed]/collapsible:rotate-0"
 											/>
