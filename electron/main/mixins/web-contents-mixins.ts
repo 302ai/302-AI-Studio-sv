@@ -1,6 +1,6 @@
 import { WebContentsView } from "electron";
 import { match, P } from "ts-pattern";
-import { isMac, isWin, isLinux } from "../constants";
+import { isLinux, isMac, isWin } from "../constants";
 
 export interface LoadHandlerConfig {
 	baseUrl?: string;
