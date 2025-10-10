@@ -425,6 +425,28 @@ export class TabService {
 			const preferencesSettings = (await storageService.getItemInternal(
 				"PreferencesSettingsStorage:state",
 			)) as unknown as { newSessionModel?: ThreadParmas["selectedModel"] } | null;
+
+			const generalSettings = (await storageService.getItemInternal(
+				"GeneralSettingsStorage:state",
+			)) as unknown as { privacyAutoInherit?: boolean } | null;
+
+			// Get current active tab's privacy state if privacyAutoInherit is enabled
+			let inheritedPrivacyState = false;
+			if (generalSettings?.privacyAutoInherit) {
+				const activeTabId = this.windowActiveTabId.get(window.id);
+				if (activeTabId) {
+					const activeTab = this.tabMap.get(activeTabId);
+					if (activeTab?.threadId) {
+						const activeThread = (await storageService.getItemInternal(
+							"app-thread:" + activeTab.threadId,
+						)) as ThreadParmas | null;
+						if (activeThread) {
+							inheritedPrivacyState = activeThread.isPrivateChatActive;
+						}
+					}
+				}
+			}
+
 			const newThread: ThreadParmas = {
 				id: newThreadId,
 				title: title,
@@ -440,7 +462,7 @@ export class TabService {
 				isOnlineSearchActive: false,
 				isMCPActive: false,
 				selectedModel: preferencesSettings?.newSessionModel ?? null,
-				isPrivateChatActive: false,
+				isPrivateChatActive: inheritedPrivacyState,
 				updatedAt: new Date(),
 			};
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
