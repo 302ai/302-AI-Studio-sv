@@ -110,6 +110,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("tabService:handleShellViewLevel", (event, up) =>
 		tabService.handleShellViewLevel(event, up),
 	);
+	ipcMain.handle("tabService:replaceTabContent", (event, tabId, newThreadId) =>
+		tabService.replaceTabContent(event, tabId, newThreadId),
+	);
 
 	// windowService service registration
 	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
@@ -161,6 +164,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:handleTabCloseOffside");
 	ipcMain.removeHandler("tabService:handleTabCloseAll");
 	ipcMain.removeHandler("tabService:handleShellViewLevel");
+	ipcMain.removeHandler("tabService:replaceTabContent");
 	ipcMain.removeHandler("windowService:focusWindow");
 	ipcMain.removeHandler("windowService:handleSplitShellWindow");
 	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");

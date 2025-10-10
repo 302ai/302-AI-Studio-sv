@@ -11,9 +11,9 @@ import {
 	withLoadHandlers,
 } from "../../mixins/web-contents-mixins";
 import { TempStorage } from "../../utils/temp-storage";
+import { shortcutService } from "../shortcut-service";
 import { storageService } from "../storage-service";
 import { tabStorage } from "../storage-service/tab-storage";
-import { shortcutService } from "../shortcut-service";
 
 type TabConfig = {
 	title: string;
@@ -607,6 +607,77 @@ export class TabService {
 		const window = BrowserWindow.fromId(windowId);
 		if (!window) return;
 		this.switchActiveTab(window, tabId);
+	}
+
+	/**
+	 * Replace the current tab's thread content with a new thread
+	 * This recreates the WebContentsView with new thread data
+	 */
+	async replaceTabContent(
+		event: IpcMainInvokeEvent,
+		tabId: string,
+		newThreadId: string,
+	): Promise<boolean> {
+		console.log(`[replaceTabContent] Replacing tab ${tabId} with thread ${newThreadId}`);
+
+		const window = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(window)) {
+			console.error("[replaceTabContent] Window not found");
+			return false;
+		}
+
+		const oldView = this.tabViewMap.get(tabId);
+		if (isUndefined(oldView) || oldView.webContents.isDestroyed()) {
+			console.error("[replaceTabContent] View not found or destroyed");
+			return false;
+		}
+
+		try {
+			const threadData = await storageService.getItemInternal("app-thread:" + newThreadId);
+
+			if (!threadData || typeof threadData !== "object" || !("title" in threadData)) {
+				console.error(`[replaceTabContent] Thread ${newThreadId} not found in storage`);
+				return false;
+			}
+
+			const currentTab = this.tabMap.get(tabId);
+			if (isUndefined(currentTab)) {
+				console.error("[replaceTabContent] Current tab not found in tabMap");
+				return false;
+			}
+
+			const updatedTab = {
+				...currentTab,
+				threadId: newThreadId,
+				title: threadData.title as string,
+			};
+
+			window.contentView.removeChildView(oldView);
+
+			oldView.webContents.close({ waitForBeforeUnload: false });
+
+			const newView = await this.newWebContentsView(window.id, updatedTab);
+
+			this.tabMap.set(tabId, updatedTab);
+
+			const windowViews = this.windowTabView.get(window.id);
+			if (!isUndefined(windowViews)) {
+				const viewIndex = windowViews.indexOf(oldView);
+				if (viewIndex !== -1) {
+					windowViews[viewIndex] = newView;
+				} else {
+					windowViews.push(newView);
+				}
+			}
+
+			this.attachViewToWindow(window, newView);
+			this.switchActiveTab(window, tabId);
+
+			return true;
+		} catch (error) {
+			console.error(`[replaceTabContent] Failed to replace tab content:`, error);
+			return false;
+		}
 	}
 }
 

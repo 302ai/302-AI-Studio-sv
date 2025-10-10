@@ -214,6 +214,14 @@ class TabBarState {
 	}
 
 	async handleNewTabForExistingThread(threadId: string) {
+		// Case 1: Check if thread exists in current window's tabs
+		const existingTabInCurrentWindow = this.tabs.find((tab) => tab.threadId === threadId);
+		if (existingTabInCurrentWindow) {
+			await this.handleActivateTab(existingTabInCurrentWindow.id);
+			return;
+		}
+
+		// Case 2: Check if thread exists in other windows
 		const tabStateEntries = Object.entries(persistedTabState.current);
 		if (tabStateEntries.length > 1) {
 			for (const [windowId, windowTabs] of tabStateEntries) {
@@ -223,6 +231,7 @@ class TabBarState {
 				const targetTab = windowTabs.tabs.find((tab) => tab.threadId === threadId);
 				if (!targetTab) continue;
 
+				// Found in another window - focus that window and tab
 				const updatedTabs = windowTabs.tabs.map((tab) => ({
 					...tab,
 					active: tab.id === targetTab.id,
@@ -234,6 +243,35 @@ class TabBarState {
 			}
 		}
 
+		// Case 3: Thread doesn't exist in any tab - replace current active tab's content
+		const activeTab = this.tabs.find((tab) => tab.active);
+		if (activeTab) {
+			console.log(
+				`[handleNewTabForExistingThread] Replacing active tab ${activeTab.id} with thread ${threadId}`,
+			);
+
+			// Get thread data first to update tab title
+			const threadData = await threadService.getThread(threadId);
+			if (!threadData) return;
+
+			// Update persisted tabs BEFORE calling replaceTabContent to avoid UI flicker
+			const updatedTabs = this.tabs.map((tab) =>
+				tab.id === activeTab.id ? { ...tab, threadId, title: threadData.thread.title } : tab,
+			);
+			this.updatePersistedTabs(updatedTabs);
+
+			// Call main process to replace the view
+			const success = await tabService.replaceTabContent(activeTab.id, threadId);
+			console.log(`[handleNewTabForExistingThread] Replace result: ${success}`);
+
+			if (!success) {
+				// If failed, revert the tab changes
+				this.updatePersistedTabs(this.tabs);
+			}
+			return;
+		}
+
+		// Fallback: create new tab if no active tab exists
 		const threadData = await threadService.getThread(threadId);
 		if (!threadData) return;
 
