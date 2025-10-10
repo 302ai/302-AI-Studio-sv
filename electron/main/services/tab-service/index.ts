@@ -220,7 +220,9 @@ export class TabService {
 
 				// If this is a private chat, delete all related data
 				if (thread?.isPrivateChatActive) {
-					console.log(`[Privacy] Deleting private chat data for tab ${tab.id}, thread ${tab.threadId}`);
+					console.log(
+						`[Privacy] Deleting private chat data for tab ${tab.id}, thread ${tab.threadId}`,
+					);
 					await storageService.removeItemInternal("app-thread:" + tab.threadId);
 					await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
 				}
@@ -264,7 +266,9 @@ export class TabService {
 
 				// If this is a private chat, delete all related data
 				if (thread?.isPrivateChatActive) {
-					console.log(`[Privacy] Deleting private chat data for tab ${tab.id}, thread ${tab.threadId}`);
+					console.log(
+						`[Privacy] Deleting private chat data for tab ${tab.id}, thread ${tab.threadId}`,
+					);
 					await storageService.removeItemInternal("app-thread:" + tab.threadId);
 					await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
 					isPrivateChat = true;
@@ -290,8 +294,10 @@ export class TabService {
 
 			// If we removed the active tab, set a new active tab
 			if (removedActiveTabIndex !== -1 && tabsToKeep.length > 0) {
-				console.log(`[Privacy] Removed active tab at index ${removedActiveTabIndex}, reassigning active tab`);
-				
+				console.log(
+					`[Privacy] Removed active tab at index ${removedActiveTabIndex}, reassigning active tab`,
+				);
+
 				// Clear all active flags first
 				tabsToKeep.forEach((tab) => {
 					tab.active = false;
@@ -300,18 +306,18 @@ export class TabService {
 				// Find the appropriate tab to activate
 				// Try to find the tab that was after the removed tab
 				let newActiveIndex = 0;
-				
+
 				for (let i = 0; i < tabsToKeep.length; i++) {
 					// Count how many tabs were before this one in the original list
 					const originalTab = tabsToKeep[i];
-					const origIndex = windowTabs.findIndex(t => t.id === originalTab.id);
-					
+					const origIndex = windowTabs.findIndex((t) => t.id === originalTab.id);
+
 					if (origIndex > removedActiveTabIndex) {
 						// This tab was after the removed tab, use it
 						newActiveIndex = i;
 						break;
 					}
-					
+
 					// If we're at the last tab and haven't found one after, use the last one (the one before)
 					if (i === tabsToKeep.length - 1) {
 						newActiveIndex = i;
@@ -641,7 +647,9 @@ export class TabService {
 			)) as ThreadParmas | null;
 
 			if (thread?.isPrivateChatActive) {
-				console.log(`[Privacy] Deleting private chat data for tab ${tabId}, thread ${tab.threadId}`);
+				console.log(
+					`[Privacy] Deleting private chat data for tab ${tabId}, thread ${tab.threadId}`,
+				);
 				await storageService.removeItemInternal("app-thread:" + tab.threadId);
 				await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
 			}
@@ -665,7 +673,9 @@ export class TabService {
 				)) as ThreadParmas | null;
 
 				if (thread?.isPrivateChatActive) {
-					console.log(`[Privacy] Deleting private chat data for tab ${tabIdToClose}, thread ${tab.threadId}`);
+					console.log(
+						`[Privacy] Deleting private chat data for tab ${tabIdToClose}, thread ${tab.threadId}`,
+					);
 					await storageService.removeItemInternal("app-thread:" + tab.threadId);
 					await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
 				}
@@ -698,7 +708,9 @@ export class TabService {
 				)) as ThreadParmas | null;
 
 				if (thread?.isPrivateChatActive) {
-					console.log(`[Privacy] Deleting private chat data for tab ${tabIdToClose}, thread ${tab.threadId}`);
+					console.log(
+						`[Privacy] Deleting private chat data for tab ${tabIdToClose}, thread ${tab.threadId}`,
+					);
 					await storageService.removeItemInternal("app-thread:" + tab.threadId);
 					await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
 				}

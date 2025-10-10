@@ -54,7 +54,8 @@
 						chatState.isPrivateChatActive && "!bg-icon-btn-active hover:!bg-icon-btn-active",
 					)}
 					tooltipSide="bottom"
-					tooltip={m.title_incognito()}
+					tooltip={chatState.canTogglePrivacy ? m.title_incognito() : m.title_incognito_disabled()}
+					disabled={!chatState.canTogglePrivacy}
 					onclick={() => chatState.handlePrivateChatActiveChange(!chatState.isPrivateChatActive)}
 				>
 					<Ghost

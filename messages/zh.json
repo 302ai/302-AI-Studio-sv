@@ -276,6 +276,7 @@
 	"title_edit": "编辑",
 	"title_frequency_penalty_tips": "数值范围在-2.0到2.0之间。正值会根据新词在当前文本中的出现频率对其进行惩罚，从而降低模型原封不动重复相同内容的可能性。",
 	"title_incognito": "无痕模式",
+	"title_incognito_disabled": "发送消息后无法切换隐私模式",
 	"title_max_tokens_tips": "聊天完成时生成的最大令牌数。 输入标记和生成标记的总长度受模型上下文长度的限制。",
 	"title_mcpServers": "搜索MCP服务",
 	"title_online_search": "联网搜索",

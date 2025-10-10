@@ -250,14 +250,14 @@ export class WindowService {
 			const shouldCleanupPrivateChats = !isQuittingApp; // Always cleanup private chats unless quitting entire app
 
 			if (shouldCleanup) {
-			 console.log("shouldCleanup ---", true);
-			await tabService.removeWindowTabs(currentWindowId);
-			tabStorage.removeWindowState(currentWindowId.toString());
-		} else if (shouldCleanupPrivateChats) {
-			console.log("shouldCleanupPrivateChats ---", true);
-			// Only cleanup private chat data, don't remove window state
-			await tabService.cleanupPrivateChatData(currentWindowId);
-		}
+				console.log("shouldCleanup ---", true);
+				await tabService.removeWindowTabs(currentWindowId);
+				tabStorage.removeWindowState(currentWindowId.toString());
+			} else if (shouldCleanupPrivateChats) {
+				console.log("shouldCleanupPrivateChats ---", true);
+				// Only cleanup private chat data, don't remove window state
+				await tabService.cleanupPrivateChatData(currentWindowId);
+			}
 
 			shellWindow.destroy();
 		});

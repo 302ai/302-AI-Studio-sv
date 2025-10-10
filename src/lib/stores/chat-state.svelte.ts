@@ -181,6 +181,7 @@ class ChatState {
 		(this.inputValue.trim() !== "" || this.attachments.length > 0) && !!this.selectedModel,
 	);
 	hasMessages = $derived(this.messages.length > 0);
+	canTogglePrivacy = $derived(!this.hasMessages);
 
 	isStreaming = $derived(chat.status === "streaming");
 	isSubmitted = $derived(chat.status === "submitted");
