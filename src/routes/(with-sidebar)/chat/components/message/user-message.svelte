@@ -1,7 +1,6 @@
 <script lang="ts" module>
 	export type UserMessage = ChatMessage & {
 		role: "user";
-		attachments: AttachmentFile[];
 	};
 
 	interface Props {
@@ -18,6 +17,26 @@
 
 	let { message }: Props = $props();
 	let selectedAttachment = $state<AttachmentFile | null>(null);
+
+	const attachments = $derived<AttachmentFile[]>(
+		(message.metadata?.attachments || []).map((att) => ({
+			id: att.id,
+			name: att.name,
+			type: att.type,
+			size: att.size,
+			filePath: att.filePath,
+			preview: att.preview,
+			file: new File([], att.name, { type: att.type }),
+		})),
+	);
+
+	const displayParts = $derived(
+		message.parts.filter((part, index) => {
+			if (part.type !== "text") return true;
+			const fileContentIndex = message.metadata?.fileContentPartIndex;
+			return fileContentIndex === undefined || index !== fileContentIndex;
+		}),
+	);
 
 	function openViewer(attachment: AttachmentFile) {
 		selectedAttachment = attachment;
@@ -38,16 +57,16 @@
 	<div
 		class="flex max-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg"
 	>
-		{#if message.attachments.length > 0}
+		{#if attachments.length > 0}
 			<div class="space-y-2">
-				{#each message.attachments as attachment (attachment.id)}
+				{#each attachments as attachment (attachment.id)}
 					<MessageAttachment {attachment} {openViewer} />
 				{/each}
 			</div>
 		{/if}
 
 		<div>
-			{#each message.parts as part, partIndex (partIndex)}
+			{#each displayParts as part, partIndex (partIndex)}
 				{#if part.type === "text"}
 					<div>{part.text}</div>
 				{/if}

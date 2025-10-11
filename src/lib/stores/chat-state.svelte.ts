@@ -16,6 +16,7 @@ import { Chat } from "@ai-sdk/svelte";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
+import { convertAttachmentsToMessageParts } from "$lib/utils/attachment-converter";
 
 const { broadcastService, threadService } = window.electronAPI;
 
@@ -255,23 +256,97 @@ class ChatState {
 		}
 	};
 
-	sendMessage = () => {
+	sendMessage = async () => {
 		if (this.sendMessageEnabled) {
 			try {
 				const currentModel = this.selectedModel!;
+				const currentAttachments = [...this.attachments];
+				const currentInputValue = this.inputValue;
 
 				this.resetError();
 
-				chat.sendMessage(
-					{ text: this.inputValue },
-					{
-						body: {
-							model: currentModel.id,
-							apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
-								?.apiKey,
-						},
-					},
+				const { parts: attachmentParts, metadataList: attachmentMetadata } =
+					await convertAttachmentsToMessageParts(currentAttachments);
+
+				const textParts = attachmentParts.filter(
+					(part): part is { type: "text"; text: string } => part.type === "text",
 				);
+				const fileParts = attachmentParts.filter(
+					(part): part is import("ai").FileUIPart => part.type === "file",
+				);
+
+				if (fileParts.length > 0 && textParts.length > 0) {
+					const fileContent = textParts.map((part) => part.text).join("\n\n");
+
+					chat.sendMessage(
+						{
+							parts: [
+								...fileParts,
+								{ type: "text" as const, text: fileContent },
+								{ type: "text" as const, text: currentInputValue },
+							],
+							metadata: {
+								attachments: attachmentMetadata,
+								fileContentPartIndex: fileParts.length,
+							},
+						},
+						{
+							body: {
+								model: currentModel.id,
+								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
+									?.apiKey,
+							},
+						},
+					);
+				} else if (fileParts.length > 0) {
+					chat.sendMessage(
+						{
+							text: currentInputValue,
+							files: fileParts,
+							metadata: { attachments: attachmentMetadata },
+						},
+						{
+							body: {
+								model: currentModel.id,
+								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
+									?.apiKey,
+							},
+						},
+					);
+				} else if (textParts.length > 0) {
+					const fileContent = textParts.map((part) => part.text).join("\n\n");
+
+					chat.sendMessage(
+						{
+							parts: [
+								{ type: "text" as const, text: fileContent },
+								{ type: "text" as const, text: currentInputValue },
+							],
+							metadata: {
+								attachments: attachmentMetadata,
+								fileContentPartIndex: 0,
+							},
+						},
+						{
+							body: {
+								model: currentModel.id,
+								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
+									?.apiKey,
+							},
+						},
+					);
+				} else {
+					chat.sendMessage(
+						{ text: currentInputValue },
+						{
+							body: {
+								model: currentModel.id,
+								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
+									?.apiKey,
+							},
+						},
+					);
+				}
 
 				threadService.addThread(persistedChatParamsState.current.id);
 
