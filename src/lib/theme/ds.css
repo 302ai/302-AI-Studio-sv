@@ -71,7 +71,7 @@
 	--ui-tab-btn-hover-active: #ece9ff;
 	--ui-tab-btn-hover-inactive: #e6e6e6;
 	--ui-tab-btn-hover-fg: var(--hover-fg);
-	--ui-tabbar-bg: var(--ui-surface-muted);
+	--ui-tabbar-bg: var(--sidebar);
 
 	/* Settings — exposed minimal knobs (concrete defaults; avoid cycles) */
 	--ui-settings-item-bg: var(--settings-item-bg, var(--overlay));
@@ -92,7 +92,7 @@
 	--ui-settings-shortcut-hint-color: #aaaaaa; /* hint text color - light mode */
 
 	/* Settings sidebar */
-	--ui-settings-sidebar-bg: var(--ui-surface-muted);
+	--ui-settings-sidebar-bg: var(--sidebar);
 	--ui-settings-sidebar-width: 15rem; /* w-60 */
 
 	/* Segmented button (concrete defaults) */
