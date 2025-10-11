@@ -124,6 +124,7 @@
 		"electron-squirrel-startup": "^1.0.1",
 		"electron-window-state": "^5.0.3",
 		"es-toolkit": "^1.39.10",
+		"hono": "^4.9.10",
 		"ky": "^1.11.0",
 		"ldrs": "^1.1.7",
 		"markdown-it": "^14.1.0",
