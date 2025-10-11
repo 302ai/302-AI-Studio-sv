@@ -1,6 +1,6 @@
-import Root from "./provider-list.svelte";
 import Item from "./provider-item.svelte";
+import Root from "./provider-list.svelte";
 
-export type { ModelProvider } from "$lib/types/provider.js";
+export type { ModelProvider } from "@shared/types";
 
-export { Root, Item, Root as ProviderList, Item as ProviderItem };
+export { Item, Item as ProviderItem, Root as ProviderList, Root };

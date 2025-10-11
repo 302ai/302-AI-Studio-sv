@@ -6,10 +6,14 @@
 	import * as Sheet from "$lib/components/ui/sheet";
 	import { m } from "$lib/paraglide/messages";
 	import { aiApplicationsState } from "$lib/stores/ai-applications-state.svelte";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { ChevronDown, LayoutGrid } from "@lucide/svelte";
 	import type { AiApplication } from "@shared/types";
+	import { toast } from "svelte-sonner";
 	import { fly } from "svelte/transition";
 	import AiApplicationItem from "./ai-application-item.svelte";
+
+	const { aiApplicationService } = window.electronAPI;
 
 	let searchQuery = $state("");
 	let categoryCollapsedState = $state<Record<string, boolean>>({});
@@ -52,6 +56,15 @@
 		return shuffled.slice(0, Math.min(count, array.length));
 	}
 
+	async function handleAiApplicationClick(aiApplication: AiApplication) {
+		const { isOk, url } = await aiApplicationService.getAiApplicationUrl(aiApplication.toolId);
+		if (!isOk) {
+			toast.error(m.error_get_ai_application_url());
+			return;
+		}
+		await tabBarState.handleNewTab(aiApplication.name, "aiApplications", true, url);
+	}
+
 	$effect(() => {
 		if (groupedAppList) {
 			Object.keys(groupedAppList).forEach((category) => {
@@ -64,19 +77,23 @@
 </script>
 
 {#if isReady}
-	<div transition:fly={{ y: 20, duration: 1000 }} class="flex flex-col w-[720px] gap-y-3">
+	<div transition:fly={{ y: 20, duration: 500 }} class="flex flex-col w-[720px] gap-y-3">
 		<Label class="font-light">{m.label_ai_applications()}</Label>
 
 		<div class="flex flex-row flex-wrap items-center gap-x-3.5 gap-y-4">
 			{#each randomApps as aiApplication (aiApplication.id)}
-				<AiApplicationItem {aiApplication} type="random" />
+				<AiApplicationItem
+					{aiApplication}
+					type="random"
+					onClick={() => handleAiApplicationClick(aiApplication)}
+				/>
 			{/each}
 			<Sheet.Root>
 				<Sheet.Trigger
 					class={buttonVariants({
 						variant: "outline",
 						className:
-							"h-[46px] cursor-pointer hover:bg-secondary/80 dark:hover:bg-secondary/80 !border-border",
+							"h-[46px] hover:bg-secondary/80 dark:hover:bg-secondary/80 !border-border !text-foreground !font-normal",
 					})}
 				>
 					<LayoutGrid className="h-5 w-5" />
@@ -94,7 +111,11 @@
 					<div class="flex flex-col gap-y-1 px-3 flex-1 overflow-y-auto min-h-0">
 						{#if isSearching}
 							{#each filteredAppList as aiApplication (aiApplication.id)}
-								<AiApplicationItem {aiApplication} type="sheet" />
+								<AiApplicationItem
+									{aiApplication}
+									type="sheet"
+									onClick={() => handleAiApplicationClick(aiApplication)}
+								/>
 							{/each}
 						{:else if groupedAppList}
 							{#each Object.entries(groupedAppList) as [category, apps] (category)}
@@ -116,7 +137,7 @@
 												<AiApplicationItem
 													{aiApplication}
 													type="sheet"
-													isCollected={aiApplication.collected}
+													onClick={() => handleAiApplicationClick(aiApplication)}
 												/>
 											{/each}
 										</Collapsible.Content>

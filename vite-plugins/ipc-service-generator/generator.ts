@@ -138,6 +138,11 @@ export class IpcStructureGenerator {
 	private extractTypesFromString(typeString: string): Set<string> {
 		const types = new Set<string>();
 
+		// Skip anonymous object types entirely
+		if (this.isAnonymousObjectType(typeString)) {
+			return types;
+		}
+
 		// Match generic types like StorageItem<T>, Promise<StorageValue>, etc.
 		const genericTypeRegex = /(\w+)<([^<>]+(?:<[^<>]*>)*)>/g;
 		let match;
@@ -150,7 +155,8 @@ export class IpcStructureGenerator {
 			types.add(baseType);
 
 			// Recursively extract types from generic arguments
-			if (genericArgs) {
+			// Skip if the generic argument is an anonymous object type
+			if (genericArgs && !this.isAnonymousObjectType(genericArgs.trim())) {
 				const innerTypes = this.extractTypesFromString(genericArgs);
 				innerTypes.forEach((t) => types.add(t));
 			}
@@ -164,8 +170,10 @@ export class IpcStructureGenerator {
 				const innerTypes = this.extractTypesFromString(cleanType);
 				innerTypes.forEach((t) => types.add(t));
 			} else {
-				// Simple type, add as is
-				types.add(cleanType);
+				// Simple type, add as is (unless it's an anonymous object type)
+				if (!this.isAnonymousObjectType(cleanType)) {
+					types.add(cleanType);
+				}
 			}
 		}
 
@@ -181,6 +189,14 @@ export class IpcStructureGenerator {
 	}
 
 	/**
+	 * Check if type is an anonymous object type (type literal)
+	 */
+	private isAnonymousObjectType(type: string): boolean {
+		const trimmedType = type.trim();
+		return trimmedType.startsWith("{") && trimmedType.endsWith("}");
+	}
+
+	/**
 	 * Check if type is a built-in complex type (like generics)
 	 */
 	private isBuiltInComplexType(type: string): boolean {
@@ -191,7 +207,8 @@ export class IpcStructureGenerator {
 			type.startsWith("Map<") ||
 			type.startsWith("Set<") ||
 			type.endsWith("[]") ||
-			type.includes("(") // function types
+			type.includes("(") || // function types
+			this.isAnonymousObjectType(type) // anonymous object types
 		);
 	}
 

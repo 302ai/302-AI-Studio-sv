@@ -4,7 +4,7 @@
 	interface Props {
 		aiApplication: AiApplication;
 		type: "random" | "sheet";
-		isCollected?: boolean;
+		onClick: () => void;
 	}
 </script>
 
@@ -17,10 +17,10 @@
 	import { Star } from "@lucide/svelte";
 	import AiApplicationIcon from "./ai-application-icon.svelte";
 
-	let { aiApplication, type, isCollected = false }: Props = $props();
+	let { aiApplication, type, onClick }: Props = $props();
 
 	let isHovered = $state(false);
-	let shouldShowStar = $derived(isCollected || isHovered);
+	let shouldShowStar = $derived(aiApplication.collected || isHovered);
 
 	function handleToggleFavorite(e: Event) {
 		e.stopPropagation();
@@ -29,7 +29,11 @@
 </script>
 
 {#if type === "random"}
-	<Item.Root variant="outline" class="h-[46px] py-0 cursor-pointer hover:bg-secondary/80">
+	<Item.Root
+		variant="outline"
+		class="h-[46px] py-0 cursor-default hover:bg-secondary/80"
+		onclick={onClick}
+	>
 		<Item.Media>
 			<AiApplicationIcon class="h-7 w-7" toolId={aiApplication.toolId} />
 		</Item.Media>
@@ -40,9 +44,10 @@
 {:else}
 	<Item.Root
 		variant="muted"
-		class="h-[46px] py-0 cursor-pointer hover:bg-secondary/80 bg-background"
+		class="h-[46px] py-0 hover:bg-secondary/80 bg-background cursor-default"
 		onmouseenter={() => (isHovered = true)}
 		onmouseleave={() => (isHovered = false)}
+		onclick={onClick}
 	>
 		<Item.Media>
 			<AiApplicationIcon class="h-7 w-7" toolId={aiApplication.toolId} />
@@ -57,7 +62,7 @@
 		</Item.Content>
 		<Item.Actions>
 			<ButtonWithTooltip
-				tooltip={isCollected ? m.title_button_unstar() : m.title_button_star()}
+				tooltip={aiApplication.collected ? m.title_button_unstar() : m.title_button_star()}
 				variant="ghost"
 				size="icon"
 				tooltipSide="bottom"
@@ -71,7 +76,7 @@
 				<Star
 					size={16}
 					class={cn(
-						isCollected
+						aiApplication.collected
 							? "fill-star-favorite text-star-favorite"
 							: "fill-star-unfavorite-inactive text-star-unfavorite-inactive",
 					)}

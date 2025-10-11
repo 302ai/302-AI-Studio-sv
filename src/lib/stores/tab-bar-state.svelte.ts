@@ -205,7 +205,7 @@ class TabBarState {
 				return true;
 			})
 			.with("chat", () => true)
-			.with("302ai-tool", () => false)
+			.with("aiApplications", () => true)
 			.exhaustive();
 
 		if (shouldCreateNewTab) {

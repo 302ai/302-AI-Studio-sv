@@ -1,6 +1,7 @@
 import { ipcMain } from "electron";
 import {
 	storageService,
+	aiApplicationService,
 	appService,
 	broadcastService,
 	tabService,
@@ -40,6 +41,14 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("storageService:unwatch", (event, watchKey) =>
 		storageService.unwatch(event, watchKey),
+	);
+
+	// aiApplicationService service registration
+	ipcMain.handle("aiApplicationService:getAiApplicationUrl", (event, applicationId) =>
+		aiApplicationService.getAiApplicationUrl(event, applicationId),
+	);
+	ipcMain.handle("aiApplicationService:handle302AIProviderChange", (event) =>
+		aiApplicationService.handle302AIProviderChange(event),
 	);
 
 	// appService service registration
@@ -143,6 +152,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:setItems");
 	ipcMain.removeHandler("storageService:watch");
 	ipcMain.removeHandler("storageService:unwatch");
+	ipcMain.removeHandler("aiApplicationService:getAiApplicationUrl");
+	ipcMain.removeHandler("aiApplicationService:handle302AIProviderChange");
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
 	ipcMain.removeHandler("broadcastService:broadcastToAll");

@@ -10,9 +10,9 @@ import type { ChatMessage } from "$lib/types/chat";
 import { ChatErrorHandler, type ChatError } from "$lib/utils/error-handler";
 import { notificationState } from "./notification-state.svelte";
 
-import type { ModelProvider } from "$lib/types/provider";
 import { clone } from "$lib/utils/clone";
 import { Chat } from "@ai-sdk/svelte";
+import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";

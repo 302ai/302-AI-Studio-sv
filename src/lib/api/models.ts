@@ -1,6 +1,5 @@
-import type { ModelProvider } from "$lib/types/provider.js";
 import { parseModelCapabilities } from "$lib/utils/model-capabilities.js";
-import type { Model } from "@shared/types";
+import type { Model, ModelProvider } from "@shared/types";
 
 /**
  * Model API interface functions

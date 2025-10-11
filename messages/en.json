@@ -330,5 +330,6 @@
 	"text_description_rename": "Please enter a new conversation name",
 	"placeholder_input_rename": "New conversation name...",
 	"title_button_more_ai_applications": "More Applications",
-	"label_ai_applications": "AI Applications"
+	"label_ai_applications": "AI Applications",
+	"error_get_ai_application_url": "The AI ​​application failed to open, please check whether the API Key of 302.AI supplier is configured correctly."
 }

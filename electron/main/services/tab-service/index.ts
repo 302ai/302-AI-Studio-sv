@@ -55,36 +55,46 @@ export class TabService {
 
 	// ******************************* Private Methods ******************************* //
 	private async newWebContentsView(windowId: number, tab: Tab): Promise<WebContentsView> {
-		const thread = await storageService.getItemInternal("app-thread:" + tab.threadId);
-		const messages = await storageService.getItemInternal("app-chat-messages:" + tab.threadId);
+		let view: WebContentsView;
 
-		const threadFilePath = TempStorage.writeData(thread, "thread");
-		const messagesFilePath = TempStorage.writeData(messages, "messages");
+		if (tab.type === "aiApplications") {
+			view = WebContentsFactory.createAiApplicationView({
+				windowId,
+				type: "aiApplication",
+			});
+		} else {
+			const thread = await storageService.getItemInternal("app-thread:" + tab.threadId);
+			const messages = await storageService.getItemInternal("app-chat-messages:" + tab.threadId);
 
-		this.tempFileRegistry.set(tab.id, [threadFilePath, messagesFilePath]);
+			const threadFilePath = TempStorage.writeData(thread, "thread");
+			const messagesFilePath = TempStorage.writeData(messages, "messages");
 
-		// Create view using factory
-		const view = WebContentsFactory.createTabView({
-			windowId,
-			type: "tab",
-			tab,
-			threadFilePath,
-			messagesFilePath,
+			this.tempFileRegistry.set(tab.id, [threadFilePath, messagesFilePath]);
+
+			// Create view using factory
+			view = WebContentsFactory.createTabView({
+				windowId,
+				type: "tab",
+				tab,
+				threadFilePath,
+				messagesFilePath,
+			});
+		}
+
+		// Add devTools shortcuts
+		withDevToolsShortcuts(view);
+		withLoadHandlers(view, {
+			baseUrl:
+				tab.type === "aiApplications"
+					? tab.href
+					: MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost",
+			autoOpenDevTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
 		});
 
 		// Attach shortcut engine to tab view
 		shortcutService.getEngine().attachToView(view, windowId, tab.id);
 
 		this.tabViewMap.set(tab.id, view);
-
-		// Add devTools shortcuts
-		withDevToolsShortcuts(view);
-
-		// Add load handlers
-		withLoadHandlers(view, {
-			baseUrl: MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost",
-			autoOpenDevTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
-		});
 
 		// Add lifecycle handlers
 		const capturedTabId = tab.id;
@@ -534,6 +544,7 @@ export class TabService {
 			active,
 			threadId: newThreadId,
 		};
+
 		if (type === "chat") {
 			const preferencesSettings = (await storageService.getItemInternal(
 				"PreferencesSettingsStorage:state",
@@ -583,6 +594,7 @@ export class TabService {
 			await storageService.setItemInternal("app-thread:" + newTab.threadId, newThread);
 			await storageService.setItemInternal("app-chat-messages:" + newTab.threadId, newMessages);
 		}
+
 		const view = await this.newWebContentsView(window.id, newTab);
 		this.attachViewToWindow(window, view);
 		this.switchActiveTab(window, newTab.id);

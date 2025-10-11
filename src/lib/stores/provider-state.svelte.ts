@@ -2,8 +2,7 @@ import { getAllModels, getModelsByProvider } from "$lib/api/models.js";
 import { DEFAULT_PROVIDERS } from "$lib/datas/providers.js";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages.js";
-import type { ModelProvider } from "$lib/types/provider.js";
-import type { Model, ModelCreateInput, ModelUpdateInput } from "@shared/types";
+import type { Model, ModelCreateInput, ModelProvider, ModelUpdateInput } from "@shared/types";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
 
@@ -12,6 +11,8 @@ export const persistedProviderState = new PersistedState<ModelProvider[]>(
 	DEFAULT_PROVIDERS,
 );
 export const persistedModelState = new PersistedState<Model[]>("app-models", []);
+
+const { aiApplicationService } = window.electronAPI;
 
 class ProviderState {
 	getProvider(id: string): ModelProvider | null {
@@ -27,6 +28,10 @@ class ProviderState {
 		persistedProviderState.current = persistedProviderState.current.map((p) =>
 			p.id === id ? { ...p, ...updates } : p,
 		);
+
+		if (updates.apiType === "302ai") {
+			aiApplicationService.handle302AIProviderChange();
+		}
 	}
 	removeProvider(id: string) {
 		persistedProviderState.current = persistedProviderState.current.filter((p) => p.id !== id);

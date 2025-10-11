@@ -9,9 +9,8 @@
 	import * as Select from "$lib/components/ui/select/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { persistedModelState, providerState } from "$lib/stores/provider-state.svelte.js";
-	import type { ModelProvider } from "$lib/types/provider.js";
 	import { Eye, EyeOff } from "@lucide/svelte";
-	import type { Model, ModelCreateInput } from "@shared/types";
+	import type { Model, ModelCreateInput, ModelProvider } from "@shared/types";
 	import { toast } from "svelte-sonner";
 
 	const apiTypes = [

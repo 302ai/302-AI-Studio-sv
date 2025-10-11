@@ -4,7 +4,7 @@
 	import { ProviderList } from "$lib/components/buss/provider-list";
 	import { m } from "$lib/paraglide/messages.js";
 	import { persistedProviderState, providerState } from "$lib/stores/provider-state.svelte.js";
-	import type { ModelProvider } from "$lib/types/provider";
+	import type { ModelProvider } from "@shared/storage/provider";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import Header from "./header.svelte";

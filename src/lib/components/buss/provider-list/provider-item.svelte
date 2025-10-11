@@ -1,6 +1,4 @@
 <script lang="ts" module>
-	import type { ModelProvider } from "$lib/types/provider.js";
-
 	interface Props {
 		provider: ModelProvider;
 		isActive?: boolean;
@@ -14,10 +12,11 @@
 <script lang="ts">
 	import { ModelIcon } from "$lib/components/buss/model-icon/index.js";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
+	import { m } from "$lib/paraglide/messages.js";
 	import { persistedModelState } from "$lib/stores/provider-state.svelte.js";
 	import { cn } from "$lib/utils";
 	import { CircleAlert, Cloud, X } from "@lucide/svelte";
-	import { m } from "$lib/paraglide/messages.js";
+	import type { ModelProvider } from "@shared/types";
 
 	const {
 		provider,

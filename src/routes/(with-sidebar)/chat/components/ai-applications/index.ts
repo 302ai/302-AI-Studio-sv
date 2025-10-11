@@ -1,3 +1,3 @@
-import AiApplicationItems from "./ai-application-items.svelte";
+import AiApplicationItems from "./ai-applications.svelte";
 
 export { AiApplicationItems };

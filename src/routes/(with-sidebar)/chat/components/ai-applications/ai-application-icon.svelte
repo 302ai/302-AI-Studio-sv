@@ -150,6 +150,6 @@
 	<img src={iconUrl} alt="AI Application Icon" class={cn("h-9 w-9 rounded-lg", className)} />
 {:else}
 	<div class={cn("flex h-9 w-9 items-center justify-center rounded-lg", className)}>
-		<LayoutGrid className="h-5 w-5" />
+		<LayoutGrid class="h-5 w-5" />
 	</div>
 {/if}

@@ -6,7 +6,7 @@ import { ENVIRONMENT } from "../constants";
 
 export interface WebContentsConfig {
 	windowId: number;
-	type: "shell" | "tab";
+	type: "shell" | "tab" | "aiApplication";
 	additionalArgs?: string[];
 	onDestroyed?: () => void;
 }
@@ -20,6 +20,10 @@ export interface TabWebContentsConfig extends WebContentsConfig {
 
 export interface ShellWebContentsConfig extends WebContentsConfig {
 	type: "shell";
+}
+
+export interface AiApplicationWebContentsConfig extends WebContentsConfig {
+	type: "aiApplication";
 }
 
 export class WebContentsFactory {
@@ -56,6 +60,10 @@ export class WebContentsFactory {
 			...config,
 			additionalArgs,
 		});
+	}
+
+	static createAiApplicationView(config: AiApplicationWebContentsConfig): WebContentsView {
+		return this.create(config);
 	}
 
 	static createShellView(config: ShellWebContentsConfig): WebContentsView {
