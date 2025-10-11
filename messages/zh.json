@@ -324,5 +324,7 @@
 	"title_button_rename": "重命名",
 	"title_rename": "重命名会话",
 	"text_description_rename": "请输入新的会话名称",
-	"placeholder_input_rename": "新的会话名称..."
+	"placeholder_input_rename": "新的会话名称...",
+	"title_button_more_ai_applications": "更多应用",
+	"label_ai_applications": "AI 应用"
 }

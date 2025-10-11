@@ -69,6 +69,7 @@ export class PersistedState<T extends StorageValue> {
 	#update: VoidFunction | undefined;
 	#proxies = new WeakMap();
 	#syncing = false;
+	#isHydrated = $state(false);
 
 	constructor(key: string, initialValue: T) {
 		this.#current = initialValue;
@@ -108,6 +109,10 @@ export class PersistedState<T extends StorageValue> {
 		);
 	}
 
+	get isHydrated(): boolean {
+		return this.#isHydrated;
+	}
+
 	set current(newValue: T) {
 		this.#current = newValue;
 		this.#store(newValue);
@@ -120,6 +125,7 @@ export class PersistedState<T extends StorageValue> {
 			const existingValue = await electronStorage?.getItemAsync(key);
 			if (existingValue == null) {
 				await electronStorage?.setItemAsync(key, initialValue);
+				this.#isHydrated = true;
 				return;
 			}
 
@@ -127,9 +133,11 @@ export class PersistedState<T extends StorageValue> {
 				this.#current = existingValue;
 				this.#update?.();
 			}
+			this.#isHydrated = true;
 		} catch (error) {
 			console.error(`Error hydrate persisted state from Electron storage for key "${key}":`, error);
 			this.#current = initialValue;
+			this.#isHydrated = true;
 		}
 	}
 

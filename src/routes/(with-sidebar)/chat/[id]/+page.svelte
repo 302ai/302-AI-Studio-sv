@@ -7,9 +7,11 @@
 </script>
 
 {#if !chatState.hasMessages}
-	<div class="flex h-full flex-col items-center justify-center gap-chat-gap-y">
-		<span class="text-center text-chat-slogan" data-layoutid="chat-slogan">{m.app_slogan()}</span>
-		<ChatInputBox />
+	<div class="flex h-full flex-col items-center justify-center gap-y-6">
+		<div class="flex w-full flex-col items-center justify-center gap-chat-gap-y">
+			<span class="text-center text-chat-slogan" data-layoutid="chat-slogan">{m.app_slogan()}</span>
+			<ChatInputBox />
+		</div>
 		<AiApplicationItems />
 	</div>
 {:else}

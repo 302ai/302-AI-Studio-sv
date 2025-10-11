@@ -8,8 +8,7 @@ const persistedAiApplicationState = new PersistedState<AiApplication[]>(
 
 class AiApplicationsState {
 	aiApplications = $derived(persistedAiApplicationState.current);
-
-	constructor() {}
+	isHydrated = $derived(persistedAiApplicationState.isHydrated);
 }
 
 export const aiApplicationsState = new AiApplicationsState();
