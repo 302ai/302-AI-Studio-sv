@@ -1,5 +1,4 @@
 import type { LanguageCode } from "@shared/storage/general-settings";
-import type { AiApplication } from "@shared/types";
 import { nanoid } from "nanoid";
 import { fetch302AIToolList } from "../../apis/ai-applications";
 import { generalSettingsService } from "../general-setting-service";
@@ -17,23 +16,21 @@ export class AiApplicationService {
 			en: "en",
 			// ja: "jp",
 		};
-		const _lang = langMap[language];
-		const aiApplications = await fetch302AIToolList(_lang);
-		const aiApplicationState: AiApplication[] = [];
-		aiApplications.forEach((aiApplication) => {
-			aiApplicationState.push({
-				id: nanoid(),
-				toolId: aiApplication.tool_id,
-				name: aiApplication.tool_name,
-				description: aiApplication.tool_description,
-				category: aiApplication.category_name,
-				categoryId: aiApplication.category_id,
-				collected: false,
-				createdAt: new Date().toISOString(),
-			});
-		});
-
-		console.log(aiApplicationState);
+		const aiApplications = await fetch302AIToolList(langMap[language]);
+		const aiApplicationState = aiApplications.map(
+			({ tool_id, tool_name, tool_description, category_name, category_id }) => {
+				return {
+					id: nanoid(),
+					toolId: tool_id,
+					name: tool_name,
+					description: tool_description,
+					category: category_name,
+					categoryId: category_id,
+					collected: false,
+					createdAt: new Date().toISOString(),
+				};
+			},
+		);
 
 		await aiApplicationStorage.setAiApplications(aiApplicationState);
 	}

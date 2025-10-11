@@ -5,7 +5,7 @@
 	import { m } from "$lib/paraglide/messages";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { threadsState } from "$lib/stores/threads-state.svelte";
-	import { TimeGroup, TIME_GROUP_ORDER } from "$lib/types/time-group";
+	import { TIME_GROUP_ORDER, TimeGroup } from "$lib/types/time-group";
 	import { ChevronDown } from "@lucide/svelte";
 	import RenameDialog from "./rename-dialog.svelte";
 	import ThreadItem from "./thread-item.svelte";
@@ -137,12 +137,12 @@
 <Sidebar.Root collapsible="offcanvas" variant="sidebar" class="border-none">
 	<Sidebar.Header class="px-4 pb-0">
 		<Input
-			class="bg-background! h-10"
+			class="bg-background! h-10 rounded-[10px]"
 			bind:value={searchQuery}
 			placeholder={m.placeholder_input_search()}
 		/>
 	</Sidebar.Header>
-	<Sidebar.Content>
+	<Sidebar.Content class="bg-input">
 		<Sidebar.Group>
 			<Sidebar.GroupContent class="flex flex-col gap-y-1 px-3">
 				{#if searchQuery.trim()}
@@ -171,7 +171,7 @@
 										class="group/collapsible flex flex-col gap-y-1"
 									>
 										<Collapsible.Trigger
-											class="text-muted-foreground flex items-center justify-between text-start w-full h-10 rounded-[10px] px-3 hover:bg-secondary"
+											class="flex items-center justify-between text-start w-full h-10 rounded-[10px] px-3 hover:bg-secondary/80"
 										>
 											<span>{getGroupLabel(groupKey)}</span>
 											<ChevronDown
