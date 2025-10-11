@@ -125,7 +125,7 @@
 										class="group/collapsible flex flex-col gap-y-1"
 									>
 										<Collapsible.Trigger
-											class="flex items-center text-sm justify-between text-start w-full h-10 rounded-[10px] px-3 hover:bg-secondary/80"
+											class="flex items-center text-sm justify-between text-start w-full h-10 rounded-[10px] px-3 hover:bg-secondary/80 text-muted-foreground"
 										>
 											<span>{category}</span>
 											<ChevronDown

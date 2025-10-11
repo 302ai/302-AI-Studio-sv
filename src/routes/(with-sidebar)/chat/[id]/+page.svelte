@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 	import { AiApplicationItems } from "../components/ai-applications";
 	import { ChatInputBox } from "../components/chat-input";
 	import { MessageList } from "../components/message";
@@ -12,7 +13,7 @@
 			<span class="text-center text-chat-slogan" data-layoutid="chat-slogan">{m.app_slogan()}</span>
 			<ChatInputBox />
 		</div>
-		<AiApplicationItems />
+		{#if preferencesSettings.enableSupermarket}<AiApplicationItems />{/if}
 	</div>
 {:else}
 	<div class="flex h-full flex-col gap-y-4">

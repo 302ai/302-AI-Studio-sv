@@ -75,6 +75,7 @@
 		const viewport = getViewportElement();
 		if (!viewport) return;
 
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
 		messages;
 
 		scrollToBottom(viewport);
@@ -101,7 +102,7 @@
 		<div class={cn("w-full space-y-4 py-8", containerClass)}>
 			{#each messages as message (message.id)}
 				{#if message.role === "user"}
-					<UserMessage message={{ ...message, role: "user" as const, attachments: [] }} />
+					<UserMessage message={{ ...message, role: "user" as const }} />
 				{:else if message.role === "assistant"}
 					<AssistantMessage message={{ ...message, role: "assistant" as const }} />
 				{/if}
