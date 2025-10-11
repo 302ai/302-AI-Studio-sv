@@ -13,9 +13,9 @@ import {
 } from "../../constants";
 import { WebContentsFactory } from "../../factories/web-contents-factory";
 import { withDevToolsShortcuts, withLoadHandlers } from "../../mixins/web-contents-mixins";
+import { shortcutService } from "../shortcut-service";
 import { tabStorage } from "../storage-service/tab-storage";
 import { tabService } from "../tab-service";
-import { shortcutService } from "../shortcut-service";
 
 export class WindowService {
 	private mainWindowId: number | null = null;
@@ -305,15 +305,21 @@ export class WindowService {
 		const triggerTab = tabService.getTabById(triggerTabId);
 		if (isUndefined(triggerTab)) return null;
 
+		const sourceWindowTabs = tabService.getWindowTabs(fromWindow.id);
+		const shouldCloseSourceWindow = sourceWindowTabs.size === 1;
+
 		const { shellWindow, shellView } = await this.createShellWindow();
 		const newShellWindowId = shellWindow.id;
 
 		tabService.initWindowShellView(newShellWindowId, shellView);
-
 		tabService.transferTabToWindow(fromWindow, shellWindow, triggerTabId, triggerTab);
 
 		const newShellWindowTabs = [{ ...triggerTab, active: true }];
 		await tabStorage.updateWindowTabs(newShellWindowId.toString(), newShellWindowTabs);
+
+		if (shouldCloseSourceWindow) {
+			fromWindow.close();
+		}
 
 		return newShellWindowId.toString();
 	}
@@ -335,6 +341,11 @@ export class WindowService {
 		const currentTabs = await tabStorage.getTabs(windowId);
 		if (isNull(currentTabs)) return;
 
+		// Check source window tabs from memory (before transfer removes it)
+		// Use tabService's in-memory state, not storage (which may already be updated by frontend)
+		const sourceWindowTabs = tabService.getWindowTabs(fromWindow.id);
+		const shouldCloseSourceWindow = sourceWindowTabs.size === 1;
+
 		// Prepare the moved tab data
 		const movedTab = { ...triggerTab, active: true };
 
@@ -345,6 +356,14 @@ export class WindowService {
 		const updatedCurrentTabs = currentTabs.map((tab) => ({ ...tab, active: false }));
 		const newTargetWindowTabs = [...updatedCurrentTabs, movedTab];
 		await tabStorage.updateWindowTabs(windowId, newTargetWindowTabs);
+
+		// Close source window if it has no remaining tabs after transfer
+		if (shouldCloseSourceWindow) {
+			console.log(
+				`Source window ${fromWindow.id} has no remaining tabs after move, closing window`,
+			);
+			fromWindow.close();
+		}
 	}
 }
 
