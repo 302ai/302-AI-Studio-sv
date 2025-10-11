@@ -35,6 +35,11 @@
 			path: "/settings/shortcut-settings",
 			labelKey: m.text_button_settings_shortcuts(),
 		},
+		{
+			name: "about",
+			path: "/settings/about",
+			labelKey: m.text_button_settings_about(),
+		},
 	];
 
 	let indicatorStyle: { top: string; height: string } = $state({ top: "", height: "" });

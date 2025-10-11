@@ -327,5 +327,7 @@
 	"placeholder_input_rename": "新的会话名称...",
 	"title_button_more_ai_applications": "更多应用",
 	"label_ai_applications": "AI 应用",
-	"error_get_ai_application_url": "AI 应用打开失败，请检查 302.AI 供应商的 API Key 是否配置正确"
+	"error_get_ai_application_url": "AI 应用打开失败，请检查 302.AI 供应商的 API Key 是否配置正确",
+	"text_button_settings_about": "关于",
+	"title_version": "版本"
 }
