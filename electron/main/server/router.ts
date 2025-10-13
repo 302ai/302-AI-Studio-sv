@@ -11,6 +11,7 @@ import {
 	type UIMessage,
 } from "ai";
 import { Hono } from "hono";
+import getPort from "get-port";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function addDefinedParams(options: any, params: any) {
@@ -302,6 +303,15 @@ app.post("/chat/gemini", async (c) => {
 	});
 });
 
-export function initServer() {
-	serve({ fetch: app.fetch, port: 8089 });
+export async function initServer(preferredPort = 8089): Promise<number> {
+	const port = await getPort({ port: preferredPort });
+
+	serve({
+		fetch: app.fetch,
+		port,
+		hostname: "localhost",
+	});
+
+	console.log(`Server started successfully on port ${port}`);
+	return port;
 }

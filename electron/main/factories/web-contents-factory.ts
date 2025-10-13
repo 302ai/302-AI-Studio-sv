@@ -27,8 +27,17 @@ export interface AiApplicationWebContentsConfig extends WebContentsConfig {
 }
 
 export class WebContentsFactory {
+	private static serverPort: number | null = null;
+
+	static setServerPort(port: number) {
+		this.serverPort = port;
+	}
+
 	static create(config: WebContentsConfig): WebContentsView {
-		const commonArgs = [`--window-id=${config.windowId}`];
+		const commonArgs = [
+			`--window-id=${config.windowId}`,
+			...(this.serverPort !== null ? [`--server-port=${this.serverPort}`] : []),
+		];
 		const additionalArgs = config.additionalArgs || [];
 
 		const view = new WebContentsView({

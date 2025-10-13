@@ -460,17 +460,18 @@ export const chat = new Chat({
 	messages: persistedMessagesState.current,
 	transport: new DynamicChatTransport<ChatMessage>({
 		api: () => {
+			const port = window.app?.serverPort ?? 8089;
 			switch (chatState.currentProvider?.apiType) {
 				case "302ai":
-					return "http://localhost:8089/chat/302ai";
+					return `http://localhost:${port}/chat/302ai`;
 				case "openai":
-					return "http://localhost:8089/chat/openai";
+					return `http://localhost:${port}/chat/openai`;
 				case "anthropic":
-					return "http://localhost:8089/chat/anthropic";
+					return `http://localhost:${port}/chat/anthropic`;
 				case "gemini":
-					return "http://localhost:8089/chat/gemini";
+					return `http://localhost:${port}/chat/gemini`;
 				default:
-					return "http://localhost:8089/chat/302";
+					return `http://localhost:${port}/chat/302`;
 			}
 		},
 		body: () => ({

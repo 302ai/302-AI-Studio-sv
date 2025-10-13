@@ -6,6 +6,7 @@ import { app, net, protocol } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
 import { isMac } from "./constants";
+import { WebContentsFactory } from "./factories/web-contents-factory";
 import { registerIpcHandlers } from "./generated/ipc-registration";
 import { initServer } from "./server/router";
 import { appService, shortcutService, windowService } from "./services";
@@ -58,10 +59,12 @@ async function init() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", () => {
-	init();
-	initServer();
-	windowService.initShellWindows();
+app.on("ready", async () => {
+	await init();
+	const serverPort = await initServer();
+	console.log(`Server initialized on port ${serverPort}`);
+	WebContentsFactory.setServerPort(serverPort);
+	await windowService.initShellWindows();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common

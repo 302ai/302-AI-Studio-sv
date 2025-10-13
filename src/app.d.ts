@@ -47,6 +47,7 @@ declare global {
 		app: {
 			platform: string;
 			isDev: boolean;
+			serverPort: number;
 		};
 	}
 }
