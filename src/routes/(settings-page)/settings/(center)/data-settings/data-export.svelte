@@ -1,19 +1,38 @@
 <script lang="ts">
-	import { m } from "$lib/paraglide/messages.js";
 	import SettingInfoItem from "$lib/components/buss/settings/setting-info-item.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
+	import { m } from "$lib/paraglide/messages.js";
 	import { Download } from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
 
-	function handleExport() {
-		console.log("Exporting data...");
+	let isExporting = $state(false);
+
+	async function handleExport() {
+		try {
+			isExporting = true;
+			const filePath = await window.electronAPI.dataService.exportStorage();
+
+			if (filePath) {
+				toast.success(m.settings_exportSuccess(), {
+					description: filePath,
+				});
+			}
+		} catch (error) {
+			console.error("Failed to export data:", error);
+			toast.error(m.settings_exportFailed(), {
+				description: error instanceof Error ? error.message : String(error),
+			});
+		} finally {
+			isExporting = false;
+		}
 	}
 </script>
 
 {#snippet exportButton()}
-	<Button size="sm" onclick={handleExport}>
+	<Button size="sm" onclick={handleExport} disabled={isExporting}>
 		<Download className="size-4" />
-		{m.settings_exportLabel()}
+		{isExporting ? m.settings_exporting() : m.settings_exportLabel()}
 	</Button>
 {/snippet}
 

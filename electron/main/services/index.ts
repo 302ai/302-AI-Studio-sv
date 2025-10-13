@@ -2,6 +2,7 @@ import { AiApplicationService, aiApplicationService } from "./ai-application-ser
 import { AppService, appService } from "./app-service";
 import { AttachmentsService, attachmentsService } from "./attachments-sevice";
 import { BroadcastService, broadcastService } from "./broadcast-service";
+import { DataService, dataService } from "./data-service";
 import { ExternalLinkService, externalLinkService } from "./external-link-service";
 import { GeneralSettingsService, generalSettingsService } from "./general-setting-service";
 import { ShortcutService, shortcutService } from "./shortcut-service";
@@ -16,6 +17,7 @@ export {
 	AppService,
 	AttachmentsService,
 	BroadcastService,
+	DataService,
 	ExternalLinkService,
 	GeneralSettingsService,
 	ShortcutService,
@@ -31,6 +33,7 @@ export {
 	appService,
 	attachmentsService,
 	broadcastService,
+	dataService,
 	externalLinkService,
 	generalSettingsService,
 	shortcutService,
