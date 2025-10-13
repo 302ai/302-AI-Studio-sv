@@ -321,7 +321,15 @@
 				</div>
 				{#if !formData.custom && formData.websites.apiKey}
 					<p class="text-muted-foreground text-xs">
-						<a href={formData.websites.apiKey} target="_blank" class="text-primary hover:underline">
+						<a
+							href={formData.websites.apiKey}
+							target="_blank"
+							class="text-primary hover:underline"
+							onclick={(e) => {
+								e.preventDefault();
+								window.electronAPI.externalLinkService.openExternalLink(formData.websites.apiKey);
+							}}
+						>
 							{m.text_get_api_key()}
 						</a>
 					</p>

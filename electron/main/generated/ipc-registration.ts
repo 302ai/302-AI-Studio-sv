@@ -4,6 +4,7 @@ import {
 	aiApplicationService,
 	appService,
 	broadcastService,
+	externalLinkService,
 	tabService,
 	shortcutService,
 	threadService,
@@ -60,6 +61,11 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("broadcastService:broadcastToAll", (event, broadcastEvent, data) =>
 		broadcastService.broadcastToAll(event, broadcastEvent, data),
+	);
+
+	// externalLinkService service registration
+	ipcMain.handle("externalLinkService:openExternalLink", (event, url) =>
+		externalLinkService.openExternalLink(event, url),
 	);
 
 	// tabService service registration
@@ -157,6 +163,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
 	ipcMain.removeHandler("broadcastService:broadcastToAll");
+	ipcMain.removeHandler("externalLinkService:openExternalLink");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");
