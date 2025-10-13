@@ -333,5 +333,9 @@
 	"label_ai_applications": "AI Applications",
 	"error_get_ai_application_url": "The AI ​​application failed to open, please check whether the API Key of 302.AI supplier is configured correctly.",
 	"text_button_settings_about": "About",
-	"title_version": "Version"
+	"title_version": "Version",
+	"title_help_center": "Help Center",
+	"title_terms_of_service": "Terms of Service",
+	"title_privacy_policy": "Privacy Policy",
+	"app_description": "302 AI Studio is a powerful AI chat application that provides users with intelligent conversation experiences. It supports multiple AI models, features file upload and web search capabilities, and is committed to creating the best AI interaction platform for users."
 }

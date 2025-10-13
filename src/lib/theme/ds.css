@@ -85,6 +85,7 @@
 	--ui-settings-layout-max-w: 33rem; /* max-w-[528px] */
 	--ui-settings-layout-min-w: 33rem; /* min-w-[528px] */
 	--ui-settings-layout-pt: 1.125rem; /* pt-[18px] */
+	--ui-settings-layout-pb: 0.5625rem; /* pb-[9px] */
 	--ui-settings-gap: 0.5rem; /* 8px — gap-2 equivalent */
 
 	/* Settings shortcut text */
@@ -232,6 +233,7 @@
 	/* Simplified aliases (both max/min can use same token by default) */
 	--spacing-settings-layout: var(--ui-settings-layout-max-w);
 	--spacing-settings-layout-pt: var(--ui-settings-layout-pt);
+	--spacing-settings-layout-pb: var(--ui-settings-layout-pb);
 
 	/* Settings shortcut text bridge */
 	--text-settings-shortcut-size: var(--ui-settings-shortcut-text-size);

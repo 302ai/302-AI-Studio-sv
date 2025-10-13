@@ -4,10 +4,9 @@
 	import GithubIcon from "$lib/assets/icons/social-medias/github.svg";
 	import TwitterIcon from "$lib/assets/icons/social-medias/twitter.svg";
 	import { ModelIcon } from "$lib/components/buss/model-icon/index.js";
+	import * as Avatar from "$lib/components/ui/avatar";
 	import { Button } from "$lib/components/ui/button/index.js";
-	import { Separator } from "$lib/components/ui/separator/index.js";
 	import { m } from "$lib/paraglide/messages";
-	import { cn } from "$lib/utils.js";
 
 	const socialMedias = [
 		{
@@ -30,49 +29,64 @@
 	const footerLinks = [
 		{
 			id: 1,
-			name: "Help Center",
+			name: m.title_help_center(),
 			action: () => {},
 		},
 		{
 			id: 2,
-			name: "Terms of Service",
+			name: m.title_terms_of_service(),
 			action: () => {},
 		},
 		{
 			id: 3,
-			name: "Privacy Policy",
+			name: m.title_privacy_policy(),
 			action: () => {},
 		},
 	] as const;
 </script>
 
-<div class="mx-auto flex h-full flex-1 flex-col items-center justify-between">
-	<div class="flex items-center gap-2 flex-col">
-		<ModelIcon modelName="ai302" className="size-[62px]" />
-		<h1 class="text-xl">{appInfo.productName}</h1>
-		<p class="text-muted-foreground text-sm">{m.title_version()} {appInfo.version}</p>
+<div class="mx-auto flex h-full flex-col items-center">
+	<div class="flex flex-1 items-center justify-center">
+		<div class="flex items-center gap-y-[22px] flex-col">
+			<ModelIcon modelName="ai302" className="size-[62px]" />
+			<div class="flex items-center gap-y-2 flex-col">
+				<h1 class="text-xl">{appInfo.productName}</h1>
+				<p class="text-muted-foreground text-sm">{m.title_version()} {appInfo.version}</p>
+			</div>
+			<p class="mx-auto text-center text-muted-foreground text-sm leading-relaxed">
+				{m.app_description()}
+				<a href={appInfo.homepage} target="_blank" class="text-sm text-primary hover:underline">
+					{appInfo.homepage}
+				</a>
+			</p>
+		</div>
 	</div>
 
 	<div class="flex items-center gap-4">
 		<div class="flex items-center gap-4">
 			{#each socialMedias as item (item.name)}
-				<Button class="size-7 hover:bg-transparent" variant="ghost" onclick={item.action}>
-					<img src={item.icon} alt={item.name} class="h-5 w-5" />
+				<Button
+					size="icon-sm"
+					class="hover:bg-transparent size-7"
+					variant="ghost"
+					onclick={item.action}
+				>
+					<Avatar.Root class="rounded-md size-full">
+						<Avatar.Image src={item.icon} alt={item.name} />
+					</Avatar.Root>
 				</Button>
 			{/each}
 		</div>
 		<div class="flex items-center gap-x-4">
-			{#each footerLinks as item, index (item.name)}
+			{#each footerLinks as item (item.name)}
 				<div class="flex items-center gap-x-4">
-					<button onclick={item.action} class="cursor-pointer text-muted-fg text-sm hover:text-fg">
+					<Button
+						variant="ghost"
+						onclick={item.action}
+						class="text-muted-foreground fit-content p-0 text-sm hover:bg-transparent dark:hover:bg-transparent"
+					>
 						{item.name}
-					</button>
-					<Separator
-						orientation="vertical"
-						class={cn("h-5 w-0.5 bg-muted-fg", {
-							"opacity-0": index === footerLinks.length - 1,
-						})}
-					/>
+					</Button>
 				</div>
 			{/each}
 		</div>

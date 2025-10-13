@@ -4,7 +4,7 @@
  */
 export const appInfo = {
 	productName: "302 AI Studio",
-	version: "25.41.0",
+	version: "25.42.0",
 	description: "302 AI Studio",
 	author: {
 		name: "302.AI",
@@ -12,6 +12,6 @@ export const appInfo = {
 	},
 	license: "AGPL-3.0",
 	repository: "https://github.com/302ai/302-AI-Studio-sv",
-	homepage: "https://github.com/302ai/302-AI-Studio-sv",
+	homepage: "https://302.ai",
 	bugs: "https://github.com/302ai/302-AI-Studio-sv/issues",
 } as const;

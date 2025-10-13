@@ -329,5 +329,9 @@
 	"label_ai_applications": "AI 应用",
 	"error_get_ai_application_url": "AI 应用打开失败，请检查 302.AI 供应商的 API Key 是否配置正确",
 	"text_button_settings_about": "关于",
-	"title_version": "版本"
+	"title_version": "版本",
+	"title_help_center": "帮助中心",
+	"title_terms_of_service": "使用条款",
+	"title_privacy_policy": "隐私政策",
+	"app_description": "302 AI Studio 是一个强大的AI聊天应用，为用户提供智能对话体验。支持多种AI模型，具备文件上传、联网搜索等功能，致力于为用户打造最佳的AI交互平台。"
 }

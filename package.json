@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "25.41.0",
+	"version": "25.42.0",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -15,7 +15,7 @@
 		"type": "git",
 		"url": "https://github.com/302ai/302-AI-Studio-sv.git"
 	},
-	"homepage": "https://github.com/302ai/302-AI-Studio-sv",
+	"homepage": "https://302.ai",
 	"bugs": {
 		"url": "https://github.com/302ai/302-AI-Studio-sv/issues"
 	},
