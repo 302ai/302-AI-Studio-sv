@@ -38,6 +38,7 @@ export class WebContentsFactory {
 				webgl: true,
 				additionalArguments: [...commonArgs, ...additionalArgs],
 				sandbox: false,
+				webSecurity: false,
 			},
 		});
 

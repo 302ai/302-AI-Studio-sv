@@ -1,22 +1,16 @@
-import {
-	ai302Handler,
-	anthropicHandler,
-	googleHandler,
-	openaiHandler,
-} from "$lib/handlers/chat-handlers";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
-import { FChatTransport } from "$lib/transport/f-chat-transport";
 import type { ChatMessage } from "$lib/types/chat";
 import { ChatErrorHandler, type ChatError } from "$lib/utils/error-handler";
 import { notificationState } from "./notification-state.svelte";
 
+import { convertAttachmentsToMessageParts } from "$lib/utils/attachment-converter";
 import { clone } from "$lib/utils/clone";
 import { Chat } from "@ai-sdk/svelte";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
+import { DynamicChatTransport } from "$lib/transport/dynamic-chat-transport";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
-import { convertAttachmentsToMessageParts } from "$lib/utils/attachment-converter";
 
 const { broadcastService, threadService } = window.electronAPI;
 
@@ -464,19 +458,19 @@ export const chatState = new ChatState();
 
 export const chat = new Chat({
 	messages: persistedMessagesState.current,
-	transport: new FChatTransport<ChatMessage>({
-		handler: () => {
+	transport: new DynamicChatTransport<ChatMessage>({
+		api: () => {
 			switch (chatState.currentProvider?.apiType) {
 				case "302ai":
-					return ai302Handler;
+					return "http://localhost:8089/chat/302ai";
 				case "openai":
-					return openaiHandler;
+					return "http://localhost:8089/chat/openai";
 				case "anthropic":
-					return anthropicHandler;
+					return "http://localhost:8089/chat/anthropic";
 				case "gemini":
-					return googleHandler;
+					return "http://localhost:8089/chat/gemini";
 				default:
-					return ai302Handler;
+					return "http://localhost:8089/chat/302";
 			}
 		},
 		body: () => ({

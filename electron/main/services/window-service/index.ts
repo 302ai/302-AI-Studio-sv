@@ -123,6 +123,7 @@ export class WindowService {
 				devTools: ENVIRONMENT.IS_DEV,
 				webgl: true,
 				sandbox: false,
+				webSecurity: false,
 			},
 			roundedCorners: true,
 			show: false,

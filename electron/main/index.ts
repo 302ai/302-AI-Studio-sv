@@ -1,13 +1,14 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
 
+import { DEFAULT_SHORTCUTS } from "@shared/config/default-shortcuts";
+import type { ShortcutBinding, ShortcutScope } from "@shared/types/shortcut";
 import { app, net, protocol } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
 import { isMac } from "./constants";
 import { registerIpcHandlers } from "./generated/ipc-registration";
+import { initServer } from "./server/router";
 import { appService, shortcutService, windowService } from "./services";
-import { DEFAULT_SHORTCUTS } from "@shared/config/default-shortcuts";
-import type { ShortcutBinding, ShortcutScope } from "@shared/types/shortcut";
 
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
@@ -59,6 +60,7 @@ async function init() {
 // Some APIs can only be used after this event occurs.
 app.on("ready", () => {
 	init();
+	initServer();
 	windowService.initShellWindows();
 });
 
