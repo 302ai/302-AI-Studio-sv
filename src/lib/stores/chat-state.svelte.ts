@@ -3,15 +3,16 @@ import type { ChatMessage } from "$lib/types/chat";
 import { ChatErrorHandler, type ChatError } from "$lib/utils/error-handler";
 import { notificationState } from "./notification-state.svelte";
 
+import { generateTitle } from "$lib/api/title-generation";
+import { DynamicChatTransport } from "$lib/transport/dynamic-chat-transport";
 import { convertAttachmentsToMessageParts } from "$lib/utils/attachment-converter";
 import { clone } from "$lib/utils/clone";
 import { Chat } from "@ai-sdk/svelte";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
-import { DynamicChatTransport } from "$lib/transport/dynamic-chat-transport";
+import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
-import { preferencesSettings } from "./preferences-settings.state.svelte";
 
 const { broadcastService, threadService } = window.electronAPI;
 
@@ -494,23 +495,47 @@ export const chat = new Chat({
 			},
 		}),
 	}),
-	onFinish: ({ messages }) => {
+	onFinish: async ({ messages }) => {
 		console.log("更新完成", $state.snapshot(messages));
 		persistedMessagesState.current = messages;
 
-		// Update thread title with first user message if title is empty or default
-		const isFirstMessage = messages.length === 2; // User message + AI response
+		const titleTiming = preferencesSettings.titleGenerationTiming;
+		const titleModel = preferencesSettings.titleGenerationModel;
 		const currentTitle = persistedChatParamsState.current.title;
 		const isDefaultTitle =
-			!currentTitle || currentTitle === "New Chat" || currentTitle === "新对话";
+			!currentTitle ||
+			currentTitle === "New Chat" ||
+			currentTitle === "新对话" ||
+			currentTitle === "新会话";
+		const isFirstMessage = messages.length === 2; // User message + AI response
 
-		if (isFirstMessage && isDefaultTitle) {
+		let shouldGenerateTitle = false;
+
+		if (titleTiming === "off") {
+			shouldGenerateTitle = false;
+		} else if (titleTiming === "firstTime") {
+			shouldGenerateTitle = isFirstMessage && isDefaultTitle;
+		} else if (titleTiming === "everyTime") {
+			shouldGenerateTitle = messages.length >= 2;
+		}
+
+		if (shouldGenerateTitle && titleModel) {
+			try {
+				const provider = persistedProviderState.current.find((p) => p.id === titleModel.providerId);
+				const serverPort = window.app?.serverPort ?? 8089;
+
+				const generatedTitle = await generateTitle(messages, titleModel, provider, serverPort);
+				persistedChatParamsState.current.title = generatedTitle;
+				tabBarState.updateTabTitle(persistedChatParamsState.current.id, generatedTitle);
+			} catch (error) {
+				console.error("Failed to generate title:", error);
+			}
+		} else if (isFirstMessage && isDefaultTitle && titleTiming !== "off") {
+			// Fallback for firstTime mode when model is not configured
 			const firstUserMessage = messages.find((msg) => msg.role === "user");
 			if (firstUserMessage) {
-				// Extract text content from the first text part
 				const textPart = firstUserMessage.parts.find((part) => part.type === "text");
 				if (textPart && "text" in textPart) {
-					// Get first 10 characters (considering emoji and multibyte characters)
 					const text = textPart.text.trim();
 					const titleText = [...text].slice(0, 10).join("");
 					persistedChatParamsState.current.title = titleText;

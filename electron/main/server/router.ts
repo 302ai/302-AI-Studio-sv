@@ -3,9 +3,11 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { serve } from "@hono/node-server";
+import type { ModelProvider } from "@shared/storage/provider";
 import {
 	convertToModelMessages,
 	extractReasoningMiddleware,
+	generateText,
 	smoothStream,
 	streamText,
 	wrapLanguageModel,
@@ -406,6 +408,84 @@ app.post("/chat/gemini", async (c) => {
 			createdAt: new Date().toISOString(),
 		}),
 	});
+});
+
+app.post("/generate-title", async (c) => {
+	const { messages, model, apiKey, baseUrl, providerType } = await c.req.json<{
+		messages: UIMessage[];
+		model: string;
+		apiKey?: string;
+		baseUrl?: string;
+		providerType: ModelProvider["apiType"];
+	}>();
+
+	const conversationText = messages
+		.map((msg) => {
+			const textParts = msg.parts.filter((part) => part.type === "text");
+			return textParts.map((part) => ("text" in part ? part.text : "")).join(" ");
+		})
+		.join("\n");
+
+	let languageModel;
+	switch (providerType) {
+		case "302ai": {
+			const openai = createOpenAICompatible({
+				name: "302.AI",
+				baseURL: baseUrl || "https://api.openai.com/v1",
+				apiKey: apiKey || "[REDACTED:sk-secret]",
+			});
+			languageModel = openai.chatModel(model);
+			break;
+		}
+		case "openai": {
+			const openai = createOpenAI({
+				baseURL: baseUrl || "https://api.openai.com/v1",
+				apiKey: apiKey || "[REDACTED:sk-secret]",
+			});
+			languageModel = openai.chat(model);
+			break;
+		}
+		case "anthropic": {
+			const anthropic = createAnthropic({
+				baseURL: baseUrl || "https://api.anthropic.com/v1",
+				apiKey: apiKey || "[REDACTED:sk-secret]",
+			});
+			languageModel = anthropic.chat(model);
+			break;
+		}
+		case "gemini": {
+			const google = createGoogleGenerativeAI({
+				baseURL: baseUrl || "https://generativelanguage.googleapis.com/v1beta",
+				apiKey: apiKey || "[REDACTED:sk-secret]",
+			});
+			languageModel = google.chat(model);
+			break;
+		}
+		default:
+			return c.json({ error: "Invalid provider type" }, 400);
+	}
+
+	try {
+		const { text } = await generateText({
+			model: languageModel,
+			prompt: `Based on the following conversation, generate a concise title (5-10 characters, no punctuation):
+
+${conversationText}
+
+Requirements:
+- Accurately summarize the main topic
+- Be concise and clear
+- Do not use punctuation
+- Return only the title text`,
+		});
+
+		const title = text.trim();
+
+		return c.json({ title });
+	} catch (error) {
+		console.error("Title generation error:", error);
+		return c.json({ error: "Failed to generate title" }, 500);
+	}
 });
 
 export async function initServer(preferredPort = 8089): Promise<number> {
