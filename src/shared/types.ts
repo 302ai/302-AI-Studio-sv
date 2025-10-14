@@ -4,6 +4,7 @@ import type { StorageValue } from "@302ai/unstorage";
 
 export * from "@302ai/unstorage";
 export * from "./storage/ai-applications";
+export * from "./storage/mcp";
 export * from "./storage/provider";
 export * from "./storage/tab";
 export * from "./storage/theme";

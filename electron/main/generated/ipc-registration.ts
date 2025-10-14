@@ -7,6 +7,7 @@ import {
 	appService,
 	dataService,
 	externalLinkService,
+	mcpService,
 	tabService,
 	shortcutService,
 	threadService,
@@ -76,6 +77,14 @@ export function registerIpcHandlers() {
 	// externalLinkService service registration
 	ipcMain.handle("externalLinkService:openExternalLink", (event, url) =>
 		externalLinkService.openExternalLink(event, url),
+	);
+
+	// mcpService service registration
+	ipcMain.handle("mcpService:getToolsFromServer", (event, server) =>
+		mcpService.getToolsFromServer(event, server),
+	);
+	ipcMain.handle("mcpService:closeServer", (event, serverId) =>
+		mcpService.closeServer(event, serverId),
 	);
 
 	// tabService service registration
@@ -176,6 +185,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
+	ipcMain.removeHandler("mcpService:getToolsFromServer");
+	ipcMain.removeHandler("mcpService:closeServer");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");
