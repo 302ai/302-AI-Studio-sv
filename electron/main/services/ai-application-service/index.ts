@@ -7,7 +7,7 @@ import {
 	fetch302AIToolList,
 	fetch302AIUserInfo,
 } from "../../apis/ai-applications";
-import { generalSettingsService } from "../general-setting-service";
+import { generalSettingsService } from "../settings-service";
 import { aiApplicationStorage } from "../storage-service/ai-application-storage";
 import { providerStorage } from "../storage-service/provider-storage";
 

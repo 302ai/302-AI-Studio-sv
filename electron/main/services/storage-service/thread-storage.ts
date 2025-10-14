@@ -4,7 +4,6 @@ import {
 	type ThreadMetadata,
 	type ThreadParmas,
 } from "@shared/types";
-import { webContents } from "electron";
 import { storageService, StorageService } from ".";
 
 export class ThreadStorage extends StorageService<ThreadMetadata> {
@@ -144,21 +143,6 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 			console.error("Failed to get threads:", error);
 			return null;
 		}
-	}
-
-	// Override setItemInternal to use the prefixed key for sync messages
-	async setItemInternal(key: string, value: ThreadMetadata): Promise<void> {
-		const versionedValue = this.addVersionIfNeeded(value);
-		await this.storage.setItem(this.ensureJsonExtension(key), versionedValue);
-
-		// Use the prefixed key for sync messages to match frontend expectations
-		const prefixedKey = `ThreadStorage:${key}`;
-		const allWebContents = webContents.getAllWebContents();
-		allWebContents.forEach((wc) => {
-			if (!wc.isDestroyed()) {
-				wc.send(`sync:${prefixedKey}`, versionedValue);
-			}
-		});
 	}
 }
 

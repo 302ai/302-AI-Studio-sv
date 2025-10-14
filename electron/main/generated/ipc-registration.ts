@@ -1,9 +1,9 @@
 import { ipcMain } from "electron";
 import {
+	broadcastService,
 	storageService,
 	aiApplicationService,
 	appService,
-	broadcastService,
 	dataService,
 	externalLinkService,
 	tabService,
@@ -16,6 +16,14 @@ import {
  * Auto-generated IPC service interfaces
  */
 export function registerIpcHandlers() {
+	// broadcastService service registration
+	ipcMain.handle("broadcastService:broadcastExcludeSource", (event, broadcastEvent, data) =>
+		broadcastService.broadcastExcludeSource(event, broadcastEvent, data),
+	);
+	ipcMain.handle("broadcastService:broadcastToAll", (event, broadcastEvent, data) =>
+		broadcastService.broadcastToAll(event, broadcastEvent, data),
+	);
+
 	// storageService service registration
 	ipcMain.handle("storageService:setItem", (event, key, value) =>
 		storageService.setItem(event, key, value),
@@ -55,14 +63,6 @@ export function registerIpcHandlers() {
 
 	// appService service registration
 	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
-
-	// broadcastService service registration
-	ipcMain.handle("broadcastService:broadcastExcludeSource", (event, broadcastEvent, data) =>
-		broadcastService.broadcastExcludeSource(event, broadcastEvent, data),
-	);
-	ipcMain.handle("broadcastService:broadcastToAll", (event, broadcastEvent, data) =>
-		broadcastService.broadcastToAll(event, broadcastEvent, data),
-	);
 
 	// dataService service registration
 	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
@@ -149,6 +149,8 @@ export function registerIpcHandlers() {
  * Clean up IPC handlers
  */
 export function removeIpcHandlers() {
+	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
+	ipcMain.removeHandler("broadcastService:broadcastToAll");
 	ipcMain.removeHandler("storageService:setItem");
 	ipcMain.removeHandler("storageService:getItem");
 	ipcMain.removeHandler("storageService:hasItem");
@@ -165,8 +167,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("aiApplicationService:getAiApplicationUrl");
 	ipcMain.removeHandler("aiApplicationService:handle302AIProviderChange");
 	ipcMain.removeHandler("appService:setTheme");
-	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
-	ipcMain.removeHandler("broadcastService:broadcastToAll");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { appInfo } from "$lib/app-info";
 	import { SettingInfoItem, SettingSwitchItem } from "$lib/components/buss/settings";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Label } from "$lib/components/ui/label/index.js";
@@ -21,5 +22,5 @@
 		<Button size="sm" onclick={handleCheckUpdate}>{m.check_update()}</Button>
 	{/snippet}
 
-	<SettingInfoItem label={m.version_information()} value="25.35.4" action={updateButton} />
+	<SettingInfoItem label={m.version_information()} value={appInfo.version} action={updateButton} />
 </div>

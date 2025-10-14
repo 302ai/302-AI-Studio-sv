@@ -3,7 +3,7 @@ import { isEqual } from "es-toolkit";
 import superjson from "superjson";
 import { createSubscriber } from "svelte/reactivity";
 
-const { ipcRenderer } = window.electron;
+const { onPersistedStateSync } = window.electronIPC;
 
 class ElectronStorageAdapter<T extends StorageValue> {
 	private storageService = window.electronAPI.storageService;
@@ -24,6 +24,10 @@ class ElectronStorageAdapter<T extends StorageValue> {
 
 	async clearAsync(): Promise<void> {
 		await this.storageService.clear("");
+	}
+
+	async watch(key: string): Promise<void> {
+		await this.storageService.watch(key);
 	}
 }
 
@@ -68,7 +72,6 @@ export class PersistedState<T extends StorageValue> {
 	#subscribe?: VoidFunction;
 	#update: VoidFunction | undefined;
 	#proxies = new WeakMap();
-	#syncing = false;
 	#isHydrated = $state(false);
 
 	constructor(key: string, initialValue: T) {
@@ -81,17 +84,19 @@ export class PersistedState<T extends StorageValue> {
 		this.#subscribe = createSubscriber((update) => {
 			this.#update = update;
 
-			ipcRenderer.on(`sync:${key}`, (_event, newValue) => {
+			console.log("watching key:", key);
+			this.#storage?.watch(key);
+
+			const unsubscribe = onPersistedStateSync<T>(key, (newValue) => {
+				if (isEqual(newValue, this.#current)) return;
 				console.log("Synced key:", key, "Synced value:", newValue);
-				if (this.#syncing) return;
-				this.#syncing = true;
 				this.#current = newValue;
 				this.#update?.();
-				this.#syncing = false;
 			});
 
 			return () => {
 				this.#update = undefined;
+				unsubscribe?.();
 			};
 		});
 	}
@@ -142,9 +147,6 @@ export class PersistedState<T extends StorageValue> {
 	}
 
 	#store(value: T | undefined | null): void {
-		if (this.#syncing) {
-			return;
-		}
 		this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
 			console.log("Value", value);
 			console.error(

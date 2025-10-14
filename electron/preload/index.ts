@@ -83,6 +83,11 @@ if (process.contextIsolated) {
 				ipcRenderer.on(SHELL_WINDOW_FULLSCREEN_CHANGED, listener);
 				return () => ipcRenderer.removeListener(SHELL_WINDOW_FULLSCREEN_CHANGED, listener);
 			},
+			onPersistedStateSync: <T>(key: string, callback: (syncValue: T) => void) => {
+				const listener = (_: unknown, syncValue: T) => callback(syncValue);
+				ipcRenderer.on(key, listener);
+				return () => ipcRenderer.removeListener(key, listener);
+			},
 		});
 
 		// Expose shell window ID from process arguments

@@ -340,5 +340,6 @@
 	"title_help_center": "Help Center",
 	"title_terms_of_service": "Terms of Service",
 	"title_privacy_policy": "Privacy Policy",
-	"app_description": "302 AI Studio is a powerful AI chat application that provides users with intelligent conversation experiences. It supports multiple AI models, features file upload and web search capabilities, and is committed to creating the best AI interaction platform for users."
+	"app_description": "302 AI Studio is a powerful AI chat application that provides users with intelligent conversation experiences. It supports multiple AI models, features file upload and web search capabilities, and is committed to creating the best AI interaction platform for users.",
+	"title_new_chat": "New Chat"
 }
