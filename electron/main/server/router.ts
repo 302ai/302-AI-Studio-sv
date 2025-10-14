@@ -33,6 +33,48 @@ function addDefinedParams(options: any, params: any) {
 	}
 }
 
+function smartChunking(buffer: string): string {
+	// whitespace
+	const whitespaceMatch = buffer.match(/^\s+/);
+	if (whitespaceMatch) {
+		return whitespaceMatch[0];
+	}
+
+	// Chinese
+	const chineseMatch = buffer.match(/^[\u4e00-\u9fff]/);
+	if (chineseMatch) {
+		return chineseMatch[0];
+	}
+
+	// English
+	const wordMatch = buffer.match(/^[a-zA-Z]+\d*/);
+	if (wordMatch) {
+		return wordMatch[0];
+	}
+
+	// Numbers
+	const numberMatch = buffer.match(/^\d+/);
+	if (numberMatch) {
+		return numberMatch[0];
+	}
+
+	// Punctuation
+	return buffer[0];
+}
+
+function getDelayForSpeed(speed: "slow" | "normal" | "fast"): number {
+	switch (speed) {
+		case "slow":
+			return 150;
+		case "normal":
+			return 50;
+		case "fast":
+			return 20;
+		default:
+			return 50;
+	}
+}
+
 const app = new Hono();
 
 app.post("/chat/302ai", async (c) => {
@@ -48,6 +90,7 @@ app.post("/chat/302ai", async (c) => {
 		isThinkingActive,
 		isOnlineSearchActive,
 		messages,
+		speedOptions,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -61,6 +104,11 @@ app.post("/chat/302ai", async (c) => {
 		isThinkingActive?: boolean;
 		isOnlineSearchActive?: boolean;
 		isMCPActive?: boolean;
+
+		speedOptions?: {
+			enabled: boolean;
+			speed: "slow" | "normal" | "fast";
+		};
 
 		messages: UIMessage[];
 	}>();
@@ -76,6 +124,7 @@ app.post("/chat/302ai", async (c) => {
 		isThinkingActive,
 		isOnlineSearchActive,
 		messages,
+		speedOptions,
 	);
 
 	const openai = createOpenAICompatible({
@@ -113,60 +162,17 @@ app.post("/chat/302ai", async (c) => {
 		presencePenalty,
 	});
 
-	/**
-	 * Smart chunking for natural reading flow
-	 * - Chinese: single character (each char is a semantic unit)
-	 * - English: complete word (natural reading unit for native speakers)
-	 * - Numbers: complete number sequence
-	 * - Whitespace: grouped together for smooth flow
-	 * - Code: preserve syntax markers
-	 */
-	function smartChunking(buffer: string): string {
-		// whitespace
-		const whitespaceMatch = buffer.match(/^\s+/);
-		if (whitespaceMatch) {
-			return whitespaceMatch[0];
-		}
-
-		// Code block markers
-		if (buffer.startsWith("```")) {
-			return "```";
-		}
-
-		// Inline code marker
-		if (buffer.startsWith("`")) {
-			return "`";
-		}
-
-		// Chinese
-		const chineseMatch = buffer.match(/^[\u4e00-\u9fff]/);
-		if (chineseMatch) {
-			return chineseMatch[0];
-		}
-
-		// English
-		const wordMatch = buffer.match(/^[a-zA-Z]+\d*/);
-		if (wordMatch) {
-			return wordMatch[0];
-		}
-
-		// Numbers
-		const numberMatch = buffer.match(/^\d+/);
-		if (numberMatch) {
-			return numberMatch[0];
-		}
-
-		// Punctuation
-		return buffer[0];
-	}
-
-	const result = streamText({
+	const streamTextOptionsWithTransform = {
 		...streamTextOptions,
-		experimental_transform: smoothStream({
-			chunking: smartChunking,
-			delayInMs: 150,
+		...(speedOptions?.enabled && {
+			experimental_transform: smoothStream({
+				chunking: smartChunking,
+				delayInMs: getDelayForSpeed(speedOptions.speed),
+			}),
 		}),
-	});
+	};
+
+	const result = streamText(streamTextOptionsWithTransform);
 
 	return result.toUIMessageStreamResponse({
 		messageMetadata: () => ({
@@ -188,6 +194,7 @@ app.post("/chat/openai", async (c) => {
 		frequencyPenalty,
 		presencePenalty,
 		messages,
+		speedOptions,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -197,6 +204,10 @@ app.post("/chat/openai", async (c) => {
 		maxTokens?: number;
 		frequencyPenalty?: number;
 		presencePenalty?: number;
+		speedOptions?: {
+			enabled: boolean;
+			speed: "slow" | "normal" | "fast";
+		};
 		messages: UIMessage[];
 	}>();
 
@@ -226,7 +237,17 @@ app.post("/chat/openai", async (c) => {
 		presencePenalty,
 	});
 
-	const result = streamText(streamTextOptions);
+	const streamTextOptionsWithTransform = {
+		...streamTextOptions,
+		...(speedOptions?.enabled && {
+			experimental_transform: smoothStream({
+				chunking: smartChunking,
+				delayInMs: getDelayForSpeed(speedOptions.speed),
+			}),
+		}),
+	};
+
+	const result = streamText(streamTextOptionsWithTransform);
 
 	return result.toUIMessageStreamResponse({
 		messageMetadata: () => ({
@@ -248,6 +269,7 @@ app.post("/chat/anthropic", async (c) => {
 		frequencyPenalty,
 		presencePenalty,
 		messages,
+		speedOptions,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -257,6 +279,10 @@ app.post("/chat/anthropic", async (c) => {
 		maxTokens?: number;
 		frequencyPenalty?: number;
 		presencePenalty?: number;
+		speedOptions?: {
+			enabled: boolean;
+			speed: "slow" | "normal" | "fast";
+		};
 		messages: UIMessage[];
 	}>();
 
@@ -286,7 +312,17 @@ app.post("/chat/anthropic", async (c) => {
 		presencePenalty,
 	});
 
-	const result = streamText(streamTextOptions);
+	const streamTextOptionsWithTransform = {
+		...streamTextOptions,
+		...(speedOptions?.enabled && {
+			experimental_transform: smoothStream({
+				chunking: smartChunking,
+				delayInMs: getDelayForSpeed(speedOptions.speed),
+			}),
+		}),
+	};
+
+	const result = streamText(streamTextOptionsWithTransform);
 
 	return result.toUIMessageStreamResponse({
 		messageMetadata: () => ({
@@ -308,6 +344,7 @@ app.post("/chat/gemini", async (c) => {
 		frequencyPenalty,
 		presencePenalty,
 		messages,
+		speedOptions,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -317,6 +354,10 @@ app.post("/chat/gemini", async (c) => {
 		maxTokens?: number;
 		frequencyPenalty?: number;
 		presencePenalty?: number;
+		speedOptions?: {
+			enabled: boolean;
+			speed: "slow" | "normal" | "fast";
+		};
 		messages: UIMessage[];
 	}>();
 
@@ -346,7 +387,17 @@ app.post("/chat/gemini", async (c) => {
 		presencePenalty,
 	});
 
-	const result = streamText(streamTextOptions);
+	const streamTextOptionsWithTransform = {
+		...streamTextOptions,
+		...(speedOptions?.enabled && {
+			experimental_transform: smoothStream({
+				chunking: smartChunking,
+				delayInMs: getDelayForSpeed(speedOptions.speed),
+			}),
+		}),
+	};
+
+	const result = streamText(streamTextOptionsWithTransform);
 
 	return result.toUIMessageStreamResponse({
 		messageMetadata: () => ({

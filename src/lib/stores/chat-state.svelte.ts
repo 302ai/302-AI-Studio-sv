@@ -11,6 +11,7 @@ import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/typ
 import { DynamicChatTransport } from "$lib/transport/dynamic-chat-transport";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
+import { preferencesSettings } from "./preferences-settings.state.svelte";
 
 const { broadcastService, threadService } = window.electronAPI;
 
@@ -164,6 +165,7 @@ class ChatState {
 	set maxTokens(value: number | null) {
 		persistedChatParamsState.current.maxTokens = value;
 	}
+
 	providerType = $derived<string | null>(
 		this.selectedModel
 			? (providerState.getProvider(this.selectedModel.providerId)?.apiType ?? null)
@@ -485,6 +487,11 @@ export const chat = new Chat({
 			isThinkingActive: persistedChatParamsState.current.isThinkingActive,
 			isOnlineSearchActive: persistedChatParamsState.current.isOnlineSearchActive,
 			isMCPActive: persistedChatParamsState.current.isMCPActive,
+
+			speedOptions: {
+				enabled: preferencesSettings.streamOutputEnabled,
+				speed: preferencesSettings.streamSpeed,
+			},
 		}),
 	}),
 	onFinish: ({ messages }) => {
