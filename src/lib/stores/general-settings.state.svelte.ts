@@ -7,6 +7,8 @@ import type {
 } from "@shared/storage/general-settings";
 import { untrack } from "svelte";
 
+const { generalSettingsService } = window.electronAPI;
+
 const getDefaults = (): GeneralSettingsState => ({
 	layoutMode: "default",
 	language: (getLocale() as LanguageCode) ?? "zh",
@@ -61,8 +63,12 @@ class GeneralSettingsManager {
 
 	setLanguage(lang: LanguageCode): void {
 		if (persistedGeneralSettings.current.language === lang) return;
+
 		persistedGeneralSettings.current = { ...persistedGeneralSettings.current, language: lang };
-		setLocale(lang as "zh" | "en", { reload: false });
+
+		generalSettingsService.handleLanguageChanged();
+
+		setLocale(lang as "zh" | "en");
 	}
 
 	get privacyAutoInherit(): boolean {
