@@ -137,6 +137,36 @@ export class IpcStructureGenerator {
 	 */
 	private extractTypesFromString(typeString: string): Set<string> {
 		const types = new Set<string>();
+		const builtInTypes = new Set([
+			"string",
+			"number",
+			"boolean",
+			"void",
+			"any",
+			"unknown",
+			"undefined",
+			"null",
+			"object",
+		]);
+
+		const builtInGenerics = new Set([
+			"Array",
+			"Promise",
+			"Record",
+			"Map",
+			"Set",
+			"Partial",
+			"Required",
+			"Readonly",
+			"Pick",
+			"Omit",
+			"Exclude",
+			"Extract",
+			"NonNullable",
+			"ReturnType",
+			"InstanceType",
+			"Parameters",
+		]);
 
 		// Skip anonymous object types entirely
 		if (this.isAnonymousObjectType(typeString)) {
@@ -151,14 +181,25 @@ export class IpcStructureGenerator {
 			const baseType = match[1];
 			const genericArgs = match[2];
 
-			// Add the base type (e.g., StorageItem from StorageItem<T>)
-			types.add(baseType);
+			// Skip built-in generic types entirely (don't extract base type or args)
+			if (builtInGenerics.has(baseType)) {
+				continue;
+			}
+
+			// Add the base type only if it's not a built-in (e.g., StorageItem from StorageItem<T>)
+			if (!builtInTypes.has(baseType)) {
+				types.add(baseType);
+			}
 
 			// Recursively extract types from generic arguments
 			// Skip if the generic argument is an anonymous object type
 			if (genericArgs && !this.isAnonymousObjectType(genericArgs.trim())) {
 				const innerTypes = this.extractTypesFromString(genericArgs);
-				innerTypes.forEach((t) => types.add(t));
+				innerTypes.forEach((t) => {
+					if (!builtInTypes.has(t)) {
+						types.add(t);
+					}
+				});
 			}
 		}
 
@@ -168,10 +209,14 @@ export class IpcStructureGenerator {
 			if (cleanType && cleanType !== typeString) {
 				// Type was cleaned, extract from the cleaned version
 				const innerTypes = this.extractTypesFromString(cleanType);
-				innerTypes.forEach((t) => types.add(t));
+				innerTypes.forEach((t) => {
+					if (!builtInTypes.has(t)) {
+						types.add(t);
+					}
+				});
 			} else {
-				// Simple type, add as is (unless it's an anonymous object type)
-				if (!this.isAnonymousObjectType(cleanType)) {
+				// Simple type, add as is (unless it's an anonymous object type or built-in)
+				if (!this.isAnonymousObjectType(cleanType) && !builtInTypes.has(cleanType)) {
 					types.add(cleanType);
 				}
 			}
@@ -200,15 +245,43 @@ export class IpcStructureGenerator {
 	 * Check if type is a built-in complex type (like generics)
 	 */
 	private isBuiltInComplexType(type: string): boolean {
+		const trimmedType = type.trim();
 		return (
-			type.startsWith("Array<") ||
-			type.startsWith("Promise<") ||
-			type.startsWith("Record<") ||
-			type.startsWith("Map<") ||
-			type.startsWith("Set<") ||
-			type.endsWith("[]") ||
-			type.includes("(") || // function types
-			this.isAnonymousObjectType(type) // anonymous object types
+			trimmedType.startsWith("Array<") ||
+			trimmedType.startsWith("Promise<") ||
+			trimmedType.startsWith("Record<") ||
+			trimmedType.startsWith("Map<") ||
+			trimmedType.startsWith("Set<") ||
+			trimmedType.startsWith("Partial<") ||
+			trimmedType.startsWith("Required<") ||
+			trimmedType.startsWith("Readonly<") ||
+			trimmedType.startsWith("Pick<") ||
+			trimmedType.startsWith("Omit<") ||
+			trimmedType.startsWith("Exclude<") ||
+			trimmedType.startsWith("Extract<") ||
+			trimmedType.startsWith("NonNullable<") ||
+			trimmedType.startsWith("ReturnType<") ||
+			trimmedType.startsWith("InstanceType<") ||
+			trimmedType.startsWith("Parameters<") ||
+			trimmedType === "Array" ||
+			trimmedType === "Promise" ||
+			trimmedType === "Record" ||
+			trimmedType === "Map" ||
+			trimmedType === "Set" ||
+			trimmedType === "Partial" ||
+			trimmedType === "Required" ||
+			trimmedType === "Readonly" ||
+			trimmedType === "Pick" ||
+			trimmedType === "Omit" ||
+			trimmedType === "Exclude" ||
+			trimmedType === "Extract" ||
+			trimmedType === "NonNullable" ||
+			trimmedType === "ReturnType" ||
+			trimmedType === "InstanceType" ||
+			trimmedType === "Parameters" ||
+			trimmedType.endsWith("[]") ||
+			trimmedType.includes("(") || // function types
+			this.isAnonymousObjectType(trimmedType) // anonymous object types
 		);
 	}
 

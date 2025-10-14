@@ -1,21 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { ipcRenderer } from "electron";
 import type {
 	BroadcastEvent,
+	StorageValue,
+	StorageOptions,
+	StorageMetadata,
+	StorageMeta,
+	StorageItem,
+	Theme,
 	McpServer,
+	TabType,
+	Tab,
 	ShortcutBinding,
 	ShortcutConflict,
 	ShortcutSyncEvent,
-	StorageItem,
-	StorageMeta,
-	StorageMetadata,
-	StorageOptions,
-	StorageValue,
-	Tab,
-	TabType,
-	Theme,
 	ThreadData,
 } from "@shared/types";
-import { ipcRenderer } from "electron";
 
 /**
  * Auto-generated IPC service interfaces
