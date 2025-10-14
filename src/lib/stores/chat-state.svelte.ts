@@ -489,6 +489,8 @@ export const chat = new Chat({
 			isOnlineSearchActive: persistedChatParamsState.current.isOnlineSearchActive,
 			isMCPActive: persistedChatParamsState.current.isMCPActive,
 
+			autoParseUrl: preferencesSettings.autoParseUrl,
+
 			speedOptions: {
 				enabled: preferencesSettings.streamOutputEnabled,
 				speed: preferencesSettings.streamSpeed,

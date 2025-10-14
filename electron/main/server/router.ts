@@ -91,6 +91,7 @@ app.post("/chat/302ai", async (c) => {
 		presencePenalty,
 		isThinkingActive,
 		isOnlineSearchActive,
+		autoParseUrl,
 		messages,
 		speedOptions,
 	} = await c.req.json<{
@@ -106,6 +107,7 @@ app.post("/chat/302ai", async (c) => {
 		isThinkingActive?: boolean;
 		isOnlineSearchActive?: boolean;
 		isMCPActive?: boolean;
+		autoParseUrl?: boolean;
 
 		speedOptions?: {
 			enabled: boolean;
@@ -144,15 +146,26 @@ app.post("/chat/302ai", async (c) => {
 		providerId: "302.AI",
 	});
 
+	const provider302Options: Record<string, boolean | string> = {};
+
+	if (autoParseUrl) {
+		provider302Options["file-parse"] = true;
+	}
+
+	if (isThinkingActive) {
+		provider302Options["r1-fusion"] = true;
+	}
+
+	if (isOnlineSearchActive) {
+		provider302Options["web-search"] = true;
+		provider302Options["search-service"] = "search1api";
+	}
+
 	const streamTextOptions = {
 		model: wrapModel,
 		messages: convertToModelMessages(messages),
 		providerOptions: {
-			"302": {
-				"r1-fusion": isThinkingActive ?? false,
-				"web-search": isOnlineSearchActive ?? false,
-				"search-service": "search1api",
-			},
+			"302": provider302Options,
 		},
 	};
 
