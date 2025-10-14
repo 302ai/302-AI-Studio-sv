@@ -53,7 +53,7 @@
 	}
 
 	function handleNewTab() {
-		tabBarState.handleNewTab();
+		tabBarState.handleNewTab(m.title_new_chat());
 	}
 
 	function handleCloseCurrentTab() {

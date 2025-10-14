@@ -62,7 +62,7 @@ class GeneralSettingsManager {
 	setLanguage(lang: LanguageCode): void {
 		if (persistedGeneralSettings.current.language === lang) return;
 		persistedGeneralSettings.current = { ...persistedGeneralSettings.current, language: lang };
-		setLocale(lang as "zh" | "en");
+		setLocale(lang as "zh" | "en", { reload: false });
 	}
 
 	get privacyAutoInherit(): boolean {

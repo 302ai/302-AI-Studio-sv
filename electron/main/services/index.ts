@@ -4,7 +4,7 @@ import { AttachmentsService, attachmentsService } from "./attachments-sevice";
 import { BroadcastService, broadcastService } from "./broadcast-service";
 import { DataService, dataService } from "./data-service";
 import { ExternalLinkService, externalLinkService } from "./external-link-service";
-import { GeneralSettingsService, generalSettingsService } from "./general-setting-service";
+import { GeneralSettingsService, generalSettingsService } from "./settings-service";
 import { ShortcutService, shortcutService } from "./shortcut-service";
 import { StorageService, storageService } from "./storage-service";
 import { TabService, tabService } from "./tab-service";

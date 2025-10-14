@@ -336,5 +336,6 @@
 	"title_help_center": "帮助中心",
 	"title_terms_of_service": "使用条款",
 	"title_privacy_policy": "隐私政策",
-	"app_description": "302 AI Studio 是一个强大的AI聊天应用，为用户提供智能对话体验。支持多种AI模型，具备文件上传、联网搜索等功能，致力于为用户打造最佳的AI交互平台。"
+	"app_description": "302 AI Studio 是一个强大的AI聊天应用，为用户提供智能对话体验。支持多种AI模型，具备文件上传、联网搜索等功能，致力于为用户打造最佳的AI交互平台。",
+	"title_new_chat": "新会话"
 }

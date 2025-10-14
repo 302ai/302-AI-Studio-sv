@@ -1,4 +1,5 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { m } from "$lib/paraglide/messages";
 import type { Tab, TabState, TabType } from "@shared/types";
 import { isNull, isUndefined } from "es-toolkit/predicate";
 import { parse } from "superjson";
@@ -125,7 +126,7 @@ class TabBarState {
 			persistedTabState.current[this.#windowId].tabs = [];
 			console.log("handleTabClose: currentTabs.length === 1");
 
-			this.handleNewTab();
+			this.handleNewTab(m.title_new_chat());
 		}
 	}
 
@@ -174,7 +175,7 @@ class TabBarState {
 
 		await tabService.handleTabCloseAll();
 
-		this.handleNewTab();
+		this.handleNewTab(m.title_new_chat());
 	}
 
 	async #createNewTab(title: string, type: TabType, active: boolean, href?: string) {
@@ -189,12 +190,7 @@ class TabBarState {
 		persistedTabState.current[this.#windowId].tabs = updatedTabs;
 	}
 
-	async handleNewTab(
-		title: string = "New Chat",
-		type: TabType = "chat",
-		active = true,
-		href?: string,
-	) {
+	async handleNewTab(title: string, type: TabType = "chat", active = true, href?: string) {
 		const shouldCreateNewTab = await match(type)
 			.with("settings", async () => {
 				const existingSettingsTab = this.tabs.find((tab) => tab.type === "settings");

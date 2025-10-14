@@ -54,7 +54,7 @@
 		if (isAnimating) return;
 
 		isAnimating = true;
-		await tabBarState.handleNewTab();
+		await tabBarState.handleNewTab(m.title_new_chat());
 
 		animateButtonBounce(buttonBounceSpring, "new").then(() => {
 			isAnimating = false;
