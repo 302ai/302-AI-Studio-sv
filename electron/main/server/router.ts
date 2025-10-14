@@ -1,17 +1,18 @@
-import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenAI } from "@ai-sdk/openai";
+import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { serve } from "@hono/node-server";
 import {
 	convertToModelMessages,
 	extractReasoningMiddleware,
+	smoothStream,
 	streamText,
 	wrapLanguageModel,
 	type UIMessage,
 } from "ai";
-import { Hono } from "hono";
 import getPort from "get-port";
+import { Hono } from "hono";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function addDefinedParams(options: any, params: any) {
@@ -112,7 +113,60 @@ app.post("/chat/302ai", async (c) => {
 		presencePenalty,
 	});
 
-	const result = streamText(streamTextOptions);
+	/**
+	 * Smart chunking for natural reading flow
+	 * - Chinese: single character (each char is a semantic unit)
+	 * - English: complete word (natural reading unit for native speakers)
+	 * - Numbers: complete number sequence
+	 * - Whitespace: grouped together for smooth flow
+	 * - Code: preserve syntax markers
+	 */
+	function smartChunking(buffer: string): string {
+		// whitespace
+		const whitespaceMatch = buffer.match(/^\s+/);
+		if (whitespaceMatch) {
+			return whitespaceMatch[0];
+		}
+
+		// Code block markers
+		if (buffer.startsWith("```")) {
+			return "```";
+		}
+
+		// Inline code marker
+		if (buffer.startsWith("`")) {
+			return "`";
+		}
+
+		// Chinese
+		const chineseMatch = buffer.match(/^[\u4e00-\u9fff]/);
+		if (chineseMatch) {
+			return chineseMatch[0];
+		}
+
+		// English
+		const wordMatch = buffer.match(/^[a-zA-Z]+\d*/);
+		if (wordMatch) {
+			return wordMatch[0];
+		}
+
+		// Numbers
+		const numberMatch = buffer.match(/^\d+/);
+		if (numberMatch) {
+			return numberMatch[0];
+		}
+
+		// Punctuation
+		return buffer[0];
+	}
+
+	const result = streamText({
+		...streamTextOptions,
+		experimental_transform: smoothStream({
+			chunking: smartChunking,
+			delayInMs: 150,
+		}),
+	});
 
 	return result.toUIMessageStreamResponse({
 		messageMetadata: () => ({
