@@ -97,6 +97,7 @@ export interface AttachmentFile {
 	file: File;
 	preview?: string;
 	filePath: string;
+	textContent?: string;
 }
 
 export interface ThreadParmas {

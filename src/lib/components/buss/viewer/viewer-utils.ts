@@ -156,6 +156,10 @@ export function getFileIcon(attachment: AttachmentFile): Component<IconProps, ob
 }
 
 export async function loadTextContent(attachment: AttachmentFile): Promise<string> {
+	if (attachment.textContent) {
+		return attachment.textContent;
+	}
+
 	if (attachment.preview && typeof attachment.preview === "string") {
 		if (attachment.preview.startsWith("data:text/")) {
 			const base64Content = attachment.preview.split(",")[1];
@@ -164,8 +168,11 @@ export async function loadTextContent(attachment: AttachmentFile): Promise<strin
 			const response = await fetch(attachment.preview);
 			return await response.text();
 		}
-	} else if (attachment.file) {
+	}
+
+	if (attachment.file) {
 		return await attachment.file.text();
 	}
+
 	throw new Error("No content available");
 }

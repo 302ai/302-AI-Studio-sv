@@ -26,6 +26,7 @@
 			size: att.size,
 			filePath: att.filePath,
 			preview: att.preview,
+			textContent: att.textContent,
 			file: new File([], att.name, { type: att.type }),
 		})),
 	);
