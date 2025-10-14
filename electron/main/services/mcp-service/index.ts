@@ -1,8 +1,8 @@
-import { type IpcMainInvokeEvent } from "electron";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { McpServer } from "@shared/storage/mcp";
+import { type IpcMainInvokeEvent } from "electron";
 
 interface MCPClientWrapper {
 	client: Client;
@@ -24,6 +24,8 @@ export class McpService {
 				const parts = server.command.split(" ");
 				const command = parts[0];
 				const args = parts.slice(1);
+
+				console.log(parts, command, args);
 
 				transport = new StdioClientTransport({
 					command,
@@ -84,7 +86,11 @@ export class McpService {
 		server: McpServer,
 	): Promise<{
 		isOk: boolean;
-		tools?: Array<{ name: string; description?: string }>;
+		tools?: Array<{
+			name: string;
+			description?: string;
+			inputSchema?: Record<string, unknown>;
+		}>;
 		error?: string;
 	}> {
 		try {
@@ -103,6 +109,7 @@ export class McpService {
 			const tools = result.tools.map((tool) => ({
 				name: tool.name,
 				description: tool.description,
+				inputSchema: tool.inputSchema,
 			}));
 
 			return { isOk: true, tools };

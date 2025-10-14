@@ -394,5 +394,15 @@
 	"mcp_import_error": "解析失败: {error}",
 	"mcp_kv_add": "添加",
 	"mcp_kv_key_placeholder": "名称",
-	"mcp_kv_value_placeholder": "值"
+	"mcp_kv_value_placeholder": "值",
+	"mcp_tools": "工具",
+	"mcp_prompts": "提示",
+	"mcp_resources": "资源",
+	"mcp_refresh": "刷新",
+	"mcp_refreshing": "刷新中...",
+	"mcp_no_tools": "暂无工具",
+	"mcp_tool_details": "工具详情",
+	"mcp_tool_name": "名称",
+	"mcp_tool_description": "描述",
+	"mcp_tool_input_schema": "输入参数"
 }

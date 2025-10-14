@@ -1,19 +1,27 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import EmojiPicker from "$lib/components/buss/emoji-picker/emoji-picker.svelte";
+	import StaticCodeBlock from "$lib/components/buss/markdown/static-code-block.svelte";
 	import AdvancedSwitchItem from "$lib/components/buss/settings/advanced-switch-item.svelte";
 	import KeyValueList from "$lib/components/buss/settings/key-value-list.svelte";
+	import SegButton from "$lib/components/buss/settings/seg-button.svelte";
 	import SettingInputField from "$lib/components/buss/settings/setting-input-field.svelte";
 	import SettingSelectField from "$lib/components/buss/settings/setting-select-field.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Collapsible from "$lib/components/ui/collapsible/index.js";
 	import * as Dialog from "$lib/components/ui/dialog/index.js";
+	import * as m from "$lib/paraglide/messages.js";
 	import { mcpState } from "$lib/stores/mcp-state.svelte";
-	import { ChevronLeft, Trash2 } from "@lucide/svelte";
+	import { ChevronLeft, RefreshCw, Trash2 } from "@lucide/svelte";
 	import type { McpServerType } from "@shared/storage/mcp";
 	import { nanoid } from "nanoid";
 	import { toast } from "svelte-sonner";
-	import * as m from "$lib/paraglide/messages.js";
+
+	interface McpTool {
+		name: string;
+		description?: string;
+		inputSchema?: Record<string, unknown>;
+	}
 
 	interface KeyValuePair {
 		key: string;
@@ -44,6 +52,20 @@
 	let isSaving = $state(false);
 	let showDeleteDialog = $state(false);
 	let isAdvancedOpen = $state(false);
+
+	// MCP Resources Tab
+	type ResourceTab = "tools" | "prompts" | "resources";
+	let selectedResourceTab = $state<ResourceTab>("tools");
+	let isLoadingTools = $state(false);
+	let tools = $state<McpTool[]>([]);
+	let selectedTool = $state<McpTool | null>(null);
+	let showToolDialog = $state(false);
+
+	const resourceTabOptions = [
+		{ key: "tools", label: m.mcp_tools() },
+		{ key: "prompts", label: m.mcp_prompts() },
+		{ key: "resources", label: m.mcp_resources() },
+	];
 
 	$effect(() => {
 		if (mode === "edit" && server) {
@@ -183,6 +205,49 @@
 			goto("/settings/mcp-settings");
 		}
 	}
+
+	async function handleRefreshTools() {
+		if (!server) return;
+
+		isLoadingTools = true;
+		try {
+			// Deep clone using JSON to ensure all fields are serializable
+			const serverData = JSON.parse(
+				JSON.stringify({
+					id: server.id,
+					name: server.name,
+					description: server.description,
+					type: server.type,
+					url: server.url,
+					command: server.command,
+					icon: server.icon,
+					enabled: server.enabled,
+					order: server.order,
+					createdAt: server.createdAt,
+					updatedAt: server.updatedAt,
+					advancedSettings: server.advancedSettings,
+				}),
+			);
+
+			const result = await window.electronAPI.mcpService.getToolsFromServer(serverData);
+			if (result.isOk && result.tools) {
+				tools = result.tools;
+				toast.success(m.mcp_success_update());
+			} else {
+				toast.error(result.error || m.mcp_error_update());
+			}
+		} catch (error) {
+			console.error("Failed to fetch tools:", error);
+			toast.error(m.mcp_error_update());
+		} finally {
+			isLoadingTools = false;
+		}
+	}
+
+	function handleToolClick(tool: McpTool) {
+		selectedTool = tool;
+		showToolDialog = true;
+	}
 </script>
 
 {#if mode === "edit" && !server}
@@ -305,6 +370,61 @@
 					</div>
 				</Collapsible.Content>
 			</Collapsible.Root>
+
+			<!-- 工具/提示/资源 - 只在编辑模式显示 -->
+			{#if mode === "edit" && server}
+				<div class="mt-4 rounded-lg">
+					<div class="mb-4 flex items-center justify-between space-x-2">
+						<div class="flex-1">
+							<SegButton
+								options={resourceTabOptions}
+								selectedKey={selectedResourceTab}
+								onSelect={(key) => (selectedResourceTab = key as ResourceTab)}
+							/>
+						</div>
+
+						<Button
+							variant="outline"
+							size="sm"
+							onclick={handleRefreshTools}
+							disabled={isLoadingTools}
+						>
+							<RefreshCw class="h-4 w-4 {isLoadingTools ? 'animate-spin' : ''}" />
+							{isLoadingTools ? m.mcp_refreshing() : m.mcp_refresh()}
+						</Button>
+					</div>
+
+					<div class="min-h-[200px]">
+						{#if selectedResourceTab === "tools"}
+							{#if tools.length === 0}
+								<div class="text-muted-foreground flex h-[200px] items-center justify-center">
+									{m.mcp_no_tools()}
+								</div>
+							{:else}
+								<div class="space-y-2">
+									{#each tools as tool (tool.name)}
+										<button
+											type="button"
+											class="flex w-full cursor-pointer items-center rounded-[10px] bg-white px-3.5 py-3 hover:bg-[#F9F9F9] dark:bg-background dark:hover:bg-[#2D2D2D]"
+											onclick={() => handleToolClick(tool)}
+										>
+											<span class="text-setting-fg text-sm">{tool.name}</span>
+										</button>
+									{/each}
+								</div>
+							{/if}
+						{:else if selectedResourceTab === "prompts"}
+							<div class="text-muted-foreground flex h-[200px] items-center justify-center">
+								Coming soon...
+							</div>
+						{:else}
+							<div class="text-muted-foreground flex h-[200px] items-center justify-center">
+								Coming soon...
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
 		</div>
 	</div>
 
@@ -327,4 +447,50 @@
 			</Dialog.Content>
 		</Dialog.Root>
 	{/if}
+
+	<!-- Tool Details Dialog -->
+	<Dialog.Root bind:open={showToolDialog}>
+		<Dialog.Content class="w-[768px] h-[600px] flex flex-col !overflow-hidden p-6 gap-0">
+			<div class="flex-shrink-0 mb-4">
+				<h2 class="text-lg font-semibold">{m.mcp_tool_details()}</h2>
+			</div>
+			{#if selectedTool}
+				<div class="flex-1 min-h-0 flex flex-col gap-3 overflow-hidden">
+					<div class="flex-shrink-0">
+						<span class="text-sm font-medium">{m.mcp_tool_name()}</span>
+						<div class="mt-1 rounded-md p-2 text-sm break-words">
+							{selectedTool.name}
+						</div>
+					</div>
+					<div class="flex-shrink-0">
+						<span class="text-sm font-medium">{m.mcp_tool_description()}</span>
+						<div
+							class="mt-1 rounded-md p-2 text-sm break-words whitespace-pre-wrap max-h-20 overflow-y-auto"
+						>
+							{selectedTool.description || "-"}
+						</div>
+					</div>
+					{#if selectedTool.inputSchema}
+						<div class="flex-1 min-h-0 flex flex-col">
+							<span class="text-sm font-medium mb-1 flex-shrink-0">{m.mcp_tool_input_schema()}</span
+							>
+							<div class="flex-1 min-h-0">
+								<StaticCodeBlock
+									blockId="tool-schema-{selectedTool.name}"
+									code={JSON.stringify(selectedTool.inputSchema, null, 2)}
+									language="json"
+									meta={null}
+								/>
+							</div>
+						</div>
+					{/if}
+				</div>
+			{/if}
+			<div class="flex-shrink-0 flex justify-end gap-2 mt-4">
+				<Button variant="outline" onclick={() => (showToolDialog = false)}>
+					{m.mcp_cancel()}
+				</Button>
+			</div>
+		</Dialog.Content>
+	</Dialog.Root>
 {/if}

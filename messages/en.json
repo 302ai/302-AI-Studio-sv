@@ -398,5 +398,15 @@
 	"mcp_import_error": "Parsing failed: {error}",
 	"mcp_kv_add": "Add",
 	"mcp_kv_key_placeholder": "Name",
-	"mcp_kv_value_placeholder": "Value"
+	"mcp_kv_value_placeholder": "Value",
+	"mcp_tools": "Tools",
+	"mcp_prompts": "Prompts",
+	"mcp_resources": "Resources",
+	"mcp_refresh": "Refresh",
+	"mcp_refreshing": "Refreshing...",
+	"mcp_no_tools": "No tools available",
+	"mcp_tool_details": "Tool Details",
+	"mcp_tool_name": "Name",
+	"mcp_tool_description": "Description",
+	"mcp_tool_input_schema": "Input Schema"
 }
