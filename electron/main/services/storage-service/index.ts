@@ -3,14 +3,16 @@ import fsDriver from "@302ai/unstorage/drivers/fs";
 import { isDev } from "@electron/main/constants";
 import type { MigrationConfig, StorageItem, StorageMetadata, StorageOptions } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
-import { app, webContents } from "electron";
+import { app } from "electron";
 import { join } from "path";
+import { emitter } from "../broadcast-service";
 import { getStorageVersion, setStorageVersion } from "./migration-utils";
 
 export class StorageService<T extends StorageValue> {
 	protected storage;
 	protected watches = new Map<string, () => void>();
 	protected migrationConfig?: MigrationConfig<T>;
+	protected lastUpdateSource = new Map<string, number>();
 
 	constructor(migrationConfig?: MigrationConfig<T>) {
 		const storagePath = isDev
@@ -30,14 +32,11 @@ export class StorageService<T extends StorageValue> {
 
 	async setItem(event: IpcMainInvokeEvent, key: string, value: T): Promise<void> {
 		const versionedValue = this.addVersionIfNeeded(value);
-		await this.storage.setItem(this.ensureJsonExtension(key), versionedValue);
+		const jsonKey = this.ensureJsonExtension(key);
 
-		const allWebContents = webContents.getAllWebContents();
-		allWebContents.forEach((wc) => {
-			if (wc !== event.sender && !wc.isDestroyed()) {
-				wc.send(`sync:${key}`, versionedValue);
-			}
-		});
+		this.lastUpdateSource.set(jsonKey, event.sender.id);
+
+		await this.storage.setItem(jsonKey, versionedValue);
 	}
 
 	async getItem(_event: IpcMainInvokeEvent, key: string): Promise<T | null> {
@@ -97,11 +96,20 @@ export class StorageService<T extends StorageValue> {
 
 	async watch(_event: IpcMainInvokeEvent, watchKey: string): Promise<void> {
 		const jsonKey = this.ensureJsonExtension(watchKey);
+
 		if (this.watches.has(watchKey)) return;
 		const unwatch = await this.storage.watch(async (_event, key) => {
 			if (key === jsonKey) {
-				// const newValue = await this.storage.getItem<T>(jsonKey);
-				// TODO
+				const sendKey = key.split(".")[0];
+				const sourceWebContentsId = this.lastUpdateSource.get(jsonKey) ?? -1;
+
+				emitter.emit("persisted-state:sync", {
+					sendKey,
+					syncValue: await this.getItemInternal(key),
+					sourceWebContentsId,
+				});
+
+				this.lastUpdateSource.delete(jsonKey);
 			}
 		});
 		this.watches.set(watchKey, unwatch);
@@ -128,12 +136,6 @@ export class StorageService<T extends StorageValue> {
 	async setItemInternal(key: string, value: T): Promise<void> {
 		const versionedValue = this.addVersionIfNeeded(value);
 		await this.storage.setItem(this.ensureJsonExtension(key), versionedValue);
-		const allWebContents = webContents.getAllWebContents();
-		allWebContents.forEach((wc) => {
-			if (!wc.isDestroyed()) {
-				wc.send(`sync:${key}`, versionedValue);
-			}
-		});
 	}
 
 	async hasItemInternal(key: string): Promise<boolean> {

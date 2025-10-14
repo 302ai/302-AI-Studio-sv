@@ -1,9 +1,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { BroadcastEvent } from "@shared/types";
-import type { IpcMainInvokeEvent, WebContents, WebContentsView } from "electron";
-import { BrowserWindow } from "electron";
+import type { IpcMainInvokeEvent, WebContents } from "electron";
+import { webContents } from "electron";
+import mitt from "mitt";
+
+export const emitter = mitt<{
+	"persisted-state:sync": { sendKey: string; syncValue: any; sourceWebContentsId: number };
+}>();
 
 export class BroadcastService {
+	constructor() {
+		emitter.on("persisted-state:sync", ({ sendKey, syncValue, sourceWebContentsId }) => {
+			this.broadcastExcludeSourceWC(sendKey, syncValue, sourceWebContentsId);
+			// console.log("Broadcasting to all webContents ", sendKey, JSON.stringify(syncValue));
+		});
+	}
+
+	private async broadcastExcludeSourceWC(
+		sendKey: string,
+		syncValue: any,
+		sourceWebContentsId: number,
+	): Promise<void> {
+		const allWebContents = webContents.getAllWebContents();
+		allWebContents
+			.filter((wc) => wc.id !== sourceWebContentsId)
+			.forEach((webContent) => webContent.send(sendKey, syncValue));
+	}
+
 	/**
 	 * Broadcast to all webContents except the source webContents
 	 */
@@ -13,7 +36,7 @@ export class BroadcastService {
 		data: any,
 	): Promise<void> {
 		const sourceWebContentsId = _event.sender.id;
-		const allWebContents = this.getAllWebContents();
+		const allWebContents = webContents.getAllWebContents();
 
 		allWebContents
 			.filter((webContents) => webContents.id !== sourceWebContentsId)
@@ -27,19 +50,10 @@ export class BroadcastService {
 		broadcastEvent: BroadcastEvent,
 		data: any,
 	): Promise<void> {
-		const allWebContents = this.getAllWebContents();
+		const allWebContents = webContents.getAllWebContents();
 		allWebContents.forEach((webContents) =>
 			this.sendBroadcast(webContents, broadcastEvent, data, -1),
 		);
-	}
-
-	private getAllWebContents(): WebContents[] {
-		return BrowserWindow.getAllWindows().flatMap((window) => [
-			window.webContents,
-			...window.contentView.children
-				.filter((childView): childView is WebContentsView => "webContents" in childView)
-				.map((childView) => childView.webContents),
-		]);
 	}
 
 	private sendBroadcast(

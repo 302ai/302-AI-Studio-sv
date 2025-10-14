@@ -38,6 +38,7 @@ declare global {
 			onShellWindowFullscreenChange: (
 				callback: (payload: ShellWindowFullscreenChange) => void,
 			) => () => void;
+			onPersistedStateSync: <T>(key: string, callback: (syncValue: T) => void) => () => void;
 		};
 		windowId: string;
 		tab: Tab;

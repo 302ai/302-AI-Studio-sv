@@ -1,21 +1,18 @@
 <script lang="ts">
-	import "$lib/stores/shortcut-settings.state.svelte";
-	import "$lib/utils/key-manager";
-	import "$lib/utils/shortcut-actions-handler";
 	import favicon from "$lib/assets/favicon.svg";
 	import { FpsDisplay } from "$lib/components/ui/fps-display";
 	import { Toaster } from "$lib/components/ui/sonner";
+	import "$lib/stores";
 	import { isDev } from "$lib/utils/env";
-	import { ModeWatcher } from "mode-watcher";
+	import "$lib/utils/key-manager";
+	import "$lib/utils/shortcut-actions-handler";
 	import { shortcutActionsHandler } from "$lib/utils/shortcut-actions-handler";
+	import { ModeWatcher } from "mode-watcher";
 	import "../app.css";
 
 	const { children } = $props();
 
-	// Initialize shortcut actions handler
-	if (typeof window !== "undefined") {
-		shortcutActionsHandler.init();
-	}
+	shortcutActionsHandler.init();
 </script>
 
 <svelte:head>

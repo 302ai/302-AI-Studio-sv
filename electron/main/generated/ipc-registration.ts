@@ -1,13 +1,13 @@
 import { ipcMain } from "electron";
 import {
-	storageService,
 	aiApplicationService,
 	appService,
 	broadcastService,
 	dataService,
 	externalLinkService,
-	tabService,
 	shortcutService,
+	storageService,
+	tabService,
 	threadService,
 	windowService,
 } from "../services";
@@ -16,6 +16,14 @@ import {
  * Auto-generated IPC service interfaces
  */
 export function registerIpcHandlers() {
+	// broadcastService service registration
+	ipcMain.handle("broadcastService:broadcastExcludeSource", (event, broadcastEvent, data) =>
+		broadcastService.broadcastExcludeSource(event, broadcastEvent, data),
+	);
+	ipcMain.handle("broadcastService:broadcastToAll", (event, broadcastEvent, data) =>
+		broadcastService.broadcastToAll(event, broadcastEvent, data),
+	);
+
 	// storageService service registration
 	ipcMain.handle("storageService:setItem", (event, key, value) =>
 		storageService.setItem(event, key, value),
@@ -55,7 +63,8 @@ export function registerIpcHandlers() {
 
 	// appService service registration
 	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
-
+	// dataService service registration
+	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
 	// broadcastService service registration
 	ipcMain.handle("broadcastService:broadcastExcludeSource", (event, broadcastEvent, data) =>
 		broadcastService.broadcastExcludeSource(event, broadcastEvent, data),
@@ -63,9 +72,6 @@ export function registerIpcHandlers() {
 	ipcMain.handle("broadcastService:broadcastToAll", (event, broadcastEvent, data) =>
 		broadcastService.broadcastToAll(event, broadcastEvent, data),
 	);
-
-	// dataService service registration
-	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
 
 	// externalLinkService service registration
 	ipcMain.handle("externalLinkService:openExternalLink", (event, url) =>
@@ -149,6 +155,8 @@ export function registerIpcHandlers() {
  * Clean up IPC handlers
  */
 export function removeIpcHandlers() {
+	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
+	ipcMain.removeHandler("broadcastService:broadcastToAll");
 	ipcMain.removeHandler("storageService:setItem");
 	ipcMain.removeHandler("storageService:getItem");
 	ipcMain.removeHandler("storageService:hasItem");
