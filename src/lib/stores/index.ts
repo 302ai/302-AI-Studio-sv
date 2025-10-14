@@ -1,6 +1,7 @@
 import "./ai-applications-state.svelte";
 import "./chat-state.svelte";
 import "./general-settings.state.svelte";
+import "./mcp-state.svelte";
 import "./model-panel-state.svelte";
 import "./notification-state.svelte";
 import "./preferences-settings.state.svelte";

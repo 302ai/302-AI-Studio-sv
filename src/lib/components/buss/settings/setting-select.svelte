@@ -35,7 +35,10 @@
 
 <Select.Root type="single" {name} bind:value {onValueChange}>
 	<Select.Trigger
-		class={cn("!bg-settings-item-bg data-[size=default]:h-settings-item w-full", className)}
+		class={cn(
+			"!bg-settings-item-bg dark:!bg-settings-item-bg data-[size=default]:h-settings-item w-full",
+			className,
+		)}
 	>
 		{placeholder && !value ? placeholder : getLabel(value)}
 	</Select.Trigger>

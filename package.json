@@ -126,6 +126,7 @@
 		"dedent": "^1.7.0",
 		"electron-squirrel-startup": "^1.0.1",
 		"electron-window-state": "^5.0.3",
+		"emoji-picker-element": "^1.27.0",
 		"es-toolkit": "^1.39.10",
 		"get-port": "^7.1.0",
 		"hono": "^4.9.10",

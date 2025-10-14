@@ -58,6 +58,9 @@ importers:
       electron-window-state:
         specifier: ^5.0.3
         version: 5.0.3
+      emoji-picker-element:
+        specifier: ^1.27.0
+        version: 1.27.0
       es-toolkit:
         specifier: ^1.39.10
         version: 1.39.10
@@ -2410,6 +2413,9 @@ packages:
 
   embla-carousel@8.6.0:
     resolution: {integrity: sha512-SjWyZBHJPbqxHOzckOfo8lHisEaJWmwd23XppYFYVh10bU66/Pn5tkVkbkCMZVdbUE5eTCI2nD8OyIP4Z+uwkA==}
+
+  emoji-picker-element@1.27.0:
+    resolution: {integrity: sha512-CeN9g5/kq41+BfYPDpAbE2ejZRHbs1faFDmU9+E9wGA4JWLkok9zo1hwcAFnUhV4lPR3ZuLHiJxNG1mpjoF4TQ==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -7254,6 +7260,8 @@ snapshots:
       svelte: 5.39.2
 
   embla-carousel@8.6.0: {}
+
+  emoji-picker-element@1.27.0: {}
 
   emoji-regex@8.0.0: {}
 

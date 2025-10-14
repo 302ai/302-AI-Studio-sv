@@ -26,6 +26,11 @@
 			labelKey: m.text_button_settings_models(),
 		},
 		{
+			name: "mcp-settings",
+			path: "/settings/mcp-settings",
+			labelKey: m.text_button_settings_mcp(),
+		},
+		{
 			name: "data-settings",
 			path: "/settings/data-settings",
 			labelKey: m.text_button_settings_data(),
