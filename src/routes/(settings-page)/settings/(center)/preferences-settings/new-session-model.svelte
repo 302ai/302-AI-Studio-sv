@@ -6,8 +6,6 @@
 	import type { Model } from "@shared/types";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 
-	let selectedModel = $derived(preferencesSettings.newSessionModel);
-
 	function handleModelSelect(model: Model) {
 		preferencesSettings.setNewSessionModel(model);
 	}
@@ -20,12 +18,16 @@
 		)}
 		{onclick}
 	>
-		{selectedModel?.name || m.settings_newSessionModelPlaceholder()}
+		{preferencesSettings.newSessionModel?.name || m.settings_newSessionModelPlaceholder()}
 	</button>
 {/snippet}
 
 <div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg">{m.settings_newSessionModel()}</Label>
 
-	<ModelSelect {selectedModel} {trigger} onModelSelect={handleModelSelect} />
+	<ModelSelect
+		selectedModel={preferencesSettings.newSessionModel}
+		{trigger}
+		onModelSelect={handleModelSelect}
+	/>
 </div>

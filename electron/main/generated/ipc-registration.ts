@@ -1,13 +1,13 @@
 import { ipcMain } from "electron";
 import {
+	broadcastService,
+	storageService,
 	aiApplicationService,
 	appService,
-	broadcastService,
 	dataService,
 	externalLinkService,
-	shortcutService,
-	storageService,
 	tabService,
+	shortcutService,
 	threadService,
 	windowService,
 } from "../services";
@@ -63,15 +63,9 @@ export function registerIpcHandlers() {
 
 	// appService service registration
 	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
+
 	// dataService service registration
 	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
-	// broadcastService service registration
-	ipcMain.handle("broadcastService:broadcastExcludeSource", (event, broadcastEvent, data) =>
-		broadcastService.broadcastExcludeSource(event, broadcastEvent, data),
-	);
-	ipcMain.handle("broadcastService:broadcastToAll", (event, broadcastEvent, data) =>
-		broadcastService.broadcastToAll(event, broadcastEvent, data),
-	);
 
 	// externalLinkService service registration
 	ipcMain.handle("externalLinkService:openExternalLink", (event, url) =>
@@ -173,8 +167,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("aiApplicationService:getAiApplicationUrl");
 	ipcMain.removeHandler("aiApplicationService:handle302AIProviderChange");
 	ipcMain.removeHandler("appService:setTheme");
-	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
-	ipcMain.removeHandler("broadcastService:broadcastToAll");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
