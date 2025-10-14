@@ -10,7 +10,6 @@ export class TabStorage extends StorageService<TabState> {
 	}
 
 	async getTabs(windowId: string): Promise<Tab[] | null> {
-		console.log("getTabs", windowId);
 		const result = await this.getItemInternal("tab-bar-state");
 		return result ? result[windowId].tabs : null;
 	}

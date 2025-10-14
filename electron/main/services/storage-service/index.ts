@@ -85,12 +85,17 @@ export class StorageService<T extends StorageValue> {
 		}));
 	}
 
-	async setItems(_event: IpcMainInvokeEvent, items: StorageItem<T>[]): Promise<void> {
+	async setItems(event: IpcMainInvokeEvent, items: StorageItem<T>[]): Promise<void> {
 		const formattedItems = items.map((item) => ({
 			key: this.ensureJsonExtension(item.key),
 			value: item.value,
 			options: {},
 		}));
+
+		formattedItems.forEach((item) => {
+			this.lastUpdateSource.set(item.key, event.sender.id);
+		});
+
 		await this.storage.setItems(formattedItems);
 	}
 

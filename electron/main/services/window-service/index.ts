@@ -68,6 +68,11 @@ export class WindowService {
 		const newWindowIds: number[] = [];
 
 		for (const [index, tabs] of windowsTabs.entries()) {
+			// Skip empty windows
+			if (tabs.length === 0) {
+				delete windowsTabs[index];
+				continue;
+			}
 			const { shellWindow, shellView } = await this.createShellWindow();
 			tabService.initWindowShellView(shellWindow.id, shellView);
 			windows.push(shellWindow);
@@ -253,7 +258,7 @@ export class WindowService {
 			if (shouldCleanup) {
 				console.log("shouldCleanup ---", true);
 				await tabService.removeWindowTabs(currentWindowId);
-				tabStorage.removeWindowState(currentWindowId.toString());
+				await tabStorage.removeWindowState(currentWindowId.toString());
 			} else if (shouldCleanupPrivateChats) {
 				console.log("shouldCleanupPrivateChats ---", true);
 				// Only cleanup private chat data, don't remove window state
@@ -318,6 +323,14 @@ export class WindowService {
 		const newShellWindowTabs = [{ ...triggerTab, active: true }];
 		await tabStorage.updateWindowTabs(newShellWindowId.toString(), newShellWindowTabs);
 
+		// Update source window storage to remove the transferred tab
+		// This prevents the tab from being destroyed when the source window closes
+		const sourceTabs = await tabStorage.getTabs(fromWindow.id.toString());
+		if (!isNull(sourceTabs)) {
+			const remainingTabs = sourceTabs.filter((tab) => tab.id !== triggerTabId);
+			await tabStorage.updateWindowTabs(fromWindow.id.toString(), remainingTabs);
+		}
+
 		if (shouldCloseSourceWindow) {
 			fromWindow.close();
 		}
@@ -357,6 +370,14 @@ export class WindowService {
 		const updatedCurrentTabs = currentTabs.map((tab) => ({ ...tab, active: false }));
 		const newTargetWindowTabs = [...updatedCurrentTabs, movedTab];
 		await tabStorage.updateWindowTabs(windowId, newTargetWindowTabs);
+
+		// Update source window storage to remove the transferred tab
+		// This prevents the tab from being destroyed when the source window closes
+		const sourceTabs = await tabStorage.getTabs(fromWindow.id.toString());
+		if (!isNull(sourceTabs)) {
+			const remainingTabs = sourceTabs.filter((tab) => tab.id !== triggerTabId);
+			await tabStorage.updateWindowTabs(fromWindow.id.toString(), remainingTabs);
+		}
 
 		// Close source window if it has no remaining tabs after transfer
 		if (shouldCloseSourceWindow) {

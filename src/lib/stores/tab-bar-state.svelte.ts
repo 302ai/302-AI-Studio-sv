@@ -55,6 +55,7 @@ class TabBarState {
 
 	async #handleTabRemovalWithActiveState(tabId: string): Promise<string | null> {
 		const currentTabs = this.tabs;
+		const currentWindowId = this.#windowId;
 		const targetTab = currentTabs.find((t) => t.id === tabId);
 		if (!targetTab) return null;
 
@@ -90,8 +91,9 @@ class TabBarState {
 			remainingTabs = currentTabs.filter((t) => t.id !== tabId);
 		}
 
-		// Update persisted state
-		persistedTabState.current[this.#windowId].tabs = remainingTabs;
+		if (remainingTabs.length > 0) {
+			persistedTabState.current[currentWindowId].tabs = remainingTabs;
+		}
 
 		// Activate new tab if needed
 		if (!isNull(newActiveTabId)) {
