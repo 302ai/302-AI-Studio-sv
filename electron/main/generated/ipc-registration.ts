@@ -2,6 +2,7 @@ import { ipcMain } from "electron";
 import {
 	broadcastService,
 	storageService,
+	generalSettingsService,
 	aiApplicationService,
 	appService,
 	dataService,
@@ -51,6 +52,11 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("storageService:unwatch", (event, watchKey) =>
 		storageService.unwatch(event, watchKey),
+	);
+
+	// generalSettingsService service registration
+	ipcMain.handle("generalSettingsService:handleLanguageChanged", (event) =>
+		generalSettingsService.handleLanguageChanged(event),
 	);
 
 	// aiApplicationService service registration
@@ -164,6 +170,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:setItems");
 	ipcMain.removeHandler("storageService:watch");
 	ipcMain.removeHandler("storageService:unwatch");
+	ipcMain.removeHandler("generalSettingsService:handleLanguageChanged");
 	ipcMain.removeHandler("aiApplicationService:getAiApplicationUrl");
 	ipcMain.removeHandler("aiApplicationService:handle302AIProviderChange");
 	ipcMain.removeHandler("appService:setTheme");
