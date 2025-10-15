@@ -29,10 +29,6 @@ jobs:
           - os: macos-13
             arch: x64
             platform: macos
-          # macOS universal - 使用 Intel runner 以支持完整的 universal 构建
-          - os: macos-13
-            arch: universal
-            platform: macos
           - os: ubuntu-latest
             arch: x64
             platform: linux
@@ -87,45 +83,27 @@ jobs:
           npx eslint electron/main/
           pnpm run check
 
-      - name: Build application
-        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform) && matrix.arch != 'universal'
+      # 对于 macOS，只构建并上传 packaged .app（不签名，不制作分发包）
+      - name: Package macOS application (unsigned)
+        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && startsWith(matrix.os, 'macos-')
         env:
           NODE_OPTIONS: --max-old-space-size=8192
-          # macOS 签名和公证环境变量
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          SKIP_CODESIGN: true
+        run: pnpm run package -- --arch=${{ matrix.arch }}
+
+      - name: Upload packaged app artifacts (macOS only - for universal build)
+        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && startsWith(matrix.os, 'macos-')
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-packaged-${{ github.run_number }}
+          path: out/302 AI Studio-darwin-${{ matrix.arch }}/
+
+      # Windows 和 Linux 直接构建完整的分发包
+      - name: Build application (Windows/Linux)
+        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform) && !startsWith(matrix.os, 'macos-')
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
         run: pnpm run make -- --arch=${{ matrix.arch }}
-
-      # Universal binary build steps - 重新打包未签名的 x64 和 arm64 后合并
-      - name: Package x64 (unsigned) for universal build
-        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.arch == 'universal'
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
-          SKIP_CODESIGN: true
-        run: pnpm run package -- --arch=x64
-
-      - name: Package arm64 (unsigned) for universal build
-        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.arch == 'universal'
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
-          SKIP_CODESIGN: true
-        run: pnpm run package -- --arch=arm64
-
-      - name: Create universal binary
-        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.arch == 'universal'
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
-        run: pnpm run package:universal
-
-      - name: Create distributable (universal)
-        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.arch == 'universal'
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: pnpm run make -- --arch=universal
 
       - name: Upload Windows artifacts
         if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows') && matrix.os == 'windows-latest'
@@ -137,24 +115,6 @@ jobs:
             out/make/zip/win32/**/*
             out/make/wix/win32/**/*
 
-      - name: Upload macOS artifacts
-        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && startsWith(matrix.os, 'macos-') && matrix.arch != 'universal'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-${{ matrix.arch }}-build-${{ github.run_number }}
-          path: |
-            out/make/*.dmg
-            out/make/zip/**/*
-
-      - name: Upload macOS universal artifacts
-        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.arch == 'universal'
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-universal-build-${{ github.run_number }}
-          path: |
-            out/make/*.dmg
-            out/make/zip/**/*
-
       - name: Upload Linux artifacts
         if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux') && matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
@@ -163,3 +123,138 @@ jobs:
           path: |
             out/make/deb/**/*
             out/make/rpm/**/*
+
+  # 单独的 job 用于构建 macOS 单架构的分发包（DMG/ZIP）
+  build-macos-distrib:
+    runs-on: ${{ matrix.os }}
+    needs: build
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos'
+
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            arch: arm64
+          - os: macos-13
+            arch: x64
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Import Code-Signing Certificates
+        uses: Apple-Actions/import-codesign-certs@v5
+        with:
+          p12-file-base64: ${{ secrets.MAC_CERTS }}
+          p12-password: ${{ secrets.MAC_CERTS_PASSWORD }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+
+      - name: Generate paraglide files
+        run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
+
+      - name: Download packaged app
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-packaged-${{ github.run_number }}
+          path: out/302 AI Studio-darwin-${{ matrix.arch }}/
+
+      - name: Create distributable (DMG and ZIP)
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: pnpm run make-only -- --arch=${{ matrix.arch }}
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-build-${{ github.run_number }}
+          path: |
+            out/make/*.dmg
+            out/make/zip/**/*
+
+  # 单独的 job 用于构建 macOS universal binary
+  build-macos-universal:
+    runs-on: macos-latest
+    needs: build
+    if: github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Import Code-Signing Certificates
+        uses: Apple-Actions/import-codesign-certs@v5
+        with:
+          p12-file-base64: ${{ secrets.MAC_CERTS }}
+          p12-password: ${{ secrets.MAC_CERTS_PASSWORD }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+
+      - name: Generate paraglide files
+        run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
+
+      - name: Download arm64 packaged app
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-arm64-packaged-${{ github.run_number }}
+          path: out/
+
+      - name: Download x64 packaged app
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-x64-packaged-${{ github.run_number }}
+          path: out/
+
+      - name: List downloaded artifacts (debug)
+        run: |
+          echo "=== Downloaded artifacts structure ==="
+          ls -la out/
+          find out/ -type d -name "*.app" || echo "No .app bundles found"
+
+      - name: Create universal binary
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: pnpm run package:universal
+
+      - name: Create distributable (DMG and ZIP)
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: pnpm run make-only -- --arch=universal
+
+      - name: Upload universal artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal-build-${{ github.run_number }}
+          path: |
+            out/make/*.dmg
+            out/make/zip/**/*

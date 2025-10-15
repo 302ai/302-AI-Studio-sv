@@ -28,6 +28,7 @@
 		"package": "electron-forge package",
 		"package:universal": "node scripts/build-universal.mjs",
 		"make": "vite build && electron-forge make",
+		"make-only": "electron-forge make --skip-package",
 		"make:universal": "vite build && electron-forge package --arch=arm64 && electron-forge package --arch=x64 && node scripts/build-universal.mjs && electron-forge make --arch=universal",
 		"publish": "electron-forge publish",
 		"preview": "vite preview",
