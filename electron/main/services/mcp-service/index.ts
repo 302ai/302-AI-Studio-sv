@@ -1,11 +1,11 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { McpServer } from "@shared/storage/mcp";
 import { type IpcMainInvokeEvent } from "electron";
+import { experimental_createMCPClient as createMCPClient } from "ai";
 
 interface MCPClientWrapper {
-	client: Client;
+	mcpClient: Awaited<ReturnType<typeof createMCPClient>>;
 	transport: Transport;
 }
 
@@ -56,20 +56,10 @@ export class McpService {
 				throw new Error(`Unsupported MCP server type: ${server.type}`);
 			}
 
-			const client = new Client(
-				{
-					name: "302-ai-studio",
-					version: "1.0.0",
-				},
-				{
-					capabilities: {},
-				},
-			);
-
-			await client.connect(transport);
+			const mcpClient = await createMCPClient({ transport });
 
 			const wrapper: MCPClientWrapper = {
-				client,
+				mcpClient,
 				transport,
 			};
 
@@ -104,12 +94,11 @@ export class McpService {
 				wrapper = newWrapper;
 			}
 
-			const result = await wrapper.client.listTools();
-
-			const tools = result.tools.map((tool) => ({
-				name: tool.name,
-				description: tool.description,
-				inputSchema: tool.inputSchema,
+			const toolsObject = await wrapper.mcpClient.tools();
+			const tools = Object.entries(toolsObject).map(([name, _tool]) => ({
+				name,
+				description: _tool.description || "",
+				inputSchema: {},
 			}));
 
 			return { isOk: true, tools };
@@ -126,7 +115,7 @@ export class McpService {
 		try {
 			const wrapper = this.clients.get(serverId);
 			if (wrapper) {
-				await wrapper.client.close();
+				await wrapper.mcpClient.close();
 				this.clients.delete(serverId);
 			}
 			return { isOk: true };
@@ -139,7 +128,7 @@ export class McpService {
 	async closeAllServers(): Promise<void> {
 		const closePromises = Array.from(this.clients.entries()).map(async ([id, wrapper]) => {
 			try {
-				await wrapper.client.close();
+				await wrapper.mcpClient.close();
 			} catch (error) {
 				console.error(`Failed to close MCP server ${id}:`, error);
 			}
@@ -147,6 +136,50 @@ export class McpService {
 
 		await Promise.all(closePromises);
 		this.clients.clear();
+	}
+
+	async getClient(
+		serverId: string,
+		server: McpServer,
+	): Promise<Awaited<ReturnType<typeof createMCPClient>> | null> {
+		let wrapper = this.clients.get(serverId);
+
+		if (!wrapper) {
+			const newWrapper = await this.createClient(server);
+			if (!newWrapper) {
+				return null;
+			}
+			wrapper = newWrapper;
+		}
+
+		return wrapper.mcpClient;
+	}
+
+	async getToolsFromServerIds(serverIds: string[], allServers: McpServer[]) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const allTools: Record<string, any> = {};
+
+		for (const serverId of serverIds) {
+			const server = allServers.find((s) => s.id === serverId);
+			if (!server || !server.enabled) {
+				continue;
+			}
+
+			const mcpClient = await this.getClient(serverId, server);
+			if (!mcpClient) {
+				console.error(`Failed to get MCP client for server ${server.name}`);
+				continue;
+			}
+
+			try {
+				const tools = await mcpClient.tools();
+				Object.assign(allTools, tools);
+			} catch (error) {
+				console.error(`Failed to get tools from server ${server.name}:`, error);
+			}
+		}
+
+		return allTools;
 	}
 }
 

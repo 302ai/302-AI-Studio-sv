@@ -112,6 +112,7 @@ export interface ThreadParmas {
 	inputValue: string;
 	attachments: AttachmentFile[];
 	mcpServers: MCPServer[];
+	mcpServerIds: string[];
 	isThinkingActive: boolean;
 	isOnlineSearchActive: boolean;
 	isMCPActive: boolean;

@@ -4,6 +4,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { serve } from "@hono/node-server";
 import type { ModelProvider } from "@shared/storage/provider";
+import type { McpServer } from "@shared/types";
 import {
 	convertToModelMessages,
 	extractReasoningMiddleware,
@@ -15,6 +16,8 @@ import {
 } from "ai";
 import getPort from "get-port";
 import { Hono } from "hono";
+import { mcpService } from "../services/mcp-service";
+import { storageService } from "../services/storage-service";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function addDefinedParams(options: any, params: any) {
@@ -91,6 +94,8 @@ app.post("/chat/302ai", async (c) => {
 		presencePenalty,
 		isThinkingActive,
 		isOnlineSearchActive,
+		isMCPActive,
+		mcpServerIds = [],
 		autoParseUrl,
 		messages,
 		speedOptions,
@@ -107,6 +112,7 @@ app.post("/chat/302ai", async (c) => {
 		isThinkingActive?: boolean;
 		isOnlineSearchActive?: boolean;
 		isMCPActive?: boolean;
+		mcpServerIds?: string[];
 		autoParseUrl?: boolean;
 
 		speedOptions?: {
@@ -161,12 +167,27 @@ app.post("/chat/302ai", async (c) => {
 		provider302Options["search-service"] = "search1api";
 	}
 
+	// Get MCP tools if MCP is active
+	let mcpTools = undefined;
+	if (isMCPActive && mcpServerIds.length > 0) {
+		try {
+			const allServers = await storageService.getItemInternal("app-mcp-servers");
+			if (allServers) {
+				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
+				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+			}
+		} catch (error) {
+			console.error("Failed to load MCP tools:", error);
+		}
+	}
+
 	const streamTextOptions = {
 		model: wrapModel,
 		messages: convertToModelMessages(messages),
 		providerOptions: {
 			"302": provider302Options,
 		},
+		...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
 	};
 
 	addDefinedParams(streamTextOptions, {
