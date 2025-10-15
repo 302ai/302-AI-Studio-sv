@@ -39,6 +39,13 @@ declare global {
 				callback: (payload: ShellWindowFullscreenChange) => void,
 			) => () => void;
 			onPersistedStateSync: <T>(key: string, callback: (syncValue: T) => void) => () => void;
+			onUpdateChecking: (callback: () => void) => () => void;
+			onUpdateAvailable: (callback: () => void) => () => void;
+			onUpdateNotAvailable: (callback: () => void) => () => void;
+			onUpdateDownloaded: (
+				callback: (data: { releaseNotes: string; releaseName: string }) => void,
+			) => () => void;
+			onUpdateError: (callback: (data: { message: string }) => void) => () => void;
 		};
 		windowId: string;
 		tab: Tab;

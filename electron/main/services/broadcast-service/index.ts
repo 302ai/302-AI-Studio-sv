@@ -56,6 +56,22 @@ export class BroadcastService {
 		);
 	}
 
+	/**
+	 * Broadcast a custom channel to all webContents (for main process use)
+	 */
+	broadcastChannelToAll(channel: string, data?: any): void {
+		const allWebContents = webContents.getAllWebContents();
+		allWebContents.forEach((wc) => {
+			if (!wc.isDestroyed()) {
+				try {
+					wc.send(channel, data);
+				} catch (error) {
+					console.error(`Failed to broadcast ${channel} to webContents ${wc.id}:`, error);
+				}
+			}
+		});
+	}
+
 	private sendBroadcast(
 		webContents: WebContents,
 		broadcastEvent: BroadcastEvent,
