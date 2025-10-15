@@ -6,7 +6,7 @@
 
 import { makeUniversalApp } from "@electron/universal";
 import { existsSync, mkdirSync } from "fs";
-import { join, dirname } from "path";
+import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,7 +21,7 @@ async function buildUniversal() {
 	const universalAppPath = join(
 		projectRoot,
 		"out",
-		"302 AI Studio-darwin-universal",
+		"302-AI-Studio-darwin-universal",
 		"302 AI Studio.app",
 	);
 
@@ -53,6 +53,7 @@ async function buildUniversal() {
 			arm64AppPath,
 			x64AppPath,
 			outAppPath: universalAppPath,
+			infoPlistsToIgnore: "302 AI Studio.app/Contents/Info.plist",
 		});
 
 		console.log("✅ Universal binary created successfully!");

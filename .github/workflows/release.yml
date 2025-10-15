@@ -9,26 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  # 创建 GitHub release
-  create-release:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Create GitHub release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Extract version from tag
-          VERSION=${GITHUB_REF#refs/tags/}
-          # Create release if it doesn't exist
-          if ! gh release view "$VERSION" >/dev/null 2>&1; then
-            gh release create "$VERSION" --title "$VERSION" --notes "Release $VERSION" --prerelease
-          fi
-
-  # 构建各平台的 packaged 应用
-  build:
+  release:
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -37,17 +18,13 @@ jobs:
           # macOS arm64 - 使用 Apple Silicon runner
           - os: macos-latest
             arch: arm64
-            platform: macos
           # macOS x64 - 使用 Intel runner (macos-13 是最后的 Intel runner)
           - os: macos-13
             arch: x64
-            platform: macos
           - os: ubuntu-latest
             arch: x64
-            platform: linux
           - os: windows-latest
             arch: x64
-            platform: windows
 
     steps:
       - name: Checkout repository
@@ -86,28 +63,36 @@ jobs:
           npx eslint electron/main/
           pnpm run check
 
-      # 对于 macOS，只构建并上传 packaged .app（不签名，不制作分发包）
-      - name: Package macOS application (unsigned)
-        if: startsWith(matrix.os, 'macos-')
+      - name: Create GitHub release (Ubuntu only)
+        if: matrix.os == 'ubuntu-latest'
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Extract version from tag
+          VERSION=${GITHUB_REF#refs/tags/}
+          # Create release if it doesn't exist
+          if ! gh release view "$VERSION" >/dev/null 2>&1; then
+            gh release create "$VERSION" --title "$VERSION" --notes "Release $VERSION" --prerelease
+          fi
+
+      - name: Build and release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: --max-old-space-size=8192
-          SKIP_CODESIGN: true
-        run: pnpm run package -- --arch=${{ matrix.arch }}
+          # macOS 签名和公证环境变量
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: pnpm run publish -- --arch=${{ matrix.arch }}
 
       - name: Upload packaged app artifacts (macOS only - for universal build)
         if: startsWith(matrix.os, 'macos-')
         uses: actions/upload-artifact@v4
         with:
           name: macos-${{ matrix.arch }}-packaged
-          path: out/302 AI Studio-darwin-${{ matrix.arch }}/
-
-      # Windows 和 Linux 直接构建完整的分发包并发布
-      - name: Build and publish (Windows/Linux)
-        if: ${{ !startsWith(matrix.os, 'macos-') }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_OPTIONS: --max-old-space-size=8192
-        run: pnpm run publish -- --arch=${{ matrix.arch }}
+          retention-days: 1
+          path: |
+            out/*-darwin-${{ matrix.arch }}/**/*
 
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows-latest'
@@ -119,6 +104,15 @@ jobs:
             out/make/zip/win32/**/*
             out/make/wix/win32/**/*
 
+      - name: Upload artifacts (macOS)
+        if: startsWith(matrix.os, 'macos-')
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-artifacts
+          path: |
+            out/make/*.dmg
+            out/make/zip/**/*
+
       - name: Upload artifacts (Linux)
         if: matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
@@ -128,80 +122,10 @@ jobs:
             out/make/deb/**/*
             out/make/rpm/**/*
 
-  # 单独的 job 用于构建和发布 macOS 单架构的分发包（DMG/ZIP）
-  release-macos-distrib:
-    runs-on: ${{ matrix.os }}
-    needs: [create-release, build]
-
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            arch: arm64
-          - os: macos-13
-            arch: x64
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: "pnpm"
-
-      - name: Import Code-Signing Certificates
-        uses: Apple-Actions/import-codesign-certs@v5
-        with:
-          p12-file-base64: ${{ secrets.MAC_CERTS }}
-          p12-password: ${{ secrets.MAC_CERTS_PASSWORD }}
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
-
-      - name: Generate paraglide files
-        run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
-
-      - name: Download packaged app
-        uses: actions/download-artifact@v4
-        with:
-          name: macos-${{ matrix.arch }}-packaged
-          path: out/302 AI Studio-darwin-${{ matrix.arch }}/
-
-      - name: Create distributable (DMG and ZIP)
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: pnpm run make-only -- --arch=${{ matrix.arch }}
-
-      - name: Upload to GitHub Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          find out/make -name "*.dmg" -exec gh release upload "$VERSION" {} --clobber \;
-          find out/make/zip -name "*.zip" -exec gh release upload "$VERSION" {} --clobber \;
-
-      - name: Upload macOS artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-${{ matrix.arch }}-artifacts
-          path: |
-            out/make/*.dmg
-            out/make/zip/**/*
-
-  # 单独的 job 用于构建和发布 macOS universal binary
-  release-macos-universal:
+  # Universal binary build - 依赖 arm64 和 x64 构建完成
+  release-universal:
     runs-on: macos-latest
-    needs: [create-release, build]
+    needs: release
 
     steps:
       - name: Checkout repository
@@ -259,14 +183,16 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: pnpm run make-only -- --arch=universal
+        run: pnpm run make -- --arch=universal
 
-      - name: Upload to GitHub Release
+      - name: Publish universal artifacts to GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           VERSION=${GITHUB_REF#refs/tags/}
+          # Upload DMG
           find out/make -name "*.dmg" -exec gh release upload "$VERSION" {} --clobber \;
+          # Upload ZIP
           find out/make/zip -name "*.zip" -exec gh release upload "$VERSION" {} --clobber \;
 
       - name: Upload universal artifacts
