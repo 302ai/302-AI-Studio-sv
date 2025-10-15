@@ -157,6 +157,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("updaterService:isUpdateDownloaded", (event) =>
 		updaterService.isUpdateDownloaded(event),
 	);
+	ipcMain.handle("updaterService:setAutoUpdate", (event, enabled) =>
+		updaterService.setAutoUpdate(event, enabled),
+	);
 
 	// windowService service registration
 	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
@@ -219,6 +222,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("updaterService:checkForUpdatesManually");
 	ipcMain.removeHandler("updaterService:quitAndInstall");
 	ipcMain.removeHandler("updaterService:isUpdateDownloaded");
+	ipcMain.removeHandler("updaterService:setAutoUpdate");
 	ipcMain.removeHandler("windowService:focusWindow");
 	ipcMain.removeHandler("windowService:handleSplitShellWindow");
 	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");
