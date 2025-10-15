@@ -21,9 +21,6 @@ jobs:
           # macOS x64 - 使用 Intel runner (macos-13 是最后的 Intel runner)
           - os: macos-13
             arch: x64
-          # macOS universal - 使用 Intel runner 以支持完整的 universal 构建
-          - os: macos-13
-            arch: universal
           - os: ubuntu-latest
             arch: x64
           - os: windows-latest
@@ -78,8 +75,7 @@ jobs:
             gh release create "$VERSION" --title "$VERSION" --notes "Release $VERSION" --prerelease
           fi
 
-      - name: Build and release (non-universal)
-        if: matrix.arch != 'universal'
+      - name: Build and release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_OPTIONS: --max-old-space-size=8192
@@ -89,39 +85,14 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: pnpm run publish -- --arch=${{ matrix.arch }}
 
-      - name: Build universal binary (macOS only)
-        if: matrix.arch == 'universal'
-        env:
-          NODE_OPTIONS: --max-old-space-size=8192
-          # macOS 签名和公证环境变量
-          APPLE_ID: ${{ secrets.APPLE_ID }}
-          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
-          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: |
-          # Build vite first
-          pnpm run build
-          # Package arm64 and x64 separately
-          pnpm run package -- --arch=arm64
-          pnpm run package -- --arch=x64
-          # Merge into universal binary
-          pnpm run package:universal
-          # Create distributable
-          pnpm run make -- --arch=universal
-
-      - name: Publish universal artifacts to GitHub Release
-        if: matrix.arch == 'universal'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          # Upload DMG
-          if [ -f out/make/*.dmg ]; then
-            gh release upload "$VERSION" out/make/*.dmg --clobber
-          fi
-          # Upload ZIP
-          if [ -d out/make/zip ]; then
-            gh release upload "$VERSION" out/make/zip/**/*.zip --clobber
-          fi
+      - name: Upload packaged app artifacts (macOS only - for universal build)
+        if: startsWith(matrix.os, 'macos-')
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-packaged
+          retention-days: 1
+          path: |
+            out/*-darwin-${{ matrix.arch }}/**/*
 
       - name: Upload artifacts (Windows)
         if: matrix.os == 'windows-latest'
@@ -150,3 +121,84 @@ jobs:
           path: |
             out/make/deb/**/*
             out/make/rpm/**/*
+
+  # Universal binary build - 依赖 arm64 和 x64 构建完成
+  release-universal:
+    runs-on: macos-latest
+    needs: release
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Import Code-Signing Certificates
+        uses: Apple-Actions/import-codesign-certs@v5
+        with:
+          p12-file-base64: ${{ secrets.MAC_CERTS }}
+          p12-password: ${{ secrets.MAC_CERTS_PASSWORD }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+
+      - name: Generate paraglide files
+        run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
+
+      - name: Download arm64 packaged app
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-arm64-packaged
+          path: out/
+
+      - name: Download x64 packaged app
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-x64-packaged
+          path: out/
+
+      - name: List downloaded artifacts (debug)
+        run: |
+          echo "=== Downloaded artifacts structure ==="
+          ls -la out/
+          find out/ -type d -name "*.app" || echo "No .app bundles found"
+
+      - name: Create universal binary
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: pnpm run package:universal
+
+      - name: Create distributable (DMG and ZIP)
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: pnpm run make -- --arch=universal
+
+      - name: Publish universal artifacts to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          # Upload DMG
+          find out/make -name "*.dmg" -exec gh release upload "$VERSION" {} --clobber \;
+          # Upload ZIP
+          find out/make/zip -name "*.zip" -exec gh release upload "$VERSION" {} --clobber \;
+
+      - name: Upload universal artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-universal-artifacts
+          path: |
+            out/make/*.dmg
+            out/make/zip/**/*
