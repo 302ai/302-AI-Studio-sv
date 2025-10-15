@@ -410,5 +410,15 @@
 	"mcp_tool_description": "Description",
 	"mcp_tool_input_schema": "Input Schema",
 	"mcp_select_servers": "Select MCP Servers",
-	"mcp_confirm": "Confirm"
+	"mcp_confirm": "Confirm",
+	"tool_call_label": "Tool Call",
+	"tool_call_status_preparing": "Preparing...",
+	"tool_call_status_executing": "Executing...",
+	"tool_call_status_success": "Success",
+	"tool_call_status_error": "Error",
+	"tool_call_parameters": "Parameters",
+	"tool_call_result": "Result",
+	"tool_call_error_message": "Error",
+	"tool_call_no_result": "No result available",
+	"tool_call_close": "Close"
 }
