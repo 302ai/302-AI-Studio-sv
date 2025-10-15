@@ -6,10 +6,12 @@ import { serve } from "@hono/node-server";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { McpServer } from "@shared/types";
 import {
+	Experimental_Agent as Agent,
 	convertToModelMessages,
 	extractReasoningMiddleware,
 	generateText,
 	smoothStream,
+	stepCountIs,
 	streamText,
 	wrapLanguageModel,
 	type UIMessage,
@@ -208,7 +210,9 @@ app.post("/chat/302ai", async (c) => {
 		}),
 	};
 
-	const result = streamText(streamTextOptionsWithTransform);
+	const result = new Agent({ ...streamTextOptionsWithTransform, stopWhen: stepCountIs(20) }).stream(
+		streamTextOptionsWithTransform,
+	);
 
 	return result.toUIMessageStreamResponse({
 		messageMetadata: () => ({

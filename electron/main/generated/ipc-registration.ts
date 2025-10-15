@@ -11,6 +11,7 @@ import {
 	tabService,
 	shortcutService,
 	threadService,
+	updaterService,
 	windowService,
 } from "../services";
 
@@ -148,6 +149,12 @@ export function registerIpcHandlers() {
 		threadService.renameThread(event, threadId, newName),
 	);
 
+	// updaterService service registration
+	ipcMain.handle("updaterService:checkForUpdatesManually", (event) =>
+		updaterService.checkForUpdatesManually(event),
+	);
+	ipcMain.handle("updaterService:quitAndInstall", (event) => updaterService.quitAndInstall(event));
+
 	// windowService service registration
 	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
 		windowService.focusWindow(event, windowId, tabId),
@@ -206,6 +213,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("threadService:getThread");
 	ipcMain.removeHandler("threadService:deleteThread");
 	ipcMain.removeHandler("threadService:renameThread");
+	ipcMain.removeHandler("updaterService:checkForUpdatesManually");
+	ipcMain.removeHandler("updaterService:quitAndInstall");
 	ipcMain.removeHandler("windowService:focusWindow");
 	ipcMain.removeHandler("windowService:handleSplitShellWindow");
 	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");

@@ -14,7 +14,17 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        include:
+          - os: macos-latest
+            arch: arm64
+          - os: macos-13
+            arch: x64
+          # - os: macos-latest
+          #   arch: universal
+          - os: ubuntu-latest
+            arch: x64
+          - os: windows-latest
+            arch: x64
 
     steps:
       - name: Checkout repository

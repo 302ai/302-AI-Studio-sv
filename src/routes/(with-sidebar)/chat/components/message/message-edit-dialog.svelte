@@ -17,7 +17,16 @@
 		onContentChange: (value: string) => void;
 	}
 
-	let { open = $bindable(), editContent, originalContent, showRegenerateButton, onCancel, onConfirm, onRegenerate, onContentChange }: Props = $props();
+	let {
+		open = $bindable(),
+		editContent,
+		originalContent,
+		showRegenerateButton,
+		onCancel,
+		onConfirm,
+		onRegenerate,
+		onContentChange,
+	}: Props = $props();
 </script>
 
 <Dialog.Root bind:open>
@@ -34,11 +43,7 @@
 		/>
 
 		<Dialog.Footer class="flex !justify-between">
-			<Button
-				variant="outline"
-				onclick={onCancel}
-				class="!border-border hover:!border-border/80"
-			>
+			<Button variant="outline" onclick={onCancel} class="!border-border hover:!border-border/80">
 				{m.text_button_cancel()}
 			</Button>
 			<div class="flex gap-2">
@@ -46,7 +51,9 @@
 					<Button
 						variant="secondary"
 						onclick={onRegenerate}
-						disabled={!chatState.canRegenerate || chatState.isStreaming || editContent.trim() === ""}
+						disabled={!chatState.canRegenerate ||
+							chatState.isStreaming ||
+							editContent.trim() === ""}
 					>
 						{#if chatState.isStreaming}
 							<RefreshCcw class="animate-spin mr-2 h-4 w-4" />

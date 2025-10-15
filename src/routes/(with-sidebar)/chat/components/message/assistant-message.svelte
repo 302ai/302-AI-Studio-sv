@@ -24,15 +24,18 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
-	import { ChevronDown, Lightbulb } from "@lucide/svelte";
+	import { ChevronDown, Lightbulb, Server } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import MessageActions from "./message-actions.svelte";
 	import MessageContextMenu from "./message-context-menu.svelte";
+	import ToolCallModal from "./tool-call-modal.svelte";
 	import { formatTimeAgo, getAssistantMessageContent } from "./utils";
 
 	let { message }: Props = $props();
 
 	let isReasoningExpanded = $state(!preferencesSettings.autoCollapseThink);
+	let selectedToolPart = $state<any>(null);
+	let isToolModalOpen = $state(false);
 
 	$effect(() => {
 		if (isStreamingReasoning) {
@@ -165,8 +168,52 @@
 						</CollapsibleContent>
 					</Collapsible>
 				{/if}
+			{:else if part.type === "dynamic-tool"}
+				<button
+					type="button"
+					class="my-2 block w-full cursor-pointer rounded-[10px] border-0 bg-white px-3.5 py-3 text-left hover:bg-[#F9F9F9] dark:bg-[#1A1A1A] dark:hover:bg-[#2D2D2D]"
+					onclick={() => {
+						selectedToolPart = part;
+						isToolModalOpen = true;
+					}}
+				>
+					<div class="flex w-full items-center justify-between gap-x-4">
+						<!-- Left: Tool Icon and Name -->
+						<div class="flex items-center gap-3">
+							<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+								<Server class="h-5 w-5 text-muted-foreground" />
+							</div>
+
+							<!-- Tool Name -->
+							<div class="flex flex-col items-start gap-1">
+								<h3 class="text-sm font-medium text-foreground">
+									{part.toolName}
+								</h3>
+								<p class="text-xs text-muted-foreground">{m.tool_call_label()}</p>
+							</div>
+						</div>
+
+						<!-- Right: Status -->
+						<div class="flex items-center gap-2">
+							{#if part.state === "input-streaming"}
+								<div class="h-2 w-2 animate-pulse rounded-full bg-[#0056FE]"></div>
+								<span class="text-sm text-[#0056FE]">{m.tool_call_status_preparing()}</span>
+							{:else if part.state === "input-available"}
+								<div class="h-2 w-2 animate-pulse rounded-full bg-[#0056FE]"></div>
+								<span class="text-sm text-[#0056FE]">{m.tool_call_status_executing()}</span>
+							{:else if part.state === "output-available"}
+								<div class="h-2 w-2 rounded-full bg-[#38B865]"></div>
+								<span class="text-sm text-[#38B865]">{m.tool_call_status_success()}</span>
+							{:else if part.state === "output-error"}
+								<div class="h-2 w-2 rounded-full bg-[#D82525]"></div>
+								<span class="text-sm text-[#D82525]">{m.tool_call_status_error()}</span>
+							{/if}
+						</div>
+					</div>
+				</button>
 			{/if}
 		{/each}
+
 		{#if isStreamingText}
 			<div class="flex items-center gap-3 py-3 animate-in fade-in duration-300">
 				<div class="flex items-center justify-center">
@@ -181,6 +228,20 @@
 					{m.text_chat_responding()}...
 				</span>
 			</div>
+		{/if}
+
+		<!-- Tool Call Modal -->
+		{#if selectedToolPart}
+			<ToolCallModal
+				part={selectedToolPart}
+				bind:open={isToolModalOpen}
+				onOpenChange={(open) => {
+					isToolModalOpen = open;
+					if (!open) {
+						selectedToolPart = null;
+					}
+				}}
+			/>
 		{/if}
 
 		{@render messageFooter()}

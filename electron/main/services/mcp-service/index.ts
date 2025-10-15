@@ -1,8 +1,8 @@
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { McpServer } from "@shared/storage/mcp";
-import { type IpcMainInvokeEvent } from "electron";
 import { experimental_createMCPClient as createMCPClient } from "ai";
+import { type IpcMainInvokeEvent } from "electron";
 
 interface MCPClientWrapper {
 	mcpClient: Awaited<ReturnType<typeof createMCPClient>>;
@@ -25,12 +25,21 @@ export class McpService {
 				const command = parts[0];
 				const args = parts.slice(1);
 
-				console.log(parts, command, args);
+				console.log("[MCP] Creating stdio transport:", { command, args });
+				console.log("[MCP] Current PATH:", process.env.PATH);
+
+				const envVars = {
+					...(server.advancedSettings?.customEnvVars as Record<string, string> | undefined),
+				};
+
+				if (!envVars.PATH && process.env.PATH) {
+					envVars.PATH = process.env.PATH;
+				}
 
 				transport = new StdioClientTransport({
 					command,
 					args,
-					env: server.advancedSettings?.customEnvVars as Record<string, string> | undefined,
+					env: envVars,
 				});
 			} else if (server.type === "sse") {
 				if (!server.url) {
@@ -66,7 +75,19 @@ export class McpService {
 			this.clients.set(server.id, wrapper);
 			return wrapper;
 		} catch (error) {
-			console.error(`Failed to create MCP client for server ${server.name}:`, error);
+			console.error(`[MCP] Failed to create MCP client for server ${server.name}:`, error);
+
+			if (
+				error instanceof Error &&
+				(error.message.includes("ENOENT") || error.message.includes("command not found"))
+			) {
+				console.error(
+					`[MCP] Command not found: ${server.command}. This may be due to PATH issues.`,
+				);
+				console.error(`[MCP] Current PATH: ${process.env.PATH}`);
+				console.error("[MCP] If launching via double-click, ensure fix-path is loaded at startup.");
+			}
+
 			return null;
 		}
 	}

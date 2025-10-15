@@ -407,5 +407,15 @@
 	"mcp_tool_description": "描述",
 	"mcp_tool_input_schema": "输入参数",
 	"mcp_select_servers": "选择 MCP 服务器",
-	"mcp_confirm": "确认"
+	"mcp_confirm": "确认",
+	"tool_call_label": "工具调用",
+	"tool_call_status_preparing": "准备中...",
+	"tool_call_status_executing": "执行中...",
+	"tool_call_status_success": "成功",
+	"tool_call_status_error": "错误",
+	"tool_call_parameters": "参数",
+	"tool_call_result": "结果",
+	"tool_call_error_message": "错误",
+	"tool_call_no_result": "暂无结果",
+	"tool_call_close": "关闭"
 }

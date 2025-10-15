@@ -1,4 +1,6 @@
 /// <reference types="@electron-forge/plugin-vite/forge-vite-env" />
+import fixPath from "fix-path";
+fixPath();
 
 import { DEFAULT_SHORTCUTS } from "@shared/config/default-shortcuts";
 import type { ShortcutBinding, ShortcutScope } from "@shared/types/shortcut";

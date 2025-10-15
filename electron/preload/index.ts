@@ -88,6 +88,34 @@ if (process.contextIsolated) {
 				ipcRenderer.on(key, listener);
 				return () => ipcRenderer.removeListener(key, listener);
 			},
+			onUpdateChecking: (callback: () => void) => {
+				const listener = () => callback();
+				ipcRenderer.on("updater:update-checking", listener);
+				return () => ipcRenderer.removeListener("updater:update-checking", listener);
+			},
+			onUpdateAvailable: (callback: () => void) => {
+				const listener = () => callback();
+				ipcRenderer.on("updater:update-available", listener);
+				return () => ipcRenderer.removeListener("updater:update-available", listener);
+			},
+			onUpdateNotAvailable: (callback: () => void) => {
+				const listener = () => callback();
+				ipcRenderer.on("updater:update-not-available", listener);
+				return () => ipcRenderer.removeListener("updater:update-not-available", listener);
+			},
+			onUpdateDownloaded: (
+				callback: (data: { releaseNotes: string; releaseName: string }) => void,
+			) => {
+				const listener = (_: unknown, data: { releaseNotes: string; releaseName: string }) =>
+					callback(data);
+				ipcRenderer.on("updater:update-downloaded", listener);
+				return () => ipcRenderer.removeListener("updater:update-downloaded", listener);
+			},
+			onUpdateError: (callback: (data: { message: string }) => void) => {
+				const listener = (_: unknown, data: { message: string }) => callback(data);
+				ipcRenderer.on("updater:update-error", listener);
+				return () => ipcRenderer.removeListener("updater:update-error", listener);
+			},
 		});
 
 		// Expose shell window ID from process arguments

@@ -10,6 +10,7 @@ import { ShortcutService, shortcutService } from "./shortcut-service";
 import { StorageService, storageService } from "./storage-service";
 import { TabService, tabService } from "./tab-service";
 import { ThreadService, threadService } from "./thread-service";
+import { UpdaterService, updaterService } from "./updater-service";
 import { WindowService, windowService } from "./window-service";
 
 // Export service classes for type definitions
@@ -26,6 +27,7 @@ export {
 	StorageService,
 	TabService,
 	ThreadService,
+	UpdaterService,
 	WindowService,
 };
 
@@ -43,5 +45,6 @@ export {
 	storageService,
 	tabService,
 	threadService,
+	updaterService,
 	windowService,
 };

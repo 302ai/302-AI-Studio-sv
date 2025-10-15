@@ -24,7 +24,14 @@ jobs:
           - os: windows-latest
             platform: windows
           - os: macos-latest
+            arch: arm64
             platform: macos
+          - os: macos-13
+            arch: x64
+            platform: macos
+          # - os: macos-latest
+          #   arch: universal
+          #   platform: macos
           - os: ubuntu-latest
             platform: linux
 
