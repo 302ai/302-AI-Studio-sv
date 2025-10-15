@@ -19,8 +19,8 @@ jobs:
             arch: arm64
           - os: macos-13
             arch: x64
-          - os: macos-latest
-            arch: universal
+          # - os: macos-latest
+          #   arch: universal
           - os: ubuntu-latest
             arch: x64
           - os: windows-latest
