@@ -15,11 +15,14 @@ jobs:
     strategy:
       matrix:
         include:
+          # macOS arm64 - 使用 Apple Silicon runner
           - os: macos-latest
             arch: arm64
-          - os: macos-latest
+          # macOS x64 - 使用 Intel runner (macos-13 是最后的 Intel runner)
+          - os: macos-13
             arch: x64
-          - os: macos-latest
+          # macOS universal - 使用 Intel runner 以支持完整的 universal 构建
+          - os: macos-13
             arch: universal
           - os: ubuntu-latest
             arch: x64
