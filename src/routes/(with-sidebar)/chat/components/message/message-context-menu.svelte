@@ -5,14 +5,15 @@
 	interface Props {
 		onCopy?: () => void | Promise<void>;
 		onEdit?: () => void | Promise<void>;
+		onRegenerate?: () => void | Promise<void>;
 		onDelete?: () => void | Promise<void>;
 		children: import("svelte").Snippet;
 	}
 
-	let { onCopy, onEdit, onDelete, children }: Props = $props();
+	let { onCopy, onEdit, onRegenerate, onDelete, children }: Props = $props();
 
 	// 判断是否需要显示分隔线（在主要操作和删除操作之间）
-	const shouldShowSeparator = $derived((onCopy || onEdit) && onDelete);
+	const shouldShowSeparator = $derived((onCopy || onEdit || onRegenerate) && onDelete);
 </script>
 
 <ContextMenu.Root>
@@ -27,9 +28,17 @@
 			</ContextMenu.Item>
 		{/if}
 
+		<ContextMenu.Separator />
+
 		{#if onEdit}
 			<ContextMenu.Item onSelect={onEdit}>
 				{m.title_edit()}
+			</ContextMenu.Item>
+		{/if}
+
+		{#if onRegenerate}
+			<ContextMenu.Item onSelect={onRegenerate}>
+				{m.title_regenerate()}
 			</ContextMenu.Item>
 		{/if}
 

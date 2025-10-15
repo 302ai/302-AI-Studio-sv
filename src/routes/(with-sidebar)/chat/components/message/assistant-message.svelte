@@ -63,6 +63,10 @@
 			toast.error(m.toast_copied_failed());
 		}
 	}
+
+	function handleRegenerate() {
+		chatState.regenerateMessage(message.id);
+	}
 </script>
 
 {#snippet messageHeader(model: string)}
@@ -81,7 +85,7 @@
 	</div>
 {/snippet}
 
-<MessageContextMenu onCopy={handleCopyMessage}>
+<MessageContextMenu onCopy={handleCopyMessage} onRegenerate={handleRegenerate}>
 	<div class="group flex flex-col gap-2">
 		{@render messageHeader(message.metadata?.model || "gpt-4o")}
 
