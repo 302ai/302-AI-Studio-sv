@@ -170,6 +170,9 @@ importers:
       '@electron/osx-sign':
         specifier: ^2.2.0
         version: 2.2.0
+      '@electron/universal':
+        specifier: ^3.0.1
+        version: 3.0.1
       '@eslint/compat':
         specifier: ^1.4.0
         version: 1.4.0(eslint@9.36.0(jiti@2.5.1))
@@ -615,6 +618,11 @@ packages:
     engines: {node: '>=10.12.0'}
     hasBin: true
 
+  '@electron/asar@4.0.1':
+    resolution: {integrity: sha512-F4Ykm1jiBGY1WV/o8Q8oFW8Nq0u+S2/vPujzNJtdSJ6C4LHC4CiGLn7c17s7SolZ23gcvCebMncmZtNc+MkxPQ==}
+    engines: {node: '>=22.12.0'}
+    hasBin: true
+
   '@electron/fuses@2.0.0':
     resolution: {integrity: sha512-lyb1zK3YHeWUjaz7yiK0GnxSPduwASKMyiDbCtbn3spP6EEt+UWtktggWehG0icFrXAk3GwvcJ4nCrJO0N9IhQ==}
     engines: {node: '>=22.12.0'}
@@ -661,6 +669,10 @@ packages:
   '@electron/universal@2.0.3':
     resolution: {integrity: sha512-Wn9sPYIVFRFl5HmwMJkARCCf7rqK/EurkfQ/rJZ14mHP3iYTjZSIOSVonEAnhWeAXwtw7zOekGRlc6yTtZ0t+g==}
     engines: {node: '>=16.4'}
+
+  '@electron/universal@3.0.1':
+    resolution: {integrity: sha512-eIp536o/szgMUjK7gq+RqtUDoYzlV2u237/jts+ZAvZCFyrwO2yYVjg5BOiTM2trD5Ikfq9kDd1MZbuJHkEDNw==}
+    engines: {node: '>=22.12.0'}
 
   '@electron/windows-sign@1.2.2':
     resolution: {integrity: sha512-dfZeox66AvdPtb2lD8OsIIQh12Tp0GNCRUDfBHIKGpbmopZto2/A8nSpYYLoedPIHpqkeblZ/k8OV0Gy7PYuyQ==}
@@ -2065,6 +2077,10 @@ packages:
   commander@11.1.0:
     resolution: {integrity: sha512-yPVavfyCcRhmorC7rWlkHn15b4wDVgVmBA7kV4QVBsF7kv/9TKJAbAXVTxvTnwP8HHKjRCJDClKbciiYS7p0DQ==}
     engines: {node: '>=16'}
+
+  commander@13.1.0:
+    resolution: {integrity: sha512-/rFeCpNJQbhSZjGVwO9RFV3xPqbnERS8MmIQzCtD/zl6gpJuV/bMLuN92oG3F7d8oDEHHRrujSXNUr8fpjntKw==}
+    engines: {node: '>=18'}
 
   commander@5.1.0:
     resolution: {integrity: sha512-P0CysNDQ7rtVw4QIQtm+MRxV66vKFSvlsQvGYXZWR3qFU0jlMKHZZZgw8e+8DSah4UDKMqnknRDQz+xuQXQ/Zg==}
@@ -5527,6 +5543,12 @@ snapshots:
       glob: 7.2.3
       minimatch: 3.1.2
 
+  '@electron/asar@4.0.1':
+    dependencies:
+      commander: 13.1.0
+      glob: 11.0.3
+      minimatch: 10.0.3
+
   '@electron/fuses@2.0.0': {}
 
   '@electron/get@2.0.3':
@@ -5653,6 +5675,17 @@ snapshots:
       debug: 4.4.3
       dir-compare: 4.2.0
       fs-extra: 11.3.2
+      minimatch: 9.0.5
+      plist: 3.1.0
+    transitivePeerDependencies:
+      - supports-color
+
+  '@electron/universal@3.0.1':
+    dependencies:
+      '@electron/asar': 4.0.1
+      '@malept/cross-spawn-promise': 2.0.0
+      debug: 4.4.3
+      dir-compare: 4.2.0
       minimatch: 9.0.5
       plist: 3.1.0
     transitivePeerDependencies:
@@ -7144,6 +7177,8 @@ snapshots:
   comma-separated-tokens@2.0.3: {}
 
   commander@11.1.0: {}
+
+  commander@13.1.0: {}
 
   commander@5.1.0: {}
 
