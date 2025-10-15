@@ -92,7 +92,11 @@
 	</div>
 {/snippet}
 
-<MessageContextMenu onCopy={handleCopyMessage} onRegenerate={handleRegenerate} onDelete={handleDelete}>
+<MessageContextMenu
+	onCopy={handleCopyMessage}
+	onRegenerate={handleRegenerate}
+	onDelete={handleDelete}
+>
 	<div class="group flex flex-col gap-2">
 		{@render messageHeader(message.metadata?.model || "gpt-4o")}
 

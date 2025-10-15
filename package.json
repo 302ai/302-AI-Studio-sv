@@ -130,6 +130,7 @@
 		"electron-window-state": "^5.0.3",
 		"emoji-picker-element": "^1.27.0",
 		"es-toolkit": "^1.39.10",
+		"fix-path": "^5.0.0",
 		"get-port": "^7.1.0",
 		"hono": "^4.9.10",
 		"ky": "^1.11.0",
