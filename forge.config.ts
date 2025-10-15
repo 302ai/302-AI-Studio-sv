@@ -105,20 +105,25 @@ const getPackagerConfig = () => {
 	if (process.platform === "darwin") {
 		const macConfig: any = {
 			...baseConfig,
-			osxSign: {
+		};
+
+		// 只有在不跳过签名时才添加签名配置
+		// 这允许在构建 universal binary 前先打包未签名的 x64 和 arm64 版本
+		if (process.env.SKIP_CODESIGN !== "true") {
+			macConfig.osxSign = {
 				identity: "Developer ID Application: SONIER PTE. LTD.",
 				"hardened-runtime": true,
 				"gatekeeper-assess": false,
 				entitlements: "entitlements.plist",
 				"entitlements-inherit": "entitlements.plist",
-			},
-		};
+			};
 
-		macConfig.osxNotarize = {
-			appleId: process.env.APPLE_ID,
-			appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
-			teamId: process.env.APPLE_TEAM_ID,
-		};
+			macConfig.osxNotarize = {
+				appleId: process.env.APPLE_ID,
+				appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
+				teamId: process.env.APPLE_TEAM_ID,
+			};
+		}
 
 		return macConfig;
 	}

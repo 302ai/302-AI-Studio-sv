@@ -91,12 +91,14 @@ jobs:
         if: matrix.arch == 'universal'
         env:
           NODE_OPTIONS: --max-old-space-size=8192
+          SKIP_CODESIGN: true
         run: pnpm run package -- --arch=x64
 
       - name: Package arm64 (unsigned) for universal build
         if: matrix.arch == 'universal'
         env:
           NODE_OPTIONS: --max-old-space-size=8192
+          SKIP_CODESIGN: true
         run: pnpm run package -- --arch=arm64
 
       - name: Create universal binary
