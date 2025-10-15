@@ -5,6 +5,7 @@
 	"private": true,
 	"version": "25.42.2",
 	"type": "module",
+	"packageManager": "pnpm@10.15.1",
 	"main": ".vite/build/main/index.js",
 	"author": {
 		"name": "302.AI",
