@@ -10,11 +10,12 @@ import { clone } from "$lib/utils/clone";
 import { Chat } from "@ai-sdk/svelte";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
+import { nanoid } from "nanoid";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
 
-const { broadcastService, threadService } = window.electronAPI;
+const { broadcastService, threadService, storageService } = window.electronAPI;
 
 export interface Thread {
 	id: string;
@@ -416,6 +417,59 @@ class ChatState {
 		const updatedMessages = this.messages.filter((msg) => msg.id !== messageId);
 		chat.messages = updatedMessages;
 		persistedMessagesState.current = updatedMessages;
+	}
+
+	async createBranch(upToMessageId: string): Promise<string | null> {
+		try {
+			// 1. find the target message index
+			const messageIndex = this.messages.findIndex((msg) => msg.id === upToMessageId);
+			if (messageIndex === -1) {
+				console.error("Message not found:", upToMessageId);
+				return null;
+			}
+
+			// 2. slice messages
+			const branchMessages = clone(this.messages.slice(0, messageIndex + 1));
+
+			// 3. generate threadId
+			const newThreadId = nanoid();
+
+			// 4. clone thread data
+			const newThread: ThreadParmas = clone({
+				id: newThreadId,
+				title: `${this.title}`,
+				inputValue: "",
+				attachments: [],
+				mcpServers: this.mcpServers,
+				mcpServerIds: persistedChatParamsState.current.mcpServerIds || [],
+				isThinkingActive: this.isThinkingActive,
+				isOnlineSearchActive: this.isOnlineSearchActive,
+				isMCPActive: this.isMCPActive,
+				isPrivateChatActive: this.isPrivateChatActive,
+				selectedModel: this.selectedModel,
+				temperature: this.temperature,
+				topP: this.topP,
+				maxTokens: this.maxTokens,
+				frequencyPenalty: this.frequencyPenalty,
+				presencePenalty: this.presencePenalty,
+				updatedAt: new Date(),
+			});
+
+			// 5. save thread data
+			await storageService.setItem(`app-thread:${newThreadId}`, newThread);
+			await storageService.setItem(`app-chat-messages:${newThreadId}`, branchMessages);
+
+			// 6. add to thread list
+			await threadService.addThread(newThreadId);
+
+			// 7. broadcast thread list update
+			await broadcastService.broadcastToAll("thread-list-updated", {});
+
+			return newThreadId;
+		} catch (error) {
+			console.error("Failed to create branch:", error);
+			return null;
+		}
 	}
 
 	addAttachment(attachment: AttachmentFile) {

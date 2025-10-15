@@ -7,6 +7,7 @@
 	"check_update": "检查更新",
 	"common_actions": "操作",
 	"common_copy": "复制",
+	"common_create_branch": "创建分支",
 	"common_custom": "自定义",
 	"common_duplicate": "复制",
 	"hello_world": "Hello, {name} from zh!",

@@ -21,6 +21,7 @@
 	import { getLocale } from "$lib/paraglide/runtime";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
 	import { ChevronDown, Lightbulb } from "@lucide/svelte";
@@ -71,6 +72,21 @@
 	function handleDelete() {
 		chatState.deleteMessage(message.id);
 	}
+
+	async function handleCreateBranch() {
+		try {
+			const newThreadId = await chatState.createBranch(message.id);
+			if (newThreadId) {
+				// Open the new thread in a new tab
+				await tabBarState.handleNewTabForExistingThread(newThreadId);
+			} else {
+				toast.error(m.toast_unknown_error());
+			}
+		} catch (error) {
+			console.error("Failed to create branch:", error);
+			toast.error(m.toast_unknown_error());
+		}
+	}
 </script>
 
 {#snippet messageHeader(model: string)}
@@ -89,7 +105,12 @@
 	</div>
 {/snippet}
 
-<MessageContextMenu onCopy={handleCopyMessage} onRegenerate={handleRegenerate} onDelete={handleDelete}>
+<MessageContextMenu
+	onCopy={handleCopyMessage}
+	onRegenerate={handleRegenerate}
+	onCreateBranch={handleCreateBranch}
+	onDelete={handleDelete}
+>
 	<div class="group flex flex-col gap-2">
 		{@render messageHeader(message.metadata?.model || "gpt-4o")}
 

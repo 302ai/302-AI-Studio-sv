@@ -6,11 +6,12 @@
 		onCopy?: () => void | Promise<void>;
 		onEdit?: () => void | Promise<void>;
 		onRegenerate?: () => void | Promise<void>;
+		onCreateBranch?: () => void | Promise<void>;
 		onDelete?: () => void | Promise<void>;
 		children: import("svelte").Snippet;
 	}
 
-	let { onCopy, onEdit, onRegenerate, onDelete, children }: Props = $props();
+	let { onCopy, onEdit, onRegenerate, onCreateBranch, onDelete, children }: Props = $props();
 </script>
 
 <ContextMenu.Root>
@@ -36,6 +37,12 @@
 		{#if onRegenerate}
 			<ContextMenu.Item onSelect={onRegenerate}>
 				{m.title_regenerate()}
+			</ContextMenu.Item>
+		{/if}
+
+		{#if onCreateBranch}
+			<ContextMenu.Item onSelect={onCreateBranch}>
+				{m.common_create_branch()}
 			</ContextMenu.Item>
 		{/if}
 

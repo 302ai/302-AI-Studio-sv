@@ -9,6 +9,7 @@
 	"check_update": "Check",
 	"common_actions": "Actions",
 	"common_copy": "Copy",
+	"common_create_branch": "Create Branch",
 	"common_custom": "Custom",
 	"common_duplicate": "Duplicate",
 	"hello_world": "Hello, {name} from en!",
