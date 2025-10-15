@@ -10,13 +10,29 @@
 
 <script lang="ts">
 	import { ViewerPanel } from "$lib/components/buss/viewer/index.js";
+	import { m } from "$lib/paraglide/messages";
+	import { chatState } from "$lib/stores/chat-state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
 	import type { AttachmentFile } from "@shared/types";
+	import { toast } from "svelte-sonner";
 	import MessageActions from "./message-actions.svelte";
 	import MessageAttachment from "./message-attachment.svelte";
+	import MessageContextMenu from "./message-context-menu.svelte";
+	import MessageEditDialog from "./message-edit-dialog.svelte";
 
 	let { message }: Props = $props();
 	let selectedAttachment = $state<AttachmentFile | null>(null);
+	let isEditDialogOpen = $state(false);
+	let editContent = $state("");
+
+	async function handleCopy(content: string) {
+		try {
+			await navigator.clipboard.writeText(content);
+			toast.success(m.toast_copied_success());
+		} catch {
+			toast.error(m.toast_copied_failed());
+		}
+	}
 
 	const attachments = $derived<AttachmentFile[]>(
 		(message.metadata?.attachments || []).map((att) => ({
@@ -46,6 +62,50 @@
 	function closeViewer() {
 		selectedAttachment = null;
 	}
+
+	function getMessageContent(): string {
+		return displayParts
+			.filter((part) => part.type === "text")
+			.map((part) => part.text)
+			.join("");
+	}
+
+	function handleCopyMessage() {
+		const textContent = getMessageContent();
+		if (textContent) {
+			handleCopy(textContent);
+		}
+	}
+
+	function handleEditClick() {
+		editContent = getMessageContent();
+		isEditDialogOpen = true;
+	}
+
+	function handleEditCancel() {
+		isEditDialogOpen = false;
+		editContent = "";
+	}
+
+	function handleEditConfirm() {
+		chatState.updateMessage(message.id, editContent.trim());
+		isEditDialogOpen = false;
+		editContent = "";
+	}
+
+	function handleRegenerate() {
+		if (isEditDialogOpen && editContent.trim() !== getMessageContent()) {
+			chatState.updateMessage(message.id, editContent.trim());
+			isEditDialogOpen = false;
+			editContent = "";
+		}
+
+		chatState.regenerateMessage(message.id);
+	}
+
+	function handleContentChange(value: string) {
+		editContent = value;
+	}
 </script>
 
 {#snippet messageFooter()}
@@ -54,29 +114,41 @@
 	</div>
 {/snippet}
 
-<div class="group flex flex-col items-end gap-2">
-	<div
-		class="flex max-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg"
-	>
-		{#if attachments.length > 0}
-			<div class="space-y-2">
-				{#each attachments as attachment (attachment.id)}
-					<MessageAttachment {attachment} {openViewer} />
+<MessageContextMenu onCopy={handleCopyMessage} onEdit={handleEditClick}>
+	<div class="group flex flex-col items-end gap-2">
+		<div
+			class="flex max-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg"
+		>
+			{#if attachments.length > 0}
+				<div class="space-y-2">
+					{#each attachments as attachment (attachment.id)}
+						<MessageAttachment {attachment} {openViewer} />
+					{/each}
+				</div>
+			{/if}
+
+			<div>
+				{#each displayParts as part, partIndex (partIndex)}
+					{#if part.type === "text"}
+						<div>{part.text}</div>
+					{/if}
 				{/each}
 			</div>
-		{/if}
-
-		<div>
-			{#each displayParts as part, partIndex (partIndex)}
-				{#if part.type === "text"}
-					<div>{part.text}</div>
-				{/if}
-			{/each}
 		</div>
+		{@render messageFooter()}
 	</div>
+</MessageContextMenu>
 
-	{@render messageFooter()}
-</div>
+<MessageEditDialog
+	bind:open={isEditDialogOpen}
+	{editContent}
+	originalContent={getMessageContent()}
+	showRegenerateButton={true}
+	onCancel={handleEditCancel}
+	onConfirm={handleEditConfirm}
+	onRegenerate={handleRegenerate}
+	onContentChange={handleContentChange}
+/>
 
 <!-- Viewer Panel Modal -->
 {#if selectedAttachment}

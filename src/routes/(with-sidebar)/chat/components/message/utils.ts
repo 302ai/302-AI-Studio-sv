@@ -1,5 +1,6 @@
 import { m } from "$lib/paraglide/messages";
 import type { Locale as ParaglideLocale } from "$lib/paraglide/runtime";
+import type { ChatMessage } from "$lib/types/chat";
 import {
 	formatDistanceToNow,
 	type FormatDistanceFnOptions,
@@ -41,4 +42,28 @@ export function formatTimeAgo(createTime: string, localeCode: ParaglideLocale) {
 		addSuffix: true,
 		locale: customLocale,
 	});
+}
+
+/**
+ * Extract content from assistant message, including both reasoning and text parts
+ * @param message - The assistant chat message
+ * @returns Formatted content with reasoning wrapped in <thinking> tags
+ */
+export function getAssistantMessageContent(message: ChatMessage): string {
+	const textParts = message.parts.filter((part) => part.type === "text");
+	const reasoningParts = message.parts.filter((part) => part.type === "reasoning");
+
+	const textContent = textParts.map((part) => part.text).join("");
+	const reasoningContent = reasoningParts
+		.map((part) => `<thinking>\n${part.text}\n</thinking>`)
+		.join("\n");
+
+	if (reasoningContent && textContent) {
+		return `${reasoningContent}\n\n${textContent}`;
+	} else if (textContent) {
+		return textContent;
+	} else if (reasoningContent) {
+		return reasoningContent;
+	}
+	return "";
 }
