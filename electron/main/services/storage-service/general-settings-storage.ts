@@ -15,6 +15,14 @@ export class GeneralSettingsStorage extends StorageService<GeneralSettingsState>
 		}
 		return result.language;
 	}
+
+	async getAutoUpdate(): Promise<boolean> {
+		const result = await this.getItemInternal("state");
+		if (!result) {
+			return false;
+		}
+		return result.autoUpdate ?? false;
+	}
 }
 
 export const generalSettingsStorage = new GeneralSettingsStorage();

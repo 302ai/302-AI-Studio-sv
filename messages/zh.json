@@ -417,5 +417,11 @@
 	"tool_call_result": "结果",
 	"tool_call_error_message": "错误",
 	"tool_call_no_result": "暂无结果",
-	"tool_call_close": "关闭"
+	"tool_call_close": "关闭",
+	"checking_update": "检查中...",
+	"update_available": "发现新版本",
+	"update_not_available": "当前已是最新版本",
+	"update_error": "检查更新失败",
+	"downloading_update": "下载中...",
+	"restart_to_update": "立即重启"
 }

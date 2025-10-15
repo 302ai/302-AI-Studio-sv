@@ -421,5 +421,11 @@
 	"tool_call_result": "Result",
 	"tool_call_error_message": "Error",
 	"tool_call_no_result": "No result available",
-	"tool_call_close": "Close"
+	"tool_call_close": "Close",
+	"checking_update": "Checking...",
+	"update_available": "New version available",
+	"update_not_available": "You're up to date",
+	"update_error": "Failed to check for updates",
+	"downloading_update": "Downloading...",
+	"restart_to_update": "Restart to Update"
 }

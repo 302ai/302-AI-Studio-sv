@@ -88,6 +88,8 @@ class GeneralSettingsManager {
 
 	setAutoUpdate(value: boolean): void {
 		persistedGeneralSettings.current = { ...persistedGeneralSettings.current, autoUpdate: value };
+		// Notify main process to enable/disable auto-check
+		window.electronAPI.updaterService.setAutoUpdate(value);
 	}
 
 	update(partial: Partial<GeneralSettingsState>): void {

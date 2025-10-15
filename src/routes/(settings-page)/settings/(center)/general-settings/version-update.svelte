@@ -5,6 +5,7 @@
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { generalSettings } from "$lib/stores/general-settings.state.svelte";
+	import Loader2Icon from "@lucide/svelte/icons/loader-2";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
@@ -18,66 +19,79 @@
 	} = window.electronIPC;
 
 	let checking = $state(false);
+	let downloading = $state(false);
+	let updateDownloaded = $state(false);
+
+	let isUpdating = $derived(checking || downloading);
+	let statusText = $derived(
+		updateDownloaded
+			? m.restart_to_update()
+			: checking
+				? m.checking_update()
+				: downloading
+					? m.downloading_update()
+					: m.check_update(),
+	);
 
 	async function handleCheckUpdate() {
 		checking = true;
-		console.log("Checking for updates...");
 		try {
 			await updaterService.checkForUpdatesManually();
-		} catch (error) {
-			console.error("Failed to check for updates:", error);
-			toast.error("检查更新失败");
+		} catch (_error) {
+			toast.error(m.update_error());
 			checking = false;
 		}
 	}
 
-	onMount(() => {
-		console.log("[Frontend] Registering update event listeners...");
-		console.log("[Frontend] window.electronIPC available:", !!window.electronIPC);
-		console.log("[Frontend] onUpdateChecking available:", !!window.electronIPC?.onUpdateChecking);
+	async function handleRestartToUpdate() {
+		try {
+			await updaterService.quitAndInstall();
+		} catch (_error) {
+			toast.error(m.update_error());
+		}
+	}
 
+	onMount(async () => {
+		try {
+			const isDownloaded = await updaterService.isUpdateDownloaded();
+			updateDownloaded = isDownloaded;
+		} catch (error) {
+			console.error("Failed to check update status:", error);
+		}
+	});
+
+	onMount(() => {
 		const cleanupChecking = onUpdateChecking(() => {
-			console.log("[Frontend] Received: update-checking");
 			checking = true;
-			toast.info("正在检查更新...");
 		});
 
 		const cleanupAvailable = onUpdateAvailable(() => {
-			console.log("[Frontend] Received: update-available");
 			checking = false;
-			toast.success("发现新版本！正在下载...");
+			downloading = true;
+			toast.success(m.update_available());
 		});
 
 		const cleanupNotAvailable = onUpdateNotAvailable(() => {
-			console.log("[Frontend] Received: update-not-available");
 			checking = false;
-			toast.success("当前已是最新版本");
+			downloading = false;
+			toast.success(m.update_not_available());
 		});
 
-		const cleanupDownloaded = onUpdateDownloaded((data) => {
-			console.log("[Frontend] Received: update-downloaded", data);
+		const cleanupDownloaded = onUpdateDownloaded((_data) => {
 			checking = false;
-			toast.success(`新版本 ${data.releaseName} 下载完成！`, {
-				description: "重启应用以安装更新",
-				action: {
-					label: "重启",
-					onClick: () => updaterService.quitAndInstall(),
-				},
-			});
+			downloading = false;
+			updateDownloaded = true;
 		});
 
 		const cleanupError = onUpdateError((data) => {
-			console.log("[Frontend] Received: update-error", data);
 			checking = false;
-			toast.error("更新失败", {
+			downloading = false;
+			toast.error(m.update_error(), {
 				description: data.message,
 			});
 		});
 
-		console.log("[Frontend] Update event listeners registered");
-
 		return () => {
-			console.log("[Frontend] Cleaning up update event listeners");
 			cleanupChecking?.();
 			cleanupAvailable?.();
 			cleanupNotAvailable?.();
@@ -95,8 +109,15 @@
 		onCheckedChange={(v) => generalSettings.setAutoUpdate(v)}
 	/>
 	{#snippet updateButton()}
-		<Button size="sm" onclick={handleCheckUpdate} disabled={checking}>
-			{checking ? "检查中..." : m.check_update()}
+		<Button
+			size="sm"
+			onclick={updateDownloaded ? handleRestartToUpdate : handleCheckUpdate}
+			disabled={isUpdating}
+		>
+			{statusText}
+			{#if isUpdating}
+				<Loader2Icon class="animate-spin w-4 h-4" />
+			{/if}
 		</Button>
 	{/snippet}
 
