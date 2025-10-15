@@ -11,9 +11,6 @@
 	}
 
 	let { onCopy, onEdit, onRegenerate, onDelete, children }: Props = $props();
-
-	// 判断是否需要显示分隔线（在主要操作和删除操作之间）
-	const shouldShowSeparator = $derived((onCopy || onEdit || onRegenerate) && onDelete);
 </script>
 
 <ContextMenu.Root>
@@ -40,14 +37,6 @@
 			<ContextMenu.Item onSelect={onRegenerate}>
 				{m.title_regenerate()}
 			</ContextMenu.Item>
-		{/if}
-
-		{#if shouldShowSeparator}
-			<ContextMenu.Separator />
-		{/if}
-
-		{#if onDelete}
-			<ContextMenu.Item onSelect={onDelete}>删除</ContextMenu.Item>
 		{/if}
 	</ContextMenu.Content>
 </ContextMenu.Root>
