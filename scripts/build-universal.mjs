@@ -21,7 +21,7 @@ async function buildUniversal() {
 	const universalAppPath = join(
 		projectRoot,
 		"out",
-		"302-AI-Studio-darwin-universal",
+		"302 AI Studio-darwin-universal",
 		"302 AI Studio.app",
 	);
 
