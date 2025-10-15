@@ -404,6 +404,12 @@ class ChatState {
 		chat.messages = updatedMessages;
 	}
 
+	deleteMessage(messageId: string) {
+		const updatedMessages = this.messages.filter((msg) => msg.id !== messageId);
+		chat.messages = updatedMessages;
+		persistedMessagesState.current = updatedMessages;
+	}
+
 	addAttachment(attachment: AttachmentFile) {
 		this.attachments = [...this.attachments, attachment];
 	}

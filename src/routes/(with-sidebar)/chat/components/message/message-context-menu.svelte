@@ -38,5 +38,11 @@
 				{m.title_regenerate()}
 			</ContextMenu.Item>
 		{/if}
+
+		{#if onDelete}
+			<ContextMenu.Item onSelect={onDelete}>
+				{m.text_button_delete()}
+			</ContextMenu.Item>
+		{/if}
 	</ContextMenu.Content>
 </ContextMenu.Root>

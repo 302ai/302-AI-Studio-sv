@@ -106,6 +106,10 @@
 	function handleContentChange(value: string) {
 		editContent = value;
 	}
+
+	function handleDelete() {
+		chatState.deleteMessage(message.id);
+	}
 </script>
 
 {#snippet messageFooter()}
@@ -114,7 +118,7 @@
 	</div>
 {/snippet}
 
-<MessageContextMenu onCopy={handleCopyMessage} onEdit={handleEditClick}>
+<MessageContextMenu onCopy={handleCopyMessage} onEdit={handleEditClick} onDelete={handleDelete}>
 	<div class="group flex flex-col items-end gap-2">
 		<div
 			class="flex max-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg"

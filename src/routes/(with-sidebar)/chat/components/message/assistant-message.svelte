@@ -67,6 +67,10 @@
 	function handleRegenerate() {
 		chatState.regenerateMessage(message.id);
 	}
+
+	function handleDelete() {
+		chatState.deleteMessage(message.id);
+	}
 </script>
 
 {#snippet messageHeader(model: string)}
@@ -85,7 +89,7 @@
 	</div>
 {/snippet}
 
-<MessageContextMenu onCopy={handleCopyMessage} onRegenerate={handleRegenerate}>
+<MessageContextMenu onCopy={handleCopyMessage} onRegenerate={handleRegenerate} onDelete={handleDelete}>
 	<div class="group flex flex-col gap-2">
 		{@render messageHeader(message.metadata?.model || "gpt-4o")}
 
