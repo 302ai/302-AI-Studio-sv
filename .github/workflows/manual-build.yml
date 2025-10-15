@@ -58,7 +58,7 @@ jobs:
           cache: "pnpm"
 
       - name: Import Code-Signing Certificates (macOS)
-        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.os == 'macos-latest'
+        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && startsWith(matrix.os, 'macos')
         uses: Apple-Actions/import-codesign-certs@v5
         with:
           p12-file-base64: ${{ secrets.MAC_CERTS }}
