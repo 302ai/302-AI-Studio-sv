@@ -96,6 +96,8 @@
 
 			autoUseTools = server.advancedSettings?.autoUseTool ?? true;
 			keepConnection = server.advancedSettings?.keepLongTaskConnection ?? false;
+
+			handleRefreshTools();
 		}
 	});
 

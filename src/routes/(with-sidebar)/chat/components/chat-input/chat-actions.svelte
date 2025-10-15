@@ -8,12 +8,27 @@
 	import { AttachmentUploader } from "../attachment";
 	import ParametersOverlay from "./parameters-overlay.svelte";
 	import ParametersPanel from "./parameters-panel.svelte";
+	import { McpServerSelector } from "$lib/components/buss/mcp-server-selector";
 
 	let actionDisabled = $derived(chatState.providerType !== "302ai");
 	let isParametersOpen = $state(false);
+	let isMCPSelectorOpen = $state(false);
 
 	function handleParametersClose() {
 		isParametersOpen = false;
+	}
+
+	function handleMCPSelectorClose() {
+		isMCPSelectorOpen = false;
+	}
+
+	function handleMCPClick() {
+		isMCPSelectorOpen = true;
+	}
+
+	function handleMCPServerConfirm(selectedIds: string[]) {
+		chatState.handleMCPServerIdsChange(selectedIds);
+		chatState.handleMCPActiveChange(selectedIds.length > 0);
 	}
 </script>
 
@@ -50,7 +65,7 @@
 			chatState.isMCPActive && "!bg-chat-action-active hover:!bg-chat-action-active",
 		)}
 		tooltip={m.title_mcpServers()}
-		onclick={() => chatState.handleMCPActiveChange(!chatState.isMCPActive)}
+		onclick={handleMCPClick}
 	>
 		<img
 			src={mcpIcon}
@@ -62,6 +77,13 @@
 			)}
 		/>
 	</ButtonWithTooltip>
+
+	<McpServerSelector
+		bind:open={isMCPSelectorOpen}
+		selectedServerIds={chatState.mcpServerIds}
+		onClose={handleMCPSelectorClose}
+		onConfirm={handleMCPServerConfirm}
+	/>
 {/snippet}
 
 {#snippet actionSetParameters()}

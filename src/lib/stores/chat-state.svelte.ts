@@ -33,6 +33,7 @@ const initialThread: ThreadParmas = clone(
 		inputValue: "",
 		attachments: [],
 		mcpServers: [],
+		mcpServerIds: [],
 		isThinkingActive: false,
 		isOnlineSearchActive: false,
 		isMCPActive: false,
@@ -87,6 +88,13 @@ class ChatState {
 	}
 	set mcpServers(value: MCPServer[]) {
 		persistedChatParamsState.current.mcpServers = value;
+	}
+
+	get mcpServerIds(): string[] {
+		return persistedChatParamsState.current.mcpServerIds;
+	}
+	set mcpServerIds(value: string[]) {
+		persistedChatParamsState.current.mcpServerIds = value;
 	}
 
 	get isThinkingActive(): boolean {
@@ -428,6 +436,10 @@ class ChatState {
 		this.isMCPActive = active;
 	}
 
+	handleMCPServerIdsChange(serverIds: string[]) {
+		this.mcpServerIds = serverIds;
+	}
+
 	handleSelectedModelChange(model: Model | null) {
 		this.selectedModel = model;
 	}
@@ -488,6 +500,7 @@ export const chat = new Chat({
 			isThinkingActive: persistedChatParamsState.current.isThinkingActive,
 			isOnlineSearchActive: persistedChatParamsState.current.isOnlineSearchActive,
 			isMCPActive: persistedChatParamsState.current.isMCPActive,
+			mcpServerIds: persistedChatParamsState.current.mcpServerIds,
 
 			autoParseUrl: preferencesSettings.autoParseUrl,
 

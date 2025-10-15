@@ -48,6 +48,7 @@ export class TabStorage extends StorageService<TabState> {
 				inputValue: "",
 				attachments: [],
 				mcpServers: [],
+				mcpServerIds: [],
 				isThinkingActive: false,
 				isOnlineSearchActive: false,
 				isMCPActive: false,

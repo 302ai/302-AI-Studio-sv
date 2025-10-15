@@ -582,6 +582,7 @@ export class TabService {
 				inputValue: "",
 				attachments: [],
 				mcpServers: [],
+				mcpServerIds: [],
 				isThinkingActive: false,
 				isOnlineSearchActive: false,
 				isMCPActive: false,

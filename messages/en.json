@@ -408,5 +408,7 @@
 	"mcp_tool_details": "Tool Details",
 	"mcp_tool_name": "Name",
 	"mcp_tool_description": "Description",
-	"mcp_tool_input_schema": "Input Schema"
+	"mcp_tool_input_schema": "Input Schema",
+	"mcp_select_servers": "Select MCP Servers",
+	"mcp_confirm": "Confirm"
 }

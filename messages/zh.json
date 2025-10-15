@@ -404,5 +404,7 @@
 	"mcp_tool_details": "工具详情",
 	"mcp_tool_name": "名称",
 	"mcp_tool_description": "描述",
-	"mcp_tool_input_schema": "输入参数"
+	"mcp_tool_input_schema": "输入参数",
+	"mcp_select_servers": "选择 MCP 服务器",
+	"mcp_confirm": "确认"
 }
