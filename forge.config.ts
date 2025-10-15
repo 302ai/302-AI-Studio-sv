@@ -98,7 +98,7 @@ const getPackagerConfig = () => {
 	const baseConfig = {
 		asar: true,
 		icon: "static/icon",
-		executableName: "302-ai-studio",
+		executableName: "302AIStudio",
 		appBundleId: "com.302ai.302aistudio",
 	};
 
@@ -132,26 +132,30 @@ const config: ForgeConfig = {
 	makers: [
 		new MakerSquirrel(
 			{
-				name: "302-ai-studio",
+				name: "302AIStudio",
 				setupIcon: "static/icon.ico",
 				iconUrl: "https://file.302.ai/gpt/playground/20250925/69b7db4b8f154fe7ad9397ba50f827b9.ico",
 			},
 			["win32"],
 		),
 		new MakerWix({
+			name: "302AIStudio",
 			icon: "static/icon.ico",
 		}),
 		new MakerZIP({}, ["darwin", "win32"]),
 		new MakerDMG({
+			name: "302AIStudio",
 			format: "ULFO",
 		}),
 		new MakerRpm({
 			options: {
+				name: "302AIStudio",
 				icon: "static/icon.png",
 			},
 		}),
 		new MakerDeb({
 			options: {
+				name: "302AIStudio",
 				icon: "static/icon.png",
 			},
 		}),
@@ -209,6 +213,10 @@ const config: ForgeConfig = {
 			[FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
 			[FuseV1Options.OnlyLoadAppFromAsar]: true,
 		}),
+		{
+			name: "@electron-forge/plugin-auto-unpack-natives",
+			config: {},
+		},
 	],
 };
 

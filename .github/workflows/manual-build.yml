@@ -21,12 +21,21 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: windows-latest
-            platform: windows
           - os: macos-latest
+            arch: arm64
+            platform: macos
+          - os: macos-latest
+            arch: x64
+            platform: macos
+          - os: macos-latest
+            arch: universal
             platform: macos
           - os: ubuntu-latest
+            arch: x64
             platform: linux
+          - os: windows-latest
+            arch: x64
+            platform: windows
 
     steps:
       - name: Check platform selection
@@ -82,7 +91,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: pnpm run make
+        run: pnpm run make -- --arch=${{ matrix.arch }}
 
       - name: Upload Windows artifacts
         if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'windows') && matrix.os == 'windows-latest'
@@ -98,7 +107,7 @@ jobs:
         if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.os == 'macos-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: macos-build-${{ github.run_number }}
+          name: macos-${{ matrix.arch }}-build-${{ github.run_number }}
           path: |
             out/make/*.dmg
             out/make/zip/**/*
