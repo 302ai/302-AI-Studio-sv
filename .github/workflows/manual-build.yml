@@ -83,6 +83,7 @@ jobs:
       - name: Build application
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         env:
+          NODE_ENV: production
           # macOS 签名和公证环境变量
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}

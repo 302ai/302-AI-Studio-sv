@@ -78,6 +78,7 @@ jobs:
       - name: Build and release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_ENV: production
           NODE_OPTIONS: --max-old-space-size=8192
           # macOS 签名和公证环境变量
           APPLE_ID: ${{ secrets.APPLE_ID }}
