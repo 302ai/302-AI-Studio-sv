@@ -233,6 +233,8 @@ app.post("/chat/openai", async (c) => {
 		maxTokens,
 		frequencyPenalty,
 		presencePenalty,
+		isMCPActive,
+		mcpServerIds = [],
 		messages,
 		speedOptions,
 	} = await c.req.json<{
@@ -244,6 +246,8 @@ app.post("/chat/openai", async (c) => {
 		maxTokens?: number;
 		frequencyPenalty?: number;
 		presencePenalty?: number;
+		isMCPActive?: boolean;
+		mcpServerIds?: string[];
 		speedOptions?: {
 			enabled: boolean;
 			speed: "slow" | "normal" | "fast";
@@ -264,9 +268,24 @@ app.post("/chat/openai", async (c) => {
 		],
 	});
 
+	// Get MCP tools if MCP is active
+	let mcpTools = undefined;
+	if (isMCPActive && mcpServerIds.length > 0) {
+		try {
+			const allServers = await storageService.getItemInternal("app-mcp-servers");
+			if (allServers) {
+				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
+				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+			}
+		} catch (error) {
+			console.error("Failed to load MCP tools:", error);
+		}
+	}
+
 	const streamTextOptions = {
 		model: wrapModel,
 		messages: convertToModelMessages(messages),
+		...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
 	};
 
 	addDefinedParams(streamTextOptions, {
@@ -308,6 +327,8 @@ app.post("/chat/anthropic", async (c) => {
 		maxTokens,
 		frequencyPenalty,
 		presencePenalty,
+		isMCPActive,
+		mcpServerIds = [],
 		messages,
 		speedOptions,
 	} = await c.req.json<{
@@ -319,6 +340,8 @@ app.post("/chat/anthropic", async (c) => {
 		maxTokens?: number;
 		frequencyPenalty?: number;
 		presencePenalty?: number;
+		isMCPActive?: boolean;
+		mcpServerIds?: string[];
 		speedOptions?: {
 			enabled: boolean;
 			speed: "slow" | "normal" | "fast";
@@ -339,9 +362,24 @@ app.post("/chat/anthropic", async (c) => {
 		],
 	});
 
+	// Get MCP tools if MCP is active
+	let mcpTools = undefined;
+	if (isMCPActive && mcpServerIds.length > 0) {
+		try {
+			const allServers = await storageService.getItemInternal("app-mcp-servers");
+			if (allServers) {
+				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
+				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+			}
+		} catch (error) {
+			console.error("Failed to load MCP tools:", error);
+		}
+	}
+
 	const streamTextOptions = {
 		model: wrapModel,
 		messages: convertToModelMessages(messages),
+		...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
 	};
 
 	addDefinedParams(streamTextOptions, {
@@ -383,6 +421,8 @@ app.post("/chat/gemini", async (c) => {
 		maxTokens,
 		frequencyPenalty,
 		presencePenalty,
+		isMCPActive,
+		mcpServerIds = [],
 		messages,
 		speedOptions,
 	} = await c.req.json<{
@@ -394,6 +434,8 @@ app.post("/chat/gemini", async (c) => {
 		maxTokens?: number;
 		frequencyPenalty?: number;
 		presencePenalty?: number;
+		isMCPActive?: boolean;
+		mcpServerIds?: string[];
 		speedOptions?: {
 			enabled: boolean;
 			speed: "slow" | "normal" | "fast";
@@ -414,9 +456,24 @@ app.post("/chat/gemini", async (c) => {
 		],
 	});
 
+	// Get MCP tools if MCP is active
+	let mcpTools = undefined;
+	if (isMCPActive && mcpServerIds.length > 0) {
+		try {
+			const allServers = await storageService.getItemInternal("app-mcp-servers");
+			if (allServers) {
+				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
+				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+			}
+		} catch (error) {
+			console.error("Failed to load MCP tools:", error);
+		}
+	}
+
 	const streamTextOptions = {
 		model: wrapModel,
 		messages: convertToModelMessages(messages),
+		...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
 	};
 
 	addDefinedParams(streamTextOptions, {
