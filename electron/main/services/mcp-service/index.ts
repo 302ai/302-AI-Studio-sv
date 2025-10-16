@@ -116,11 +116,43 @@ export class McpService {
 			}
 
 			const toolsObject = await wrapper.mcpClient.tools();
-			const tools = Object.entries(toolsObject).map(([name, _tool]) => ({
-				name,
-				description: _tool.description || "",
-				inputSchema: {},
-			}));
+			const tools = Object.entries(toolsObject).map(([name, _tool]) => {
+				// Try to serialize the inputSchema
+				let inputSchema: Record<string, unknown> = {};
+				if (_tool.inputSchema) {
+					try {
+						// FlexibleSchema might have a jsonSchema property or be directly serializable
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						const schema = _tool.inputSchema as any;
+
+						// Check if it has a jsonSchema property (common in AI SDK)
+						if (schema.jsonSchema) {
+							inputSchema = schema.jsonSchema;
+						} else if (schema._def?.jsonSchema) {
+							inputSchema = schema._def.jsonSchema;
+						} else {
+							// Try direct serialization as fallback
+							inputSchema = JSON.parse(JSON.stringify(_tool.inputSchema));
+						}
+
+						// If the result still has a jsonSchema property, unwrap it
+						// eslint-disable-next-line @typescript-eslint/no-explicit-any
+						if (inputSchema && (inputSchema as any).jsonSchema) {
+							// eslint-disable-next-line @typescript-eslint/no-explicit-any
+							inputSchema = (inputSchema as any).jsonSchema;
+						}
+					} catch (error) {
+						console.warn(`Failed to serialize inputSchema for tool ${name}:`, error);
+						inputSchema = {};
+					}
+				}
+
+				return {
+					name,
+					description: _tool.description || "",
+					inputSchema,
+				};
+			});
 
 			return { isOk: true, tools };
 		} catch (error) {
