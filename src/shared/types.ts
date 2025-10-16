@@ -140,3 +140,10 @@ export interface ShellWindowFullscreenChange {
 	windowId: number;
 	isFullScreen: boolean;
 }
+
+export interface ImportResult {
+	success: boolean;
+	message: string;
+	importedFiles?: number;
+	backupPath?: string;
+}

@@ -1,12 +1,46 @@
 <script lang="ts">
-	import { m } from "$lib/paraglide/messages.js";
 	import SettingInfoItem from "$lib/components/buss/settings/setting-info-item.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
+	import { m } from "$lib/paraglide/messages.js";
 	import { Upload } from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
 
-	function handleImport() {
-		console.log("Importing data...");
+	async function handleImport() {
+		try {
+			const { dataService } = window.electronAPI;
+			const result = await dataService.importStorage();
+
+			if (result.success) {
+				// Show success message
+				toast.success(result.message, {
+					description: m.settings_importSuccess({
+						count: result.importedFiles || 0,
+					}),
+					duration: 3000,
+				});
+
+				// Auto restart app after 2 seconds
+				setTimeout(() => {
+					toast.info(m.settings_restartingApp(), {
+						duration: 2000,
+					});
+
+					// Restart the entire Electron app
+					setTimeout(() => {
+						window.electronAPI.appService.restartApp();
+						// window.location.reload();
+					}, 1000);
+				}, 1500);
+			} else {
+				console.log("取消导入");
+			}
+		} catch (error) {
+			console.error("Import error:", error);
+			toast.error(m.settings_importFailed(), {
+				description: error instanceof Error ? error.message : "Unknown error",
+			});
+		}
 	}
 </script>
 
