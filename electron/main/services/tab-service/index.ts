@@ -880,6 +880,37 @@ export class TabService {
 			return false;
 		}
 	}
+
+	/**
+	 * Clear messages for a specific tab by reloading its WebContentsView
+	 */
+	async handleClearTabMessages(
+		_event: IpcMainInvokeEvent,
+		tabId: string,
+		threadId: string,
+	): Promise<boolean> {
+		console.log(`[handleClearTabMessages] Clearing messages for tab ${tabId}, thread ${threadId}`);
+
+		try {
+			// Clear messages in storage
+			await storageService.setItemInternal(`app-chat-messages:${threadId}`, []);
+
+			// Get the tab's WebContentsView
+			const view = this.tabViewMap.get(tabId);
+			if (isUndefined(view) || view.webContents.isDestroyed()) {
+				console.warn(`[handleClearTabMessages] View not found or destroyed for tab ${tabId}`);
+				return true; // Storage was cleared, which is the main goal
+			}
+
+			// Send a message to the tab to clear its in-memory state
+			view.webContents.send("tab:clear-messages", { tabId, threadId });
+
+			return true;
+		} catch (error) {
+			console.error(`[handleClearTabMessages] Failed to clear messages:`, error);
+			return false;
+		}
+	}
 }
 
 export const tabService = new TabService();

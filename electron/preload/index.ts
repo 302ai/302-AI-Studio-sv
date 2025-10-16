@@ -116,6 +116,11 @@ if (process.contextIsolated) {
 				ipcRenderer.on("updater:update-error", listener);
 				return () => ipcRenderer.removeListener("updater:update-error", listener);
 			},
+			onTabClearMessages: (callback: (data: { tabId: string; threadId: string }) => void) => {
+				const listener = (_: unknown, data: { tabId: string; threadId: string }) => callback(data);
+				ipcRenderer.on("tab:clear-messages", listener);
+				return () => ipcRenderer.removeListener("tab:clear-messages", listener);
+			},
 		});
 
 		// Expose shell window ID from process arguments

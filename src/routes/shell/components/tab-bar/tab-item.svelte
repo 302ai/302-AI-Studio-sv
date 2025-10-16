@@ -11,6 +11,7 @@
 		onTabClose: (tabId: string) => void;
 		onTabCloseOthers: (tabId: string) => void;
 		onTabCloseOffside: (tabId: string) => void;
+		onTabClearMessages: (tabId: string) => void;
 		onOpenChange: (open: boolean) => void;
 		class?: string;
 	}
@@ -40,6 +41,7 @@
 		onTabClose,
 		onTabCloseOthers,
 		onTabCloseOffside,
+		onTabClearMessages,
 		onOpenChange,
 		class: className,
 	}: Props = $props();
@@ -140,6 +142,16 @@
 		<ContextMenu.Item onSelect={() => onTabNew()}>
 			{m.label_button_new_tab()}
 		</ContextMenu.Item>
+
+		{#if tab.type === "chat"}
+			<ContextMenu.Separator />
+
+			<ContextMenu.Item onSelect={() => onTabClearMessages(tab.id)}>
+				{m.settings_shortcut_clearMessages()}
+			</ContextMenu.Item>
+		{/if}
+
+		<ContextMenu.Separator />
 
 		{#if windowTabsInfo.length > 0}
 			<ContextMenu.Sub>

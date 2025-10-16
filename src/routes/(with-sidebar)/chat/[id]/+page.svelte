@@ -2,9 +2,23 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
+	import { onMount } from "svelte";
 	import { AiApplicationItems } from "../components/ai-applications";
 	import { ChatInputBox } from "../components/chat-input";
 	import { MessageList } from "../components/message";
+
+	onMount(() => {
+		// Listen for clear messages event from main process
+		const unsub = window.electronIPC?.onTabClearMessages?.(({ tabId, threadId }) => {
+			console.log("[Chat Page] Received clear messages event:", { tabId, threadId });
+			// Clear the in-memory chat state
+			chatState.clearMessages();
+		});
+
+		return () => {
+			unsub?.();
+		};
+	});
 </script>
 
 {#if !chatState.hasMessages}
