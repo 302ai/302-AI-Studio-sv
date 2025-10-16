@@ -1,5 +1,5 @@
-<!-- eslint-disable svelte/no-at-html-tags -->
 <script lang="ts">
+	/* eslint-disable svelte/no-at-html-tags */
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { CopyButton } from "$lib/components/buss/copy-button";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
@@ -439,10 +439,7 @@
 				style={preStyle}>
 				<code style={codeStyle}>
 					{#each lines as line (line.id)}
-						<span class="line" data-line={line.number}>
-              	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-              {@html line.html}
-              </span>
+						<span class="line" data-line={line.number}>{@html line.html}</span>
 					{/each}
 				</code>
 			</pre>
