@@ -142,6 +142,7 @@ const config: ForgeConfig = {
 		// }),
 		new MakerZIP({}, ["darwin", "win32"]),
 		new MakerDMG({
+			icon: "static/icon.png",
 			format: "ULFO",
 		}),
 		new MakerRpm({

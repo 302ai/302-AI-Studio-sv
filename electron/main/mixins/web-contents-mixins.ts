@@ -71,12 +71,6 @@ export const withLoadHandlers = (view: WebContentsView, config: LoadHandlerConfi
 				view.webContents.openDevTools({ mode: "detach" });
 			});
 		}
-
-		view.webContents.once("did-frame-finish-load", () => {
-			console.log(
-				"did-frame-finish-load did-frame-finish-loaddid-frame-finish-loaddid-frame-finish-loaddid-frame-finish-load",
-			);
-		});
 	}
 
 	if (autoCleanTempFile.enable) {
