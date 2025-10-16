@@ -12,6 +12,7 @@ import { WebContentsFactory } from "./factories/web-contents-factory";
 import { registerIpcHandlers } from "./generated/ipc-registration";
 import { initServer } from "./server/router";
 import { appService, shortcutService, windowService } from "./services";
+import { UpdaterService } from "./services/updater-service";
 
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
@@ -80,6 +81,9 @@ app.on("window-all-closed", () => {
 if (isMac) {
 	// Handle Cmd+Q (or menu quit) - ensure window close listeners fire
 	app.on("before-quit", (event) => {
+		// Skip interception if this is triggered by update installation
+		if (UpdaterService.isInstallingUpdateNow()) return;
+
 		event.preventDefault();
 		// Enable force quitting mode to bypass macOS hide behavior
 		windowService.setCMDQ(true);

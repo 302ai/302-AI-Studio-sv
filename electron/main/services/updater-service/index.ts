@@ -9,6 +9,7 @@ export class UpdaterService {
 	private checkInterval: NodeJS.Timeout | null = null;
 	private updateFeedUrl: string;
 	private updateDownloaded = false;
+	private static isInstallingUpdate = false;
 
 	constructor() {
 		const server = "https://update.electronjs.org";
@@ -133,6 +134,7 @@ export class UpdaterService {
 
 			if (response === 0) {
 				// User clicked "Restart Now"
+				UpdaterService.isInstallingUpdate = true;
 				autoUpdater.quitAndInstall();
 			}
 		} catch (error) {
@@ -146,7 +148,12 @@ export class UpdaterService {
 	}
 
 	async quitAndInstall(_event: IpcMainInvokeEvent): Promise<void> {
+		UpdaterService.isInstallingUpdate = true;
 		autoUpdater.quitAndInstall();
+	}
+
+	static isInstallingUpdateNow(): boolean {
+		return UpdaterService.isInstallingUpdate;
 	}
 
 	async isUpdateDownloaded(_event: IpcMainInvokeEvent): Promise<boolean> {
