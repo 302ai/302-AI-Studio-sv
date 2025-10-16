@@ -1,14 +1,14 @@
 <!-- eslint-disable svelte/no-at-html-tags -->
 <script lang="ts">
+	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
+	import { CopyButton } from "$lib/components/buss/copy-button";
+	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
+	import { ChevronDown } from "@lucide/svelte";
 	import type { GrammarState, ThemedToken } from "@shikijs/types";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import type { ShikiHighlighter } from "./highlighter";
-	import { DEFAULT_THEME, ensureHighlighter } from "./highlighter";
-	import { CopyButton } from "$lib/components/buss/copy-button";
-	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
-	import { ChevronDown } from "@lucide/svelte";
-	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
+	import { DEFAULT_THEME, ensureHighlighter, ensureLanguageLoaded } from "./highlighter";
 
 	interface RenderedToken {
 		id: string;
@@ -275,6 +275,9 @@
 		const raw = props.language?.toLowerCase().trim() || "plaintext";
 		if (resolvedLanguage !== raw) {
 			resolvedLanguage = raw;
+			ensureLanguageLoaded(raw).catch((error) => {
+				console.warn(`Failed to load language ${raw}:`, error);
+			});
 			return true;
 		}
 		return false;
@@ -436,11 +439,10 @@
 				style={preStyle}>
 				<code style={codeStyle}>
 					{#each lines as line (line.id)}
-						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-						<span
-							class="line"
-							data-line={line.number}>{@html line.html}</span
-						>
+						<span class="line" data-line={line.number}>
+              	<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+              {@html line.html}
+              </span>
 					{/each}
 				</code>
 			</pre>

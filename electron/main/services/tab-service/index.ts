@@ -34,7 +34,7 @@ export class TabService {
 	private windowTabView: Map<number, WebContentsView[]>;
 	private windowActiveTabId: Map<number, string>;
 	private windowShellView: Map<number, WebContentsView>;
-	private tempFileRegistry: Map<string, string[]>; // tabId -> tempFilePaths[]
+	// private tempFileRegistry: Map<string, string[]>; // tabId -> tempFilePaths[]
 
 	constructor() {
 		this.tabViewMap = new Map();
@@ -42,7 +42,7 @@ export class TabService {
 		this.windowTabView = new Map();
 		this.windowActiveTabId = new Map();
 		this.windowShellView = new Map();
-		this.tempFileRegistry = new Map();
+		// this.tempFileRegistry = new Map();
 	}
 
 	private scheduleWindowResize(window: BrowserWindow) {
@@ -63,13 +63,13 @@ export class TabService {
 				type: "aiApplication",
 			});
 		} else {
-			const thread = await storageService.getItemInternal("app-thread:" + tab.threadId);
-			const messages = await storageService.getItemInternal("app-chat-messages:" + tab.threadId);
+			const [thread, messages] = await Promise.all([
+				storageService.getItemInternal("app-thread:" + tab.threadId),
+				storageService.getItemInternal("app-chat-messages:" + tab.threadId),
+			]);
 
 			const threadFilePath = TempStorage.writeData(thread, "thread");
 			const messagesFilePath = TempStorage.writeData(messages, "messages");
-
-			this.tempFileRegistry.set(tab.id, [threadFilePath, messagesFilePath]);
 
 			// Create view using factory
 			view = WebContentsFactory.createTabView({
@@ -78,6 +78,16 @@ export class TabService {
 				tab,
 				threadFilePath,
 				messagesFilePath,
+			});
+
+			withLoadHandlers(view, {
+				autoCleanTempFile: {
+					enable: true,
+					callback: () => {
+						TempStorage.cleanupFile(threadFilePath);
+						TempStorage.cleanupFile(messagesFilePath);
+					},
+				},
 			});
 		}
 
@@ -116,7 +126,7 @@ export class TabService {
 					this.windowActiveTabId.delete(capturedWindowId);
 				}
 
-				this.cleanupTabTempFiles(capturedTabId);
+				// this.cleanupTabTempFiles(capturedTabId);
 
 				// Check if all mappings related to the destroyed tab have been properly cleaned up
 				console.log(
@@ -132,10 +142,10 @@ export class TabService {
 					"Checking windowActiveTabId ---> ",
 					this.windowActiveTabId.get(capturedWindowId) === capturedTabId ? "failed" : "passed",
 				);
-				console.log(
-					"Checking tempFileRegistry ---> ",
-					this.tempFileRegistry.has(capturedTabId) ? "failed" : "passed",
-				);
+				// console.log(
+				// 	"Checking tempFileRegistry ---> ",
+				// 	this.tempFileRegistry.has(capturedTabId) ? "failed" : "passed",
+				// );
 			},
 			onWillPreventUnload: () => {
 				console.log("view will prevent unload");
@@ -169,15 +179,15 @@ export class TabService {
 		this.windowActiveTabId.set(window.id, newActiveTabId);
 	}
 
-	private cleanupTabTempFiles(tabId: string) {
-		const tempFiles = this.tempFileRegistry.get(tabId);
-		if (tempFiles) {
-			tempFiles.forEach((filePath) => {
-				TempStorage.cleanupFile(filePath);
-			});
-			this.tempFileRegistry.delete(tabId);
-		}
-	}
+	// private cleanupTabTempFiles(tabId: string) {
+	// 	const tempFiles = this.tempFileRegistry.get(tabId);
+	// 	if (tempFiles) {
+	// 		tempFiles.forEach((filePath) => {
+	// 			TempStorage.cleanupFile(filePath);
+	// 		});
+	// 		this.tempFileRegistry.delete(tabId);
+	// 	}
+	// }
 
 	// ******************************* Main Process Methods ******************************* //
 	async initWindowTabs(window: BrowserWindow, tabs: Tab[]): Promise<void> {

@@ -1,8 +1,44 @@
-import { createHighlighter, createJavaScriptRegexEngine } from "shiki";
 import type { Highlighter as ShikiHighlighter } from "shiki";
+import { createHighlighter, createJavaScriptRegexEngine } from "shiki";
 
 const CODE_THEMES = ["vitesse-dark", "vitesse-light"] as const;
-const CODE_LANGUAGES = [
+
+// 核心语言：立即加载（最常用的，控制在 30 个以内）
+const CORE_LANGUAGES = [
+	"plaintext",
+	"javascript",
+	"typescript",
+	"jsx",
+	"tsx",
+	"python",
+	"java",
+	"cpp",
+	"c",
+	"csharp",
+	"go",
+	"rust",
+	"ruby",
+	"php",
+	"swift",
+	"kotlin",
+	"dart",
+	"sql",
+	"html",
+	"css",
+	"scss",
+	"sass",
+	"less",
+	"json",
+	"yaml",
+	"xml",
+	"bash",
+	"shellscript",
+	"markdown",
+	"latex",
+] as const;
+
+// 所有支持的语言（用于按需加载）
+const ALL_LANGUAGES = [
 	"abap",
 	"actionscript-3",
 	"ada",
@@ -227,17 +263,60 @@ const CODE_LANGUAGES = [
 	"zig",
 ] as const;
 
-let highlighterPromise: Promise<ShikiHighlighter> | null = null;
+type SupportedLanguage = (typeof ALL_LANGUAGES)[number];
 
+let highlighterPromise: Promise<ShikiHighlighter> | null = null;
+const loadedLanguages = new Set<string>(CORE_LANGUAGES);
+const loadingQueue: Set<string> = new Set();
+
+/**
+ * 确保 highlighter 已初始化并加载必要的语言
+ * - 首次加载时，只加载核心语言（快速启动）
+ * - 检测到新语言时，自动后台加载
+ */
 export const ensureHighlighter = (): Promise<ShikiHighlighter> => {
 	if (!highlighterPromise) {
 		highlighterPromise = createHighlighter({
-			langs: [...new Set(CODE_LANGUAGES)],
+			langs: [...new Set(CORE_LANGUAGES)],
 			themes: [...new Set(CODE_THEMES)],
 			engine: createJavaScriptRegexEngine(),
 		});
 	}
 	return highlighterPromise;
+};
+
+/**
+ * 加载特定语言（如果还未加载）
+ * 使用 async/await，但不阻塞 UI，因为在后台执行
+ */
+export const ensureLanguageLoaded = async (lang: string): Promise<void> => {
+	const normalized = (lang || "plaintext").toLowerCase() as SupportedLanguage;
+
+	// 已加载或正在加载，直接返回
+	if (loadedLanguages.has(normalized)) {
+		return;
+	}
+
+	if (loadingQueue.has(normalized)) {
+		return;
+	}
+
+	// 不在支持列表中，无需加载
+	if (!ALL_LANGUAGES.includes(normalized)) {
+		return;
+	}
+
+	try {
+		loadingQueue.add(normalized);
+		const highlighter = await ensureHighlighter();
+		// 使用类型断言，因为 Shiki 内部支持所有这些语言
+		await highlighter.loadLanguage(normalized);
+		loadedLanguages.add(normalized);
+	} catch (error) {
+		console.warn(`Failed to load language: ${normalized}`, error);
+	} finally {
+		loadingQueue.delete(normalized);
+	}
 };
 
 export type { ShikiHighlighter };
