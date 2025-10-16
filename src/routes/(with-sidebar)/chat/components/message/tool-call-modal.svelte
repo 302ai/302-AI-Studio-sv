@@ -3,12 +3,14 @@
 
 	export interface ToolCallModalProps {
 		part: DynamicToolUIPart;
+		messageId: string;
 		open: boolean;
 		onOpenChange: (open: boolean) => void;
 	}
 </script>
 
 <script lang="ts">
+	import StaticCodeBlock from "$lib/components/buss/markdown/static-code-block.svelte";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import {
 		Dialog,
@@ -17,9 +19,13 @@
 		DialogTitle,
 	} from "$lib/components/ui/dialog/index.js";
 	import { m } from "$lib/paraglide/messages.js";
-	import StaticCodeBlock from "$lib/components/buss/markdown/static-code-block.svelte";
+	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { RotateCw } from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
 
-	let { part, open = $bindable(), onOpenChange }: ToolCallModalProps = $props();
+	let { part, messageId, open = $bindable(), onOpenChange }: ToolCallModalProps = $props();
+
+	let isRerunning = $state(false);
 
 	function getDisplayToolName(toolName: string): string {
 		// Remove server ID prefix from display name
@@ -61,6 +67,27 @@
 			return JSON.stringify(obj, null, 2);
 		} catch {
 			return String(obj);
+		}
+	}
+
+	async function handleRerun() {
+		if (isRerunning) return;
+
+		isRerunning = true;
+
+		const toolCallIdToRerun = part.toolCallId;
+		const messageIdToRerun = messageId;
+
+		onOpenChange(false);
+
+		try {
+			await chatState.rerunToolCall(messageIdToRerun, toolCallIdToRerun);
+			toast.success(m.tool_call_rerun_success());
+		} catch (error) {
+			console.error("Failed to rerun tool call:", error);
+			toast.error(m.tool_call_rerun_error());
+		} finally {
+			isRerunning = false;
 		}
 	}
 </script>
@@ -160,6 +187,17 @@
 
 		<!-- Footer -->
 		<div class="flex w-full items-center justify-center gap-3 px-6 py-4">
+			{#if part.state === "output-available" || part.state === "output-error"}
+				<Button
+					variant="outline"
+					class="h-[42px] w-[148px]"
+					onclick={handleRerun}
+					disabled={isRerunning}
+				>
+					<RotateCw class="h-4 w-4 {isRerunning ? 'animate-spin' : ''}" />
+					{m.tool_call_rerun()}
+				</Button>
+			{/if}
 			<Button variant="default" class="h-[42px] w-[148px]" onclick={() => onOpenChange(false)}>
 				{m.tool_call_close()}
 			</Button>

@@ -269,6 +269,7 @@
 		{#if selectedToolPart}
 			<ToolCallModal
 				part={selectedToolPart}
+				messageId={message.id}
 				bind:open={isToolModalOpen}
 				onOpenChange={(open) => {
 					isToolModalOpen = open;
