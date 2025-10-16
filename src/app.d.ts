@@ -38,6 +38,9 @@ declare global {
 			onTabClearMessages: (
 				callback: (data: { tabId: string; threadId: string }) => void,
 			) => () => void;
+			onTabGenerateTitle: (
+				callback: (data: { tabId: string; threadId: string }) => void,
+			) => () => void;
 			onPersistedStateSync: <T>(key: string, callback: (syncValue: T) => void) => () => void;
 			updater: {
 				onUpdateChecking: (callback: () => void) => () => void;
