@@ -9,7 +9,7 @@
 
 	onMount(() => {
 		// Listen for clear messages event from main process
-		const unsub = window.electronIPC?.onTabClearMessages?.(({ tabId, threadId }) => {
+		const unsub = window.electronAPI?.onTabClearMessages?.(({ tabId, threadId }) => {
 			console.log("[Chat Page] Received clear messages event:", { tabId, threadId });
 			// Clear the in-memory chat state
 			chatState.clearMessages();
