@@ -47,8 +47,6 @@ jobs:
       - name: Setup pnpm
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         uses: pnpm/action-setup@v4
-        with:
-          version: 10.18.3
 
       - name: Setup Node.js
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
