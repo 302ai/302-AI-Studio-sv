@@ -4,7 +4,7 @@
  */
 export const appInfo = {
 	productName: "302 AI Studio",
-	version: "25.42.8",
+	version: "25.42.9",
 	description: "302 AI Studio",
 	author: {
 		name: "302.AI",
