@@ -168,7 +168,7 @@ export class WindowService {
 		withLoadHandlers(shellWebContentsView, {
 			baseUrl,
 			routePath,
-			autoOpenDevTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
+			// autoOpenDevTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
 		});
 		shellWebContentsView.webContents.once("did-finish-load", () => {
 			shellWindow.show();

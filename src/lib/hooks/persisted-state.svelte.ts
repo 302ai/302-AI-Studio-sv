@@ -3,7 +3,7 @@ import { isEqual } from "es-toolkit";
 import superjson from "superjson";
 import { createSubscriber } from "svelte/reactivity";
 
-const { onPersistedStateSync } = window.electronIPC;
+const { onPersistedStateSync } = window.electronAPI;
 
 class ElectronStorageAdapter<T extends StorageValue> {
 	private storageService = window.electronAPI.storageService;

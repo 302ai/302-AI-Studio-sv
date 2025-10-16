@@ -16,7 +16,7 @@
 		onUpdateNotAvailable,
 		onUpdateDownloaded,
 		onUpdateError,
-	} = window.electronIPC;
+	} = window.electronAPI.updater;
 
 	let checking = $state(false);
 	let downloading = $state(false);

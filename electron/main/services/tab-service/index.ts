@@ -88,7 +88,7 @@ export class TabService {
 				tab.type === "aiApplications"
 					? tab.href
 					: MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost",
-			autoOpenDevTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
+			// autoOpenDevTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
 		});
 
 		// Attach shortcut engine to tab view
@@ -163,6 +163,7 @@ export class TabService {
 		const newView = this.tabViewMap.get(newActiveTabId);
 		if (!isUndefined(newView)) {
 			newView.setVisible(true);
+			newView.webContents.focus();
 		}
 
 		this.windowActiveTabId.set(window.id, newActiveTabId);

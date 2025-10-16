@@ -10,9 +10,14 @@
 	const { children } = $props();
 
 	onMount(() => {
-		window.electronAPI?.shortcut?.onShortcutAction?.((event: ShortcutActionEvent) => {
-			handleShortcutAction(event.action);
-		});
+		console.log("ShortcutService: onShortcutAction");
+		const cleanup = window.electronAPI?.shortcut?.onShortcutAction?.(
+			(event: ShortcutActionEvent) => {
+				handleShortcutAction(event.action);
+			},
+		);
+
+		return cleanup;
 	});
 
 	function handleShortcutAction(action: string) {
@@ -47,6 +52,7 @@
 				handleOpenSettings();
 				break;
 			default:
+				console.error("ShortcutService: Unknown action", action);
 				// Other actions handled by chat-specific or sidebar-specific handlers
 				break;
 		}

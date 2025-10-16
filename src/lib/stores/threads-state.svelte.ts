@@ -3,7 +3,7 @@ import type { ThreadMetadata } from "@shared/types";
 import { debounce } from "es-toolkit";
 
 const { threadService, broadcastService } = window.electronAPI;
-const { onThreadListUpdate } = window.electronIPC;
+const { onThreadListUpdate } = window.electronAPI;
 
 export const persistedThreadState = new PersistedState<ThreadMetadata>(
 	"ThreadStorage:thread-metadata",

@@ -26,26 +26,25 @@ declare global {
 				getCurrentTheme: () => Promise<Theme>;
 			};
 			shortcut: {
-				onShortcutSync: (callback: (data: ShortcutSyncEvent) => void) => void;
-				onShortcutAction: (callback: (event: ShortcutActionEvent) => void) => void;
-				sendShortcutKeyPressed: (event: ShortcutKeyPressEvent) => void;
+				onShortcutSync: (callback: (data: ShortcutSyncEvent) => void) => () => void;
+				onShortcutAction: (callback: (event: ShortcutActionEvent) => void) => () => void;
+				sendShortcutKeyPressed: (event: ShortcutKeyPressEvent) => () => void;
 			};
-		};
-		electronIPC: {
-			onThemeChange: (callback: (theme: Theme) => void) => void;
-			onBroadcastEvent: (callback: (eventData: BroadcastEventData) => void) => void;
-			onThreadListUpdate: (callback: (eventData: BroadcastEventData) => void) => void;
+			onThemeChange: (callback: (theme: Theme) => void) => () => void;
+			onThreadListUpdate: (callback: (eventData: BroadcastEventData) => void) => () => void;
 			onShellWindowFullscreenChange: (
 				callback: (payload: ShellWindowFullscreenChange) => void,
 			) => () => void;
 			onPersistedStateSync: <T>(key: string, callback: (syncValue: T) => void) => () => void;
-			onUpdateChecking: (callback: () => void) => () => void;
-			onUpdateAvailable: (callback: () => void) => () => void;
-			onUpdateNotAvailable: (callback: () => void) => () => void;
-			onUpdateDownloaded: (
-				callback: (data: { releaseNotes: string; releaseName: string }) => void,
-			) => () => void;
-			onUpdateError: (callback: (data: { message: string }) => void) => () => void;
+			updater: {
+				onUpdateChecking: (callback: () => void) => () => void;
+				onUpdateAvailable: (callback: () => void) => () => void;
+				onUpdateNotAvailable: (callback: () => void) => () => void;
+				onUpdateDownloaded: (
+					callback: (data: { releaseNotes: string; releaseName: string }) => void,
+				) => () => void;
+				onUpdateError: (callback: (data: { message: string }) => void) => () => void;
+			};
 		};
 		windowId: string;
 		tab: Tab;

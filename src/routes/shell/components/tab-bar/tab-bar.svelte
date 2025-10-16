@@ -15,7 +15,7 @@
 
 	type TabDndEvent = DndEvent<Tab>;
 
-	const { onShellWindowFullscreenChange } = window.electronIPC;
+	const { onShellWindowFullscreenChange } = window.electronAPI;
 </script>
 
 <script lang="ts">

@@ -1,21 +1,30 @@
-import type { ShortcutActionEvent } from "@shared/types/shortcut";
 import { chatState } from "$lib/stores/chat-state.svelte";
 import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
+import type { ShortcutActionEvent } from "@shared/types/shortcut";
 import { toast } from "svelte-sonner";
 
 export class ShortcutActionsHandler {
 	private isInitialized = false;
+	private cleanup?: () => void;
 
 	init(): void {
 		if (this.isInitialized || typeof window === "undefined" || !window.electronAPI) {
 			return;
 		}
 
-		window.electronAPI.shortcut.onShortcutAction((event: ShortcutActionEvent) => {
+		this.cleanup = window.electronAPI.shortcut.onShortcutAction((event: ShortcutActionEvent) => {
 			this.handleAction(event);
 		});
 
 		this.isInitialized = true;
+	}
+
+	destroy(): void {
+		if (this.cleanup) {
+			this.cleanup();
+			this.cleanup = undefined;
+		}
+		this.isInitialized = false;
 	}
 
 	private handleAction(event: ShortcutActionEvent): void {
