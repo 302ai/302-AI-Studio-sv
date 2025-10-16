@@ -481,6 +481,7 @@
 									blockId="tool-schema-{selectedTool.name}"
 									code={JSON.stringify(selectedTool.inputSchema, null, 2)}
 									language="json"
+									showCollapseButton={false}
 									meta={null}
 								/>
 							</div>

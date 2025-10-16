@@ -12,7 +12,6 @@
 		type: McpServerType;
 		url?: string;
 		command?: string;
-		args?: string[];
 		env?: Record<string, string>;
 	}
 </script>
@@ -62,12 +61,15 @@
 						type,
 						url,
 					});
-				} else if (serverConfig.command && serverConfig.args) {
+				} else if (serverConfig.command) {
+					const cmd = serverConfig.command as string;
+					const args = Array.isArray(serverConfig.args) ? (serverConfig.args as string[]) : [];
+					const combinedCommand = args.length > 0 ? `${cmd} ${args.join(" ")}` : cmd;
+
 					servers.push({
 						name: serverName,
 						type: "stdio",
-						command: serverConfig.command as string,
-						args: Array.isArray(serverConfig.args) ? (serverConfig.args as string[]) : [],
+						command: combinedCommand,
 						env: (serverConfig.env as Record<string, string>) || {},
 					});
 				}

@@ -3,12 +3,14 @@
 
 	export interface ToolCallModalProps {
 		part: DynamicToolUIPart;
+		messageId: string;
 		open: boolean;
 		onOpenChange: (open: boolean) => void;
 	}
 </script>
 
 <script lang="ts">
+	import StaticCodeBlock from "$lib/components/buss/markdown/static-code-block.svelte";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import {
 		Dialog,
@@ -17,8 +19,19 @@
 		DialogTitle,
 	} from "$lib/components/ui/dialog/index.js";
 	import { m } from "$lib/paraglide/messages.js";
+	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { RotateCw } from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
 
-	let { part, open = $bindable(), onOpenChange }: ToolCallModalProps = $props();
+	let { part, messageId, open = $bindable(), onOpenChange }: ToolCallModalProps = $props();
+
+	let isRerunning = $state(false);
+
+	function getDisplayToolName(toolName: string): string {
+		// Remove server ID prefix from display name
+		const parts = toolName.split("__");
+		return parts.length >= 2 ? parts.slice(1).join("__") : toolName;
+	}
 
 	function getStatusIcon() {
 		switch (part.state) {
@@ -56,6 +69,27 @@
 			return String(obj);
 		}
 	}
+
+	async function handleRerun() {
+		if (isRerunning) return;
+
+		isRerunning = true;
+
+		const toolCallIdToRerun = part.toolCallId;
+		const messageIdToRerun = messageId;
+
+		onOpenChange(false);
+
+		try {
+			await chatState.rerunToolCall(messageIdToRerun, toolCallIdToRerun);
+			toast.success(m.tool_call_rerun_success());
+		} catch (error) {
+			console.error("Failed to rerun tool call:", error);
+			toast.error(m.tool_call_rerun_error());
+		} finally {
+			isRerunning = false;
+		}
+	}
 </script>
 
 <Dialog {open} {onOpenChange}>
@@ -65,10 +99,10 @@
 		</DialogHeader>
 
 		<!-- Header with tool name and status -->
-		<div class="mb-6 flex items-center justify-between px-6 pt-4">
+		<div class="mb-6 flex items-center justify-between pt-1">
 			<div>
 				<h3 class="text-lg font-medium text-foreground">
-					{part.toolName}
+					{getDisplayToolName(part.toolName)}
 				</h3>
 			</div>
 
@@ -89,35 +123,49 @@
 		</div>
 
 		<!-- Two-column layout -->
-		<div class="grid grid-cols-2 gap-6 px-6">
+		<div class="grid grid-cols-2 gap-4">
 			<!-- Left Column: Parameters -->
-			<div class="h-[400px] overflow-auto rounded-lg border border-border bg-muted/50">
-				<div class="sticky top-0 border-b border-border bg-background px-4 py-2">
-					<p class="text-sm font-medium text-muted-foreground">{m.tool_call_parameters()}</p>
+			<div class="flex flex-col gap-2">
+				<div class="h-[400px] overflow-hidden">
+					<StaticCodeBlock
+						blockId={`tool-params-${part.toolCallId}`}
+						code={formatJson(part.input)}
+						language="json"
+						title={m.tool_call_parameters()}
+						showCollapseButton={false}
+					/>
 				</div>
-				<pre class="p-4 text-xs"><code>{formatJson(part.input)}</code></pre>
 			</div>
 
 			<!-- Right Column: Result -->
-			<div class="h-[400px] overflow-auto rounded-lg border border-border bg-muted/50">
+			<div class="flex flex-col gap-2">
 				{#if part.state === "output-available"}
-					<div class="sticky top-0 border-b border-border bg-background px-4 py-2">
-						<p class="text-sm font-medium text-[#38B865]">{m.tool_call_result()}</p>
+					<div class="h-[400px] overflow-hidden">
+						<StaticCodeBlock
+							blockId={`tool-result-${part.toolCallId}`}
+							code={formatJson(part.output)}
+							language="json"
+							title={m.tool_call_result()}
+							showCollapseButton={false}
+						/>
 					</div>
-					<pre class="bg-green-50 p-4 text-xs dark:bg-green-950/30"><code
-							>{formatJson(part.output)}</code
-						></pre>
 				{:else if part.state === "output-error"}
-					<div class="sticky top-0 border-b border-border bg-background px-4 py-2">
-						<p class="text-sm font-medium text-[#D82525]">{m.tool_call_error_message()}</p>
-					</div>
 					<div
-						class="whitespace-pre-wrap bg-red-50 p-4 text-xs text-red-900 dark:bg-red-950/30 dark:text-red-100"
+						class="h-[400px] overflow-auto rounded-xl border border-border bg-card flex flex-col"
 					>
-						{part.errorText}
+						<div class="flex-shrink-0 px-4 py-2 bg-muted border-b border-border">
+							<span class="text-sm font-medium text-[#D82525]">{m.tool_call_error_message()}</span>
+						</div>
+						<div
+							class="flex-1 overflow-auto whitespace-pre-wrap p-4 text-xs text-red-900 dark:text-red-100"
+						>
+							{part.errorText}
+						</div>
 					</div>
 				{:else if part.state === "input-available" || part.state === "input-streaming"}
-					<div class="flex h-full items-center justify-center">
+					<div
+						class="flex h-[400px] items-center justify-center rounded-xl border border-border bg-card"
+					>
 						<div class="text-center">
 							<div class="mx-auto mb-2 h-8 w-8 animate-pulse rounded-full bg-[#0056FE]"></div>
 							<p class="text-sm text-[#0056FE]">
@@ -128,7 +176,9 @@
 						</div>
 					</div>
 				{:else}
-					<div class="flex h-full items-center justify-center">
+					<div
+						class="flex h-[400px] items-center justify-center rounded-xl border border-border bg-card"
+					>
 						<p class="text-sm text-muted-foreground">{m.tool_call_no_result()}</p>
 					</div>
 				{/if}
@@ -137,7 +187,18 @@
 
 		<!-- Footer -->
 		<div class="flex w-full items-center justify-center gap-3 px-6 py-4">
-			<Button variant="outline" class="h-[42px] w-[148px]" onclick={() => onOpenChange(false)}>
+			{#if part.state === "output-available" || part.state === "output-error"}
+				<Button
+					variant="outline"
+					class="h-[42px] w-[148px]"
+					onclick={handleRerun}
+					disabled={isRerunning}
+				>
+					<RotateCw class="h-4 w-4 {isRerunning ? 'animate-spin' : ''}" />
+					{m.tool_call_rerun()}
+				</Button>
+			{/if}
+			<Button variant="default" class="h-[42px] w-[148px]" onclick={() => onOpenChange(false)}>
 				{m.tool_call_close()}
 			</Button>
 		</div>

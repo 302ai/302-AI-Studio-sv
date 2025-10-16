@@ -419,6 +419,53 @@ class ChatState {
 		persistedMessagesState.current = updatedMessages;
 	}
 
+	rerunToolCall = async (messageId: string, toolCallId: string) => {
+		if (!this.canRegenerate) {
+			console.warn("Cannot rerun tool: chat is not ready or no model selected");
+			return;
+		}
+
+		const messageIndex = this.messages.findIndex((msg) => msg.id === messageId);
+		if (messageIndex === -1) {
+			throw new Error("Message not found");
+		}
+
+		const message = this.messages[messageIndex];
+		if (!message) {
+			throw new Error("Message not found");
+		}
+
+		const toolCallPartIndex = message.parts.findIndex(
+			(part) => part.type === "dynamic-tool" && part.toolCallId === toolCallId,
+		);
+
+		if (toolCallPartIndex === -1) {
+			throw new Error("Tool call not found");
+		}
+		const updatedParts = message.parts.slice(0, toolCallPartIndex);
+		const updatedMessage = { ...message, parts: updatedParts };
+		const updatedMessages = [...this.messages.slice(0, messageIndex), updatedMessage];
+
+		chat.messages = updatedMessages;
+		persistedMessagesState.current = updatedMessages;
+
+		const currentModel = this.selectedModel!;
+
+		try {
+			this.resetError();
+			await chat.sendMessage(undefined, {
+				body: {
+					model: currentModel.id,
+					apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
+						?.apiKey,
+				},
+			});
+		} catch (error) {
+			console.error("Failed to rerun tool call:", error);
+			this.handleChatError(error);
+		}
+	};
+
 	async createBranch(upToMessageId: string): Promise<string | null> {
 		try {
 			// 1. find the target message index

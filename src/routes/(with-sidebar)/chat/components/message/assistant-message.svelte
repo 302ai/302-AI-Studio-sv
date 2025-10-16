@@ -20,6 +20,7 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { getLocale } from "$lib/paraglide/runtime";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { mcpState } from "$lib/stores/mcp-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
@@ -32,6 +33,36 @@
 	import { formatTimeAgo, getAssistantMessageContent } from "./utils";
 
 	let { message }: Props = $props();
+
+	function getServerIcon(toolName: string): string | null {
+		// Extract server ID from toolName (format: serverId__toolName)
+		const parts = toolName.split("__");
+		if (parts.length >= 2) {
+			const serverId = parts[0];
+			const server = mcpState.getServer(serverId);
+			return server?.icon || null;
+		}
+
+		return null;
+	}
+
+	function getServerName(toolName: string): string {
+		// Extract server ID from toolName (format: serverId__toolName)
+		const parts = toolName.split("__");
+		if (parts.length >= 2) {
+			const serverId = parts[0];
+			const server = mcpState.getServer(serverId);
+			return server?.name || m.tool_call_label();
+		}
+
+		return m.tool_call_label();
+	}
+
+	function getDisplayToolName(toolName: string): string {
+		// Remove server ID prefix from display name
+		const parts = toolName.split("__");
+		return parts.length >= 2 ? parts.slice(1).join("__") : toolName;
+	}
 
 	let isReasoningExpanded = $state(!preferencesSettings.autoCollapseThink);
 	let selectedToolPart = $state<any>(null);
@@ -181,15 +212,19 @@
 						<!-- Left: Tool Icon and Name -->
 						<div class="flex items-center gap-3">
 							<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-								<Server class="h-5 w-5 text-muted-foreground" />
+								{#if getServerIcon(part.toolName)}
+									<span class="text-xl">{getServerIcon(part.toolName)}</span>
+								{:else}
+									<Server class="h-5 w-5 text-muted-foreground" />
+								{/if}
 							</div>
 
 							<!-- Tool Name -->
 							<div class="flex flex-col items-start gap-1">
 								<h3 class="text-sm font-medium text-foreground">
-									{part.toolName}
+									{getDisplayToolName(part.toolName)}
 								</h3>
-								<p class="text-xs text-muted-foreground">{m.tool_call_label()}</p>
+								<p class="text-xs text-muted-foreground">{getServerName(part.toolName)}</p>
 							</div>
 						</div>
 
@@ -234,6 +269,7 @@
 		{#if selectedToolPart}
 			<ToolCallModal
 				part={selectedToolPart}
+				messageId={message.id}
 				bind:open={isToolModalOpen}
 				onOpenChange={(open) => {
 					isToolModalOpen = open;
