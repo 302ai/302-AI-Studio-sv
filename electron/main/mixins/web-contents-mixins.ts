@@ -6,10 +6,6 @@ export interface LoadHandlerConfig {
 	baseUrl?: string;
 	routePath?: string;
 	autoOpenDevTools?: boolean;
-	autoCleanTempFile?: {
-		enable: boolean;
-		callback: () => void;
-	};
 }
 
 /**
@@ -52,15 +48,7 @@ export const withDevToolsShortcuts = (view: WebContentsView): void => {
  * Adds common load handling to a WebContentsView
  */
 export const withLoadHandlers = (view: WebContentsView, config: LoadHandlerConfig): void => {
-	const {
-		baseUrl,
-		routePath,
-		autoOpenDevTools = false,
-		autoCleanTempFile = {
-			enable: false,
-			callback: () => {},
-		},
-	} = config;
+	const { baseUrl, routePath, autoOpenDevTools = false } = config;
 
 	if (baseUrl) {
 		const fullUrl = routePath ? `${baseUrl}${routePath}` : baseUrl;
@@ -71,12 +59,6 @@ export const withLoadHandlers = (view: WebContentsView, config: LoadHandlerConfi
 				view.webContents.openDevTools({ mode: "detach" });
 			});
 		}
-	}
-
-	if (autoCleanTempFile.enable) {
-		view.webContents.once("did-frame-finish-load", () => {
-			autoCleanTempFile.callback();
-		});
 	}
 };
 

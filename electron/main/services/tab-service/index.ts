@@ -34,7 +34,7 @@ export class TabService {
 	private windowTabView: Map<number, WebContentsView[]>;
 	private windowActiveTabId: Map<number, string>;
 	private windowShellView: Map<number, WebContentsView>;
-	// private tempFileRegistry: Map<string, string[]>; // tabId -> tempFilePaths[]
+	private tempFileRegistry: Map<string, string[]>; // tabId -> tempFilePaths[]
 
 	constructor() {
 		this.tabViewMap = new Map();
@@ -42,7 +42,7 @@ export class TabService {
 		this.windowTabView = new Map();
 		this.windowActiveTabId = new Map();
 		this.windowShellView = new Map();
-		// this.tempFileRegistry = new Map();
+		this.tempFileRegistry = new Map();
 	}
 
 	private scheduleWindowResize(window: BrowserWindow) {
@@ -78,16 +78,6 @@ export class TabService {
 				tab,
 				threadFilePath,
 				messagesFilePath,
-			});
-
-			withLoadHandlers(view, {
-				autoCleanTempFile: {
-					enable: true,
-					callback: () => {
-						TempStorage.cleanupFile(threadFilePath);
-						TempStorage.cleanupFile(messagesFilePath);
-					},
-				},
 			});
 		}
 
@@ -126,7 +116,7 @@ export class TabService {
 					this.windowActiveTabId.delete(capturedWindowId);
 				}
 
-				// this.cleanupTabTempFiles(capturedTabId);
+				this.cleanupTabTempFiles(capturedTabId);
 
 				// Check if all mappings related to the destroyed tab have been properly cleaned up
 				console.log(
@@ -179,15 +169,15 @@ export class TabService {
 		this.windowActiveTabId.set(window.id, newActiveTabId);
 	}
 
-	// private cleanupTabTempFiles(tabId: string) {
-	// 	const tempFiles = this.tempFileRegistry.get(tabId);
-	// 	if (tempFiles) {
-	// 		tempFiles.forEach((filePath) => {
-	// 			TempStorage.cleanupFile(filePath);
-	// 		});
-	// 		this.tempFileRegistry.delete(tabId);
-	// 	}
-	// }
+	private cleanupTabTempFiles(tabId: string) {
+		const tempFiles = this.tempFileRegistry.get(tabId);
+		if (tempFiles) {
+			tempFiles.forEach((filePath) => {
+				TempStorage.cleanupFile(filePath);
+			});
+			this.tempFileRegistry.delete(tabId);
+		}
+	}
 
 	// ******************************* Main Process Methods ******************************* //
 	async initWindowTabs(window: BrowserWindow, tabs: Tab[]): Promise<void> {
