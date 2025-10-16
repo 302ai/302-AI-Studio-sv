@@ -120,6 +120,11 @@ if (process.contextIsolated) {
 				ipcRenderer.on("tab:clear-messages", listener);
 				return () => ipcRenderer.removeListener("tab:clear-messages", listener);
 			},
+			onTabGenerateTitle: (callback: (data: { tabId: string; threadId: string }) => void) => {
+				const listener = (_: unknown, data: { tabId: string; threadId: string }) => callback(data);
+				ipcRenderer.on("tab:generate-title", listener);
+				return () => ipcRenderer.removeListener("tab:generate-title", listener);
+			},
 		});
 
 		// Expose shell window ID from process arguments

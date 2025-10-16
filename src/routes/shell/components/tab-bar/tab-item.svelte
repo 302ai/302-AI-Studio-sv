@@ -12,6 +12,7 @@
 		onTabCloseOthers: (tabId: string) => void;
 		onTabCloseOffside: (tabId: string) => void;
 		onTabClearMessages: (tabId: string) => void;
+		onTabGenerateTitle: (tabId: string) => void;
 		onOpenChange: (open: boolean) => void;
 		class?: string;
 	}
@@ -42,6 +43,7 @@
 		onTabCloseOthers,
 		onTabCloseOffside,
 		onTabClearMessages,
+		onTabGenerateTitle,
 		onOpenChange,
 		class: className,
 	}: Props = $props();
@@ -145,6 +147,10 @@
 
 		{#if tab.type === "chat"}
 			<ContextMenu.Separator />
+
+			<ContextMenu.Item onSelect={() => onTabGenerateTitle(tab.id)}>
+				{m.label_button_generate_title()}
+			</ContextMenu.Item>
 
 			<ContextMenu.Item onSelect={() => onTabClearMessages(tab.id)}>
 				{m.settings_shortcut_clearMessages()}

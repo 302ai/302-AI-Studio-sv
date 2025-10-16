@@ -128,6 +128,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("tabService:handleClearTabMessages", (event, tabId, threadId) =>
 		tabService.handleClearTabMessages(event, tabId, threadId),
 	);
+	ipcMain.handle("tabService:handleGenerateTabTitle", (event, tabId, threadId) =>
+		tabService.handleGenerateTabTitle(event, tabId, threadId),
+	);
 
 	// shortcutService service registration
 	ipcMain.handle("shortcutService:init", (event, shortcuts) =>
@@ -218,6 +221,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:handleShellViewLevel");
 	ipcMain.removeHandler("tabService:replaceTabContent");
 	ipcMain.removeHandler("tabService:handleClearTabMessages");
+	ipcMain.removeHandler("tabService:handleGenerateTabTitle");
 	ipcMain.removeHandler("shortcutService:init");
 	ipcMain.removeHandler("shortcutService:updateShortcuts");
 	ipcMain.removeHandler("shortcutService:getConflicts");

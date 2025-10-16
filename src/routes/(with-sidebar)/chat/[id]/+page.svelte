@@ -9,14 +9,22 @@
 
 	onMount(() => {
 		// Listen for clear messages event from main process
-		const unsub = window.electronAPI?.onTabClearMessages?.(({ tabId, threadId }) => {
+		const unsubClear = window.electronAPI?.onTabClearMessages?.(({ tabId, threadId }) => {
 			console.log("[Chat Page] Received clear messages event:", { tabId, threadId });
 			// Clear the in-memory chat state
 			chatState.clearMessages();
 		});
 
+		// Listen for generate title event from main process
+		const unsubGenerateTitle = window.electronAPI?.onTabGenerateTitle?.(async ({ tabId, threadId }) => {
+			console.log("[Chat Page] Received generate title event:", { tabId, threadId });
+			// Generate title for the current chat
+			await chatState.generateTitleManually();
+		});
+
 		return () => {
-			unsub?.();
+			unsubClear?.();
+			unsubGenerateTitle?.();
 		};
 	});
 </script>

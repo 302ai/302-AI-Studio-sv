@@ -11,9 +11,11 @@ import { Chat } from "@ai-sdk/svelte";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { nanoid } from "nanoid";
+import { toast } from "svelte-sonner";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
+import { m } from "$lib/paraglide/messages.js";
 
 const { broadcastService, threadService, storageService } = window.electronAPI;
 
@@ -465,6 +467,44 @@ class ChatState {
 			this.handleChatError(error);
 		}
 	};
+
+	async generateTitleManually(): Promise<void> {
+		const titleModel = preferencesSettings.titleGenerationModel;
+
+		if (!titleModel) {
+			console.warn("No title generation model configured");
+			toast.warning(m.toast_no_title_generation_model());
+			return;
+		}
+
+		if (this.messages.length < 2) {
+			console.warn("Not enough messages to generate title");
+			toast.warning(m.toast_empty_message());
+			return;
+		}
+
+		try {
+			const provider = persistedProviderState.current.find((p) => p.id === titleModel.providerId);
+			const serverPort = window.app?.serverPort ?? 8089;
+
+			const generatedTitle = await generateTitle(this.messages, titleModel, provider, serverPort);
+
+			if (generatedTitle) {
+				persistedChatParamsState.current.title = generatedTitle;
+				tabBarState.updateTabTitle(persistedChatParamsState.current.id, generatedTitle);
+
+				// Broadcast update event to trigger sidebar refresh
+				await broadcastService.broadcastToAll("thread-list-updated", {});
+
+				toast.success(m.toast_title_generation_success());
+			} else {
+				toast.error(m.toast_title_generation_failed());
+			}
+		} catch (error) {
+			console.error("Failed to generate title manually:", error);
+			toast.error(m.toast_title_generation_failed());
+		}
+	}
 
 	async createBranch(upToMessageId: string): Promise<string | null> {
 		try {

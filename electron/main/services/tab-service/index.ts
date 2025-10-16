@@ -922,6 +922,34 @@ export class TabService {
 			return false;
 		}
 	}
+
+	/**
+	 * Generate title for a specific tab
+	 */
+	async handleGenerateTabTitle(
+		_event: IpcMainInvokeEvent,
+		tabId: string,
+		threadId: string,
+	): Promise<boolean> {
+		console.log(`[handleGenerateTabTitle] Generating title for tab ${tabId}, thread ${threadId}`);
+
+		try {
+			// Get the tab's WebContentsView
+			const view = this.tabViewMap.get(tabId);
+			if (isUndefined(view) || view.webContents.isDestroyed()) {
+				console.warn(`[handleGenerateTabTitle] View not found or destroyed for tab ${tabId}`);
+				return false;
+			}
+
+			// Send a message to the tab to generate title
+			view.webContents.send("tab:generate-title", { tabId, threadId });
+
+			return true;
+		} catch (error) {
+			console.error(`[handleGenerateTabTitle] Failed to generate title:`, error);
+			return false;
+		}
+	}
 }
 
 export const tabService = new TabService();
