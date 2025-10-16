@@ -22,15 +22,30 @@
 	let renameTargetThreadId = $state<string | null>(null);
 	let renameTargetName = $state("");
 
-	function getTimeGroup(date: Date): TimeGroup {
-		const now = new Date();
-		const diffTime = now.getTime() - new Date(date).getTime();
-		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+	const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
-		if (diffDays === 0) return TimeGroup.TODAY;
+	function getStartOfDay(date: Date): Date {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
+		const start = new Date(date);
+		start.setHours(0, 0, 0, 0);
+		return start;
+	}
+
+	function getTimeGroup(date: Date | string): TimeGroup {
+		const targetDate = new Date(date);
+		if (Number.isNaN(targetDate.getTime())) {
+			return TimeGroup.EARLIER;
+		}
+
+		const todayStart = getStartOfDay(new Date());
+		const targetStart = getStartOfDay(targetDate);
+		const diffTime = todayStart.getTime() - targetStart.getTime();
+		const diffDays = Math.floor(diffTime / DAY_IN_MS);
+
+		if (diffDays <= 0) return TimeGroup.TODAY;
 		if (diffDays === 1) return TimeGroup.YESTERDAY;
-		if (diffDays < 7) return TimeGroup.LAST_7_DAYS;
-		if (diffDays < 30) return TimeGroup.LAST_30_DAYS;
+		if (diffDays <= 6) return TimeGroup.LAST_7_DAYS;
+		if (diffDays <= 29) return TimeGroup.LAST_30_DAYS;
 		return TimeGroup.EARLIER;
 	}
 
