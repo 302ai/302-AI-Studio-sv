@@ -1,11 +1,11 @@
 <script lang="ts">
-	import Button from "$lib/components/ui/button/button.svelte";
-	import * as Dialog from "$lib/components/ui/dialog/index.js";
 	import SettingSearchInput from "$lib/components/buss/settings/setting-search-input.svelte";
+	import Button from "$lib/components/ui/button/button.svelte";
 	import Checkbox from "$lib/components/ui/checkbox/checkbox.svelte";
+	import * as Dialog from "$lib/components/ui/dialog/index.js";
+	import * as m from "$lib/paraglide/messages.js";
 	import { mcpState } from "$lib/stores/mcp-state.svelte";
 	import { Server } from "@lucide/svelte";
-	import * as m from "$lib/paraglide/messages.js";
 
 	interface Props {
 		open: boolean;

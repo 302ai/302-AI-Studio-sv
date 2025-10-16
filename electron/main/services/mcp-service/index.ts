@@ -194,7 +194,11 @@ export class McpService {
 
 			try {
 				const tools = await mcpClient.tools();
-				Object.assign(allTools, tools);
+				// Add server ID prefix to each tool name to track which server it belongs to
+				for (const [toolName, toolDef] of Object.entries(tools)) {
+					const prefixedName = `${serverId}__${toolName}`;
+					allTools[prefixedName] = toolDef;
+				}
 			} catch (error) {
 				console.error(`Failed to get tools from server ${server.name}:`, error);
 			}

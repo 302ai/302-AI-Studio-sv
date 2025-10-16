@@ -1,12 +1,12 @@
 <!-- eslint-disable svelte/no-at-html-tags -->
 <script lang="ts">
+	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
+	import { CopyButton } from "$lib/components/buss/copy-button";
+	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
+	import { ChevronDown } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import type { ShikiHighlighter } from "./highlighter";
 	import { DEFAULT_THEME, ensureHighlighter } from "./highlighter";
-	import { CopyButton } from "$lib/components/buss/copy-button";
-	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
-	import { ChevronDown } from "@lucide/svelte";
-	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 
 	interface Props {
 		blockId: string;
@@ -14,6 +14,8 @@
 		language: string | null;
 		meta?: string | null;
 		theme?: string | null;
+		title?: string | null;
+		showCollapseButton?: boolean;
 	}
 
 	const props: Props = $props();
@@ -105,25 +107,27 @@
 </script>
 
 {#if props.code.trim()}
-	<div class="rounded-xl overflow-hidden border border-border bg-card w-full flex flex-col h-full">
+	<div class="rounded-xl overflow-hidden border border-border w-full flex flex-col h-full">
 		<div
 			class="flex justify-between items-center px-4 py-2 bg-muted border-b border-border min-h-10 flex-shrink-0"
 		>
-			<span class="text-sm font-medium text-muted-foreground select-none"
-				>{formatLanguageName(resolvedLanguage)}</span
-			>
+			<span class="text-sm font-medium text-muted-foreground select-none">
+				{props.title || formatLanguageName(resolvedLanguage)}
+			</span>
 			<div class="flex items-center gap-1">
 				<CopyButton content={props.code} position="bottom" />
-				<ButtonWithTooltip
-					class="text-muted-foreground hover:!bg-chat-action-hover"
-					tooltip="Toggle collapse"
-					tooltipSide="bottom"
-					onclick={toggleCollapse}
-				>
-					<ChevronDown
-						class={`transition-transform duration-200 ${isCollapsed ? "rotate-180" : ""}`}
-					/>
-				</ButtonWithTooltip>
+				{#if props.showCollapseButton !== false}
+					<ButtonWithTooltip
+						class="text-muted-foreground hover:!bg-chat-action-hover"
+						tooltip="Toggle collapse"
+						tooltipSide="bottom"
+						onclick={toggleCollapse}
+					>
+						<ChevronDown
+							class={`transition-transform duration-200 ${isCollapsed ? "rotate-180" : ""}`}
+						/>
+					</ButtonWithTooltip>
+				{/if}
 			</div>
 		</div>
 		{#if !isCollapsed}
