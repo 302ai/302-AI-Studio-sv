@@ -49,6 +49,7 @@ export class KeyManager {
 	private shortcuts: Map<string, ShortcutBinding> = new Map();
 	private windowId: number = -1;
 	private viewId: string = "";
+	private cleanupSync?: () => void;
 
 	constructor() {
 		this.init();
@@ -66,7 +67,17 @@ export class KeyManager {
 		window.addEventListener("keydown", this.handleKeyDown.bind(this), true);
 
 		// Listen to shortcuts sync from main process
-		window.electronAPI?.shortcut?.onShortcutSync?.(this.handleShortcutSync.bind(this));
+		this.cleanupSync = window.electronAPI.shortcut.onShortcutSync?.(
+			this.handleShortcutSync.bind(this),
+		);
+	}
+
+	destroy(): void {
+		if (this.cleanupSync) {
+			this.cleanupSync();
+			this.cleanupSync = undefined;
+		}
+		window.removeEventListener("keydown", this.handleKeyDown.bind(this), true);
 	}
 
 	private handleKeyDown(event: KeyboardEvent): void {
@@ -106,7 +117,7 @@ export class KeyManager {
 	}
 
 	private sendKeyPressed(keys: string[], editable: boolean): void {
-		if (!window.electronAPI?.shortcut?.sendShortcutKeyPressed) return;
+		if (!window.electronAPI.shortcut.sendShortcutKeyPressed) return;
 
 		const event: ShortcutKeyPressEvent = {
 			windowId: this.windowId,

@@ -8,11 +8,25 @@
 	import "$lib/utils/shortcut-actions-handler";
 	import { shortcutActionsHandler } from "$lib/utils/shortcut-actions-handler";
 	import { ModeWatcher } from "mode-watcher";
+	import { onMount } from "svelte";
 	import "../app.css";
 
 	const { children } = $props();
 
-	shortcutActionsHandler.init();
+	onMount(() => {
+		// Only initialize shortcut actions handler in tab views (chat pages)
+		// Shell view handles its own shortcuts in shell/+layout.svelte
+		const isShellView = window.location.pathname.startsWith("/shell");
+		if (!isShellView) {
+			shortcutActionsHandler.init();
+		}
+
+		return () => {
+			if (!isShellView) {
+				shortcutActionsHandler.destroy();
+			}
+		};
+	});
 </script>
 
 <svelte:head>

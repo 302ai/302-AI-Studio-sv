@@ -23,11 +23,13 @@
 	}
 
 	onMount(() => {
-		window.electronAPI.shortcut.onShortcutAction?.((event: ShortcutActionEvent) => {
+		const cleanup = window.electronAPI.shortcut.onShortcutAction?.((event: ShortcutActionEvent) => {
 			if (event.action === "toggleSidebar") {
 				useSidebar().toggle();
 			}
 		});
+
+		return cleanup;
 	});
 </script>
 
