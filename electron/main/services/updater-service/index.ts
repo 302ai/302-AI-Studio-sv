@@ -26,11 +26,14 @@ export class UpdaterService {
 		}
 	}
 
+	// ******************************* Private Methods ******************************* //
 	private async initializeAutoCheck() {
 		// Read initial autoUpdate setting
 		const autoUpdate = await generalSettingsStorage.getAutoUpdate();
 		if (autoUpdate) {
-			this.checkForUpdates();
+			setTimeout(() => {
+				this.checkForUpdates();
+			}, 1000);
 			this.startAutoCheck();
 		}
 	}
@@ -72,8 +75,9 @@ export class UpdaterService {
 	}
 
 	private startAutoCheck() {
-		// Clear existing interval if any
-		this.stopAutoCheck();
+		if (this.checkInterval) {
+			this.stopAutoCheck();
+		}
 
 		this.checkInterval = setInterval(() => {
 			this.checkForUpdates();
@@ -136,6 +140,7 @@ export class UpdaterService {
 		}
 	}
 
+	// ******************************* IPC Methods ******************************* //
 	async checkForUpdatesManually(_event: IpcMainInvokeEvent): Promise<void> {
 		this.checkForUpdates();
 	}

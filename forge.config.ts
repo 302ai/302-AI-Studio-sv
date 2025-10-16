@@ -10,7 +10,6 @@ import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerDMG } from "@electron-forge/maker-dmg";
 import { MakerRpm } from "@electron-forge/maker-rpm";
 import { MakerSquirrel } from "@electron-forge/maker-squirrel";
-import { MakerWix } from "@electron-forge/maker-wix";
 import { MakerZIP } from "@electron-forge/maker-zip";
 import { FusesPlugin } from "@electron-forge/plugin-fuses";
 import { VitePlugin } from "@electron-forge/plugin-vite";
@@ -102,7 +101,7 @@ const getPackagerConfig = () => {
 		appBundleId: "com.302ai.302aistudio",
 	};
 
-	if (process.platform === "darwin") {
+	if (process.platform === "darwin" && process.env.NODE_ENV === "production") {
 		const macConfig: any = {
 			...baseConfig,
 			osxSign: {
@@ -138,9 +137,9 @@ const config: ForgeConfig = {
 			},
 			["win32"],
 		),
-		new MakerWix({
-			icon: "static/icon.ico",
-		}),
+		// new MakerWix({
+		// 	icon: "static/icon.ico",
+		// }),
 		new MakerZIP({}, ["darwin", "win32"]),
 		new MakerDMG({
 			format: "ULFO",
