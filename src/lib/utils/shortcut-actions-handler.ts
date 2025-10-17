@@ -1,5 +1,8 @@
+import { m } from "$lib/paraglide/messages";
 import { chatState } from "$lib/stores/chat-state.svelte";
 import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
+import { persistedProviderState } from "$lib/stores/provider-state.svelte";
+import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 import type { ShortcutActionEvent } from "@shared/types/shortcut";
 import { toast } from "svelte-sonner";
 
@@ -96,6 +99,27 @@ export class ShortcutActionsHandler {
 	}
 
 	private handleToggleModelPanel(): void {
+		const hasConfiguredProviders = persistedProviderState.current.some(
+			(provider) => provider.enabled && provider.apiKey && provider.apiKey.trim() !== "",
+		);
+
+		if (!hasConfiguredProviders) {
+			toast.info(m.toast_no_provider_configured(), {
+				action: {
+					label: m.text_button_go_to_settings(),
+					onClick: async () => {
+						await tabBarState.handleNewTab(
+							m.title_settings(),
+							"settings",
+							true,
+							"/settings/model-settings",
+						);
+					},
+				},
+			});
+			return;
+		}
+
 		modelPanelState.toggle();
 	}
 
