@@ -131,7 +131,7 @@ const config: ForgeConfig = {
 	makers: [
 		new MakerSquirrel(
 			{
-				name: "302 AI Studio",
+				name: "302AIStudio",
 				setupIcon: "static/icon.ico",
 				iconUrl: "https://file.302.ai/gpt/playground/20250925/69b7db4b8f154fe7ad9397ba50f827b9.ico",
 			},
