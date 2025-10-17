@@ -5,7 +5,6 @@ import { isNull, isUndefined } from "es-toolkit";
 import path from "node:path";
 import {
 	CONFIG,
-	ENVIRONMENT,
 	isMac,
 	PLATFORM,
 	SHELL_WINDOW_FULLSCREEN_CHANGED,
@@ -125,7 +124,7 @@ export class WindowService {
 			}),
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
-				devTools: ENVIRONMENT.IS_DEV,
+				devTools: true,
 				webgl: true,
 				sandbox: false,
 				webSecurity: false,
