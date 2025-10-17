@@ -9,9 +9,12 @@
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
+	import type { AttachmentFile } from "@shared/types";
+	import { nanoid } from "nanoid";
 	import { toast } from "svelte-sonner";
 	import { match } from "ts-pattern";
 	import { AttachmentThumbnailBar } from "../attachment";
+	import { MAX_ATTACHMENT_COUNT } from "../attachment/attachment-uploader.svelte";
 	import ChatActions from "./chat-actions.svelte";
 	import StreamingIndicator from "./streaming-indicator.svelte";
 
@@ -78,6 +81,61 @@
 				}
 			});
 	}
+
+	async function generatePreview(file: File): Promise<string | undefined> {
+		if (file.type.startsWith("image/")) {
+			return new Promise((resolve) => {
+				const reader = new FileReader();
+				reader.onload = (e) => resolve(e.target?.result as string);
+				reader.onerror = () => resolve(undefined);
+				reader.readAsDataURL(file);
+			});
+		}
+		return undefined;
+	}
+
+	async function handlePaste(event: ClipboardEvent) {
+		const items = event.clipboardData?.items;
+		if (!items) return;
+
+		const files: File[] = [];
+
+		for (const item of Array.from(items)) {
+			if (item.kind === "file") {
+				const file = item.getAsFile();
+				if (file) files.push(file);
+			}
+		}
+
+		if (files.length === 0) return;
+
+		event.preventDefault();
+
+		const newAttachments: AttachmentFile[] = [];
+
+		for (const file of files) {
+			if (chatState.attachments.length + newAttachments.length >= MAX_ATTACHMENT_COUNT) {
+				break;
+			}
+
+			const preview = await generatePreview(file);
+			const filePath = (file as File & { path?: string }).path || file.name;
+
+			newAttachments.push({
+				id: nanoid(),
+				name: file.name || `pasted-file-${Date.now()}`,
+				type: file.type,
+				size: file.size,
+				file,
+				preview,
+				filePath,
+			});
+		}
+
+		if (newAttachments.length > 0) {
+			chatState.addAttachments(newAttachments);
+		}
+	}
 </script>
 
 <div class="w-full max-w-chat-max-w" data-layoutid="chat-input-container">
@@ -111,6 +169,7 @@
 			oncompositionend={() => {
 				isComposing = false;
 			}}
+			onpaste={handlePaste}
 		/>
 
 		<div class="mt-1.5 flex flex-row justify-between">
