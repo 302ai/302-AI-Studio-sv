@@ -4,6 +4,7 @@ import { ChatErrorHandler, type ChatError } from "$lib/utils/error-handler";
 import { notificationState } from "./notification-state.svelte";
 
 import { generateTitle } from "$lib/api/title-generation";
+import { m } from "$lib/paraglide/messages.js";
 import { DynamicChatTransport } from "$lib/transport/dynamic-chat-transport";
 import { convertAttachmentsToMessageParts } from "$lib/utils/attachment-converter";
 import { clone } from "$lib/utils/clone";
@@ -15,7 +16,6 @@ import { toast } from "svelte-sonner";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
-import { m } from "$lib/paraglide/messages.js";
 
 const { broadcastService, threadService, storageService } = window.electronAPI;
 
@@ -397,6 +397,7 @@ class ChatState {
 
 	clearMessages() {
 		this.messages = [];
+		persistedMessagesState.current = [];
 	}
 
 	updateMessage(messageId: string, content: string) {
