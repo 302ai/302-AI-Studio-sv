@@ -137,12 +137,22 @@ export class ShortcutActionsHandler {
 	}
 
 	private async handleToggleSidebar(windowId: number): Promise<void> {
-		const shellView = this.getShellViewWebContents(windowId);
-		if (shellView && !shellView.isDestroyed()) {
-			shellView.send("shortcut:action", {
+		const activeTabId = tabService.getActiveTabId(windowId);
+
+		if (!activeTabId) {
+			console.log(`[ActionsHandler] No active tab found`);
+			return;
+		}
+
+		const view = tabService.getTabView(activeTabId);
+
+		if (view && !view.webContents.isDestroyed()) {
+			view.webContents.send("shortcut:action", {
 				action: "toggleSidebar",
 				ctx: { windowId },
 			});
+		} else {
+			console.log(`[ActionsHandler] Cannot send - view is null or destroyed`);
 		}
 	}
 
