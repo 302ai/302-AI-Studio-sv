@@ -58,10 +58,10 @@ jobs:
       - name: Generate paraglide files
         run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
 
-      # - name: Run quality checks
-      #   run: |
-      #     npx eslint electron/main/
-      #     pnpm run check
+      - name: Run quality checks
+        run: |
+          npx eslint electron/main/
+          pnpm run check
 
       - name: Create GitHub release (Ubuntu only)
         if: matrix.os == 'ubuntu-latest'
