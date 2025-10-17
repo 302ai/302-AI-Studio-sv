@@ -143,7 +143,7 @@ const config: ForgeConfig = {
 			config: {
 				name: "302.AI.Studio",
 				executableName: "302 AI Studio",
-				artifactName: "${name}.Setup.${version}.${ext}",
+				artifactName: "${name}.Setup.${version}.exe",
 				updater: {
 					url: "https://github.com/302ai/302-AI-Studio/releases/latest/download",
 				},
