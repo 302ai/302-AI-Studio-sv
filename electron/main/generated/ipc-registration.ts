@@ -11,8 +11,8 @@ import {
 	tabService,
 	shortcutService,
 	threadService,
-	updaterService,
 	windowService,
+	updaterService,
 } from "../services";
 
 /**
@@ -157,6 +157,17 @@ export function registerIpcHandlers() {
 		threadService.renameThread(event, threadId, newName),
 	);
 
+	// windowService service registration
+	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
+		windowService.focusWindow(event, windowId, tabId),
+	);
+	ipcMain.handle("windowService:handleSplitShellWindow", (event, triggerTabId) =>
+		windowService.handleSplitShellWindow(event, triggerTabId),
+	);
+	ipcMain.handle("windowService:handleMoveTabIntoExistingWindow", (event, triggerTabId, windowId) =>
+		windowService.handleMoveTabIntoExistingWindow(event, triggerTabId, windowId),
+	);
+
 	// updaterService service registration
 	ipcMain.handle("updaterService:checkForUpdatesManually", (event) =>
 		updaterService.checkForUpdatesManually(event),
@@ -167,17 +178,6 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("updaterService:setAutoUpdate", (event, enabled) =>
 		updaterService.setAutoUpdate(event, enabled),
-	);
-
-	// windowService service registration
-	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
-		windowService.focusWindow(event, windowId, tabId),
-	);
-	ipcMain.handle("windowService:handleSplitShellWindow", (event, triggerTabId) =>
-		windowService.handleSplitShellWindow(event, triggerTabId),
-	);
-	ipcMain.handle("windowService:handleMoveTabIntoExistingWindow", (event, triggerTabId, windowId) =>
-		windowService.handleMoveTabIntoExistingWindow(event, triggerTabId, windowId),
 	);
 }
 
@@ -231,11 +231,11 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("threadService:getThread");
 	ipcMain.removeHandler("threadService:deleteThread");
 	ipcMain.removeHandler("threadService:renameThread");
+	ipcMain.removeHandler("windowService:focusWindow");
+	ipcMain.removeHandler("windowService:handleSplitShellWindow");
+	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");
 	ipcMain.removeHandler("updaterService:checkForUpdatesManually");
 	ipcMain.removeHandler("updaterService:quitAndInstall");
 	ipcMain.removeHandler("updaterService:isUpdateDownloaded");
 	ipcMain.removeHandler("updaterService:setAutoUpdate");
-	ipcMain.removeHandler("windowService:focusWindow");
-	ipcMain.removeHandler("windowService:handleSplitShellWindow");
-	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");
 }
