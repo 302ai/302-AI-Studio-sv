@@ -6,6 +6,7 @@ import path from "node:path";
 
 const require = createRequire(import.meta.url);
 
+import MakerNSIS from "@electron-addons/electron-forge-maker-nsis";
 import { MakerDeb } from "@electron-forge/maker-deb";
 import { MakerDMG } from "@electron-forge/maker-dmg";
 import { MakerRpm } from "@electron-forge/maker-rpm";
@@ -137,9 +138,7 @@ const config: ForgeConfig = {
 			},
 			["win32"],
 		),
-		// new MakerWix({
-		// 	icon: "static/icon.ico",
-		// }),
+		new MakerNSIS({}),
 		new MakerZIP({}, ["darwin", "win32"]),
 		new MakerDMG({
 			icon: "static/icon.png",

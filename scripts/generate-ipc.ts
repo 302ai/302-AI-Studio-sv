@@ -2,8 +2,8 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { TypeScriptServiceParser } from "../vite-plugins/ipc-service-generator/parser";
 import { IpcStructureGenerator } from "../vite-plugins/ipc-service-generator/generator";
+import { TypeScriptServiceParser } from "../vite-plugins/ipc-service-generator/parser";
 import type { IpcServiceGeneratorOptions } from "../vite-plugins/ipc-service-generator/types";
 
 /**
@@ -21,8 +21,8 @@ async function generateIpcServices() {
 	};
 
 	const { servicesDir, outputDir } = options;
-	const resolvedServicesDir = path.resolve(projectRoot, servicesDir);
-	const resolvedOutputDir = path.resolve(projectRoot, outputDir);
+	const resolvedServicesDir = path.resolve(projectRoot, servicesDir ?? "electron/main/services");
+	const resolvedOutputDir = path.resolve(projectRoot, outputDir ?? "electron/main/generated");
 
 	console.log(`🔍 IPC Service Generator: Scanning directory ${resolvedServicesDir}`);
 
