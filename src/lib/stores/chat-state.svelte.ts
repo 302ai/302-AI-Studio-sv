@@ -401,6 +401,7 @@ class ChatState {
 
 	clearMessages() {
 		this.messages = [];
+		persistedMessagesState.current = [];
 	}
 
 	updateMessage(messageId: string, content: string) {

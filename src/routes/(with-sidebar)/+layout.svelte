@@ -7,9 +7,8 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Ghost, Settings } from "@lucide/svelte";
-	import type { ShortcutActionEvent } from "@shared/types/shortcut";
-	import { onMount } from "svelte";
 	import AppSidebar from "./components/app-sidebar.svelte";
+	import SidebarShortcutHandler from "./components/sidebar-shortcut-handler.svelte";
 
 	const { children } = $props();
 
@@ -21,19 +20,12 @@
 			"/settings/general-settings",
 		);
 	}
-
-	onMount(() => {
-		const cleanup = window.electronAPI.shortcut.onShortcutAction?.((event: ShortcutActionEvent) => {
-			if (event.action === "toggleSidebar") {
-				useSidebar().toggle();
-			}
-		});
-
-		return cleanup;
-	});
 </script>
 
 <Sidebar.Provider class="h-full min-h-fit">
+	<!-- Handle sidebar shortcuts - must be inside Provider to access context -->
+	<SidebarShortcutHandler />
+
 	<AppSidebar />
 
 	<Sidebar.Inset class="relative flex-1">

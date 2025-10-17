@@ -16,11 +16,13 @@
 		});
 
 		// Listen for generate title event from main process
-		const unsubGenerateTitle = window.electronAPI?.onTabGenerateTitle?.(async ({ tabId, threadId }) => {
-			console.log("[Chat Page] Received generate title event:", { tabId, threadId });
-			// Generate title for the current chat
-			await chatState.generateTitleManually();
-		});
+		const unsubGenerateTitle = window.electronAPI?.onTabGenerateTitle?.(
+			async ({ tabId, threadId }) => {
+				console.log("[Chat Page] Received generate title event:", { tabId, threadId });
+				// Generate title for the current chat
+				await chatState.generateTitleManually();
+			},
+		);
 
 		return () => {
 			unsubClear?.();

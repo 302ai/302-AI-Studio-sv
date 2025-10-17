@@ -1,5 +1,8 @@
+import { m } from "$lib/paraglide/messages";
 import { chatState } from "$lib/stores/chat-state.svelte";
 import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
+import { persistedProviderState } from "$lib/stores/provider-state.svelte";
+import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 import type { ShortcutActionEvent } from "@shared/types/shortcut";
 import { toast } from "svelte-sonner";
 
@@ -77,13 +80,27 @@ export class ShortcutActionsHandler {
 		chatState.regenerateMessage();
 	}
 
-	private handleCreateBranch(): void {
+	private async handleCreateBranch(): Promise<void> {
 		if (chatState.messages.length === 0) {
 			toast.error("No messages to branch from");
 			return;
 		}
-		// TODO: Implement branch creation logic
-		console.log("Create branch shortcut triggered");
+
+		// Create branch from the last message
+		const lastMessage = chatState.messages[chatState.messages.length - 1];
+
+		try {
+			const newThreadId = await chatState.createBranch(lastMessage.id);
+			if (newThreadId) {
+				// Open the new thread in a new tab
+				await tabBarState.handleNewTabForExistingThread(newThreadId);
+			} else {
+				toast.error(m.toast_unknown_error());
+			}
+		} catch (error) {
+			console.error("Failed to create branch:", error);
+			toast.error(m.toast_unknown_error());
+		}
 	}
 
 	private handleBranchAndSend(): void {
@@ -96,6 +113,27 @@ export class ShortcutActionsHandler {
 	}
 
 	private handleToggleModelPanel(): void {
+		const hasConfiguredProviders = persistedProviderState.current.some(
+			(provider) => provider.enabled && provider.apiKey && provider.apiKey.trim() !== "",
+		);
+
+		if (!hasConfiguredProviders) {
+			toast.info(m.toast_no_provider_configured(), {
+				action: {
+					label: m.text_button_go_to_settings(),
+					onClick: async () => {
+						await tabBarState.handleNewTab(
+							m.title_settings(),
+							"settings",
+							true,
+							"/settings/model-settings",
+						);
+					},
+				},
+			});
+			return;
+		}
+
 		modelPanelState.toggle();
 	}
 
