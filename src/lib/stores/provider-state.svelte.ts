@@ -14,6 +14,15 @@ export const persistedModelState = new PersistedState<Model[]>("app-models", [])
 
 const { aiApplicationService } = window.electronAPI;
 
+$effect.root(() => {
+	$effect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		persistedModelState.current;
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		persistedProviderState.current;
+	});
+});
+
 class ProviderState {
 	getProvider(id: string): ModelProvider | null {
 		return persistedProviderState.current.find((p) => p.id === id) || null;
@@ -175,8 +184,11 @@ class ProviderState {
 			const result = await getModelsByProvider(provider);
 			if (result.success && result.data) {
 				this.updateProvider(provider.id, { status: "connected" });
-				this.removeModelsByProvider(provider.id);
-				persistedModelState.current = [...persistedModelState.current, ...result.data.models];
+				persistedModelState.current = persistedModelState.current
+					.filter((models) => {
+						return models.providerId !== provider.id;
+					})
+					.concat(result.data.models);
 
 				toast.success(
 					m.text_fetch_models_success({

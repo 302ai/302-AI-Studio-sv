@@ -3,6 +3,13 @@ import type { McpServer } from "@shared/storage/mcp";
 
 const persistedMcpState = new PersistedState<McpServer[]>("app-mcp-servers", []);
 
+$effect.root(() => {
+	$effect(() => {
+		// eslint-disable-next-line @typescript-eslint/no-unused-expressions
+		persistedMcpState.current;
+	});
+});
+
 class McpState {
 	servers = $derived(persistedMcpState.current);
 	isHydrated = $derived(persistedMcpState.isHydrated);
