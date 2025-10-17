@@ -178,7 +178,6 @@
 			"allowToChangeInstallationDirectory": true,
 			"createDesktopShortcut": true,
 			"createStartMenuShortcut": true,
-			"buildUniversalInstaller": false,
 			"deleteAppDataOnUninstall": true
 		},
 		"win": {
