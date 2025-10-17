@@ -2,7 +2,6 @@ import type { Tab } from "@shared/types";
 import { WebContentsView } from "electron";
 import path from "node:path";
 import { stringify } from "superjson";
-import { ENVIRONMENT } from "../constants";
 
 export interface WebContentsConfig {
 	windowId: number;
@@ -43,7 +42,7 @@ export class WebContentsFactory {
 		const view = new WebContentsView({
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
-				devTools: ENVIRONMENT.IS_DEV,
+				devTools: true,
 				webgl: true,
 				additionalArguments: [...commonArgs, ...additionalArgs],
 				sandbox: false,
