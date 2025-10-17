@@ -138,8 +138,12 @@ const config: ForgeConfig = {
 			["win32"],
 		),
 		{
-			name: "@electron-addons/electron-forge-maker-nsis",
-			config: {},
+			name: "@felixrieseberg/electron-forge-maker-nsis",
+			config: {
+				updater: {
+					url: "https://github.com/302ai/302-AI-Studio/releases/latest/download",
+				},
+			},
 		},
 		new MakerZIP({}, ["darwin", "win32"]),
 		new MakerDMG({

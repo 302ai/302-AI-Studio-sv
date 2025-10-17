@@ -47,7 +47,7 @@
 		"@ai-sdk/anthropic": "^2.0.17",
 		"@ai-sdk/openai": "^2.0.32",
 		"@ai-sdk/svelte": "^3.0.48",
-		"@electron-addons/electron-forge-maker-nsis": "^7.0.2",
+		"@felixrieseberg/electron-forge-maker-nsis": "^7.2.0",
 		"@electron-forge/cli": "^7.9.0",
 		"@electron-forge/maker-deb": "^7.9.0",
 		"@electron-forge/maker-dmg": "^7.9.0",
