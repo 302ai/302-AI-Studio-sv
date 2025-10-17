@@ -141,9 +141,7 @@ const config: ForgeConfig = {
 		{
 			name: "@felixrieseberg/electron-forge-maker-nsis",
 			config: {
-				name: "302.AI.Studio",
-				executableName: "302 AI Studio",
-				artifactName: "${name}.Setup.${version}.exe",
+				name: "302 AI Studio",
 				updater: {
 					url: "https://github.com/302ai/302-AI-Studio/releases/latest/download",
 				},
