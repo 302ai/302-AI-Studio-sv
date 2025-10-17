@@ -27,6 +27,11 @@ export class ShortcutEngine {
 	private windowIndex = new Map<number, Map<string, ShortcutBinding>>();
 	private webviewIndex = new Map<string, Map<string, ShortcutBinding>>();
 
+	// Deduplication: track last handled shortcut to prevent duplicate triggers
+	private lastHandledKey: string | null = null;
+	private lastHandledTime: number = 0;
+	private readonly DEBOUNCE_MS = 200; // 200ms debounce window
+
 	constructor() {}
 
 	init(shortcuts: ShortcutBinding[], handler: ShortcutHandler): void {
@@ -164,9 +169,29 @@ export class ShortcutEngine {
 		const keys = normalizeKeys(input as InputEventLike);
 		const key = keysToString(keys);
 
+		// Ignore empty keys or modifier-only keys (key releases)
+		if (!key || keys.length === 0) {
+			return;
+		}
+
 		const match = this.findMatch(key, windowId, viewId);
 
 		if (match) {
+			// Debounce: prevent duplicate triggers within the debounce window
+			const now = Date.now();
+			const keyIdentifier = `${windowId}:${key}`;
+			const timeSinceLastHandle = now - this.lastHandledTime;
+
+			if (this.lastHandledKey === keyIdentifier && timeSinceLastHandle < this.DEBOUNCE_MS) {
+				// This is a duplicate event within the debounce window, ignore it
+				electronEvent.preventDefault();
+				return;
+			}
+
+			// Update debounce tracking
+			this.lastHandledKey = keyIdentifier;
+			this.lastHandledTime = now;
+
 			electronEvent.preventDefault();
 			this.dispatch(match.binding.action, { windowId, viewId });
 		}
