@@ -80,13 +80,27 @@ export class ShortcutActionsHandler {
 		chatState.regenerateMessage();
 	}
 
-	private handleCreateBranch(): void {
+	private async handleCreateBranch(): Promise<void> {
 		if (chatState.messages.length === 0) {
 			toast.error("No messages to branch from");
 			return;
 		}
-		// TODO: Implement branch creation logic
-		console.log("Create branch shortcut triggered");
+
+		// Create branch from the last message
+		const lastMessage = chatState.messages[chatState.messages.length - 1];
+
+		try {
+			const newThreadId = await chatState.createBranch(lastMessage.id);
+			if (newThreadId) {
+				// Open the new thread in a new tab
+				await tabBarState.handleNewTabForExistingThread(newThreadId);
+			} else {
+				toast.error(m.toast_unknown_error());
+			}
+		} catch (error) {
+			console.error("Failed to create branch:", error);
+			toast.error(m.toast_unknown_error());
+		}
 	}
 
 	private handleBranchAndSend(): void {
