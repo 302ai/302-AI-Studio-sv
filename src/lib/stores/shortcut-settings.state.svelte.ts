@@ -30,6 +30,60 @@ const persistedShortcutSettings = new PersistedState<ShortcutSettingsState>(
 );
 
 class ShortcutSettingsManager {
+	private migrationApplied = false;
+
+	constructor() {
+		// Apply migration once after hydration
+		if (typeof window !== "undefined") {
+			const checkHydration = () => {
+				if (persistedShortcutSettings.isHydrated && !this.migrationApplied) {
+					this.applyMigration();
+					this.migrationApplied = true;
+				} else if (!persistedShortcutSettings.isHydrated) {
+					setTimeout(checkHydration, 50);
+				}
+			};
+			checkHydration();
+		}
+	}
+
+	private applyMigration(): void {
+		// Check if we're on Mac - if so, no migration needed
+		const isMac = typeof window !== "undefined" && window.app?.platform === "darwin";
+		if (isMac) return;
+
+		const state = persistedShortcutSettings.current;
+		let needsUpdate = false;
+
+		// Check if any shortcut has Cmd or Option
+		const hasOldKeys = state.shortcuts.some((s) =>
+			s.keys.some((key) => key === "Cmd" || key === "Option"),
+		);
+
+		if (!hasOldKeys) return;
+
+		// Migrate Cmd -> Ctrl and Option -> Alt
+		const migratedShortcuts = state.shortcuts.map((shortcut) => ({
+			...shortcut,
+			keys: shortcut.keys.map((key) => {
+				if (key === "Cmd") {
+					needsUpdate = true;
+					return "Ctrl";
+				}
+				if (key === "Option") {
+					needsUpdate = true;
+					return "Alt";
+				}
+				return key;
+			}),
+		}));
+
+		if (needsUpdate) {
+			console.log("[Shortcut Migration] Migrating shortcuts from Cmd to Ctrl");
+			persistedShortcutSettings.current = { shortcuts: migratedShortcuts };
+		}
+	}
+
 	get state(): ShortcutSettingsState {
 		return persistedShortcutSettings.current;
 	}
