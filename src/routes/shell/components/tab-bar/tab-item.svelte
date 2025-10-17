@@ -153,28 +153,14 @@
 			{m.label_button_new_tab()}
 		</ContextMenu.Item>
 
-		{#if tab.type === "chat"}
-			<ContextMenu.Separator />
-
-			<ContextMenu.Item onSelect={() => onTabGenerateTitle(tab.id)}>
-				{m.label_button_generate_title()}
-			</ContextMenu.Item>
-
-			<ContextMenu.Item onSelect={() => onTabClearMessages(tab.id)}>
-				{m.settings_shortcut_clearMessages()}
-			</ContextMenu.Item>
-		{/if}
-
 		<ContextMenu.Separator />
 
 		{#if tab.type === "chat"}
 			<ContextMenu.Item onSelect={handleScreenshot} disabled={!isActive}>
 				{m.screenshot_action()}
 			</ContextMenu.Item>
+			<ContextMenu.Separator />
 		{/if}
-		<!-- <ContextMenu.Item onSelect={handleScreenshot} disabled={!isActive || tab.type !== "chat"}>
-			{m.screenshot_action()}
-		</ContextMenu.Item> -->
 
 		{#if windowTabsInfo.length > 0}
 			<ContextMenu.Sub>

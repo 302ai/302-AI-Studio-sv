@@ -147,6 +147,24 @@
 		tabBarState.updateTabTitle(renameTargetThreadId, trimmedName);
 		closeRenameDialog();
 	}
+
+	async function handleThreadGenerateTitle(threadId: string) {
+		const relatedTab = tabBarState.tabs.find((tab) => tab.threadId === threadId);
+
+		if (relatedTab?.type === "chat" && relatedTab.threadId) {
+			const { tabService } = window.electronAPI;
+			await tabService.handleGenerateTabTitle(relatedTab.id, relatedTab.threadId);
+		}
+	}
+
+	async function handleThreadClearMessages(threadId: string) {
+		const relatedTab = tabBarState.tabs.find((tab) => tab.threadId === threadId);
+
+		if (relatedTab?.type === "chat" && relatedTab.threadId) {
+			const { tabService } = window.electronAPI;
+			await tabService.handleClearTabMessages(relatedTab.id, relatedTab.threadId);
+		}
+	}
 </script>
 
 <Sidebar.Root collapsible="offcanvas" variant="sidebar" class="border-none">
@@ -171,6 +189,8 @@
 								onThreadClick={handleThreadClick}
 								onToggleFavorite={() => threadsState.toggleFavorite(threadId)}
 								onRenameThread={handleRenameThread}
+								onThreadGenerateTitle={handleThreadGenerateTitle}
+								onThreadClearMessages={handleThreadClearMessages}
 								onThreadDelete={handleThreadDelete}
 							/>
 						{/each}
@@ -203,6 +223,8 @@
 													onThreadClick={handleThreadClick}
 													onToggleFavorite={() => threadsState.toggleFavorite(threadId)}
 													onRenameThread={handleRenameThread}
+													onThreadGenerateTitle={handleThreadGenerateTitle}
+													onThreadClearMessages={handleThreadClearMessages}
 													onThreadDelete={handleThreadDelete}
 												/>
 											{/each}

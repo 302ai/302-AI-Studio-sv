@@ -14,6 +14,8 @@
 		onThreadClick: (threadId: string) => void;
 		onToggleFavorite: (threadId: string) => void;
 		onRenameThread: (threadId: string, currentName: string) => void;
+		onThreadGenerateTitle: (threadId: string) => void;
+		onThreadClearMessages: (threadId: string) => void;
 		onThreadDelete: (threadId: string) => void;
 	}
 
@@ -25,6 +27,8 @@
 		onThreadClick,
 		onToggleFavorite,
 		onRenameThread,
+		onThreadGenerateTitle,
+		onThreadClearMessages,
 		onThreadDelete,
 	}: Props = $props();
 
@@ -88,6 +92,14 @@
 	<ContextMenu.Content>
 		<ContextMenu.Item onSelect={() => onRenameThread(threadId, thread.title)}>
 			{m.title_button_rename()}
+		</ContextMenu.Item>
+
+		<ContextMenu.Item onSelect={() => onThreadGenerateTitle(threadId)}>
+			{m.label_button_generate_title()}
+		</ContextMenu.Item>
+
+		<ContextMenu.Item onSelect={() => onThreadClearMessages(threadId)}>
+			{m.settings_shortcut_clearMessages()}
 		</ContextMenu.Item>
 
 		<ContextMenu.Item onSelect={(e) => handleToggleFavorite(threadId, e)}>
