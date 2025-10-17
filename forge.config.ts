@@ -137,9 +137,10 @@ const config: ForgeConfig = {
 			},
 			["win32"],
 		),
-		// new MakerWix({
-		// 	icon: "static/icon.ico",
-		// }),
+		{
+			name: "@electron-addons/electron-forge-maker-nsis",
+			config: {},
+		},
 		new MakerZIP({}, ["darwin", "win32"]),
 		new MakerDMG({
 			icon: "static/icon.png",

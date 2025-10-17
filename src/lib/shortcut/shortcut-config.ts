@@ -78,10 +78,10 @@ export const SHORTCUT_OPTIONS: Record<ShortcutActionWithoutSendMessage, Shortcut
 	switchToTab8: [],
 	switchToTab9: [],
 };
-export const isMac = false;
-export const isWindows = true;
-export const isLinux = false;
-export const isDev = process.env.NODE_ENV === "development";
+export const isMac = window.app.platform === "darwin";
+export const isWindows = window.app.platform === "win32";
+export const isLinux = window.app.platform === "linux";
+export const isDev = window.app.isDev;
 
 export const PLATFORM_KEY_MAP: Record<string, string> = {
 	Cmd: isMac ? "⌘" : "Ctrl",
