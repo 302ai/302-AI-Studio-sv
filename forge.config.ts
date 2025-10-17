@@ -131,16 +131,18 @@ const config: ForgeConfig = {
 	makers: [
 		new MakerSquirrel(
 			{
-				name: "302AIStudio",
+				name: "302-AI-Studio",
 				setupIcon: "static/icon.ico",
 				iconUrl: "https://file.302.ai/gpt/playground/20250925/69b7db4b8f154fe7ad9397ba50f827b9.ico",
+				loadingGif: "static/icon.gif",
 			},
 			["win32"],
 		),
 		{
 			name: "@felixrieseberg/electron-forge-maker-nsis",
 			config: {
-				appName: "302 AI Studio",
+				name: "302-AI-Studio",
+				executableName: "302 AI Studio",
 				updater: {
 					url: "https://github.com/302ai/302-AI-Studio/releases/latest/download",
 				},

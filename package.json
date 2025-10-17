@@ -1,5 +1,6 @@
 {
 	"name": "302-ai-studio",
+	"displayName": "302AIStudio",
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
@@ -172,9 +173,13 @@
 		"asar": true,
 		"publish": null,
 		"nsis": {
+			"shortcutName": "302 AI Studio",
 			"oneClick": false,
+			"allowToChangeInstallationDirectory": true,
 			"createDesktopShortcut": true,
-			"runAfterFinish": true
+			"createStartMenuShortcut": true,
+			"buildUniversalInstaller": false,
+			"deleteAppDataOnUninstall": true
 		},
 		"win": {
 			"target": [
