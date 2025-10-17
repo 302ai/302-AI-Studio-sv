@@ -145,6 +145,11 @@ const config: ForgeConfig = {
 				updater: {
 					url: "https://github.com/302ai/302-AI-Studio/releases/latest/download",
 				},
+				getAdditionalConfig: () => {
+					return {
+						artifactName: "${productName} Setup ${version}.exe",
+					};
+				},
 			},
 		},
 		new MakerZIP({}, ["darwin", "win32"]),
