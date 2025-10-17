@@ -81,7 +81,6 @@ app.on("window-all-closed", () => {
 if (isMac) {
 	// Handle Cmd+Q (or menu quit) - ensure window close listeners fire
 	app.on("before-quit", (event) => {
-		// Skip interception if this is triggered by update installation
 		if (UpdaterService.isInstallingUpdateNow()) return;
 
 		event.preventDefault();

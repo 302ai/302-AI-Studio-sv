@@ -1,7 +1,9 @@
+import { isMac } from "@electron/main/constants";
 import { app, autoUpdater, dialog, type IpcMainInvokeEvent } from "electron";
 import { broadcastService } from "../broadcast-service";
 import { generalSettingsService } from "../settings-service/general-settings-service";
 import { generalSettingsStorage } from "../storage-service/general-settings-storage";
+import { windowService } from "../window-service";
 
 const UPDATE_CHECK_INTERVAL = 60 * 60 * 1000;
 
@@ -135,11 +137,18 @@ export class UpdaterService {
 			if (response === 0) {
 				// User clicked "Restart Now"
 				UpdaterService.isInstallingUpdate = true;
+				if (isMac) windowService.setCMDQ(true);
 				autoUpdater.quitAndInstall();
 			}
 		} catch (error) {
 			console.error("Failed to show update dialog:", error);
 		}
+	}
+
+	private _quitAndInstall() {
+		UpdaterService.isInstallingUpdate = true;
+		if (isMac) windowService.setCMDQ(true);
+		autoUpdater.quitAndInstall();
 	}
 
 	// ******************************* IPC Methods ******************************* //
@@ -148,8 +157,7 @@ export class UpdaterService {
 	}
 
 	async quitAndInstall(_event: IpcMainInvokeEvent): Promise<void> {
-		UpdaterService.isInstallingUpdate = true;
-		autoUpdater.quitAndInstall();
+		this._quitAndInstall();
 	}
 
 	static isInstallingUpdateNow(): boolean {
