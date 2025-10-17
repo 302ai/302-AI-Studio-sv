@@ -1,4 +1,4 @@
-import { isMac } from "$lib/shortcut/shortcut-config";
+import { isMac } from "@electron/main/constants";
 import { app, autoUpdater, dialog, type IpcMainInvokeEvent } from "electron";
 import { broadcastService } from "../broadcast-service";
 import { generalSettingsService } from "../settings-service/general-settings-service";
@@ -136,7 +136,9 @@ export class UpdaterService {
 
 			if (response === 0) {
 				// User clicked "Restart Now"
-				this._quitAndInstall();
+				UpdaterService.isInstallingUpdate = true;
+				if (isMac) windowService.setCMDQ(true);
+				autoUpdater.quitAndInstall();
 			}
 		} catch (error) {
 			console.error("Failed to show update dialog:", error);
