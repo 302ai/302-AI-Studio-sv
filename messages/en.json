@@ -323,6 +323,7 @@
 	"label_button_close_others": "Close Other Tabs",
 	"label_button_close_offside": "Close the Offside Tabs",
 	"label_button_generate_title": "Generate Title",
+	"label_button_screenshot_conversation": "Screenshot Conversation",
 	"placeholder_input_search": "Search...",
 	"ai_service": "AI service",
 	"error_network_connection_failed": "Network connection failed. Please check your internet connection and try again.",
@@ -431,6 +432,7 @@
 	"tool_call_result": "Result",
 	"tool_call_error_message": "Error",
 	"tool_call_no_result": "No result available",
+
 	"tool_call_close": "Close",
 	"tool_call_rerun": "Rerun",
 	"tool_call_rerun_success": "Tool rerunning...",
@@ -440,5 +442,9 @@
 	"update_not_available": "You're up to date",
 	"update_error": "Failed to check for updates",
 	"downloading_update": "Downloading...",
-	"restart_to_update": "Restart to Update"
+	"restart_to_update": "Restart to Update",
+	"screenshot_action": "Screenshot",
+	"screenshot_generating": "Generating screenshot...",
+	"screenshot_success": "Screenshot generated successfully",
+	"screenshot_failed": "Screenshot failed, please try again"
 }

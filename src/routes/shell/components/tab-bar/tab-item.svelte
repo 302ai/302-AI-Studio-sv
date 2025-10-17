@@ -78,6 +78,14 @@
 	onDestroy(() => {
 		window.cancelAnimationFrame?.(0);
 	});
+
+	const handleScreenshot = async () => {
+		if (tab.type === "chat" && tab.threadId) {
+			await window.electronAPI?.broadcastService?.broadcastToAll("trigger-screenshot", {
+				threadId: tab.threadId,
+			});
+		}
+	};
 </script>
 
 {#snippet tabIcon()}
@@ -158,6 +166,15 @@
 		{/if}
 
 		<ContextMenu.Separator />
+
+		{#if tab.type === "chat"}
+			<ContextMenu.Item onSelect={handleScreenshot} disabled={!isActive}>
+				{m.screenshot_action()}
+			</ContextMenu.Item>
+		{/if}
+		<!-- <ContextMenu.Item onSelect={handleScreenshot} disabled={!isActive || tab.type !== "chat"}>
+			{m.screenshot_action()}
+		</ContextMenu.Item> -->
 
 		{#if windowTabsInfo.length > 0}
 			<ContextMenu.Sub>

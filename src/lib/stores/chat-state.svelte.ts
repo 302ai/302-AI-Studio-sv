@@ -4,6 +4,7 @@ import { ChatErrorHandler, type ChatError } from "$lib/utils/error-handler";
 import { notificationState } from "./notification-state.svelte";
 
 import { generateTitle } from "$lib/api/title-generation";
+import { m } from "$lib/paraglide/messages.js";
 import { DynamicChatTransport } from "$lib/transport/dynamic-chat-transport";
 import { convertAttachmentsToMessageParts } from "$lib/utils/attachment-converter";
 import { clone } from "$lib/utils/clone";
@@ -15,7 +16,6 @@ import { toast } from "svelte-sonner";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
-import { m } from "$lib/paraglide/messages.js";
 
 const { broadcastService, threadService, storageService } = window.electronAPI;
 
@@ -63,6 +63,10 @@ export const persistedChatParamsState = new PersistedState<ThreadParmas>(
 class ChatState {
 	private lastError: ChatError | null = $state(null);
 	private retryInProgress = $state(false);
+
+	get id(): string {
+		return persistedChatParamsState.current.id;
+	}
 
 	get inputValue(): string {
 		return persistedChatParamsState.current.inputValue;

@@ -319,6 +319,7 @@
 	"label_button_close_others": "关闭其他标签页",
 	"label_button_close_offside": "关闭右侧标签页",
 	"label_button_generate_title": "生成标题",
+	"label_button_screenshot_conversation": "截图当前对话",
 	"placeholder_input_search": "搜索...",
 	"ai_service": "AI服务",
 	"error_network_connection_failed": "网络连接失败，请检查网络连接后重试",
@@ -436,5 +437,9 @@
 	"update_not_available": "当前已是最新版本",
 	"update_error": "检查更新失败",
 	"downloading_update": "下载中...",
-	"restart_to_update": "立即重启"
+	"restart_to_update": "立即重启",
+	"screenshot_action": "截图",
+	"screenshot_generating": "正在生成截图...",
+	"screenshot_success": "截图生成成功",
+	"screenshot_failed": "截图失败,请重试"
 }

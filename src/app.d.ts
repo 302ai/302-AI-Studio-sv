@@ -31,6 +31,7 @@ declare global {
 				sendShortcutKeyPressed: (event: ShortcutKeyPressEvent) => () => void;
 			};
 			onThemeChange: (callback: (theme: Theme) => void) => () => void;
+			onScreenshotTriggered: (callback: (data: { threadId: string }) => void) => () => void;
 			onThreadListUpdate: (callback: (eventData: BroadcastEventData) => void) => () => void;
 			onShellWindowFullscreenChange: (
 				callback: (payload: ShellWindowFullscreenChange) => void,
