@@ -15,6 +15,9 @@ export class ShortcutActionsHandler {
 				case "closeCurrentTab":
 					await this.handleCloseCurrentTab(windowId);
 					break;
+				case "closeOtherTabs":
+					await this.handleCloseOtherTabs(windowId);
+					break;
 				case "nextTab":
 					await this.handleNextTab(windowId);
 					break;
@@ -91,6 +94,16 @@ export class ShortcutActionsHandler {
 		if (shellView && !shellView.isDestroyed()) {
 			shellView.send("shortcut:action", {
 				action: "closeCurrentTab",
+				ctx: { windowId },
+			});
+		}
+	}
+
+	private async handleCloseOtherTabs(windowId: number): Promise<void> {
+		const shellView = this.getShellViewWebContents(windowId);
+		if (shellView && !shellView.isDestroyed()) {
+			shellView.send("shortcut:action", {
+				action: "closeOtherTabs",
 				ctx: { windowId },
 			});
 		}
