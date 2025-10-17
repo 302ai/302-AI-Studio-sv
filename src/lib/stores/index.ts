@@ -8,5 +8,6 @@ import "./preferences-settings.state.svelte";
 import "./provider-state.svelte";
 import "./shortcut-settings.state.svelte";
 import "./tab-bar-state.svelte";
+import "./theme-css.state.svelte";
 import "./theme.state.svelte";
 import "./threads-state.svelte";
