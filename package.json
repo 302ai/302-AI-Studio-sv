@@ -170,6 +170,7 @@
 	"build": {
 		"appId": "com.302ai.302aistudio",
 		"asar": true,
+		"publish": null,
 		"nsis": {
 			"oneClick": false,
 			"createDesktopShortcut": true,
