@@ -49,6 +49,9 @@ export class ShortcutActionsHandler {
 				case "toggleModelPanel":
 					await this.handleToggleModelPanel(windowId);
 					break;
+				case "toggleIncognitoMode":
+					await this.handleToggleIncognitoMode(windowId);
+					break;
 
 				case "newChat":
 					await this.handleNewChat(windowId);
@@ -67,6 +70,9 @@ export class ShortcutActionsHandler {
 					break;
 				case "branchAndSend":
 					await this.handleBranchAndSend(windowId, ctx);
+					break;
+				case "deleteCurrentThread":
+					await this.handleDeleteCurrentThread(windowId, ctx);
 					break;
 
 				default:
@@ -174,6 +180,16 @@ export class ShortcutActionsHandler {
 		}
 	}
 
+	private async handleToggleIncognitoMode(windowId: number): Promise<void> {
+		const activeView = this.getActiveTabWebContents(windowId);
+		if (activeView && !activeView.isDestroyed()) {
+			activeView.send("shortcut:action", {
+				action: "toggleIncognitoMode",
+				ctx: { windowId },
+			});
+		}
+	}
+
 	private async handleNewChat(windowId: number): Promise<void> {
 		const shellView = this.getShellViewWebContents(windowId);
 		if (shellView && !shellView.isDestroyed()) {
@@ -229,6 +245,16 @@ export class ShortcutActionsHandler {
 		if (activeView && !activeView.isDestroyed()) {
 			activeView.send("shortcut:action", {
 				action: "branchAndSend",
+				ctx,
+			});
+		}
+	}
+
+	private async handleDeleteCurrentThread(windowId: number, ctx: ShortcutContext): Promise<void> {
+		const activeView = this.getActiveTabWebContents(windowId);
+		if (activeView && !activeView.isDestroyed()) {
+			activeView.send("shortcut:action", {
+				action: "deleteCurrentThread",
 				ctx,
 			});
 		}

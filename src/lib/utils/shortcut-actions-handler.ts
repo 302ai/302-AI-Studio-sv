@@ -3,6 +3,7 @@ import { chatState } from "$lib/stores/chat-state.svelte";
 import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
 import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
+import { threadsState } from "$lib/stores/threads-state.svelte";
 import type { ShortcutActionEvent } from "@shared/types/shortcut";
 import { toast } from "svelte-sonner";
 
@@ -55,6 +56,9 @@ export class ShortcutActionsHandler {
 					break;
 				case "toggleIncognitoMode":
 					this.handleToggleIncognitoMode();
+					break;
+				case "deleteCurrentThread":
+					this.handleDeleteCurrentThread();
 					break;
 				default:
 					console.warn(`Unhandled shortcut action: ${action}`);
@@ -138,7 +142,45 @@ export class ShortcutActionsHandler {
 	}
 
 	private handleToggleIncognitoMode(): void {
-		chatState.isPrivateChatActive = !chatState.isPrivateChatActive;
+		if (!chatState.canTogglePrivacy) {
+			toast.error(m.title_incognito_disabled());
+			return;
+		}
+		chatState.handlePrivateChatActiveChange(!chatState.isPrivateChatActive);
+	}
+
+	private async handleDeleteCurrentThread(): Promise<void> {
+		// Get current active tab's threadId
+		const activeTab = tabBarState.tabs.find((tab) => tab.active);
+		const threadId = activeTab?.threadId;
+
+		// Check if there's a valid thread to delete (not shell and not undefined)
+		if (!threadId || threadId === "shell") {
+			return;
+		}
+
+		// Check if there are any threads to delete
+		const threads = await threadsState.threads;
+		if (!threads || threads.length === 0) {
+			return;
+		}
+
+		// Check if the thread exists in the list
+		const threadExists = threads.some((thread) => thread.threadId === threadId);
+		if (!threadExists) {
+			return;
+		}
+
+		// Close the tab if it's open
+		if (activeTab) {
+			await tabBarState.handleTabClose(activeTab.id);
+		}
+
+		// Delete the thread
+		const success = await threadsState.deleteThread(threadId);
+		if (!success) {
+			console.error("Failed to delete thread:", threadId);
+		}
 	}
 }
 

@@ -117,6 +117,13 @@
 		)}
 		style="app-region: no-drag;"
 		onclick={() => onTabClick(tab.id)}
+		onauxclick={(e) => {
+			if (e.button === 1 && closable) {
+				e.preventDefault();
+				e.stopPropagation();
+				onTabClose(tab.id);
+			}
+		}}
 		role="button"
 	>
 		<div bind:this={triggerRef} class="contents">
