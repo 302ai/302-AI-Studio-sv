@@ -12,7 +12,7 @@ export class StorageService<T extends StorageValue> {
 	protected storage;
 	protected watches = new Map<string, () => void>();
 	protected migrationConfig?: MigrationConfig<T>;
-	protected lastUpdateSource = new Map<string, number>();
+	// 移除不可靠的lastUpdateSource，改为在事件队列中维护完整信息
 
 	constructor(migrationConfig?: MigrationConfig<T>) {
 		const storagePath = isDev
@@ -34,7 +34,12 @@ export class StorageService<T extends StorageValue> {
 		const versionedValue = this.addVersionIfNeeded(value);
 		const jsonKey = this.ensureJsonExtension(key);
 
-		this.lastUpdateSource.set(jsonKey, event.sender.id);
+		// 直接触发事件队列，在队列中维护完整的sender信息
+		emitter.emit("persisted-state:before-set", {
+			key: jsonKey,
+			value: versionedValue,
+			sourceWebContentsId: event.sender.id,
+		});
 
 		await this.storage.setItem(jsonKey, versionedValue);
 	}
@@ -92,8 +97,13 @@ export class StorageService<T extends StorageValue> {
 			options: {},
 		}));
 
+		// 为每个item触发事件队列
 		formattedItems.forEach((item) => {
-			this.lastUpdateSource.set(item.key, event.sender.id);
+			emitter.emit("persisted-state:before-set", {
+				key: item.key,
+				value: item.value,
+				sourceWebContentsId: event.sender.id,
+			});
 		});
 
 		await this.storage.setItems(formattedItems);
@@ -107,15 +117,13 @@ export class StorageService<T extends StorageValue> {
 			console.log("current change key", key);
 			if (key === jsonKey) {
 				const sendKey = key.split(".")[0];
-				const sourceWebContentsId = this.lastUpdateSource.get(jsonKey) ?? -1;
 
+				// 直接触发同步事件，source信息由事件队列管理
 				emitter.emit("persisted-state:sync", {
 					sendKey,
 					syncValue: await this.getItemInternal(key),
-					sourceWebContentsId,
+					storageKey: jsonKey, // 传递原始storage key
 				});
-
-				this.lastUpdateSource.delete(jsonKey);
 			}
 		});
 		this.watches.set(watchKey, unwatch);
