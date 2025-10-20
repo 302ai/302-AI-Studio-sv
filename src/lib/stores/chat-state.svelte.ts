@@ -64,6 +64,10 @@ class ChatState {
 	private lastError: ChatError | null = $state(null);
 	private retryInProgress = $state(false);
 
+	get id(): string {
+		return persistedChatParamsState.current.id;
+	}
+
 	get inputValue(): string {
 		return persistedChatParamsState.current.inputValue;
 	}

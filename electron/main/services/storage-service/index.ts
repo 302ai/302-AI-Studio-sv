@@ -104,7 +104,6 @@ export class StorageService<T extends StorageValue> {
 
 		if (this.watches.has(watchKey)) return;
 		const unwatch = await this.storage.watch(async (_event, key) => {
-			console.log("current change key", key);
 			if (key === jsonKey) {
 				const sendKey = key.split(".")[0];
 				const sourceWebContentsId = this.lastUpdateSource.get(jsonKey) ?? -1;

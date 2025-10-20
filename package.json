@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "25.43.0",
+	"version": "25.43.1",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -122,6 +122,7 @@
 		"@lobehub/icons-static-svg": "^1.66.0",
 		"@modelcontextprotocol/sdk": "^1.20.0",
 		"@sveltejs/adapter-static": "^3.0.9",
+		"@zumer/snapdom": "^1.9.14",
 		"archiver": "^7.0.1",
 		"arktype": "^2.1.22",
 		"date-fns": "^4.1.0",

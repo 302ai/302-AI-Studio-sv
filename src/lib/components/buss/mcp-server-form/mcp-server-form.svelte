@@ -52,6 +52,7 @@
 	let isSaving = $state(false);
 	let showDeleteDialog = $state(false);
 	let isAdvancedOpen = $state(false);
+	let isInitialLoad = $state(true);
 
 	// MCP Resources Tab
 	type ResourceTab = "tools" | "prompts" | "resources";
@@ -97,7 +98,10 @@
 			autoUseTools = server.advancedSettings?.autoUseTool ?? true;
 			keepConnection = server.advancedSettings?.keepLongTaskConnection ?? false;
 
-			handleRefreshTools();
+			if (isInitialLoad) {
+				handleRefreshTools();
+				isInitialLoad = false;
+			}
 		}
 	});
 
@@ -170,10 +174,35 @@
 				},
 			};
 
+			// Validate server configuration by trying to fetch tools
+			const tempServerId = mode === "edit" && serverId ? serverId : nanoid();
+			const testServerData = JSON.parse(
+				JSON.stringify({
+					id: tempServerId,
+					name: serverData.name,
+					description: "",
+					type: serverData.type,
+					url: serverData.url,
+					command: serverData.command,
+					icon: serverData.icon,
+					enabled: true,
+					order: 0,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+					advancedSettings: serverData.advancedSettings,
+				}),
+			);
+
+			const result = await window.electronAPI.mcpService.getToolsFromServer(testServerData);
+			if (!result.isOk) {
+				toast.error(result.error || m.mcp_error_connection());
+				return;
+			}
+
 			if (mode === "add") {
 				const now = new Date();
 				mcpState.addServer({
-					id: nanoid(),
+					id: tempServerId,
 					...serverData,
 					description: "",
 					enabled: true,
@@ -213,21 +242,34 @@
 
 		isLoadingTools = true;
 		try {
-			// Deep clone using JSON to ensure all fields are serializable
+			// Use current form values instead of stored server data
+			const validHeaders = headers.filter((h) => h.key.trim() && h.value.trim());
+			const validEnvVars = envVars.filter((e) => e.key.trim() && e.value.trim());
+
 			const serverData = JSON.parse(
 				JSON.stringify({
 					id: server.id,
-					name: server.name,
+					name: name,
 					description: server.description,
-					type: server.type,
-					url: server.url,
-					command: server.command,
-					icon: server.icon,
+					type: type,
+					url: type === "stdio" ? null : url,
+					command: type === "stdio" ? command : null,
+					icon: icon,
 					enabled: server.enabled,
 					order: server.order,
 					createdAt: server.createdAt,
 					updatedAt: server.updatedAt,
-					advancedSettings: server.advancedSettings,
+					advancedSettings: {
+						timeout: timeout || undefined,
+						customHeaders: validHeaders.length
+							? Object.fromEntries(validHeaders.map((h) => [h.key, h.value]))
+							: undefined,
+						customEnvVars: validEnvVars.length
+							? Object.fromEntries(validEnvVars.map((e) => [e.key, e.value]))
+							: undefined,
+						autoUseTool: autoUseTools,
+						keepLongTaskConnection: keepConnection,
+					},
 				}),
 			);
 
