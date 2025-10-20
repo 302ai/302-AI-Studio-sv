@@ -41,7 +41,7 @@
 		<!-- 表格头部 -->
 		<div
 			class="text-muted-fg bg-muted grid h-10 w-full flex-shrink-0"
-			style="grid-template-columns: 1.3fr 0.7fr 1.2fr 0.8fr;"
+			style="grid-template-columns: 2fr 0.8fr 1.2fr 1fr;"
 		>
 			<div class="flex h-full items-center pl-4 outline-hidden">
 				<div class="truncate">{m.text_models_column_name()}</div>

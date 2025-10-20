@@ -66,7 +66,7 @@
 </script>
 
 <div class="flex size-full overflow-hidden">
-	<div class="flex h-full w-80 flex-shrink-0 flex-col border-r">
+	<div class="flex h-full w-56 flex-shrink-0 flex-col border-r">
 		<div class="flex-shrink-0 p-4">
 			<Header onClick={handleAddProvider} />
 		</div>
@@ -85,5 +85,7 @@
 		</div>
 	</div>
 
-	{@render children()}
+	<div class="flex min-w-0 flex-1 flex-col overflow-hidden">
+		{@render children()}
+	</div>
 </div>
