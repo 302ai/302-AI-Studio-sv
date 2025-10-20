@@ -4,7 +4,6 @@
 	import { useSidebar } from "$lib/components/ui/sidebar";
 	import { m } from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Ghost, Settings } from "@lucide/svelte";
 	import AppSidebar from "./components/app-sidebar.svelte";
@@ -13,12 +12,7 @@
 	const { children } = $props();
 
 	async function handleNewSettingsTab() {
-		await tabBarState.handleNewTab(
-			m.title_settings(),
-			"settings",
-			true,
-			"/settings/general-settings",
-		);
+		await window.electronAPI.windowService.handleOpenSettingsWindow();
 	}
 </script>
 

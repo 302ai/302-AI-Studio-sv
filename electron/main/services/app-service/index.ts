@@ -22,11 +22,16 @@ export class AppService {
 		allWindows.forEach((window) => {
 			window.setBackgroundColor(nativeTheme.shouldUseDarkColors ? "#1A1A1A" : "#F9F9F9");
 			if (!isMac) {
-				window.setTitleBarOverlay(
-					nativeTheme.shouldUseDarkColors
-						? CONFIG.TITLE_BAR_OVERLAY.DARK
-						: CONFIG.TITLE_BAR_OVERLAY.LIGHT,
-				);
+				try {
+					window.setTitleBarOverlay(
+						nativeTheme.shouldUseDarkColors
+							? CONFIG.TITLE_BAR_OVERLAY.DARK
+							: CONFIG.TITLE_BAR_OVERLAY.LIGHT,
+					);
+				} catch (_error) {
+					// Skip windows that don't have titleBarOverlay enabled (e.g., settings window)
+					console.debug(`Skipping titleBarOverlay for window "${window.getTitle()}"`);
+				}
 			}
 		});
 	}
