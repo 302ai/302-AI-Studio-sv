@@ -29,9 +29,9 @@ jobs:
           - os: macos-13
             arch: x64
             platform: macos
-          # - os: macos-latest
-          #   arch: universal
-          #   platform: macos
+          - os: macos-latest
+            arch: universal
+            platform: macos
           - os: ubuntu-latest
             platform: linux
 
@@ -107,6 +107,7 @@ jobs:
           name: macos-build-${{ github.run_number }}
           path: |
             out/make/*.dmg
+            out/make/*.universal
             out/make/zip/**/*
 
       - name: Upload Linux artifacts
