@@ -133,8 +133,8 @@ export function registerIpcHandlers() {
 	);
 
 	// windowService service registration
-	ipcMain.handle("windowService:handleOpenSettingsWindow", (event) =>
-		windowService.handleOpenSettingsWindow(event),
+	ipcMain.handle("windowService:handleOpenSettingsWindow", (event, route) =>
+		windowService.handleOpenSettingsWindow(event, route),
 	);
 	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
 		windowService.focusWindow(event, windowId, tabId),

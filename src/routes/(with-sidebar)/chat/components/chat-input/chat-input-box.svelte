@@ -7,7 +7,6 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { chat, chatState } from "$lib/stores/chat-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
-	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
@@ -29,12 +28,7 @@
 	});
 
 	async function handleGoToModelSettings() {
-		await tabBarState.handleNewTab(
-			m.title_settings(),
-			"settings",
-			true,
-			"/settings/model-settings",
-		);
+		await window.electronAPI.windowService.handleOpenSettingsWindow("/settings/model-settings");
 	}
 
 	function handleSendMessage() {

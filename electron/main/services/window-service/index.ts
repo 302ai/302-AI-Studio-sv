@@ -277,8 +277,8 @@ export class WindowService {
 	}
 
 	// ******************************* IPC Methods ******************************* //
-	async handleOpenSettingsWindow(_event: IpcMainInvokeEvent): Promise<void> {
-		await this.openSettingsWindow();
+	async handleOpenSettingsWindow(_event: IpcMainInvokeEvent, route?: string): Promise<void> {
+		await this.openSettingsWindow(route);
 	}
 
 	async focusWindow(_event: IpcMainInvokeEvent, windowId: string, tabId?: string): Promise<void> {
@@ -392,13 +392,25 @@ export class WindowService {
 		}
 	}
 
-	async openSettingsWindow(): Promise<void> {
-		// If settings window already exists, focus it
+	async openSettingsWindow(route?: string): Promise<void> {
+		const targetRoute = route || "/settings/general-settings";
+
+		// If settings window already exists, focus it and navigate
 		if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
 			if (this.settingsWindow.isMinimized()) {
 				this.settingsWindow.restore();
 			}
 			this.settingsWindow.focus();
+
+			// Navigate to the specified route
+			const view = this.settingsWindow.contentView.children[0];
+			if (view instanceof WebContentsView && !view.webContents.isDestroyed()) {
+				const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost";
+				const url = MAIN_WINDOW_VITE_DEV_SERVER_URL
+					? `${baseUrl}${targetRoute}`
+					: `${baseUrl}?route=${targetRoute.slice(1)}`; // Remove leading /
+				view.webContents.loadURL(url);
+			}
 			return;
 		}
 
@@ -449,8 +461,8 @@ export class WindowService {
 		// Load settings page
 		const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost";
 		const routePath = MAIN_WINDOW_VITE_DEV_SERVER_URL
-			? "/settings/general-settings"
-			: "?route=settings/general-settings";
+			? targetRoute
+			: `?route=${targetRoute.slice(1)}`; // Remove leading /
 
 		withLoadHandlers(settingsView, {
 			baseUrl,
