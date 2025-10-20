@@ -43,19 +43,26 @@ async function init() {
 		await shortcutActionsHandler.handle(action, ctx);
 	});
 
+	const root = path.join(import.meta.dirname, `../../renderer/${MAIN_WINDOW_VITE_NAME}`);
 	protocol.handle("app", (request) => {
 		const url = new URL(request.url);
-		const filePath = url.pathname.substring(1); // 移除开头的 /
-
-		if (!filePath || filePath === "localhost") {
-			return net.fetch(
-				`file://${path.join(import.meta.dirname, `../../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)}`,
-			);
+		let pathname = decodeURIComponent(url.pathname);
+		const appIndex = pathname.indexOf("/_app/");
+		if (appIndex !== -1) {
+			pathname = pathname.slice(appIndex);
 		}
 
-		return net.fetch(
-			`file://${path.join(import.meta.dirname, `../../renderer/${MAIN_WINDOW_VITE_NAME}`, filePath)}`,
-		);
+		const filePath = pathname.startsWith("/") ? pathname.slice(1) : pathname;
+
+		const isAsset = /\.[a-z0-9]+$/i.test(filePath) || filePath.startsWith("_app/");
+		const target = isAsset ? path.join(root, filePath) : path.join(root, "index.html");
+
+		const normalized = path.normalize(target);
+		if (!normalized.startsWith(path.normalize(root))) {
+			return net.fetch(`file://${path.join(root, "index.html")}`);
+		}
+
+		return net.fetch(`file://${normalized}`);
 	});
 }
 
