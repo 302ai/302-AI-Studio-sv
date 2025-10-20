@@ -172,12 +172,8 @@
 </script>
 
 <ScrollArea bind:ref={scrollAreaRef} class="h-full w-full">
-	<div
-		bind:this={messageListContainer}
-		class="flex w-full justify-center"
-		data-screenshot-target="message-list"
-	>
-		<div class={cn("w-full space-y-4 py-8", containerClass)}>
+	<div class="flex w-full justify-center">
+		<div class={cn("w-full space-y-4 pt-8", containerClass)}>
 			{#each messages as message (message.id)}
 				{#if message.role === "user"}
 					<UserMessage message={{ ...message, role: "user" as const }} />

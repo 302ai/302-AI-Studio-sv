@@ -2,6 +2,7 @@ import type { ShortcutContext } from "@shared/types/shortcut";
 import { BrowserWindow } from "electron";
 import { isNull } from "es-toolkit";
 import { tabService } from "../tab-service";
+import { windowService } from "../window-service";
 
 export class ShortcutActionsHandler {
 	async handle(action: string, ctx: ShortcutContext): Promise<void> {
@@ -139,14 +140,8 @@ export class ShortcutActionsHandler {
 		}
 	}
 
-	private async handleOpenSettings(windowId: number): Promise<void> {
-		const shellView = this.getShellViewWebContents(windowId);
-		if (shellView && !shellView.isDestroyed()) {
-			shellView.send("shortcut:action", {
-				action: "openSettings",
-				ctx: { windowId },
-			});
-		}
+	private async handleOpenSettings(_windowId: number): Promise<void> {
+		await windowService.openSettingsWindow();
 	}
 
 	private async handleToggleSidebar(windowId: number): Promise<void> {

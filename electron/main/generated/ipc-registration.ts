@@ -9,9 +9,9 @@ import {
 	externalLinkService,
 	mcpService,
 	tabService,
+	windowService,
 	shortcutService,
 	threadService,
-	windowService,
 	updaterService,
 } from "../services";
 
@@ -132,6 +132,20 @@ export function registerIpcHandlers() {
 		tabService.handleGenerateTabTitle(event, tabId, threadId),
 	);
 
+	// windowService service registration
+	ipcMain.handle("windowService:handleOpenSettingsWindow", (event, route) =>
+		windowService.handleOpenSettingsWindow(event, route),
+	);
+	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
+		windowService.focusWindow(event, windowId, tabId),
+	);
+	ipcMain.handle("windowService:handleSplitShellWindow", (event, triggerTabId) =>
+		windowService.handleSplitShellWindow(event, triggerTabId),
+	);
+	ipcMain.handle("windowService:handleMoveTabIntoExistingWindow", (event, triggerTabId, windowId) =>
+		windowService.handleMoveTabIntoExistingWindow(event, triggerTabId, windowId),
+	);
+
 	// shortcutService service registration
 	ipcMain.handle("shortcutService:init", (event, shortcuts) =>
 		shortcutService.init(event, shortcuts),
@@ -155,17 +169,6 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("threadService:renameThread", (event, threadId, newName) =>
 		threadService.renameThread(event, threadId, newName),
-	);
-
-	// windowService service registration
-	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
-		windowService.focusWindow(event, windowId, tabId),
-	);
-	ipcMain.handle("windowService:handleSplitShellWindow", (event, triggerTabId) =>
-		windowService.handleSplitShellWindow(event, triggerTabId),
-	);
-	ipcMain.handle("windowService:handleMoveTabIntoExistingWindow", (event, triggerTabId, windowId) =>
-		windowService.handleMoveTabIntoExistingWindow(event, triggerTabId, windowId),
 	);
 
 	// updaterService service registration
@@ -222,6 +225,10 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:replaceTabContent");
 	ipcMain.removeHandler("tabService:handleClearTabMessages");
 	ipcMain.removeHandler("tabService:handleGenerateTabTitle");
+	ipcMain.removeHandler("windowService:handleOpenSettingsWindow");
+	ipcMain.removeHandler("windowService:focusWindow");
+	ipcMain.removeHandler("windowService:handleSplitShellWindow");
+	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");
 	ipcMain.removeHandler("shortcutService:init");
 	ipcMain.removeHandler("shortcutService:updateShortcuts");
 	ipcMain.removeHandler("shortcutService:getConflicts");
@@ -231,9 +238,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("threadService:getThread");
 	ipcMain.removeHandler("threadService:deleteThread");
 	ipcMain.removeHandler("threadService:renameThread");
-	ipcMain.removeHandler("windowService:focusWindow");
-	ipcMain.removeHandler("windowService:handleSplitShellWindow");
-	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");
 	ipcMain.removeHandler("updaterService:checkForUpdatesManually");
 	ipcMain.removeHandler("updaterService:quitAndInstall");
 	ipcMain.removeHandler("updaterService:isUpdateDownloaded");

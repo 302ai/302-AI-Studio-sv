@@ -20,6 +20,7 @@ export class WindowService {
 	private mainWindowId: number | null = null;
 	private windows: BrowserWindow[] = [];
 	private isCMDQ = false;
+	private settingsWindow: BrowserWindow | null = null;
 
 	// ******************************* Private Methods ******************************* //
 	private setMainWindow(windowId: number) {
@@ -276,6 +277,10 @@ export class WindowService {
 	}
 
 	// ******************************* IPC Methods ******************************* //
+	async handleOpenSettingsWindow(_event: IpcMainInvokeEvent, route?: string): Promise<void> {
+		await this.openSettingsWindow(route);
+	}
+
 	async focusWindow(_event: IpcMainInvokeEvent, windowId: string, tabId?: string): Promise<void> {
 		const numericWindowId = Number.parseInt(windowId, 10);
 		if (Number.isNaN(numericWindowId)) return;
@@ -385,6 +390,108 @@ export class WindowService {
 			);
 			fromWindow.close();
 		}
+	}
+
+	async openSettingsWindow(route?: string): Promise<void> {
+		const targetRoute = route || "/settings/general-settings";
+
+		// If settings window already exists, focus it and navigate
+		if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
+			if (this.settingsWindow.isMinimized()) {
+				this.settingsWindow.restore();
+			}
+			this.settingsWindow.focus();
+
+			// Navigate to the specified route
+			const view = this.settingsWindow.contentView.children[0];
+			if (view instanceof WebContentsView && !view.webContents.isDestroyed()) {
+				const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost";
+				const url = MAIN_WINDOW_VITE_DEV_SERVER_URL
+					? `${baseUrl}${targetRoute}`
+					: `${baseUrl}?route=${targetRoute.slice(1)}`; // Remove leading /
+				view.webContents.loadURL(url);
+			}
+			return;
+		}
+
+		const { shouldUseDarkColors } = nativeTheme;
+
+		// Create settings window with normal title bar
+		this.settingsWindow = new BrowserWindow({
+			width: 1000,
+			height: 700,
+			minWidth: 800,
+			minHeight: 600,
+			title: "Settings",
+			autoHideMenuBar: true,
+			backgroundColor: shouldUseDarkColors ? "#2d2d2d" : "#f1f1f1",
+			webPreferences: {
+				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
+				devTools: true,
+				webgl: true,
+				sandbox: false,
+				webSecurity: false,
+			},
+			show: false,
+			icon: path.join(import.meta.dirname, "../../renderer/main_window/icon.png"),
+		});
+
+		// Create a single view for settings content
+		const settingsView = new WebContentsView({
+			webPreferences: {
+				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
+				devTools: true,
+				sandbox: false,
+				webSecurity: false,
+			},
+		});
+
+		this.settingsWindow.contentView.addChildView(settingsView);
+		const { width, height } = this.settingsWindow.getContentBounds();
+		settingsView.setBounds({
+			x: 0,
+			y: 0,
+			width,
+			height,
+		});
+
+		// Add devTools shortcuts
+		withDevToolsShortcuts(settingsView);
+
+		// Load settings page
+		const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost";
+		const routePath = MAIN_WINDOW_VITE_DEV_SERVER_URL
+			? targetRoute
+			: `?route=${targetRoute.slice(1)}`; // Remove leading /
+
+		withLoadHandlers(settingsView, {
+			baseUrl,
+			routePath,
+		});
+
+		settingsView.webContents.once("did-finish-load", () => {
+			if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
+				this.settingsWindow.show();
+			}
+		});
+
+		// Handle window resize
+		this.settingsWindow.addListener("resize", () => {
+			if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
+				const bounds = this.settingsWindow.getContentBounds();
+				settingsView.setBounds({
+					x: 0,
+					y: 0,
+					width: bounds.width,
+					height: bounds.height,
+				});
+			}
+		});
+
+		// Clean up reference when window is closed
+		this.settingsWindow.addListener("closed", () => {
+			this.settingsWindow = null;
+		});
 	}
 }
 

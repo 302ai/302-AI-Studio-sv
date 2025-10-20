@@ -1,11 +1,11 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
-import { getLocale, setLocale } from "$lib/paraglide/runtime";
+import { applyLocale } from "$lib/i18n";
+import { getLocale } from "$lib/paraglide/runtime";
 import type {
 	GeneralSettingsState,
 	LanguageCode,
 	LayoutMode,
 } from "@shared/storage/general-settings";
-import { untrack } from "svelte";
 
 const { generalSettingsService } = window.electronAPI;
 
@@ -29,18 +29,15 @@ function applyLayout(mode: LayoutMode): void {
 $effect.root(() => {
 	$effect(() => {
 		const { language, layoutMode } = persistedGeneralSettings.current;
-
-		untrack(() => {
-			try {
-				if (getLocale() !== language) {
-					setLocale(language);
-				}
-			} catch (error) {
-				console.error("Failed to set locale:", error);
+		try {
+			if (getLocale() !== language) {
+				applyLocale(language as "zh" | "en");
 			}
+		} catch (error) {
+			console.error("Failed to set locale:", error);
+		}
 
-			applyLayout(layoutMode);
-		});
+		applyLayout(layoutMode);
 	});
 });
 
@@ -68,7 +65,7 @@ class GeneralSettingsManager {
 
 		generalSettingsService.handleLanguageChanged();
 
-		setLocale(lang as "zh" | "en");
+		applyLocale(lang as "zh" | "en");
 	}
 
 	get privacyAutoInherit(): boolean {

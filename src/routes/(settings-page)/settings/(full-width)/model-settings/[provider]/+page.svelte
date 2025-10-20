@@ -240,7 +240,7 @@
 	);
 </script>
 
-<div class="flex flex-1 flex-col overflow-hidden p-6">
+<div class="flex h-full min-w-0 flex-1 flex-col overflow-hidden p-6">
 	<!-- 配置标题 -->
 	<div class="mb-6 flex flex-shrink-0 flex-col gap-1">
 		<h2 class="max-w-full break-all whitespace-normal">
@@ -362,7 +362,7 @@
 			{/if}
 
 			<!-- 操作按钮 -->
-			<div class="flex items-center gap-3 pt-4">
+			<div class="@container flex flex-wrap items-center gap-3 pt-4">
 				<Button variant="default" onclick={handleGetModels} disabled={isLoadingModels}>
 					{isLoadingModels ? m.text_button_get_models_loading() : m.text_button_get_models()}
 				</Button>
@@ -374,17 +374,17 @@
 				>
 					{m.text_button_clear_models()}
 				</Button>
-				<div class="flex-1"></div>
+				<div class="@[600px]:flex-1 @[600px]:block hidden"></div>
 				<Input
 					bind:value={searchQuery}
 					placeholder={m.placeholder_input_search_model()}
-					class="rounded-settings-item bg-settings-item-bg! hover:ring-ring w-64 hover:ring-1"
+					class="rounded-settings-item bg-settings-item-bg! hover:ring-ring @[600px]:max-w-xs w-full @[600px]:w-auto min-w-0 hover:ring-1"
 				/>
 			</div>
 		</div>
 
 		<!-- 模型列表区域 -->
-		<div class="min-h-0 w-full flex-1 overflow-hidden">
+		<div class="min-h-0 w-full flex-1">
 			<ModelList
 				models={filteredModels}
 				onModelEdit={handleModelEdit}

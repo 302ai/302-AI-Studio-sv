@@ -145,7 +145,7 @@
 	onCreateBranch={handleCreateBranch}
 	onDelete={handleDelete}
 >
-	<div class="group flex flex-col gap-2">
+	<div class="group flex flex-col gap-1">
 		{@render messageHeader(message.metadata?.model || "gpt-4o")}
 
 		{#each message.parts as part, partIndex (partIndex)}

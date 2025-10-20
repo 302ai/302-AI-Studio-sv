@@ -102,7 +102,7 @@
 	}
 
 	function handleOpenSettings() {
-		tabBarState.handleNewTab(m.title_settings(), "settings", true, "/settings/general-settings");
+		window.electronAPI.windowService.handleOpenSettingsWindow();
 	}
 </script>
 

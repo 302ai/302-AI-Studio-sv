@@ -12,6 +12,7 @@
 <script lang="ts">
 	import { Button } from "$lib/components/ui/button/index.js";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
+	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
 	import {
@@ -20,6 +21,7 @@
 		Hammer,
 		Image,
 		Lightbulb,
+		MoreVertical,
 		Music,
 		PenLine,
 		Play,
@@ -129,7 +131,7 @@
 			!isLast ? "border-border border-b" : "",
 		)}
 	>
-		<div class="grid h-full w-full" style="grid-template-columns: 1.3fr 0.7fr 1.2fr 0.8fr;">
+		<div class="grid h-full w-full" style="grid-template-columns: 2fr 0.8fr 1.2fr 1fr;">
 			<!-- 模型名称 -->
 			<div class="flex h-full items-center overflow-hidden pr-2 pl-4 outline-hidden">
 				<div class="truncate" title={model.remark || model.name}>
@@ -163,8 +165,11 @@
 			</div>
 
 			<!-- 操作 -->
-			<div class="flex h-full items-center justify-center overflow-hidden pr-2 outline-hidden">
-				<div class="flex h-full items-center justify-center">
+			<div
+				class="@container flex h-full items-center justify-center overflow-hidden pr-2 outline-hidden"
+			>
+				<!-- 默认显示所有按钮 -->
+				<div class="@[80px]:flex hidden h-full items-center justify-center">
 					<!-- Star -->
 					<Button
 						variant="ghost"
@@ -204,6 +209,47 @@
 					>
 						<Trash2 class="text-destructive/70 hover:text-destructive size-4" />
 					</Button>
+				</div>
+
+				<!-- 空间不足时显示更多按钮 -->
+				<div class="@[80px]:hidden flex">
+					<DropdownMenu.Root>
+						<DropdownMenu.Trigger>
+							<Button
+								variant="ghost"
+								size="icon"
+								class="pressed:bg-accent/20 hover:bg-accent/10 h-8 w-8 rounded-lg p-0"
+							>
+								<MoreVertical class="size-4" />
+							</Button>
+						</DropdownMenu.Trigger>
+						<DropdownMenu.Content align="end" class="w-40">
+							<DropdownMenu.Item onclick={onToggleCollected}>
+								<Star
+									class={cn(
+										"mr-2 h-4 w-4",
+										model.collected ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground",
+									)}
+								/>
+								{model.collected ? m.text_button_unstar() : m.text_button_star()}
+							</DropdownMenu.Item>
+							<DropdownMenu.Item onclick={onEdit}>
+								<PenLine class="mr-2 h-4 w-4" />
+								{m.text_button_edit()}
+							</DropdownMenu.Item>
+							{#if onDuplicate}
+								<DropdownMenu.Item onclick={handleDuplicate}>
+									<Files class="mr-2 h-4 w-4" />
+									{m.text_context_duplicate()}
+								</DropdownMenu.Item>
+							{/if}
+							<DropdownMenu.Separator />
+							<DropdownMenu.Item onclick={onDelete} class="text-destructive focus:text-destructive">
+								<Trash2 class="mr-2 h-4 w-4" />
+								{m.text_button_delete()}
+							</DropdownMenu.Item>
+						</DropdownMenu.Content>
+					</DropdownMenu.Root>
 				</div>
 			</div>
 		</div>

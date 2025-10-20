@@ -94,7 +94,6 @@ jobs:
           path: |
             out/make/squirrel.windows/**/*
             out/make/zip/win32/**/*
-            out/make/wix/win32/**/*
 
       - name: Upload artifacts (macOS)
         if: matrix.os == 'macos-latest'

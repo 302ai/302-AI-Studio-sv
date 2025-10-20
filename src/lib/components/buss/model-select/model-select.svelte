@@ -17,16 +17,13 @@
 	import * as Command from "$lib/components/ui/command";
 	import * as ScrollArea from "$lib/components/ui/scroll-area";
 	import { m } from "$lib/paraglide/messages";
-	import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
 	import { persistedModelState, persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Check, ChevronRight } from "@lucide/svelte";
 	import type { Model, Model as ProviderModel } from "@shared/types";
 
 	const { trigger, selectedModel, onModelSelect }: ModelSelectProps = $props();
-
-	let isOpen = $derived.by(() => modelPanelState.isOpen);
-
+	let isOpen = $state(false);
 	let searchValue = $state("");
 	const collapsedProviders = $state<Record<string, boolean>>({});
 	let hoveredItemId = $state<string | null>(null);
@@ -34,7 +31,7 @@
 	let scrollTop = $state(0);
 
 	const triggerProps: TriggerProps = {
-		onclick: () => modelPanelState.open(),
+		onclick: () => (isOpen = true),
 	};
 
 	// Transform provider-state data to UI format
@@ -114,15 +111,7 @@
 
 	function handleModelSelect(model: Model) {
 		onModelSelect(model);
-		modelPanelState.close();
-	}
-
-	function handleOpenChange(open: boolean) {
-		if (open) {
-			modelPanelState.open();
-		} else {
-			modelPanelState.close();
-		}
+		isOpen = false;
 	}
 
 	function toggleProvider(provider: string) {
@@ -202,7 +191,7 @@
 	<Button {...triggerProps}>{m.text_button_model_select_trigger()}</Button>
 {/if}
 
-<Command.Dialog open={isOpen} onOpenChange={handleOpenChange} class="w-[638px]">
+<Command.Dialog bind:open={isOpen} class="w-[638px]">
 	<div class="[&_[data-slot=command-input-wrapper]]:!h-12">
 		<Command.Input bind:value={searchValue} placeholder={m.placeholder_input_search_model()} />
 	</div>

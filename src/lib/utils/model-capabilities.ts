@@ -5,23 +5,23 @@ export const MODEL_LIST_CONFIGS = {
 		vision: ["claude"],
 	},
 	deepseek: {
-		functionCall: ["v3", "r1"],
-		reasoning: ["r1"],
+		functionCall: ["v3", "r1", "deepseek-chat"],
+		reasoning: ["r1", "deepseek-reasoner", "v3.1", "v3.2"],
 		vision: [],
 	},
 	google: {
-		functionCall: ["gemini"],
-		reasoning: ["thinking", "-2.5-"],
+		functionCall: ["gemini", "!-image-"],
+		reasoning: ["thinking", "-2.5-", "!-image-"],
 		vision: ["gemini", "learnlm"],
 	},
 	llama: {
 		functionCall: ["llama-3.2", "llama-3.3", "llama-4"],
 		reasoning: [],
-		vision: [],
+		vision: ["llava"],
 	},
 	openai: {
-		functionCall: ["4o", "4.1", "o3", "o4"],
-		reasoning: ["o1", "o3", "o4"],
+		functionCall: ["4o", "4.1", "o3", "o4", "oss"],
+		reasoning: ["o1", "o3", "o4", "oss"],
 		vision: ["4o", "4.1", "o4"],
 	},
 	qwen: {
@@ -35,7 +35,7 @@ export const MODEL_LIST_CONFIGS = {
 			"qwen2.5",
 			"qwen3",
 		],
-		reasoning: ["qvq", "qwq", "qwen3"],
+		reasoning: ["qvq", "qwq", "qwen3", "!-instruct-", "!-coder-", "!-max-"],
 		vision: ["qvq", "vl"],
 	},
 	v0: {
@@ -44,9 +44,9 @@ export const MODEL_LIST_CONFIGS = {
 		vision: ["v0"],
 	},
 	volcengine: {
-		functionCall: ["doubao-1.5"],
-		reasoning: ["thinking", "-r1"],
-		vision: ["vision", "-m"],
+		functionCall: ["1.5", "1-5", "1.6", "1-6"],
+		reasoning: ["thinking", "seed", "ui-tars"],
+		vision: ["vision", "-m", "seed", "ui-tars"],
 	},
 	zeroone: {
 		functionCall: ["fc"],
@@ -55,8 +55,8 @@ export const MODEL_LIST_CONFIGS = {
 	},
 	zhipu: {
 		functionCall: ["glm-4", "glm-z1"],
-		reasoning: ["glm-zero", "glm-z1"],
-		vision: ["glm-4v"],
+		reasoning: ["glm-zero", "glm-z1", "glm-4.5"],
+		vision: ["glm-4v", "glm-4.1v", "glm-4.5v"],
 	},
 } as const;
 

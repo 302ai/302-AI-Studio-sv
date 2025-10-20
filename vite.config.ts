@@ -12,6 +12,7 @@ export default defineConfig({
 		paraglideVitePlugin({
 			project: "./project.inlang",
 			outdir: "./src/lib/paraglide",
+			strategy: ["custom-sessionStorage"],
 		}),
 		ipcServiceGenerator({
 			servicesDir: "electron/main/services",
