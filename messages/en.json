@@ -395,6 +395,7 @@
 	"mcp_error_name_required": "Please enter server name",
 	"mcp_error_command_required": "Please enter command",
 	"mcp_error_url_required": "Please enter URL",
+	"mcp_error_connection": "Failed to connect to server. Please check your configuration.",
 	"mcp_success_save": "Saved successfully",
 	"mcp_success_update": "Updated successfully",
 	"mcp_success_delete": "Deleted successfully",

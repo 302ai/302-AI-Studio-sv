@@ -391,6 +391,7 @@
 	"mcp_error_name_required": "请输入服务器名称",
 	"mcp_error_command_required": "请输入命令",
 	"mcp_error_url_required": "请输入 URL",
+	"mcp_error_connection": "无法连接到服务器，请检查您的配置。",
 	"mcp_success_save": "保存成功",
 	"mcp_success_update": "更新成功",
 	"mcp_success_delete": "删除成功",

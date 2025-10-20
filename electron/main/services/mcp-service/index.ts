@@ -105,14 +105,20 @@ export class McpService {
 		error?: string;
 	}> {
 		try {
-			let wrapper = this.clients.get(server.id);
-
-			if (!wrapper) {
-				const newWrapper = await this.createClient(server);
-				if (!newWrapper) {
-					return { isOk: false, error: "Failed to create MCP client" };
+			// Always close and recreate client to ensure we use the latest configuration
+			const existingWrapper = this.clients.get(server.id);
+			if (existingWrapper) {
+				try {
+					await existingWrapper.mcpClient.close();
+					this.clients.delete(server.id);
+				} catch (error) {
+					console.warn(`Failed to close existing client for server ${server.id}:`, error);
 				}
-				wrapper = newWrapper;
+			}
+
+			const wrapper = await this.createClient(server);
+			if (!wrapper) {
+				return { isOk: false, error: "Failed to create MCP client" };
 			}
 
 			const toolsObject = await wrapper.mcpClient.tools();
