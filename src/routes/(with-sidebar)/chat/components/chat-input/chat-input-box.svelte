@@ -132,9 +132,11 @@
 	}
 </script>
 
-<div class="w-full max-w-chat-max-w" data-layoutid="chat-input-container">
+<div class="relative w-full max-w-chat-max-w" data-layoutid="chat-input-container">
 	<AttachmentThumbnailBar />
-	<StreamingIndicator />
+	<div class="absolute left-0 right-0 -top-14 z-10">
+		<StreamingIndicator />
+	</div>
 	<div
 		class={cn(
 			"transition-[color,box-shadow]",

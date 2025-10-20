@@ -19,7 +19,7 @@
 </script>
 
 {#if chatState.isStreaming}
-	<div class="flex justify-center mb-3">
+	<div class="flex justify-center">
 		<div
 			class="flex items-center gap-3 rounded-lg bg-muted/10 px-3 py-2"
 			transition:slide={{ duration: 200, axis: "y" }}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
-	import type { ChatMessage } from "$lib/types/chat";
 	import { generalSettings } from "$lib/stores/general-settings.state.svelte";
+	import type { ChatMessage } from "$lib/types/chat";
 	import { cn } from "$lib/utils";
 	import AssistantMessage from "./assistant-message.svelte";
 	import UserMessage from "./user-message.svelte";
@@ -99,7 +99,7 @@
 
 <ScrollArea bind:ref={scrollAreaRef} class="h-full w-full">
 	<div class="flex w-full justify-center">
-		<div class={cn("w-full space-y-4 py-8", containerClass)}>
+		<div class={cn("w-full space-y-4 pt-8", containerClass)}>
 			{#each messages as message (message.id)}
 				{#if message.role === "user"}
 					<UserMessage message={{ ...message, role: "user" as const }} />

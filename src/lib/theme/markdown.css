@@ -40,9 +40,9 @@
 }
 
 .prose p {
-	margin-top: 1.25rem;
-	margin-bottom: 1.25rem;
-	line-height: 1.75;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+	line-height: 1.5;
 }
 
 .prose strong {
