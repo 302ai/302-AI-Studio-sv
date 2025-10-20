@@ -138,7 +138,11 @@ export class ShortcutActionsHandler {
 	}
 
 	private handleToggleIncognitoMode(): void {
-		chatState.isPrivateChatActive = !chatState.isPrivateChatActive;
+		if (!chatState.canTogglePrivacy) {
+			toast.error(m.title_incognito_disabled());
+			return;
+		}
+		chatState.handlePrivateChatActiveChange(!chatState.isPrivateChatActive);
 	}
 }
 
