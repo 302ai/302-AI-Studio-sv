@@ -101,16 +101,22 @@ const getPackagerConfig = () => {
 		appBundleId: "com.302ai.302aistudio",
 	};
 
-	if (process.platform === "darwin" && process.env.NODE_ENV === "production") {
+	// if (process.platform === "darwin" && process.env.NODE_ENV === "production") {
+	// 	const macConfig: any = {
+	// 		...baseConfig,
+	// 		osxSign: {
+	// 			identity: "Developer ID Application: SONIER PTE. LTD.",
+	// 			"hardened-runtime": true,
+	// 			"gatekeeper-assess": false,
+	// 			entitlements: "entitlements.plist",
+	// 			"entitlements-inherit": "entitlements.plist",
+	// 		},
+	// 	};
+
+	if (process.platform === "darwin") {
 		const macConfig: any = {
 			...baseConfig,
-			osxSign: {
-				identity: "Developer ID Application: SONIER PTE. LTD.",
-				"hardened-runtime": true,
-				"gatekeeper-assess": false,
-				entitlements: "entitlements.plist",
-				"entitlements-inherit": "entitlements.plist",
-			},
+			osxSign: {},
 		};
 
 		macConfig.osxNotarize = {
