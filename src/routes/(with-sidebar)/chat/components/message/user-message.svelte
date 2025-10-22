@@ -110,6 +110,73 @@
 	function handleDelete() {
 		chatState.deleteMessage(message.id);
 	}
+
+	function linkifyText(text: string): string {
+		const urlRegex =
+			/(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*))/gi;
+
+		const parts: Array<{ type: "text" | "url"; value: string }> = [];
+		let lastIndex = 0;
+		let match;
+
+		while ((match = urlRegex.exec(text)) !== null) {
+			if (match.index > lastIndex) {
+				parts.push({ type: "text", value: text.slice(lastIndex, match.index) });
+			}
+			parts.push({ type: "url", value: match[0] });
+			lastIndex = match.index + match[0].length;
+		}
+
+		if (lastIndex < text.length) {
+			parts.push({ type: "text", value: text.slice(lastIndex) });
+		}
+
+		return parts
+			.map((part) => {
+				if (part.type === "url") {
+					const escaped = part.value
+						.replace(/&/g, "&amp;")
+						.replace(/</g, "&lt;")
+						.replace(/>/g, "&gt;")
+						.replace(/"/g, "&quot;")
+						.replace(/'/g, "&#039;");
+					return `<a href="${escaped}" class="text-blue-500 underline hover:text-blue-600 cursor-pointer">${escaped}</a>`;
+				} else {
+					return part.value
+						.replace(/&/g, "&amp;")
+						.replace(/</g, "&lt;")
+						.replace(/>/g, "&gt;")
+						.replace(/"/g, "&quot;")
+						.replace(/'/g, "&#039;");
+				}
+			})
+			.join("");
+	}
+
+	function handleLinkClick(node: HTMLElement) {
+		const handleClick = (event: MouseEvent) => {
+			const target = event.target as HTMLElement;
+			if (target.tagName === "A") {
+				event.preventDefault();
+
+				// Only open link if Ctrl or Cmd is pressed
+				if (event.ctrlKey || event.metaKey) {
+					const url = (target as HTMLAnchorElement).href;
+					if (url && window.electronAPI?.externalLinkService?.openExternalLink) {
+						window.electronAPI.externalLinkService.openExternalLink(url);
+					}
+				}
+			}
+		};
+
+		node.addEventListener("click", handleClick);
+
+		return {
+			destroy() {
+				node.removeEventListener("click", handleClick);
+			},
+		};
+	}
 </script>
 
 {#snippet messageFooter()}
@@ -129,10 +196,10 @@
 				</div>
 			{/if}
 
-			<div class="whitespace-pre-wrap break-all">
+			<div class="whitespace-pre-wrap break-all" use:handleLinkClick>
 				{#each displayParts as part, partIndex (partIndex)}
 					{#if part.type === "text"}
-						<div>{part.text}</div>
+						<div>{@html linkifyText(part.text)}</div>
 					{/if}
 				{/each}
 			</div>
