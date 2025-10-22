@@ -6,6 +6,7 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { threadsState } from "$lib/stores/threads-state.svelte";
 	import { TIME_GROUP_ORDER, TimeGroup } from "$lib/types/time-group";
+	import type { MessagePart } from "$lib/utils/attachment-converter";
 	import { ChevronDown } from "@lucide/svelte";
 	import RenameDialog from "./rename-dialog.svelte";
 	import ThreadItem from "./thread-item.svelte";
@@ -68,10 +69,49 @@
 		if (!searchQuery.trim()) return threadsState.threads;
 
 		const threads = await threadsState.threads;
+		const searchTerm = searchQuery.toLowerCase().trim();
 
-		return threads.filter(({ thread }) =>
-			thread.title.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+		const { storageService } = window.electronAPI;
+
+		// Filter threads by title or message content
+		const filtered = await Promise.all(
+			threads.map(async (threadData) => {
+				// Check title first
+				if (threadData.thread.title.toLowerCase().includes(searchTerm)) {
+					return { match: true, threadData };
+				}
+
+				// Check message content
+				try {
+					const messagesData = await storageService.getItem(
+						`app-chat-messages:${threadData.threadId}`,
+					);
+					const messages = messagesData;
+					if (Array.isArray(messages)) {
+						const hasMatchingMessage = messages.some((msg) => {
+							if (Array.isArray(msg.parts)) {
+								return msg.parts.some((part: MessagePart) => {
+									if (part.type === "text" && typeof part.text === "string") {
+										return part.text.toLowerCase().includes(searchTerm);
+									}
+									return false;
+								});
+							}
+							return false;
+						});
+						if (hasMatchingMessage) {
+							return { match: true, threadData };
+						}
+					}
+				} catch (error) {
+					console.warn(`Failed to load messages for thread ${threadData.threadId}:`, error);
+				}
+
+				return { match: false, threadData };
+			}),
 		);
+
+		return filtered.filter((item) => item.match).map((item) => item.threadData);
 	});
 
 	const groupedThreadList = $derived.by(async () => {
