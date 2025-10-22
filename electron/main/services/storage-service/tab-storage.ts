@@ -1,5 +1,6 @@
-import { prefixStorage, type Tab, type TabState, type ThreadParmas } from "@shared/types";
+import { prefixStorage, TabState, type Tab, type ThreadParmas } from "@shared/types";
 import { isNull } from "es-toolkit";
+import { isEmpty } from "es-toolkit/compat";
 import { nanoid } from "nanoid";
 import { storageService, StorageService } from ".";
 
@@ -26,7 +27,7 @@ export class TabStorage extends StorageService<TabState> {
 		const allWindowsTabs: Tab[][] = [];
 
 		const result = await this.getItemInternal("tab-bar-state");
-		if (isNull(result)) {
+		if (isNull(result) || isEmpty(result)) {
 			const tabId = nanoid();
 			const threadId = nanoid();
 			const initTab: Tab = {
