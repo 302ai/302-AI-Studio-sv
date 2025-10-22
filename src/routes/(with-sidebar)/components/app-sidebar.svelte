@@ -6,6 +6,7 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { threadsState } from "$lib/stores/threads-state.svelte";
 	import { TIME_GROUP_ORDER, TimeGroup } from "$lib/types/time-group";
+	import type { MessagePart } from "$lib/utils/attachment-converter";
 	import { ChevronDown } from "@lucide/svelte";
 	import RenameDialog from "./rename-dialog.svelte";
 	import ThreadItem from "./thread-item.svelte";
@@ -68,10 +69,49 @@
 		if (!searchQuery.trim()) return threadsState.threads;
 
 		const threads = await threadsState.threads;
+		const searchTerm = searchQuery.toLowerCase().trim();
 
-		return threads.filter(({ thread }) =>
-			thread.title.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+		const { storageService } = window.electronAPI;
+
+		// Filter threads by title or message content
+		const filtered = await Promise.all(
+			threads.map(async (threadData) => {
+				// Check title first
+				if (threadData.thread.title.toLowerCase().includes(searchTerm)) {
+					return { match: true, threadData };
+				}
+
+				// Check message content
+				try {
+					const messagesData = await storageService.getItem(
+						`app-chat-messages:${threadData.threadId}`,
+					);
+					const messages = messagesData;
+					if (Array.isArray(messages)) {
+						const hasMatchingMessage = messages.some((msg) => {
+							if (Array.isArray(msg.parts)) {
+								return msg.parts.some((part: MessagePart) => {
+									if (part.type === "text" && typeof part.text === "string") {
+										return part.text.toLowerCase().includes(searchTerm);
+									}
+									return false;
+								});
+							}
+							return false;
+						});
+						if (hasMatchingMessage) {
+							return { match: true, threadData };
+						}
+					}
+				} catch (error) {
+					console.warn(`Failed to load messages for thread ${threadData.threadId}:`, error);
+				}
+
+				return { match: false, threadData };
+			}),
 		);
+
+		return filtered.filter((item) => item.match).map((item) => item.threadData);
 	});
 
 	const groupedThreadList = $derived.by(async () => {
@@ -168,14 +208,14 @@
 </script>
 
 <Sidebar.Root collapsible="offcanvas" variant="sidebar" class="border-none">
-	<Sidebar.Header class="px-4 pb-0">
+	<Sidebar.Header class="px-4 pb-2">
 		<Input
 			class="bg-background! h-10 rounded-[10px]"
 			bind:value={searchQuery}
 			placeholder={m.placeholder_input_search()}
 		/>
 	</Sidebar.Header>
-	<Sidebar.Content class="bg-input">
+	<Sidebar.Content class="bg-input pt-0">
 		<Sidebar.Group>
 			<Sidebar.GroupContent class="flex flex-col gap-y-1 px-3">
 				{#if searchQuery.trim()}
