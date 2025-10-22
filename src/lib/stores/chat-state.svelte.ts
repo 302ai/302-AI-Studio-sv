@@ -190,16 +190,20 @@ class ChatState {
 	currentProvider = $derived<ModelProvider | null>(
 		this.selectedModel ? providerState.getProvider(this.selectedModel.providerId) : null,
 	);
-	sendMessageEnabled = $derived<boolean>(
-		(this.inputValue.trim() !== "" || this.attachments.length > 0) && !!this.selectedModel,
-	);
-	hasMessages = $derived(this.messages.length > 0);
-	canTogglePrivacy = $derived(!this.hasMessages);
-
+	
 	isStreaming = $derived(chat.status === "streaming");
 	isSubmitted = $derived(chat.status === "submitted");
 	isReady = $derived(chat.status === "ready");
 	isError = $derived(chat.status === "error");
+	
+	sendMessageEnabled = $derived<boolean>(
+		(this.inputValue.trim() !== "" || this.attachments.length > 0) &&
+			!!this.selectedModel &&
+			!this.isStreaming &&
+			!this.isSubmitted,
+	);
+	hasMessages = $derived(this.messages.length > 0);
+	canTogglePrivacy = $derived(!this.hasMessages);
 	canRegenerate = $derived(
 		(this.isReady || this.isError) &&
 			this.hasMessages &&
