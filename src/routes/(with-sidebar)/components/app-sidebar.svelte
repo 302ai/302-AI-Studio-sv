@@ -168,14 +168,14 @@
 </script>
 
 <Sidebar.Root collapsible="offcanvas" variant="sidebar" class="border-none">
-	<Sidebar.Header class="px-4 pb-0">
+	<Sidebar.Header class="px-4 pb-2">
 		<Input
 			class="bg-background! h-10 rounded-[10px]"
 			bind:value={searchQuery}
 			placeholder={m.placeholder_input_search()}
 		/>
 	</Sidebar.Header>
-	<Sidebar.Content class="bg-input">
+	<Sidebar.Content class="bg-input pt-0">
 		<Sidebar.Group>
 			<Sidebar.GroupContent class="flex flex-col gap-y-1 px-3">
 				{#if searchQuery.trim()}
