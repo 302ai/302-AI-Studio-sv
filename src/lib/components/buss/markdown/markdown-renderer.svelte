@@ -206,7 +206,7 @@
 	};
 </script>
 
-<div class="prose max-w-none">
+<div class="prose max-w-none [&_a]:break-all">
 	{#each blocks as block (block.id)}
 		{#if block.kind === "code"}
 			<CodeBlock

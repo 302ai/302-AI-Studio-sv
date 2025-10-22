@@ -131,7 +131,7 @@
 				</div>
 			{/if}
 
-			<div class="whitespace-pre-wrap">
+			<div class="whitespace-pre-wrap break-all">
 				{#each displayParts as part, partIndex (partIndex)}
 					{#if part.type === "text"}
 						<div>{part.text}</div>
