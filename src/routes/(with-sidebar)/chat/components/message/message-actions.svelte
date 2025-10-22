@@ -23,6 +23,12 @@
 	let isEditDialogOpen = $state(false);
 	let editContent = $state("");
 
+	const isCurrentMessageStreaming = $derived(
+		chatState.isStreaming &&
+			message.role === "assistant" &&
+			chatState.lastAssistantMessage?.id === message.id,
+	);
+
 	function getMessageContent(message: ChatMessage): string {
 		return message.parts
 			.filter((part) => part.type === "text")
@@ -77,7 +83,7 @@
 		onclick={handleRegenerate}
 		disabled={!chatState.canRegenerate || chatState.isStreaming}
 	>
-		<RefreshCcw class={chatState.isStreaming ? "animate-spin" : ""} />
+		<RefreshCcw class={isCurrentMessageStreaming ? "animate-spin" : ""} />
 	</ButtonWithTooltip>
 {/snippet}
 
