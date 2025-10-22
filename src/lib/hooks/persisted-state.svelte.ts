@@ -73,11 +73,14 @@ export class PersistedState<T extends StorageValue> {
 	#update: VoidFunction | undefined;
 	#proxies = new WeakMap();
 	#isHydrated = $state(false);
+	#storeTimeoutId: ReturnType<typeof setTimeout> | null = null;
+	#storeDebounceMs: number;
 
-	constructor(key: string, initialValue: T) {
+	constructor(key: string, initialValue: T, debounceMs: number = 300) {
 		this.#current = initialValue;
 		this.#key = key;
 		this.#storage = new ElectronStorageAdapter<T>();
+		this.#storeDebounceMs = debounceMs;
 
 		this.#hydratePersistState(key, initialValue);
 
@@ -118,6 +121,10 @@ export class PersistedState<T extends StorageValue> {
 		return this.#isHydrated;
 	}
 
+	get snapshot(): T {
+		return this.#current as T;
+	}
+
 	set current(newValue: T) {
 		this.#current = newValue;
 		this.#store(newValue);
@@ -147,10 +154,40 @@ export class PersistedState<T extends StorageValue> {
 	}
 
 	#store(value: T | undefined | null): void {
-		this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
-			console.log("Value", value);
+		// Clear existing timeout
+		if (this.#storeTimeoutId !== null) {
+			clearTimeout(this.#storeTimeoutId);
+		}
+
+		// Set new debounced store
+		this.#storeTimeoutId = setTimeout(() => {
+			const write = () => {
+				this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
+					console.log("Value", value);
+					console.error(
+						`Error when writing value from persisted store "${this.#key}" to Electron storage`,
+						error,
+					);
+				});
+			};
+			if (typeof requestIdleCallback !== "undefined") {
+				requestIdleCallback(write, { timeout: 1500 });
+			} else {
+				write();
+			}
+			this.#storeTimeoutId = null;
+		}, this.#storeDebounceMs);
+	}
+
+	// Force immediate storage without debounce
+	flush(): void {
+		if (this.#storeTimeoutId !== null) {
+			clearTimeout(this.#storeTimeoutId);
+			this.#storeTimeoutId = null;
+		}
+		this.#storage?.setItemAsync(this.#key, this.#current ?? null).catch((error) => {
 			console.error(
-				`Error when writing value from persisted store "${this.#key}" to Electron storage`,
+				`Error when flushing persisted store "${this.#key}" to Electron storage`,
 				error,
 			);
 		});

@@ -9,8 +9,9 @@ import { toast } from "svelte-sonner";
 export const persistedProviderState = new PersistedState<ModelProvider[]>(
 	"app-providers",
 	DEFAULT_PROVIDERS,
+	300,
 );
-export const persistedModelState = new PersistedState<Model[]>("app-models", []);
+export const persistedModelState = new PersistedState<Model[]>("app-models", [], 500);
 
 const { aiApplicationService } = window.electronAPI;
 
@@ -22,6 +23,33 @@ $effect.root(() => {
 		persistedProviderState.current;
 	});
 });
+
+let pendingDeleteIds: string[] = [];
+let deleteFlushScheduled = false;
+
+function flushPendingDeletes() {
+	deleteFlushScheduled = false;
+	if (pendingDeleteIds.length === 0) return;
+
+	const idsToDelete = new Set(pendingDeleteIds);
+	pendingDeleteIds = [];
+	const current = persistedModelState.snapshot;
+	const next = current.filter((m) => !idsToDelete.has(m.id));
+
+	persistedModelState.current = next;
+}
+
+let cachedSortedModels: Model[] = [];
+let lastModelArray: Model[] = [];
+
+function getCachedSortedModels(): Model[] {
+	const currentModels = persistedModelState.snapshot;
+	if (currentModels !== lastModelArray) {
+		lastModelArray = currentModels;
+		cachedSortedModels = [...currentModels].sort((a, b) => a.name.localeCompare(b.name));
+	}
+	return cachedSortedModels;
+}
 
 class ProviderState {
 	getProvider(id: string): ModelProvider | null {
@@ -78,7 +106,7 @@ class ProviderState {
 		);
 	}
 	getSortedModels(): Model[] {
-		return [...persistedModelState.current].sort((a, b) => a.name.localeCompare(b.name));
+		return getCachedSortedModels();
 	}
 
 	addModel(input: ModelCreateInput): Model {
@@ -131,6 +159,13 @@ class ProviderState {
 			return true;
 		}
 		return false;
+	}
+	scheduleRemoveModel(id: string): void {
+		pendingDeleteIds.push(id);
+		if (!deleteFlushScheduled) {
+			deleteFlushScheduled = true;
+			requestAnimationFrame(flushPendingDeletes);
+		}
 	}
 	addModels(models: ModelCreateInput[]): Model[] {
 		const newModels: Model[] = models.map((input) => ({
