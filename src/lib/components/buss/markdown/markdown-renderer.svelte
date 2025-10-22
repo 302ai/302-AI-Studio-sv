@@ -7,6 +7,9 @@
 	} from "markdown-it";
 	import type Token from "markdown-it/lib/token.mjs";
 	import { onMount } from "svelte";
+	import texmath from "markdown-it-texmath";
+	import katex from "katex";
+	import "katex/dist/katex.min.css";
 	import CodeBlock from "./code-block.svelte";
 	import { DEFAULT_THEME, ensureHighlighter } from "./highlighter";
 
@@ -85,6 +88,14 @@
 		const instance = props.preset
 			? markdownIt(props.preset, effectiveOptions)
 			: markdownIt(effectiveOptions);
+		
+		// Add math support
+		instance.use(texmath, {
+			engine: katex,
+			delimiters: "dollars",
+			katexOptions: { macros: { "\\RR": "\\mathbb{R}" } },
+		});
+		
 		for (const { plugin, options } of normalizePlugins(props.plugins ?? [])) {
 			instance.use(plugin as PluginWithOptions<unknown>, options);
 		}
