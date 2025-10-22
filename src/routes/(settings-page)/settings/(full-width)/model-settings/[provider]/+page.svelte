@@ -18,9 +18,9 @@
 		{ value: "openai", label: "OpenAI" },
 		{ value: "anthropic", label: "Anthropic" },
 		{ value: "gemini", label: "Google Gemini" },
-		{ value: "azure", label: "Azure OpenAI" },
-		{ value: "ollama", label: "Ollama" },
-		{ value: "custom", label: m.common_custom() },
+		// { value: "azure", label: "Azure OpenAI" },
+		// { value: "ollama", label: "Ollama" },
+		// { value: "custom", label: m.common_custom() },
 	];
 
 	function getChatEndpointUrl(baseUrl: string, apiType: string): string {
