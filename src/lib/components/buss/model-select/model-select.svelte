@@ -19,7 +19,7 @@
 	import { m } from "$lib/paraglide/messages";
 	import { persistedModelState, persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
-	import { Check, ChevronRight } from "@lucide/svelte";
+	import { Check, ChevronRight, Star } from "@lucide/svelte";
 	import type { Model, Model as ProviderModel } from "@shared/types";
 
 	const { trigger, selectedModel, onModelSelect }: ModelSelectProps = $props();
@@ -100,9 +100,15 @@
 			groups[provider.name].push(model);
 		});
 
+		// Sort models within each group: collected first
 		Object.keys(groups).forEach((key) => {
 			if (groups[key].length === 0) {
 				delete groups[key];
+			} else {
+				groups[key].sort((a, b) => {
+					if (a.collected === b.collected) return 0;
+					return a.collected ? -1 : 1;
+				});
 			}
 		});
 
@@ -235,8 +241,11 @@
 								onmouseleave={handleItemMouseLeave}
 							>
 								<div class="flex w-full flex-row items-center justify-between pl-2">
-									<div class="flex flex-row gap-2">
-										{model.name}
+									<div class="flex flex-row items-center gap-2">
+										{#if model.collected}
+											<Star class="size-3.5 shrink-0 fill-yellow-500 text-yellow-500" />
+										{/if}
+										<span>{model.name}</span>
 										<span class="text-muted-foreground text-sm">{model.type}</span>
 									</div>
 									{#if selectedModel?.id === model.id && selectedModel?.providerId === model.providerId}
