@@ -1,7 +1,9 @@
-import { prefixStorage, type Tab, type TabState, type ThreadParmas } from "@shared/types";
+import { prefixStorage, TabState, type Tab, type ThreadParmas } from "@shared/types";
 import { isNull } from "es-toolkit";
+import { isEmpty } from "es-toolkit/compat";
 import { nanoid } from "nanoid";
 import { storageService, StorageService } from ".";
+import { generalSettingsService } from "../settings-service";
 
 export class TabStorage extends StorageService<TabState> {
 	constructor() {
@@ -26,12 +28,14 @@ export class TabStorage extends StorageService<TabState> {
 		const allWindowsTabs: Tab[][] = [];
 
 		const result = await this.getItemInternal("tab-bar-state");
-		if (isNull(result)) {
+		if (isNull(result) || isEmpty(result)) {
+			const language = await generalSettingsService.getLanguage();
+			const title = language === "zh" ? "新会话" : "New Chat";
 			const tabId = nanoid();
 			const threadId = nanoid();
 			const initTab: Tab = {
 				id: tabId,
-				title: "New Chat",
+				title,
 				href: `/chat/${tabId}`,
 				type: "chat",
 				active: true,
@@ -39,7 +43,7 @@ export class TabStorage extends StorageService<TabState> {
 			};
 			const initThread: ThreadParmas = {
 				id: threadId,
-				title: "New Chat",
+				title,
 				temperature: null,
 				topP: null,
 				frequencyPenalty: null,

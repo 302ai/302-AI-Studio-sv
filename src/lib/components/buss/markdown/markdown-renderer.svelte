@@ -7,6 +7,9 @@
 	} from "markdown-it";
 	import type Token from "markdown-it/lib/token.mjs";
 	import { onMount } from "svelte";
+	import texmath from "markdown-it-texmath";
+	import katex from "katex";
+	import "katex/dist/katex.min.css";
 	import CodeBlock from "./code-block.svelte";
 	import { DEFAULT_THEME, ensureHighlighter } from "./highlighter";
 
@@ -85,6 +88,14 @@
 		const instance = props.preset
 			? markdownIt(props.preset, effectiveOptions)
 			: markdownIt(effectiveOptions);
+
+		// Add math support
+		instance.use(texmath, {
+			engine: katex,
+			delimiters: "dollars",
+			katexOptions: { macros: { "\\RR": "\\mathbb{R}" } },
+		});
+
 		for (const { plugin, options } of normalizePlugins(props.plugins ?? [])) {
 			instance.use(plugin as PluginWithOptions<unknown>, options);
 		}
@@ -179,9 +190,34 @@
 			collectBlocks(content);
 		}
 	});
+
+	const handleExternalLinks = (node: HTMLElement) => {
+		const links = node.querySelectorAll("a");
+
+		const handleClick = (event: MouseEvent) => {
+			event.preventDefault();
+			const target = event.currentTarget as HTMLAnchorElement;
+			const url = target.href;
+			if (url && window.electronAPI?.externalLinkService?.openExternalLink) {
+				window.electronAPI.externalLinkService.openExternalLink(url);
+			}
+		};
+
+		links.forEach((link) => {
+			link.addEventListener("click", handleClick);
+		});
+
+		return {
+			destroy() {
+				links.forEach((link) => {
+					link.removeEventListener("click", handleClick);
+				});
+			},
+		};
+	};
 </script>
 
-<div class="prose max-w-none">
+<div class="prose max-w-none [&_a]:break-all">
 	{#each blocks as block (block.id)}
 		{#if block.kind === "code"}
 			<CodeBlock
@@ -192,8 +228,10 @@
 				theme={props.codeTheme ?? DEFAULT_THEME}
 			/>
 		{:else}
-			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-			{@html block.html}
+			<div use:handleExternalLinks>
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+				{@html block.html}
+			</div>
 		{/if}
 	{/each}
 </div>

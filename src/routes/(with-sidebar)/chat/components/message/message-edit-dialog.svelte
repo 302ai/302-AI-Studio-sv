@@ -55,9 +55,7 @@
 							chatState.isStreaming ||
 							editContent.trim() === ""}
 					>
-						{#if chatState.isStreaming}
-							<RefreshCcw class="animate-spin mr-2 h-4 w-4" />
-						{/if}
+						<RefreshCcw class="mr-2 h-4 w-4" />
 						{m.title_regenerate()}
 					</Button>
 				{/if}

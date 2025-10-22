@@ -105,6 +105,7 @@
 				<a
 					bind:this={itemElements[index]}
 					href={item.path}
+					draggable="false"
 					class={cn(
 						"px-settings-item-x py-settings-item-y flex w-full items-center rounded-lg text-sm font-medium whitespace-nowrap outline-hidden transition-colors",
 						"hover:bg-hover-primary",

@@ -12,14 +12,21 @@
 	}
 
 	let { label, tips, tooltipPlacement = "right", class: className }: Props = $props();
+	let open = $state(false);
+
+	function handleClick(e: MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		open = !open;
+	}
 </script>
 
 <div class="flex flex-row items-center gap-x-1" data-slot="label">
 	<Label class="text-label-fg">{label}</Label>
 	<Tooltip.Provider>
-		<Tooltip.Root>
-			<Tooltip.Trigger>
-				<CircleQuestionMark class="h-3 w-3 text-label-fg" />
+		<Tooltip.Root bind:open disableHoverableContent={true}>
+			<Tooltip.Trigger onclick={handleClick}>
+				<CircleQuestionMark class="h-3 w-3 text-label-fg cursor-pointer" />
 			</Tooltip.Trigger>
 
 			<Tooltip.Content
