@@ -709,8 +709,10 @@ export const chat = new Chat({
 				if (textPart && "text" in textPart) {
 					const text = textPart.text.trim();
 					const titleText = [...text].slice(0, 10).join("");
-					persistedChatParamsState.current.title = titleText;
-					tabBarState.updateTabTitle(persistedChatParamsState.current.id, titleText);
+					if (titleText) {
+						persistedChatParamsState.current.title = titleText;
+						tabBarState.updateTabTitle(persistedChatParamsState.current.id, titleText);
+					}
 				}
 			}
 		}
