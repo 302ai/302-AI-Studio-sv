@@ -40,6 +40,75 @@
 		onDuplicate,
 	}: Props = $props();
 
+	const typeLabel = $derived.by(() => {
+		switch (model.type) {
+			case "language":
+				return m.text_model_type_chat();
+			case "embedding":
+				return m.text_model_type_embedding();
+			case "image-generation":
+				return m.text_model_type_image();
+			case "tts":
+				return m.text_model_type_audio();
+			case "rerank":
+				return "Rerank";
+			default:
+				return model.type;
+		}
+	});
+
+	const capabilityInfos = $derived.by(() => {
+		const result = [];
+		for (const capability of model.capabilities) {
+			const capStr = String(capability);
+			let info = null;
+			switch (capStr) {
+				case "reasoning":
+					info = {
+						Icon: Lightbulb,
+						bgClass: "bg-accent dark:bg-primary/10",
+						iconClass: "text-primary",
+						title: m.text_capability_reasoning(),
+					};
+					break;
+				case "vision":
+					info = {
+						Icon: Image,
+						bgClass: "bg-green-100 dark:bg-green-900/20",
+						iconClass: "text-green-600 dark:text-green-400",
+						title: m.text_capability_vision(),
+					};
+					break;
+				case "music":
+					info = {
+						Icon: Music,
+						bgClass: "bg-pink-50 dark:bg-pink-900/20",
+						iconClass: "text-pink-500",
+						title: m.text_capability_music(),
+					};
+					break;
+				case "video":
+					info = {
+						Icon: Play,
+						bgClass: "bg-blue-50 dark:bg-blue-900/20",
+						iconClass: "text-blue-600",
+						title: m.text_capability_video(),
+					};
+					break;
+				case "function_call":
+					info = {
+						Icon: Hammer,
+						bgClass: "bg-orange-50 dark:bg-orange-900/20",
+						iconClass: "text-orange-500",
+						title: m.text_capability_function_call(),
+					};
+					break;
+			}
+			if (info) result.push({ ...info, key: capStr });
+		}
+		return result;
+	});
+
 	const getCapabilityIcon = (capability: string) => {
 		switch (capability) {
 			case "reasoning":
@@ -142,25 +211,22 @@
 			<!-- 类型 -->
 			<div class="flex h-full items-center overflow-hidden px-1 outline-hidden">
 				<div class="truncate text-sm text-[#333333] dark:text-[#E6E6E6]">
-					{getTypeLabel(model.type)}
+					{typeLabel}
 				</div>
 			</div>
 
 			<!-- 能力 -->
 			<div class="flex h-full items-center gap-2 overflow-hidden outline-hidden">
-				{#each Array.from(model.capabilities) as capability (capability)}
-					{@const capabilityInfo = getCapabilityIcon(String(capability))}
-					{#if capabilityInfo}
-						<div
-							class={cn(
-								"flex size-6 flex-shrink-0 items-center justify-center rounded-sm",
-								capabilityInfo.bgClass,
-							)}
-							title={capabilityInfo.title}
-						>
-							<capabilityInfo.Icon class={cn("h-4 w-4", capabilityInfo.iconClass)} />
-						</div>
-					{/if}
+				{#each capabilityInfos as capabilityInfo (capabilityInfo.key)}
+					<div
+						class={cn(
+							"flex size-6 flex-shrink-0 items-center justify-center rounded-sm",
+							capabilityInfo.bgClass,
+						)}
+						title={capabilityInfo.title}
+					>
+						<capabilityInfo.Icon class={cn("h-4 w-4", capabilityInfo.iconClass)} />
+					</div>
 				{/each}
 			</div>
 
