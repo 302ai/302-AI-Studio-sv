@@ -88,14 +88,14 @@
 		const instance = props.preset
 			? markdownIt(props.preset, effectiveOptions)
 			: markdownIt(effectiveOptions);
-		
+
 		// Add math support
 		instance.use(texmath, {
 			engine: katex,
 			delimiters: "dollars",
 			katexOptions: { macros: { "\\RR": "\\mathbb{R}" } },
 		});
-		
+
 		for (const { plugin, options } of normalizePlugins(props.plugins ?? [])) {
 			instance.use(plugin as PluginWithOptions<unknown>, options);
 		}

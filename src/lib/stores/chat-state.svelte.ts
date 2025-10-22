@@ -190,12 +190,12 @@ class ChatState {
 	currentProvider = $derived<ModelProvider | null>(
 		this.selectedModel ? providerState.getProvider(this.selectedModel.providerId) : null,
 	);
-	
+
 	isStreaming = $derived(chat.status === "streaming");
 	isSubmitted = $derived(chat.status === "submitted");
 	isReady = $derived(chat.status === "ready");
 	isError = $derived(chat.status === "error");
-	
+
 	sendMessageEnabled = $derived<boolean>(
 		(this.inputValue.trim() !== "" || this.attachments.length > 0) &&
 			!!this.selectedModel &&
