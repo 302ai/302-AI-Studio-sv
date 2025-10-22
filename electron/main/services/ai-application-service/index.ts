@@ -7,6 +7,7 @@ import {
 	fetch302AIToolList,
 	fetch302AIUserInfo,
 } from "../../apis/ai-applications";
+import { emitter } from "../broadcast-service";
 import { generalSettingsService } from "../settings-service";
 import { aiApplicationStorage } from "../storage-service/ai-application-storage";
 import { providerStorage } from "../storage-service/provider-storage";
@@ -17,6 +18,9 @@ export class AiApplicationService {
 
 	constructor() {
 		this.initAiApplications();
+		emitter.on("general-settings:language-changed", () => {
+			this.initAiApplications();
+		});
 	}
 
 	// ******************************* Private Methods ******************************* //

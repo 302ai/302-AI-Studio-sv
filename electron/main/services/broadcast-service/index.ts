@@ -6,6 +6,7 @@ import mitt from "mitt";
 
 export const emitter = mitt<{
 	"persisted-state:sync": { sendKey: string; syncValue: any; sourceWebContentsId: number };
+	"general-settings:language-changed": null;
 }>();
 
 export class BroadcastService {
