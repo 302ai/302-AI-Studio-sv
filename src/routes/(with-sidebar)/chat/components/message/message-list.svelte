@@ -171,9 +171,9 @@
 	});
 </script>
 
-<ScrollArea bind:ref={scrollAreaRef} class="h-full w-full">
+<ScrollArea bind:ref={scrollAreaRef} class="h-full w-full pt-5">
 	<div class="flex w-full justify-center">
-		<div class={cn("w-full space-y-4 pt-8", containerClass)}>
+		<div class={cn("w-full space-y-4", containerClass)}>
 			{#each messages as message (message.id)}
 				{#if message.role === "user"}
 					<UserMessage message={{ ...message, role: "user" as const }} />
