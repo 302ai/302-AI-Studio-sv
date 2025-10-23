@@ -50,27 +50,6 @@ export class WebContentsFactory {
 			},
 		});
 
-		const backgroundColor = nativeTheme.shouldUseDarkColors ? "#1A1A1A" : "#F9F9F9";
-		view.setBackgroundColor(backgroundColor);
-
-		if (config.type === "aiApplication") {
-			view.webContents.on("dom-ready", () => {
-				this.applyThemeToWebContents(view.webContents);
-			});
-
-			view.webContents.on("did-finish-load", () => {
-				this.applyThemeToWebContents(view.webContents);
-			});
-
-			view.webContents.on("did-navigate", () => {
-				this.applyThemeToWebContents(view.webContents);
-			});
-
-			view.webContents.on("did-navigate-in-page", () => {
-				this.applyThemeToWebContents(view.webContents);
-			});
-		}
-
 		// Add destroyed listener if callback provided
 		if (config.onDestroyed) {
 			view.webContents.on("destroyed", config.onDestroyed);
@@ -200,7 +179,28 @@ export class WebContentsFactory {
 	}
 
 	static createAiApplicationView(config: AiApplicationWebContentsConfig): WebContentsView {
-		return this.create(config);
+		const view = this.create(config);
+		const backgroundColor = nativeTheme.shouldUseDarkColors ? "#1A1A1A" : "#F9F9F9";
+		view.setBackgroundColor(backgroundColor);
+
+		if (config.type === "aiApplication") {
+			view.webContents.on("dom-ready", () => {
+				this.applyThemeToWebContents(view.webContents);
+			});
+
+			view.webContents.on("did-finish-load", () => {
+				this.applyThemeToWebContents(view.webContents);
+			});
+
+			view.webContents.on("did-navigate", () => {
+				this.applyThemeToWebContents(view.webContents);
+			});
+
+			view.webContents.on("did-navigate-in-page", () => {
+				this.applyThemeToWebContents(view.webContents);
+			});
+		}
+		return view;
 	}
 
 	static createShellView(config: ShellWebContentsConfig): WebContentsView {

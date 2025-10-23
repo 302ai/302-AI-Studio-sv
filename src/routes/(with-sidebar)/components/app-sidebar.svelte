@@ -19,7 +19,6 @@
 		[TimeGroup.LAST_30_DAYS]: true,
 		[TimeGroup.EARLIER]: true,
 	});
-	let favoritesCollapsed = $state(true);
 	let renameDialogOpen = $state(false);
 	let renameTargetThreadId = $state<string | null>(null);
 	let renameTargetName = $state("");
@@ -128,10 +127,8 @@
 		};
 
 		threads.forEach((threadData) => {
-			if (!threadData.isFavorite) {
-				const group = getTimeGroup(threadData.thread.updatedAt);
-				groups[group].push(threadData);
-			}
+			const group = getTimeGroup(threadData.thread.updatedAt);
+			groups[group].push(threadData);
 		});
 
 		(Object.keys(groups) as TimeGroup[]).forEach((groupKey) => {
@@ -141,19 +138,6 @@
 		});
 
 		return groups;
-	});
-
-	const favoriteThreadList = $derived.by(async () => {
-		if (searchQuery.trim()) return [];
-
-		const threads = await threadsState.threads;
-		const favorites = threads.filter((threadData) => threadData.isFavorite);
-
-		favorites.sort(
-			(a, b) => new Date(b.thread.updatedAt).getTime() - new Date(a.thread.updatedAt).getTime(),
-		);
-
-		return favorites;
 	});
 
 	async function handleThreadClick(threadId: string) {
@@ -252,39 +236,6 @@
 						{/each}
 					{/await}
 				{:else}
-					{#await favoriteThreadList then favorites}
-						{#if favorites.length > 0}
-							<Collapsible.Root
-								bind:open={favoritesCollapsed}
-								class="group/collapsible flex flex-col gap-y-1"
-							>
-								<Collapsible.Trigger
-									class="flex items-center justify-between text-start w-full h-10 rounded-[10px] px-3 hover:bg-secondary/80 text-muted-foreground"
-								>
-									<span>{m.label_favorites()}</span>
-									<ChevronDown
-										class="size-4 transition-transform duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-180 group-data-[state=closed]/collapsible:rotate-0"
-									/>
-								</Collapsible.Trigger>
-								<Collapsible.Content class="flex flex-col gap-y-1">
-									{#each favorites as { threadId, thread, isFavorite } (threadId)}
-										<ThreadItem
-											{threadId}
-											{thread}
-											{isFavorite}
-											isActive={threadId === threadsState.activeThreadId}
-											onThreadClick={handleThreadClick}
-											onToggleFavorite={() => threadsState.toggleFavorite(threadId)}
-											onRenameThread={handleRenameThread}
-											onThreadGenerateTitle={handleThreadGenerateTitle}
-											onThreadClearMessages={handleThreadClearMessages}
-											onThreadDelete={handleThreadDelete}
-										/>
-									{/each}
-								</Collapsible.Content>
-							</Collapsible.Root>
-						{/if}
-					{/await}
 					{#await groupedThreadList then groupedThreads}
 						{#if groupedThreads}
 							{#each TIME_GROUP_ORDER as groupKey (groupKey)}

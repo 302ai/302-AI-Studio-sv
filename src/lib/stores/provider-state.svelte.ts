@@ -9,9 +9,10 @@ import { toast } from "svelte-sonner";
 export const persistedProviderState = new PersistedState<ModelProvider[]>(
 	"app-providers",
 	DEFAULT_PROVIDERS,
+	true,
 	300,
 );
-export const persistedModelState = new PersistedState<Model[]>("app-models", [], 500);
+export const persistedModelState = new PersistedState<Model[]>("app-models", [], true, 500);
 
 const { aiApplicationService } = window.electronAPI;
 
