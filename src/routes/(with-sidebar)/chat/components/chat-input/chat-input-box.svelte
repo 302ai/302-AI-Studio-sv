@@ -5,7 +5,7 @@
 	import { Separator } from "$lib/components/ui/separator";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { m } from "$lib/paraglide/messages.js";
-	import { chat, chatState } from "$lib/stores/chat-state.svelte";
+	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
 	import type { AttachmentFile } from "@shared/types";
@@ -192,7 +192,7 @@
 						"")}
 						<Button
 							variant="ghost"
-							class="text-sm text-foreground/50 hover:!bg-chat-action-hover"
+							class="text-sm text-foreground/50 hover:!bg-chat-action-hover max-w-[200px]"
 							onclick={() => {
 								if (!hasConfiguredProviders()) {
 									toast.info(m.toast_no_provider_configured(), {
@@ -206,7 +206,9 @@
 								openModelSelect?.();
 							}}
 						>
-							{chatState.selectedModel?.name ?? m.text_button_select_model()}
+							<p class="truncate">
+								{chatState.selectedModel?.name ?? m.text_button_select_model()}
+							</p>
 						</Button>
 					{/snippet}
 				</ModelSelect>
