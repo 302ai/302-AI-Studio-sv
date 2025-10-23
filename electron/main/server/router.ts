@@ -20,6 +20,7 @@ import getPort from "get-port";
 import { Hono } from "hono";
 import { mcpService } from "../services/mcp-service";
 import { storageService } from "../services/storage-service";
+import { createCitationsFetch } from "./citations-processor";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function addDefinedParams(options: any, params: any) {
@@ -143,6 +144,7 @@ app.post("/chat/302ai", async (c) => {
 		name: "302.AI",
 		baseURL: baseUrl || "https://api.openai.com/v1",
 		apiKey: apiKey || "[REDACTED:sk-secret]",
+		fetch: createCitationsFetch(),
 	});
 
 	const wrapModel = wrapLanguageModel({

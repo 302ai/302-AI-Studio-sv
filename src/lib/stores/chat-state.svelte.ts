@@ -668,6 +668,73 @@ export const chat = new Chat({
 	}),
 	onFinish: async ({ messages }) => {
 		console.log("更新完成", $state.snapshot(messages));
+
+		// Extract and process citations from the last assistant message
+		// const lastMessage = messages[messages.length - 1];
+		// if (lastMessage && lastMessage.role === "assistant") {
+		// 	const textParts = lastMessage.parts.filter((part) => part.type === "text" && "text" in part);
+		// 	if (textParts.length > 0) {
+		// 		const lastTextPart = textParts[textParts.length - 1];
+		// 		if ("text" in lastTextPart) {
+		// 			const text = lastTextPart.text;
+		// 			// Match citation links in format: [1] https://example.com
+		// 			const citationRegex = /^\[\d+\]\s+(https?:\/\/[^\s]+)\s*$/gm;
+		// 			const citations: string[] = [];
+		// 			let match;
+
+		// 			while ((match = citationRegex.exec(text)) !== null) {
+		// 				citations.push(match[1]);
+		// 			}
+
+		// 			if (citations.length > 0) {
+		// 				// Remove all citation lines from text (more aggressive pattern)
+		// 				const cleanedText = text
+		// 					.split("\n")
+		// 					.filter((line) => !/^\[\d+\]\s+https?:\/\//.test(line.trim()))
+		// 					.join("\n")
+		// 					.trim();
+		// 				lastTextPart.text = cleanedText;
+
+		// 				// Add citations to metadata
+		// 				if (!lastMessage.metadata) {
+		// 					lastMessage.metadata = {};
+		// 				}
+		// 				lastMessage.metadata.citations = citations;
+		// 			}
+		// 		}
+		// 	}
+		// }
+		const lastMessage = messages[messages.length - 1];
+		if (lastMessage && lastMessage.role === "assistant") {
+			const textParts = lastMessage.parts.filter((part) => part.type === "text" && "text" in part);
+			if (textParts.length > 0) {
+				const lastTextPart = textParts[textParts.length - 1];
+				if ("text" in lastTextPart) {
+					const text = lastTextPart.text;
+					// Match citation links in format: [1] https://example.com
+					const citationRegex = /^\[\d+\]\s+(https?:\/\/[^\s]+)$/gm;
+					const citations: string[] = [];
+					let match;
+
+					while ((match = citationRegex.exec(text)) !== null) {
+						citations.push(match[1]);
+					}
+
+					if (citations.length > 0) {
+						// Remove citations from text
+						const cleanedText = text.replace(/\n+\[\d+\]\s+https?:\/\/[^\s]+\n*/g, "").trim();
+						lastTextPart.text = cleanedText;
+
+						// Add citations to metadata
+						if (!lastMessage.metadata) {
+							lastMessage.metadata = {};
+						}
+						lastMessage.metadata.citations = citations;
+					}
+				}
+			}
+		}
+
 		persistedMessagesState.current = messages;
 
 		const titleTiming = preferencesSettings.titleGenerationTiming;
