@@ -457,5 +457,7 @@
 	"screenshot_action": "Screenshot",
 	"screenshot_generating": "Generating screenshot...",
 	"screenshot_success": "Screenshot generated successfully",
-	"screenshot_failed": "Screenshot failed, please try again"
+	"screenshot_failed": "Screenshot failed, please try again",
+	"settings_importLegacyJson": "Import Legacy JSON Data",
+	"settings_importLegacyJsonDesc": "Import data from older versions of 302 AI Studio (supports providers, models, threads, messages, etc.)"
 }

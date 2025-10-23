@@ -6,8 +6,13 @@ import extract from "extract-zip";
 import { createWriteStream } from "fs";
 import { cp, mkdir, readdir, readFile, rm } from "fs/promises";
 import { join } from "path";
+import { importLegacyJson } from "./legacy-import";
 
 export class DataService {
+	async importLegacyJson(_event: IpcMainInvokeEvent): Promise<ImportResult> {
+		return await importLegacyJson();
+	}
+
 	/**
 	 * Export storage folder as a zip file
 	 * @returns The path to the exported zip file, or null if cancelled

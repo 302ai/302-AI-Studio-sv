@@ -452,5 +452,7 @@
 	"screenshot_action": "截图",
 	"screenshot_generating": "正在生成截图...",
 	"screenshot_success": "截图生成成功",
-	"screenshot_failed": "截图失败,请重试"
+	"screenshot_failed": "截图失败,请重试",
+	"settings_importLegacyJson": "导入旧版JSON数据",
+	"settings_importLegacyJsonDesc": "从旧版本的302 AI Studio导入数据（支持providers、models、threads、messages等）"
 }
