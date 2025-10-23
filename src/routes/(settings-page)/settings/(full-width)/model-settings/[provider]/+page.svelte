@@ -51,17 +51,16 @@
 	let showModelDialog = $state(false);
 	let dialogMode = $state<"add" | "edit">("add");
 	let editingModel = $state<Model | undefined>(undefined);
+	let pendingRemovedIds = $state<Set<string>>(new Set());
+
 	const providerParam = $derived(page.params.provider);
 	const currentProvider = $derived(
 		providerParam ? providerState.getProviderByNameOrId(providerParam) : undefined,
 	);
 	let showApiKey = $state(false);
 
-	const persistedSoredModelState = $derived.by(() => {
-		return persistedModelState.current
-			.filter((m) => m.providerId === currentProvider?.id)
-			.sort((a, b) => a.name.localeCompare(b.name));
-	});
+	const sortedModels = $derived.by(() => providerState.getSortedModels());
+
 	let formData = $derived.by<ModelProvider>(() => {
 		if (currentProvider) {
 			return {
@@ -141,7 +140,8 @@
 	}
 
 	async function handleModelDelete(model: Model) {
-		await providerState.removeModel(model.id);
+		pendingRemovedIds = new Set(pendingRemovedIds).add(model.id);
+		providerState.scheduleRemoveModel(model.id);
 	}
 
 	function handleDialogClose() {
@@ -231,12 +231,15 @@
 		}, 500);
 	}
 	const filteredModels = $derived(
-		persistedSoredModelState.filter(
-			(model) =>
-				searchQuery === "" ||
-				model.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				model.name.toLowerCase().includes(searchQuery.toLowerCase()),
-		),
+		sortedModels
+			.filter((m) => m.providerId === currentProvider?.id)
+			.filter(
+				(model) =>
+					searchQuery === "" ||
+					model.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					model.name.toLowerCase().includes(searchQuery.toLowerCase()),
+			)
+			.filter((m) => !pendingRemovedIds.has(m.id)),
 	);
 </script>
 
@@ -370,7 +373,7 @@
 				<Button
 					variant="destructive"
 					onclick={handleClearModels}
-					disabled={persistedSoredModelState.length === 0}
+					disabled={filteredModels.length === 0}
 				>
 					{m.text_button_clear_models()}
 				</Button>

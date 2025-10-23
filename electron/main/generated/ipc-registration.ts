@@ -74,6 +74,7 @@ export function registerIpcHandlers() {
 	ipcMain.handle("appService:restartApp", (event) => appService.restartApp(event));
 
 	// dataService service registration
+	ipcMain.handle("dataService:importLegacyJson", (event) => dataService.importLegacyJson(event));
 	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
 	ipcMain.handle("dataService:importStorage", (event) => dataService.importStorage(event));
 
@@ -208,6 +209,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("aiApplicationService:handle302AIProviderChange");
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("appService:restartApp");
+	ipcMain.removeHandler("dataService:importLegacyJson");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("dataService:importStorage");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
