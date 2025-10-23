@@ -175,7 +175,7 @@ class CitationsProcessor {
 			return "";
 		}
 
-		const citationLines = this.citations.map((citation, index) => `[${index + 1}] ${citation}`);
+		const citationLines = this.citations.map((citation, index) => `- [${index + 1}] ${citation}`);
 
 		return `\n\n${citationLines.join("\n")}\n`;
 	}

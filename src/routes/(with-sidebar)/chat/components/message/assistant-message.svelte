@@ -83,11 +83,6 @@
 
 	const hasReasoningContent = $derived(message.parts.some((part) => part.type === "reasoning"));
 	const hasTextContent = $derived(message.parts.some((part) => part.type === "text"));
-	const hasCitations = $derived(
-		message.metadata?.citations &&
-			Array.isArray(message.metadata.citations) &&
-			message.metadata.citations.length > 0,
-	);
 	const isStreamingReasoning = $derived(
 		isCurrentMessageStreaming && hasReasoningContent && !hasTextContent,
 	);
@@ -253,32 +248,6 @@
 				</button>
 			{/if}
 		{/each}
-
-		<!-- {#if hasCitations}
-			<div class="mt-4 border-t pt-3">
-				<div class="text-xs font-medium text-muted-foreground mb-2">
-					{m.text_search_references()}
-				</div>
-				<div class="flex flex-col gap-1">
-					{#each message?.metadata?.citations || [] as citation, index}
-						<button
-							type="button"
-							class="flex items-start gap-2 rounded-md p-2 text-left text-xs hover:bg-muted/50 transition-colors group"
-							onclick={() => {
-								if (window.electronAPI?.externalLinkService?.openExternalLink) {
-									window.electronAPI.externalLinkService.openExternalLink(citation);
-								}
-							}}
-						>
-							<span class="flex-shrink-0 text-muted-foreground font-medium">[{index + 1}]</span>
-							<span class="flex-1 text-muted-foreground break-all group-hover:text-foreground transition-colors">
-								{citation}
-							</span>
-						</button>
-					{/each}
-				</div>
-			</div>
-		{/if} -->
 
 		{#if isStreamingText}
 			<div class="flex items-center gap-3 py-3 animate-in fade-in duration-300">

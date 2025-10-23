@@ -18,7 +18,6 @@ export const messageMetadataSchema = z.object({
 		)
 		.optional(),
 	fileContentPartIndex: z.number().optional(),
-	citations: z.array(z.string()).optional(),
 });
 
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
