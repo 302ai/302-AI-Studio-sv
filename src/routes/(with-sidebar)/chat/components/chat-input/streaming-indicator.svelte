@@ -2,6 +2,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { isMac } from "$lib/utils/platform";
 	import { Square } from "@lucide/svelte";
 </script>
 
@@ -14,7 +15,7 @@
 			onclick={chatState.stopGeneration}
 		>
 			<Square class="h-3 w-3 fill-current" />
-			<span>{m.text_chat_stop_generation()}</span>
+			<span>{m.text_chat_stop_generation({ key: isMac ? "⌘D" : "Ctrl+D" })}</span>
 		</Button>
 	</div>
 {/if}
