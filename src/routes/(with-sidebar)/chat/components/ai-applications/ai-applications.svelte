@@ -18,7 +18,7 @@
 
 	let searchQuery = $state("");
 	let categoryCollapsedState = $state<Record<string, boolean>>({});
-	let showMainContent = $state(false);
+	let showMainContent = $state(true);
 
 	let randomApps = $derived(
 		aiApplicationsState.collectedAiApplications.length > 0
@@ -82,7 +82,6 @@
 
 	$effect(() => {
 		if (!aiApplicationsState.isReady) {
-			console.log("aiApplicationsState.isReady", aiApplicationsState.isReady);
 			showMainContent = false;
 		}
 	});
