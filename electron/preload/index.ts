@@ -135,6 +135,13 @@ if (process.contextIsolated) {
 				ipcRenderer.on("tab:generate-title", listener);
 				return () => ipcRenderer.removeListener("tab:generate-title", listener);
 			},
+			aiApplication: {
+				onAiApplicationsLoading: (callback: (loading: boolean) => void) => {
+					const listener = (_: unknown, loading: boolean) => callback(loading);
+					ipcRenderer.on("ai-applications:loading", listener);
+					return () => ipcRenderer.removeListener("ai-applications:loading", listener);
+				},
+			},
 		});
 
 		// Expose shell window ID from process arguments

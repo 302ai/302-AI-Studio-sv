@@ -65,8 +65,8 @@ export function registerIpcHandlers() {
 	ipcMain.handle("aiApplicationService:getAiApplicationUrl", (event, applicationId) =>
 		aiApplicationService.getAiApplicationUrl(event, applicationId),
 	);
-	ipcMain.handle("aiApplicationService:handle302AIProviderChange", (event) =>
-		aiApplicationService.handle302AIProviderChange(event),
+	ipcMain.handle("aiApplicationService:handle302AIProviderChange", (event, updatedApiKey) =>
+		aiApplicationService.handle302AIProviderChange(event, updatedApiKey),
 	);
 
 	// appService service registration

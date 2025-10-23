@@ -52,6 +52,9 @@ declare global {
 				) => () => void;
 				onUpdateError: (callback: (data: { message: string }) => void) => () => void;
 			};
+			aiApplication: {
+				onAiApplicationsLoading: (callback: (loading: boolean) => void) => () => void;
+			};
 		};
 		windowId: string;
 		tab: Tab;

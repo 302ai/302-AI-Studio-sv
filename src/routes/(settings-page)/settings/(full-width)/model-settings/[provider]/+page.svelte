@@ -97,9 +97,9 @@
 		};
 	});
 
-	function saveFormData() {
+	async function saveFormData() {
 		if (formData.id) {
-			providerState.updateProvider(formData.id, {
+			await providerState.updateProvider(formData.id, {
 				name: formData.name,
 				apiType: formData.apiType,
 				apiKey: formData.apiKey,
@@ -113,9 +113,9 @@
 		}
 	}
 
-	function handleIconChange(iconKey: string) {
+	async function handleIconChange(iconKey: string) {
 		formData.icon = iconKey;
-		saveFormData();
+		await saveFormData();
 	}
 
 	async function handleGetModels() {
@@ -140,6 +140,7 @@
 	}
 
 	async function handleModelDelete(model: Model) {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		pendingRemovedIds = new Set(pendingRemovedIds).add(model.id);
 		providerState.scheduleRemoveModel(model.id);
 	}

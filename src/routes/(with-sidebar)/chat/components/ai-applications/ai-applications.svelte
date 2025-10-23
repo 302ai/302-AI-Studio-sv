@@ -1,4 +1,5 @@
 <script lang="ts">
+	import LdrsLoader from "$lib/components/buss/ldrs-loader/ldrs-loader.svelte";
 	import { buttonVariants } from "$lib/components/ui/button";
 	import * as Collapsible from "$lib/components/ui/collapsible";
 	import { Input } from "$lib/components/ui/input";
@@ -17,8 +18,8 @@
 
 	let searchQuery = $state("");
 	let categoryCollapsedState = $state<Record<string, boolean>>({});
+	let showMainContent = $state(false);
 
-	let isReady = $derived(aiApplicationsState.isHydrated);
 	let randomApps = $derived(
 		aiApplicationsState.collectedAiApplications.length > 0
 			? getRandomItems(aiApplicationsState.collectedAiApplications, 4)
@@ -65,6 +66,10 @@
 		await tabBarState.handleNewTab(aiApplication.name, "aiApplications", true, url);
 	}
 
+	function handleLoadingAnimationEnd() {
+		showMainContent = true;
+	}
+
 	$effect(() => {
 		if (groupedAppList) {
 			Object.keys(groupedAppList).forEach((category) => {
@@ -74,80 +79,97 @@
 			});
 		}
 	});
+
+	$effect(() => {
+		if (!aiApplicationsState.isReady) {
+			console.log("aiApplicationsState.isReady", aiApplicationsState.isReady);
+			showMainContent = false;
+		}
+	});
 </script>
 
-{#if isReady}
-	<div transition:fly={{ y: 20, duration: 500 }} class="flex flex-col w-[720px] gap-y-3">
-		<Label class="font-light">{m.label_ai_applications()}</Label>
+{#if aiApplicationsState.isReady}
+	{#if showMainContent}
+		<div transition:fly={{ y: 20, duration: 500 }} class="flex flex-col w-[720px] gap-y-3">
+			<Label class="font-light">{m.label_ai_applications()}</Label>
 
-		<div class="flex flex-row flex-wrap items-center gap-x-3.5 gap-y-4">
-			{#each randomApps as aiApplication (aiApplication.id)}
-				<AiApplicationItem
-					{aiApplication}
-					type="random"
-					onClick={() => handleAiApplicationClick(aiApplication)}
-				/>
-			{/each}
-			<Sheet.Root>
-				<Sheet.Trigger
-					class={buttonVariants({
-						variant: "outline",
-						className:
-							"h-[46px] hover:bg-secondary/80 dark:hover:bg-secondary/80 !border-border !text-foreground !font-normal",
-					})}
-				>
-					<LayoutGrid className="h-5 w-5" />
-					{m.title_button_more_ai_applications()}
-				</Sheet.Trigger>
-				<Sheet.Content class="border-none !max-w-[260px] bg-input">
-					<Sheet.Header class="pb-0">
-						<Sheet.Title class="font-light text-sm">{m.label_ai_applications()}</Sheet.Title>
-						<Input
-							class="!bg-background h-10 rounded-[10px]"
-							bind:value={searchQuery}
-							placeholder={m.placeholder_input_search()}
-						/>
-					</Sheet.Header>
-					<div class="flex flex-col gap-y-1 px-3 flex-1 overflow-y-auto min-h-0">
-						{#if isSearching}
-							{#each filteredAppList as aiApplication (aiApplication.id)}
-								<AiApplicationItem
-									{aiApplication}
-									type="sheet"
-									onClick={() => handleAiApplicationClick(aiApplication)}
-								/>
-							{/each}
-						{:else if groupedAppList}
-							{#each Object.entries(groupedAppList) as [category, apps] (category)}
-								{#if apps.length > 0}
-									<Collapsible.Root
-										bind:open={categoryCollapsedState[category]}
-										class="group/collapsible flex flex-col gap-y-1"
-									>
-										<Collapsible.Trigger
-											class="flex items-center text-sm justify-between text-start w-full h-10 rounded-[10px] px-3 hover:bg-secondary/80 text-muted-foreground"
+			<div class="flex flex-row flex-wrap items-center gap-x-3.5 gap-y-4">
+				{#each randomApps as aiApplication (aiApplication.id)}
+					<AiApplicationItem
+						{aiApplication}
+						type="random"
+						onClick={() => handleAiApplicationClick(aiApplication)}
+					/>
+				{/each}
+				<Sheet.Root>
+					<Sheet.Trigger
+						class={buttonVariants({
+							variant: "outline",
+							className:
+								"h-[46px] hover:bg-secondary/80 dark:hover:bg-secondary/80 !border-border !text-foreground !font-normal",
+						})}
+					>
+						<LayoutGrid className="h-5 w-5" />
+						{m.title_button_more_ai_applications()}
+					</Sheet.Trigger>
+					<Sheet.Content class="border-none !max-w-[260px] bg-input">
+						<Sheet.Header class="pb-0">
+							<Sheet.Title class="font-light text-sm">{m.label_ai_applications()}</Sheet.Title>
+							<Input
+								class="!bg-background h-10 rounded-[10px]"
+								bind:value={searchQuery}
+								placeholder={m.placeholder_input_search()}
+							/>
+						</Sheet.Header>
+						<div class="flex flex-col gap-y-1 px-3 flex-1 overflow-y-auto min-h-0">
+							{#if isSearching}
+								{#each filteredAppList as aiApplication (aiApplication.id)}
+									<AiApplicationItem
+										{aiApplication}
+										type="sheet"
+										onClick={() => handleAiApplicationClick(aiApplication)}
+									/>
+								{/each}
+							{:else if groupedAppList}
+								{#each Object.entries(groupedAppList) as [category, apps] (category)}
+									{#if apps.length > 0}
+										<Collapsible.Root
+											bind:open={categoryCollapsedState[category]}
+											class="group/collapsible flex flex-col gap-y-1"
 										>
-											<span>{category}</span>
-											<ChevronDown
-												class="size-4 transition-transform duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-180 group-data-[state=closed]/collapsible:rotate-0"
-											/>
-										</Collapsible.Trigger>
-										<Collapsible.Content class="flex flex-col gap-y-1">
-											{#each apps as aiApplication (aiApplication.id)}
-												<AiApplicationItem
-													{aiApplication}
-													type="sheet"
-													onClick={() => handleAiApplicationClick(aiApplication)}
+											<Collapsible.Trigger
+												class="flex items-center text-sm justify-between text-start w-full h-10 rounded-[10px] px-3 hover:bg-secondary/80 text-muted-foreground"
+											>
+												<span>{category}</span>
+												<ChevronDown
+													class="size-4 transition-transform duration-200 ease-in-out group-data-[state=open]/collapsible:rotate-180 group-data-[state=closed]/collapsible:rotate-0"
 												/>
-											{/each}
-										</Collapsible.Content>
-									</Collapsible.Root>
-								{/if}
-							{/each}
-						{/if}
-					</div>
-				</Sheet.Content>
-			</Sheet.Root>
+											</Collapsible.Trigger>
+											<Collapsible.Content class="flex flex-col gap-y-1">
+												{#each apps as aiApplication (aiApplication.id)}
+													<AiApplicationItem
+														{aiApplication}
+														type="sheet"
+														onClick={() => handleAiApplicationClick(aiApplication)}
+													/>
+												{/each}
+											</Collapsible.Content>
+										</Collapsible.Root>
+									{/if}
+								{/each}
+							{/if}
+						</div>
+					</Sheet.Content>
+				</Sheet.Root>
+			</div>
 		</div>
+	{/if}
+{:else}
+	<div
+		transition:fly={{ y: 20, duration: 500 }}
+		onoutroend={handleLoadingAnimationEnd}
+		class="flex flex-col w-[720px] items-center justify-center h-[134px]"
+	>
+		<LdrsLoader type="waveform" />
 	</div>
 {/if}
