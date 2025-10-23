@@ -44,10 +44,12 @@ export class AppService {
 			contentViews.forEach((view) => {
 				if (view && "webContents" in view) {
 					const webContentsView = view as WebContentsView;
-					const backgroundColor = nativeTheme.shouldUseDarkColors ? "#1A1A1A" : "#F9F9F9";
-					webContentsView.setBackgroundColor(backgroundColor);
+					const url = webContentsView.webContents.getURL();
+					if (!url.includes("shell")) {
+						const backgroundColor = nativeTheme.shouldUseDarkColors ? "#1A1A1A" : "#F9F9F9";
+						webContentsView.setBackgroundColor(backgroundColor);
+					}
 					if (!webContentsView.webContents.isDestroyed()) {
-						const url = webContentsView.webContents.getURL();
 						const isExternalPage =
 							url &&
 							!url.startsWith("app://") &&
