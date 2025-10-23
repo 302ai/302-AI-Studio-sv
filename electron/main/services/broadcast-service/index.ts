@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { LanguageCode } from "@shared/storage/general-settings";
 import type { BroadcastEvent } from "@shared/types";
 import type { IpcMainInvokeEvent, WebContents } from "electron";
 import { webContents } from "electron";
@@ -6,7 +7,7 @@ import mitt from "mitt";
 
 export const emitter = mitt<{
 	"persisted-state:sync": { sendKey: string; syncValue: any; sourceWebContentsId: number };
-	"general-settings:language-changed": null;
+	"general-settings:language-changed": { language: LanguageCode };
 }>();
 
 export class BroadcastService {

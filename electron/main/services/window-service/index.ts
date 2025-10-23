@@ -12,7 +12,9 @@ import {
 } from "../../constants";
 import { WebContentsFactory } from "../../factories/web-contents-factory";
 import { withDevToolsShortcuts, withLoadHandlers } from "../../mixins/web-contents-mixins";
+import { emitter } from "../broadcast-service";
 import { shortcutService } from "../shortcut-service";
+import { generalSettingsStorage } from "../storage-service/general-settings-storage";
 import { tabStorage } from "../storage-service/tab-storage";
 import { tabService } from "../tab-service";
 
@@ -21,6 +23,14 @@ export class WindowService {
 	private windows: BrowserWindow[] = [];
 	private isCMDQ = false;
 	private settingsWindow: BrowserWindow | null = null;
+
+	constructor() {
+		emitter.on("general-settings:language-changed", ({ language }) => {
+			if (this.settingsWindow) {
+				this.settingsWindow.title = language === "zh" ? "设置" : "Settings";
+			}
+		});
+	}
 
 	// ******************************* Private Methods ******************************* //
 	private setMainWindow(windowId: number) {
@@ -415,6 +425,7 @@ export class WindowService {
 		}
 
 		const { shouldUseDarkColors } = nativeTheme;
+		const language = await generalSettingsStorage.getLanguage();
 
 		// Create settings window with normal title bar
 		this.settingsWindow = new BrowserWindow({
@@ -422,7 +433,7 @@ export class WindowService {
 			height: 700,
 			minWidth: 800,
 			minHeight: 600,
-			title: "Settings",
+			title: language === "zh" ? "设置" : "Settings",
 			autoHideMenuBar: true,
 			backgroundColor: shouldUseDarkColors ? "#2d2d2d" : "#f1f1f1",
 			webPreferences: {

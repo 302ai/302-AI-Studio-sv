@@ -57,8 +57,8 @@ export function registerIpcHandlers() {
 	);
 
 	// generalSettingsService service registration
-	ipcMain.handle("generalSettingsService:handleLanguageChanged", (event) =>
-		generalSettingsService.handleLanguageChanged(event),
+	ipcMain.handle("generalSettingsService:handleLanguageChanged", (event, language) =>
+		generalSettingsService.handleLanguageChanged(event, language),
 	);
 
 	// aiApplicationService service registration
