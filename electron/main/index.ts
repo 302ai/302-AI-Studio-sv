@@ -14,6 +14,8 @@ import { initServer } from "./server/router";
 import { appService, shortcutService, windowService } from "./services";
 import { UpdaterService } from "./services/updater-service";
 
+app.setName("com.302ai.302aistudio");
+
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
 ]);
