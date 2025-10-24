@@ -3,7 +3,7 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { CopyButton } from "$lib/components/buss/copy-button";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
-	import { ChevronDown } from "@lucide/svelte";
+	import { ChevronDown, CodeXml, ImagePlay } from "@lucide/svelte";
 	import type { GrammarState, ThemedToken } from "@shikijs/types";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
@@ -47,6 +47,8 @@
 	let codeStyle = $state<string | undefined>(undefined);
 	let lines = $state<RenderedLine[]>([]);
 	let isCollapsed = $state(preferencesSettings.autoHideCode);
+	let showSvgPreview = $state(false);
+	let isSvgCode = $state(false);
 
 	const FONT_STYLE = {
 		Italic: 1,
@@ -120,13 +122,24 @@
 			svelte: "Svelte",
 			angular: "Angular",
 			react: "React",
+			svg: "SVG",
 		};
 
 		return languageNames[lang.toLowerCase()] || lang.charAt(0).toUpperCase() + lang.slice(1);
 	};
 
+	const detectSvg = (code: string, language: string | null): boolean => {
+		if (language?.toLowerCase() === "svg") return true;
+		const trimmed = code.trim();
+		return trimmed.startsWith("<svg") || (trimmed.startsWith("<?xml") && trimmed.includes("<svg"));
+	};
+
 	const toggleCollapse = () => {
 		isCollapsed = !isCollapsed;
+	};
+
+	const toggleSvgPreview = () => {
+		showSvgPreview = !showSvgPreview;
 	};
 
 	const buildTokenStyle = (token: ThemedToken): string | undefined => {
@@ -381,6 +394,10 @@
 		const { code } = props;
 		syncCode(code);
 	});
+
+	$effect(() => {
+		isSvgCode = detectSvg(props.code, props.language);
+	});
 </script>
 
 {#if !highlighter}
@@ -424,6 +441,20 @@
 			>
 			<div class="flex items-center gap-1">
 				<CopyButton content={props.code} position="bottom" />
+				{#if isSvgCode}
+					<ButtonWithTooltip
+						class="text-muted-foreground hover:!bg-chat-action-hover"
+						tooltip={showSvgPreview ? "Show code" : "Preview SVG"}
+						tooltipSide="bottom"
+						onclick={toggleSvgPreview}
+					>
+						{#if showSvgPreview}
+							<CodeXml class="" />
+						{:else}
+							<ImagePlay class="" />
+						{/if}
+					</ButtonWithTooltip>
+				{/if}
 				<ButtonWithTooltip
 					class="text-muted-foreground hover:!bg-chat-action-hover"
 					tooltip="Toggle collapse"
@@ -437,18 +468,24 @@
 			</div>
 		</div>
 		{#if !isCollapsed}
-			<pre
-				class="shiki !m-0 !rounded-none !border-0"
-				data-language={resolvedLanguage}
-				data-theme={resolvedTheme}
-				data-meta={props.meta ?? undefined}
-				style={preStyle}>
-				<code style={codeStyle}>
-					{#each lines as line (line.id)}
-						<span class="line" data-line={line.number}>{@html line.html}</span>
-					{/each}
-				</code>
-			</pre>
+			{#if showSvgPreview && isSvgCode}
+				<div class="p-4 bg-background flex items-center justify-center min-h-[200px]">
+					{@html props.code}
+				</div>
+			{:else}
+				<pre
+					class="shiki !m-0 !rounded-none !border-0"
+					data-language={resolvedLanguage}
+					data-theme={resolvedTheme}
+					data-meta={props.meta ?? undefined}
+					style={preStyle}>
+					<code style={codeStyle}>
+						{#each lines as line (line.id)}
+							<span class="line" data-line={line.number}>{@html line.html}</span>
+						{/each}
+					</code>
+				</pre>
+			{/if}
 		{/if}
 	</div>
 {/if}
