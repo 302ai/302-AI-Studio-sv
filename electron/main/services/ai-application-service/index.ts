@@ -84,6 +84,7 @@ export class AiApplicationService {
 				);
 			});
 		} catch (error) {
+			broadcastService.broadcastChannelToAll("ai-applications:loading", false);
 			console.error("Failed to update ai application url map:", error);
 		}
 	}

@@ -9,7 +9,7 @@ const persistedAiApplicationState = new PersistedState<AiApplication[]>(
 );
 
 class AiApplicationsState {
-	#isLoading = $state(true);
+	#isLoading = $state(false);
 
 	aiApplications = $derived(persistedAiApplicationState.current);
 	isReady = $derived(persistedAiApplicationState.isHydrated && !this.#isLoading);
