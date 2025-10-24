@@ -6,6 +6,7 @@
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
 	import type { AttachmentFile } from "@shared/types";
@@ -19,6 +20,13 @@
 
 	let openModelSelect = $state<() => void>();
 	let isComposing = $state(false); // 跟踪输入法composition状态
+
+	$effect(() => {
+		if (modelPanelState.isOpen && openModelSelect) {
+			openModelSelect();
+			modelPanelState.close();
+		}
+	});
 
 	// Check if any providers are properly configured with API keys
 	const hasConfiguredProviders = $derived(() => {
