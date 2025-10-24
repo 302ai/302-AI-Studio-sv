@@ -6,7 +6,10 @@ import { notificationState } from "./notification-state.svelte";
 import { generateTitle } from "$lib/api/title-generation";
 import { m } from "$lib/paraglide/messages.js";
 import { DynamicChatTransport } from "$lib/transport/dynamic-chat-transport";
-import { convertAttachmentsToMessageParts, type MessagePart } from "$lib/utils/attachment-converter";
+import {
+	convertAttachmentsToMessageParts,
+	type MessagePart,
+} from "$lib/utils/attachment-converter";
 import { clone } from "$lib/utils/clone";
 import { Chat } from "@ai-sdk/svelte";
 import type { ModelProvider } from "@shared/storage/provider";
@@ -629,8 +632,7 @@ class ChatState {
 			const userMessage: ChatMessage = {
 				id: nanoid(),
 				role: "user",
-				parts: messageParts, // Always an array, never undefined
-				createdAt: new Date(),
+				parts: messageParts,
 				metadata: {
 					createdAt: new Date().toISOString(),
 					attachments: attachmentMetadata,
