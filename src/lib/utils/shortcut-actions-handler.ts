@@ -2,6 +2,7 @@ import { m } from "$lib/paraglide/messages";
 import { chatState } from "$lib/stores/chat-state.svelte";
 import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
 import { persistedProviderState } from "$lib/stores/provider-state.svelte";
+import { sidebarSearchState } from "$lib/stores/sidebar-search-state.svelte";
 import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 import { threadsState } from "$lib/stores/threads-state.svelte";
 import type { ShortcutActionEvent } from "@shared/types/shortcut";
@@ -59,6 +60,9 @@ export class ShortcutActionsHandler {
 					break;
 				case "deleteCurrentThread":
 					this.handleDeleteCurrentThread();
+					break;
+				case "search":
+					this.handleSearch();
 					break;
 				default:
 					console.warn(`Unhandled shortcut action: ${action}`);
@@ -181,6 +185,10 @@ export class ShortcutActionsHandler {
 		if (!success) {
 			console.error("Failed to delete thread:", threadId);
 		}
+	}
+
+	private handleSearch(): void {
+		sidebarSearchState.triggerFocus();
 	}
 }
 

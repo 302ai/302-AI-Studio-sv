@@ -3,15 +3,18 @@
 	import { Input } from "$lib/components/ui/input";
 	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { m } from "$lib/paraglide/messages";
+	import { sidebarSearchState } from "$lib/stores/sidebar-search-state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { threadsState } from "$lib/stores/threads-state.svelte";
 	import { TIME_GROUP_ORDER, TimeGroup } from "$lib/types/time-group";
 	import type { MessagePart } from "$lib/utils/attachment-converter";
 	import { ChevronDown } from "@lucide/svelte";
+	import { onMount } from "svelte";
 	import RenameDialog from "./rename-dialog.svelte";
 	import ThreadItem from "./thread-item.svelte";
 
 	let searchQuery = $state("");
+	let searchInputElement: HTMLInputElement | null = $state(null);
 	let groupCollapsedState = $state<Record<TimeGroup, boolean>>({
 		[TimeGroup.TODAY]: true,
 		[TimeGroup.YESTERDAY]: true,
@@ -22,6 +25,15 @@
 	let renameDialogOpen = $state(false);
 	let renameTargetThreadId = $state<string | null>(null);
 	let renameTargetName = $state("");
+
+	onMount(() => {
+		// Register focus callback
+		const cleanup = sidebarSearchState.registerFocusCallback(() => {
+			searchInputElement?.focus();
+		});
+
+		return cleanup;
+	});
 
 	const DAY_IN_MS = 1000 * 60 * 60 * 24;
 
@@ -212,6 +224,7 @@
 		<Input
 			class="bg-background! h-10 rounded-[10px]"
 			bind:value={searchQuery}
+			bind:ref={searchInputElement}
 			placeholder={m.placeholder_input_search()}
 		/>
 	</Sidebar.Header>

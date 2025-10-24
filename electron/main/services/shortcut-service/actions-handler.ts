@@ -74,6 +74,9 @@ export class ShortcutActionsHandler {
 				case "deleteCurrentThread":
 					await this.handleDeleteCurrentThread(windowId, ctx);
 					break;
+				case "search":
+					await this.handleSearch(windowId, ctx);
+					break;
 
 				default:
 					console.warn(`Unknown shortcut action: ${action}`);
@@ -255,6 +258,16 @@ export class ShortcutActionsHandler {
 		if (activeView && !activeView.isDestroyed()) {
 			activeView.send("shortcut:action", {
 				action: "deleteCurrentThread",
+				ctx,
+			});
+		}
+	}
+
+	private async handleSearch(windowId: number, ctx: ShortcutContext): Promise<void> {
+		const activeView = this.getActiveTabWebContents(windowId);
+		if (activeView && !activeView.isDestroyed()) {
+			activeView.send("shortcut:action", {
+				action: "search",
 				ctx,
 			});
 		}

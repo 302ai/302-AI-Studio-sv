@@ -30,7 +30,7 @@ export class ShortcutEngine {
 	// Deduplication: track last handled shortcut to prevent duplicate triggers
 	private lastHandledKey: string | null = null;
 	private lastHandledTime: number = 0;
-	private readonly DEBOUNCE_MS = 150; // 150ms debounce window
+	private readonly DEBOUNCE_MS = 200; // 200ms debounce window
 
 	constructor() {}
 
