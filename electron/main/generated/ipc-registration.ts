@@ -146,6 +146,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("dataService:importLegacyJson", (event) => dataService.importLegacyJson(event));
 	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
 	ipcMain.handle("dataService:importStorage", (event) => dataService.importStorage(event));
+	ipcMain.handle("dataService:checkOldVersionData", (event) =>
+		dataService.checkOldVersionData(event),
+	);
 
 	// externalLinkService service registration
 	ipcMain.handle("externalLinkService:openExternalLink", (event, url) =>
@@ -236,6 +239,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("dataService:importLegacyJson");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("dataService:importStorage");
+	ipcMain.removeHandler("dataService:checkOldVersionData");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
 	ipcMain.removeHandler("mcpService:getToolsFromServer");
 	ipcMain.removeHandler("mcpService:closeServer");

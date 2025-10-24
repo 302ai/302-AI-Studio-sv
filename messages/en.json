@@ -463,5 +463,10 @@
 	"screenshot_failed": "Screenshot failed, please try again",
 	"settings_importLegacyJson": "Import Legacy JSON Data",
 	"settings_importLegacyJsonDesc": "Import data from older versions of 302 AI Studio (supports providers, models, threads, messages, etc.)",
-	"label_button_reload": "Refresh"
+	"label_button_reload": "Refresh",
+	"title_old_version_data_detected": "Old Version of Data Detected",
+	"text_old_version_data_detected_desc": "It is detected that there is an old version of data. It is recommended that you open the old client application and upgrade to the latest version, and then manually export the data for data import.",
+	"label_button_continue_import": "Continue Importing",
+	"label_no_show_again": "Don't Remind Again",
+	"text_old_version_data_detected_note": "Note: Importing old client data into the new client may lose some data (including: tab bar records, model/session collection records, MCP call records, shortcut key settings, etc.)"
 }

@@ -1,14 +1,24 @@
 <script lang="ts">
 	import SettingInfoItem from "$lib/components/buss/settings/setting-info-item.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
+	import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+	import * as Dialog from "$lib/components/ui/dialog/index.js";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import { m } from "$lib/paraglide/messages.js";
+	import { dataSettings } from "$lib/stores/data-settings.state.svelte";
 	import { Upload } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 
+	const { dataService } = window.electronAPI;
+
+	let open = $state(false);
+
+	function onOpenChange(value: boolean) {
+		open = value;
+	}
+
 	async function handleImport() {
 		try {
-			const { dataService } = window.electronAPI;
 			const result = await dataService.importStorage();
 
 			if (result.success) {
@@ -43,9 +53,21 @@
 		}
 	}
 
+	async function handleLegacyImportWithCheck() {
+		if (!dataSettings.state.showOldDataCheckModal) {
+			handleLegacyImport();
+			return;
+		}
+		const oldVersionData = await dataService.checkOldVersionData();
+		if (oldVersionData) {
+			open = true;
+		} else {
+			handleLegacyImport();
+		}
+	}
+
 	async function handleLegacyImport() {
 		try {
-			const { dataService } = window.electronAPI;
 			const result = await dataService.importLegacyJson();
 
 			if (result.success) {
@@ -74,7 +96,13 @@
 			toast.error(m.settings_importFailed(), {
 				description: error instanceof Error ? error.message : "Unknown error",
 			});
+		} finally {
+			open = false;
 		}
+	}
+
+	function onCheckedChange(checked: boolean) {
+		dataSettings.setShowOldDataCheckModal(!checked);
 	}
 </script>
 
@@ -93,7 +121,7 @@
 {#snippet legacyImportButton()}
 	<Button
 		size="sm"
-		onclick={handleLegacyImport}
+		onclick={handleLegacyImportWithCheck}
 		variant="outline"
 		class="border-border text-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring dark:border-border dark:text-foreground dark:hover:bg-muted dark:hover:text-foreground border bg-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
 	>
@@ -106,4 +134,31 @@
 	<Label class="text-label-fg">{m.settings_importData()}</Label>
 	<SettingInfoItem label={m.settings_importFromBackup()} action={importButton} />
 	<SettingInfoItem label={m.settings_importLegacyJson()} action={legacyImportButton} />
+
+	<Dialog.Root {open} {onOpenChange}>
+		<Dialog.Content>
+			<Dialog.Header>
+				<Dialog.Title>{m.title_old_version_data_detected()}</Dialog.Title>
+			</Dialog.Header>
+
+			<p class="text-sm font-normal">{m.text_old_version_data_detected_desc()}</p>
+			<p class="text-destructive text-sm">{m.text_old_version_data_detected_note()}</p>
+
+			<div class="flex items-center gap-3">
+				<Checkbox id="terms" class="border-border dark:border-border" {onCheckedChange} />
+				<Label class="text-label-fg font-normal" for="terms">{m.label_no_show_again()}</Label>
+			</div>
+
+			<Dialog.Footer>
+				<Button
+					onclick={() => {
+						open = false;
+					}}
+					class="border-border text-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring dark:border-border dark:text-foreground dark:hover:bg-muted dark:hover:text-foreground border bg-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+					variant="outline">{m.label_button_close()}</Button
+				>
+				<Button onclick={handleLegacyImport}>{m.label_button_continue_import()}</Button>
+			</Dialog.Footer>
+		</Dialog.Content>
+	</Dialog.Root>
 </div>

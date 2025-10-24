@@ -459,5 +459,10 @@
 	"screenshot_failed": "截图失败,请重试",
 	"settings_importLegacyJson": "导入旧版JSON数据",
 	"settings_importLegacyJsonDesc": "从旧版本的302 AI Studio导入数据（支持providers、models、threads、messages等）",
-	"label_button_reload": "刷新"
+	"label_button_reload": "刷新",
+	"title_old_version_data_detected": "检测到存在旧版本的数据",
+	"text_old_version_data_detected_desc": "检测到存在旧版本的数据，建议您打开旧客户端应用并升级到最新版本后，手动导出数据进行数据导入",
+	"label_button_continue_import": "继续导入",
+	"label_no_show_again": "不再提醒",
+	"text_old_version_data_detected_note": "注意：将旧客户端数据导入到新客户端可能会丢失部份数据（包括：标签栏记录、模型/会话收藏记录、MCP调用记录、快捷键设置等数据）"
 }

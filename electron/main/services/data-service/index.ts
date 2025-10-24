@@ -3,7 +3,7 @@ import type { ImportResult } from "@shared/types";
 import archiver from "archiver";
 import { type IpcMainInvokeEvent, app, dialog } from "electron";
 import extract from "extract-zip";
-import { createWriteStream } from "fs";
+import { createWriteStream, existsSync } from "fs";
 import { cp, mkdir, readdir, readFile, rm } from "fs/promises";
 import { join } from "path";
 import { importLegacyJson } from "./legacy-import";
@@ -270,6 +270,12 @@ export class DataService {
 			archive.directory(sourceDir, false);
 			archive.finalize();
 		});
+	}
+
+	async checkOldVersionData(_event: IpcMainInvokeEvent): Promise<boolean> {
+		const triplitPath = join(app.getPath("userData"), "../", "302 AI Studio", "triplit");
+		console.log(triplitPath);
+		return existsSync(triplitPath);
 	}
 }
 
