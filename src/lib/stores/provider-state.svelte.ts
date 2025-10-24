@@ -44,7 +44,7 @@ let cachedSortedModels: Model[] = [];
 let lastModelArray: Model[] = [];
 
 function getCachedSortedModels(): Model[] {
-	const currentModels = persistedModelState.snapshot;
+	const currentModels = persistedModelState.current;
 	if (currentModels !== lastModelArray) {
 		lastModelArray = currentModels;
 		cachedSortedModels = [...currentModels].sort((a, b) => a.name.localeCompare(b.name));
