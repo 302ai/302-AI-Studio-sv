@@ -111,13 +111,48 @@ export class ShortcutActionsHandler {
 		}
 	}
 
-	private handleBranchAndSend(): void {
+	private async handleBranchAndSend(): Promise<void> {
 		if (chatState.messages.length === 0) {
 			toast.error("No messages to branch from");
 			return;
 		}
-		// TODO: Implement branch and send logic
-		console.log("Branch and send shortcut triggered");
+
+		// Check if there's content to send
+		if (chatState.inputValue.trim() === "" && chatState.attachments.length === 0) {
+			toast.error(m.toast_empty_message());
+			return;
+		}
+
+		// Save the input content and attachments before branching
+		const savedInputValue = chatState.inputValue;
+		const savedAttachments = [...chatState.attachments];
+
+		// Create branch from the last message
+		const lastMessage = chatState.messages[chatState.messages.length - 1];
+
+		try {
+			// Use the new createBranchAndSend method that directly adds the user message
+			const newThreadId = await chatState.createBranchAndSend(
+				lastMessage.id,
+				savedInputValue,
+				savedAttachments,
+			);
+
+			if (newThreadId) {
+				// Clear current thread's input
+				chatState.inputValue = "";
+				chatState.attachments = [];
+
+				// Open the new thread in a new tab (this will reload the page with new threadId)
+				// The user message will already be in the message list, not in the input box
+				await tabBarState.handleNewTabForExistingThread(newThreadId);
+			} else {
+				toast.error(m.toast_unknown_error());
+			}
+		} catch (error) {
+			console.error("Failed to branch and send:", error);
+			toast.error(m.toast_unknown_error());
+		}
 	}
 
 	private handleToggleModelPanel(): void {

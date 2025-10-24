@@ -6,7 +6,7 @@ import { notificationState } from "./notification-state.svelte";
 import { generateTitle } from "$lib/api/title-generation";
 import { m } from "$lib/paraglide/messages.js";
 import { DynamicChatTransport } from "$lib/transport/dynamic-chat-transport";
-import { convertAttachmentsToMessageParts } from "$lib/utils/attachment-converter";
+import { convertAttachmentsToMessageParts, type MessagePart } from "$lib/utils/attachment-converter";
 import { clone } from "$lib/utils/clone";
 import { Chat } from "@ai-sdk/svelte";
 import type { ModelProvider } from "@shared/storage/provider";
@@ -564,6 +564,121 @@ class ChatState {
 			return newThreadId;
 		} catch (error) {
 			console.error("Failed to create branch:", error);
+			return null;
+		}
+	}
+
+	async createBranchAndSend(
+		upToMessageId: string,
+		userInput: string,
+		userAttachments: AttachmentFile[],
+	): Promise<string | null> {
+		try {
+			// 1. find the target message index
+			const messageIndex = this.messages.findIndex((msg) => msg.id === upToMessageId);
+			if (messageIndex === -1) {
+				console.error("Message not found:", upToMessageId);
+				return null;
+			}
+
+			// 2. slice messages up to and including the target message
+			const branchMessages = clone(this.messages.slice(0, messageIndex + 1));
+
+			// 3. convert attachments to message parts
+			const { parts: attachmentParts, metadataList: attachmentMetadata } =
+				await convertAttachmentsToMessageParts(userAttachments);
+
+			// 4. Separate text and file parts
+			const textParts = attachmentParts.filter(
+				(part): part is { type: "text"; text: string } => part.type === "text",
+			);
+			const fileParts = attachmentParts.filter(
+				(part): part is import("ai").FileUIPart => part.type === "file",
+			);
+
+			// 5. Build message parts array - always include at least the user input as a text part
+			let messageParts: MessagePart[] = [];
+			let fileContentPartIndex: number | undefined = undefined;
+
+			if (fileParts.length > 0 && textParts.length > 0) {
+				// Has both files and text content from files
+				const fileContent = textParts.map((part) => part.text).join("\n\n");
+				messageParts = [
+					...fileParts,
+					{ type: "text" as const, text: fileContent },
+					{ type: "text" as const, text: userInput },
+				];
+				fileContentPartIndex = fileParts.length;
+			} else if (fileParts.length > 0) {
+				// Has only files
+				messageParts = [...fileParts, { type: "text" as const, text: userInput }];
+			} else if (textParts.length > 0) {
+				// Has only text content from files
+				const fileContent = textParts.map((part) => part.text).join("\n\n");
+				messageParts = [
+					{ type: "text" as const, text: fileContent },
+					{ type: "text" as const, text: userInput },
+				];
+				fileContentPartIndex = 0;
+			} else {
+				// No attachments, just user input
+				messageParts = [{ type: "text" as const, text: userInput }];
+			}
+
+			// 6. Create user message with proper structure
+			const userMessage: ChatMessage = {
+				id: nanoid(),
+				role: "user",
+				parts: messageParts, // Always an array, never undefined
+				createdAt: new Date(),
+				metadata: {
+					createdAt: new Date().toISOString(),
+					attachments: attachmentMetadata,
+					...(fileContentPartIndex !== undefined && { fileContentPartIndex }),
+				},
+			};
+
+			// 7. add user message to branch messages
+			branchMessages.push(userMessage);
+
+			// 8. generate threadId
+			const newThreadId = nanoid();
+
+			// 9. clone thread data with autoSendOnLoad flag
+			const newThread: ThreadParmas = clone({
+				id: newThreadId,
+				title: `${this.title}`,
+				inputValue: "", // Keep input empty
+				attachments: [], // Keep attachments empty
+				mcpServers: this.mcpServers,
+				mcpServerIds: persistedChatParamsState.current.mcpServerIds || [],
+				isThinkingActive: this.isThinkingActive,
+				isOnlineSearchActive: this.isOnlineSearchActive,
+				isMCPActive: this.isMCPActive,
+				isPrivateChatActive: this.isPrivateChatActive,
+				selectedModel: this.selectedModel,
+				temperature: this.temperature,
+				topP: this.topP,
+				maxTokens: this.maxTokens,
+				frequencyPenalty: this.frequencyPenalty,
+				presencePenalty: this.presencePenalty,
+				updatedAt: new Date(),
+				autoSendOnLoad: true, // Set flag to trigger AI reply on load
+			});
+
+			// 8. save thread data and messages
+			await storageService.setItem(`app-thread:${newThreadId}`, newThread);
+			await storageService.setItem(`app-chat-messages:${newThreadId}`, branchMessages);
+
+			// 9. add to thread list
+			await threadService.addThread(newThreadId);
+
+			// 10. broadcast thread list update
+			await broadcastService.broadcastToAll("thread-list-updated", {});
+
+			return newThreadId;
+		} catch (error) {
+			console.error("Failed to create branch and send:", error);
 			return null;
 		}
 	}

@@ -120,6 +120,7 @@ export interface ThreadParmas {
 	selectedModel: Model | null;
 	isPrivateChatActive: boolean;
 	updatedAt: Date;
+	autoSendOnLoad?: boolean; // Flag to auto-send message when thread loads (for branch and send)
 }
 
 export interface ThreadData {
@@ -133,7 +134,8 @@ export type BroadcastEvent =
 	| "thread-list-updated"
 	| "theme-changed"
 	| "settings-updated"
-	| "trigger-screenshot";
+	| "trigger-screenshot"
+	| "trigger-send-message";
 
 export interface BroadcastEventData {
 	broadcastEvent: BroadcastEvent;
