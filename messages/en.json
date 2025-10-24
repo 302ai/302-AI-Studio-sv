@@ -443,7 +443,6 @@
 	"tool_call_result": "Result",
 	"tool_call_error_message": "Error",
 	"tool_call_no_result": "No result available",
-
 	"tool_call_close": "Close",
 	"tool_call_rerun": "Rerun",
 	"tool_call_rerun_success": "Tool rerunning...",
@@ -459,5 +458,6 @@
 	"screenshot_success": "Screenshot generated successfully",
 	"screenshot_failed": "Screenshot failed, please try again",
 	"settings_importLegacyJson": "Import Legacy JSON Data",
-	"settings_importLegacyJsonDesc": "Import data from older versions of 302 AI Studio (supports providers, models, threads, messages, etc.)"
+	"settings_importLegacyJsonDesc": "Import data from older versions of 302 AI Studio (supports providers, models, threads, messages, etc.)",
+	"label_button_reload": "Refresh"
 }

@@ -3,14 +3,14 @@ import {
 	broadcastService,
 	storageService,
 	generalSettingsService,
+	windowService,
+	shortcutService,
+	tabService,
 	aiApplicationService,
 	appService,
 	dataService,
 	externalLinkService,
 	mcpService,
-	tabService,
-	windowService,
-	shortcutService,
 	threadService,
 	updaterService,
 } from "../services";
@@ -61,35 +61,29 @@ export function registerIpcHandlers() {
 		generalSettingsService.handleLanguageChanged(event, language),
 	);
 
-	// aiApplicationService service registration
-	ipcMain.handle("aiApplicationService:getAiApplicationUrl", (event, applicationId) =>
-		aiApplicationService.getAiApplicationUrl(event, applicationId),
+	// windowService service registration
+	ipcMain.handle("windowService:handleOpenSettingsWindow", (event, route) =>
+		windowService.handleOpenSettingsWindow(event, route),
 	);
-	ipcMain.handle("aiApplicationService:handle302AIProviderChange", (event, updatedApiKey) =>
-		aiApplicationService.handle302AIProviderChange(event, updatedApiKey),
+	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
+		windowService.focusWindow(event, windowId, tabId),
 	);
-
-	// appService service registration
-	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
-	ipcMain.handle("appService:restartApp", (event) => appService.restartApp(event));
-
-	// dataService service registration
-	ipcMain.handle("dataService:importLegacyJson", (event) => dataService.importLegacyJson(event));
-	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
-	ipcMain.handle("dataService:importStorage", (event) => dataService.importStorage(event));
-
-	// externalLinkService service registration
-	ipcMain.handle("externalLinkService:openExternalLink", (event, url) =>
-		externalLinkService.openExternalLink(event, url),
+	ipcMain.handle("windowService:handleSplitShellWindow", (event, triggerTabId) =>
+		windowService.handleSplitShellWindow(event, triggerTabId),
+	);
+	ipcMain.handle("windowService:handleMoveTabIntoExistingWindow", (event, triggerTabId, windowId) =>
+		windowService.handleMoveTabIntoExistingWindow(event, triggerTabId, windowId),
 	);
 
-	// mcpService service registration
-	ipcMain.handle("mcpService:getToolsFromServer", (event, server) =>
-		mcpService.getToolsFromServer(event, server),
+	// shortcutService service registration
+	ipcMain.handle("shortcutService:init", (event, shortcuts) =>
+		shortcutService.init(event, shortcuts),
 	);
-	ipcMain.handle("mcpService:closeServer", (event, serverId) =>
-		mcpService.closeServer(event, serverId),
+	ipcMain.handle("shortcutService:updateShortcuts", (event, shortcuts) =>
+		shortcutService.updateShortcuts(event, shortcuts),
 	);
+	ipcMain.handle("shortcutService:getConflicts", (event) => shortcutService.getConflicts(event));
+	ipcMain.handle("shortcutService:getSyncInfo", (event) => shortcutService.getSyncInfo(event));
 
 	// tabService service registration
 	ipcMain.handle("tabService:handleNewTabWithThread", (event, threadId, title, type, active) =>
@@ -133,29 +127,38 @@ export function registerIpcHandlers() {
 		tabService.handleGenerateTabTitle(event, tabId, threadId),
 	);
 
-	// windowService service registration
-	ipcMain.handle("windowService:handleOpenSettingsWindow", (event, route) =>
-		windowService.handleOpenSettingsWindow(event, route),
+	// aiApplicationService service registration
+	ipcMain.handle("aiApplicationService:getAiApplicationUrl", (event, applicationId) =>
+		aiApplicationService.getAiApplicationUrl(event, applicationId),
 	);
-	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
-		windowService.focusWindow(event, windowId, tabId),
+	ipcMain.handle("aiApplicationService:handle302AIProviderChange", (event, updatedApiKey) =>
+		aiApplicationService.handle302AIProviderChange(event, updatedApiKey),
 	);
-	ipcMain.handle("windowService:handleSplitShellWindow", (event, triggerTabId) =>
-		windowService.handleSplitShellWindow(event, triggerTabId),
-	);
-	ipcMain.handle("windowService:handleMoveTabIntoExistingWindow", (event, triggerTabId, windowId) =>
-		windowService.handleMoveTabIntoExistingWindow(event, triggerTabId, windowId),
+	ipcMain.handle("aiApplicationService:handleAiApplicationReload", (event, tabId) =>
+		aiApplicationService.handleAiApplicationReload(event, tabId),
 	);
 
-	// shortcutService service registration
-	ipcMain.handle("shortcutService:init", (event, shortcuts) =>
-		shortcutService.init(event, shortcuts),
+	// appService service registration
+	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
+	ipcMain.handle("appService:restartApp", (event) => appService.restartApp(event));
+
+	// dataService service registration
+	ipcMain.handle("dataService:importLegacyJson", (event) => dataService.importLegacyJson(event));
+	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
+	ipcMain.handle("dataService:importStorage", (event) => dataService.importStorage(event));
+
+	// externalLinkService service registration
+	ipcMain.handle("externalLinkService:openExternalLink", (event, url) =>
+		externalLinkService.openExternalLink(event, url),
 	);
-	ipcMain.handle("shortcutService:updateShortcuts", (event, shortcuts) =>
-		shortcutService.updateShortcuts(event, shortcuts),
+
+	// mcpService service registration
+	ipcMain.handle("mcpService:getToolsFromServer", (event, server) =>
+		mcpService.getToolsFromServer(event, server),
 	);
-	ipcMain.handle("shortcutService:getConflicts", (event) => shortcutService.getConflicts(event));
-	ipcMain.handle("shortcutService:getSyncInfo", (event) => shortcutService.getSyncInfo(event));
+	ipcMain.handle("mcpService:closeServer", (event, serverId) =>
+		mcpService.closeServer(event, serverId),
+	);
 
 	// threadService service registration
 	ipcMain.handle("threadService:addThread", (event, threadId) =>
@@ -205,16 +208,14 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:watch");
 	ipcMain.removeHandler("storageService:unwatch");
 	ipcMain.removeHandler("generalSettingsService:handleLanguageChanged");
-	ipcMain.removeHandler("aiApplicationService:getAiApplicationUrl");
-	ipcMain.removeHandler("aiApplicationService:handle302AIProviderChange");
-	ipcMain.removeHandler("appService:setTheme");
-	ipcMain.removeHandler("appService:restartApp");
-	ipcMain.removeHandler("dataService:importLegacyJson");
-	ipcMain.removeHandler("dataService:exportStorage");
-	ipcMain.removeHandler("dataService:importStorage");
-	ipcMain.removeHandler("externalLinkService:openExternalLink");
-	ipcMain.removeHandler("mcpService:getToolsFromServer");
-	ipcMain.removeHandler("mcpService:closeServer");
+	ipcMain.removeHandler("windowService:handleOpenSettingsWindow");
+	ipcMain.removeHandler("windowService:focusWindow");
+	ipcMain.removeHandler("windowService:handleSplitShellWindow");
+	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");
+	ipcMain.removeHandler("shortcutService:init");
+	ipcMain.removeHandler("shortcutService:updateShortcuts");
+	ipcMain.removeHandler("shortcutService:getConflicts");
+	ipcMain.removeHandler("shortcutService:getSyncInfo");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");
@@ -227,14 +228,17 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:replaceTabContent");
 	ipcMain.removeHandler("tabService:handleClearTabMessages");
 	ipcMain.removeHandler("tabService:handleGenerateTabTitle");
-	ipcMain.removeHandler("windowService:handleOpenSettingsWindow");
-	ipcMain.removeHandler("windowService:focusWindow");
-	ipcMain.removeHandler("windowService:handleSplitShellWindow");
-	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");
-	ipcMain.removeHandler("shortcutService:init");
-	ipcMain.removeHandler("shortcutService:updateShortcuts");
-	ipcMain.removeHandler("shortcutService:getConflicts");
-	ipcMain.removeHandler("shortcutService:getSyncInfo");
+	ipcMain.removeHandler("aiApplicationService:getAiApplicationUrl");
+	ipcMain.removeHandler("aiApplicationService:handle302AIProviderChange");
+	ipcMain.removeHandler("aiApplicationService:handleAiApplicationReload");
+	ipcMain.removeHandler("appService:setTheme");
+	ipcMain.removeHandler("appService:restartApp");
+	ipcMain.removeHandler("dataService:importLegacyJson");
+	ipcMain.removeHandler("dataService:exportStorage");
+	ipcMain.removeHandler("dataService:importStorage");
+	ipcMain.removeHandler("externalLinkService:openExternalLink");
+	ipcMain.removeHandler("mcpService:getToolsFromServer");
+	ipcMain.removeHandler("mcpService:closeServer");
 	ipcMain.removeHandler("threadService:addThread");
 	ipcMain.removeHandler("threadService:getThreads");
 	ipcMain.removeHandler("threadService:getThread");

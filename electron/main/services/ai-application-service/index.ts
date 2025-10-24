@@ -12,6 +12,7 @@ import { broadcastService, emitter } from "../broadcast-service";
 import { generalSettingsService } from "../settings-service";
 import { aiApplicationStorage } from "../storage-service/ai-application-storage";
 import { providerStorage } from "../storage-service/provider-storage";
+import { tabService } from "../tab-service";
 
 export class AiApplicationService {
 	private aiApplicationUrlMap = new Map<string, string>();
@@ -114,6 +115,13 @@ export class AiApplicationService {
 		broadcastService.broadcastChannelToAll("ai-applications:loading", true);
 		await this.updateAiApplicationUrlMap(this.aiApplicationList, updatedApiKey);
 		broadcastService.broadcastChannelToAll("ai-applications:loading", false);
+	}
+
+	async handleAiApplicationReload(_event: IpcMainInvokeEvent, tabId: string): Promise<void> {
+		const tabView = tabService.getTabView(tabId);
+		if (isUndefined(tabView)) return;
+
+		tabView.webContents.reload();
 	}
 }
 

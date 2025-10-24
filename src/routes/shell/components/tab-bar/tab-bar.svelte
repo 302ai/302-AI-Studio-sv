@@ -150,26 +150,6 @@
 		await tabBarState.handleTabCloseOffside(tabId);
 	}
 
-	async function handleTabClearMessages(tabId: string) {
-		const targetTab = tabBarState.tabs.find((tab) => tab.id === tabId);
-
-		if (targetTab?.type === "chat" && targetTab.threadId) {
-			// Call the main process to clear messages and notify the tab
-			const { tabService } = window.electronAPI;
-			await tabService.handleClearTabMessages(tabId, targetTab.threadId);
-		}
-	}
-
-	async function handleTabGenerateTitle(tabId: string) {
-		const targetTab = tabBarState.tabs.find((tab) => tab.id === tabId);
-
-		if (targetTab?.type === "chat" && targetTab.threadId) {
-			// Call the main process to generate title for the tab
-			const { tabService } = window.electronAPI;
-			await tabService.handleGenerateTabTitle(tabId, targetTab.threadId);
-		}
-	}
-
 	onMount(() => {
 		const unsub = onShellWindowFullscreenChange(({ isFullScreen }) => {
 			isMaximized = isFullScreen;
@@ -250,8 +230,6 @@
 					onTabClose={handleTabClose}
 					onTabCloseOthers={handleTabCloseOthers}
 					onTabCloseOffside={handleTabCloseOffside}
-					onTabClearMessages={handleTabClearMessages}
-					onTabGenerateTitle={handleTabGenerateTitle}
 					onOpenChange={(open) => tabBarState.handleTabOverlayChange(tab.id, open)}
 				/>
 				<div class="shrink-0 px-0.5" style="cursor: pointer !important;">
