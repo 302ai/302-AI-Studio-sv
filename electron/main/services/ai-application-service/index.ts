@@ -52,7 +52,7 @@ export class AiApplicationService {
 		);
 
 		this.aiApplicationList = aiApplicationState;
-		await this.updateAiApplicationUrlMap(aiApplicationState);
+		await this.updateAiApplicationUrlMap(aiApplicationState, lang);
 
 		await aiApplicationStorage.setAiApplications(aiApplicationState);
 
@@ -61,6 +61,7 @@ export class AiApplicationService {
 
 	private async updateAiApplicationUrlMap(
 		apps: AiApplication[],
+		language?: LanguageCode,
 		updatedApiKey?: string,
 	): Promise<void> {
 		this.aiApplicationUrlMap.clear();
@@ -73,16 +74,20 @@ export class AiApplicationService {
 		}
 
 		try {
+			const lang = language ?? (await generalSettingsService.getLanguage());
+
 			const userInfo = await fetch302AIUserInfo(key);
 			const uidBase64 = Buffer.from(userInfo.data.uid.toString(), "utf8").toString("base64");
 			const aiApplicationDetail = await fetch302AIToolDetail(uidBase64);
 
 			apps.forEach((app) => {
 				const applicationIdStr = app.toolId.toString();
-				this.aiApplicationUrlMap.set(
-					applicationIdStr,
-					aiApplicationDetail.data.app_box_detail[applicationIdStr].url,
-				);
+				const originalUrl = aiApplicationDetail.data.app_box_detail[applicationIdStr].url;
+				const baseUrl = originalUrl.split("?")[0];
+				const urlWithLang = `${baseUrl}/${lang}`;
+
+				this.aiApplicationUrlMap.set(applicationIdStr, urlWithLang);
+				console.log("applicationIdStr", urlWithLang);
 			});
 		} catch (error) {
 			broadcastService.broadcastChannelToAll("ai-applications:loading", false);
@@ -113,7 +118,8 @@ export class AiApplicationService {
 		updatedApiKey: string,
 	): Promise<void> {
 		broadcastService.broadcastChannelToAll("ai-applications:loading", true);
-		await this.updateAiApplicationUrlMap(this.aiApplicationList, updatedApiKey);
+		const lang = await generalSettingsService.getLanguage();
+		await this.updateAiApplicationUrlMap(this.aiApplicationList, lang, updatedApiKey);
 		broadcastService.broadcastChannelToAll("ai-applications:loading", false);
 	}
 

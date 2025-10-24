@@ -16,11 +16,7 @@ export class ProviderStorage extends StorageService<ModelProvider[]> {
 
 		const _302AIProvider = allProviders.find((p) => p.apiType === "302ai");
 		if (isUndefined(_302AIProvider)) return { valid: false, apiKey: "" };
-		if (
-			!_302AIProvider.enabled ||
-			_302AIProvider.apiKey.trim() === "" ||
-			_302AIProvider.status !== "connected"
-		)
+		if (!_302AIProvider.enabled || _302AIProvider.apiKey.trim() === "")
 			return { valid: false, apiKey: "" };
 
 		return {
