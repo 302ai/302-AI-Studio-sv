@@ -8,7 +8,12 @@
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import type { ShikiHighlighter } from "./highlighter";
-	import { DEFAULT_THEME, ensureHighlighter, ensureLanguageLoaded } from "./highlighter";
+	import {
+		DEFAULT_THEME,
+		ensureHighlighter,
+		ensureLanguageLoaded,
+		LANGUAGE_ALIASES,
+	} from "./highlighter";
 
 	interface RenderedToken {
 		id: string;
@@ -273,10 +278,11 @@
 
 	const ensureLanguage = (): boolean => {
 		const raw = props.language?.toLowerCase().trim() || "plaintext";
-		if (resolvedLanguage !== raw) {
-			resolvedLanguage = raw;
-			ensureLanguageLoaded(raw).catch((error) => {
-				console.warn(`Failed to load language ${raw}:`, error);
+		const effectiveLang = LANGUAGE_ALIASES[raw] ?? raw;
+		if (resolvedLanguage !== effectiveLang) {
+			resolvedLanguage = effectiveLang;
+			ensureLanguageLoaded(effectiveLang).catch((error) => {
+				console.warn(`Failed to load language ${effectiveLang}:`, error);
 			});
 			return true;
 		}

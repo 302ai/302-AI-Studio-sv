@@ -2,7 +2,9 @@ import type { Highlighter as ShikiHighlighter } from "shiki";
 import { createHighlighter, createJavaScriptRegexEngine } from "shiki";
 
 const CODE_THEMES = ["vitesse-dark", "vitesse-light"] as const;
-
+export const LANGUAGE_ALIASES: Record<string, SupportedLanguage> = {
+	svg: "xml",
+};
 // 核心语言：立即加载（最常用的，控制在 30 个以内）
 const CORE_LANGUAGES = [
 	"plaintext",
@@ -290,7 +292,11 @@ export const ensureHighlighter = (): Promise<ShikiHighlighter> => {
  * 使用 async/await，但不阻塞 UI，因为在后台执行
  */
 export const ensureLanguageLoaded = async (lang: string): Promise<void> => {
-	const normalized = (lang || "plaintext").toLowerCase() as SupportedLanguage;
+	let normalized = (lang || "plaintext").toLowerCase() as SupportedLanguage;
+
+	if (LANGUAGE_ALIASES[normalized]) {
+		normalized = LANGUAGE_ALIASES[normalized];
+	}
 
 	// 已加载或正在加载，直接返回
 	if (loadedLanguages.has(normalized)) {
@@ -301,15 +307,15 @@ export const ensureLanguageLoaded = async (lang: string): Promise<void> => {
 		return;
 	}
 
-	// 不在支持列表中，无需加载
+	// 不在支持列表中，回退到纯文本
 	if (!ALL_LANGUAGES.includes(normalized)) {
+		console.warn(`Language ${normalized} is not supported, falling back to plaintext`);
 		return;
 	}
 
 	try {
 		loadingQueue.add(normalized);
 		const highlighter = await ensureHighlighter();
-		// 使用类型断言，因为 Shiki 内部支持所有这些语言
 		await highlighter.loadLanguage(normalized);
 		loadedLanguages.add(normalized);
 	} catch (error) {
