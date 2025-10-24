@@ -2,8 +2,9 @@
 	/* eslint-disable svelte/no-at-html-tags */
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { CopyButton } from "$lib/components/buss/copy-button";
+	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
-	import { ChevronDown, CodeXml, ImagePlay } from "@lucide/svelte";
+	import { ChevronDown, CodeXml, ImagePlay, MonitorPlay } from "@lucide/svelte";
 	import type { GrammarState, ThemedToken } from "@shikijs/types";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
@@ -49,6 +50,7 @@
 	let isCollapsed = $state(preferencesSettings.autoHideCode);
 	let showSvgPreview = $state(false);
 	let isSvgCode = $state(false);
+	let isHtmlCode = $state(false);
 
 	const FONT_STYLE = {
 		Italic: 1,
@@ -134,12 +136,28 @@
 		return trimmed.startsWith("<svg") || (trimmed.startsWith("<?xml") && trimmed.includes("<svg"));
 	};
 
+	const detectHtml = (code: string, language: string | null): boolean => {
+		const htmlLanguages = ["html", "htm", "xhtml", "xml"];
+		if (language && htmlLanguages.includes(language.toLowerCase())) {
+			return true;
+		}
+
+		const trimmed = code.trim();
+		const htmlTagRegex =
+			/<([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>(.*?)<\/\1>|<([a-zA-Z][a-zA-Z0-9]*)\b[^>]*\/>/s;
+		return htmlTagRegex.test(trimmed);
+	};
+
 	const toggleCollapse = () => {
 		isCollapsed = !isCollapsed;
 	};
 
 	const toggleSvgPreview = () => {
 		showSvgPreview = !showSvgPreview;
+	};
+
+	const toggleHtmlPreview = () => {
+		htmlPreviewState.togglePreview(props.code);
 	};
 
 	const buildTokenStyle = (token: ThemedToken): string | undefined => {
@@ -397,6 +415,7 @@
 
 	$effect(() => {
 		isSvgCode = detectSvg(props.code, props.language);
+		isHtmlCode = detectHtml(props.code, props.language);
 	});
 </script>
 
@@ -453,6 +472,16 @@
 						{:else}
 							<ImagePlay class="" />
 						{/if}
+					</ButtonWithTooltip>
+				{/if}
+				{#if isHtmlCode}
+					<ButtonWithTooltip
+						class="text-muted-foreground hover:!bg-chat-action-hover"
+						tooltip={htmlPreviewState.isVisible ? "Close preview" : "Preview HTML"}
+						tooltipSide="bottom"
+						onclick={toggleHtmlPreview}
+					>
+						<MonitorPlay class="" />
 					</ButtonWithTooltip>
 				{/if}
 				<ButtonWithTooltip

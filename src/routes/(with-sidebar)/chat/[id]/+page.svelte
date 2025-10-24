@@ -1,10 +1,13 @@
 <script lang="ts">
+	import * as Resizable from "$lib/components/ui/resizable/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 	import { onMount } from "svelte";
 	import { AiApplicationItems } from "../components/ai-applications";
 	import { ChatInputBox } from "../components/chat-input";
+	import { HtmlPreviewPanel } from "../components/html-preview";
 	import { MessageList } from "../components/message";
 
 	onMount(() => {
@@ -42,7 +45,21 @@
 {:else}
 	<div class="flex h-full flex-col gap-y-4">
 		<div class="flex-1 overflow-hidden" data-layoutid="chat-message-list">
-			<MessageList messages={chatState.messages} />
+			{#if htmlPreviewState.isVisible}
+				<Resizable.PaneGroup direction="horizontal" class="h-full">
+					<Resizable.Pane defaultSize={50} minSize={20}>
+						<div class="h-full overflow-hidden">
+							<MessageList messages={chatState.messages} />
+						</div>
+					</Resizable.Pane>
+					<Resizable.Handle withHandle />
+					<Resizable.Pane defaultSize={50} minSize={20}>
+						<HtmlPreviewPanel />
+					</Resizable.Pane>
+				</Resizable.PaneGroup>
+			{:else}
+				<MessageList messages={chatState.messages} />
+			{/if}
 		</div>
 		<div class="flex items-center justify-center">
 			<ChatInputBox />
