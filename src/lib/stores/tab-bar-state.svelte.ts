@@ -128,7 +128,9 @@ class TabBarState {
 			persistedTabState.current[this.#windowId].tabs = [];
 			console.log("handleTabClose: currentTabs.length === 1");
 
-			this.handleNewTab(m.title_new_chat());
+			setTimeout(() => {
+				this.handleNewTab(m.title_new_chat());
+			}, 100);
 		}
 	}
 
