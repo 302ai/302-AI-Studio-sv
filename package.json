@@ -40,8 +40,7 @@
 		"test:e2e": "playwright test",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"generate:ipc": "tsx scripts/generate-ipc.ts",
-		"postinstall": "pre-commit install --install-hooks --hook-type commit-msg",
-		"fta": "fta src/lib && fta electron/main"
+		"postinstall": "pre-commit install --install-hooks --hook-type commit-msg"
 	},
 	"devDependencies": {
 		"@ai-sdk/anthropic": "^2.0.17",
@@ -150,8 +149,7 @@
 		"superjson": "^2.2.2",
 		"svelte-dnd-action": "^0.9.65",
 		"svelte-image-viewer": "^5.0.0",
-		"ts-pattern": "^5.8.0",
-		"fta-cli": "^3.0.0"
+		"ts-pattern": "^5.8.0"
 	},
 	"packageManager": "pnpm@10.18.3+sha512.bbd16e6d7286fd7e01f6b3c0b3c932cda2965c06a908328f74663f10a9aea51f1129eea615134bf992831b009eabe167ecb7008b597f40ff9bc75946aadfb08d",
 	"pnpm": {
