@@ -12,9 +12,10 @@ import { WebContentsFactory } from "./factories/web-contents-factory";
 import { registerIpcHandlers } from "./generated/ipc-registration";
 import { initServer } from "./server/router";
 import { appService, shortcutService, windowService } from "./services";
+import { UserDataManager } from "./services/app-service/user-data-manager";
 import { UpdaterService } from "./services/updater-service";
 
-app.setName("com.302ai.302aistudio");
+new UserDataManager("com.302ai.302aistudio");
 
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
