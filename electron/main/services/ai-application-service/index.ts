@@ -14,6 +14,10 @@ import { aiApplicationStorage } from "../storage-service/ai-application-storage"
 import { providerStorage } from "../storage-service/provider-storage";
 import { tabService } from "../tab-service";
 
+const UNSUPPORTED_INJECTING_LANGUAGE: number[] = [
+	-1, 7, 11, 13, 19, 4, 5, 14, 17, 45, 48, 49, 8, 12, 15, 18, 23, 24,
+];
+
 export class AiApplicationService {
 	private aiApplicationUrlMap = new Map<string, string>();
 	private aiApplicationList: AiApplication[] = [];
@@ -92,7 +96,9 @@ export class AiApplicationService {
 				const applicationIdStr = app.toolId.toString();
 				const originalUrl = aiApplicationDetail.data.app_box_detail[applicationIdStr].url;
 				const baseUrl = originalUrl.split("?")[0];
-				const urlWithLang = `${baseUrl}/${lang}`;
+				const urlWithLang = UNSUPPORTED_INJECTING_LANGUAGE.includes(app.toolId)
+					? originalUrl
+					: `${baseUrl}/${lang}`;
 
 				this.aiApplicationUrlMap.set(applicationIdStr, urlWithLang);
 			});

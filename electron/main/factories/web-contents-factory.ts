@@ -1,7 +1,7 @@
 import type { Tab } from "@shared/types";
 import { nativeTheme, WebContentsView } from "electron";
 import path from "node:path";
-import { TempStorage } from "../utils/temp-storage";
+import { UNSUPPORTED_INJECTING_THEME } from "../constants";
 
 export interface WebContentsConfig {
 	windowId: number;
@@ -80,6 +80,12 @@ export class WebContentsFactory {
 	}
 
 	private static applyThemeToWebContents(webContents: Electron.WebContents) {
+		const url = webContents.getURL();
+		const isUnsupported = UNSUPPORTED_INJECTING_THEME.some((domain) =>
+			new URL(url).hostname.endsWith(`${domain}`),
+		);
+		console.log(`Applying theme to ${url}`, isUnsupported);
+		if (isUnsupported) return;
 		if (webContents.isDestroyed()) return;
 
 		const isDark = nativeTheme.shouldUseDarkColors;
