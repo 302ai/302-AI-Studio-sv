@@ -1,0 +1,41 @@
+{
+	"id": "com.302ai.provider.openai",
+	"name": "OpenAI Provider",
+	"version": "1.0.0",
+	"type": "provider",
+	"description": "OpenAI API provider plugin for GPT models",
+	"author": "302.AI",
+	"homepage": "https://302.ai",
+	"repository": "https://github.com/302ai/302-AI-Studio-SV",
+	"permissions": ["network", "storage"],
+	"compatibleVersion": ">=0.1.0",
+	"main": "main/index.js",
+	"builtin": true,
+	"tags": ["provider", "openai", "gpt", "chatgpt"],
+	"defaultConfig": {
+		"apiKey": "",
+		"baseUrl": "https://api.openai.com/v1"
+	},
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"apiKey": {
+				"type": "string",
+				"title": "API Key",
+				"description": "Your OpenAI API key"
+			},
+			"baseUrl": {
+				"type": "string",
+				"title": "Base URL",
+				"description": "API base URL (for proxies or custom endpoints)",
+				"default": "https://api.openai.com/v1"
+			},
+			"organization": {
+				"type": "string",
+				"title": "Organization ID",
+				"description": "Optional: Your OpenAI organization ID"
+			}
+		},
+		"required": ["apiKey"]
+	}
+}

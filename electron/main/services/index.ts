@@ -5,6 +5,7 @@ import { BroadcastService, broadcastService } from "./broadcast-service";
 import { DataService, dataService } from "./data-service";
 import { ExternalLinkService, externalLinkService } from "./external-link-service";
 import { McpService, mcpService } from "./mcp-service";
+import { PluginService, pluginService } from "./plugin-service";
 import { GeneralSettingsService, generalSettingsService } from "./settings-service";
 import { ShortcutService, shortcutService } from "./shortcut-service";
 import { StorageService, storageService } from "./storage-service";
@@ -23,6 +24,7 @@ export {
 	ExternalLinkService,
 	GeneralSettingsService,
 	McpService,
+	PluginService,
 	ShortcutService,
 	StorageService,
 	TabService,
@@ -41,6 +43,7 @@ export {
 	externalLinkService,
 	generalSettingsService,
 	mcpService,
+	pluginService,
 	shortcutService,
 	storageService,
 	tabService,
