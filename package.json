@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "25.44.1",
+	"version": "25.44.2",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -40,8 +40,7 @@
 		"test:e2e": "playwright test",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"generate:ipc": "tsx scripts/generate-ipc.ts",
-		"postinstall": "pre-commit install --install-hooks --hook-type commit-msg",
-		"fta": "fta src/lib && fta electron/main"
+		"postinstall": "pre-commit install --install-hooks --hook-type commit-msg"
 	},
 	"devDependencies": {
 		"@ai-sdk/anthropic": "^2.0.17",
@@ -91,7 +90,6 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.12.3",
 		"formsnap": "^2.0.1",
-		"fta-cli": "^3.0.0",
 		"glob": "^11.0.3",
 		"globals": "^16.4.0",
 		"jsdom": "^27.0.0",

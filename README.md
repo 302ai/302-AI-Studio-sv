@@ -1,264 +1,269 @@
 <h1 align="center">
-302 AI Studio
+<img src='./docs/imgs/icon.svg' width='30'>
+<span>
+    302 AI Studio
+</span>
 </h1>
 
 <p align="center">
-<em>302 AI Studio 是一款支持多种大模型（LLM）服务商的桌面客户端，适用于 Windows、Mac 和 Linux。</em>
+<em>302 AI Studio is a desktop client supporting multiple LLM service providers, compatible with Windows, Mac, and Linux.</em>
 </p>
+
+<p align="center"><a href="https://302.ai/" target="blank"><img src="https://file.302.ai/gpt/imgs/github/20250102/72a57c4263944b73bf521830878ae39a.png" /></a></p >
 
 <p align="center"><a href="README_zh.md">中文</a> | <a href="README.md">English</a> | <a href="README_ja.md">日本語</a></p>
 
-## 🌟 主要特点
+## 🌟 Key Features
 
-### 多模型与多服务商支持
+### Multi-Model & Multi-Provider Support
 
-- 🤖 支持 OpenAI、Anthropic、Google 等多主流 AI 提供商
-- 🔄 灵活的模型切换与配置
-- 🎛️ 高级对话参数控制（温度、top-p、token 限制等）
-- 📊 MCP（Model Context Protocol）服务器集成
+- 🤖 Support for OpenAI, Anthropic, Google, and other major AI providers
+- 🔄 Flexible model switching and configuration
+- 🎛️ Advanced conversation parameter controls (temperature, top-p, token limits, etc.)
+- 📊 MCP (Model Context Protocol) server integration
 
-### 文档与数据处理
+### Document & Data Processing
 
-- 🖼️ 上传图片让 AI 帮你分析内容、生成描述
-- 📄 支持多种文件格式处理
-- 💻 代码高亮显示
-- 📊 Mermaid 图表可视化
-- 📝 完整的 Markdown 渲染支持
+- 🖼️ Upload images for AI-assisted content analysis and description generation
+- 📄 Support for multiple file formats
+- 💻 Code syntax highlighting
+- 📊 Mermaid diagram visualization
+- 📝 Full Markdown rendering support
 
-### 优质使用体验
+### Excellent User Experience
 
-- 🖥️ Windows、Mac、Linux 多平台支持
-- 🌙 可自定义的明暗主题系统，实时预览
-- 📝 完整的 Markdown 渲染
-- 📱 响应式设计，完美适配各种屏幕尺寸
-- 🎨 基于 Shadcn-Svelte 的现代化组件库
+- 🖥️ Multi-platform support for Windows, Mac, and Linux
+- 🌙 Customizable light/dark theme system with real-time preview
+- 📝 Complete Markdown rendering
+- 📱 Responsive design, perfectly adapts to various screen sizes
+- 🎨 Modern component library based on Shadcn-Svelte
 
-### 高效工作流
+### Efficient Workflow
 
-- 🗂️ 同时进行多个对话线程，思路清晰不混乱
-- ⚡ 支持实时流式响应
-- ⌨️ 完整的快捷键系统
-- 🔄 热更新（HMR）支持，开发体验流畅
+- 🗂️ Manage multiple conversation threads simultaneously, organized and clear
+- ⚡ Support for real-time streaming responses
+- ⌨️ Complete keyboard shortcut system
+- 🔄 Hot Module Replacement (HMR) support for smooth development experience
 
-### 多语言支持
+### Multi-Language Support
 
 - **中文**
 - **English**
 - **日本語**
 
-## 🛠️ 技术架构
+## 🛠️ Technical Architecture
 
-### 🏗️ 核心技术栈
+### 🏗️ Core Technology Stack
 
-| 层级          | 技术选型                                | 说明                                   |
-| ------------- | --------------------------------------- | -------------------------------------- |
-| **界面层**    | SvelteKit 5 + TypeScript                | 现代组件开发，类型安全，响应式状态管理 |
-| **样式层**    | TailwindCSS 4.x + 自定义主题系统        | 原子化 CSS + 流畅动画                  |
-| **桌面端**    | Electron 38                             | 跨平台桌面应用框架                     |
-| **状态管理**  | Svelte 5 Runes                          | 响应式状态管理（`$state`, `$derived`） |
-| **UI 组件库** | Shadcn-Svelte (bits-ui)                 | 现代化、可访问的组件库                 |
-| **国际化**    | Inlang Paraglide-js                     | 多语言支持                             |
-| **AI 集成**   | AI SDK                                  | 统一的 AI 提供商接口                   |
-| **构建工具**  | Vite + Electron Forge                   | 快速构建 + 热重载                      |
-| **类型系统**  | TypeScript                              | 严格的类型检查                         |
-| **代码质量**  | ESLint + Prettier + Vitest + Playwright | 代码规范 + 单元测试 + E2E 测试         |
+| Layer                    | Technology                              | Description                                                          |
+| ------------------------ | --------------------------------------- | -------------------------------------------------------------------- |
+| **UI Layer**             | SvelteKit 5 + TypeScript                | Modern component development, type safety, reactive state management |
+| **Style Layer**          | TailwindCSS 4.x + Custom Theme System   | Atomic CSS + smooth animations                                       |
+| **Desktop**              | Electron 38                             | Cross-platform desktop application framework                         |
+| **State Management**     | Svelte 5 Runes                          | Reactive state management (`$state`, `$derived`)                     |
+| **UI Component Library** | Shadcn-Svelte (bits-ui)                 | Modern, accessible component library                                 |
+| **Internationalization** | Inlang Paraglide-js                     | Multi-language support                                               |
+| **AI Integration**       | AI SDK                                  | Unified AI provider interface                                        |
+| **Build Tools**          | Vite + Electron Forge                   | Fast build + hot reload                                              |
+| **Type System**          | TypeScript                              | Strict type checking                                                 |
+| **Code Quality**         | ESLint + Prettier + Vitest + Playwright | Code standards + unit tests + E2E tests                              |
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 📋 系统要求
+### 📋 System Requirements
 
-- **操作系统**: Windows 10+ / macOS 10.14+ / Linux (Ubuntu 18.04+)
-- **Node.js**: 18.x 或更高版本
-- **包管理器**: pnpm 10.18.3+（必需）
-- **内存**: 4GB RAM（推荐 8GB+）
-- **存储**: 500MB 可用空间
-- **网络**: 稳定的互联网连接（访问 AI 服务商 API）
+- **Operating System**: Windows 10+ / macOS 10.14+ / Linux (Ubuntu 18.04+)
+- **Node.js**: 18.x or higher
+- **Package Manager**: pnpm 10.18.3+ (required)
+- **Memory**: 4GB RAM (8GB+ recommended)
+- **Storage**: 500MB available space
+- **Network**: Stable internet connection (to access AI provider APIs)
 
-### ⚡ 安装与启动
+### ⚡ Installation & Launch
 
 ```bash
-# 1️⃣ 克隆项目
+# 1️⃣ Clone the project
 git clone https://github.com/302ai/302-AI-Studio-sv.git
 cd 302-AI-Studio-sv
 
-# 2️⃣ 安装依赖
+# 2️⃣ Install dependencies
 pnpm install
 
-# 3️⃣ 启动开发服务器 🎉
+# 3️⃣ Start the development server 🎉
 pnpm dev
 ```
 
 > [!WARNING]
-> 此项目必须使用 `pnpm` 作为包管理器。项目包含对 SvelteKit 的必要补丁，其他包管理器可能无法正常工作。
+> This project must use `pnpm` as the package manager. The project includes necessary patches for SvelteKit, and other package managers may not work properly.
 
-## 📦 构建与部署
+## 📦 Build & Deployment
 
-### 🔧 开发命令
+### 🔧 Development Commands
 
 ```bash
-# 启动开发服务器（支持热重载）
+# Start development server (with hot reload)
 pnpm dev
 
-# 类型检查
+# Type checking
 pnpm check
 
-# 代码规范检查
+# Code linting
 pnpm lint
 
-# 自动修复代码问题
+# Auto-fix linting issues
 pnpm lint:fix
 
-# 格式化代码
+# Format code
 pnpm format
 
-# 检查代码格式
+# Check code formatting
 pnpm format:check
 
-# 完整质量检查
+# Complete quality check
 pnpm quality
 
-# 自动修复所有问题
+# Auto-fix all issues
 pnpm quality:fix
 ```
 
-### 🧪 测试
+### 🧪 Testing
 
 ```bash
-# 运行单元测试
+# Run unit tests
 pnpm test:unit
 
-# 运行 E2E 测试
+# Run E2E tests
 pnpm test:e2e
 
-# 运行所有测试
+# Run all tests
 pnpm test
 ```
 
-### 🚀 生产构建
+### 🚀 Production Build
 
 ```bash
-# 构建 SvelteKit 应用
+# Build SvelteKit application
 pnpm build
 
-# 打包 Electron 应用（输出在 /out 目录）
+# Package Electron app (output in /out directory)
 pnpm package
 
-# 创建可分发安装包
+# Create distributable installer
 pnpm make
 
-# 发布到配置的目标
+# Publish to configured targets
 pnpm publish
 ```
 
-### 📱 跨平台支持
+### 📱 Cross-Platform Support
 
-| 平台    | 架构                | 状态        |
-| ------- | ------------------- | ----------- |
-| Windows | x64 / ARM64         | ✅ 完全支持 |
-| macOS   | x64 / Apple Silicon | ✅ 完全支持 |
-| Linux   | x64 / ARM64         | ✅ 完全支持 |
+| Platform | Architecture        | Status             |
+| -------- | ------------------- | ------------------ |
+| Windows  | x64 / ARM64         | ✅ Fully Supported |
+| macOS    | x64 / Apple Silicon | ✅ Fully Supported |
+| Linux    | x64 / ARM64         | ✅ Fully Supported |
 
-## 🛠️ 开发指南
+## 🛠️ Development Guide
 
-### 📁 项目结构
+### 📁 Project Structure
 
 ```
 📦 302-AI-Studio-sv
-├── 📂 src/                          # 渲染进程源代码
-│   ├── 📂 lib/                       # 共享库
-│   │   ├── 📂 components/            # UI 组件
-│   │   │   ├── ui/                   # Shadcn-Svelte 基础组件（40+）
-│   │   │   └── buss/                 # 业务组件
-│   │   │       ├── chat/             # 聊天界面
-│   │   │       ├── model-*/          # 模型选择与配置
-│   │   │       ├── provider-*/       # AI 提供商管理
-│   │   │       ├── theme-*/          # 主题系统
-│   │   │       └── settings/         # 应用设置
-│   │   ├── 📂 stores/                # 状态管理（Svelte 5 Runes）
-│   │   ├── 📂 types/                 # TypeScript 类型定义
-│   │   ├── 📂 api/                   # API 集成层
-│   │   ├── 📂 utils/                 # 工具函数
-│   │   ├── 📂 theme/                 # 主题系统
-│   │   ├── 📂 datas/                 # 静态数据
+├── 📂 src/                          # Renderer process source code
+│   ├── 📂 lib/                       # Shared libraries
+│   │   ├── 📂 components/            # UI components
+│   │   │   ├── ui/                   # Shadcn-Svelte base components (40+)
+│   │   │   └── buss/                 # Business components
+│   │   │       ├── chat/             # Chat interface
+│   │   │       ├── model-*/          # Model selection and configuration
+│   │   │       ├── provider-*/       # AI provider management
+│   │   │       ├── theme-*/          # Theme system
+│   │   │       └── settings/         # Application settings
+│   │   ├── 📂 stores/                # State management (Svelte 5 Runes)
+│   │   ├── 📂 types/                 # TypeScript type definitions
+│   │   ├── 📂 api/                   # API integration layer
+│   │   ├── 📂 utils/                 # Utility functions
+│   │   ├── 📂 theme/                 # Theme system
+│   │   ├── 📂 datas/                 # Static data
 │   │   └── 📂 hooks/                 # Svelte Hooks
-│   ├── 📂 routes/                    # 路由
-│   │   ├── (with-sidebar)/           # 主应用布局
-│   │   │   └── chat/                 # 聊天界面路由
-│   │   ├── (settings-page)/          # 设置页面布局
-│   │   │   └── settings/             # 设置路由组
-│   │   └── shell/                     # Shell 窗口路由
-│   ├── 📂 shared/                    # 跨进程共享代码
-│   │   ├── storage/                  # 持久化存储
-│   │   └── types/                    # 共享类型
-│   ├── 📂 messages/                  # 国际化消息文件
-│   └── 📄 app.html                   # HTML 模板
-├── 📂 electron/                      # Electron 主进程
-│   ├── main/                         # 主进程代码
-│   │   ├── services/                 # IPC 服务
-│   │   ├── generated/                # 自动生成的 IPC 绑定
-│   │   └── constants/                # Electron 常量
-│   └── preload/                      # Preload 脚本
-├── 📂 vite-plugins/                  # 自定义 Vite 插件
-│   └── ipc-service-generator/        # IPC 服务生成器
-├── 📂 scripts/                       # 构建脚本
-├── 📂 docs/                          # 文档
-├── 📂 e2e/                           # Playwright E2E 测试
-└── 📄 package.json                   # 项目配置
+│   ├── 📂 routes/                    # Routes
+│   │   ├── (with-sidebar)/           # Main application layout
+│   │   │   └── chat/                 # Chat interface routes
+│   │   ├── (settings-page)/          # Settings page layout
+│   │   │   └── settings/             # Settings route groups
+│   │   └── shell/                     # Shell window routes
+│   ├── 📂 shared/                    # Cross-process shared code
+│   │   ├── storage/                  # Persistent storage
+│   │   └── types/                    # Shared types
+│   ├── 📂 messages/                  # Internationalization message files
+│   └── 📄 app.html                   # HTML template
+├── 📂 electron/                      # Electron main process
+│   ├── main/                         # Main process code
+│   │   ├── services/                 # IPC services
+│   │   ├── generated/                # Auto-generated IPC bindings
+│   │   └── constants/                # Electron constants
+│   └── preload/                      # Preload scripts
+├── 📂 vite-plugins/                  # Custom Vite plugins
+│   └── ipc-service-generator/        # IPC service generator
+├── 📂 scripts/                       # Build scripts
+├── 📂 docs/                          # Documentation
+├── 📂 e2e/                           # Playwright E2E tests
+└── 📄 package.json                   # Project configuration
 ```
 
-## 🤝 贡献指南
+## 🤝 Contribution Guide
 
-我们欢迎所有形式的贡献！无论是报告 bug、提出新功能建议，还是提交代码改进。
+We welcome all forms of contributions! Whether it's reporting bugs, suggesting new features, or submitting code improvements.
 
-### 💡 贡献方式
+### 💡 Ways to Contribute
 
-1. **代码贡献**：提交 PR 来改进代码
-2. **修复 Bug**：提交你发现的问题修复
-3. **功能建议**：有好想法？我们很乐意听取你的建议
-4. **编写文档**：帮助我们完善文档和使用指南
-5. **推广应用**：宣传 302 AI Studio
+1. **Code Contributions**: Submit PRs to improve the code
+2. **Bug Fixes**: Submit fixes for issues you've discovered
+3. **Feature Suggestions**: Have a great idea? We'd love to hear your suggestions
+4. **Documentation**: Help us improve documentation and usage guides
+5. **Promotion**: Spread the word about 302 AI Studio
 
-### 📋 贡献步骤
+### 📋 Contribution Steps
 
 ```bash
-# 1. Fork 项目
-# 2. 创建功能分支
+# 1. Fork the project
+# 2. Create a feature branch
 git checkout -b feature/amazing-feature
 
-# 3. 提交更改（遵循 Conventional Commits）
+# 3. Commit changes (following Conventional Commits)
 git commit -m 'feat: add amazing feature'
 
-# 4. 推送到分支
+# 4. Push to the branch
 git push origin feature/amazing-feature
 
-# 5. 创建 Pull Request
+# 5. Create a Pull Request
 ```
 
-## 💬 联系我们
+## 💬 Contact Us
 
 <div align="center">
 
-[![官网](https://img.shields.io/badge/官网-302.ai-blue.svg)](https://302.ai)
-[![GitHub](https://img.shields.io/badge/GitHub-302--AI--Studio--sv-black.svg)](https://github.com/302ai/302-AI-Studio-sv)
-[![邮件](https://img.shields.io/badge/邮件-support@302.ai-red.svg)](mailto:support@302.ai)
+[![Website](https://img.shields.io/badge/Website-302.ai-blue.svg)](https://302.ai)
+[![GitHub](https://img.shields.io/badge/GitHub-302--AI--Studio-black.svg)](https://github.com/302ai/302-AI-Studio-sv)
+[![Email](https://img.shields.io/badge/Email-support@302.ai-red.svg)](mailto:support@302.ai)
 
-**遇到问题？** 请在 [GitHub Issues](https://github.com/302ai/302-AI-Studio-sv/issues) 中反馈
+**Encountering issues?** Please provide feedback in [GitHub Issues](https://github.com/302ai/302-AI-Studio-sv/issues)
 
-**功能建议？** 我们在 [GitHub Discussions](https://github.com/302ai/302-AI-Studio-sv/discussions) 等你
+**Have feature suggestions?** We're waiting for you in [GitHub Discussions](https://github.com/302ai/302-AI-Studio-sv/discussions)
 
 </div>
 
-## 📄 许可证
+## 📄 License
 
-本项目基于 [AGPL-3.0](LICENSE) 开源，你可以自由使用、修改和分发。
+This project is open source under [AGPL-3.0](LICENSE), you are free to use, modify, and distribute it.
 
-## ✨ 302.AI 介绍
+## ✨ About 302.AI
 
-[302.AI](https://302.ai) 是一个按需付费的 AI 应用平台，为用户解决 AI 用于实践的最后一公里问题。
+[302.AI](https://302.ai) is a pay-as-you-go AI application platform that solves the last-mile problem of applying AI in practice.
 
-1. 🧠 集合了最新最全的 AI 能力和品牌，包括但不限于语言模型、图像模型、声音模型、视频模型
-2. 🚀 在基础模型上进行深度应用开发，我们开发真正的 AI 产品，而不是简单的对话机器人
-3. 💰 零月费，所有功能按需付费，全面开放，做到真正的门槛低，上限高
-4. 🛠️ 功能强大的管理后台，面向团队和中小企业，一人管理，多人使用
-5. 🔗 所有 AI 能力均提供 API 接入，所有工具开源可自行定制（进行中）
-6. 💡 强大的开发团队，每周推出 2-3 个新应用，产品每日更新。有兴趣加入的开发者也欢迎联系我们
+1. 🧠 Comprehensive collection of the latest and most complete AI capabilities and brands, including but not limited to language models, image models, audio models, and video models
+2. 🚀 Deep application development based on foundation models, developing real AI products rather than simple chatbots
+3. 💰 Zero monthly fees, all features are pay-as-you-go, fully open, truly low barriers with high ceilings
+4. 🛠️ Powerful management backend, targeting teams and small-to-medium enterprises, one person manages, multiple people use
+5. 🔗 All AI capabilities provide API access, all tools are open source and customizable (in progress)
+6. 💡 Strong development team, launching 2-3 new applications weekly, with daily product updates. Developers interested in joining are welcome to contact us
