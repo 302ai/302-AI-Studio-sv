@@ -87,7 +87,6 @@ export class AiApplicationService {
 				const urlWithLang = `${baseUrl}/${lang}`;
 
 				this.aiApplicationUrlMap.set(applicationIdStr, urlWithLang);
-				console.log("applicationIdStr", urlWithLang);
 			});
 		} catch (error) {
 			broadcastService.broadcastChannelToAll("ai-applications:loading", false);

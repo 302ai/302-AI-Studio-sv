@@ -4,18 +4,20 @@ import path from "path";
 
 export class UserDataManager {
 	appName: string;
+	storagePath: string;
 
 	constructor(appName: string) {
 		this.appName = appName;
-		this.setupUserDataPath();
+		this.storagePath = this.setupUserDataPath();
 	}
 
-	private setupUserDataPath() {
+	private setupUserDataPath(): string {
 		const basePath = app.getPath("appData");
 		const userDataPath = path.join(basePath, this.appName);
 		app.setPath("userData", userDataPath);
 		this.ensureDirectoryExists(userDataPath);
 		this.logPathInfo();
+		return userDataPath;
 	}
 
 	private ensureDirectoryExists(dirPath: string) {
@@ -27,8 +29,9 @@ export class UserDataManager {
 	private logPathInfo() {
 		console.log("========== 路径信息 ==========");
 		console.log("平台:", process.platform);
-		console.log("应用名称:", this.appName);
 		console.log("userData 路径:", app.getPath("userData"));
 		console.log("==============================");
 	}
 }
+
+export const userDataManager = new UserDataManager("com.302ai.302aistudio");
