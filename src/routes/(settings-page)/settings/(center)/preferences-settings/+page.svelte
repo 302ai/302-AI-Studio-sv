@@ -9,11 +9,13 @@
 	import TitleGenerationTiming from "./title-generation-timing.svelte";
 </script>
 
-<ChatSettings />
-<SearchSettings />
-<ParseUrl />
-<StreamSetting />
-<EnableSupermarket />
-<NewSessionModel />
-<TitleGenerationModel />
-<TitleGenerationTiming />
+<div class="flex flex-col gap-settings-section-gap pb-settings-layout-pb">
+	<ChatSettings />
+	<SearchSettings />
+	<ParseUrl />
+	<StreamSetting />
+	<EnableSupermarket />
+	<NewSessionModel />
+	<TitleGenerationModel />
+	<TitleGenerationTiming />
+</div>
