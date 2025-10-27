@@ -83,6 +83,7 @@ export async function importLegacyJson(): Promise<ImportResult> {
 			legacyData.data.threads,
 			legacyData.data.threadMcpServers,
 			legacyData.data.messages,
+			legacyData.data.attachments,
 			stats,
 		);
 		await importSettings(legacyData.data.settings, stats);
@@ -285,6 +286,7 @@ async function importThreads(
 	legacyThreads: any[],
 	threadMcpServers: any[],
 	legacyMessages: any[],
+	legacyAttachments: any[],
 	stats: ImportStats,
 ): Promise<void> {
 	try {
@@ -298,6 +300,15 @@ async function importThreads(
 
 		const newThreadIds = [];
 		const newFavorites = [];
+
+		// Create a map of messageId -> attachments for quick lookup
+		const attachmentsByMessageId = new Map<string, any[]>();
+		for (const attachment of legacyAttachments) {
+			if (!attachmentsByMessageId.has(attachment.messageId)) {
+				attachmentsByMessageId.set(attachment.messageId, []);
+			}
+			attachmentsByMessageId.get(attachment.messageId)!.push(attachment);
+		}
 
 		for (const legacy of legacyThreads) {
 			if (existingThreadIds.has(legacy.id)) {
@@ -342,6 +353,20 @@ async function importThreads(
 						metadata.createdAt = new Date(msg.createdAt);
 					} else if (metadata.createdAt && typeof metadata.createdAt === "string") {
 						metadata.createdAt = new Date(metadata.createdAt);
+					}
+
+					// Import attachments for this message
+					const messageAttachments = attachmentsByMessageId.get(msg.id) || [];
+					if (messageAttachments.length > 0) {
+						metadata.attachments = messageAttachments.map((att) => ({
+							id: att.id,
+							name: att.name,
+							type: att.type,
+							size: att.size,
+							filePath: att.filePath,
+							preview: att.preview || undefined,
+							textContent: att.fileContent || att.textContent || undefined,
+						}));
 					}
 
 					return {
