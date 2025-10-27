@@ -181,6 +181,18 @@ export class AppService {
 		app.relaunch();
 		app.exit(0);
 	}
+
+	/**
+	 * Reset all application data and restart
+	 */
+	async resetAllData(_event: IpcMainInvokeEvent): Promise<void> {
+		console.log("Resetting all data...");
+		const { storageService } = await import("../storage-service");
+		await storageService.clear(_event);
+		console.log("All data cleared, restarting...");
+		app.relaunch();
+		app.exit(0);
+	}
 }
 
 export const appService = new AppService();

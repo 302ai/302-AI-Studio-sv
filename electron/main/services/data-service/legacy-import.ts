@@ -127,16 +127,13 @@ async function importProviders(legacyProviders: any[], stats: ImportStats): Prom
 	try {
 		const existingProviders =
 			((await storageService.getItemInternal("app-providers")) as any[]) || [];
-		const existingIds = new Set(existingProviders.map((p) => p.id));
+		const existingByName = new Map(existingProviders.map((p) => [p.name, p]));
 
+		const updatedProviders = [...existingProviders];
 		const newProviders = [];
-		for (const legacy of legacyProviders) {
-			if (existingIds.has(legacy.id)) {
-				stats.providers.skipped++;
-				continue;
-			}
 
-			newProviders.push({
+		for (const legacy of legacyProviders) {
+			const newProvider = {
 				id: legacy.id,
 				name: legacy.name,
 				apiType: legacy.apiType,
@@ -153,15 +150,25 @@ async function importProviders(legacyProviders: any[], stats: ImportStats): Prom
 					defaultBaseUrl: "",
 				},
 				icon: legacy.avatar,
-			});
-			stats.providers.added++;
+			};
+
+			// Check if a provider with the same name exists
+			if (existingByName.has(legacy.name)) {
+				// Replace the existing provider with the new one
+				const existingIndex = updatedProviders.findIndex((p) => p.name === legacy.name);
+				if (existingIndex !== -1) {
+					updatedProviders[existingIndex] = newProvider;
+					stats.providers.added++;
+				}
+			} else {
+				// Add as new provider
+				newProviders.push(newProvider);
+				stats.providers.added++;
+			}
 		}
 
-		if (newProviders.length > 0) {
-			await storageService.setItemInternal("app-providers", [
-				...existingProviders,
-				...newProviders,
-			]);
+		if (newProviders.length > 0 || updatedProviders.length !== existingProviders.length) {
+			await storageService.setItemInternal("app-providers", [...updatedProviders, ...newProviders]);
 		}
 	} catch (error) {
 		console.error("Failed to import providers:", error);
@@ -172,16 +179,15 @@ async function importProviders(legacyProviders: any[], stats: ImportStats): Prom
 async function importModels(legacyModels: any[], stats: ImportStats): Promise<void> {
 	try {
 		const existingModels = ((await storageService.getItemInternal("app-models")) as any[]) || [];
-		const existingIds = new Set(existingModels.map((m) => m.id));
+		const existingByNameAndProvider = new Map(
+			existingModels.map((m) => [`${m.name}:${m.providerId}`, m]),
+		);
 
+		const updatedModels = [...existingModels];
 		const newModels = [];
-		for (const legacy of legacyModels) {
-			if (existingIds.has(legacy.id)) {
-				stats.models.skipped++;
-				continue;
-			}
 
-			newModels.push({
+		for (const legacy of legacyModels) {
+			const newModel = {
 				id: legacy.id,
 				name: legacy.name,
 				remark: legacy.remark,
@@ -191,12 +197,28 @@ async function importModels(legacyModels: any[], stats: ImportStats): Promise<vo
 				custom: legacy.custom,
 				enabled: legacy.enabled,
 				collected: legacy.collected,
-			});
-			stats.models.added++;
+			};
+
+			const key = `${legacy.name}:${legacy.providerId}`;
+			// Check if a model with the same name and provider exists
+			if (existingByNameAndProvider.has(key)) {
+				// Replace the existing model with the new one
+				const existingIndex = updatedModels.findIndex(
+					(m) => m.name === legacy.name && m.providerId === legacy.providerId,
+				);
+				if (existingIndex !== -1) {
+					updatedModels[existingIndex] = newModel;
+					stats.models.added++;
+				}
+			} else {
+				// Add as new model
+				newModels.push(newModel);
+				stats.models.added++;
+			}
 		}
 
-		if (newModels.length > 0) {
-			await storageService.setItemInternal("app-models", [...existingModels, ...newModels]);
+		if (newModels.length > 0 || updatedModels.length !== existingModels.length) {
+			await storageService.setItemInternal("app-models", [...updatedModels, ...newModels]);
 		}
 	} catch (error) {
 		console.error("Failed to import models:", error);
@@ -208,16 +230,13 @@ async function importMcpServers(legacyServers: any[], stats: ImportStats): Promi
 	try {
 		const existingServers =
 			((await storageService.getItemInternal("app-mcp-servers")) as any[]) || [];
-		const existingIds = new Set(existingServers.map((s) => s.id));
+		const existingByName = new Map(existingServers.map((s) => [s.name, s]));
 
+		const updatedServers = [...existingServers];
 		const newServers = [];
-		for (const legacy of legacyServers) {
-			if (existingIds.has(legacy.id)) {
-				stats.mcpServers.skipped++;
-				continue;
-			}
 
-			newServers.push({
+		for (const legacy of legacyServers) {
+			const newServer = {
 				id: legacy.id,
 				name: legacy.name,
 				description: legacy.description,
@@ -236,12 +255,25 @@ async function importMcpServers(legacyServers: any[], stats: ImportStats): Promi
 					autoUseTool: true,
 					keepLongTaskConnection: false,
 				},
-			});
-			stats.mcpServers.added++;
+			};
+
+			// Check if a server with the same name exists
+			if (existingByName.has(legacy.name)) {
+				// Replace the existing server with the new one
+				const existingIndex = updatedServers.findIndex((s) => s.name === legacy.name);
+				if (existingIndex !== -1) {
+					updatedServers[existingIndex] = newServer;
+					stats.mcpServers.added++;
+				}
+			} else {
+				// Add as new server
+				newServers.push(newServer);
+				stats.mcpServers.added++;
+			}
 		}
 
-		if (newServers.length > 0) {
-			await storageService.setItemInternal("app-mcp-servers", [...existingServers, ...newServers]);
+		if (newServers.length > 0 || updatedServers.length !== existingServers.length) {
+			await storageService.setItemInternal("app-mcp-servers", [...updatedServers, ...newServers]);
 		}
 	} catch (error) {
 		console.error("Failed to import MCP servers:", error);
