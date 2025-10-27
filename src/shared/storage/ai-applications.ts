@@ -8,6 +8,7 @@ export const AiApplication = type({
 	category: "string",
 	categoryId: "number",
 	collected: "boolean",
+	"collectedAt?": "string.date.iso",
 	createdAt: "string.date.iso",
 });
 

@@ -13,7 +13,15 @@ class AiApplicationsState {
 
 	aiApplications = $derived(persistedAiApplicationState.current);
 	isReady = $derived(persistedAiApplicationState.isHydrated && !this.#isLoading);
-	collectedAiApplications = $derived(this.aiApplications.filter((app) => app.collected));
+	collectedAiApplications = $derived.by(() => {
+		const collected = this.aiApplications.filter((app) => app.collected);
+		return collected.sort((a, b) => {
+			// Sort by collectedAt in descending order (newest first)
+			const aTime = a.collectedAt ? new Date(a.collectedAt).getTime() : 0;
+			const bTime = b.collectedAt ? new Date(b.collectedAt).getTime() : 0;
+			return bTime - aTime;
+		});
+	});
 
 	constructor() {
 		onAiApplicationsLoading((loading) => {
@@ -24,9 +32,11 @@ class AiApplicationsState {
 	toggleCollected(app: AiApplication) {
 		const newAiApplications = this.aiApplications.map((a) => {
 			if (a.id === app.id) {
+				const newCollectedState = !a.collected;
 				return {
 					...a,
-					collected: !a.collected,
+					collected: newCollectedState,
+					collectedAt: newCollectedState ? new Date().toISOString() : undefined,
 				};
 			}
 			return a;

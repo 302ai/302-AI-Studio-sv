@@ -122,6 +122,7 @@
 				onTabClose(tab.id);
 			}
 		}}
+		title={tab.title}
 		role="button"
 	>
 		<div bind:this={triggerRef} class="contents">

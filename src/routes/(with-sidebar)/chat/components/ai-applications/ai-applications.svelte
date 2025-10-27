@@ -20,9 +20,9 @@
 	let categoryCollapsedState = $state<Record<string, boolean>>({});
 	let showMainContent = $state(true);
 
-	let randomApps = $derived(
+	let displayedApps = $derived(
 		aiApplicationsState.collectedAiApplications.length > 0
-			? getRandomItems(aiApplicationsState.collectedAiApplications, 4)
+			? aiApplicationsState.collectedAiApplications
 			: getRandomItems(aiApplicationsState.aiApplications, 4),
 	);
 	let isSearching = $derived(searchQuery.trim().length > 0);
@@ -90,25 +90,18 @@
 {#if aiApplicationsState.isReady}
 	{#if showMainContent}
 		<div transition:fly={{ y: 20, duration: 500 }} class="flex flex-col w-[720px] gap-y-3">
-			<Label class="font-light">{m.label_ai_applications()}</Label>
-
-			<div class="flex flex-row flex-wrap items-center gap-x-3.5 gap-y-4">
-				{#each randomApps as aiApplication (aiApplication.id)}
-					<AiApplicationItem
-						{aiApplication}
-						type="random"
-						onClick={() => handleAiApplicationClick(aiApplication)}
-					/>
-				{/each}
+			<div class="flex flex-row items-center justify-between">
+				<Label class="font-light">{m.label_ai_applications()}</Label>
 				<Sheet.Root>
 					<Sheet.Trigger
 						class={buttonVariants({
-							variant: "outline",
+							variant: "ghost",
+							size: "sm",
 							className:
-								"h-[46px] hover:bg-secondary/80 dark:hover:bg-secondary/80 !border-border !text-foreground !font-normal",
+								"hover:bg-secondary/80 dark:hover:bg-secondary/80 !border-border !text-foreground !font-normal text-xs",
 						})}
 					>
-						<LayoutGrid className="h-5 w-5" />
+						<LayoutGrid className="h-4 w-4" />
 						{m.title_button_more_ai_applications()}
 					</Sheet.Trigger>
 					<Sheet.Content class="border-none !max-w-[260px] bg-input">
@@ -160,6 +153,18 @@
 						</div>
 					</Sheet.Content>
 				</Sheet.Root>
+			</div>
+
+			<div
+				class="flex flex-row flex-wrap items-center gap-x-3.5 gap-y-4 max-h-[186px] overflow-y-auto pr-2"
+			>
+				{#each displayedApps as aiApplication (aiApplication.id)}
+					<AiApplicationItem
+						{aiApplication}
+						type="random"
+						onClick={() => handleAiApplicationClick(aiApplication)}
+					/>
+				{/each}
 			</div>
 		</div>
 	{/if}
