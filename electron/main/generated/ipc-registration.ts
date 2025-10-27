@@ -147,6 +147,16 @@ export function registerIpcHandlers() {
 	ipcMain.handle("dataService:importLegacyJson", (event) => dataService.importLegacyJson(event));
 	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
 	ipcMain.handle("dataService:importStorage", (event) => dataService.importStorage(event));
+	ipcMain.handle("dataService:listBackups", (event) => dataService.listBackups(event));
+	ipcMain.handle("dataService:restoreFromBackup", (event, backupPath) =>
+		dataService.restoreFromBackup(event, backupPath),
+	);
+	ipcMain.handle("dataService:deleteBackup", (event, backupPath) =>
+		dataService.deleteBackup(event, backupPath),
+	);
+	ipcMain.handle("dataService:openBackupDirectory", (event) =>
+		dataService.openBackupDirectory(event),
+	);
 	ipcMain.handle("dataService:checkOldVersionData", (event) =>
 		dataService.checkOldVersionData(event),
 	);
@@ -241,6 +251,10 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("dataService:importLegacyJson");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("dataService:importStorage");
+	ipcMain.removeHandler("dataService:listBackups");
+	ipcMain.removeHandler("dataService:restoreFromBackup");
+	ipcMain.removeHandler("dataService:deleteBackup");
+	ipcMain.removeHandler("dataService:openBackupDirectory");
 	ipcMain.removeHandler("dataService:checkOldVersionData");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
 	ipcMain.removeHandler("mcpService:getToolsFromServer");
