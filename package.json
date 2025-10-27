@@ -91,6 +91,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.12.3",
 		"formsnap": "^2.0.1",
+		"fta-cli": "^3.0.0",
 		"glob": "^11.0.3",
 		"globals": "^16.4.0",
 		"jsdom": "^27.0.0",
