@@ -154,3 +154,9 @@ export interface ImportResult {
 	importedFiles?: number;
 	backupPath?: string;
 }
+
+export interface BackupInfo {
+	path: string;
+	timestamp: Date;
+	size: number;
+}
