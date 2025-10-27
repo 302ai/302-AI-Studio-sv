@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as Select from "$lib/components/ui/select/index.js";
 	import SettingInfoItem from "$lib/components/buss/settings/setting-info-item.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
+	import * as Select from "$lib/components/ui/select/index.js";
 	import { m } from "$lib/paraglide/messages";
 
 	import {
@@ -116,7 +116,7 @@
 	</Button>
 {/snippet} -->
 
-<div class="flex flex-col gap-4 py-[18px]">
+<div class="flex flex-col gap-settings-section-gap pb-settings-layout-pb">
 	{#each shortcutSettingsList() as shortcut (shortcut.id)}
 		<div class="flex max-w-[528px] min-w-[528px] flex-col">
 			<Label class="text-label-fg mb-2">
