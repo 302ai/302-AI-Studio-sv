@@ -32,6 +32,7 @@ declare global {
 			};
 			onThemeChange: (callback: (theme: Theme) => void) => () => void;
 			onScreenshotTriggered: (callback: (data: { threadId: string }) => void) => () => void;
+			onTriggerSendMessage: (callback: (data: { threadId: string }) => void) => () => void;
 			onThreadListUpdate: (callback: (eventData: BroadcastEventData) => void) => () => void;
 			onShellWindowFullscreenChange: (
 				callback: (payload: ShellWindowFullscreenChange) => void,
@@ -51,6 +52,9 @@ declare global {
 					callback: (data: { releaseNotes: string; releaseName: string }) => void,
 				) => () => void;
 				onUpdateError: (callback: (data: { message: string }) => void) => () => void;
+			};
+			aiApplication: {
+				onAiApplicationsLoading: (callback: (loading: boolean) => void) => () => void;
 			};
 		};
 		windowId: string;

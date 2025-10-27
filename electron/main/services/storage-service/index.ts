@@ -3,8 +3,8 @@ import fsDriver from "@302ai/unstorage/drivers/fs";
 import { isDev } from "@electron/main/constants";
 import type { MigrationConfig, StorageItem, StorageMetadata, StorageOptions } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
-import { app } from "electron";
 import { join } from "path";
+import { userDataManager } from "../app-service/user-data-manager";
 import { emitter } from "../broadcast-service";
 import { getStorageVersion, setStorageVersion } from "./migration-utils";
 
@@ -17,7 +17,7 @@ export class StorageService<T extends StorageValue> {
 	constructor(migrationConfig?: MigrationConfig<T>) {
 		const storagePath = isDev
 			? join(process.cwd(), "storage")
-			: join(app.getPath("userData"), "storage");
+			: join(userDataManager.storagePath, "storage");
 		this.storage = createStorage<T>({
 			driver: fsDriver({
 				base: storagePath,

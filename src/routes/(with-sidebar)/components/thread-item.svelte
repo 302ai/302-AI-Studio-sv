@@ -61,6 +61,7 @@
 		}}
 		onmouseenter={() => (isHovered = true)}
 		onmouseleave={() => (isHovered = false)}
+		title={thread.title}
 	>
 		<span class="text-sm truncate w-full">{thread.title}</span>
 

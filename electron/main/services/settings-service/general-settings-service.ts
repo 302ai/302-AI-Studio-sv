@@ -10,14 +10,14 @@ export class GeneralSettingsService {
 	}
 
 	// ******************************* IPC Methods ******************************* //
-	async handleLanguageChanged(event: IpcMainInvokeEvent): Promise<void> {
-		emitter.emit("general-settings:language-changed", null);
 
+	async handleLanguageChanged(event: IpcMainInvokeEvent, language: LanguageCode): Promise<void> {
 		const allWebContents = webContents.getAllWebContents();
 		allWebContents.forEach((webContent) => {
 			if (webContent.id === event.sender.id) return;
 			webContent.reload();
 		});
+		emitter.emit("general-settings:language-changed", { language });
 	}
 }
 

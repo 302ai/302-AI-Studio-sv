@@ -63,7 +63,7 @@ class GeneralSettingsManager {
 
 		persistedGeneralSettings.current = { ...persistedGeneralSettings.current, language: lang };
 
-		generalSettingsService.handleLanguageChanged();
+		generalSettingsService.handleLanguageChanged(lang);
 
 		applyLocale(lang as "zh" | "en");
 	}

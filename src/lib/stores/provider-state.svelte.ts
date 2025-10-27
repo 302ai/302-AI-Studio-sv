@@ -9,9 +9,10 @@ import { toast } from "svelte-sonner";
 export const persistedProviderState = new PersistedState<ModelProvider[]>(
 	"app-providers",
 	DEFAULT_PROVIDERS,
+	true,
 	300,
 );
-export const persistedModelState = new PersistedState<Model[]>("app-models", [], 500);
+export const persistedModelState = new PersistedState<Model[]>("app-models", [], true, 500);
 
 const { aiApplicationService } = window.electronAPI;
 
@@ -43,7 +44,7 @@ let cachedSortedModels: Model[] = [];
 let lastModelArray: Model[] = [];
 
 function getCachedSortedModels(): Model[] {
-	const currentModels = persistedModelState.snapshot;
+	const currentModels = persistedModelState.current;
 	if (currentModels !== lastModelArray) {
 		lastModelArray = currentModels;
 		cachedSortedModels = [...currentModels].sort((a, b) => a.name.localeCompare(b.name));
@@ -61,13 +62,13 @@ class ProviderState {
 	addProvider(provider: ModelProvider) {
 		persistedProviderState.current = [...persistedProviderState.current, provider];
 	}
-	updateProvider(id: string, updates: Partial<ModelProvider>) {
+	async updateProvider(id: string, updates: Partial<ModelProvider>) {
 		persistedProviderState.current = persistedProviderState.current.map((p) =>
 			p.id === id ? { ...p, ...updates } : p,
 		);
 
-		if (updates.apiType === "302ai") {
-			aiApplicationService.handle302AIProviderChange();
+		if (updates.apiKey && updates.apiType === "302ai") {
+			await aiApplicationService.handle302AIProviderChange(updates.apiKey);
 		}
 	}
 	removeProvider(id: string) {
@@ -218,7 +219,7 @@ class ProviderState {
 		try {
 			const result = await getModelsByProvider(provider);
 			if (result.success && result.data) {
-				this.updateProvider(provider.id, { status: "connected" });
+				await this.updateProvider(provider.id, { status: "connected" });
 				persistedModelState.current = persistedModelState.current
 					.filter((models) => {
 						return models.providerId !== provider.id;
@@ -233,7 +234,7 @@ class ProviderState {
 				);
 				return true;
 			} else {
-				this.updateProvider(provider.id, { status: "error" });
+				await this.updateProvider(provider.id, { status: "error" });
 				toast.error(m.text_fetch_models_error({ provider: provider.name }), {
 					description: result.error || m.text_fetch_models_unknown_error(),
 				});
@@ -241,7 +242,7 @@ class ProviderState {
 			}
 		} catch (error) {
 			console.error(`Failed to fetch models for provider ${provider.id}:`, error);
-			this.updateProvider(provider.id, { status: "error" });
+			await this.updateProvider(provider.id, { status: "error" });
 			toast.error(m.text_fetch_models_error({ provider: provider.name }), {
 				description: error instanceof Error ? error.message : m.text_fetch_models_network_error(),
 			});

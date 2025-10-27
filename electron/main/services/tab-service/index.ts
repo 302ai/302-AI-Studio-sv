@@ -180,6 +180,12 @@ export class TabService {
 	}
 
 	// ******************************* Main Process Methods ******************************* //
+	getActiveTabView(windowId: number): WebContentsView | null {
+		const activeTabId = this.windowActiveTabId.get(windowId);
+		if (isUndefined(activeTabId)) return null;
+		return this.tabViewMap.get(activeTabId) || null;
+	}
+
 	async initWindowTabs(window: BrowserWindow, tabs: Tab[]): Promise<void> {
 		let activeTabView: WebContentsView | null = null;
 		let activeTabId: string | null = null;

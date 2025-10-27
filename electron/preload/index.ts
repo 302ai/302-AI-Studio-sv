@@ -84,6 +84,15 @@ if (process.contextIsolated) {
 				ipcRenderer.on("broadcast-event", listener);
 				return () => ipcRenderer.removeListener("broadcast-event", listener);
 			},
+			onTriggerSendMessage: (callback: (data: { threadId: string }) => void) => {
+				const listener = (_: unknown, eventData: BroadcastEventData) => {
+					if (eventData.broadcastEvent === "trigger-send-message") {
+						callback(eventData.data as { threadId: string });
+					}
+				};
+				ipcRenderer.on("broadcast-event", listener);
+				return () => ipcRenderer.removeListener("broadcast-event", listener);
+			},
 			onShellWindowFullscreenChange: (callback: (payload: ShellWindowFullscreenChange) => void) => {
 				const listener = (_: unknown, payload: ShellWindowFullscreenChange) => callback(payload);
 				ipcRenderer.on(SHELL_WINDOW_FULLSCREEN_CHANGED, listener);
@@ -134,6 +143,13 @@ if (process.contextIsolated) {
 				const listener = (_: unknown, data: { tabId: string; threadId: string }) => callback(data);
 				ipcRenderer.on("tab:generate-title", listener);
 				return () => ipcRenderer.removeListener("tab:generate-title", listener);
+			},
+			aiApplication: {
+				onAiApplicationsLoading: (callback: (loading: boolean) => void) => {
+					const listener = (_: unknown, loading: boolean) => callback(loading);
+					ipcRenderer.on("ai-applications:loading", listener);
+					return () => ipcRenderer.removeListener("ai-applications:loading", listener);
+				},
 			},
 		});
 

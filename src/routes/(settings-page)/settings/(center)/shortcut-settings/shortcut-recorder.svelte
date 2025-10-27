@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from "$lib/paraglide/messages";
 	import { formatShortcutKeys, isMac } from "$lib/shortcut/shortcut-config";
 	import { cn } from "$lib/utils";
 
@@ -23,17 +24,6 @@
 		allShortcuts = [],
 		onReset,
 	}: Props = $props();
-	const t = (key: string) => {
-		const translations: Record<string, string> = {
-			"press-keys": "Press keys...",
-			placeholder: "Click to record shortcut",
-			cancel: "Cancel",
-			reset: "Reset",
-			"error.modifier-required": "Shortcut must include a modifier key",
-			"error.shortcut-conflict": "This shortcut conflicts with an existing one",
-		};
-		return translations[key] || key;
-	};
 
 	let isRecording = $state(false);
 	let currentKeys = $state<string[]>([]);
@@ -163,9 +153,9 @@
 	};
 	const displayValue = $derived(() => {
 		if (isRecording) {
-			return currentKeys.length > 0 ? formatKeys(currentKeys) : "press-keys";
+			return currentKeys.length > 0 ? formatKeys(currentKeys) : m.settings_shortcut_pressKeys();
 		}
-		return value.length > 0 ? formatKeys(value) : placeholder || "placeholder";
+		return value.length > 0 ? formatKeys(value) : placeholder || m.settings_shortcut_placeholder();
 	});
 	$effect(() => {
 		if (!isRecording) return;
@@ -217,7 +207,7 @@
 				}}
 				class="text-settings-shortcut-size text-primary hover:text-primary/80 ml-2 cursor-pointer font-medium"
 			>
-				{t("cancel")}
+				{m.settings_shortcut_cancel()}
 			</button>
 		{:else}
 			<button
@@ -228,7 +218,7 @@
 				}}
 				class="text-settings-shortcut-size text-primary hover:text-primary/80 ml-2 cursor-pointer font-medium"
 			>
-				{t("reset")}
+				{m.settings_shortcut_reset()}
 			</button>
 		{/if}
 	</div>

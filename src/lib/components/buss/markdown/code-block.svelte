@@ -2,13 +2,19 @@
 	/* eslint-disable svelte/no-at-html-tags */
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { CopyButton } from "$lib/components/buss/copy-button";
+	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
-	import { ChevronDown } from "@lucide/svelte";
+	import { ChevronDown, CodeXml, ImagePlay, MonitorPlay } from "@lucide/svelte";
 	import type { GrammarState, ThemedToken } from "@shikijs/types";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import type { ShikiHighlighter } from "./highlighter";
-	import { DEFAULT_THEME, ensureHighlighter, ensureLanguageLoaded } from "./highlighter";
+	import {
+		DEFAULT_THEME,
+		ensureHighlighter,
+		ensureLanguageLoaded,
+		LANGUAGE_ALIASES,
+	} from "./highlighter";
 
 	interface RenderedToken {
 		id: string;
@@ -42,6 +48,9 @@
 	let codeStyle = $state<string | undefined>(undefined);
 	let lines = $state<RenderedLine[]>([]);
 	let isCollapsed = $state(preferencesSettings.autoHideCode);
+	let showSvgPreview = $state(false);
+	let isSvgCode = $state(false);
+	let isHtmlCode = $state(false);
 
 	const FONT_STYLE = {
 		Italic: 1,
@@ -115,13 +124,40 @@
 			svelte: "Svelte",
 			angular: "Angular",
 			react: "React",
+			svg: "SVG",
 		};
 
 		return languageNames[lang.toLowerCase()] || lang.charAt(0).toUpperCase() + lang.slice(1);
 	};
 
+	const detectSvg = (code: string, language: string | null): boolean => {
+		if (language?.toLowerCase() === "svg") return true;
+		const trimmed = code.trim();
+		return trimmed.startsWith("<svg") || (trimmed.startsWith("<?xml") && trimmed.includes("<svg"));
+	};
+
+	const detectHtml = (code: string, language: string | null): boolean => {
+		const htmlLanguages = ["html", "htm", "xhtml", "xml"];
+		if (language && htmlLanguages.includes(language.toLowerCase())) {
+			return true;
+		}
+
+		const trimmed = code.trim();
+		const htmlTagRegex =
+			/<([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>(.*?)<\/\1>|<([a-zA-Z][a-zA-Z0-9]*)\b[^>]*\/>/s;
+		return htmlTagRegex.test(trimmed);
+	};
+
 	const toggleCollapse = () => {
 		isCollapsed = !isCollapsed;
+	};
+
+	const toggleSvgPreview = () => {
+		showSvgPreview = !showSvgPreview;
+	};
+
+	const toggleHtmlPreview = () => {
+		htmlPreviewState.togglePreview(props.code);
 	};
 
 	const buildTokenStyle = (token: ThemedToken): string | undefined => {
@@ -273,10 +309,11 @@
 
 	const ensureLanguage = (): boolean => {
 		const raw = props.language?.toLowerCase().trim() || "plaintext";
-		if (resolvedLanguage !== raw) {
-			resolvedLanguage = raw;
-			ensureLanguageLoaded(raw).catch((error) => {
-				console.warn(`Failed to load language ${raw}:`, error);
+		const effectiveLang = LANGUAGE_ALIASES[raw] ?? raw;
+		if (resolvedLanguage !== effectiveLang) {
+			resolvedLanguage = effectiveLang;
+			ensureLanguageLoaded(effectiveLang).catch((error) => {
+				console.warn(`Failed to load language ${effectiveLang}:`, error);
 			});
 			return true;
 		}
@@ -375,6 +412,11 @@
 		const { code } = props;
 		syncCode(code);
 	});
+
+	$effect(() => {
+		isSvgCode = detectSvg(props.code, props.language);
+		isHtmlCode = detectHtml(props.code, props.language);
+	});
 </script>
 
 {#if !highlighter}
@@ -418,6 +460,30 @@
 			>
 			<div class="flex items-center gap-1">
 				<CopyButton content={props.code} position="bottom" />
+				{#if isSvgCode}
+					<ButtonWithTooltip
+						class="text-muted-foreground hover:!bg-chat-action-hover"
+						tooltip={showSvgPreview ? "Show code" : "Preview SVG"}
+						tooltipSide="bottom"
+						onclick={toggleSvgPreview}
+					>
+						{#if showSvgPreview}
+							<CodeXml class="" />
+						{:else}
+							<ImagePlay class="" />
+						{/if}
+					</ButtonWithTooltip>
+				{/if}
+				{#if isHtmlCode}
+					<ButtonWithTooltip
+						class="text-muted-foreground hover:!bg-chat-action-hover"
+						tooltip={htmlPreviewState.isVisible ? "Close preview" : "Preview HTML"}
+						tooltipSide="bottom"
+						onclick={toggleHtmlPreview}
+					>
+						<MonitorPlay class="" />
+					</ButtonWithTooltip>
+				{/if}
 				<ButtonWithTooltip
 					class="text-muted-foreground hover:!bg-chat-action-hover"
 					tooltip="Toggle collapse"
@@ -431,18 +497,24 @@
 			</div>
 		</div>
 		{#if !isCollapsed}
-			<pre
-				class="shiki !m-0 !rounded-none !border-0"
-				data-language={resolvedLanguage}
-				data-theme={resolvedTheme}
-				data-meta={props.meta ?? undefined}
-				style={preStyle}>
-				<code style={codeStyle}>
-					{#each lines as line (line.id)}
-						<span class="line" data-line={line.number}>{@html line.html}</span>
-					{/each}
-				</code>
-			</pre>
+			{#if showSvgPreview && isSvgCode}
+				<div class="p-4 bg-background flex items-center justify-center min-h-[200px]">
+					{@html props.code}
+				</div>
+			{:else}
+				<pre
+					class="shiki !m-0 !rounded-none !border-0"
+					data-language={resolvedLanguage}
+					data-theme={resolvedTheme}
+					data-meta={props.meta ?? undefined}
+					style={preStyle}>
+					<code style={codeStyle}>
+						{#each lines as line (line.id)}
+							<span class="line" data-line={line.number}>{@html line.html}</span>
+						{/each}
+					</code>
+				</pre>
+			{/if}
 		{/if}
 	</div>
 {/if}

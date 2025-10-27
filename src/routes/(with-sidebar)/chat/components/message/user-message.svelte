@@ -159,12 +159,9 @@
 			if (target.tagName === "A") {
 				event.preventDefault();
 
-				// Only open link if Ctrl or Cmd is pressed
-				if (event.ctrlKey || event.metaKey) {
-					const url = (target as HTMLAnchorElement).href;
-					if (url && window.electronAPI?.externalLinkService?.openExternalLink) {
-						window.electronAPI.externalLinkService.openExternalLink(url);
-					}
+				const url = (target as HTMLAnchorElement).href;
+				if (url && window.electronAPI?.externalLinkService?.openExternalLink) {
+					window.electronAPI.externalLinkService.openExternalLink(url);
 				}
 			}
 		};

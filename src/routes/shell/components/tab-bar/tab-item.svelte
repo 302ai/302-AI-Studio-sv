@@ -11,8 +11,6 @@
 		onTabClose: (tabId: string) => void;
 		onTabCloseOthers: (tabId: string) => void;
 		onTabCloseOffside: (tabId: string) => void;
-		onTabClearMessages: (tabId: string) => void;
-		onTabGenerateTitle: (tabId: string) => void;
 		onOpenChange: (open: boolean) => void;
 		class?: string;
 	}
@@ -30,6 +28,8 @@
 	import type { Tab } from "@shared/types";
 	import { onDestroy } from "svelte";
 
+	const { handleAiApplicationReload } = window.electronAPI.aiApplicationService;
+
 	const {
 		tab,
 		isActive,
@@ -42,8 +42,6 @@
 		onTabClose,
 		onTabCloseOthers,
 		onTabCloseOffside,
-		onTabClearMessages,
-		onTabGenerateTitle,
 		onOpenChange,
 		class: className,
 	}: Props = $props();
@@ -124,6 +122,7 @@
 				onTabClose(tab.id);
 			}
 		}}
+		title={tab.title}
 		role="button"
 	>
 		<div bind:this={triggerRef} class="contents">
@@ -165,6 +164,13 @@
 		{#if tab.type === "chat"}
 			<ContextMenu.Item onSelect={handleScreenshot} disabled={!isActive}>
 				{m.screenshot_action()}
+			</ContextMenu.Item>
+			<ContextMenu.Separator />
+		{/if}
+
+		{#if tab.type === "aiApplications"}
+			<ContextMenu.Item onSelect={() => handleAiApplicationReload(tab.id)}>
+				{m.label_button_reload()}
 			</ContextMenu.Item>
 			<ContextMenu.Separator />
 		{/if}

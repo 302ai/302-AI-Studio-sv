@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "25.43.13",
+	"version": "25.44.0",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -40,7 +40,8 @@
 		"test:e2e": "playwright test",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"generate:ipc": "tsx scripts/generate-ipc.ts",
-		"postinstall": "pre-commit install --install-hooks --hook-type commit-msg"
+		"postinstall": "pre-commit install --install-hooks --hook-type commit-msg",
+		"fta": "fta src/lib && fta electron/main"
 	},
 	"devDependencies": {
 		"@ai-sdk/anthropic": "^2.0.17",

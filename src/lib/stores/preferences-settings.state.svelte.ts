@@ -25,7 +25,7 @@ const getDefaults = (): PreferencesSettingsState => ({
 	autoHideReason: false,
 	autoCollapseThink: false,
 	autoDisableMarkdown: false,
-	enableSupermarket: false,
+	enableSupermarket: true,
 	newSessionModel: null,
 	autoParseUrl: false,
 	searchProvider: "search1api",

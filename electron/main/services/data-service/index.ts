@@ -3,11 +3,25 @@ import type { ImportResult } from "@shared/types";
 import archiver from "archiver";
 import { type IpcMainInvokeEvent, app, dialog } from "electron";
 import extract from "extract-zip";
-import { createWriteStream } from "fs";
+import { createWriteStream, existsSync } from "fs";
 import { cp, mkdir, readdir, readFile, rm } from "fs/promises";
 import { join } from "path";
+import { userDataManager } from "../app-service/user-data-manager";
+import { importLegacyJson } from "./legacy-import";
 
 export class DataService {
+	private storagePath: string;
+
+	constructor() {
+		this.storagePath = isDev
+			? join(process.cwd(), "storage")
+			: join(userDataManager.storagePath, "storage");
+	}
+
+	async importLegacyJson(_event: IpcMainInvokeEvent): Promise<ImportResult> {
+		return await importLegacyJson();
+	}
+
 	/**
 	 * Export storage folder as a zip file
 	 * @returns The path to the exported zip file, or null if cancelled
@@ -15,9 +29,7 @@ export class DataService {
 	async exportStorage(_event: IpcMainInvokeEvent): Promise<string | null> {
 		try {
 			// Get storage path
-			const storagePath = isDev
-				? join(process.cwd(), "storage")
-				: join(app.getPath("userData"), "storage");
+			const storagePath = this.storagePath;
 
 			// Show save dialog
 			const { canceled, filePath } = await dialog.showSaveDialog({
@@ -47,9 +59,7 @@ export class DataService {
 	async importStorage(_event: IpcMainInvokeEvent): Promise<ImportResult> {
 		try {
 			// Get storage path
-			const storagePath = isDev
-				? join(process.cwd(), "storage")
-				: join(app.getPath("userData"), "storage");
+			const storagePath = this.storagePath;
 
 			// Show open dialog
 			const { canceled, filePaths } = await dialog.showOpenDialog({
@@ -265,6 +275,12 @@ export class DataService {
 			archive.directory(sourceDir, false);
 			archive.finalize();
 		});
+	}
+
+	async checkOldVersionData(_event: IpcMainInvokeEvent): Promise<boolean> {
+		const triplitPath = join(app.getPath("userData"), "../", "302 AI Studio", "triplit");
+		console.log(triplitPath);
+		return existsSync(triplitPath);
 	}
 }
 
