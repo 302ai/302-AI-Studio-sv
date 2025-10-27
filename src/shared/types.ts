@@ -11,6 +11,7 @@ export * from "./storage/tab";
 export * from "./storage/theme";
 export * from "./storage/thread";
 export * from "./types/shortcut";
+export * from "../lib/plugin-system/types";
 
 export interface StorageMetadata {
 	mtime?: Date;

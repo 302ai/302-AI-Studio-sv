@@ -16,12 +16,14 @@
 ## 🌟 主要特点
 
 ### 多模型与多服务商支持
+
 - 🤖 支持 OpenAI、Anthropic、Google 等多主流 AI 提供商
 - 🔄 灵活的模型切换与配置
 - 🎛️ 高级对话参数控制（温度、top-p、token 限制等）
 - 📊 MCP（Model Context Protocol）服务器集成
 
 ### 文档与数据处理
+
 - 🖼️ 上传图片让 AI 帮你分析内容、生成描述
 - 📄 支持多种文件格式处理
 - 💻 代码高亮显示
@@ -29,6 +31,7 @@
 - 📝 完整的 Markdown 渲染支持
 
 ### 优质使用体验
+
 - 🖥️ Windows、Mac、Linux 多平台支持
 - 🌙 可自定义的明暗主题系统，实时预览
 - 📝 完整的 Markdown 渲染
@@ -36,12 +39,14 @@
 - 🎨 基于 Shadcn-Svelte 的现代化组件库
 
 ### 高效工作流
+
 - 🗂️ 同时进行多个对话线程，思路清晰不混乱
 - ⚡ 支持实时流式响应
 - ⌨️ 完整的快捷键系统
 - 🔄 热更新（HMR）支持，开发体验流畅
 
 ### 多语言支持
+
 - **中文**
 - **English**
 - **日本語**
@@ -50,18 +55,18 @@
 
 ### 🏗️ 核心技术栈
 
-| 层级 | 技术选型 | 说明 |
-|------|----------|------|
-| **界面层** | SvelteKit 5 + TypeScript | 现代组件开发，类型安全，响应式状态管理 |
-| **样式层** | TailwindCSS 4.x + 自定义主题系统 | 原子化 CSS + 流畅动画 |
-| **桌面端** | Electron 38 | 跨平台桌面应用框架 |
-| **状态管理** | Svelte 5 Runes | 响应式状态管理（`$state`, `$derived`） |
-| **UI 组件库** | Shadcn-Svelte (bits-ui) | 现代化、可访问的组件库 |
-| **国际化** | Inlang Paraglide-js | 多语言支持 |
-| **AI 集成** | AI SDK | 统一的 AI 提供商接口 |
-| **构建工具** | Vite + Electron Forge | 快速构建 + 热重载 |
-| **类型系统** | TypeScript | 严格的类型检查 |
-| **代码质量** | ESLint + Prettier + Vitest + Playwright | 代码规范 + 单元测试 + E2E 测试 |
+| 层级          | 技术选型                                | 说明                                   |
+| ------------- | --------------------------------------- | -------------------------------------- |
+| **界面层**    | SvelteKit 5 + TypeScript                | 现代组件开发，类型安全，响应式状态管理 |
+| **样式层**    | TailwindCSS 4.x + 自定义主题系统        | 原子化 CSS + 流畅动画                  |
+| **桌面端**    | Electron 38                             | 跨平台桌面应用框架                     |
+| **状态管理**  | Svelte 5 Runes                          | 响应式状态管理（`$state`, `$derived`） |
+| **UI 组件库** | Shadcn-Svelte (bits-ui)                 | 现代化、可访问的组件库                 |
+| **国际化**    | Inlang Paraglide-js                     | 多语言支持                             |
+| **AI 集成**   | AI SDK                                  | 统一的 AI 提供商接口                   |
+| **构建工具**  | Vite + Electron Forge                   | 快速构建 + 热重载                      |
+| **类型系统**  | TypeScript                              | 严格的类型检查                         |
+| **代码质量**  | ESLint + Prettier + Vitest + Playwright | 代码规范 + 单元测试 + E2E 测试         |
 
 ## 🚀 快速开始
 
@@ -152,11 +157,11 @@ pnpm publish
 
 ### 📱 跨平台支持
 
-| 平台 | 架构 | 状态 |
-|------|------|------|
-| Windows | x64 / ARM64 | ✅ 完全支持 |
-| macOS | x64 / Apple Silicon | ✅ 完全支持 |
-| Linux | x64 / ARM64 | ✅ 完全支持 |
+| 平台    | 架构                | 状态        |
+| ------- | ------------------- | ----------- |
+| Windows | x64 / ARM64         | ✅ 完全支持 |
+| macOS   | x64 / Apple Silicon | ✅ 完全支持 |
+| Linux   | x64 / ARM64         | ✅ 完全支持 |
 
 ## 🛠️ 开发指南
 
@@ -234,7 +239,6 @@ git push origin feature/amazing-feature
 # 5. 创建 Pull Request
 ```
 
-
 ## 💬 联系我们
 
 <div align="center">
@@ -263,4 +267,3 @@ git push origin feature/amazing-feature
 4. 🛠️ 功能强大的管理后台，面向团队和中小企业，一人管理，多人使用
 5. 🔗 所有 AI 能力均提供 API 接入，所有工具开源可自行定制（进行中）
 6. 💡 强大的开发团队，每周推出 2-3 个新应用，产品每日更新。有兴趣加入的开发者也欢迎联系我们
-
