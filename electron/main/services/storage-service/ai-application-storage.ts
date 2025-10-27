@@ -10,6 +10,10 @@ export class AiApplicationStorage extends StorageService<AiApplication[]> {
 	async setAiApplications(aiApplications: AiApplication[]) {
 		await this.setItemInternal("state", aiApplications);
 	}
+
+	async getAiApplications(): Promise<AiApplication[]> {
+		return (await this.getItemInternal("state")) ?? [];
+	}
 }
 
 export const aiApplicationStorage = new AiApplicationStorage();

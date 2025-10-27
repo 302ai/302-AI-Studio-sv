@@ -35,7 +35,15 @@ export class AiApplicationService {
 			en: "en",
 			// ja: "jp",
 		};
-		const aiApplications = await fetch302AIToolList(langMap[lang]);
+		const collectedMap = new Map<number, boolean>();
+		const [aiApplications, existingAiApplications] = await Promise.all([
+			fetch302AIToolList(langMap[lang]),
+			aiApplicationStorage.getAiApplications(),
+		]);
+		existingAiApplications.forEach((app) => {
+			collectedMap.set(app.toolId, app.collected);
+		});
+
 		const aiApplicationState = aiApplications.map(
 			({ tool_id, tool_name, tool_description, category_name, category_id }) => {
 				return {
@@ -45,7 +53,7 @@ export class AiApplicationService {
 					description: tool_description,
 					category: category_name,
 					categoryId: category_id,
-					collected: false,
+					collected: collectedMap.get(tool_id) ?? false,
 					createdAt: new Date().toISOString(),
 				};
 			},
