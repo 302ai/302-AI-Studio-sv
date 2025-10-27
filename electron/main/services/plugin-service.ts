@@ -13,6 +13,7 @@ import {
 	executeFetchModelsHook,
 	hasProviderPlugin,
 } from "../plugin-manager/provider-plugin-helper";
+import { storageService } from "./storage-service";
 
 /**
  * Plugin Service Class
@@ -211,10 +212,16 @@ export class PluginService {
 			throw new Error(`Plugin ${pluginId} not found`);
 		}
 
+		// Update in-memory config
 		plugin.config = { ...plugin.config, ...config };
 
-		// TODO: Persist config to storage
-		console.log(`[PluginService] Updated config for plugin: ${pluginId}`);
+		// Persist each config key to storage
+		const configPrefix = `plugin:${pluginId}:config:`;
+		for (const [key, value] of Object.entries(config)) {
+			await storageService.setItem(_event, configPrefix + key, value as never);
+		}
+
+		console.log(`[PluginService] Updated and persisted config for plugin: ${pluginId}`);
 	}
 
 	/**
@@ -247,10 +254,16 @@ export class PluginService {
 			throw new Error(`Plugin ${pluginId} not found`);
 		}
 
+		// Update in-memory config
 		plugin.config[key] = value;
 
-		// TODO: Persist config to storage
-		console.log(`[PluginService] Updated config value for plugin: ${pluginId}, key: ${key}`);
+		// Persist to storage
+		const configPrefix = `plugin:${pluginId}:config:`;
+		await storageService.setItem(_event, configPrefix + key, value as never);
+
+		console.log(
+			`[PluginService] Updated and persisted config value for plugin: ${pluginId}, key: ${key}`,
+		);
 	}
 
 	/**
@@ -302,6 +315,115 @@ export class PluginService {
 		} catch (error) {
 			console.error(`[PluginService] Error fetching models for provider ${provider.id}:`, error);
 			throw error;
+		}
+	}
+
+	/**
+	 * Execute before send message hook
+	 */
+	async executeBeforeSendMessageHook(
+		_event: IpcMainInvokeEvent,
+		context: {
+			messages: unknown[];
+			userMessage: unknown;
+			model: Model;
+			provider: ModelProvider;
+			parameters: Record<string, unknown>;
+			options: Record<string, unknown>;
+		},
+	): Promise<{
+		messages: unknown[];
+		userMessage: unknown;
+		model: Model;
+		provider: ModelProvider;
+		parameters: Record<string, unknown>;
+		options: Record<string, unknown>;
+	}> {
+		console.log("[PluginService] Executing before send message hook");
+
+		try {
+			const { executeBeforeSendMessageHook } = await import(
+				"../plugin-manager/provider-plugin-helper"
+			);
+			const result = await executeBeforeSendMessageHook(context);
+			return result;
+		} catch (error) {
+			console.error("[PluginService] Before send message hook failed:", error);
+			// Return original context on error
+			return context;
+		}
+	}
+
+	/**
+	 * Execute after send message hook
+	 */
+	async executeAfterSendMessageHook(
+		_event: IpcMainInvokeEvent,
+		context: {
+			messages: unknown[];
+			userMessage: unknown;
+			model: Model;
+			provider: ModelProvider;
+			parameters: Record<string, unknown>;
+			options: Record<string, unknown>;
+		},
+		response: {
+			message: unknown;
+			usage?: {
+				promptTokens: number;
+				completionTokens: number;
+				totalTokens: number;
+			};
+			model: string;
+			finishReason: string;
+			metadata?: Record<string, unknown>;
+		},
+	): Promise<void> {
+		console.log("[PluginService] Executing after send message hook");
+
+		try {
+			const { executeAfterSendMessageHook } = await import(
+				"../plugin-manager/provider-plugin-helper"
+			);
+			await executeAfterSendMessageHook(context, response);
+		} catch (error) {
+			console.error("[PluginService] After send message hook failed:", error);
+			// Continue execution even if hook fails
+		}
+	}
+
+	/**
+	 * Execute error hook
+	 */
+	async executeErrorHook(
+		_event: IpcMainInvokeEvent,
+		errorData: { message: string; stack?: string; name?: string },
+		context: {
+			source: string;
+			provider?: ModelProvider;
+			model?: Model;
+			metadata?: Record<string, unknown>;
+		},
+	): Promise<{
+		handled: boolean;
+		retry?: boolean;
+		retryDelay?: number;
+		message?: string;
+	}> {
+		console.log("[PluginService] Executing error hook");
+
+		try {
+			const { executeErrorHook } = await import("../plugin-manager/provider-plugin-helper");
+			// Reconstruct Error object
+			const error = new Error(errorData.message);
+			error.stack = errorData.stack;
+			error.name = errorData.name || "Error";
+			const result = await executeErrorHook(error, context);
+			return result;
+		} catch (hookError) {
+			console.error("[PluginService] Error hook failed:", hookError);
+			// Return not handled on error
+			return { handled: false };
 		}
 	}
 }

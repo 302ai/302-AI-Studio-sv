@@ -285,14 +285,42 @@
 								{#if schema.description}
 									<p class="text-xs text-muted-foreground">{schema.description}</p>
 								{/if}
-								<Input
-									id={key}
-									type={key.toLowerCase().includes("key") || key.toLowerCase().includes("password")
-										? "password"
-										: "text"}
-									bind:value={pluginConfig[key]}
-									placeholder={schema.default || ""}
-								/>
+
+								<!-- Render different input types based on schema type -->
+								{#if schema.type === "boolean"}
+									<div class="flex items-center space-x-2">
+										<input
+											id={key}
+											type="checkbox"
+											checked={!!pluginConfig[key]}
+											onchange={(e) => (pluginConfig[key] = e.currentTarget.checked)}
+											class="h-4 w-4 rounded border-gray-300"
+										/>
+										<label for={key} class="text-sm">
+											{schema.description || "Enable"}
+										</label>
+									</div>
+								{:else if schema.enum && Array.isArray(schema.enum)}
+									<select
+										id={key}
+										bind:value={pluginConfig[key]}
+										class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+									>
+										{#each schema.enum as option}
+											<option value={option}>{option}</option>
+										{/each}
+									</select>
+								{:else}
+									<Input
+										id={key}
+										type={key.toLowerCase().includes("key") ||
+										key.toLowerCase().includes("password")
+											? "password"
+											: "text"}
+										bind:value={pluginConfig[key]}
+										placeholder={schema.default || ""}
+									/>
+								{/if}
 							</div>
 						{/each}
 					{:else}

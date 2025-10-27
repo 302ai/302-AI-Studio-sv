@@ -103,6 +103,15 @@ export function registerIpcHandlers() {
 	ipcMain.handle("pluginService:fetchModelsFromProvider", (event, provider) =>
 		pluginService.fetchModelsFromProvider(event, provider),
 	);
+	ipcMain.handle("pluginService:executeBeforeSendMessageHook", (event, context) =>
+		pluginService.executeBeforeSendMessageHook(event, context),
+	);
+	ipcMain.handle("pluginService:executeAfterSendMessageHook", (event, context, response) =>
+		pluginService.executeAfterSendMessageHook(event, context, response),
+	);
+	ipcMain.handle("pluginService:executeErrorHook", (event, errorData, context) =>
+		pluginService.executeErrorHook(event, errorData, context),
+	);
 
 	// generalSettingsService service registration
 	ipcMain.handle("generalSettingsService:handleLanguageChanged", (event, language) =>
@@ -284,6 +293,9 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("pluginService:getPluginConfigValue");
 	ipcMain.removeHandler("pluginService:setPluginConfigValue");
 	ipcMain.removeHandler("pluginService:fetchModelsFromProvider");
+	ipcMain.removeHandler("pluginService:executeBeforeSendMessageHook");
+	ipcMain.removeHandler("pluginService:executeAfterSendMessageHook");
+	ipcMain.removeHandler("pluginService:executeErrorHook");
 	ipcMain.removeHandler("generalSettingsService:handleLanguageChanged");
 	ipcMain.removeHandler("windowService:handleOpenSettingsWindow");
 	ipcMain.removeHandler("windowService:focusWindow");

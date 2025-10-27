@@ -270,8 +270,11 @@ class PluginState {
 	 */
 	async setPluginConfig(pluginId: string, config: Record<string, unknown>): Promise<void> {
 		try {
-			console.log("[PluginState] Setting plugin config:", pluginId, config);
-			await pluginService.setPluginConfig(pluginId, config);
+			// Serialize config to remove Svelte Proxy objects
+			const serializedConfig = JSON.parse(JSON.stringify(config));
+
+			console.log("[PluginState] Setting plugin config:", pluginId, serializedConfig);
+			await pluginService.setPluginConfig(pluginId, serializedConfig);
 			console.log("[PluginState] Plugin config updated:", pluginId);
 		} catch (error) {
 			console.error("[PluginState] Failed to set plugin config:", error);
@@ -296,8 +299,12 @@ class PluginState {
 	 */
 	async setPluginConfigValue(pluginId: string, key: string, value: unknown): Promise<void> {
 		try {
-			console.log("[PluginState] Setting plugin config value:", pluginId, key, value);
-			await pluginService.setPluginConfigValue(pluginId, key, value);
+			// Serialize value to remove Svelte Proxy objects if it's an object
+			const serializedValue =
+				typeof value === "object" && value !== null ? JSON.parse(JSON.stringify(value)) : value;
+
+			console.log("[PluginState] Setting plugin config value:", pluginId, key, serializedValue);
+			await pluginService.setPluginConfigValue(pluginId, key, serializedValue);
 			console.log("[PluginState] Plugin config value updated:", pluginId, key);
 		} catch (error) {
 			console.error("[PluginState] Failed to set plugin config value:", error);

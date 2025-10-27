@@ -11,12 +11,14 @@ import type { InstalledPlugin, PluginMetadata, ProviderPlugin } from "$lib/plugi
 import { pluginRegistry } from "./plugin-registry";
 import { hookManager } from "./hook-manager";
 import { createPluginAPI } from "./plugin-api";
+import { storageService } from "../services/storage-service";
 
 // Import built-in plugins statically for development
 import { OpenAIProviderPlugin } from "../../../plugins/builtin/openai-plugin/main/index";
 import { AnthropicProviderPlugin } from "../../../plugins/builtin/anthropic-plugin/main/index";
 import { GoogleProviderPlugin } from "../../../plugins/builtin/google-plugin/main/index";
 import { AI302ProviderPlugin } from "../../../plugins/builtin/302ai-plugin/main/index";
+import { DebugProviderPlugin } from "../../../plugins/builtin/debug-plugin/main/index";
 
 // Map of built-in plugin IDs to their class constructors
 const BUILTIN_PLUGINS: Record<string, new () => ProviderPlugin> = {
@@ -24,6 +26,7 @@ const BUILTIN_PLUGINS: Record<string, new () => ProviderPlugin> = {
 	"com.302ai.provider.anthropic": AnthropicProviderPlugin,
 	"com.302ai.provider.google": GoogleProviderPlugin,
 	"com.302ai.provider.302ai": AI302ProviderPlugin,
+	"com.302ai.provider.debug": DebugProviderPlugin,
 };
 
 /**
@@ -113,7 +116,7 @@ export class PluginLoader {
 		// Validate compatibility
 		this.validateCompatibility(metadata);
 
-		// Create plugin entry
+		// Create plugin entry with default config
 		const plugin: InstalledPlugin = {
 			metadata,
 			path: pluginPath,
@@ -121,6 +124,40 @@ export class PluginLoader {
 			installedAt: new Date(),
 			config: metadata.defaultConfig || {},
 		};
+
+		// Load saved configuration from storage
+		try {
+			const configPrefix = `plugin:${metadata.id}:config:`;
+			const configKeys = await storageService.getKeys(
+				{ sender: { id: -1 } } as never,
+				configPrefix,
+			);
+
+			// Load each config value
+			for (const fullKey of configKeys) {
+				// Remove .json suffix and prefix to get the actual config key
+				// fullKey: "plugin:com.302ai.provider.debug:config:enabled.json"
+				// configKey: "enabled"
+				const configKey = fullKey
+					.replace(configPrefix, "") // "enabled.json"
+					.replace(/\.json$/, ""); // "enabled"
+
+				const value = await storageService.getItem({ sender: { id: -1 } } as never, fullKey);
+				if (value !== null) {
+					plugin.config[configKey] = value;
+				}
+			}
+
+			if (configKeys.length > 0) {
+				console.log(
+					`[PluginLoader] Loaded ${configKeys.length} config values for ${metadata.id}:`,
+					plugin.config,
+				);
+			}
+		} catch (error) {
+			console.warn(`[PluginLoader] Failed to load saved config for ${metadata.id}:`, error);
+			// Continue with default config
+		}
 
 		// Load plugin module
 		let pluginInstance: ProviderPlugin;
