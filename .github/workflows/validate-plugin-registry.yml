@@ -22,19 +22,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
       - name: Setup pnpm
-        uses: pnpm/action-setup@v3
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
         with:
-          version: 8
+          node-version: 22
+          cache: "pnpm"
 
       - name: Install dependencies
-        working-directory: packages/plugin-registry
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Validate registry
         working-directory: packages/plugin-registry
