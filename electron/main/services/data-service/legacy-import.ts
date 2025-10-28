@@ -4,6 +4,67 @@ import { dialog } from "electron";
 import { readFile } from "fs/promises";
 import { storageService } from "../storage-service";
 
+/**
+ * Parse content with <reason>, <think>, or <thinking> tags into parts array
+ */
+function parseContentToParts(content: string): any[] {
+	const parts: any[] = [];
+
+	// Match <reason>, <think>, or <thinking> tags
+	const reasonRegex = /<reason>([\s\S]*?)<\/reason>/gi;
+	const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
+	const thinkingRegex = /<thinking>([\s\S]*?)<\/thinking>/gi;
+
+	let lastIndex = 0;
+	const matches: Array<{ start: number; end: number; text: string; type: "reasoning" }> = [];
+
+	// Find all reasoning blocks
+	let match;
+	[reasonRegex, thinkRegex, thinkingRegex].forEach((regex) => {
+		regex.lastIndex = 0;
+		while ((match = regex.exec(content)) !== null) {
+			matches.push({
+				start: match.index,
+				end: match.index + match[0].length,
+				text: match[1].trim(),
+				type: "reasoning",
+			});
+		}
+	});
+
+	// Sort matches by start position
+	matches.sort((a, b) => a.start - b.start);
+
+	// Build parts array
+	matches.forEach((m) => {
+		// Add text before this reasoning block
+		if (lastIndex < m.start) {
+			const textContent = content.substring(lastIndex, m.start).trim();
+			if (textContent) {
+				parts.push({ type: "text", text: textContent });
+			}
+		}
+		// Add reasoning block
+		parts.push({ type: "reasoning", text: m.text });
+		lastIndex = m.end;
+	});
+
+	// Add remaining text
+	if (lastIndex < content.length) {
+		const textContent = content.substring(lastIndex).trim();
+		if (textContent) {
+			parts.push({ type: "text", text: textContent });
+		}
+	}
+
+	// If no reasoning blocks found, return original content as text
+	if (parts.length === 0) {
+		return [{ type: "text", text: content }];
+	}
+
+	return parts;
+}
+
 interface LegacyDataFormat {
 	data: {
 		providers: any[];
@@ -369,9 +430,12 @@ async function importThreads(
 						}));
 					}
 
+					// Parse content to extract reasoning blocks
+					const parts = msg.parts || parseContentToParts(msg.content || "");
+
 					return {
 						...msg,
-						parts: msg.parts || [{ type: "text", text: msg.content || "" }],
+						parts: parts,
 						metadata: metadata,
 						createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
 					};
