@@ -1,10 +1,6 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-	import { pluginState } from "$lib/stores/plugin-state.svelte";
-	import { Button } from "$lib/components/ui/button";
-	import { Input } from "$lib/components/ui/input";
 	import { Badge } from "$lib/components/ui/badge";
-	import { Tabs, TabsContent, TabsList, TabsTrigger } from "$lib/components/ui/tabs";
+	import { Button } from "$lib/components/ui/button";
 	import {
 		Dialog,
 		DialogContent,
@@ -13,11 +9,25 @@
 		DialogHeader,
 		DialogTitle,
 	} from "$lib/components/ui/dialog";
+	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
+	import { Tabs, TabsContent, TabsList, TabsTrigger } from "$lib/components/ui/tabs";
+	import { Checkbox } from "$lib/components/ui/checkbox";
+	import { m } from "$lib/paraglide/messages";
+	import { pluginState } from "$lib/stores/plugin-state.svelte";
+	import { Loader2, Plus, RefreshCw, Search } from "@lucide/svelte";
 	import type { InstalledPlugin } from "@shared/types";
+	import { onMount } from "svelte";
+	import { toast } from "svelte-sonner";
 
 	onMount(async () => {
 		await pluginState.initialize();
+		// Check for errors after initialization
+		if (pluginState.error) {
+			toast.error(m.plugins_error(), {
+				description: pluginState.error,
+			});
+		}
 	});
 
 	let searchQuery = $state("");
@@ -26,8 +36,7 @@
 	let selectedPlugin = $state<InstalledPlugin | null>(null);
 	let pluginConfig = $state<Record<string, unknown>>({});
 
-	const { installedPlugins, builtinPlugins, thirdPartyPlugins, isLoading, error } =
-		$derived(pluginState);
+	const { installedPlugins, builtinPlugins, thirdPartyPlugins, isLoading } = $derived(pluginState);
 
 	// Filter plugins based on search query
 	const filteredPlugins = $derived.by(() => {
@@ -50,10 +59,12 @@
 	});
 
 	async function handleRefresh() {
-		try {
-			await pluginState.refreshPlugins();
-		} catch (err) {
-			console.error("Failed to refresh plugins:", err);
+		await pluginState.refreshPlugins();
+		// Check for errors after refresh
+		if (pluginState.error) {
+			toast.error(m.plugins_error(), {
+				description: pluginState.error,
+			});
 		}
 	}
 
@@ -65,6 +76,9 @@
 			pluginConfig = config || {};
 		} catch (err) {
 			console.error("Failed to load plugin config:", err);
+			toast.error(m.plugins_error(), {
+				description: err instanceof Error ? err.message : String(err),
+			});
 			pluginConfig = {};
 		}
 		settingsDialogOpen = true;
@@ -76,8 +90,34 @@
 		try {
 			await pluginState.setPluginConfig(selectedPlugin.metadata.id, pluginConfig);
 			settingsDialogOpen = false;
+			toast.success(m.plugins_settings_saved());
 		} catch (err) {
 			console.error("Failed to save plugin config:", err);
+			toast.error(m.plugins_error(), {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		}
+	}
+
+	async function handleEnablePlugin(pluginId: string) {
+		try {
+			await pluginState.enablePlugin(pluginId);
+		} catch (err) {
+			console.error("Failed to enable plugin:", err);
+			toast.error(m.plugins_error(), {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		}
+	}
+
+	async function handleDisablePlugin(pluginId: string) {
+		try {
+			await pluginState.disablePlugin(pluginId);
+		} catch (err) {
+			console.error("Failed to disable plugin:", err);
+			toast.error(m.plugins_error(), {
+				description: err instanceof Error ? err.message : String(err),
+			});
 		}
 	}
 
@@ -93,48 +133,62 @@
 				return "outline";
 		}
 	}
+
+	function getStatusText(status: string) {
+		switch (status) {
+			case "enabled":
+				return m.plugins_status_enabled();
+			case "disabled":
+				return m.plugins_status_disabled();
+			case "error":
+				return m.plugins_status_error();
+			default:
+				return status;
+		}
+	}
 </script>
 
 <div class="flex h-full flex-col gap-6 p-6">
 	<!-- Header -->
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="text-3xl font-bold">Plugins</h1>
-			<p class="text-muted-foreground mt-1">Extend functionality with plugins</p>
+			<h1 class="text-3xl font-bold">{m.plugins_title()}</h1>
+			<p class="text-muted-foreground mt-1">{m.plugins_description()}</p>
 		</div>
 		<div class="flex gap-2">
 			<Button variant="outline" size="sm" onclick={handleRefresh} disabled={isLoading}>
-				{isLoading ? "⟳" : "↻"} Refresh
+				<RefreshCw class={isLoading ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} />
+				{m.plugins_refresh()}
 			</Button>
-			<Button variant="default" size="sm">+ Install Plugin</Button>
+			<Button variant="default" size="sm">
+				<Plus class="mr-2 h-4 w-4" />
+				{m.plugins_install()}
+			</Button>
 		</div>
 	</div>
 
 	<!-- Search -->
 	<div class="relative">
-		<span class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">🔍</span>
-		<Input type="text" placeholder="Search plugins..." bind:value={searchQuery} class="pl-10" />
+		<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+		<Input
+			type="text"
+			placeholder={m.plugins_search_placeholder()}
+			bind:value={searchQuery}
+			class="pl-10"
+		/>
 	</div>
-
-	<!-- Error message -->
-	{#if error}
-		<div class="rounded-lg bg-destructive/10 p-4 text-destructive">
-			<p class="font-medium">Error</p>
-			<p class="text-sm">{error}</p>
-		</div>
-	{/if}
 
 	<!-- Tabs -->
 	<Tabs bind:value={activeTab} class="flex-1">
 		<TabsList class="grid w-full grid-cols-3">
 			<TabsTrigger value="installed">
-				All ({installedPlugins.length})
+				{m.plugins_tab_all()} ({installedPlugins.length})
 			</TabsTrigger>
 			<TabsTrigger value="builtin">
-				Built-in ({builtinPlugins.length})
+				{m.plugins_tab_builtin()} ({builtinPlugins.length})
 			</TabsTrigger>
 			<TabsTrigger value="thirdparty">
-				Third-party ({thirdPartyPlugins.length})
+				{m.plugins_tab_thirdparty()} ({thirdPartyPlugins.length})
 			</TabsTrigger>
 		</TabsList>
 
@@ -142,16 +196,16 @@
 			{#if isLoading}
 				<div class="flex items-center justify-center py-12">
 					<div class="text-center">
-						<div class="mx-auto mb-4 text-4xl">⟳</div>
-						<p class="text-muted-foreground">Loading plugins...</p>
+						<Loader2 class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
+						<p class="text-muted-foreground">{m.plugins_loading()}</p>
 					</div>
 				</div>
 			{:else if filteredPlugins.length === 0}
 				<div class="flex items-center justify-center py-12">
 					<div class="text-center">
-						<p class="text-muted-foreground mb-2">No plugins found</p>
+						<p class="text-muted-foreground mb-2">{m.plugins_no_plugins_found()}</p>
 						{#if searchQuery}
-							<p class="text-sm text-muted-foreground">Try adjusting your search query</p>
+							<p class="text-sm text-muted-foreground">{m.plugins_search_tip()}</p>
 						{/if}
 					</div>
 				</div>
@@ -161,6 +215,13 @@
 						<div
 							class="group relative rounded-lg border p-4 transition-all hover:border-primary hover:shadow-md"
 						>
+							<!-- Builtin badge - moved to top right corner -->
+							{#if plugin.metadata.builtin}
+								<div class="absolute right-2 top-2">
+									<Badge variant="secondary" class="text-xs">{m.plugins_badge_builtin()}</Badge>
+								</div>
+							{/if}
+
 							<!-- Plugin icon and header -->
 							<div class="mb-3 flex items-start justify-between">
 								<div class="flex items-center gap-3">
@@ -179,14 +240,16 @@
 											</span>
 										</div>
 									{/if}
-									<div>
+									<div class="flex-1">
 										<h3 class="font-semibold">{plugin.metadata.name}</h3>
-										<p class="text-xs text-muted-foreground">v{plugin.metadata.version}</p>
+										<div class="flex items-center gap-2">
+											<p class="text-xs text-muted-foreground">v{plugin.metadata.version}</p>
+											<Badge variant={getStatusBadgeVariant(plugin.status)} class="text-xs">
+												{getStatusText(plugin.status)}
+											</Badge>
+										</div>
 									</div>
 								</div>
-								<Badge variant={getStatusBadgeVariant(plugin.status)}>
-									{plugin.status}
-								</Badge>
 							</div>
 
 							<!-- Description -->
@@ -207,7 +270,8 @@
 
 							<!-- Author -->
 							<p class="text-xs text-muted-foreground mb-3">
-								by {plugin.metadata.author}
+								{m.plugins_author_by()}
+								{plugin.metadata.author}
 							</p>
 
 							<!-- Actions -->
@@ -217,31 +281,24 @@
 										size="sm"
 										variant="outline"
 										class="flex-1"
-										onclick={() => pluginState.disablePlugin(plugin.metadata.id)}
+										onclick={() => handleDisablePlugin(plugin.metadata.id)}
 									>
-										Disable
+										{m.plugins_button_disable()}
 									</Button>
 								{:else if plugin.status === "disabled"}
 									<Button
 										size="sm"
 										variant="default"
 										class="flex-1"
-										onclick={() => pluginState.enablePlugin(plugin.metadata.id)}
+										onclick={() => handleEnablePlugin(plugin.metadata.id)}
 									>
-										Enable
+										{m.plugins_button_enable()}
 									</Button>
 								{/if}
 								<Button size="sm" variant="ghost" onclick={() => openSettings(plugin)}>
-									Settings
+									{m.plugins_button_settings()}
 								</Button>
 							</div>
-
-							<!-- Builtin badge -->
-							{#if plugin.metadata.builtin}
-								<div class="absolute right-2 top-2">
-									<Badge variant="secondary" class="text-xs">Built-in</Badge>
-								</div>
-							{/if}
 						</div>
 					{/each}
 				</div>
@@ -254,9 +311,11 @@
 <Dialog bind:open={settingsDialogOpen}>
 	<DialogContent class="max-w-2xl max-h-[80vh] overflow-y-auto">
 		<DialogHeader>
-			<DialogTitle>{selectedPlugin?.metadata.name} Settings</DialogTitle>
+			<DialogTitle
+				>{m.plugins_settings_title({ name: selectedPlugin?.metadata.name || "" })}</DialogTitle
+			>
 			<DialogDescription>
-				Configure {selectedPlugin?.metadata.name} plugin settings
+				{m.plugins_settings_description({ name: selectedPlugin?.metadata.name || "" })}
 			</DialogDescription>
 		</DialogHeader>
 
@@ -264,14 +323,20 @@
 			<div class="space-y-4 py-4">
 				<!-- Plugin Info -->
 				<div class="rounded-lg bg-muted p-4">
-					<p class="text-sm"><strong>Version:</strong> {selectedPlugin.metadata.version}</p>
-					<p class="text-sm"><strong>Author:</strong> {selectedPlugin.metadata.author}</p>
+					<p class="text-sm">
+						<strong>{m.plugins_settings_version()}</strong>
+						{selectedPlugin.metadata.version}
+					</p>
+					<p class="text-sm">
+						<strong>{m.plugins_settings_author()}</strong>
+						{selectedPlugin.metadata.author}
+					</p>
 					<p class="text-sm mt-2">{selectedPlugin.metadata.description}</p>
 				</div>
 
 				<!-- Configuration Fields -->
 				<div class="space-y-4">
-					<h3 class="text-sm font-medium">Configuration</h3>
+					<h3 class="text-sm font-medium">{m.plugins_settings_configuration()}</h3>
 
 					{#if selectedPlugin.metadata.configSchema?.properties}
 						{#each Object.entries(selectedPlugin.metadata.configSchema.properties) as [key, schema]}
@@ -279,7 +344,7 @@
 								<Label for={key} class="text-sm font-medium">
 									{schema.title || key}
 									{#if Array.isArray(selectedPlugin.metadata.configSchema.required) && selectedPlugin.metadata.configSchema.required.includes(key)}
-										<span class="text-destructive">*</span>
+										<span class="text-destructive">{m.plugins_settings_required()}</span>
 									{/if}
 								</Label>
 								{#if schema.description}
@@ -289,16 +354,17 @@
 								<!-- Render different input types based on schema type -->
 								{#if schema.type === "boolean"}
 									<div class="flex items-center space-x-2">
-										<input
+										<Checkbox
 											id={key}
-											type="checkbox"
 											checked={!!pluginConfig[key]}
-											onchange={(e) => (pluginConfig[key] = e.currentTarget.checked)}
-											class="h-4 w-4 rounded border-gray-300"
+											onCheckedChange={(checked) => (pluginConfig[key] = checked)}
 										/>
-										<label for={key} class="text-sm">
-											{schema.description || "Enable"}
-										</label>
+										<Label
+											for={key}
+											class="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+										>
+											{schema.description || m.plugins_settings_enable_label()}
+										</Label>
 									</div>
 								{:else if schema.enum && Array.isArray(schema.enum)}
 									<select
@@ -324,14 +390,16 @@
 							</div>
 						{/each}
 					{:else}
-						<p class="text-sm text-muted-foreground">No configuration options available</p>
+						<p class="text-sm text-muted-foreground">{m.plugins_settings_no_config()}</p>
 					{/if}
 				</div>
 			</div>
 
 			<DialogFooter>
-				<Button variant="outline" onclick={() => (settingsDialogOpen = false)}>Cancel</Button>
-				<Button onclick={saveSettings}>Save Changes</Button>
+				<Button variant="outline" onclick={() => (settingsDialogOpen = false)}
+					>{m.plugins_settings_cancel()}</Button
+				>
+				<Button onclick={saveSettings}>{m.plugins_settings_save()}</Button>
 			</DialogFooter>
 		{/if}
 	</DialogContent>
