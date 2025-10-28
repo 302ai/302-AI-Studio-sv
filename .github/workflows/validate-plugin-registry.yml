@@ -32,8 +32,7 @@ jobs:
           cache: "pnpm"
 
       - name: Install dependencies
-        working-directory: packages/plugin-registry
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Validate registry
         working-directory: packages/plugin-registry
