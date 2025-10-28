@@ -283,8 +283,9 @@ async function importModels(
 			// Map old providerId to new providerId
 			const newProviderId = providerIdMap.get(legacy.providerId) || legacy.providerId;
 
+			// Use model name as ID (new system uses name as ID)
 			const newModel = {
-				id: legacy.id,
+				id: legacy.name,
 				name: legacy.name,
 				remark: legacy.remark,
 				providerId: newProviderId,
