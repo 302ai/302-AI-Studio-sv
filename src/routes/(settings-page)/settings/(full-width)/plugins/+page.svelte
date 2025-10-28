@@ -139,7 +139,7 @@
 		} else if (installSource === "marketplace") {
 			if (!installMarketplaceId.trim()) {
 				toast.error(m.plugins_install_error(), {
-					description: "Please select a plugin from marketplace",
+					description: m.plugins_marketplace_select_plugin(),
 				});
 				return;
 			}
@@ -309,7 +309,7 @@
 
 		// Check if already installed
 		if (pluginState.isPluginInstalled(pluginId)) {
-			toast.error("Plugin already installed");
+			toast.error(m.plugins_marketplace_plugin_already_installed());
 			return;
 		}
 
@@ -342,7 +342,7 @@
 			await marketplaceState.search(query);
 		} catch (err) {
 			console.error("Marketplace search failed:", err);
-			toast.error("Search failed", {
+			toast.error(m.plugins_marketplace_search_failed(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
 		}
@@ -351,10 +351,10 @@
 	async function handleRefreshMarketplace() {
 		try {
 			await marketplaceState.refreshMarketplace(true);
-			toast.success("Marketplace refreshed");
+			toast.success(m.plugins_marketplace_refreshed());
 		} catch (err) {
 			console.error("Failed to refresh marketplace:", err);
-			toast.error("Failed to refresh marketplace", {
+			toast.error(m.plugins_marketplace_refresh_failed(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
 		}
@@ -386,7 +386,7 @@
 		<Input
 			type="text"
 			placeholder={activeTab === "marketplace"
-				? "Search marketplace..."
+				? m.plugins_marketplace_search_placeholder()
 				: m.plugins_search_placeholder()}
 			bind:value={searchQuery}
 			oninput={() => {
@@ -411,7 +411,7 @@
 				{m.plugins_tab_thirdparty()} ({thirdPartyPlugins.length})
 			</TabsTrigger>
 			<TabsTrigger value="marketplace">
-				Marketplace ({marketplacePlugins.length})
+				{m.plugins_tab_marketplace()} ({marketplacePlugins.length})
 			</TabsTrigger>
 		</TabsList>
 
@@ -777,16 +777,16 @@
 				<div class="flex items-center justify-center py-12">
 					<div class="text-center">
 						<RefreshCw class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
-						<p class="text-muted-foreground">Loading marketplace...</p>
+						<p class="text-muted-foreground">{m.plugins_marketplace_loading()}</p>
 					</div>
 				</div>
 			{:else if marketplacePlugins.length === 0}
 				<div class="flex items-center justify-center py-12">
 					<div class="text-center">
-						<p class="text-muted-foreground mb-4">No plugins found in marketplace</p>
+						<p class="text-muted-foreground mb-4">{m.plugins_marketplace_no_plugins()}</p>
 						<Button variant="outline" onclick={handleRefreshMarketplace}>
 							<RefreshCw class="mr-2 h-4 w-4" />
-							Refresh Marketplace
+							{m.plugins_marketplace_refresh()}
 						</Button>
 					</div>
 				</div>
@@ -801,7 +801,7 @@
 								<div class="absolute right-2 top-2">
 									<Badge variant="default" class="text-xs">
 										<Star class="mr-1 h-3 w-3" />
-										Featured
+										{m.plugins_marketplace_featured()}
 									</Badge>
 								</div>
 							{/if}
@@ -856,12 +856,17 @@
 							</div>
 
 							<!-- Author -->
-							<p class="text-xs text-muted-foreground mb-3">By {plugin.metadata.author}</p>
+							<p class="text-xs text-muted-foreground mb-3">
+								{m.plugins_marketplace_by()}
+								{plugin.metadata.author}
+							</p>
 
 							<!-- Actions -->
 							<div class="flex gap-2">
 								{#if pluginState.isPluginInstalled(plugin.metadata.id)}
-									<Button size="sm" variant="outline" class="flex-1" disabled>Installed</Button>
+									<Button size="sm" variant="outline" class="flex-1" disabled
+										>{m.plugins_marketplace_installed()}</Button
+									>
 								{:else}
 									<Button
 										size="sm"
@@ -875,11 +880,11 @@
 										{:else}
 											<Download class="mr-2 h-4 w-4" />
 										{/if}
-										Install
+										{m.plugins_marketplace_install()}
 									</Button>
 								{/if}
 								<Button size="sm" variant="ghost" onclick={() => openMarketplaceDetails(plugin)}>
-									Details
+									{m.plugins_marketplace_details()}
 								</Button>
 							</div>
 						</div>
@@ -1332,7 +1337,7 @@
 							{#if selectedMarketplacePlugin.featured}
 								<Badge variant="default">
 									<Star class="mr-1 h-3 w-3" />
-									Featured
+									{m.plugins_marketplace_featured()}
 								</Badge>
 							{/if}
 						</div>
@@ -1340,7 +1345,8 @@
 							v{selectedMarketplacePlugin.metadata.version}
 						</p>
 						<p class="text-sm text-muted-foreground">
-							By {selectedMarketplacePlugin.metadata.author}
+							{m.plugins_marketplace_by()}
+							{selectedMarketplacePlugin.metadata.author}
 						</p>
 						{#if selectedMarketplacePlugin.metadata.tags && selectedMarketplacePlugin.metadata.tags.length > 0}
 							<div class="flex flex-wrap gap-2 mt-2">
@@ -1355,22 +1361,23 @@
 				<!-- Stats -->
 				<div class="grid gap-4 md:grid-cols-3">
 					<div class="rounded-lg border p-3">
-						<p class="text-sm font-medium">Downloads</p>
+						<p class="text-sm font-medium">{m.plugins_marketplace_downloads()}</p>
 						<p class="text-2xl font-bold">{selectedMarketplacePlugin.downloads}</p>
 					</div>
 					{#if selectedMarketplacePlugin.ratingCount > 0}
 						<div class="rounded-lg border p-3">
-							<p class="text-sm font-medium">Rating</p>
+							<p class="text-sm font-medium">{m.plugins_marketplace_rating()}</p>
 							<p class="text-2xl font-bold">
 								{selectedMarketplacePlugin.rating.toFixed(1)}/5
 							</p>
 							<p class="text-xs text-muted-foreground">
-								({selectedMarketplacePlugin.ratingCount} ratings)
+								({selectedMarketplacePlugin.ratingCount}
+								{m.plugins_marketplace_ratings()})
 							</p>
 						</div>
 					{/if}
 					<div class="rounded-lg border p-3">
-						<p class="text-sm font-medium">Last Updated</p>
+						<p class="text-sm font-medium">{m.plugins_marketplace_last_updated()}</p>
 						<p class="text-sm">
 							{new Date(selectedMarketplacePlugin.updatedAt).toLocaleDateString()}
 						</p>
@@ -1379,7 +1386,7 @@
 
 				<!-- Description -->
 				<div class="rounded-lg border p-4">
-					<h4 class="font-medium text-sm mb-2">Description</h4>
+					<h4 class="font-medium text-sm mb-2">{m.plugins_marketplace_description()}</h4>
 					<p class="text-sm text-muted-foreground">
 						{selectedMarketplacePlugin.metadata.description}
 					</p>
@@ -1396,7 +1403,7 @@
 									selectedMarketplacePlugin?.repository || "",
 								)}
 						>
-							Repository
+							{m.plugins_marketplace_repository()}
 						</Button>
 					{/if}
 					{#if selectedMarketplacePlugin.homepage}
@@ -1408,7 +1415,7 @@
 									selectedMarketplacePlugin?.homepage || "",
 								)}
 						>
-							Homepage
+							{m.plugins_marketplace_homepage()}
 						</Button>
 					{/if}
 				</div>
@@ -1416,7 +1423,7 @@
 
 			<DialogFooter>
 				<Button variant="outline" onclick={() => (marketplaceDetailsDialogOpen = false)}>
-					Close
+					{m.plugins_marketplace_close()}
 				</Button>
 				{#if !pluginState.isPluginInstalled(selectedMarketplacePlugin.metadata.id)}
 					<Button
@@ -1429,10 +1436,10 @@
 							<RefreshCw class="mr-2 h-4 w-4 animate-spin" />
 						{/if}
 						<Download class="mr-2 h-4 w-4" />
-						Install
+						{m.plugins_marketplace_install()}
 					</Button>
 				{:else}
-					<Button variant="outline" disabled>Already Installed</Button>
+					<Button variant="outline" disabled>{m.plugins_marketplace_already_installed()}</Button>
 				{/if}
 			</DialogFooter>
 		{/if}
