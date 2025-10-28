@@ -257,7 +257,10 @@ export class PluginService {
 	 * @param pluginId The plugin ID to check
 	 * @returns Object with update information
 	 */
-	async checkForUpdates(_event: IpcMainInvokeEvent, pluginId: string): Promise<{
+	async checkForUpdates(
+		_event: IpcMainInvokeEvent,
+		pluginId: string,
+	): Promise<{
 		hasUpdate: boolean;
 		currentVersion: string;
 		latestVersion?: string;

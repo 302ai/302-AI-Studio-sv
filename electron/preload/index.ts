@@ -150,8 +150,23 @@ if (process.contextIsolated) {
 				},
 			},
 			plugin: {
-				onNotification: (callback: (data: { pluginId: string; pluginName: string; message: string; type: "info" | "success" | "warning" | "error" }) => void) => {
-					const listener = (_: unknown, data: { pluginId: string; pluginName: string; message: string; type: "info" | "success" | "warning" | "error" }) => callback(data);
+				onNotification: (
+					callback: (data: {
+						pluginId: string;
+						pluginName: string;
+						message: string;
+						type: "info" | "success" | "warning" | "error";
+					}) => void,
+				) => {
+					const listener = (
+						_: unknown,
+						data: {
+							pluginId: string;
+							pluginName: string;
+							message: string;
+							type: "info" | "success" | "warning" | "error";
+						},
+					) => callback(data);
 					ipcRenderer.on("plugin:notification", listener);
 					return () => ipcRenderer.removeListener("plugin:notification", listener);
 				},

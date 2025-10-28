@@ -4,8 +4,8 @@
  * Provides integration with Google AI API (Gemini models)
  */
 
-import type { Model, ModelProvider } from "../../../../src/shared/types";
-import { BaseProviderPlugin } from "../../../../src/lib/plugin-system/base-provider-plugin";
+import type { Model, ModelProvider } from "@302ai/studio-plugin-sdk";
+import { BaseProviderPlugin } from "@302ai/studio-plugin-sdk";
 
 /**
  * Google AI model response interface

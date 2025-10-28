@@ -4,8 +4,8 @@
  * Provides integration with OpenAI API (GPT models)
  */
 
-import type { Model, ModelProvider } from "../../../../src/shared/types";
-import { BaseProviderPlugin } from "../../../../src/lib/plugin-system/base-provider-plugin";
+import type { Model, ModelProvider } from "@302ai/studio-plugin-sdk";
+import { BaseProviderPlugin } from "@302ai/studio-plugin-sdk";
 
 /**
  * OpenAI model response interface

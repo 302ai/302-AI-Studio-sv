@@ -245,17 +245,17 @@ export class PluginLoader {
 			if (!semver.satisfies(appVersion, metadata.compatibleVersion)) {
 				console.warn(
 					`[PluginLoader] Plugin ${metadata.id} specifies compatibility with ${metadata.compatibleVersion}, ` +
-					`but current app version is ${appVersion}. The plugin may not work correctly.`
+						`but current app version is ${appVersion}. The plugin may not work correctly.`,
 				);
 			} else {
 				console.log(
-					`[PluginLoader] Plugin ${metadata.id} is compatible with app version ${appVersion}`
+					`[PluginLoader] Plugin ${metadata.id} is compatible with app version ${appVersion}`,
 				);
 			}
 		} catch (err) {
 			console.error(
 				`[PluginLoader] Failed to check version compatibility for plugin ${metadata.id}:`,
-				err
+				err,
 			);
 		}
 	}
@@ -297,7 +297,7 @@ export class PluginLoader {
 				pluginModule = await import(modulePath);
 			} else {
 				// For CommonJS - dynamic require
-				 
+
 				pluginModule = { default: require(modulePath) };
 			}
 		} catch (error) {

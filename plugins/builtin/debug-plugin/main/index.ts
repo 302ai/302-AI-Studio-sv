@@ -16,8 +16,9 @@ import type {
 	ErrorContext,
 	ErrorHandleResult,
 	PluginAPI,
-} from "../../../../src/lib/plugin-system/types";
-import type { Model, ModelProvider } from "../../../../src/shared/types";
+	Model,
+	ModelProvider,
+} from "@302ai/studio-plugin-sdk";
 
 /**
  * Debug Provider Plugin Class

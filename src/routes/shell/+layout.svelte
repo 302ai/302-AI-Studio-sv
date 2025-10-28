@@ -19,34 +19,32 @@
 		);
 
 		// Listen for plugin notifications
-		const notificationCleanup = window.electronAPI?.plugin?.onNotification?.(
-			(data) => {
-				// Show toast notification
-				switch (data.type) {
-					case "success":
-						toast.success(data.message, {
-							description: `From ${data.pluginName}`,
-						});
-						break;
-					case "error":
-						toast.error(data.message, {
-							description: `From ${data.pluginName}`,
-						});
-						break;
-					case "warning":
-						toast.warning(data.message, {
-							description: `From ${data.pluginName}`,
-						});
-						break;
-					case "info":
-					default:
-						toast.info(data.message, {
-							description: `From ${data.pluginName}`,
-						});
-						break;
-				}
-			},
-		);
+		const notificationCleanup = window.electronAPI?.plugin?.onNotification?.((data) => {
+			// Show toast notification
+			switch (data.type) {
+				case "success":
+					toast.success(data.message, {
+						description: `From ${data.pluginName}`,
+					});
+					break;
+				case "error":
+					toast.error(data.message, {
+						description: `From ${data.pluginName}`,
+					});
+					break;
+				case "warning":
+					toast.warning(data.message, {
+						description: `From ${data.pluginName}`,
+					});
+					break;
+				case "info":
+				default:
+					toast.info(data.message, {
+						description: `From ${data.pluginName}`,
+					});
+					break;
+			}
+		});
 
 		return () => {
 			shortcutCleanup?.();

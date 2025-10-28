@@ -116,6 +116,7 @@
 		"vitest": "^3.2.4"
 	},
 	"dependencies": {
+		"@302ai/studio-plugin-sdk": "workspace:*",
 		"@302ai/unstorage": "^1.18.0",
 		"@ai-sdk/google": "^2.0.17",
 		"@ai-sdk/openai-compatible": "^1.0.19",
