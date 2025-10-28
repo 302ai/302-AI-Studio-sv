@@ -137,8 +137,8 @@ export async function importLegacyJson(): Promise<ImportResult> {
 			tabs: { added: 0, skipped: 0, failed: 0 },
 		};
 
-		await importProviders(legacyData.data.providers, stats);
-		await importModels(legacyData.data.models, stats);
+		const providerIdMap = await importProviders(legacyData.data.providers, stats);
+		await importModels(legacyData.data.models, providerIdMap, stats);
 		await importMcpServers(legacyData.data.mcpServers, stats);
 		await importThreads(
 			legacyData.data.threads,
@@ -185,7 +185,13 @@ function validateLegacyData(data: unknown): data is LegacyDataFormat {
 	return true;
 }
 
-async function importProviders(legacyProviders: any[], stats: ImportStats): Promise<void> {
+async function importProviders(
+	legacyProviders: any[],
+	stats: ImportStats,
+): Promise<Map<string, string>> {
+	// Return a map of old provider ID -> new provider ID
+	const providerIdMap = new Map<string, string>();
+
 	try {
 		const existingProviders =
 			((await storageService.getItemInternal("app-providers")) as any[]) || [];
@@ -194,9 +200,28 @@ async function importProviders(legacyProviders: any[], stats: ImportStats): Prom
 		const updatedProviders = [...existingProviders];
 		const newProviders = [];
 
+		// Map legacy provider names to standard built-in provider IDs
+		const STANDARD_PROVIDER_IDS: Record<string, string> = {
+			"302.AI": "302AI",
+			OpenAI: "openai",
+			Anthropic: "anthropic",
+			"Google AI": "google",
+		};
+
 		for (const legacy of legacyProviders) {
+			// Determine the correct provider ID
+			let newProviderId = legacy.id;
+
+			// If it's a built-in provider (not custom), use standard ID
+			if (!legacy.custom && STANDARD_PROVIDER_IDS[legacy.name]) {
+				newProviderId = STANDARD_PROVIDER_IDS[legacy.name];
+			}
+
+			// Store the mapping from old ID to new ID
+			providerIdMap.set(legacy.id, newProviderId);
+
 			const newProvider = {
-				id: legacy.id,
+				id: newProviderId,
 				name: legacy.name,
 				apiType: legacy.apiType,
 				apiKey: legacy.apiKey,
@@ -236,9 +261,15 @@ async function importProviders(legacyProviders: any[], stats: ImportStats): Prom
 		console.error("Failed to import providers:", error);
 		stats.providers.failed++;
 	}
+
+	return providerIdMap;
 }
 
-async function importModels(legacyModels: any[], stats: ImportStats): Promise<void> {
+async function importModels(
+	legacyModels: any[],
+	providerIdMap: Map<string, string>,
+	stats: ImportStats,
+): Promise<void> {
 	try {
 		const existingModels = ((await storageService.getItemInternal("app-models")) as any[]) || [];
 		const existingByNameAndProvider = new Map(
@@ -249,11 +280,14 @@ async function importModels(legacyModels: any[], stats: ImportStats): Promise<vo
 		const newModels = [];
 
 		for (const legacy of legacyModels) {
+			// Map old providerId to new providerId
+			const newProviderId = providerIdMap.get(legacy.providerId) || legacy.providerId;
+
 			const newModel = {
 				id: legacy.id,
 				name: legacy.name,
 				remark: legacy.remark,
-				providerId: legacy.providerId,
+				providerId: newProviderId,
 				capabilities: legacy.capabilities || [],
 				type: legacy.type || "language",
 				custom: legacy.custom,
@@ -261,12 +295,12 @@ async function importModels(legacyModels: any[], stats: ImportStats): Promise<vo
 				collected: legacy.collected,
 			};
 
-			const key = `${legacy.name}:${legacy.providerId}`;
+			const key = `${legacy.name}:${newProviderId}`;
 			// Check if a model with the same name and provider exists
 			if (existingByNameAndProvider.has(key)) {
 				// Replace the existing model with the new one
 				const existingIndex = updatedModels.findIndex(
-					(m) => m.name === legacy.name && m.providerId === legacy.providerId,
+					(m) => m.name === legacy.name && m.providerId === newProviderId,
 				);
 				if (existingIndex !== -1) {
 					updatedModels[existingIndex] = newModel;
