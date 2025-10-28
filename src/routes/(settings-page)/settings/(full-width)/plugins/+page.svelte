@@ -734,7 +734,7 @@
 						<p class="text-sm text-muted-foreground mb-2">v{selectedPlugin.metadata.version}</p>
 						<div class="flex flex-wrap gap-2">
 							{#if selectedPlugin.metadata.tags && selectedPlugin.metadata.tags.length > 0}
-								{#each selectedPlugin.metadata.tags as tag}
+								{#each selectedPlugin.metadata.tags as tag (tag)}
 									<Badge variant="outline" class="text-xs">
 										{tag}
 									</Badge>
@@ -810,7 +810,7 @@
 					<div class="rounded-lg border p-4">
 						<h4 class="font-medium text-sm mb-3">{m.plugins_details_configurable_options()}</h4>
 						<div class="space-y-2">
-							{#each Object.entries(selectedPlugin.metadata.configSchema.properties) as [key, schema]}
+							{#each Object.entries(selectedPlugin.metadata.configSchema.properties) as [key, schema] (key)}
 								<div class="flex items-start gap-3 text-sm">
 									<div class="flex-1">
 										<div class="font-medium">
@@ -837,7 +837,7 @@
 					<div class="rounded-lg border p-4">
 						<h4 class="font-medium text-sm mb-3">{m.plugins_details_permissions()}</h4>
 						<div class="flex flex-wrap gap-2">
-							{#each selectedPlugin.metadata.permissions as permission}
+							{#each selectedPlugin.metadata.permissions as permission (permission)}
 								<Badge variant="secondary" class="text-xs">
 									{permission}
 								</Badge>
