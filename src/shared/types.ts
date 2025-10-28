@@ -28,6 +28,9 @@ export type PluginSource =
 export interface PluginMarketEntry {
 	metadata: import("@302ai/studio-plugin-sdk").PluginMetadata;
 	downloadUrl: string;
+	repository: string;
+	homepage?: string;
+	icon?: string;
 	downloads: number;
 	rating: number;
 	ratingCount: number;

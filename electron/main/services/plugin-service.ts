@@ -19,6 +19,7 @@ import {
 	hasProviderPlugin,
 } from "../plugin-manager/provider-plugin-helper";
 import { storageService } from "./storage-service";
+import { registryService } from "./registry-service";
 
 /**
  * Plugin Service Class
@@ -195,9 +196,24 @@ export class PluginService {
 				pluginPath = await this.downloadPluginFromUrl(source.url);
 				break;
 
-			case "marketplace":
-				// TODO: Download plugin from marketplace
-				throw new Error("Marketplace-based plugin installation not yet implemented");
+			case "marketplace": {
+				if (!source.id) {
+					throw new Error("Marketplace source requires a plugin ID");
+				}
+
+				// Get plugin info from registry
+				const marketplacePlugin = await registryService.getMarketplacePlugin(_event, source.id);
+				if (!marketplacePlugin) {
+					throw new Error(`Plugin ${source.id} not found in marketplace`);
+				}
+
+				// Download from the registry's download URL
+				console.log(
+					`[PluginService] Installing ${marketplacePlugin.metadata.name} from marketplace`,
+				);
+				pluginPath = await this.downloadPluginFromUrl(marketplacePlugin.downloadUrl);
+				break;
+			}
 
 			default:
 				throw new Error(`Unknown plugin source type: ${(source as { type: string }).type}`);
@@ -285,7 +301,8 @@ export class PluginService {
 		try {
 			const pluginJsonPath = path.join(plugin.path, "plugin.json");
 			if (await fs.pathExists(pluginJsonPath)) {
-				const _pluginJson = await fs.readJson(pluginJsonPath);
+				// TODO: Read plugin.json to check for repository or update URL
+				// const pluginJson = await fs.readJson(pluginJsonPath);
 
 				// If the plugin has a repository or update URL, we could check it here
 				// For now, we'll just indicate no update is available

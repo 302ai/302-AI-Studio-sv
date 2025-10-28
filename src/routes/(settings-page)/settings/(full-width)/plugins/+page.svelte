@@ -15,17 +15,24 @@
 	import { Checkbox } from "$lib/components/ui/checkbox";
 	import { m } from "$lib/paraglide/messages";
 	import { pluginState } from "$lib/stores/plugin-state.svelte";
-	import { FolderOpen, Loader2, Plus, RefreshCw, Search } from "@lucide/svelte";
-	import type { InstalledPlugin, PluginSource } from "@shared/types";
+	import { marketplaceState } from "$lib/stores/marketplace-state.svelte";
+	import { FolderOpen, Loader2, Plus, RefreshCw, Search, Download, Star } from "@lucide/svelte";
+	import type { InstalledPlugin, PluginSource, PluginMarketEntry } from "@shared/types";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
 	onMount(async () => {
 		await pluginState.initialize();
+		await marketplaceState.initialize();
 		// Check for errors after initialization
 		if (pluginState.error) {
 			toast.error(m.plugins_error(), {
 				description: pluginState.error,
+			});
+		}
+		if (marketplaceState.error) {
+			toast.error(m.plugins_error(), {
+				description: marketplaceState.error,
 			});
 		}
 	});
@@ -36,19 +43,29 @@
 	let installDialogOpen = $state(false);
 	let uninstallDialogOpen = $state(false);
 	let detailsDialogOpen = $state(false);
+	let marketplaceDetailsDialogOpen = $state(false);
 	let selectedPlugin = $state<InstalledPlugin | null>(null);
+	let selectedMarketplacePlugin = $state<PluginMarketEntry | null>(null);
 	let pluginConfig = $state<Record<string, unknown>>({});
 	let installSource = $state<"local" | "url" | "marketplace">("local");
 	let installPath = $state("");
 	let installUrl = $state("");
+	let installMarketplaceId = $state("");
 	let isInstalling = $state(false);
 	let isUninstalling = $state(false);
 	let updatingPlugins = $state(new Set<string>());
 
 	const { installedPlugins, builtinPlugins, thirdPartyPlugins, isLoading } = $derived(pluginState);
+	const { searchResults: marketplacePlugins, isLoading: isLoadingMarketplace } =
+		$derived(marketplaceState);
 
 	// Filter plugins based on search query
 	const filteredPlugins = $derived.by(() => {
+		// Skip filtering for marketplace tab
+		if (activeTab === "marketplace") {
+			return [];
+		}
+
 		const plugins =
 			activeTab === "builtin"
 				? builtinPlugins
@@ -119,9 +136,17 @@
 				return;
 			}
 			source = { type: "url", url: installUrl };
+		} else if (installSource === "marketplace") {
+			if (!installMarketplaceId.trim()) {
+				toast.error(m.plugins_install_error(), {
+					description: "Please select a plugin from marketplace",
+				});
+				return;
+			}
+			source = { type: "marketplace", id: installMarketplaceId };
 		} else {
 			toast.error(m.plugins_error(), {
-				description: "Marketplace not yet implemented",
+				description: "Unknown install source",
 			});
 			return;
 		}
@@ -272,6 +297,68 @@
 				return status;
 		}
 	}
+
+	// Marketplace functions
+	function openMarketplaceDetails(plugin: PluginMarketEntry) {
+		selectedMarketplacePlugin = plugin;
+		marketplaceDetailsDialogOpen = true;
+	}
+
+	async function handleInstallFromMarketplace(pluginId: string) {
+		if (isInstalling) return;
+
+		// Check if already installed
+		if (pluginState.isPluginInstalled(pluginId)) {
+			toast.error("Plugin already installed");
+			return;
+		}
+
+		isInstalling = true;
+
+		try {
+			const source: PluginSource = { type: "marketplace", id: pluginId };
+			await pluginState.installPlugin(source);
+			toast.success(m.plugins_install_success());
+
+			// Close details dialog if open
+			if (marketplaceDetailsDialogOpen) {
+				marketplaceDetailsDialogOpen = false;
+			}
+
+			// Refresh plugin list
+			await pluginState.refreshPlugins();
+		} catch (err) {
+			console.error("Failed to install from marketplace:", err);
+			toast.error(m.plugins_install_error(), {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		} finally {
+			isInstalling = false;
+		}
+	}
+
+	async function handleMarketplaceSearch(query: string) {
+		try {
+			await marketplaceState.search(query);
+		} catch (err) {
+			console.error("Marketplace search failed:", err);
+			toast.error("Search failed", {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		}
+	}
+
+	async function handleRefreshMarketplace() {
+		try {
+			await marketplaceState.refreshMarketplace(true);
+			toast.success("Marketplace refreshed");
+		} catch (err) {
+			console.error("Failed to refresh marketplace:", err);
+			toast.error("Failed to refresh marketplace", {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		}
+	}
 </script>
 
 <div class="flex h-full flex-col gap-6 p-6">
@@ -298,15 +385,22 @@
 		<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 		<Input
 			type="text"
-			placeholder={m.plugins_search_placeholder()}
+			placeholder={activeTab === "marketplace"
+				? "Search marketplace..."
+				: m.plugins_search_placeholder()}
 			bind:value={searchQuery}
+			oninput={() => {
+				if (activeTab === "marketplace") {
+					handleMarketplaceSearch(searchQuery);
+				}
+			}}
 			class="pl-10"
 		/>
 	</div>
 
 	<!-- Tabs -->
 	<Tabs bind:value={activeTab} class="flex-1">
-		<TabsList class="grid w-full grid-cols-3">
+		<TabsList class="grid w-full grid-cols-4">
 			<TabsTrigger value="installed">
 				{m.plugins_tab_all()} ({installedPlugins.length})
 			</TabsTrigger>
@@ -316,13 +410,17 @@
 			<TabsTrigger value="thirdparty">
 				{m.plugins_tab_thirdparty()} ({thirdPartyPlugins.length})
 			</TabsTrigger>
+			<TabsTrigger value="marketplace">
+				Marketplace ({marketplacePlugins.length})
+			</TabsTrigger>
 		</TabsList>
 
-		<TabsContent value={activeTab} class="mt-6">
+		<!-- Installed/Builtin/ThirdParty Tabs Content -->
+		<TabsContent value="installed" class="mt-6">
 			{#if isLoading}
 				<div class="flex items-center justify-center py-12">
 					<div class="text-center">
-						<Loader2 class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
+						<RefreshCw class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
 						<p class="text-muted-foreground">{m.plugins_loading()}</p>
 					</div>
 				</div>
@@ -449,6 +547,340 @@
 										{m.plugins_button_uninstall()}
 									</Button>
 								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</TabsContent>
+
+		<!-- Builtin Tab -->
+		<TabsContent value="builtin" class="mt-6">
+			{#if isLoading}
+				<div class="flex items-center justify-center py-12">
+					<div class="text-center">
+						<RefreshCw class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
+						<p class="text-muted-foreground">{m.plugins_loading()}</p>
+					</div>
+				</div>
+			{:else if filteredPlugins.length === 0}
+				<div class="flex items-center justify-center py-12">
+					<p class="text-muted-foreground">{m.plugins_no_plugins_found()}</p>
+				</div>
+			{:else}
+				<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+					{#each filteredPlugins as plugin (plugin.metadata.id)}
+						<div
+							class="group relative rounded-lg border p-4 transition-all hover:border-primary hover:shadow-md"
+						>
+							<!-- Same plugin card content as installed tab -->
+							{#if plugin.metadata.builtin}
+								<div class="absolute right-2 top-2">
+									<Badge variant="secondary" class="text-xs">{m.plugins_badge_builtin()}</Badge>
+								</div>
+							{/if}
+							<div class="mb-3 flex items-start justify-between">
+								<div class="flex items-center gap-3">
+									{#if plugin.metadata.icon}
+										<img
+											src={plugin.metadata.icon}
+											alt={plugin.metadata.name}
+											class="h-10 w-10 rounded"
+										/>
+									{:else}
+										<div
+											class="flex h-10 w-10 items-center justify-center rounded bg-primary/10 text-primary"
+										>
+											<span class="text-lg font-bold">
+												{plugin.metadata.name.charAt(0).toUpperCase()}
+											</span>
+										</div>
+									{/if}
+									<div class="flex-1">
+										<h3 class="font-semibold">{plugin.metadata.name}</h3>
+										<div class="flex items-center gap-2">
+											<p class="text-xs text-muted-foreground">v{plugin.metadata.version}</p>
+											<Badge variant={getStatusBadgeVariant(plugin.status)} class="text-xs">
+												{getStatusText(plugin.status)}
+											</Badge>
+										</div>
+									</div>
+								</div>
+							</div>
+							<p class="mb-3 text-sm text-muted-foreground line-clamp-2">
+								{plugin.metadata.description}
+							</p>
+							{#if plugin.metadata.tags && plugin.metadata.tags.length > 0}
+								<div class="mb-3 flex flex-wrap gap-1">
+									{#each plugin.metadata.tags.slice(0, 3) as tag (tag)}
+										<Badge variant="outline" class="text-xs">{tag}</Badge>
+									{/each}
+								</div>
+							{/if}
+							<p class="text-xs text-muted-foreground mb-3">
+								{m.plugins_author_by()}
+								{plugin.metadata.author}
+							</p>
+							<div class="flex gap-2 flex-wrap">
+								{#if plugin.status === "enabled"}
+									<Button
+										size="sm"
+										variant="outline"
+										class="flex-1"
+										onclick={() => handleDisablePlugin(plugin.metadata.id)}
+									>
+										{m.plugins_button_disable()}
+									</Button>
+								{:else if plugin.status === "disabled"}
+									<Button
+										size="sm"
+										variant="default"
+										class="flex-1"
+										onclick={() => handleEnablePlugin(plugin.metadata.id)}
+									>
+										{m.plugins_button_enable()}
+									</Button>
+								{/if}
+								<Button size="sm" variant="ghost" onclick={() => openDetails(plugin)}>
+									{m.plugins_button_details()}
+								</Button>
+								<Button size="sm" variant="ghost" onclick={() => openSettings(plugin)}>
+									{m.plugins_button_settings()}
+								</Button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</TabsContent>
+
+		<!-- ThirdParty Tab -->
+		<TabsContent value="thirdparty" class="mt-6">
+			{#if isLoading}
+				<div class="flex items-center justify-center py-12">
+					<div class="text-center">
+						<RefreshCw class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
+						<p class="text-muted-foreground">{m.plugins_loading()}</p>
+					</div>
+				</div>
+			{:else if filteredPlugins.length === 0}
+				<div class="flex items-center justify-center py-12">
+					<p class="text-muted-foreground">{m.plugins_no_plugins_found()}</p>
+				</div>
+			{:else}
+				<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+					{#each filteredPlugins as plugin (plugin.metadata.id)}
+						<div
+							class="group relative rounded-lg border p-4 transition-all hover:border-primary hover:shadow-md"
+						>
+							<!-- Same plugin card content -->
+							<div class="mb-3 flex items-start justify-between">
+								<div class="flex items-center gap-3">
+									{#if plugin.metadata.icon}
+										<img
+											src={plugin.metadata.icon}
+											alt={plugin.metadata.name}
+											class="h-10 w-10 rounded"
+										/>
+									{:else}
+										<div
+											class="flex h-10 w-10 items-center justify-center rounded bg-primary/10 text-primary"
+										>
+											<span class="text-lg font-bold">
+												{plugin.metadata.name.charAt(0).toUpperCase()}
+											</span>
+										</div>
+									{/if}
+									<div class="flex-1">
+										<h3 class="font-semibold">{plugin.metadata.name}</h3>
+										<div class="flex items-center gap-2">
+											<p class="text-xs text-muted-foreground">v{plugin.metadata.version}</p>
+											<Badge variant={getStatusBadgeVariant(plugin.status)} class="text-xs">
+												{getStatusText(plugin.status)}
+											</Badge>
+										</div>
+									</div>
+								</div>
+							</div>
+							<p class="mb-3 text-sm text-muted-foreground line-clamp-2">
+								{plugin.metadata.description}
+							</p>
+							{#if plugin.metadata.tags && plugin.metadata.tags.length > 0}
+								<div class="mb-3 flex flex-wrap gap-1">
+									{#each plugin.metadata.tags.slice(0, 3) as tag (tag)}
+										<Badge variant="outline" class="text-xs">{tag}</Badge>
+									{/each}
+								</div>
+							{/if}
+							<p class="text-xs text-muted-foreground mb-3">
+								{m.plugins_author_by()}
+								{plugin.metadata.author}
+							</p>
+							<div class="flex gap-2 flex-wrap">
+								{#if plugin.status === "enabled"}
+									<Button
+										size="sm"
+										variant="outline"
+										class="flex-1"
+										onclick={() => handleDisablePlugin(plugin.metadata.id)}
+									>
+										{m.plugins_button_disable()}
+									</Button>
+								{:else if plugin.status === "disabled"}
+									<Button
+										size="sm"
+										variant="default"
+										class="flex-1"
+										onclick={() => handleEnablePlugin(plugin.metadata.id)}
+									>
+										{m.plugins_button_enable()}
+									</Button>
+								{/if}
+								<Button size="sm" variant="ghost" onclick={() => openDetails(plugin)}>
+									{m.plugins_button_details()}
+								</Button>
+								<Button size="sm" variant="ghost" onclick={() => openSettings(plugin)}>
+									{m.plugins_button_settings()}
+								</Button>
+								{#if !plugin.metadata.builtin}
+									<Button
+										size="sm"
+										variant="ghost"
+										onclick={() => handleUpdatePlugin(plugin.metadata.id)}
+										disabled={updatingPlugins.has(plugin.metadata.id)}
+									>
+										{#if updatingPlugins.has(plugin.metadata.id)}
+											<RefreshCw class="h-4 w-4 animate-spin" />
+										{:else}
+											{m.plugins_button_update()}
+										{/if}
+									</Button>
+									<Button
+										size="sm"
+										variant="ghost"
+										onclick={() => openUninstallDialog(plugin)}
+										class="text-destructive hover:text-destructive"
+									>
+										{m.plugins_button_uninstall()}
+									</Button>
+								{/if}
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		</TabsContent>
+
+		<!-- Marketplace Tab -->
+		<TabsContent value="marketplace" class="mt-6">
+			{#if isLoadingMarketplace}
+				<div class="flex items-center justify-center py-12">
+					<div class="text-center">
+						<RefreshCw class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
+						<p class="text-muted-foreground">Loading marketplace...</p>
+					</div>
+				</div>
+			{:else if marketplacePlugins.length === 0}
+				<div class="flex items-center justify-center py-12">
+					<div class="text-center">
+						<p class="text-muted-foreground mb-4">No plugins found in marketplace</p>
+						<Button variant="outline" onclick={handleRefreshMarketplace}>
+							<RefreshCw class="mr-2 h-4 w-4" />
+							Refresh Marketplace
+						</Button>
+					</div>
+				</div>
+			{:else}
+				<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+					{#each marketplacePlugins as plugin (plugin.metadata.id)}
+						<div
+							class="group relative rounded-lg border p-4 transition-all hover:border-primary hover:shadow-md"
+						>
+							<!-- Featured badge -->
+							{#if plugin.featured}
+								<div class="absolute right-2 top-2">
+									<Badge variant="default" class="text-xs">
+										<Star class="mr-1 h-3 w-3" />
+										Featured
+									</Badge>
+								</div>
+							{/if}
+
+							<!-- Plugin icon and header -->
+							<div class="mb-3 flex items-start justify-between">
+								<div class="flex items-center gap-3">
+									{#if plugin.icon}
+										<img src={plugin.icon} alt={plugin.metadata.name} class="h-10 w-10 rounded" />
+									{:else}
+										<div
+											class="flex h-10 w-10 items-center justify-center rounded bg-primary/10 text-primary"
+										>
+											<span class="text-lg font-bold">
+												{plugin.metadata.name.charAt(0).toUpperCase()}
+											</span>
+										</div>
+									{/if}
+									<div class="flex-1">
+										<h3 class="font-semibold">{plugin.metadata.name}</h3>
+										<p class="text-xs text-muted-foreground">v{plugin.metadata.version}</p>
+									</div>
+								</div>
+							</div>
+
+							<!-- Description -->
+							<p class="mb-3 text-sm text-muted-foreground line-clamp-2">
+								{plugin.metadata.description}
+							</p>
+
+							<!-- Tags -->
+							{#if plugin.metadata.tags && plugin.metadata.tags.length > 0}
+								<div class="mb-3 flex flex-wrap gap-1">
+									{#each plugin.metadata.tags.slice(0, 3) as tag (tag)}
+										<Badge variant="outline" class="text-xs">{tag}</Badge>
+									{/each}
+								</div>
+							{/if}
+
+							<!-- Stats -->
+							<div class="mb-3 flex items-center gap-4 text-xs text-muted-foreground">
+								<span>
+									<Download class="mr-1 inline h-3 w-3" />
+									{plugin.downloads}
+								</span>
+								{#if plugin.ratingCount > 0}
+									<span>
+										<Star class="mr-1 inline h-3 w-3" />
+										{plugin.rating.toFixed(1)} ({plugin.ratingCount})
+									</span>
+								{/if}
+							</div>
+
+							<!-- Author -->
+							<p class="text-xs text-muted-foreground mb-3">By {plugin.metadata.author}</p>
+
+							<!-- Actions -->
+							<div class="flex gap-2">
+								{#if pluginState.isPluginInstalled(plugin.metadata.id)}
+									<Button size="sm" variant="outline" class="flex-1" disabled>Installed</Button>
+								{:else}
+									<Button
+										size="sm"
+										variant="default"
+										class="flex-1"
+										onclick={() => handleInstallFromMarketplace(plugin.metadata.id)}
+										disabled={isInstalling}
+									>
+										{#if isInstalling}
+											<RefreshCw class="mr-2 h-4 w-4 animate-spin" />
+										{:else}
+											<Download class="mr-2 h-4 w-4" />
+										{/if}
+										Install
+									</Button>
+								{/if}
+								<Button size="sm" variant="ghost" onclick={() => openMarketplaceDetails(plugin)}>
+									Details
+								</Button>
 							</div>
 						</div>
 					{/each}
@@ -860,6 +1292,148 @@
 				>
 					{m.plugins_button_settings()}
 				</Button>
+			</DialogFooter>
+		{/if}
+	</DialogContent>
+</Dialog>
+
+<!-- Marketplace Plugin Details Dialog -->
+<Dialog bind:open={marketplaceDetailsDialogOpen}>
+	<DialogContent class="max-w-3xl max-h-[85vh] overflow-y-auto">
+		<DialogHeader>
+			<DialogTitle>{selectedMarketplacePlugin?.metadata.name || ""}</DialogTitle>
+			<DialogDescription>
+				{selectedMarketplacePlugin?.metadata.description || ""}
+			</DialogDescription>
+		</DialogHeader>
+
+		{#if selectedMarketplacePlugin}
+			<div class="space-y-6 py-4">
+				<!-- Plugin Header -->
+				<div class="flex items-start gap-4">
+					{#if selectedMarketplacePlugin.icon}
+						<img
+							src={selectedMarketplacePlugin.icon}
+							alt={selectedMarketplacePlugin.metadata.name}
+							class="h-16 w-16 rounded-lg"
+						/>
+					{:else}
+						<div
+							class="flex h-16 w-16 items-center justify-center rounded-lg bg-primary/10 text-primary"
+						>
+							<span class="text-2xl font-bold">
+								{selectedMarketplacePlugin.metadata.name.charAt(0).toUpperCase()}
+							</span>
+						</div>
+					{/if}
+					<div class="flex-1">
+						<div class="flex items-center gap-2 mb-1">
+							<h3 class="text-xl font-semibold">{selectedMarketplacePlugin.metadata.name}</h3>
+							{#if selectedMarketplacePlugin.featured}
+								<Badge variant="default">
+									<Star class="mr-1 h-3 w-3" />
+									Featured
+								</Badge>
+							{/if}
+						</div>
+						<p class="text-sm text-muted-foreground">
+							v{selectedMarketplacePlugin.metadata.version}
+						</p>
+						<p class="text-sm text-muted-foreground">
+							By {selectedMarketplacePlugin.metadata.author}
+						</p>
+						{#if selectedMarketplacePlugin.metadata.tags && selectedMarketplacePlugin.metadata.tags.length > 0}
+							<div class="flex flex-wrap gap-2 mt-2">
+								{#each selectedMarketplacePlugin.metadata.tags as tag (tag)}
+									<Badge variant="outline" class="text-xs">{tag}</Badge>
+								{/each}
+							</div>
+						{/if}
+					</div>
+				</div>
+
+				<!-- Stats -->
+				<div class="grid gap-4 md:grid-cols-3">
+					<div class="rounded-lg border p-3">
+						<p class="text-sm font-medium">Downloads</p>
+						<p class="text-2xl font-bold">{selectedMarketplacePlugin.downloads}</p>
+					</div>
+					{#if selectedMarketplacePlugin.ratingCount > 0}
+						<div class="rounded-lg border p-3">
+							<p class="text-sm font-medium">Rating</p>
+							<p class="text-2xl font-bold">
+								{selectedMarketplacePlugin.rating.toFixed(1)}/5
+							</p>
+							<p class="text-xs text-muted-foreground">
+								({selectedMarketplacePlugin.ratingCount} ratings)
+							</p>
+						</div>
+					{/if}
+					<div class="rounded-lg border p-3">
+						<p class="text-sm font-medium">Last Updated</p>
+						<p class="text-sm">
+							{new Date(selectedMarketplacePlugin.updatedAt).toLocaleDateString()}
+						</p>
+					</div>
+				</div>
+
+				<!-- Description -->
+				<div class="rounded-lg border p-4">
+					<h4 class="font-medium text-sm mb-2">Description</h4>
+					<p class="text-sm text-muted-foreground">
+						{selectedMarketplacePlugin.metadata.description}
+					</p>
+				</div>
+
+				<!-- Links -->
+				<div class="flex gap-2">
+					{#if selectedMarketplacePlugin.repository}
+						<Button
+							variant="outline"
+							size="sm"
+							onclick={() =>
+								window.electronAPI.externalLinkService.openExternalLink(
+									selectedMarketplacePlugin?.repository || "",
+								)}
+						>
+							Repository
+						</Button>
+					{/if}
+					{#if selectedMarketplacePlugin.homepage}
+						<Button
+							variant="outline"
+							size="sm"
+							onclick={() =>
+								window.electronAPI.externalLinkService.openExternalLink(
+									selectedMarketplacePlugin?.homepage || "",
+								)}
+						>
+							Homepage
+						</Button>
+					{/if}
+				</div>
+			</div>
+
+			<DialogFooter>
+				<Button variant="outline" onclick={() => (marketplaceDetailsDialogOpen = false)}>
+					Close
+				</Button>
+				{#if !pluginState.isPluginInstalled(selectedMarketplacePlugin.metadata.id)}
+					<Button
+						variant="default"
+						onclick={() =>
+							handleInstallFromMarketplace(selectedMarketplacePlugin?.metadata.id || "")}
+						disabled={isInstalling}
+					>
+						{#if isInstalling}
+							<RefreshCw class="mr-2 h-4 w-4 animate-spin" />
+						{/if}
+						<Download class="mr-2 h-4 w-4" />
+						Install
+					</Button>
+				{:else}
+					<Button variant="outline" disabled>Already Installed</Button>
+				{/if}
 			</DialogFooter>
 		{/if}
 	</DialogContent>
