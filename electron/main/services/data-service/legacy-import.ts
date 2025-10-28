@@ -416,6 +416,11 @@ async function importThreads(
 						metadata.createdAt = new Date(metadata.createdAt);
 					}
 
+					// Import model name
+					if (msg.modelName && !metadata.model) {
+						metadata.model = msg.modelName;
+					}
+
 					// Import attachments for this message
 					const messageAttachments = attachmentsByMessageId.get(msg.id) || [];
 					if (messageAttachments.length > 0) {
