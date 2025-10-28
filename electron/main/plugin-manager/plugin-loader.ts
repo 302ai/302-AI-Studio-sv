@@ -8,7 +8,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
 import semver from "semver";
-import type { InstalledPlugin, PluginMetadata, ProviderPlugin } from "$lib/plugin-system/types";
+import type { InstalledPlugin, PluginMetadata, ProviderPlugin } from "@302ai/studio-plugin-sdk";
 import { pluginRegistry } from "./plugin-registry";
 import { hookManager } from "./hook-manager";
 import { createPluginAPI } from "./plugin-api";

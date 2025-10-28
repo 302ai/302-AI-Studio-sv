@@ -7,7 +7,7 @@
 
 import * as vm from "vm";
 import * as path from "path";
-import type { PluginPermission } from "$lib/plugin-system/types";
+import type { PluginPermission } from "@302ai/studio-plugin-sdk";
 
 /**
  * Sandbox context for plugin execution

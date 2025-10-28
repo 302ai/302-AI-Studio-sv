@@ -4,8 +4,8 @@
  * IPC service for managing plugins from the renderer process
  */
 
-import type { InstalledPlugin, PluginSource, ProviderDefinition } from "$lib/plugin-system/types";
-import type { Model, ModelProvider } from "@shared/types";
+import type { InstalledPlugin, ProviderDefinition } from "@302ai/studio-plugin-sdk";
+import type { Model, ModelProvider, PluginSource } from "@shared/types";
 import { dialog, type IpcMainInvokeEvent } from "electron";
 import fs from "fs-extra";
 import extract from "extract-zip";

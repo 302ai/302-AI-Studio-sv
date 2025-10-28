@@ -4,7 +4,7 @@
  * Manages plugin state in the renderer process
  */
 
-import type { InstalledPlugin, PluginSource, ProviderDefinition } from "$lib/plugin-system/types";
+import type { InstalledPlugin, PluginSource, ProviderDefinition } from "@shared/types";
 import type { Model, ModelProvider } from "@shared/types";
 
 const { pluginService } = window.electronAPI;

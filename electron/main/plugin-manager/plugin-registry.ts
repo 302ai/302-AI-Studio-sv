@@ -4,7 +4,8 @@
  * Manages registered plugin instances and their metadata
  */
 
-import type { InstalledPlugin, IPluginRegistry, ProviderPlugin } from "$lib/plugin-system/types";
+import type { InstalledPlugin, ProviderPlugin } from "@302ai/studio-plugin-sdk";
+import type { IPluginRegistry } from "./types";
 
 interface RegisteredPlugin {
 	plugin: InstalledPlugin;

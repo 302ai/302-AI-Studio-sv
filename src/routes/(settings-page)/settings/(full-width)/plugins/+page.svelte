@@ -63,7 +63,7 @@
 			(p) =>
 				p.metadata.name.toLowerCase().includes(query) ||
 				p.metadata.description.toLowerCase().includes(query) ||
-				p.metadata.tags?.some((t) => t.toLowerCase().includes(query)),
+				p.metadata.tags?.some((t: string) => t.toLowerCase().includes(query)),
 		);
 	});
 

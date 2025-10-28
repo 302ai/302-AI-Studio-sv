@@ -18,8 +18,8 @@ import type {
 	DialogResult,
 	WindowOptions,
 	RequestOptions,
-} from "$lib/plugin-system/types";
-import type { IHookManager } from "$lib/plugin-system/types";
+} from "@302ai/studio-plugin-sdk";
+import type { IHookManager } from "./types";
 import { dialog, BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import { storageService } from "../services/storage-service";
 import { broadcastService } from "../services/broadcast-service";

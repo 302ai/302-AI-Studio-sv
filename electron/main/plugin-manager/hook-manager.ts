@@ -4,7 +4,8 @@
  * Manages hook registration and execution for the plugin system
  */
 
-import type { HookHandler, HookOptions, IHookManager } from "$lib/plugin-system/types";
+import type { HookHandler, HookOptions } from "@302ai/studio-plugin-sdk";
+import type { IHookManager } from "./types";
 
 interface RegisteredHook<T = unknown> {
 	pluginId: string;
