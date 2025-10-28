@@ -113,7 +113,7 @@
 
 	function linkifyText(text: string): string {
 		const urlRegex =
-			/(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_\+.~#?&\/=]*))/gi;
+			/(https?:\/\/(?:www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b(?:[-a-zA-Z0-9()@:%_+.~#?&/=]*))/gi;
 
 		const parts: Array<{ type: "text" | "url"; value: string }> = [];
 		let lastIndex = 0;
@@ -196,7 +196,9 @@
 			<div class="whitespace-pre-wrap break-all" use:handleLinkClick>
 				{#each displayParts as part, partIndex (partIndex)}
 					{#if part.type === "text"}
+						<!-- eslint-disable svelte/no-at-html-tags -->
 						<div>{@html linkifyText(part.text)}</div>
+						<!-- eslint-enable svelte/no-at-html-tags -->
 					{/if}
 				{/each}
 			</div>

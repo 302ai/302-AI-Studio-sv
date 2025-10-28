@@ -20,7 +20,7 @@ import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
 
-const { broadcastService, threadService, storageService } = window.electronAPI;
+const { broadcastService, threadService, storageService, pluginService } = window.electronAPI;
 
 export interface Thread {
 	id: string;
@@ -231,7 +231,7 @@ class ChatState {
 		);
 	}
 
-	private handleChatError = (error: unknown) => {
+	private handleChatError = async (error: unknown) => {
 		const chatError = ChatErrorHandler.createError(error, {
 			provider: this.currentProvider?.name,
 			model: this.selectedModel?.id,
@@ -240,8 +240,65 @@ class ChatState {
 		});
 
 		this.lastError = chatError;
-		notificationState.setError(chatError);
-		ChatErrorHandler.showErrorNotification(chatError);
+
+		// Execute error hook
+		try {
+			const errorContext = {
+				source: "send_message" as const,
+				provider: this.currentProvider || undefined,
+				model: this.selectedModel || undefined,
+				metadata: {
+					errorType: chatError.type,
+					statusCode: chatError.statusCode,
+				},
+			};
+
+			const hookResult = await pluginService.executeErrorHook(
+				{
+					message:
+						chatError.originalError instanceof Error
+							? chatError.originalError.message
+							: String(chatError.originalError),
+					stack:
+						chatError.originalError instanceof Error ? chatError.originalError.stack : undefined,
+					name: chatError.originalError instanceof Error ? chatError.originalError.name : "Error",
+				},
+				errorContext,
+			);
+
+			if (hookResult.handled) {
+				console.log("[ChatState] Error handled by plugin hook");
+
+				// If plugin suggests custom message, use it
+				if (hookResult.message) {
+					notificationState.setError({
+						...chatError,
+						message: hookResult.message,
+					});
+				} else {
+					notificationState.setError(chatError);
+				}
+
+				// If plugin suggests retry
+				if (hookResult.retry) {
+					const retryDelay = hookResult.retryDelay || 0;
+					if (retryDelay > 0) {
+						await new Promise((resolve) => setTimeout(resolve, retryDelay));
+					}
+					await this.retryLastMessage();
+					return;
+				}
+			} else {
+				// Default error handling
+				notificationState.setError(chatError);
+				ChatErrorHandler.showErrorNotification(chatError);
+			}
+		} catch (hookError) {
+			console.error("[ChatState] Error hook failed:", hookError);
+			// Fallback to default error handling
+			notificationState.setError(chatError);
+			ChatErrorHandler.showErrorNotification(chatError);
+		}
 	};
 
 	private resetError = () => {
@@ -283,6 +340,60 @@ class ChatState {
 				const currentInputValue = this.inputValue;
 
 				this.resetError();
+
+				// Execute before send message hook
+				try {
+					const messageContext = {
+						messages: this.messages,
+						userMessage: {
+							role: "user" as const,
+							content: currentInputValue,
+							attachments: currentAttachments,
+						},
+						model: currentModel,
+						provider: this.currentProvider!,
+						parameters: {
+							temperature: this.temperature,
+							topP: this.topP,
+							maxTokens: this.maxTokens,
+							frequencyPenalty: this.frequencyPenalty,
+							presencePenalty: this.presencePenalty,
+						},
+						options: {
+							isThinkingActive: this.isThinkingActive,
+							isOnlineSearchActive: this.isOnlineSearchActive,
+							isMCPActive: this.isMCPActive,
+							mcpServerIds: this.mcpServerIds,
+							autoParseUrl: preferencesSettings.autoParseUrl,
+							speedOptions: {
+								enabled: preferencesSettings.streamOutputEnabled,
+								speed: preferencesSettings.streamSpeed,
+							},
+						},
+					};
+
+					// Serialize context to remove Svelte Proxy objects
+					const serializedContext = JSON.parse(JSON.stringify(messageContext));
+
+					const modifiedContext =
+						await pluginService.executeBeforeSendMessageHook(serializedContext);
+
+					// Check if hook cancelled the message
+					if (
+						modifiedContext &&
+						typeof modifiedContext === "object" &&
+						"stop" in modifiedContext &&
+						modifiedContext.stop === true
+					) {
+						console.log("[ChatState] Message sending cancelled by plugin hook");
+						return;
+					}
+
+					console.log("[ChatState] Before send message hook executed successfully");
+				} catch (hookError) {
+					console.error("[ChatState] Before send message hook failed:", hookError);
+					// Continue with message sending even if hook fails
+				}
 
 				const { parts: attachmentParts, metadataList: attachmentMetadata } =
 					await convertAttachmentsToMessageParts(currentAttachments);
@@ -786,6 +897,57 @@ export const chat = new Chat({
 	onFinish: async ({ messages }) => {
 		console.log("更新完成", $state.snapshot(messages));
 		persistedMessagesState.current = messages;
+
+		// Execute after send message hook
+		try {
+			const lastMessage = messages[messages.length - 1];
+			const userMessage = messages[messages.length - 2]; // Assuming last is AI, second-to-last is user
+
+			if (lastMessage && userMessage && chatState.selectedModel && chatState.currentProvider) {
+				const messageContext = {
+					messages: messages,
+					userMessage: userMessage,
+					model: chatState.selectedModel,
+					provider: chatState.currentProvider,
+					parameters: {
+						temperature: chatState.temperature,
+						topP: chatState.topP,
+						maxTokens: chatState.maxTokens,
+						frequencyPenalty: chatState.frequencyPenalty,
+						presencePenalty: chatState.presencePenalty,
+					},
+					options: {
+						isThinkingActive: chatState.isThinkingActive,
+						isOnlineSearchActive: chatState.isOnlineSearchActive,
+						isMCPActive: chatState.isMCPActive,
+						mcpServerIds: chatState.mcpServerIds,
+						autoParseUrl: preferencesSettings.autoParseUrl,
+						speedOptions: {
+							enabled: preferencesSettings.streamOutputEnabled,
+							speed: preferencesSettings.streamSpeed,
+						},
+					},
+				};
+
+				const response = {
+					message: lastMessage,
+					usage: undefined,
+					model: chatState.selectedModel.id,
+					finishReason: "stop",
+					metadata: {},
+				};
+
+				// Serialize context and response to remove Svelte Proxy objects
+				const serializedContext = JSON.parse(JSON.stringify(messageContext));
+				const serializedResponse = JSON.parse(JSON.stringify(response));
+
+				await pluginService.executeAfterSendMessageHook(serializedContext, serializedResponse);
+				console.log("[ChatState] After send message hook executed successfully");
+			}
+		} catch (hookError) {
+			console.error("[ChatState] After send message hook failed:", hookError);
+			// Continue execution even if hook fails
+		}
 
 		const titleTiming = preferencesSettings.titleGenerationTiming;
 		const titleModel = preferencesSettings.titleGenerationModel;

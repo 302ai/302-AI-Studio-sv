@@ -1,0 +1,52 @@
+{
+	"id": "com.302ai.provider.debug",
+	"name": "Debug Provider",
+	"version": "1.0.0",
+	"type": "provider",
+	"description": "Debug provider plugin for testing message hooks and plugin system functionality",
+	"author": "302.AI",
+	"homepage": "https://302.ai",
+	"repository": "https://github.com/302ai/302-AI-Studio-SV",
+	"permissions": ["network", "storage"],
+	"compatibleVersion": ">=0.1.0",
+	"main": "main/index.js",
+	"builtin": true,
+	"tags": ["provider", "debug", "testing", "hooks"],
+	"defaultConfig": {
+		"enabled": false,
+		"logLevel": "verbose",
+		"addPrefix": true,
+		"prefix": "[DEBUG]"
+	},
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"enabled": {
+				"type": "boolean",
+				"title": "Enable Debug Mode",
+				"description": "Enable debug hooks and logging",
+				"default": false
+			},
+			"logLevel": {
+				"type": "string",
+				"title": "Log Level",
+				"description": "Logging verbosity level",
+				"enum": ["silent", "normal", "verbose"],
+				"default": "verbose"
+			},
+			"addPrefix": {
+				"type": "boolean",
+				"title": "Add Message Prefix",
+				"description": "Add debug prefix to user messages",
+				"default": true
+			},
+			"prefix": {
+				"type": "string",
+				"title": "Message Prefix",
+				"description": "Prefix to add to messages when debug mode is enabled",
+				"default": "[DEBUG]"
+			}
+		},
+		"required": []
+	}
+}

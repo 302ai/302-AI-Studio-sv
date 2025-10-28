@@ -1,0 +1,36 @@
+{
+	"id": "com.302ai.provider.google",
+	"name": "Google AI Provider",
+	"version": "1.0.0",
+	"type": "provider",
+	"description": "Google AI API provider plugin for Gemini models",
+	"author": "302.AI",
+	"homepage": "https://302.ai",
+	"repository": "https://github.com/302ai/302-AI-Studio-SV",
+	"permissions": ["network", "storage"],
+	"compatibleVersion": ">=0.1.0",
+	"main": "main/index.js",
+	"builtin": true,
+	"tags": ["provider", "google", "gemini", "ai"],
+	"defaultConfig": {
+		"apiKey": "",
+		"baseUrl": "https://generativelanguage.googleapis.com"
+	},
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"apiKey": {
+				"type": "string",
+				"title": "API Key",
+				"description": "Your Google AI API key"
+			},
+			"baseUrl": {
+				"type": "string",
+				"title": "Base URL",
+				"description": "API base URL (for proxies or custom endpoints)",
+				"default": "https://generativelanguage.googleapis.com"
+			}
+		},
+		"required": ["apiKey"]
+	}
+}

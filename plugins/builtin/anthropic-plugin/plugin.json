@@ -1,0 +1,36 @@
+{
+	"id": "com.302ai.provider.anthropic",
+	"name": "Anthropic Provider",
+	"version": "1.0.0",
+	"type": "provider",
+	"description": "Anthropic API provider plugin for Claude models",
+	"author": "302.AI",
+	"homepage": "https://302.ai",
+	"repository": "https://github.com/302ai/302-AI-Studio-SV",
+	"permissions": ["network", "storage"],
+	"compatibleVersion": ">=0.1.0",
+	"main": "main/index.js",
+	"builtin": true,
+	"tags": ["provider", "anthropic", "claude", "ai"],
+	"defaultConfig": {
+		"apiKey": "",
+		"baseUrl": "https://api.anthropic.com"
+	},
+	"configSchema": {
+		"type": "object",
+		"properties": {
+			"apiKey": {
+				"type": "string",
+				"title": "API Key",
+				"description": "Your Anthropic API key"
+			},
+			"baseUrl": {
+				"type": "string",
+				"title": "Base URL",
+				"description": "API base URL (for proxies or custom endpoints)",
+				"default": "https://api.anthropic.com"
+			}
+		},
+		"required": ["apiKey"]
+	}
+}

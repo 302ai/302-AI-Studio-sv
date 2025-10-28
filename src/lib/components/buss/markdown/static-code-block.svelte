@@ -9,10 +9,8 @@
 	import { DEFAULT_THEME, ensureHighlighter } from "./highlighter";
 
 	interface Props {
-		blockId: string;
 		code: string;
 		language: string | null;
-		meta?: string | null;
 		theme?: string | null;
 		title?: string | null;
 		showCollapseButton?: boolean;
