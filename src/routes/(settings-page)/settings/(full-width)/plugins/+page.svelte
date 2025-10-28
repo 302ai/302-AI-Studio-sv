@@ -15,8 +15,8 @@
 	import { Checkbox } from "$lib/components/ui/checkbox";
 	import { m } from "$lib/paraglide/messages";
 	import { pluginState } from "$lib/stores/plugin-state.svelte";
-	import { Loader2, Plus, RefreshCw, Search } from "@lucide/svelte";
-	import type { InstalledPlugin } from "@shared/types";
+	import { FolderOpen, Loader2, Plus, RefreshCw, Search } from "@lucide/svelte";
+	import type { InstalledPlugin, PluginSource } from "@shared/types";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
@@ -33,8 +33,17 @@
 	let searchQuery = $state("");
 	let activeTab = $state("installed");
 	let settingsDialogOpen = $state(false);
+	let installDialogOpen = $state(false);
+	let uninstallDialogOpen = $state(false);
+	let detailsDialogOpen = $state(false);
 	let selectedPlugin = $state<InstalledPlugin | null>(null);
 	let pluginConfig = $state<Record<string, unknown>>({});
+	let installSource = $state<"local" | "url" | "marketplace">("local");
+	let installPath = $state("");
+	let installUrl = $state("");
+	let isInstalling = $state(false);
+	let isUninstalling = $state(false);
+	let updatingPlugins = $state(new Set<string>());
 
 	const { installedPlugins, builtinPlugins, thirdPartyPlugins, isLoading } = $derived(pluginState);
 
@@ -68,6 +77,73 @@
 		}
 	}
 
+	function openInstallDialog() {
+		installSource = "local";
+		installPath = "";
+		installUrl = "";
+		installDialogOpen = true;
+	}
+
+	async function selectFolder() {
+		try {
+			const path = await window.electronAPI.pluginService.selectPluginFolder();
+			if (path) {
+				installPath = path;
+			}
+		} catch (err) {
+			console.error("Failed to select folder:", err);
+			toast.error(m.plugins_error(), {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		}
+	}
+
+	async function handleInstallPlugin() {
+		if (isInstalling) return;
+
+		let source: PluginSource;
+
+		if (installSource === "local") {
+			if (!installPath.trim()) {
+				toast.error(m.plugins_install_error(), {
+					description: m.plugins_install_path_placeholder(),
+				});
+				return;
+			}
+			source = { type: "local", path: installPath };
+		} else if (installSource === "url") {
+			if (!installUrl.trim()) {
+				toast.error(m.plugins_install_error(), {
+					description: m.plugins_install_url_placeholder(),
+				});
+				return;
+			}
+			source = { type: "url", url: installUrl };
+		} else {
+			toast.error(m.plugins_error(), {
+				description: "Marketplace not yet implemented",
+			});
+			return;
+		}
+
+		isInstalling = true;
+
+		try {
+			await pluginState.installPlugin(source);
+			toast.success(m.plugins_install_success());
+			installDialogOpen = false;
+			installPath = "";
+			installUrl = "";
+		} catch (err) {
+			console.error("Failed to install plugin:", err);
+			toast.error(m.plugins_install_error(), {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		} finally {
+			isInstalling = false;
+		}
+	}
+
 	async function openSettings(plugin: InstalledPlugin) {
 		selectedPlugin = plugin;
 		// Load current config
@@ -82,6 +158,11 @@
 			pluginConfig = {};
 		}
 		settingsDialogOpen = true;
+	}
+
+	function openDetails(plugin: InstalledPlugin) {
+		selectedPlugin = plugin;
+		detailsDialogOpen = true;
 	}
 
 	async function saveSettings() {
@@ -118,6 +199,51 @@
 			toast.error(m.plugins_error(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
+		}
+	}
+
+	function openUninstallDialog(plugin: InstalledPlugin) {
+		selectedPlugin = plugin;
+		uninstallDialogOpen = true;
+	}
+
+	async function handleUninstallPlugin() {
+		if (!selectedPlugin || isUninstalling) return;
+
+		isUninstalling = true;
+
+		try {
+			await pluginState.uninstallPlugin(selectedPlugin.metadata.id);
+			toast.success(m.plugins_uninstall_success());
+			uninstallDialogOpen = false;
+			selectedPlugin = null;
+		} catch (err) {
+			console.error("Failed to uninstall plugin:", err);
+			toast.error(m.plugins_error(), {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		} finally {
+			isUninstalling = false;
+		}
+	}
+
+	async function handleUpdatePlugin(pluginId: string) {
+		if (updatingPlugins.has(pluginId)) return;
+
+		updatingPlugins.add(pluginId);
+
+		try {
+			await pluginState.updatePlugin(pluginId);
+			toast.success(m.plugins_settings_saved(), {
+				description: "Plugin reloaded successfully",
+			});
+		} catch (err) {
+			console.error("Failed to update plugin:", err);
+			toast.error(m.plugins_error(), {
+				description: err instanceof Error ? err.message : String(err),
+			});
+		} finally {
+			updatingPlugins.delete(pluginId);
 		}
 	}
 
@@ -160,7 +286,7 @@
 				<RefreshCw class={isLoading ? "mr-2 h-4 w-4 animate-spin" : "mr-2 h-4 w-4"} />
 				{m.plugins_refresh()}
 			</Button>
-			<Button variant="default" size="sm">
+			<Button variant="default" size="sm" onclick={openInstallDialog}>
 				<Plus class="mr-2 h-4 w-4" />
 				{m.plugins_install()}
 			</Button>
@@ -260,7 +386,7 @@
 							<!-- Tags -->
 							{#if plugin.metadata.tags && plugin.metadata.tags.length > 0}
 								<div class="mb-3 flex flex-wrap gap-1">
-									{#each plugin.metadata.tags.slice(0, 3) as tag}
+									{#each plugin.metadata.tags.slice(0, 3) as tag (tag)}
 										<Badge variant="outline" class="text-xs">
 											{tag}
 										</Badge>
@@ -275,7 +401,7 @@
 							</p>
 
 							<!-- Actions -->
-							<div class="flex gap-2">
+							<div class="flex gap-2 flex-wrap">
 								{#if plugin.status === "enabled"}
 									<Button
 										size="sm"
@@ -295,9 +421,34 @@
 										{m.plugins_button_enable()}
 									</Button>
 								{/if}
+								<Button size="sm" variant="ghost" onclick={() => openDetails(plugin)}>
+									{m.plugins_button_details()}
+								</Button>
 								<Button size="sm" variant="ghost" onclick={() => openSettings(plugin)}>
 									{m.plugins_button_settings()}
 								</Button>
+								{#if !plugin.metadata.builtin}
+									<Button
+										size="sm"
+										variant="ghost"
+										onclick={() => handleUpdatePlugin(plugin.metadata.id)}
+										disabled={updatingPlugins.has(plugin.metadata.id)}
+									>
+										{#if updatingPlugins.has(plugin.metadata.id)}
+											<Loader2 class="h-4 w-4 animate-spin" />
+										{:else}
+											{m.plugins_button_update()}
+										{/if}
+									</Button>
+									<Button
+										size="sm"
+										variant="ghost"
+										onclick={() => openUninstallDialog(plugin)}
+										class="text-destructive hover:text-destructive"
+									>
+										{m.plugins_button_uninstall()}
+									</Button>
+								{/if}
 							</div>
 						</div>
 					{/each}
@@ -339,7 +490,7 @@
 					<h3 class="text-sm font-medium">{m.plugins_settings_configuration()}</h3>
 
 					{#if selectedPlugin.metadata.configSchema?.properties}
-						{#each Object.entries(selectedPlugin.metadata.configSchema.properties) as [key, schema]}
+						{#each Object.entries(selectedPlugin.metadata.configSchema.properties) as [key, schema] (key)}
 							<div class="space-y-2">
 								<Label for={key} class="text-sm font-medium">
 									{schema.title || key}
@@ -372,7 +523,7 @@
 										bind:value={pluginConfig[key]}
 										class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 									>
-										{#each schema.enum as option}
+										{#each schema.enum as option (option)}
 											<option value={option}>{option}</option>
 										{/each}
 									</select>
@@ -400,6 +551,315 @@
 					>{m.plugins_settings_cancel()}</Button
 				>
 				<Button onclick={saveSettings}>{m.plugins_settings_save()}</Button>
+			</DialogFooter>
+		{/if}
+	</DialogContent>
+</Dialog>
+
+<!-- Plugin Install Dialog -->
+<Dialog bind:open={installDialogOpen}>
+	<DialogContent class="max-w-lg">
+		<DialogHeader>
+			<DialogTitle>{m.plugins_install_dialog_title()}</DialogTitle>
+			<DialogDescription>{m.plugins_install_dialog_description()}</DialogDescription>
+		</DialogHeader>
+
+		<div class="space-y-4 py-4">
+			<!-- Installation Source Type -->
+			<div class="space-y-2">
+				<Label>{m.plugins_install_source_type()}</Label>
+				<div class="grid grid-cols-2 gap-2">
+					<Button
+						variant={installSource === "local" ? "default" : "outline"}
+						size="sm"
+						onclick={() => (installSource = "local")}
+						class="justify-start"
+					>
+						{m.plugins_install_source_local()}
+					</Button>
+					<Button
+						variant={installSource === "url" ? "default" : "outline"}
+						size="sm"
+						onclick={() => (installSource = "url")}
+						class="justify-start"
+					>
+						{m.plugins_install_source_url()}
+					</Button>
+				</div>
+			</div>
+
+			<!-- Local Path Input -->
+			{#if installSource === "local"}
+				<div class="space-y-2">
+					<Label for="plugin-path">{m.plugins_install_path_label()}</Label>
+					<div class="flex gap-2">
+						<Input
+							id="plugin-path"
+							type="text"
+							bind:value={installPath}
+							placeholder={m.plugins_install_path_placeholder()}
+							class="flex-1"
+						/>
+						<Button variant="outline" size="icon" onclick={selectFolder}>
+							<FolderOpen class="h-4 w-4" />
+						</Button>
+					</div>
+				</div>
+			{/if}
+
+			<!-- URL Input -->
+			{#if installSource === "url"}
+				<div class="space-y-2">
+					<Label for="plugin-url">{m.plugins_install_url_label()}</Label>
+					<Input
+						id="plugin-url"
+						type="text"
+						bind:value={installUrl}
+						placeholder={m.plugins_install_url_placeholder()}
+					/>
+					<p class="text-xs text-muted-foreground">This feature is not yet implemented.</p>
+				</div>
+			{/if}
+		</div>
+
+		<DialogFooter>
+			<Button variant="outline" onclick={() => (installDialogOpen = false)}
+				>{m.plugins_settings_cancel()}</Button
+			>
+			<Button onclick={handleInstallPlugin} disabled={isInstalling}>
+				{#if isInstalling}
+					<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+					{m.plugins_install_installing()}
+				{:else}
+					<Plus class="mr-2 h-4 w-4" />
+					{m.plugins_install_button_install()}
+				{/if}
+			</Button>
+		</DialogFooter>
+	</DialogContent>
+</Dialog>
+
+<!-- Plugin Uninstall Confirmation Dialog -->
+<Dialog bind:open={uninstallDialogOpen}>
+	<DialogContent class="max-w-md">
+		<DialogHeader>
+			<DialogTitle>{m.plugins_uninstall_confirm_title()}</DialogTitle>
+			<DialogDescription>
+				{m.plugins_uninstall_confirm_description({ name: selectedPlugin?.metadata.name || "" })}
+			</DialogDescription>
+		</DialogHeader>
+
+		{#if selectedPlugin}
+			<div class="space-y-3 py-4">
+				<div class="rounded-lg bg-muted p-4">
+					<div class="flex items-center gap-3 mb-2">
+						{#if selectedPlugin.metadata.icon}
+							<img
+								src={selectedPlugin.metadata.icon}
+								alt={selectedPlugin.metadata.name}
+								class="h-8 w-8 rounded"
+							/>
+						{:else}
+							<div
+								class="flex h-8 w-8 items-center justify-center rounded bg-primary/10 text-primary"
+							>
+								<span class="text-sm font-bold">
+									{selectedPlugin.metadata.name.charAt(0).toUpperCase()}
+								</span>
+							</div>
+						{/if}
+						<div>
+							<p class="font-medium">{selectedPlugin.metadata.name}</p>
+							<p class="text-xs text-muted-foreground">v{selectedPlugin.metadata.version}</p>
+						</div>
+					</div>
+					<p class="text-sm text-muted-foreground">{selectedPlugin.metadata.description}</p>
+				</div>
+			</div>
+		{/if}
+
+		<DialogFooter>
+			<Button variant="outline" onclick={() => (uninstallDialogOpen = false)}
+				>{m.plugins_settings_cancel()}</Button
+			>
+			<Button variant="destructive" onclick={handleUninstallPlugin} disabled={isUninstalling}>
+				{#if isUninstalling}
+					<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+				{/if}
+				{m.plugins_uninstall_button_confirm()}
+			</Button>
+		</DialogFooter>
+	</DialogContent>
+</Dialog>
+
+<!-- Plugin Details Dialog -->
+<Dialog bind:open={detailsDialogOpen}>
+	<DialogContent class="max-w-3xl max-h-[85vh] overflow-y-auto">
+		<DialogHeader>
+			<DialogTitle>{selectedPlugin?.metadata.name || ""}</DialogTitle>
+			<DialogDescription>
+				{selectedPlugin?.metadata.description || ""}
+			</DialogDescription>
+		</DialogHeader>
+
+		{#if selectedPlugin}
+			<div class="space-y-6 py-4">
+				<!-- Plugin Header -->
+				<div class="flex items-start gap-4">
+					{#if selectedPlugin.metadata.icon}
+						<img
+							src={selectedPlugin.metadata.icon}
+							alt={selectedPlugin.metadata.name}
+							class="h-16 w-16 rounded-lg"
+						/>
+					{:else}
+						<div
+							class="flex h-16 w-16 items-center justify-center rounded-lg bg-primary/10 text-primary"
+						>
+							<span class="text-2xl font-bold">
+								{selectedPlugin.metadata.name.charAt(0).toUpperCase()}
+							</span>
+						</div>
+					{/if}
+					<div class="flex-1">
+						<div class="flex items-center gap-2 mb-1">
+							<h3 class="text-xl font-semibold">{selectedPlugin.metadata.name}</h3>
+							<Badge variant={getStatusBadgeVariant(selectedPlugin.status)}>
+								{getStatusText(selectedPlugin.status)}
+							</Badge>
+							{#if selectedPlugin.metadata.builtin}
+								<Badge variant="secondary">{m.plugins_badge_builtin()}</Badge>
+							{/if}
+						</div>
+						<p class="text-sm text-muted-foreground mb-2">v{selectedPlugin.metadata.version}</p>
+						<div class="flex flex-wrap gap-2">
+							{#if selectedPlugin.metadata.tags && selectedPlugin.metadata.tags.length > 0}
+								{#each selectedPlugin.metadata.tags as tag}
+									<Badge variant="outline" class="text-xs">
+										{tag}
+									</Badge>
+								{/each}
+							{/if}
+						</div>
+					</div>
+				</div>
+
+				<!-- Plugin Information Grid -->
+				<div class="grid gap-4 md:grid-cols-2">
+					<!-- Basic Info -->
+					<div class="rounded-lg border p-4 space-y-2">
+						<h4 class="font-medium text-sm mb-3">{m.plugins_details_basic_info()}</h4>
+						<div class="space-y-1.5 text-sm">
+							<div class="flex justify-between">
+								<span class="text-muted-foreground">{m.plugins_details_author()}：</span>
+								<span class="font-medium">{selectedPlugin.metadata.author}</span>
+							</div>
+							<div class="flex justify-between">
+								<span class="text-muted-foreground">{m.plugins_details_version()}：</span>
+								<span class="font-medium">{selectedPlugin.metadata.version}</span>
+							</div>
+							<div class="flex justify-between">
+								<span class="text-muted-foreground">{m.plugins_details_id()}：</span>
+								<span class="font-mono text-xs">{selectedPlugin.metadata.id}</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Installation Info -->
+					<div class="rounded-lg border p-4 space-y-2">
+						<h4 class="font-medium text-sm mb-3">{m.plugins_details_installation_info()}</h4>
+						<div class="space-y-1.5 text-sm">
+							<div class="flex justify-between">
+								<span class="text-muted-foreground">{m.plugins_details_type()}：</span>
+								<span class="font-medium">
+									{selectedPlugin.metadata.builtin
+										? m.plugins_details_builtin()
+										: m.plugins_details_third_party()}
+								</span>
+							</div>
+							<div class="flex justify-between">
+								<span class="text-muted-foreground">{m.plugins_details_status()}：</span>
+								<span class="font-medium">{getStatusText(selectedPlugin.status)}</span>
+							</div>
+							{#if selectedPlugin.installedAt}
+								<div class="flex justify-between">
+									<span class="text-muted-foreground">{m.plugins_details_installed_at()}：</span>
+									<span class="font-medium">
+										{new Date(selectedPlugin.installedAt).toLocaleDateString()}
+									</span>
+								</div>
+							{/if}
+							<div class="flex flex-col gap-1">
+								<span class="text-muted-foreground">{m.plugins_details_path()}：</span>
+								<span class="font-mono text-xs break-all">{selectedPlugin.path}</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Description -->
+				<div class="rounded-lg border p-4">
+					<h4 class="font-medium text-sm mb-2">{m.plugins_details_full_description()}</h4>
+					<p class="text-sm text-muted-foreground">
+						{selectedPlugin.metadata.description}
+					</p>
+				</div>
+
+				<!-- Configuration Schema -->
+				{#if selectedPlugin.metadata.configSchema?.properties && Object.keys(selectedPlugin.metadata.configSchema.properties).length > 0}
+					<div class="rounded-lg border p-4">
+						<h4 class="font-medium text-sm mb-3">{m.plugins_details_configurable_options()}</h4>
+						<div class="space-y-2">
+							{#each Object.entries(selectedPlugin.metadata.configSchema.properties) as [key, schema]}
+								<div class="flex items-start gap-3 text-sm">
+									<div class="flex-1">
+										<div class="font-medium">
+											{schema.title || key}
+											{#if Array.isArray(selectedPlugin.metadata.configSchema.required) && selectedPlugin.metadata.configSchema.required.includes(key)}
+												<span class="text-destructive text-xs ml-1">*</span>
+											{/if}
+										</div>
+										{#if schema.description}
+											<div class="text-muted-foreground text-xs mt-0.5">
+												{schema.description}
+											</div>
+										{/if}
+									</div>
+									<Badge variant="outline" class="text-xs">{schema.type}</Badge>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/if}
+
+				<!-- Permissions -->
+				{#if selectedPlugin.metadata.permissions && selectedPlugin.metadata.permissions.length > 0}
+					<div class="rounded-lg border p-4">
+						<h4 class="font-medium text-sm mb-3">{m.plugins_details_permissions()}</h4>
+						<div class="flex flex-wrap gap-2">
+							{#each selectedPlugin.metadata.permissions as permission}
+								<Badge variant="secondary" class="text-xs">
+									{permission}
+								</Badge>
+							{/each}
+						</div>
+					</div>
+				{/if}
+			</div>
+
+			<DialogFooter>
+				<Button variant="outline" onclick={() => (detailsDialogOpen = false)}
+					>{m.plugins_details_close()}</Button
+				>
+				<Button
+					variant="default"
+					onclick={() => {
+						detailsDialogOpen = false;
+						if (selectedPlugin) openSettings(selectedPlugin);
+					}}
+				>
+					{m.plugins_button_settings()}
+				</Button>
 			</DialogFooter>
 		{/if}
 	</DialogContent>

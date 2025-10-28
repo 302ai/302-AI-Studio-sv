@@ -6,7 +6,8 @@
 
 import type { InstalledPlugin, PluginSource, ProviderDefinition } from "$lib/plugin-system/types";
 import type { Model, ModelProvider } from "@shared/types";
-import type { IpcMainInvokeEvent } from "electron";
+import { dialog, type IpcMainInvokeEvent } from "electron";
+import fs from "fs-extra";
 import { pluginLoader } from "../plugin-manager/plugin-loader";
 import { pluginRegistry } from "../plugin-manager/plugin-registry";
 import {
@@ -152,11 +153,31 @@ export class PluginService {
 			throw new Error(`Cannot uninstall builtin plugin: ${pluginId}`);
 		}
 
-		// Unload the plugin
+		const pluginPath = plugin.path;
+
+		// Unload the plugin first
 		await pluginLoader.unloadPlugin(pluginId);
 
-		// TODO: Delete plugin files
-		// For now, just unload it
+		// Delete plugin files
+		try {
+			await fs.remove(pluginPath);
+			console.log(`[PluginService] Deleted plugin files at: ${pluginPath}`);
+		} catch (err) {
+			console.error(`[PluginService] Failed to delete plugin files:`, err);
+			throw new Error(
+				`Failed to delete plugin files: ${err instanceof Error ? err.message : String(err)}`,
+			);
+		}
+
+		// Clean up plugin configuration from storage
+		const configPrefix = `plugin:${pluginId}:config:`;
+		const allKeys = await storageService.getKeys(_event);
+		const configKeys = allKeys.filter((key: string) => key.startsWith(configPrefix));
+
+		for (const key of configKeys) {
+			await storageService.removeItem(_event, key);
+		}
+
 		console.log(`[PluginService] Uninstalled plugin: ${pluginId}`);
 	}
 
@@ -182,6 +203,23 @@ export class PluginService {
 	async reloadPlugin(_event: IpcMainInvokeEvent, pluginId: string): Promise<void> {
 		await pluginLoader.reloadPlugin(pluginId);
 		console.log(`[PluginService] Reloaded plugin: ${pluginId}`);
+	}
+
+	/**
+	 * Show a dialog to select a plugin folder
+	 * @returns The selected folder path, or null if cancelled
+	 */
+	async selectPluginFolder(_event: IpcMainInvokeEvent): Promise<string | null> {
+		const { canceled, filePaths } = await dialog.showOpenDialog({
+			title: "Select Plugin Folder",
+			properties: ["openDirectory"],
+		});
+
+		if (canceled || filePaths.length === 0) {
+			return null;
+		}
+
+		return filePaths[0];
 	}
 
 	/**

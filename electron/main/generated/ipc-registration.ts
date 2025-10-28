@@ -88,6 +88,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("pluginService:reloadPlugin", (event, pluginId) =>
 		pluginService.reloadPlugin(event, pluginId),
 	);
+	ipcMain.handle("pluginService:selectPluginFolder", (event) =>
+		pluginService.selectPluginFolder(event),
+	);
 	ipcMain.handle("pluginService:getPluginConfig", (event, pluginId) =>
 		pluginService.getPluginConfig(event, pluginId),
 	);
@@ -288,6 +291,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("pluginService:uninstallPlugin");
 	ipcMain.removeHandler("pluginService:updatePlugin");
 	ipcMain.removeHandler("pluginService:reloadPlugin");
+	ipcMain.removeHandler("pluginService:selectPluginFolder");
 	ipcMain.removeHandler("pluginService:getPluginConfig");
 	ipcMain.removeHandler("pluginService:setPluginConfig");
 	ipcMain.removeHandler("pluginService:getPluginConfigValue");
