@@ -4,6 +4,7 @@
 	import type { ShortcutActionEvent } from "@shared/types/shortcut";
 	import { ModeWatcher } from "mode-watcher";
 	import { onMount } from "svelte";
+	import { toast } from "svelte-sonner";
 	import "../../app.css";
 	import TabBar from "./components/tab-bar/tab-bar.svelte";
 
@@ -11,13 +12,44 @@
 
 	onMount(() => {
 		console.log("ShortcutService: onShortcutAction");
-		const cleanup = window.electronAPI?.shortcut?.onShortcutAction?.(
+		const shortcutCleanup = window.electronAPI?.shortcut?.onShortcutAction?.(
 			(event: ShortcutActionEvent) => {
 				handleShortcutAction(event.action);
 			},
 		);
 
-		return cleanup;
+		// Listen for plugin notifications
+		const notificationCleanup = window.electronAPI?.plugin?.onNotification?.((data) => {
+			// Show toast notification
+			switch (data.type) {
+				case "success":
+					toast.success(data.message, {
+						description: `From ${data.pluginName}`,
+					});
+					break;
+				case "error":
+					toast.error(data.message, {
+						description: `From ${data.pluginName}`,
+					});
+					break;
+				case "warning":
+					toast.warning(data.message, {
+						description: `From ${data.pluginName}`,
+					});
+					break;
+				case "info":
+				default:
+					toast.info(data.message, {
+						description: `From ${data.pluginName}`,
+					});
+					break;
+			}
+		});
+
+		return () => {
+			shortcutCleanup?.();
+			notificationCleanup?.();
+		};
 	});
 
 	function handleShortcutAction(action: string) {

@@ -10,6 +10,7 @@ import path from "node:path";
 import { isMac } from "./constants";
 import { WebContentsFactory } from "./factories/web-contents-factory";
 import { registerIpcHandlers } from "./generated/ipc-registration";
+import { initializePluginSystem } from "./plugin-manager";
 import { initServer } from "./server/router";
 import { appService, shortcutService, windowService } from "./services";
 import { UpdaterService } from "./services/updater-service";
@@ -28,6 +29,16 @@ async function init() {
 	registerIpcHandlers();
 
 	await appService.initFromStorage();
+
+	// Initialize plugin system
+	try {
+		console.log("[Main] Initializing plugin system...");
+		await initializePluginSystem();
+		console.log("[Main] Plugin system initialized successfully");
+	} catch (error) {
+		console.error("[Main] Failed to initialize plugin system:", error);
+		// Continue app initialization even if plugin system fails
+	}
 
 	// Initialize shortcut system
 	const defaultShortcuts: ShortcutBinding[] = DEFAULT_SHORTCUTS.map((s) => ({

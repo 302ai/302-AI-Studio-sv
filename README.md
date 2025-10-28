@@ -16,12 +16,14 @@
 ## 🌟 Key Features
 
 ### Multi-Model & Multi-Provider Support
+
 - 🤖 Support for OpenAI, Anthropic, Google, and other major AI providers
 - 🔄 Flexible model switching and configuration
 - 🎛️ Advanced conversation parameter controls (temperature, top-p, token limits, etc.)
 - 📊 MCP (Model Context Protocol) server integration
 
 ### Document & Data Processing
+
 - 🖼️ Upload images for AI-assisted content analysis and description generation
 - 📄 Support for multiple file formats
 - 💻 Code syntax highlighting
@@ -29,6 +31,7 @@
 - 📝 Full Markdown rendering support
 
 ### Excellent User Experience
+
 - 🖥️ Multi-platform support for Windows, Mac, and Linux
 - 🌙 Customizable light/dark theme system with real-time preview
 - 📝 Complete Markdown rendering
@@ -36,12 +39,14 @@
 - 🎨 Modern component library based on Shadcn-Svelte
 
 ### Efficient Workflow
+
 - 🗂️ Manage multiple conversation threads simultaneously, organized and clear
 - ⚡ Support for real-time streaming responses
 - ⌨️ Complete keyboard shortcut system
 - 🔄 Hot Module Replacement (HMR) support for smooth development experience
 
 ### Multi-Language Support
+
 - **中文**
 - **English**
 - **日本語**
@@ -50,18 +55,18 @@
 
 ### 🏗️ Core Technology Stack
 
-| Layer | Technology | Description |
-|------|-----------|------------|
-| **UI Layer** | SvelteKit 5 + TypeScript | Modern component development, type safety, reactive state management |
-| **Style Layer** | TailwindCSS 4.x + Custom Theme System | Atomic CSS + smooth animations |
-| **Desktop** | Electron 38 | Cross-platform desktop application framework |
-| **State Management** | Svelte 5 Runes | Reactive state management (`$state`, `$derived`) |
-| **UI Component Library** | Shadcn-Svelte (bits-ui) | Modern, accessible component library |
-| **Internationalization** | Inlang Paraglide-js | Multi-language support |
-| **AI Integration** | AI SDK | Unified AI provider interface |
-| **Build Tools** | Vite + Electron Forge | Fast build + hot reload |
-| **Type System** | TypeScript | Strict type checking |
-| **Code Quality** | ESLint + Prettier + Vitest + Playwright | Code standards + unit tests + E2E tests |
+| Layer                    | Technology                              | Description                                                          |
+| ------------------------ | --------------------------------------- | -------------------------------------------------------------------- |
+| **UI Layer**             | SvelteKit 5 + TypeScript                | Modern component development, type safety, reactive state management |
+| **Style Layer**          | TailwindCSS 4.x + Custom Theme System   | Atomic CSS + smooth animations                                       |
+| **Desktop**              | Electron 38                             | Cross-platform desktop application framework                         |
+| **State Management**     | Svelte 5 Runes                          | Reactive state management (`$state`, `$derived`)                     |
+| **UI Component Library** | Shadcn-Svelte (bits-ui)                 | Modern, accessible component library                                 |
+| **Internationalization** | Inlang Paraglide-js                     | Multi-language support                                               |
+| **AI Integration**       | AI SDK                                  | Unified AI provider interface                                        |
+| **Build Tools**          | Vite + Electron Forge                   | Fast build + hot reload                                              |
+| **Type System**          | TypeScript                              | Strict type checking                                                 |
+| **Code Quality**         | ESLint + Prettier + Vitest + Playwright | Code standards + unit tests + E2E tests                              |
 
 ## 🚀 Quick Start
 
@@ -152,11 +157,11 @@ pnpm publish
 
 ### 📱 Cross-Platform Support
 
-| Platform | Architecture | Status |
-|----------|--------------|--------|
-| Windows | x64 / ARM64 | ✅ Fully Supported |
-| macOS | x64 / Apple Silicon | ✅ Fully Supported |
-| Linux | x64 / ARM64 | ✅ Fully Supported |
+| Platform | Architecture        | Status             |
+| -------- | ------------------- | ------------------ |
+| Windows  | x64 / ARM64         | ✅ Fully Supported |
+| macOS    | x64 / Apple Silicon | ✅ Fully Supported |
+| Linux    | x64 / ARM64         | ✅ Fully Supported |
 
 ## 🛠️ Development Guide
 
@@ -233,7 +238,6 @@ git push origin feature/amazing-feature
 
 # 5. Create a Pull Request
 ```
-
 
 ## 💬 Contact Us
 

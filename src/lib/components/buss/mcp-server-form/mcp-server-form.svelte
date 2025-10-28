@@ -520,11 +520,9 @@
 							>
 							<div class="flex-1 min-h-0">
 								<StaticCodeBlock
-									blockId="tool-schema-{selectedTool.name}"
 									code={JSON.stringify(selectedTool.inputSchema, null, 2)}
 									language="json"
 									showCollapseButton={false}
-									meta={null}
 								/>
 							</div>
 						</div>

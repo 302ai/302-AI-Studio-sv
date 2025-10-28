@@ -6,7 +6,7 @@ import {
 	WebContentsView,
 	type IpcMainInvokeEvent,
 } from "electron";
-import { CONFIG, isMac } from "../../constants";
+import { CONFIG, isMac, UNSUPPORTED_INJECTING_THEME } from "../../constants";
 import { themeStorage } from "../storage-service/theme-storage";
 
 export class AppService {
@@ -54,7 +54,10 @@ export class AppService {
 							url &&
 							!url.startsWith("app://") &&
 							!url.includes("localhost") &&
-							!url.includes("127.0.0.1");
+							!url.includes("127.0.0.1") &&
+							!UNSUPPORTED_INJECTING_THEME.some((domain) =>
+								new URL(url).hostname.endsWith(`${domain}`),
+							);
 						if (isExternalPage) {
 							this.updateWebContentsTheme(webContentsView.webContents);
 						}

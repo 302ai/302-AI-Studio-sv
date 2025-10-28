@@ -1,0 +1,132 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"type": "object",
+	"required": ["version", "lastUpdated", "plugins"],
+	"properties": {
+		"version": {
+			"type": "string",
+			"description": "Registry schema version"
+		},
+		"lastUpdated": {
+			"type": "string",
+			"format": "date-time",
+			"description": "Last update timestamp"
+		},
+		"plugins": {
+			"type": "array",
+			"items": {
+				"type": "object",
+				"required": ["id", "name", "description", "author", "version", "downloadUrl", "repository"],
+				"properties": {
+					"id": {
+						"type": "string",
+						"pattern": "^[a-z0-9-]+$",
+						"description": "Unique plugin identifier (lowercase, alphanumeric, hyphens only)"
+					},
+					"name": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 100,
+						"description": "Plugin display name"
+					},
+					"description": {
+						"type": "string",
+						"minLength": 1,
+						"maxLength": 500,
+						"description": "Short plugin description"
+					},
+					"author": {
+						"type": "string",
+						"description": "Plugin author name or organization"
+					},
+					"version": {
+						"type": "string",
+						"pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
+						"description": "Plugin version (semver)"
+					},
+					"downloadUrl": {
+						"type": "string",
+						"format": "uri",
+						"pattern": "^https://",
+						"description": "HTTPS URL to download plugin zip file"
+					},
+					"repository": {
+						"type": "string",
+						"format": "uri",
+						"description": "Plugin source code repository URL"
+					},
+					"homepage": {
+						"type": "string",
+						"format": "uri",
+						"description": "Plugin homepage URL"
+					},
+					"tags": {
+						"type": "array",
+						"items": {
+							"type": "string"
+						},
+						"description": "Plugin tags for categorization"
+					},
+					"icon": {
+						"type": "string",
+						"format": "uri",
+						"description": "Plugin icon URL"
+					},
+					"screenshots": {
+						"type": "array",
+						"items": {
+							"type": "string",
+							"format": "uri"
+						},
+						"description": "Screenshot URLs"
+					},
+					"readme": {
+						"type": "string",
+						"format": "uri",
+						"description": "README file URL"
+					},
+					"changelog": {
+						"type": "string",
+						"format": "uri",
+						"description": "Changelog file URL"
+					},
+					"minSdkVersion": {
+						"type": "string",
+						"pattern": "^\\d+\\.\\d+\\.\\d+$",
+						"description": "Minimum required SDK version"
+					},
+					"downloads": {
+						"type": "integer",
+						"minimum": 0,
+						"description": "Total download count"
+					},
+					"rating": {
+						"type": "number",
+						"minimum": 0,
+						"maximum": 5,
+						"description": "Average rating (0-5)"
+					},
+					"ratingCount": {
+						"type": "integer",
+						"minimum": 0,
+						"description": "Number of ratings"
+					},
+					"featured": {
+						"type": "boolean",
+						"description": "Whether plugin is featured"
+					},
+					"publishedAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "First publication date"
+					},
+					"updatedAt": {
+						"type": "string",
+						"format": "date-time",
+						"description": "Last update date"
+					}
+				}
+			}
+		}
+	}
+}

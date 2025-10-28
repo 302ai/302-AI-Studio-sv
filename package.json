@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "25.44.2",
+	"version": "25.44.5",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -40,8 +40,7 @@
 		"test:e2e": "playwright test",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"generate:ipc": "tsx scripts/generate-ipc.ts",
-		"postinstall": "pre-commit install --install-hooks --hook-type commit-msg",
-		"fta": "fta src/lib && fta electron/main"
+		"postinstall": "pre-commit install --install-hooks --hook-type commit-msg"
 	},
 	"devDependencies": {
 		"@ai-sdk/anthropic": "^2.0.17",
@@ -82,6 +81,7 @@
 		"@types/extract-zip": "^2.0.3",
 		"@types/markdown-it": "^14.1.2",
 		"@types/node": "^24.4.0",
+		"@types/semver": "^7.7.1",
 		"ai": "^5.0.48",
 		"bits-ui": "^2.9.8",
 		"clsx": "^2.1.1",
@@ -99,6 +99,7 @@
 		"paneforge": "^1.0.2",
 		"prettier": "^3.6.2",
 		"prettier-plugin-svelte": "^3.4.0",
+		"semver": "^7.7.3",
 		"svelte": "^5.38.10",
 		"svelte-check": "^4.3.1",
 		"svelte-sonner": "^1.0.5",
@@ -115,6 +116,7 @@
 		"vitest": "^3.2.4"
 	},
 	"dependencies": {
+		"@302ai/studio-plugin-sdk": "workspace:*",
 		"@302ai/unstorage": "^1.18.0",
 		"@ai-sdk/google": "^2.0.17",
 		"@ai-sdk/openai-compatible": "^1.0.19",
