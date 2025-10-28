@@ -298,6 +298,7 @@ export class PluginLoader {
 			} else {
 				// For CommonJS - dynamic require
 
+				// eslint-disable-next-line @typescript-eslint/no-require-imports
 				pluginModule = { default: require(modulePath) };
 			}
 		} catch (error) {

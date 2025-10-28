@@ -114,6 +114,7 @@ function addPermissionBasedAPIs(
 
 	// Filesystem permission (restricted to plugin directory)
 	if (permissions.includes("filesystem")) {
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const fs = require("fs");
 
 		// Create restricted fs module

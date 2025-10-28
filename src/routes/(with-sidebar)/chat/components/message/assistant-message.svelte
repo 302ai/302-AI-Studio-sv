@@ -25,6 +25,7 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
+	import type { DynamicToolUIPart } from "ai";
 	import { ChevronDown, Lightbulb, Server } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import MessageActions from "./message-actions.svelte";
@@ -65,7 +66,7 @@
 	}
 
 	let isReasoningExpanded = $state(!preferencesSettings.autoCollapseThink);
-	let selectedToolPart = $state<any>(null);
+	let selectedToolPart = $state<DynamicToolUIPart | null>(null);
 	let isToolModalOpen = $state(false);
 
 	$effect(() => {

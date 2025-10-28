@@ -109,7 +109,7 @@
 		return result;
 	});
 
-	const getCapabilityIcon = (capability: string) => {
+	const _getCapabilityIcon = (capability: string) => {
 		switch (capability) {
 			case "reasoning":
 				return {
@@ -151,7 +151,7 @@
 		}
 	};
 
-	const getTypeLabel = (type: string) => {
+	const _getTypeLabel = (type: string) => {
 		switch (type) {
 			case "language":
 				return m.text_model_type_chat();

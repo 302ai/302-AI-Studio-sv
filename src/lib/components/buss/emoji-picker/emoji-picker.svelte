@@ -23,6 +23,7 @@
 
 		// 如果 picker 存在但不在 DOM 中，重新添加
 		if (picker && !pickerContainer.contains(picker)) {
+			// eslint-disable-next-line svelte/no-dom-manipulating
 			pickerContainer.appendChild(picker);
 			return;
 		}
@@ -39,13 +40,15 @@
 
 			picker.classList.add("emoji-picker-custom");
 
-			picker.addEventListener("emoji-click", (event: any) => {
-				const emoji = event.detail.unicode;
+			picker.addEventListener("emoji-click", (event: Event) => {
+				const emojiEvent = event as CustomEvent<{ unicode: string }>;
+				const emoji = emojiEvent.detail.unicode;
 				value = emoji;
 				onSelect?.(emoji);
 				open = false;
 			});
 
+			// eslint-disable-next-line svelte/no-dom-manipulating
 			pickerContainer.appendChild(picker);
 		} catch (error) {
 			console.error("Failed to load emoji picker:", error);

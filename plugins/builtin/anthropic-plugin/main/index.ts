@@ -107,7 +107,7 @@ export class AnthropicProviderPlugin extends BaseProviderPlugin {
 	 * Parse model type from model ID
 	 */
 	protected parseModelType(
-		modelId: string,
+		_modelId: string,
 	): "language" | "image-generation" | "tts" | "embedding" | "rerank" {
 		// Anthropic only has language models
 		return "language";

@@ -6,18 +6,19 @@
  */
 
 import type {
-	ProviderPlugin,
-	ProviderDefinition,
+	AIResponse,
 	AuthContext,
 	AuthResult,
-	MessageContext,
-	AIResponse,
-	StreamChunk,
+	ChatMessage,
 	ErrorContext,
 	ErrorHandleResult,
-	PluginAPI,
+	MessageContext,
 	Model,
 	ModelProvider,
+	PluginAPI,
+	ProviderDefinition,
+	ProviderPlugin,
+	StreamChunk,
 } from "@302ai/studio-plugin-sdk";
 
 /**
@@ -123,11 +124,12 @@ export class DebugProviderPlugin implements ProviderPlugin {
 		if (this.config.addPrefix && context.userMessage) {
 			const modifiedContext = { ...context };
 
-			// Add prefix to the user message content
-			const userMsg = modifiedContext.userMessage as any;
-			if (userMsg.content && typeof userMsg.content === "string") {
-				userMsg.content = `${this.config.prefix} ${userMsg.content}`;
-				this.log("verbose", "✏️ Added prefix to message:", userMsg.content);
+			// Add prefix to the first text part
+			const userMsg: ChatMessage = modifiedContext.userMessage;
+			const textPart = userMsg.parts.find((part) => part.type === "text");
+			if (textPart && "text" in textPart) {
+				textPart.text = `${this.config.prefix} ${textPart.text}`;
+				this.log("verbose", "✏️ Added prefix to message:", textPart.text);
 			}
 
 			return modifiedContext;
@@ -277,7 +279,7 @@ export class DebugProviderPlugin implements ProviderPlugin {
 		try {
 			const savedConfig = await this.api.storage.getAllConfig();
 			this.config = { ...this.config, ...savedConfig };
-		} catch (error) {
+		} catch (_error) {
 			// Silently fail, keep current config
 		}
 	}

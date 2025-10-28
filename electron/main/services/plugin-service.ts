@@ -12,7 +12,6 @@ import extract from "extract-zip";
 import ky from "ky";
 import os from "os";
 import path from "path";
-import semver from "semver";
 import { pluginLoader } from "../plugin-manager/plugin-loader";
 import { pluginRegistry } from "../plugin-manager/plugin-registry";
 import {
@@ -286,7 +285,7 @@ export class PluginService {
 		try {
 			const pluginJsonPath = path.join(plugin.path, "plugin.json");
 			if (await fs.pathExists(pluginJsonPath)) {
-				const pluginJson = await fs.readJson(pluginJsonPath);
+				const _pluginJson = await fs.readJson(pluginJsonPath);
 
 				// If the plugin has a repository or update URL, we could check it here
 				// For now, we'll just indicate no update is available
