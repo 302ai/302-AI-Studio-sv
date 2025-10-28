@@ -290,7 +290,7 @@
 					class="rounded-settings-item bg-settings-item-bg hover:ring-ring hover:ring-1"
 				/>
 				{#if formData.baseUrl}
-					<p class="text-muted-foreground text-xs">
+					<p class="text-muted-foreground max-w-full break-all text-xs">
 						{m.text_base_url_request_info({
 							url: getChatEndpointUrl(formData.baseUrl, formData.apiType),
 						})}
