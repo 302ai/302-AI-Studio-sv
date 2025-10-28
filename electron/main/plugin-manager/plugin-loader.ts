@@ -56,22 +56,9 @@ export class PluginLoader {
 	 */
 	private ensurePluginDirs(): void {
 		for (const dir of this.pluginDirs) {
-			try {
-				const stats = fs.existsSync(dir) ? fs.statSync(dir) : null;
-
-				if (stats && !stats.isDirectory()) {
-					// If path exists but is not a directory, remove it first
-					console.warn(`[PluginLoader] Path exists but is not a directory, removing: ${dir}`);
-					fs.unlinkSync(dir);
-				}
-
-				if (!fs.existsSync(dir)) {
-					fs.mkdirSync(dir, { recursive: true });
-					console.log(`[PluginLoader] Created plugin directory: ${dir}`);
-				}
-			} catch (error) {
-				console.error(`[PluginLoader] Failed to ensure plugin directory ${dir}:`, error);
-				throw error;
+			if (!fs.existsSync(dir)) {
+				fs.mkdirSync(dir, { recursive: true });
+				console.log(`[PluginLoader] Created plugin directory: ${dir}`);
 			}
 		}
 	}
