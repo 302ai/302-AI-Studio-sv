@@ -1,24 +1,25 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Plugin Loader
  *
  * Loads and initializes plugins from file system
  */
 
+import type { InstalledPlugin, PluginMetadata, ProviderPlugin } from "$lib/plugin-system/types";
+import { app } from "electron";
 import * as fs from "fs";
 import * as path from "path";
-import { app } from "electron";
-import type { InstalledPlugin, PluginMetadata, ProviderPlugin } from "$lib/plugin-system/types";
-import { pluginRegistry } from "./plugin-registry";
+import { storageService } from "../services/storage-service";
 import { hookManager } from "./hook-manager";
 import { createPluginAPI } from "./plugin-api";
-import { storageService } from "../services/storage-service";
+import { pluginRegistry } from "./plugin-registry";
 
 // Import built-in plugins statically for development
-import { OpenAIProviderPlugin } from "../../../plugins/builtin/openai-plugin/main/index";
-import { AnthropicProviderPlugin } from "../../../plugins/builtin/anthropic-plugin/main/index";
-import { GoogleProviderPlugin } from "../../../plugins/builtin/google-plugin/main/index";
 import { AI302ProviderPlugin } from "../../../plugins/builtin/302ai-plugin/main/index";
+import { AnthropicProviderPlugin } from "../../../plugins/builtin/anthropic-plugin/main/index";
 import { DebugProviderPlugin } from "../../../plugins/builtin/debug-plugin/main/index";
+import { GoogleProviderPlugin } from "../../../plugins/builtin/google-plugin/main/index";
+import { OpenAIProviderPlugin } from "../../../plugins/builtin/openai-plugin/main/index";
 
 // Map of built-in plugin IDs to their class constructors
 const BUILTIN_PLUGINS: Record<string, new () => ProviderPlugin> = {
@@ -280,7 +281,7 @@ export class PluginLoader {
 				pluginModule = await import(modulePath);
 			} else {
 				// For CommonJS - dynamic require
-				// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 				pluginModule = { default: require(modulePath) };
 			}
 		} catch (error) {

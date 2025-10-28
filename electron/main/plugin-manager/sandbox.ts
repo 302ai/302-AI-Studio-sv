@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 /**
  * Plugin Sandbox
  *
@@ -5,9 +6,9 @@
  * to limit their access to system resources and APIs
  */
 
-import * as vm from "vm";
-import * as path from "path";
 import type { PluginPermission } from "$lib/plugin-system/types";
+import * as path from "path";
+import * as vm from "vm";
 
 /**
  * Sandbox context for plugin execution
