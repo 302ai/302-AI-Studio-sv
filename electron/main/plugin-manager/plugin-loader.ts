@@ -7,6 +7,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { app } from "electron";
+import semver from "semver";
 import type { InstalledPlugin, PluginMetadata, ProviderPlugin } from "$lib/plugin-system/types";
 import { pluginRegistry } from "./plugin-registry";
 import { hookManager } from "./hook-manager";
@@ -234,13 +235,29 @@ export class PluginLoader {
 		// For now, just log a warning if compatibility info is missing
 		if (!metadata.compatibleVersion) {
 			console.warn(`[PluginLoader] Plugin ${metadata.id} does not specify compatible version`);
+			return;
 		}
 
-		// TODO: Implement semver range checking
-		// const appVersion = app.getVersion();
-		// if (!semver.satisfies(appVersion, metadata.compatibleVersion)) {
-		//   throw new Error(`Plugin ${metadata.id} is not compatible with app version ${appVersion}`);
-		// }
+		// Check semantic version compatibility
+		const appVersion = app.getVersion();
+
+		try {
+			if (!semver.satisfies(appVersion, metadata.compatibleVersion)) {
+				console.warn(
+					`[PluginLoader] Plugin ${metadata.id} specifies compatibility with ${metadata.compatibleVersion}, ` +
+					`but current app version is ${appVersion}. The plugin may not work correctly.`
+				);
+			} else {
+				console.log(
+					`[PluginLoader] Plugin ${metadata.id} is compatible with app version ${appVersion}`
+				);
+			}
+		} catch (err) {
+			console.error(
+				`[PluginLoader] Failed to check version compatibility for plugin ${metadata.id}:`,
+				err
+			);
+		}
 	}
 
 	/**
@@ -280,7 +297,7 @@ export class PluginLoader {
 				pluginModule = await import(modulePath);
 			} else {
 				// For CommonJS - dynamic require
-				// eslint-disable-next-line @typescript-eslint/no-var-requires
+				 
 				pluginModule = { default: require(modulePath) };
 			}
 		} catch (error) {

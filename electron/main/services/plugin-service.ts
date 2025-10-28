@@ -8,6 +8,11 @@ import type { InstalledPlugin, PluginSource, ProviderDefinition } from "$lib/plu
 import type { Model, ModelProvider } from "@shared/types";
 import { dialog, type IpcMainInvokeEvent } from "electron";
 import fs from "fs-extra";
+import extract from "extract-zip";
+import ky from "ky";
+import os from "os";
+import path from "path";
+import semver from "semver";
 import { pluginLoader } from "../plugin-manager/plugin-loader";
 import { pluginRegistry } from "../plugin-manager/plugin-registry";
 import {
@@ -109,6 +114,69 @@ export class PluginService {
 	}
 
 	/**
+	 * Download a plugin from a URL
+	 * @param url The URL to download from
+	 * @returns The path to the downloaded and extracted plugin
+	 */
+	private async downloadPluginFromUrl(url: string): Promise<string> {
+		console.log(`[PluginService] Downloading plugin from: ${url}`);
+
+		// Create a temporary directory for download
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "plugin-download-"));
+		const zipPath = path.join(tempDir, "plugin.zip");
+
+		try {
+			// Download the plugin
+			const response = await ky.get(url, {
+				timeout: 120000, // 2 minutes timeout
+				headers: {
+					"User-Agent": "302-AI-Studio-Plugin-Installer",
+				},
+			});
+
+			if (!response.ok) {
+				throw new Error(`Failed to download plugin: ${response.status} ${response.statusText}`);
+			}
+
+			// Get the array buffer and save to file
+			const arrayBuffer = await response.arrayBuffer();
+			await fs.writeFile(zipPath, Buffer.from(arrayBuffer));
+
+			console.log(`[PluginService] Downloaded plugin to: ${zipPath}`);
+
+			// Extract the zip file
+			const extractDir = path.join(tempDir, "extracted");
+			await fs.ensureDir(extractDir);
+
+			await extract(zipPath, {
+				dir: extractDir,
+			});
+
+			console.log(`[PluginService] Extracted plugin to: ${extractDir}`);
+
+			// Move to final location
+			const pluginsDir = path.join(process.cwd(), "plugins", "external");
+			await fs.ensureDir(pluginsDir);
+
+			const pluginId = `external-${Date.now()}`;
+			const finalDir = path.join(pluginsDir, pluginId);
+
+			await fs.move(extractDir, finalDir);
+
+			// Clean up temp zip file
+			await fs.remove(zipPath);
+
+			console.log(`[PluginService] Plugin installed to: ${finalDir}`);
+
+			return finalDir;
+		} catch (err) {
+			// Clean up on error
+			await fs.remove(tempDir);
+			throw err;
+		}
+	}
+
+	/**
 	 * Install a plugin from a source
 	 */
 	async installPlugin(_event: IpcMainInvokeEvent, source: PluginSource): Promise<InstalledPlugin> {
@@ -122,8 +190,11 @@ export class PluginService {
 				break;
 
 			case "url":
-				// TODO: Download plugin from URL
-				throw new Error("URL-based plugin installation not yet implemented");
+				if (!source.url) {
+					throw new Error("URL source requires a URL");
+				}
+				pluginPath = await this.downloadPluginFromUrl(source.url);
+				break;
 
 			case "marketplace":
 				// TODO: Download plugin from marketplace
@@ -182,6 +253,57 @@ export class PluginService {
 	}
 
 	/**
+	 * Check for plugin updates
+	 * @param pluginId The plugin ID to check
+	 * @returns Object with update information
+	 */
+	async checkForUpdates(_event: IpcMainInvokeEvent, pluginId: string): Promise<{
+		hasUpdate: boolean;
+		currentVersion: string;
+		latestVersion?: string;
+		downloadUrl?: string;
+	}> {
+		const plugin = pluginLoader.getPlugin(pluginId);
+		if (!plugin) {
+			throw new Error(`Plugin ${pluginId} not found`);
+		}
+
+		const currentVersion = plugin.metadata.version;
+
+		// For external plugins, try to check from the plugin path
+		if (plugin.metadata.builtin) {
+			// Built-in plugins don't need updates
+			return {
+				hasUpdate: false,
+				currentVersion,
+			};
+		}
+
+		// Try to find an update URL in the plugin metadata or plugin.json
+		try {
+			const pluginJsonPath = path.join(plugin.path, "plugin.json");
+			if (await fs.pathExists(pluginJsonPath)) {
+				const pluginJson = await fs.readJson(pluginJsonPath);
+
+				// If the plugin has a repository or update URL, we could check it here
+				// For now, we'll just indicate no update is available
+
+				return {
+					hasUpdate: false,
+					currentVersion,
+				};
+			}
+		} catch (err) {
+			console.warn(`[PluginService] Failed to check updates for ${pluginId}:`, err);
+		}
+
+		return {
+			hasUpdate: false,
+			currentVersion,
+		};
+	}
+
+	/**
 	 * Update a plugin
 	 */
 	async updatePlugin(_event: IpcMainInvokeEvent, pluginId: string): Promise<void> {
@@ -190,8 +312,13 @@ export class PluginService {
 			throw new Error(`Plugin ${pluginId} not found`);
 		}
 
-		// TODO: Check for updates and download
+		if (plugin.metadata.builtin) {
+			throw new Error(`Cannot update builtin plugin: ${pluginId}`);
+		}
+
+		// For external plugins installed from URL, we could implement update logic here
 		// For now, just reload the plugin
+
 		await pluginLoader.reloadPlugin(pluginId);
 
 		console.log(`[PluginService] Updated plugin: ${pluginId}`);

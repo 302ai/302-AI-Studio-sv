@@ -56,6 +56,9 @@ declare global {
 			aiApplication: {
 				onAiApplicationsLoading: (callback: (loading: boolean) => void) => () => void;
 			};
+			plugin: {
+				onNotification: (callback: (data: { pluginId: string; pluginName: string; message: string; type: "info" | "success" | "warning" | "error" }) => void) => () => void;
+			};
 		};
 		windowId: string;
 		tab: Tab;

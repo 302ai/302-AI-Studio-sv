@@ -22,6 +22,7 @@ import type {
 import type { IHookManager } from "$lib/plugin-system/types";
 import { dialog, BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import { storageService } from "../services/storage-service";
+import { broadcastService } from "../services/broadcast-service";
 
 /**
  * Create a dummy IPC event for internal API calls
@@ -137,8 +138,14 @@ function createUIAPI(plugin: InstalledPlugin): PluginUIAPI {
 			message: string,
 			type: "info" | "success" | "warning" | "error" = "info",
 		): void {
-			// TODO: Integrate with application notification system
-			console.log(`[${type.toUpperCase()}] ${plugin.metadata.name}: ${message}`);
+			// Broadcast notification to all renderer processes
+			broadcastService.broadcastChannelToAll("plugin:notification", {
+				pluginId: plugin.metadata.id,
+				pluginName: plugin.metadata.name,
+				message,
+				type,
+			});
+			console.log(`[PluginAPI] Notification from ${plugin.metadata.name}: [${type}] ${message}`);
 		},
 
 		async showDialog(options: DialogOptions): Promise<DialogResult> {
