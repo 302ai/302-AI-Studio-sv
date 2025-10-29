@@ -66,14 +66,19 @@ class MarketplaceState {
 			console.log("[MarketplaceState] Refreshing marketplace...");
 
 			// Force refresh if requested
+			let plugins: PluginMarketEntry[];
 			if (force) {
-				this.marketplacePlugins = await registryService.refreshRegistry();
+				plugins = await registryService.refreshRegistry();
 			} else {
-				this.marketplacePlugins = await registryService.getMarketplacePlugins();
+				plugins = await registryService.getMarketplacePlugins();
 			}
 
+			// Filter out invalid entries (missing metadata or metadata.id)
+			this.marketplacePlugins = plugins.filter((p) => p && p.metadata && p.metadata.id);
+
 			// Update featured plugins
-			this.featuredPlugins = await registryService.getFeaturedPlugins();
+			const featured = await registryService.getFeaturedPlugins();
+			this.featuredPlugins = featured.filter((p) => p && p.metadata && p.metadata.id);
 
 			this.lastRefresh = Date.now();
 
@@ -110,7 +115,11 @@ class MarketplaceState {
 
 		try {
 			console.log(`[MarketplaceState] Searching for: "${query}"`);
-			this.searchResults = await registryService.searchMarketplacePlugins(query);
+			const results = await registryService.searchMarketplacePlugins(query);
+
+			// Filter out invalid entries
+			this.searchResults = results.filter((p) => p && p.metadata && p.metadata.id);
+
 			console.log(`[MarketplaceState] Found ${this.searchResults.length} results`);
 		} catch (error) {
 			console.error("[MarketplaceState] Search failed:", error);
