@@ -1,70 +1,10 @@
-import { getAllModels } from "$lib/api/models.js";
+import { getAllModels, getModelsByProvider } from "$lib/api/models.js";
 import { DEFAULT_PROVIDERS } from "$lib/datas/providers.js";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages.js";
-import type {
-	Model,
-	ModelCreateInput,
-	ModelProvider,
-	ModelUpdateInput,
-	ProviderDefinition,
-} from "@shared/types";
+import type { Model, ModelCreateInput, ModelProvider, ModelUpdateInput } from "@shared/types";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
-
-const { pluginService } = window.electronAPI;
-
-/**
- * Serialize ModelProvider for IPC transmission
- * Ensures all fields are plain objects (no complex types, no Proxy, no reactivity)
- */
-function serializeProvider(provider: ModelProvider): ModelProvider {
-	// Use JSON serialization to remove any Proxy/reactive wrappers
-	return JSON.parse(
-		JSON.stringify({
-			id: provider.id,
-			name: provider.name,
-			apiType: provider.apiType,
-			apiKey: provider.apiKey,
-			baseUrl: provider.baseUrl,
-			enabled: provider.enabled,
-			custom: provider.custom,
-			status: provider.status,
-			websites: provider.websites,
-			icon: provider.icon,
-		}),
-	) as ModelProvider;
-}
-
-/**
- * Convert ProviderDefinition from plugin to ModelProvider
- */
-function providerDefinitionToModelProvider(definition: ProviderDefinition): ModelProvider {
-	// Normalize apiType to match ModelProvider type
-	let apiType: "openai" | "anthropic" | "gemini" | "302ai" = "openai";
-	const lowerApiType = definition.apiType.toLowerCase();
-
-	if (lowerApiType === "anthropic") {
-		apiType = "anthropic";
-	} else if (lowerApiType === "gemini" || lowerApiType === "google") {
-		apiType = "gemini";
-	} else if (lowerApiType === "302ai") {
-		apiType = "302ai";
-	}
-
-	return {
-		id: definition.id,
-		name: definition.name,
-		apiType,
-		apiKey: "",
-		baseUrl: definition.websites.defaultBaseUrl,
-		enabled: true,
-		custom: false,
-		status: "pending",
-		websites: definition.websites,
-		icon: definition.icon,
-	};
-}
 
 export const persistedProviderState = new PersistedState<ModelProvider[]>(
 	"app-providers",
@@ -113,51 +53,6 @@ function getCachedSortedModels(): Model[] {
 }
 
 class ProviderState {
-	/**
-	 * Load providers from plugins and merge with existing providers
-	 */
-	async loadProvidersFromPlugins(): Promise<void> {
-		try {
-			// Get provider plugins from plugin system
-			const providerPlugins = await pluginService.getProviderPlugins();
-
-			// Convert ProviderDefinition to ModelProvider
-			const pluginProviders = providerPlugins.map(providerDefinitionToModelProvider);
-
-			// Get current providers
-			const currentProviders = persistedProviderState.current;
-
-			// Merge plugin providers with existing providers
-			// Keep user's existing providers and their settings (apiKey, baseUrl, enabled, etc.)
-			const mergedProviders = pluginProviders.map((pluginProvider) => {
-				const existingProvider = currentProviders.find((p) => p.id === pluginProvider.id);
-				if (existingProvider) {
-					// Keep user's settings but update metadata from plugin
-					return {
-						...pluginProvider,
-						apiKey: existingProvider.apiKey,
-						baseUrl: existingProvider.baseUrl,
-						enabled: existingProvider.enabled,
-						status: existingProvider.status,
-					};
-				}
-				return pluginProvider;
-			});
-
-			// Add custom providers that are not from plugins
-			const customProviders = currentProviders.filter(
-				(p) => p.custom || !pluginProviders.some((pp) => pp.id === p.id),
-			);
-
-			// Update provider state
-			persistedProviderState.current = [...mergedProviders, ...customProviders];
-
-			console.log(`[ProviderState] Loaded ${mergedProviders.length} providers from plugins`);
-		} catch (error) {
-			console.error("[ProviderState] Failed to load providers from plugins:", error);
-		}
-	}
-
 	getProvider(id: string): ModelProvider | null {
 		return persistedProviderState.current.find((p) => p.id === id) || null;
 	}
@@ -322,43 +217,26 @@ class ProviderState {
 	}
 	async fetchModelsForProvider(provider: ModelProvider): Promise<boolean> {
 		try {
-			// Use plugin system for all providers
-			// Deep clone to remove any reactive proxies
-			const serializedProvider = serializeProvider(provider);
-
-			console.log("[ProviderState] Fetching models for provider:", serializedProvider.id);
-			console.log("[ProviderState] Serialized provider:", serializedProvider);
-
-			const pluginModels = await pluginService.fetchModelsFromProvider(serializedProvider);
-
-			if (pluginModels && pluginModels.length > 0) {
+			const result = await getModelsByProvider(provider);
+			if (result.success && result.data) {
 				await this.updateProvider(provider.id, { status: "connected" });
-
-				// Ensure capabilities is a Set (in case it came as Array from IPC)
-				const modelsWithSet = pluginModels.map((model) => ({
-					...model,
-					capabilities:
-						model.capabilities instanceof Set
-							? model.capabilities
-							: new Set(model.capabilities as unknown as string[]),
-				}));
-
 				persistedModelState.current = persistedModelState.current
-					.filter((models) => models.providerId !== provider.id)
-					.concat(modelsWithSet);
+					.filter((models) => {
+						return models.providerId !== provider.id;
+					})
+					.concat(result.data.models);
 
 				toast.success(
 					m.text_fetch_models_success({
-						count: pluginModels.length.toString(),
+						count: result.data.models.length.toString(),
 						provider: provider.name,
 					}),
 				);
 				return true;
 			} else {
-				// No models returned from plugin
 				await this.updateProvider(provider.id, { status: "error" });
 				toast.error(m.text_fetch_models_error({ provider: provider.name }), {
-					description: m.text_fetch_models_unknown_error(),
+					description: result.error || m.text_fetch_models_unknown_error(),
 				});
 				return false;
 			}
@@ -394,13 +272,3 @@ class ProviderState {
 }
 
 export const providerState = new ProviderState();
-
-// Initialize providers from plugins on startup
-$effect.root(() => {
-	$effect(() => {
-		// Load providers from plugins when the store is initialized
-		providerState.loadProvidersFromPlugins().catch((error) => {
-			console.error("[ProviderState] Failed to initialize providers from plugins:", error);
-		});
-	});
-});
