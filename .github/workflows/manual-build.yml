@@ -74,6 +74,10 @@ jobs:
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
 
+      - name: Build workspace packages
+        if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
+        run: pnpm --filter @302ai/studio-plugin-sdk run build
+
       - name: Run quality checks
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         run: |

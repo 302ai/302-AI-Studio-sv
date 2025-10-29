@@ -14,22 +14,6 @@ import { hookManager } from "./hook-manager";
 import { createPluginAPI } from "./plugin-api";
 import { storageService } from "../services/storage-service";
 
-// Import built-in plugins statically for development
-import { OpenAIProviderPlugin } from "../../../plugins/builtin/openai-plugin/main/index";
-import { AnthropicProviderPlugin } from "../../../plugins/builtin/anthropic-plugin/main/index";
-import { GoogleProviderPlugin } from "../../../plugins/builtin/google-plugin/main/index";
-import { AI302ProviderPlugin } from "../../../plugins/builtin/302ai-plugin/main/index";
-import { DebugProviderPlugin } from "../../../plugins/builtin/debug-plugin/main/index";
-
-// Map of built-in plugin IDs to their class constructors
-const BUILTIN_PLUGINS: Record<string, new () => ProviderPlugin> = {
-	"com.302ai.provider.openai": OpenAIProviderPlugin,
-	"com.302ai.provider.anthropic": AnthropicProviderPlugin,
-	"com.302ai.provider.google": GoogleProviderPlugin,
-	"com.302ai.provider.302ai": AI302ProviderPlugin,
-	"com.302ai.provider.debug": DebugProviderPlugin,
-};
-
 /**
  * Plugin loader implementation
  * Scans directories and loads plugin modules
@@ -41,9 +25,9 @@ export class PluginLoader {
 	constructor(pluginDirs?: string[]) {
 		// Default plugin directories
 		this.pluginDirs = pluginDirs || [
-			// Builtin plugins
-			path.join(app.getAppPath(), "plugins", "builtin"),
-			// User plugins
+			// Preinstalled plugins (bundled with app in extraResources)
+			path.join(process.resourcesPath, "plugins"),
+			// User-installed plugins
 			path.join(app.getPath("userData"), "plugins"),
 		];
 
@@ -264,13 +248,7 @@ export class PluginLoader {
 	 * Load plugin module
 	 */
 	private async loadPluginModule(plugin: InstalledPlugin): Promise<ProviderPlugin> {
-		// For built-in plugins, use static imports
-		if (plugin.metadata.builtin && BUILTIN_PLUGINS[plugin.metadata.id]) {
-			const PluginClass = BUILTIN_PLUGINS[plugin.metadata.id];
-			return new PluginClass();
-		}
-
-		// For external plugins, use dynamic imports
+		// All plugins now use dynamic loading from file system
 		const mainPath = plugin.metadata.main || "main/index.js";
 		let modulePath = path.join(plugin.path, mainPath);
 
@@ -379,10 +357,6 @@ export class PluginLoader {
 		}
 
 		// Check if plugin is builtin (cannot be unloaded)
-		if (plugin.metadata.builtin) {
-			throw new Error(`Cannot unload builtin plugin: ${pluginId}`);
-		}
-
 		// Get plugin instance
 		const registered = pluginRegistry.get(pluginId);
 		if (registered) {
