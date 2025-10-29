@@ -345,11 +345,7 @@ class ChatState {
 				try {
 					const messageContext = {
 						messages: this.messages,
-						userMessage: {
-							role: "user" as const,
-							content: currentInputValue,
-							attachments: currentAttachments,
-						},
+						userMessage: this.messages.at(-1),
 						model: currentModel,
 						provider: this.currentProvider!,
 						parameters: {
