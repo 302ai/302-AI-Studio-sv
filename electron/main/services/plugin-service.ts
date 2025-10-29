@@ -6,7 +6,7 @@
 
 import type { InstalledPlugin, ProviderDefinition } from "@302ai/studio-plugin-sdk";
 import type { Model, ModelProvider, PluginSource } from "@shared/types";
-import { dialog, type IpcMainInvokeEvent } from "electron";
+import { app, dialog, type IpcMainInvokeEvent } from "electron";
 import fs from "fs-extra";
 import extract from "extract-zip";
 import ky from "ky";
@@ -155,7 +155,7 @@ export class PluginService {
 			console.log(`[PluginService] Extracted plugin to: ${extractDir}`);
 
 			// Move to final location
-			const pluginsDir = path.join(process.cwd(), "plugins", "external");
+			const pluginsDir = path.join(app.getPath("userData"), "plugins", "external");
 			await fs.ensureDir(pluginsDir);
 
 			const pluginId = `external-${Date.now()}`;
