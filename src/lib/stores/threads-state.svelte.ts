@@ -11,6 +11,7 @@ export const persistedThreadState = new PersistedState<ThreadMetadata>(
 		threadIds: [],
 		favorites: [],
 	} as ThreadMetadata,
+	true,
 );
 
 class ThreadsState {
@@ -81,8 +82,10 @@ class ThreadsState {
 			this.#addFavorite(threadId);
 		}
 
+		persistedThreadState.flush();
+
 		await broadcastService.broadcastExcludeSource("thread-list-updated", { threadId });
-	}, 100);
+	}, 150);
 
 	async renameThread(threadId: string, newName: string): Promise<void> {
 		await threadService.renameThread(threadId, newName);
