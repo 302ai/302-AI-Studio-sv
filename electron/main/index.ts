@@ -24,6 +24,29 @@ if (started) {
 	app.quit();
 }
 
+// Implement single instance lock to prevent multiple app instances
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+	// Another instance is already running, quit this instance
+	app.quit();
+} else {
+	// This instance got the lock, listen for second instance attempts
+	app.on("second-instance", () => {
+		// When a second instance tries to start, focus the main window instead
+		const mainWindow = windowService.getMainWindow();
+		if (mainWindow) {
+			if (mainWindow.isMinimized()) {
+				mainWindow.restore();
+			}
+			if (!mainWindow.isVisible()) {
+				mainWindow.show();
+			}
+			mainWindow.focus();
+		}
+	});
+}
+
 async function init() {
 	// Register auto-generated IPC handlers
 	registerIpcHandlers();
