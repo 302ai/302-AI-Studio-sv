@@ -37,25 +37,26 @@
 </script>
 
 {#if htmlPreviewState.isVisible}
-	<div class="h-full border-l border-border bg-background">
-		<div class="flex items-center justify-between px-4 py-2 border-b border-border bg-muted">
+	<div class="h-full border-l border-border bg-background flex flex-col">
+		<div
+			class="flex items-center justify-between px-4 py-3 border-b border-border bg-muted shrink-0"
+		>
 			<div class="flex items-center gap-2">
 				<Monitor class="h-4 w-4 text-muted-foreground" />
 				<span class="text-sm font-medium text-muted-foreground">HTML Preview</span>
 			</div>
-			<div class="flex items-center gap-2">
-				<Button
-					variant="ghost"
-					size="sm"
-					onclick={() => htmlPreviewState.closePreview()}
-					class="h-6 w-6 p-0"
-				>
-					<X class="h-3 w-3" />
-				</Button>
-			</div>
+			<Button
+				variant="ghost"
+				size="sm"
+				onclick={() => htmlPreviewState.closePreview()}
+				class="h-8 w-8 p-0 hover:bg-background/80"
+				title="Close preview"
+			>
+				<X class="h-4 w-4" />
+			</Button>
 		</div>
 
-		<div class="h-full overflow-auto">
+		<div class="flex-1 overflow-auto">
 			<iframe
 				bind:this={iframeRef}
 				class="w-full h-full border-0"

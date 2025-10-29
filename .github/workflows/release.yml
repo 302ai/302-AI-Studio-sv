@@ -58,10 +58,14 @@ jobs:
       - name: Generate paraglide files
         run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
 
+      - name: Build workspace packages
+        run: pnpm --filter @302ai/studio-plugin-sdk run build
+
       - name: Run quality checks
         run: |
           npx eslint electron/main/
           pnpm run check
+          pnpm run build
 
       - name: Create GitHub release (Ubuntu only)
         if: matrix.os == 'ubuntu-latest'
