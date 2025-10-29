@@ -38,9 +38,20 @@ export const CONFIG = {
 export const SHELL_WINDOW_FULLSCREEN_CHANGED = "shell-window:fullscreen-changed";
 
 export const UNSUPPORTED_INJECTING_THEME: string[] = [
-	"arena.302.ai",
-	"ecom.302.ai",
-	"ppt.302.ai",
-	"vt.302.ai",
-	"writing.302.ai",
+	"-arena.302.ai",
+	"-ecom.302.ai",
+	"-ppt.302.ai",
+	"-vt.302.ai",
+	"-writing.302.ai",
+	"-translate.302.ai",
+	"-ecom1.302.ai",
+	"-front.302.ai",
+	"-restoration.302.ai",
+	"-academic.302.ai",
+	"-excel.302.ai",
+	"-paint.302.ai",
+	"-search.302.ai",
+	"-patent.302.ai",
+	"-paper.302.ai",
+	"-tts.302.ai",
 ];
