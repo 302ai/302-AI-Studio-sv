@@ -134,8 +134,20 @@ export class StorageService<T extends StorageValue> {
 
 	// Internal methods for main process usage (without IPC event parameter)
 	async getItemInternal(key: string): Promise<T | null> {
-		const value = await this.storage.getItem<T>(this.ensureJsonExtension(key));
-		return await this.migrateIfNeeded(key, value);
+		try {
+			const value = await this.storage.getItem<T>(this.ensureJsonExtension(key));
+			return await this.migrateIfNeeded(key, value);
+		} catch (error) {
+			// Handle JSON parsing errors from corrupted files
+			if (error instanceof SyntaxError) {
+				console.error(
+					`Failed to parse storage file "${key}": ${error.message}. The file may be corrupted.`,
+				);
+				return null;
+			}
+			// Re-throw other errors
+			throw error;
+		}
 	}
 
 	async setItemInternal(key: string, value: T): Promise<void> {
