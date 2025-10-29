@@ -31,6 +31,11 @@
 			labelKey: m.text_button_settings_mcp(),
 		},
 		{
+			name: "plugins",
+			path: "/settings/plugins",
+			labelKey: m.text_button_settings_plugins(),
+		},
+		{
 			name: "data-settings",
 			path: "/settings/data-settings",
 			labelKey: m.text_button_settings_data(),

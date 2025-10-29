@@ -4,6 +4,67 @@ import { dialog } from "electron";
 import { readFile } from "fs/promises";
 import { storageService } from "../storage-service";
 
+/**
+ * Parse content with <reason>, <think>, or <thinking> tags into parts array
+ */
+function parseContentToParts(content: string): any[] {
+	const parts: any[] = [];
+
+	// Match <reason>, <think>, or <thinking> tags
+	const reasonRegex = /<reason>([\s\S]*?)<\/reason>/gi;
+	const thinkRegex = /<think>([\s\S]*?)<\/think>/gi;
+	const thinkingRegex = /<thinking>([\s\S]*?)<\/thinking>/gi;
+
+	let lastIndex = 0;
+	const matches: Array<{ start: number; end: number; text: string; type: "reasoning" }> = [];
+
+	// Find all reasoning blocks
+	let match;
+	[reasonRegex, thinkRegex, thinkingRegex].forEach((regex) => {
+		regex.lastIndex = 0;
+		while ((match = regex.exec(content)) !== null) {
+			matches.push({
+				start: match.index,
+				end: match.index + match[0].length,
+				text: match[1].trim(),
+				type: "reasoning",
+			});
+		}
+	});
+
+	// Sort matches by start position
+	matches.sort((a, b) => a.start - b.start);
+
+	// Build parts array
+	matches.forEach((m) => {
+		// Add text before this reasoning block
+		if (lastIndex < m.start) {
+			const textContent = content.substring(lastIndex, m.start).trim();
+			if (textContent) {
+				parts.push({ type: "text", text: textContent });
+			}
+		}
+		// Add reasoning block
+		parts.push({ type: "reasoning", text: m.text });
+		lastIndex = m.end;
+	});
+
+	// Add remaining text
+	if (lastIndex < content.length) {
+		const textContent = content.substring(lastIndex).trim();
+		if (textContent) {
+			parts.push({ type: "text", text: textContent });
+		}
+	}
+
+	// If no reasoning blocks found, return original content as text
+	if (parts.length === 0) {
+		return [{ type: "text", text: content }];
+	}
+
+	return parts;
+}
+
 interface LegacyDataFormat {
 	data: {
 		providers: any[];
@@ -76,13 +137,14 @@ export async function importLegacyJson(): Promise<ImportResult> {
 			tabs: { added: 0, skipped: 0, failed: 0 },
 		};
 
-		await importProviders(legacyData.data.providers, stats);
-		await importModels(legacyData.data.models, stats);
+		const providerIdMap = await importProviders(legacyData.data.providers, stats);
+		await importModels(legacyData.data.models, providerIdMap, stats);
 		await importMcpServers(legacyData.data.mcpServers, stats);
 		await importThreads(
 			legacyData.data.threads,
 			legacyData.data.threadMcpServers,
 			legacyData.data.messages,
+			legacyData.data.attachments,
 			stats,
 		);
 		await importSettings(legacyData.data.settings, stats);
@@ -123,7 +185,13 @@ function validateLegacyData(data: unknown): data is LegacyDataFormat {
 	return true;
 }
 
-async function importProviders(legacyProviders: any[], stats: ImportStats): Promise<void> {
+async function importProviders(
+	legacyProviders: any[],
+	stats: ImportStats,
+): Promise<Map<string, string>> {
+	// Return a map of old provider ID -> new provider ID
+	const providerIdMap = new Map<string, string>();
+
 	try {
 		const existingProviders =
 			((await storageService.getItemInternal("app-providers")) as any[]) || [];
@@ -132,9 +200,28 @@ async function importProviders(legacyProviders: any[], stats: ImportStats): Prom
 		const updatedProviders = [...existingProviders];
 		const newProviders = [];
 
+		// Map legacy provider names to standard built-in provider IDs
+		const STANDARD_PROVIDER_IDS: Record<string, string> = {
+			"302.AI": "302AI",
+			OpenAI: "openai",
+			Anthropic: "anthropic",
+			"Google AI": "google",
+		};
+
 		for (const legacy of legacyProviders) {
+			// Determine the correct provider ID
+			let newProviderId = legacy.id;
+
+			// If it's a built-in provider (not custom), use standard ID
+			if (!legacy.custom && STANDARD_PROVIDER_IDS[legacy.name]) {
+				newProviderId = STANDARD_PROVIDER_IDS[legacy.name];
+			}
+
+			// Store the mapping from old ID to new ID
+			providerIdMap.set(legacy.id, newProviderId);
+
 			const newProvider = {
-				id: legacy.id,
+				id: newProviderId,
 				name: legacy.name,
 				apiType: legacy.apiType,
 				apiKey: legacy.apiKey,
@@ -174,9 +261,15 @@ async function importProviders(legacyProviders: any[], stats: ImportStats): Prom
 		console.error("Failed to import providers:", error);
 		stats.providers.failed++;
 	}
+
+	return providerIdMap;
 }
 
-async function importModels(legacyModels: any[], stats: ImportStats): Promise<void> {
+async function importModels(
+	legacyModels: any[],
+	providerIdMap: Map<string, string>,
+	stats: ImportStats,
+): Promise<void> {
 	try {
 		const existingModels = ((await storageService.getItemInternal("app-models")) as any[]) || [];
 		const existingByNameAndProvider = new Map(
@@ -187,11 +280,15 @@ async function importModels(legacyModels: any[], stats: ImportStats): Promise<vo
 		const newModels = [];
 
 		for (const legacy of legacyModels) {
+			// Map old providerId to new providerId
+			const newProviderId = providerIdMap.get(legacy.providerId) || legacy.providerId;
+
+			// Use model name as ID (new system uses name as ID)
 			const newModel = {
-				id: legacy.id,
+				id: legacy.name,
 				name: legacy.name,
 				remark: legacy.remark,
-				providerId: legacy.providerId,
+				providerId: newProviderId,
 				capabilities: legacy.capabilities || [],
 				type: legacy.type || "language",
 				custom: legacy.custom,
@@ -199,12 +296,12 @@ async function importModels(legacyModels: any[], stats: ImportStats): Promise<vo
 				collected: legacy.collected,
 			};
 
-			const key = `${legacy.name}:${legacy.providerId}`;
+			const key = `${legacy.name}:${newProviderId}`;
 			// Check if a model with the same name and provider exists
 			if (existingByNameAndProvider.has(key)) {
 				// Replace the existing model with the new one
 				const existingIndex = updatedModels.findIndex(
-					(m) => m.name === legacy.name && m.providerId === legacy.providerId,
+					(m) => m.name === legacy.name && m.providerId === newProviderId,
 				);
 				if (existingIndex !== -1) {
 					updatedModels[existingIndex] = newModel;
@@ -285,6 +382,7 @@ async function importThreads(
 	legacyThreads: any[],
 	threadMcpServers: any[],
 	legacyMessages: any[],
+	legacyAttachments: any[],
 	stats: ImportStats,
 ): Promise<void> {
 	try {
@@ -298,6 +396,15 @@ async function importThreads(
 
 		const newThreadIds = [];
 		const newFavorites = [];
+
+		// Create a map of messageId -> attachments for quick lookup
+		const attachmentsByMessageId = new Map<string, any[]>();
+		for (const attachment of legacyAttachments) {
+			if (!attachmentsByMessageId.has(attachment.messageId)) {
+				attachmentsByMessageId.set(attachment.messageId, []);
+			}
+			attachmentsByMessageId.get(attachment.messageId)!.push(attachment);
+		}
 
 		for (const legacy of legacyThreads) {
 			if (existingThreadIds.has(legacy.id)) {
@@ -344,9 +451,31 @@ async function importThreads(
 						metadata.createdAt = new Date(metadata.createdAt);
 					}
 
+					// Import model name
+					if (msg.modelName && !metadata.model) {
+						metadata.model = msg.modelName;
+					}
+
+					// Import attachments for this message
+					const messageAttachments = attachmentsByMessageId.get(msg.id) || [];
+					if (messageAttachments.length > 0) {
+						metadata.attachments = messageAttachments.map((att) => ({
+							id: att.id,
+							name: att.name,
+							type: att.type,
+							size: att.size,
+							filePath: att.filePath,
+							preview: att.preview || undefined,
+							textContent: att.fileContent || att.textContent || undefined,
+						}));
+					}
+
+					// Parse content to extract reasoning blocks
+					const parts = msg.parts || parseContentToParts(msg.content || "");
+
 					return {
 						...msg,
-						parts: msg.parts || [{ type: "text", text: msg.content || "" }],
+						parts: parts,
 						metadata: metadata,
 						createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
 					};

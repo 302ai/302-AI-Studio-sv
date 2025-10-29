@@ -1,7 +1,8 @@
 import type { Tab } from "@shared/types";
 import { nativeTheme, WebContentsView } from "electron";
 import path from "node:path";
-import { stringify } from "superjson";
+import { UNSUPPORTED_INJECTING_THEME } from "../constants";
+import { TempStorage } from "../utils/temp-storage";
 
 export interface WebContentsConfig {
 	windowId: number;
@@ -80,6 +81,12 @@ export class WebContentsFactory {
 	}
 
 	private static applyThemeToWebContents(webContents: Electron.WebContents) {
+		const url = webContents.getURL();
+		const isUnsupported = UNSUPPORTED_INJECTING_THEME.some((domain) =>
+			new URL(url).hostname.endsWith(`${domain}`),
+		);
+		console.log(`Applying theme to ${url}`, isUnsupported);
+		if (isUnsupported) return;
 		if (webContents.isDestroyed()) return;
 
 		const isDark = nativeTheme.shouldUseDarkColors;
@@ -187,8 +194,11 @@ export class WebContentsFactory {
 	}
 
 	static createTabView(config: TabWebContentsConfig): WebContentsView {
+		// Use temp file for tab data to avoid command li	ne argument length limits
+		const tabFilePath = TempStorage.writeData(config.tab, "tab");
+
 		const additionalArgs = [
-			`--tab=${stringify(config.tab)}`,
+			`--tab-file=${tabFilePath}`,
 			`--thread-file=${config.threadFilePath}`,
 			`--messages-file=${config.messagesFilePath}`,
 		];

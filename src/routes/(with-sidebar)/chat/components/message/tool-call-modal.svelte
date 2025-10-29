@@ -107,7 +107,9 @@
 			</div>
 
 			<div class="flex items-center gap-2">
+				<!-- eslint-disable svelte/no-at-html-tags -->
 				{@html getStatusIcon()}
+				<!-- eslint-enable svelte/no-at-html-tags -->
 				<span
 					class="text-sm {part.state === 'output-available'
 						? 'text-[#38B865]'
@@ -128,7 +130,6 @@
 			<div class="flex flex-col gap-2">
 				<div class="h-[400px] overflow-hidden">
 					<StaticCodeBlock
-						blockId={`tool-params-${part.toolCallId}`}
 						code={formatJson(part.input)}
 						language="json"
 						title={m.tool_call_parameters()}
@@ -142,7 +143,6 @@
 				{#if part.state === "output-available"}
 					<div class="h-[400px] overflow-hidden">
 						<StaticCodeBlock
-							blockId={`tool-result-${part.toolCallId}`}
 							code={formatJson(part.output)}
 							language="json"
 							title={m.tool_call_result()}
