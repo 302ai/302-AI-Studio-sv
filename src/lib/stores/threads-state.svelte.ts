@@ -48,13 +48,26 @@ class ThreadsState {
 
 	#addFavorite(threadId: string): void {
 		if (this.#isFavorite(threadId)) return;
-		persistedThreadState.current.favorites.push(threadId);
+		const currentFavorites = persistedThreadState.current.favorites;
+		const newFavorites = [...currentFavorites, threadId];
+		persistedThreadState.current = {
+			threadIds: persistedThreadState.current.threadIds,
+			favorites: newFavorites,
+		};
 	}
 
 	#removeFavorite(threadId: string): void {
 		const index = persistedThreadState.current.favorites.indexOf(threadId);
 		if (index === -1) return;
-		persistedThreadState.current.favorites.splice(index, 1);
+		const currentFavorites = persistedThreadState.current.favorites;
+		const newFavorites = [
+			...currentFavorites.slice(0, index),
+			...currentFavorites.slice(index + 1),
+		];
+		persistedThreadState.current = {
+			threadIds: persistedThreadState.current.threadIds,
+			favorites: newFavorites,
+		};
 	}
 
 	#isFavorite(threadId: string): boolean {
