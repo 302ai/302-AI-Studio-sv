@@ -16,33 +16,97 @@
 			"type": "array",
 			"items": {
 				"type": "object",
-				"required": ["id", "name", "description", "author", "version", "downloadUrl", "repository"],
+				"required": [
+					"metadata",
+					"downloadUrl",
+					"repository",
+					"downloads",
+					"rating",
+					"ratingCount",
+					"featured",
+					"publishedAt",
+					"updatedAt"
+				],
 				"properties": {
-					"id": {
-						"type": "string",
-						"pattern": "^[a-z0-9-]+$",
-						"description": "Unique plugin identifier (lowercase, alphanumeric, hyphens only)"
-					},
-					"name": {
-						"type": "string",
-						"minLength": 1,
-						"maxLength": 100,
-						"description": "Plugin display name"
-					},
-					"description": {
-						"type": "string",
-						"minLength": 1,
-						"maxLength": 500,
-						"description": "Short plugin description"
-					},
-					"author": {
-						"type": "string",
-						"description": "Plugin author name or organization"
-					},
-					"version": {
-						"type": "string",
-						"pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
-						"description": "Plugin version (semver)"
+					"metadata": {
+						"type": "object",
+						"required": [
+							"id",
+							"name",
+							"version",
+							"type",
+							"description",
+							"author",
+							"permissions",
+							"compatibleVersion",
+							"main"
+						],
+						"properties": {
+							"id": {
+								"type": "string",
+								"pattern": "^[a-z0-9.-]+$",
+								"description": "Unique plugin identifier (reverse domain notation)"
+							},
+							"name": {
+								"type": "string",
+								"minLength": 1,
+								"maxLength": 100,
+								"description": "Plugin display name"
+							},
+							"version": {
+								"type": "string",
+								"pattern": "^\\d+\\.\\d+\\.\\d+(-[a-zA-Z0-9.]+)?$",
+								"description": "Plugin version (semver)"
+							},
+							"type": {
+								"type": "string",
+								"enum": ["provider", "extension", "integration"],
+								"description": "Plugin type"
+							},
+							"description": {
+								"type": "string",
+								"minLength": 1,
+								"maxLength": 500,
+								"description": "Short plugin description"
+							},
+							"author": {
+								"type": "string",
+								"description": "Plugin author name or organization"
+							},
+							"homepage": {
+								"type": "string",
+								"format": "uri",
+								"description": "Plugin homepage URL"
+							},
+							"repository": {
+								"type": "string",
+								"format": "uri",
+								"description": "Plugin source code repository URL"
+							},
+							"permissions": {
+								"type": "array",
+								"items": {
+									"type": "string",
+									"enum": ["network", "storage", "system", "shell"]
+								},
+								"description": "Required permissions"
+							},
+							"compatibleVersion": {
+								"type": "string",
+								"description": "Compatible app version range (semver range)"
+							},
+							"main": {
+								"type": "string",
+								"description": "Main entry point file path"
+							},
+							"tags": {
+								"type": "array",
+								"items": {
+									"type": "string"
+								},
+								"description": "Plugin tags for categorization"
+							}
+						}
 					},
 					"downloadUrl": {
 						"type": "string",
@@ -59,13 +123,6 @@
 						"type": "string",
 						"format": "uri",
 						"description": "Plugin homepage URL"
-					},
-					"tags": {
-						"type": "array",
-						"items": {
-							"type": "string"
-						},
-						"description": "Plugin tags for categorization"
 					},
 					"icon": {
 						"type": "string",
@@ -90,15 +147,10 @@
 						"format": "uri",
 						"description": "Changelog file URL"
 					},
-					"minSdkVersion": {
-						"type": "string",
-						"pattern": "^\\d+\\.\\d+\\.\\d+$",
-						"description": "Minimum required SDK version"
-					},
 					"downloads": {
 						"type": "integer",
 						"minimum": 0,
-						"description": "Total download count"
+						"description": "Download count"
 					},
 					"rating": {
 						"type": "number",
@@ -113,17 +165,17 @@
 					},
 					"featured": {
 						"type": "boolean",
-						"description": "Whether plugin is featured"
+						"description": "Whether the plugin is featured"
 					},
 					"publishedAt": {
 						"type": "string",
 						"format": "date-time",
-						"description": "First publication date"
+						"description": "Publication timestamp"
 					},
 					"updatedAt": {
 						"type": "string",
 						"format": "date-time",
-						"description": "Last update date"
+						"description": "Last update timestamp"
 					}
 				}
 			}

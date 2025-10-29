@@ -47,11 +47,6 @@ function validateSemver(version) {
 	return semverRegex.test(version);
 }
 
-function validatePluginId(id) {
-	const idRegex = /^[a-z0-9-]+$/;
-	return idRegex.test(id);
-}
-
 function validateUrl(url, requireHttps = true) {
 	try {
 		const urlObj = new URL(url);
@@ -68,50 +63,84 @@ function validatePlugin(plugin, index) {
 	const errors = [];
 	const path = `plugins[${index}]`;
 
-	// Required fields
-	const requiredFields = [
+	// Check if plugin has metadata object
+	if (!plugin.metadata || typeof plugin.metadata !== "object") {
+		errors.push(new ValidationError(`Missing or invalid metadata object`, `${path}.metadata`));
+		return errors; // Can't continue validation without metadata
+	}
+
+	const metadata = plugin.metadata;
+	const metadataPath = `${path}.metadata`;
+
+	// Required metadata fields
+	const requiredMetadataFields = [
 		"id",
 		"name",
 		"description",
 		"author",
 		"version",
-		"downloadUrl",
-		"repository",
+		"type",
+		"permissions",
+		"compatibleVersion",
+		"main",
 	];
+	for (const field of requiredMetadataFields) {
+		if (!metadata[field]) {
+			errors.push(
+				new ValidationError(
+					`Missing required metadata field: ${field}`,
+					`${metadataPath}.${field}`,
+				),
+			);
+		}
+	}
+
+	// Required top-level fields
+	const requiredFields = ["downloadUrl", "repository"];
 	for (const field of requiredFields) {
 		if (!plugin[field]) {
 			errors.push(new ValidationError(`Missing required field: ${field}`, `${path}.${field}`));
 		}
 	}
 
-	// Validate ID format
-	if (plugin.id && !validatePluginId(plugin.id)) {
+	// Validate ID format (allow dots for reverse domain notation)
+	if (metadata.id && !/^[a-z0-9.-]+$/.test(metadata.id)) {
 		errors.push(
 			new ValidationError(
-				`Invalid plugin ID: ${plugin.id}. Must be lowercase alphanumeric with hyphens only`,
-				`${path}.id`,
+				`Invalid plugin ID: ${metadata.id}. Must be lowercase alphanumeric with dots and hyphens only`,
+				`${metadataPath}.id`,
 			),
 		);
 	}
 
 	// Validate version
-	if (plugin.version && !validateSemver(plugin.version)) {
+	if (metadata.version && !validateSemver(metadata.version)) {
 		errors.push(
 			new ValidationError(
-				`Invalid version: ${plugin.version}. Must be valid semver (e.g., 1.0.0)`,
-				`${path}.version`,
+				`Invalid version: ${metadata.version}. Must be valid semver (e.g., 1.0.0)`,
+				`${metadataPath}.version`,
 			),
 		);
 	}
 
-	// Validate minSdkVersion if present
-	if (plugin.minSdkVersion && !validateSemver(plugin.minSdkVersion)) {
+	// Validate type
+	const validTypes = ["provider", "extension", "integration"];
+	if (metadata.type && !validTypes.includes(metadata.type)) {
 		errors.push(
 			new ValidationError(
-				`Invalid minSdkVersion: ${plugin.minSdkVersion}. Must be valid semver (e.g., 1.0.0)`,
-				`${path}.minSdkVersion`,
+				`Invalid type: ${metadata.type}. Must be one of: ${validTypes.join(", ")}`,
+				`${metadataPath}.type`,
 			),
 		);
+	}
+
+	// Validate permissions array
+	if (metadata.permissions) {
+		if (!Array.isArray(metadata.permissions)) {
+			errors.push(
+				new ValidationError("permissions must be an array", `${metadataPath}.permissions`),
+			);
+		}
 	}
 
 	// Validate downloadUrl (must be HTTPS)
@@ -131,7 +160,20 @@ function validatePlugin(plugin, index) {
 		);
 	}
 
-	// Validate optional URLs
+	// Validate optional metadata URLs
+	const metadataUrlFields = ["homepage", "repository"];
+	for (const field of metadataUrlFields) {
+		if (metadata[field] && !validateUrl(metadata[field], false)) {
+			errors.push(
+				new ValidationError(
+					`Invalid metadata ${field} URL: ${metadata[field]}`,
+					`${metadataPath}.${field}`,
+				),
+			);
+		}
+	}
+
+	// Validate optional top-level URLs
 	const urlFields = ["homepage", "icon", "readme", "changelog"];
 	for (const field of urlFields) {
 		if (plugin[field] && !validateUrl(plugin[field], false)) {
@@ -157,12 +199,12 @@ function validatePlugin(plugin, index) {
 	}
 
 	// Validate tags array
-	if (plugin.tags) {
-		if (!Array.isArray(plugin.tags)) {
-			errors.push(new ValidationError("tags must be an array", `${path}.tags`));
-		} else if (plugin.tags.length === 0) {
+	if (metadata.tags) {
+		if (!Array.isArray(metadata.tags)) {
+			errors.push(new ValidationError("tags must be an array", `${metadataPath}.tags`));
+		} else if (metadata.tags.length === 0) {
 			errors.push(
-				new ValidationError("tags array should not be empty if provided", `${path}.tags`),
+				new ValidationError("tags array should not be empty if provided", `${metadataPath}.tags`),
 			);
 		}
 	}
@@ -250,11 +292,16 @@ async function validateRegistry() {
 			const plugin = registry.plugins[i];
 
 			// Check for duplicate IDs
-			if (plugin.id) {
-				if (seenIds.has(plugin.id)) {
-					errors.push(new ValidationError(`Duplicate plugin ID: ${plugin.id}`, `plugins[${i}].id`));
+			if (plugin.metadata && plugin.metadata.id) {
+				if (seenIds.has(plugin.metadata.id)) {
+					errors.push(
+						new ValidationError(
+							`Duplicate plugin ID: ${plugin.metadata.id}`,
+							`plugins[${i}].metadata.id`,
+						),
+					);
 				}
-				seenIds.add(plugin.id);
+				seenIds.add(plugin.metadata.id);
 			}
 
 			// Validate plugin
@@ -262,16 +309,13 @@ async function validateRegistry() {
 			errors.push(...pluginErrors);
 
 			// Warnings
+			const pluginId = plugin.metadata?.id || i;
 			if (!plugin.icon) {
-				warnings.push(`Plugin ${plugin.id || i} has no icon`);
+				warnings.push(`Plugin ${pluginId} has no icon`);
 			}
 
-			if (!plugin.tags || plugin.tags.length === 0) {
-				warnings.push(`Plugin ${plugin.id || i} has no tags`);
-			}
-
-			if (!plugin.minSdkVersion) {
-				warnings.push(`Plugin ${plugin.id || i} has no minSdkVersion specified`);
+			if (!plugin.metadata?.tags || plugin.metadata.tags.length === 0) {
+				warnings.push(`Plugin ${pluginId} has no tags`);
 			}
 		}
 
