@@ -26,13 +26,21 @@ class ThreadsState {
 	}
 
 	async #loadThreads(): Promise<void> {
+		const currentThreads = this.threads;
 		try {
 			const threadsData = await threadService.getThreads();
-			this.threads = threadsData ?? [];
+
+			if (!threadsData) {
+				setTimeout(() => {
+					this.#loadThreads();
+				}, 100);
+			}
+
+			this.threads = threadsData ?? currentThreads;
 			console.log("Threads loaded:", this.threads.length);
 		} catch (error) {
 			console.error("Failed to load threads:", error);
-			this.threads = [];
+			this.threads = currentThreads;
 		}
 	}
 
@@ -60,25 +68,22 @@ class ThreadsState {
 	}
 
 	toggleFavorite(threadId: string) {
-		// Get current state from persisted storage (source of truth)
 		const current = persistedThreadState.current;
 		const isFavoriteNow = current.favorites.includes(threadId);
 
-		// Update persisted storage based on current actual state
 		if (isFavoriteNow) {
 			this.#removeFavorite(threadId, current);
 		} else {
 			this.#addFavorite(threadId, current);
 		}
 
-		// Update UI to match persisted state
 		const threadData = this.threads.find((t) => t.threadId === threadId);
 		if (threadData) {
 			threadData.isFavorite = !isFavoriteNow;
 		}
 
-		// Broadcast to other windows/tabs (excluding current source)
-		broadcastService.broadcastExcludeSource("thread-list-updated", { threadId });
+		// Broadcast to other windows/tabs (excluding current source) with updated threads
+		broadcastService.broadcastExcludeSource("thread-list-updated", {});
 	}
 
 	// toggleFavorite = debounce(async (threadId: string) => {
