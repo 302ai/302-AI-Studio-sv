@@ -130,7 +130,7 @@ export class WindowService {
 					? CONFIG.TITLE_BAR_OVERLAY.DARK
 					: CONFIG.TITLE_BAR_OVERLAY.LIGHT
 				: undefined,
-			backgroundColor: shouldUseDarkColors ? "#2d2d2d" : "#f1f1f1",
+			backgroundColor: shouldUseDarkColors ? "#121212" : "#f1f1f1",
 			trafficLightPosition: PLATFORM.IS_MAC ? { x: 12, y: 12 } : undefined,
 			...(PLATFORM.IS_LINUX && {
 				thickFrame: false,
@@ -439,7 +439,7 @@ export class WindowService {
 			minHeight: 600,
 			title: language === "zh" ? "设置" : "Settings",
 			autoHideMenuBar: true,
-			backgroundColor: shouldUseDarkColors ? "#2d2d2d" : "#f1f1f1",
+			backgroundColor: shouldUseDarkColors ? "#121212" : "#f1f1f1",
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
 				devTools: true,

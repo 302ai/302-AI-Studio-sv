@@ -26,7 +26,7 @@ export class AppService {
 		nativeTheme.themeSource = theme;
 		const allWindows = BrowserWindow.getAllWindows();
 		allWindows.forEach((window) => {
-			window.setBackgroundColor(nativeTheme.shouldUseDarkColors ? "#1A1A1A" : "#F9F9F9");
+			window.setBackgroundColor(nativeTheme.shouldUseDarkColors ? "#121212" : "#F9F9F9");
 			if (!isMac) {
 				try {
 					window.setTitleBarOverlay(
@@ -46,7 +46,7 @@ export class AppService {
 					const webContentsView = view as WebContentsView;
 					const url = webContentsView.webContents.getURL();
 					if (!url.includes("shell")) {
-						const backgroundColor = nativeTheme.shouldUseDarkColors ? "#1A1A1A" : "#F9F9F9";
+						const backgroundColor = nativeTheme.shouldUseDarkColors ? "#121212" : "#F9F9F9";
 						webContentsView.setBackgroundColor(backgroundColor);
 					}
 					if (!webContentsView.webContents.isDestroyed()) {

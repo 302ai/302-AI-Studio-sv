@@ -52,7 +52,7 @@ export class WebContentsFactory {
 			},
 		});
 
-		const backgroundColor = nativeTheme.shouldUseDarkColors ? "#1A1A1A" : "#F9F9F9";
+		const backgroundColor = nativeTheme.shouldUseDarkColors ? "#121212" : "#F9F9F9";
 		view.setBackgroundColor(backgroundColor);
 
 		// Add external link handler to all views
