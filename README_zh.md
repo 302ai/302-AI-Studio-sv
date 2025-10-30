@@ -13,6 +13,23 @@
 
 <p align="center"><a href="README_zh.md">中文</a> | <a href="README.md">English</a> | <a href="README_ja.md">日本語</a></p>
 
+![](docs/imgs/桌面客户端-cn.png) 
+
+## 🖼️ 界面截图
+
+主页聊天欢迎界面，提供消息输入框、工具栏、模型选择与常用AI工具快捷入口           
+<img src="./docs/imgs/302_AI_Studio_screenshot_01.png" >                   
+ 
+多标签聊天界面，左侧会话列表，右侧聊天界面
+<img src="./docs/imgs/302_AI_Studio_screenshot_02.png" >              
+
+在客户端内可一键快速打开AI应用，无需跳转至官网
+<img src="./docs/imgs/302_AI_Studio_screenshot_03.png" >          
+
+独立窗口形式的设置页面，包含通用与、偏好、MCP等常用配置
+<img src="./docs/imgs/302_AI_Studio_screenshot_04.png" >
+<img src="./docs/imgs/302_AI_Studio_screenshot_05.png" >
+
 ## 🌟 主要特点
 
 ### 多模型与多服务商支持

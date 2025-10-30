@@ -13,6 +13,23 @@
 
 <p align="center"><a href="README_zh.md">中文</a> | <a href="README.md">English</a> | <a href="README_ja.md">日本語</a></p>
 
+![](docs/imgs/桌面客户端-jp.png) 
+
+## 🖼️ インターフェースのスクリーンショット
+
+ホームチャットのウェルカム画面。メッセージ入力欄、ツールバー、モデル選択、よく使うAIツールのクイックアクセスを提供します。           
+<img src="./docs/imgs/302_AI_Studio_en_screenshot_01.png" >                   
+
+マルチタブチャット画面。左側が会話リスト、右側がチャット画面です。
+<img src="./docs/imgs/302_AI_Studio_en_screenshot_02.png" >              
+
+クライアント内でワンクリックでAIアプリを素早く開けます。公式サイトに遷移する必要はありません。
+<img src="./docs/imgs/302_AI_Studio_en_screenshot_03.png" >          
+
+独立ウィンドウ形式の設定ページ。一般設定や環境設定、MCPなどの主要な設定を含みます。
+<img src="./docs/imgs/302_AI_Studio_en_screenshot_04.png" >
+<img src="./docs/imgs/302_AI_Studio_en_screenshot_05.png" >
+
 ## 🌟 主な特徴
 
 ### マルチモデル・マルチプロバイダーサポート

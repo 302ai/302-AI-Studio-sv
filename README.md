@@ -13,6 +13,23 @@
 
 <p align="center"><a href="README_zh.md">中文</a> | <a href="README.md">English</a> | <a href="README_ja.md">日本語</a></p>
 
+![](docs/imgs/桌面客户端-en.png) 
+
+## 🖼️ Interface Screenshots
+
+Home chat welcome screen, providing a message input box, toolbar, model selection, and quick access to commonly used AI tools           
+<img src="./docs/imgs/302_AI_Studio_en_screenshot_01.png" >                   
+ 
+Multi-tab chat interface, with a conversation list on the left and the chat interface on the right
+<img src="./docs/imgs/302_AI_Studio_en_screenshot_02.png" >              
+
+Quickly open AI applications within the client with one click, without having to visit the official website
+<img src="./docs/imgs/302_AI_Studio_en_screenshot_03.png" >          
+
+Independent window settings page with common, preferences, MCP, and other frequently used configurations
+<img src="./docs/imgs/302_AI_Studio_en_screenshot_04.png" >
+<img src="./docs/imgs/302_AI_Studio_en_screenshot_05.png" >
+
 ## 🌟 Key Features
 
 ### Multi-Model & Multi-Provider Support
