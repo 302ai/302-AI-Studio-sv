@@ -100,7 +100,7 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 		try {
 			const metadata = await this.getThreadMetadata();
 			if (!metadata || metadata.threadIds.length === 0) {
-				return [];
+				return null;
 			}
 
 			const allThreads: Array<ThreadData> = [];

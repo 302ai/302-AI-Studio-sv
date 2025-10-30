@@ -85,7 +85,7 @@ class ThreadsState {
 		persistedThreadState.flush();
 
 		await broadcastService.broadcastToAll("thread-list-updated", { threadId });
-	}, 10);
+	}, 150);
 
 	async renameThread(threadId: string, newName: string): Promise<void> {
 		await threadService.renameThread(threadId, newName);
