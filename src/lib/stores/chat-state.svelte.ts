@@ -894,6 +894,8 @@ export const chat = new Chat({
 		console.log("更新完成", $state.snapshot(messages));
 		persistedMessagesState.current = messages;
 
+		broadcastService.broadcastToAll("thread-list-updated", {});
+
 		// Execute after send message hook
 		try {
 			const lastMessage = messages[messages.length - 1];
@@ -995,7 +997,5 @@ export const chat = new Chat({
 		// Update the updatedAt timestamp
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		persistedChatParamsState.current.updatedAt = new Date();
-
-		broadcastService.broadcastToAll("thread-list-updated", {});
 	},
 });
