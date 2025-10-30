@@ -30,12 +30,6 @@ class ThreadsState {
 		try {
 			const threadsData = await threadService.getThreads();
 
-			if (!threadsData) {
-				setTimeout(() => {
-					this.#loadThreads();
-				}, 100);
-			}
-
 			this.threads = threadsData ?? currentThreads;
 			console.log("Threads loaded:", this.threads.length);
 		} catch (error) {
@@ -83,7 +77,9 @@ class ThreadsState {
 		}
 
 		// Broadcast to other windows/tabs (excluding current source) with updated threads
-		broadcastService.broadcastExcludeSource("thread-list-updated", {});
+		setTimeout(() => {
+			broadcastService.broadcastExcludeSource("thread-list-updated", {});
+		}, 100);
 	}
 
 	// toggleFavorite = debounce(async (threadId: string) => {
