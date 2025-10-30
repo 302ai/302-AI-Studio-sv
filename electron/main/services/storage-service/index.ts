@@ -40,8 +40,13 @@ export class StorageService<T extends StorageValue> {
 	}
 
 	async getItem(_event: IpcMainInvokeEvent, key: string): Promise<T | null> {
-		const value = await this.storage.getItem<T>(this.ensureJsonExtension(key));
-		return await this.migrateIfNeeded(key, value);
+		try {
+			const value = await this.storage.getItem<T>(this.ensureJsonExtension(key));
+			return await this.migrateIfNeeded(key, value);
+		} catch (error) {
+			console.error("Failed to get item from storage:", error);
+			return null;
+		}
 	}
 
 	async hasItem(_event: IpcMainInvokeEvent, key: string): Promise<boolean> {
