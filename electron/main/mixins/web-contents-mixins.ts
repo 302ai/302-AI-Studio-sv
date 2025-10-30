@@ -1,4 +1,4 @@
-import { WebContentsView } from "electron";
+import { shell, WebContentsView } from "electron";
 import { match, P } from "ts-pattern";
 import { isLinux, isMac, isWin } from "../constants";
 
@@ -79,4 +79,44 @@ export const withLifecycleHandlers = (
 	if (callbacks.onWillPreventUnload) {
 		view.webContents.on("will-prevent-unload", callbacks.onWillPreventUnload);
 	}
+};
+
+/**
+ * Adds external link handler to open links in default browser
+ */
+export const withExternalLinkHandler = (view: WebContentsView): void => {
+	// Handle links opened via window.open or target="_blank"
+	view.webContents.setWindowOpenHandler(({ url }) => {
+		// Check if it's an external URL (http/https)
+		if (url.startsWith("http://") || url.startsWith("https://")) {
+			shell.openExternal(url);
+			return { action: "deny" };
+		}
+		// For internal URLs, allow them to open normally
+		return { action: "allow" };
+	});
+
+	// Handle navigation attempts (clicking links without target="_blank")
+	view.webContents.on("will-navigate", (event, url) => {
+		// Get the current URL
+		const currentUrl = view.webContents.getURL();
+
+		// Check if it's an external URL (http/https) and different from current domain
+		if (url.startsWith("http://") || url.startsWith("https://")) {
+			try {
+				const currentDomain = new URL(currentUrl).hostname;
+				const targetDomain = new URL(url).hostname;
+
+				// If navigating to a different domain or if current is app:// protocol, open externally
+				if (currentUrl.startsWith("app://") || currentDomain !== targetDomain) {
+					event.preventDefault();
+					shell.openExternal(url);
+				}
+			} catch {
+				// If URL parsing fails, just open externally to be safe
+				event.preventDefault();
+				shell.openExternal(url);
+			}
+		}
+	});
 };

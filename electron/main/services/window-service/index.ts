@@ -11,7 +11,11 @@ import {
 	WINDOW_SIZE,
 } from "../../constants";
 import { WebContentsFactory } from "../../factories/web-contents-factory";
-import { withDevToolsShortcuts, withLoadHandlers } from "../../mixins/web-contents-mixins";
+import {
+	withDevToolsShortcuts,
+	withExternalLinkHandler,
+	withLoadHandlers,
+} from "../../mixins/web-contents-mixins";
 import { emitter } from "../broadcast-service";
 import { shortcutService } from "../shortcut-service";
 import { generalSettingsStorage } from "../storage-service/general-settings-storage";
@@ -468,6 +472,9 @@ export class WindowService {
 
 		// Add devTools shortcuts
 		withDevToolsShortcuts(settingsView);
+
+		// Add external link handler
+		withExternalLinkHandler(settingsView);
 
 		// Load settings page
 		const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost";
