@@ -11,12 +11,12 @@ export const persistedThreadState = new PersistedState<ThreadMetadata>(
 		threadIds: [],
 		favorites: [],
 	} as ThreadMetadata,
-	true,
+	false, // 禁用 PersistedState 的 debounce，改为在这里控制
 );
 
 class ThreadsState {
 	#threadIds = $derived(persistedThreadState.current.threadIds);
-	#favorites = $derived(persistedThreadState.current.favorites);
+	// #favorites = $derived(persistedThreadState.current.favorites);
 	#lastSyncTime = $state(Date.now());
 
 	constructor() {
@@ -47,42 +47,25 @@ class ThreadsState {
 
 	activeThreadId = $state<string>(window.thread.id);
 
-	#addFavorite(threadId: string): void {
-		if (this.#isFavorite(threadId)) return;
-		const currentFavorites = persistedThreadState.current.favorites;
-		const newFavorites = [...currentFavorites, threadId];
-		persistedThreadState.current = {
-			threadIds: persistedThreadState.current.threadIds,
-			favorites: newFavorites,
-		};
-	}
-
-	#removeFavorite(threadId: string): void {
-		const index = persistedThreadState.current.favorites.indexOf(threadId);
-		if (index === -1) return;
-		const currentFavorites = persistedThreadState.current.favorites;
-		const newFavorites = [
-			...currentFavorites.slice(0, index),
-			...currentFavorites.slice(index + 1),
-		];
-		persistedThreadState.current = {
-			threadIds: persistedThreadState.current.threadIds,
-			favorites: newFavorites,
-		};
-	}
-
-	#isFavorite(threadId: string): boolean {
-		return this.#favorites.includes(threadId);
-	}
+	// #isFavorite(threadId: string): boolean {
+	// 	return this.#favorites.includes(threadId);
+	// }
 
 	toggleFavorite = debounce(async (threadId: string) => {
-		if (this.#isFavorite(threadId)) {
-			this.#removeFavorite(threadId);
+		const current = persistedThreadState.current;
+		const isFavorite = current.favorites.includes(threadId);
+
+		let newFavorites: string[];
+		if (isFavorite) {
+			newFavorites = current.favorites.filter((id) => id !== threadId);
 		} else {
-			this.#addFavorite(threadId);
+			newFavorites = [...current.favorites, threadId];
 		}
 
-		persistedThreadState.flush();
+		persistedThreadState.current = {
+			threadIds: current.threadIds,
+			favorites: newFavorites,
+		};
 
 		await broadcastService.broadcastExcludeSource("thread-list-updated", { threadId });
 	}, 150);
