@@ -242,3 +242,35 @@
 .dark .prose tbody tr {
 	border-bottom-color: #374151;
 }
+
+/* a标签样式 */
+.prose a {
+	color: #8e47f0;
+
+	text-decoration-color: #8e47f0;
+	text-underline-offset: 2px;
+	transition: color 0.2s ease;
+	cursor: pointer;
+}
+
+.prose a:hover {
+	color: #8e47f0;
+	text-decoration-color: #8e47f0;
+	text-decoration: underline;
+}
+
+.prose a:active {
+	color: #8e47f0;
+}
+
+/* 暗黑模式 */
+.dark .prose a {
+	color: #8e47f0;
+	text-decoration-color: #8e47f0;
+}
+
+.dark .prose a:hover {
+	color: #8e47f0;
+	text-decoration-color: #8e47f0;
+	text-decoration: underline;
+}
