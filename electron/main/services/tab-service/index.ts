@@ -671,8 +671,21 @@ export class TabService {
 		console.log("Removing Tab --->", tabId);
 		const view = this.tabViewMap.get(tabId);
 		if (!isUndefined(view)) {
+			// Get the thread ID before removing
+			const tab = this.tabMap.get(tabId);
+			const threadId = tab?.threadId;
+
 			window.contentView.removeChildView(view);
-			view.webContents.close({ waitForBeforeUnload: true });
+
+			// IMPORTANT: Check if this view is in the preload pool
+			// If it is, don't close it - it will be reused
+			const isInPool = Array.from(this.preloadedViewPool.values()).includes(view);
+			if (isInPool) {
+				console.log(`[Preload] View for tab ${tabId} (thread ${threadId}) is in pool, not closing`);
+			} else {
+				// Not in pool, safe to close
+				view.webContents.close({ waitForBeforeUnload: true });
+			}
 		} else {
 			this.tabViewMap.delete(tabId);
 			this.tabMap.delete(tabId);
@@ -1176,6 +1189,11 @@ export class TabService {
 
 			// Try to get preloaded view or create new one
 			const newView = await this.getOrCreateViewForThread(window.id, newThreadId, updatedTab);
+
+			// IMPORTANT: Ensure tabMap is updated with the new tab
+			// This is critical when newWebContentsView creates a new view (not from preload pool)
+			// because newWebContentsView only sets tabViewMap, not tabMap
+			this.tabMap.set(tabId, updatedTab);
 
 			// Update window views list
 			const windowViews = this.windowTabView.get(window.id);
