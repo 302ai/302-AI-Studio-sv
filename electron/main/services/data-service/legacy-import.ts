@@ -5,6 +5,41 @@ import { readFile } from "fs/promises";
 import { storageService } from "../storage-service";
 
 /**
+ * Format citations in legacy format to markdown list format
+ * Converts lines like "[1] https://..." to "- [1] https://..."
+ */
+function formatCitations(text: string): string {
+	const lines = text.split("\n");
+	const formattedLines: string[] = [];
+	let inCitationBlock = false;
+
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		// Match citation pattern: [number] url
+		const citationMatch = line.match(/^\[(\d+)\]\s+(https?:\/\/\S+)/);
+
+		if (citationMatch) {
+			// If this is the first citation, add a blank line before
+			if (
+				!inCitationBlock &&
+				formattedLines.length > 0 &&
+				formattedLines[formattedLines.length - 1] !== ""
+			) {
+				formattedLines.push("");
+			}
+			inCitationBlock = true;
+			// Convert to markdown list format
+			formattedLines.push(`- [${citationMatch[1]}] ${citationMatch[2]}`);
+		} else {
+			inCitationBlock = false;
+			formattedLines.push(line);
+		}
+	}
+
+	return formattedLines.join("\n");
+}
+
+/**
  * Parse content with <reason>, <think>, or <thinking> tags into parts array
  */
 function parseContentToParts(content: string): any[] {
@@ -26,7 +61,7 @@ function parseContentToParts(content: string): any[] {
 			matches.push({
 				start: match.index,
 				end: match.index + match[0].length,
-				text: match[1].trim(),
+				text: formatCitations(match[1].trim()),
 				type: "reasoning",
 			});
 		}
@@ -41,7 +76,7 @@ function parseContentToParts(content: string): any[] {
 		if (lastIndex < m.start) {
 			const textContent = content.substring(lastIndex, m.start).trim();
 			if (textContent) {
-				parts.push({ type: "text", text: textContent });
+				parts.push({ type: "text", text: formatCitations(textContent) });
 			}
 		}
 		// Add reasoning block
@@ -53,13 +88,13 @@ function parseContentToParts(content: string): any[] {
 	if (lastIndex < content.length) {
 		const textContent = content.substring(lastIndex).trim();
 		if (textContent) {
-			parts.push({ type: "text", text: textContent });
+			parts.push({ type: "text", text: formatCitations(textContent) });
 		}
 	}
 
 	// If no reasoning blocks found, return original content as text
 	if (parts.length === 0) {
-		return [{ type: "text", text: content }];
+		return [{ type: "text", text: formatCitations(content) }];
 	}
 
 	return parts;
