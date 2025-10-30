@@ -309,6 +309,33 @@ export class TabService {
 				this.tabMap.delete(oldTabId);
 			}
 
+			// Update window ID in the preloaded view's WebContents
+			// This is critical when tabs are moved to different windows
+			// The preloaded view may have been created for a different window
+			preloadedView.webContents
+				.executeJavaScript(
+					`
+				window.windowId = "${windowId}";
+				// Trigger TabBarState to refresh window ID
+				if (window.dispatchEvent) {
+					window.dispatchEvent(new CustomEvent('windowIdChanged', {
+						detail: { newWindowId: "${windowId}" }
+					}));
+				}
+			`,
+				)
+				.catch((error) => {
+					console.error(
+						`[Preload] Failed to update window ID for preloaded thread ${threadId}:`,
+						error,
+					);
+				});
+
+			// Re-attach shortcut engine with the correct window ID and tab ID
+			// This is critical when the preloaded view is used in a different window
+			// or with a different tab ID than it was created with
+			shortcutService.getEngine().attachToView(preloadedView, windowId, tab.id);
+
 			// Register with the actual tab ID
 			this.tabViewMap.set(tab.id, preloadedView);
 			this.tabMap.set(tab.id, tab);
