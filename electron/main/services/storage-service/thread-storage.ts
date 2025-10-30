@@ -14,14 +14,7 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 
 	private async getThreadMetadata(): Promise<ThreadMetadata | null> {
 		const result = await this.getItemInternal("thread-metadata");
-		if (!result) {
-			const defaultMetadata: ThreadMetadata = {
-				threadIds: [],
-				favorites: [],
-			};
-			await this.setItemInternal("thread-metadata", defaultMetadata);
-			return defaultMetadata;
-		}
+
 		return result;
 	}
 
