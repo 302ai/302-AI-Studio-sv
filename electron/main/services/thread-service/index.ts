@@ -1,6 +1,7 @@
 import type { ThreadData } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
 import { threadStorage } from "../storage-service/thread-storage";
+import { tabService } from "../tab-service";
 
 export class ThreadService {
 	async addThread(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
@@ -34,6 +35,8 @@ export class ThreadService {
 	async deleteThread(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
 		try {
 			await threadStorage.deleteThread(threadId);
+			// Also remove from preload pool if present
+			tabService.handleThreadDeleted(threadId);
 			return true;
 		} catch (error) {
 			console.error("ThreadService: Failed to delete thread:", error);

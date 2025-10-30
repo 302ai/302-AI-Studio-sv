@@ -209,6 +209,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("tabService:handleGenerateTabTitle", (event, tabId, threadId) =>
 		tabService.handleGenerateTabTitle(event, tabId, threadId),
 	);
+	ipcMain.handle("tabService:startPreloadThreads", (event) =>
+		tabService.startPreloadThreads(event),
+	);
 
 	// aiApplicationService service registration
 	ipcMain.handle("aiApplicationService:getAiApplicationUrl", (event, applicationId) =>
@@ -352,6 +355,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:replaceTabContent");
 	ipcMain.removeHandler("tabService:handleClearTabMessages");
 	ipcMain.removeHandler("tabService:handleGenerateTabTitle");
+	ipcMain.removeHandler("tabService:startPreloadThreads");
 	ipcMain.removeHandler("aiApplicationService:getAiApplicationUrl");
 	ipcMain.removeHandler("aiApplicationService:handle302AIProviderChange");
 	ipcMain.removeHandler("aiApplicationService:handleAiApplicationReload");

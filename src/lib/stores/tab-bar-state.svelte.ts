@@ -357,6 +357,20 @@ class TabBarState {
 		});
 		this.updatePersistedTabs(updatedTabs);
 	}
+
+	/**
+	 * Start preloading all threads in the background
+	 * This should be called after the main UI has loaded
+	 */
+	async startPreload() {
+		try {
+			console.log("[TabBarState] Starting thread preload...");
+			await tabService.startPreloadThreads();
+			console.log("[TabBarState] Thread preload initiated");
+		} catch (error) {
+			console.error("[TabBarState] Failed to start thread preload:", error);
+		}
+	}
 }
 
 export const tabBarState = new TabBarState();

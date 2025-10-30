@@ -4,8 +4,10 @@
 	import { useSidebar } from "$lib/components/ui/sidebar";
 	import { m } from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Ghost, Settings } from "@lucide/svelte";
+	import { onMount } from "svelte";
 	import AppSidebar from "./components/app-sidebar.svelte";
 	import SidebarShortcutHandler from "./components/sidebar-shortcut-handler.svelte";
 
@@ -14,6 +16,12 @@
 	async function handleNewSettingsTab() {
 		await window.electronAPI.windowService.handleOpenSettingsWindow();
 	}
+
+	// Start preloading threads immediately on mount
+	// This ensures users can switch threads right away without waiting
+	onMount(() => {
+		tabBarState.startPreload();
+	});
 </script>
 
 <Sidebar.Provider class="h-full min-h-fit">

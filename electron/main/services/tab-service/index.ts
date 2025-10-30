@@ -14,6 +14,7 @@ import { TempStorage } from "../../utils/temp-storage";
 import { shortcutService } from "../shortcut-service";
 import { storageService } from "../storage-service";
 import { tabStorage } from "../storage-service/tab-storage";
+import { threadStorage } from "../storage-service/thread-storage";
 
 type TabConfig = {
 	title: string;
@@ -36,6 +37,13 @@ export class TabService {
 	private windowShellView: Map<number, WebContentsView>;
 	private tempFileRegistry: Map<string, string[]>; // tabId -> tempFilePaths[]
 
+	// Preload management
+	private preloadedViewPool: Map<string, WebContentsView>; // threadId -> preloaded view
+	private preloadQueue: string[]; // threadIds waiting to be preloaded
+	private isPreloading: boolean; // flag to prevent concurrent preloading
+	private windowPreloadStatus: Map<number, boolean>; // windowId -> has started preloading
+	private preloadingThreads: Set<string>; // threadIds currently being preloaded
+
 	constructor() {
 		this.tabViewMap = new Map();
 		this.tabMap = new Map();
@@ -43,6 +51,13 @@ export class TabService {
 		this.windowActiveTabId = new Map();
 		this.windowShellView = new Map();
 		this.tempFileRegistry = new Map();
+
+		// Initialize preload structures
+		this.preloadedViewPool = new Map();
+		this.preloadQueue = [];
+		this.isPreloading = false;
+		this.windowPreloadStatus = new Map();
+		this.preloadingThreads = new Set();
 	}
 
 	private scheduleWindowResize(window: BrowserWindow) {
@@ -101,6 +116,16 @@ export class TabService {
 		const capturedWindowId = windowId;
 		withLifecycleHandlers(view, {
 			onDestroyed: () => {
+				// IMPORTANT: Check if this view is in the preload pool
+				// If it is, it means the view was recycled and shouldn't be cleaned up
+				const isInPool = Array.from(this.preloadedViewPool.values()).includes(view);
+				if (isInPool) {
+					console.log(
+						`[Preload] View for tab ${capturedTabId} is in preload pool, skipping cleanup`,
+					);
+					return;
+				}
+
 				console.log(`Tab ${capturedTabId} webContents destroyed, cleaning up all mappings`);
 				this.tabViewMap.delete(capturedTabId);
 				this.tabMap.delete(capturedTabId);
@@ -177,6 +202,259 @@ export class TabService {
 			});
 			this.tempFileRegistry.delete(tabId);
 		}
+	}
+
+	// ******************************* Preload Methods ******************************* //
+	/**
+	 * Create a preloaded view for a thread without attaching it to a window
+	 * The view is created and stored in the preloadedViewPool for later use
+	 */
+	private async createPreloadedView(
+		windowId: number,
+		threadId: string,
+	): Promise<WebContentsView | null> {
+		try {
+			// Mark as preloading
+			this.preloadingThreads.add(threadId);
+			console.log(`[Preload] Creating preloaded view for thread ${threadId}`);
+
+			// Get thread data from storage
+			const threadData = await storageService.getItemInternal("app-thread:" + threadId);
+
+			if (!threadData || typeof threadData !== "object" || !("title" in threadData)) {
+				console.warn(`[Preload] Thread ${threadId} not found in storage, skipping`);
+				this.preloadingThreads.delete(threadId);
+				return null;
+			}
+
+			// Create a temporary tab object for the preloaded view
+			const tempTab: Tab = {
+				id: `preload-${threadId}-${Date.now()}`,
+				title: threadData.title as string,
+				href: `/chat/${threadId}`,
+				type: "chat",
+				active: false,
+				threadId: threadId,
+			};
+
+			// Create the view using the existing method
+			const view = await this.newWebContentsView(windowId, tempTab);
+
+			// Set view as invisible (important!)
+			view.setVisible(false);
+
+			// Store in the preloaded view pool
+			this.preloadedViewPool.set(threadId, view);
+
+			// Remove from preloading set
+			this.preloadingThreads.delete(threadId);
+
+			console.log(`[Preload] Successfully created preloaded view for thread ${threadId}`);
+			return view;
+		} catch (error) {
+			console.error(`[Preload] Failed to create preloaded view for thread ${threadId}:`, error);
+			this.preloadingThreads.delete(threadId);
+			return null;
+		}
+	}
+
+	/**
+	 * Get a view from the preloaded pool or create a new one
+	 * If a preloaded view exists, it's removed from the pool and returned
+	 * If the thread is currently being preloaded, wait for it
+	 * Otherwise, a new view is created on-demand
+	 */
+	private async getOrCreateViewForThread(
+		windowId: number,
+		threadId: string,
+		tab: Tab,
+	): Promise<WebContentsView> {
+		// Check if this thread is currently being preloaded
+		if (this.preloadingThreads.has(threadId)) {
+			console.log(`[Preload] Thread ${threadId} is currently being preloaded, waiting...`);
+
+			// Wait for the preloading to complete (with timeout)
+			const maxWaitTime = 10000; // 10 seconds max
+			const startTime = Date.now();
+
+			while (this.preloadingThreads.has(threadId) && Date.now() - startTime < maxWaitTime) {
+				await new Promise((resolve) => setTimeout(resolve, 100)); // Wait 100ms
+			}
+
+			if (this.preloadingThreads.has(threadId)) {
+				console.warn(
+					`[Preload] Timeout waiting for thread ${threadId} to preload, creating new view`,
+				);
+			} else {
+				console.log(`[Preload] Thread ${threadId} preloading completed, checking pool`);
+			}
+		}
+
+		// Check if we have a preloaded view for this thread
+		const preloadedView = this.preloadedViewPool.get(threadId);
+		if (preloadedView && !preloadedView.webContents.isDestroyed()) {
+			console.log(`[Preload] Using preloaded view for thread ${threadId}`);
+			// Remove from pool since it's now being used
+			this.preloadedViewPool.delete(threadId);
+
+			// Find and clean up the old temporary tab ID
+			// The preloaded view was created with a temporary tab ID starting with "preload-{threadId}-"
+			const oldTabId = Array.from(this.tabMap.entries()).find(
+				([_, t]) => t.threadId === threadId && t.id.startsWith(`preload-${threadId}-`),
+			)?.[0];
+
+			if (oldTabId) {
+				console.log(`[Preload] Cleaning up temporary tab ID ${oldTabId}`);
+				this.tabViewMap.delete(oldTabId);
+				this.tabMap.delete(oldTabId);
+			}
+
+			// Register with the actual tab ID
+			this.tabViewMap.set(tab.id, preloadedView);
+			this.tabMap.set(tab.id, tab);
+
+			return preloadedView;
+		}
+
+		// No preloaded view available, create new one
+		console.log(`[Preload] No preloaded view found for thread ${threadId}, creating new view`);
+		return await this.newWebContentsView(windowId, tab);
+	}
+
+	/**
+	 * Process the preload queue one thread at a time
+	 * Uses setImmediate to avoid blocking the main thread
+	 */
+	private async processPreloadQueue(windowId: number): Promise<void> {
+		if (this.isPreloading || this.preloadQueue.length === 0) {
+			return;
+		}
+
+		this.isPreloading = true;
+		const threadId = this.preloadQueue.shift();
+
+		if (threadId) {
+			try {
+				// Check if already in pool (avoid duplicates)
+				if (!this.preloadedViewPool.has(threadId)) {
+					await this.createPreloadedView(windowId, threadId);
+					console.log(
+						`[Preload] Progress: ${this.preloadedViewPool.size} views preloaded, ${this.preloadQueue.length} remaining`,
+					);
+				}
+			} catch (error) {
+				console.error(`[Preload] Failed to preload thread ${threadId}:`, error);
+			}
+		}
+
+		this.isPreloading = false;
+
+		// Continue processing the queue using setImmediate
+		if (this.preloadQueue.length > 0) {
+			setImmediate(() => this.processPreloadQueue(windowId));
+		} else {
+			console.log(`[Preload] Completed preloading ${this.preloadedViewPool.size} threads`);
+		}
+	}
+
+	/**
+	 * Preload all threads for a window
+	 * This is the main entry point for starting the preload process
+	 */
+	private async preloadAllThreads(windowId: number): Promise<void> {
+		// Check if preloading has already started for this window
+		if (this.windowPreloadStatus.get(windowId)) {
+			console.log(`[Preload] Already started for window ${windowId}`);
+			return;
+		}
+
+		console.log(`[Preload] Starting preload for window ${windowId}`);
+		this.windowPreloadStatus.set(windowId, true);
+
+		try {
+			// Get all threads from storage
+			const allThreads = await threadStorage.getThreadsData();
+			if (!allThreads || allThreads.length === 0) {
+				console.log("[Preload] No threads found to preload");
+				return;
+			}
+
+			// Get currently open tabs in this window to exclude them
+			const windowTabs = await tabStorage.getTabs(windowId.toString());
+			const openThreadIds = new Set(
+				(windowTabs || [])
+					.filter((tab) => tab.type === "chat" && tab.threadId)
+					.map((tab) => tab.threadId),
+			);
+
+			// Filter out threads that are already open in tabs
+			const threadsToPreload = allThreads
+				.filter(({ threadId }) => !openThreadIds.has(threadId))
+				.map(({ threadId }) => threadId);
+
+			console.log(
+				`[Preload] Found ${allThreads.length} total threads, ${threadsToPreload.length} need preloading (${openThreadIds.size} already open)`,
+			);
+
+			if (threadsToPreload.length === 0) {
+				console.log("[Preload] All threads are already open, nothing to preload");
+				return;
+			}
+
+			// Add to preload queue
+			this.preloadQueue.push(...threadsToPreload);
+
+			// Start processing the queue
+			this.processPreloadQueue(windowId);
+		} catch (error) {
+			console.error("[Preload] Failed to start preload:", error);
+			this.windowPreloadStatus.set(windowId, false);
+		}
+	}
+
+	/**
+	 * Remove a thread from the preload pool
+	 * Used when a thread is deleted - this actually closes the view
+	 */
+	private removeThreadFromPool(threadId: string): void {
+		const view = this.preloadedViewPool.get(threadId);
+		if (view) {
+			console.log(`[Preload] Removing and closing view for deleted thread ${threadId}`);
+			try {
+				if (!view.webContents.isDestroyed()) {
+					// Remove from window if attached
+					const windows = BrowserWindow.getAllWindows();
+					for (const window of windows) {
+						try {
+							window.contentView.removeChildView(view);
+						} catch (_) {
+							// View might not be attached to this window, ignore
+						}
+					}
+					view.webContents.close({ waitForBeforeUnload: false });
+				}
+			} catch (error) {
+				console.error(`[Preload] Error closing view for thread ${threadId}:`, error);
+			}
+			this.preloadedViewPool.delete(threadId);
+		}
+
+		// Also remove from preloading set if present
+		this.preloadingThreads.delete(threadId);
+
+		// Also remove from queue if present
+		const queueIndex = this.preloadQueue.indexOf(threadId);
+		if (queueIndex !== -1) {
+			this.preloadQueue.splice(queueIndex, 1);
+		}
+	}
+
+	/**
+	 * Public method to handle thread deletion
+	 * Called by threadService when a thread is deleted
+	 */
+	handleThreadDeleted(threadId: string): void {
+		this.removeThreadFromPool(threadId);
 	}
 
 	// ******************************* Main Process Methods ******************************* //
@@ -256,6 +534,24 @@ export class TabService {
 
 		this.windowTabView.delete(windowId);
 		this.windowActiveTabId.delete(windowId);
+
+		// If this is the last window, clean up all preloaded views
+		const remainingWindows = BrowserWindow.getAllWindows().filter((w) => !w.isDestroyed());
+		if (remainingWindows.length === 0) {
+			console.log("[Preload] Cleaning up all preloaded views (last window closing)");
+			for (const [threadId, view] of this.preloadedViewPool.entries()) {
+				try {
+					if (!view.webContents.isDestroyed()) {
+						view.webContents.close({ waitForBeforeUnload: false });
+					}
+				} catch (error) {
+					console.error(`[Preload] Error closing preloaded view for thread ${threadId}:`, error);
+				}
+			}
+			this.preloadedViewPool.clear();
+			this.preloadQueue = [];
+			this.windowPreloadStatus.clear();
+		}
 	}
 
 	/**
@@ -513,7 +809,8 @@ export class TabService {
 			threadId,
 		};
 
-		const view = await this.newWebContentsView(window.id, newTab);
+		// Try to use preloaded view for existing threads
+		const view = await this.getOrCreateViewForThread(window.id, threadId, newTab);
 		this.attachViewToWindow(window, view);
 		this.switchActiveTab(window, newTab.id);
 
@@ -819,7 +1116,8 @@ export class TabService {
 
 	/**
 	 * Replace the current tab's thread content with a new thread
-	 * This recreates the WebContentsView with new thread data
+	 * This uses preloaded views when available for instant switching
+	 * The old view is returned to the preload pool instead of being destroyed
 	 */
 	async replaceTabContent(
 		event: IpcMainInvokeEvent,
@@ -854,20 +1152,32 @@ export class TabService {
 				return false;
 			}
 
+			const oldThreadId = currentTab.threadId;
+
 			const updatedTab = {
 				...currentTab,
 				threadId: newThreadId,
 				title: threadData.title as string,
 			};
 
+			// Remove old view from window and hide it
 			window.contentView.removeChildView(oldView);
+			oldView.setVisible(false);
 
-			oldView.webContents.close({ waitForBeforeUnload: false });
+			// Remove old mappings
+			this.tabViewMap.delete(tabId);
+			this.tabMap.delete(tabId);
 
-			const newView = await this.newWebContentsView(window.id, updatedTab);
+			// Return old view to preload pool if it's a valid thread
+			if (oldThreadId && !this.preloadedViewPool.has(oldThreadId)) {
+				console.log(`[Preload] Returning view for thread ${oldThreadId} to pool`);
+				this.preloadedViewPool.set(oldThreadId, oldView);
+			}
 
-			this.tabMap.set(tabId, updatedTab);
+			// Try to get preloaded view or create new one
+			const newView = await this.getOrCreateViewForThread(window.id, newThreadId, updatedTab);
 
+			// Update window views list
 			const windowViews = this.windowTabView.get(window.id);
 			if (!isUndefined(windowViews)) {
 				const viewIndex = windowViews.indexOf(oldView);
@@ -878,6 +1188,7 @@ export class TabService {
 				}
 			}
 
+			// Attach new view to window and activate it
 			this.attachViewToWindow(window, newView);
 			this.switchActiveTab(window, tabId);
 
@@ -945,6 +1256,21 @@ export class TabService {
 			console.error(`[handleGenerateTabTitle] Failed to generate title:`, error);
 			return false;
 		}
+	}
+
+	/**
+	 * Start preloading all threads for a window
+	 * This is called from the frontend after the main UI has loaded
+	 */
+	async startPreloadThreads(event: IpcMainInvokeEvent): Promise<void> {
+		const window = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(window)) {
+			console.error("[startPreloadThreads] Window not found");
+			return;
+		}
+
+		console.log(`[startPreloadThreads] Starting preload for window ${window.id}`);
+		await this.preloadAllThreads(window.id);
 	}
 }
 
