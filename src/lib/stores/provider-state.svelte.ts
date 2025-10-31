@@ -217,25 +217,32 @@ class ProviderState {
 	}
 	async fetchModelsForProvider(provider: ModelProvider): Promise<boolean> {
 		try {
-			const result = await getModelsByProvider(provider);
+			// 确保使用最新的 provider 数据
+			const latestProvider = this.getProvider(provider.id);
+			if (!latestProvider) {
+				console.error(`Provider ${provider.id} not found`);
+				return false;
+			}
+
+			const result = await getModelsByProvider(latestProvider);
 			if (result.success && result.data) {
-				await this.updateProvider(provider.id, { status: "connected" });
+				await this.updateProvider(latestProvider.id, { status: "connected" });
 				persistedModelState.current = persistedModelState.current
 					.filter((models) => {
-						return models.providerId !== provider.id;
+						return models.providerId !== latestProvider.id;
 					})
 					.concat(result.data.models);
 
 				toast.success(
 					m.text_fetch_models_success({
 						count: result.data.models.length.toString(),
-						provider: provider.name,
+						provider: latestProvider.name,
 					}),
 				);
 				return true;
 			} else {
-				await this.updateProvider(provider.id, { status: "error" });
-				toast.error(m.text_fetch_models_error({ provider: provider.name }), {
+				await this.updateProvider(latestProvider.id, { status: "error" });
+				toast.error(m.text_fetch_models_error({ provider: latestProvider.name }), {
 					description: result.error || m.text_fetch_models_unknown_error(),
 				});
 				return false;
