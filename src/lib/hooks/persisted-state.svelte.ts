@@ -76,7 +76,6 @@ export class PersistedState<T extends StorageValue> {
 	#storeTimeoutId: ReturnType<typeof setTimeout> | null = null;
 	#storeDebounceMs: number;
 	#debounce: boolean;
-	#lastWrittenValue: T | undefined | null = undefined;
 
 	constructor(key: string, initialValue: T, debounce: boolean = false, debounceMs: number = 300) {
 		this.#current = initialValue;
@@ -140,7 +139,6 @@ export class PersistedState<T extends StorageValue> {
 			const existingValue = await electronStorage?.getItemAsync(key);
 			if (existingValue == null) {
 				await electronStorage?.setItemAsync(key, initialValue);
-				this.#lastWrittenValue = initialValue;  // Track initial write
 				this.#isHydrated = true;
 				return;
 			}
@@ -149,34 +147,23 @@ export class PersistedState<T extends StorageValue> {
 				this.#current = existingValue;
 				this.#update?.();
 			}
-			this.#lastWrittenValue = existingValue;  // Track loaded value
 			this.#isHydrated = true;
 		} catch (error) {
 			console.error(`Error hydrate persisted state from Electron storage for key "${key}":`, error);
 			this.#current = initialValue;
-			this.#lastWrittenValue = initialValue;  // Track fallback value
 			this.#isHydrated = true;
 		}
 	}
 
 	#store(value: T | undefined | null): void {
-		// Skip write if value hasn't actually changed
-		if (isEqual(value, this.#lastWrittenValue)) {
-			return;
-		}
-
 		if (!this.#debounce) {
-			this.#storage?.setItemAsync(this.#key, value ?? null)
-				.then(() => {
-					this.#lastWrittenValue = value;
-				})
-				.catch((error) => {
-					console.log("Value", value);
-					console.error(
-						`Error when writing value from persisted store "${this.#key}" to Electron storage`,
-						error,
-					);
-				});
+			this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
+				console.log("Value", value);
+				console.error(
+					`Error when writing value from persisted store "${this.#key}" to Electron storage`,
+					error,
+				);
+			});
 			return;
 		}
 		// Clear existing timeout
@@ -187,17 +174,13 @@ export class PersistedState<T extends StorageValue> {
 		// Set new debounced store
 		this.#storeTimeoutId = setTimeout(() => {
 			const write = () => {
-				this.#storage?.setItemAsync(this.#key, value ?? null)
-					.then(() => {
-						this.#lastWrittenValue = value;
-					})
-					.catch((error) => {
-						console.log("Value", value);
-						console.error(
-							`Error when writing value from persisted store "${this.#key}" to Electron storage`,
-							error,
-						);
-					});
+				this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
+					console.log("Value", value);
+					console.error(
+						`Error when writing value from persisted store "${this.#key}" to Electron storage`,
+						error,
+					);
+				});
 			};
 			if (typeof requestIdleCallback !== "undefined") {
 				requestIdleCallback(write, { timeout: 1500 });
@@ -214,15 +197,11 @@ export class PersistedState<T extends StorageValue> {
 			clearTimeout(this.#storeTimeoutId);
 			this.#storeTimeoutId = null;
 		}
-		this.#storage?.setItemAsync(this.#key, this.#current ?? null)
-			.then(() => {
-				this.#lastWrittenValue = this.#current;
-			})
-			.catch((error) => {
-				console.error(
-					`Error when flushing persisted store "${this.#key}" to Electron storage`,
-					error,
-				);
-			});
+		this.#storage?.setItemAsync(this.#key, this.#current ?? null).catch((error) => {
+			console.error(
+				`Error when flushing persisted store "${this.#key}" to Electron storage`,
+				error,
+			);
+		});
 	}
 }

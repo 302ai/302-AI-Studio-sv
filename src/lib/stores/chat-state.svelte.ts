@@ -57,14 +57,10 @@ const initialThread: ThreadParmas = clone(
 export const persistedMessagesState = new PersistedState<ChatMessage[]>(
 	"app-chat-messages:" + threadId,
 	initialMessages,
-	true,  // Enable debouncing
-	1000,  // 1 second delay (messages are less time-sensitive)
 );
 export const persistedChatParamsState = new PersistedState<ThreadParmas>(
 	"app-thread:" + threadId,
 	initialThread,
-	true,  // Enable debouncing
-	500,   // 500ms delay for chat parameters
 );
 
 class ChatState {

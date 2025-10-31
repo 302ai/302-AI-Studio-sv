@@ -8,8 +8,6 @@ import { match } from "ts-pattern";
 export const persistedTabState = new PersistedState<TabState>(
 	"TabStorage:tab-bar-state",
 	{} as TabState,
-	true,  // Enable debouncing
-	300,   // 300ms delay for tab operations
 );
 
 const { tabService, windowService, threadService } = window.electronAPI;
@@ -358,20 +356,6 @@ class TabBarState {
 			return tab;
 		});
 		this.updatePersistedTabs(updatedTabs);
-	}
-
-	/**
-	 * Start preloading all threads in the background
-	 * This should be called after the main UI has loaded
-	 */
-	async startPreload() {
-		try {
-			console.log("[TabBarState] Starting thread preload...");
-			await tabService.startPreloadThreads();
-			console.log("[TabBarState] Thread preload initiated");
-		} catch (error) {
-			console.error("[TabBarState] Failed to start thread preload:", error);
-		}
 	}
 }
 
