@@ -476,7 +476,7 @@ class ChatState {
 
 				threadService.addThread(persistedChatParamsState.current.id);
 
-				broadcastService.broadcastToAll("thread-list-updated", { threadId });
+				await broadcastService.broadcastToAll("thread-list-updated", { threadId });
 
 				this.inputValue = "";
 				this.attachments = [];
@@ -998,6 +998,6 @@ export const chat = new Chat({
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		persistedChatParamsState.current.updatedAt = new Date();
 
-		broadcastService.broadcastToAll("thread-list-updated", {});
+		await broadcastService.broadcastToAll("thread-list-updated", {});
 	},
 });
