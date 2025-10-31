@@ -8,6 +8,8 @@ import { match } from "ts-pattern";
 export const persistedTabState = new PersistedState<TabState>(
 	"TabStorage:tab-bar-state",
 	{} as TabState,
+	true,  // Enable debouncing
+	300,   // 300ms delay for tab operations
 );
 
 const { tabService, windowService, threadService } = window.electronAPI;

@@ -3,31 +3,219 @@ import fsDriver from "@302ai/unstorage/drivers/fs";
 import { isDev } from "@electron/main/constants";
 import type { MigrationConfig, StorageItem, StorageMetadata, StorageOptions } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
+import { promises as fs } from "fs";
 import { join } from "path";
 import { userDataManager } from "../app-service/user-data-manager";
 import { emitter } from "../broadcast-service";
 import { getStorageVersion, setStorageVersion } from "./migration-utils";
 
+/**
+ * Simple in-memory lock manager to serialize concurrent writes to the same file
+ */
+class StorageLockManager {
+	private locks = new Map<string, Promise<void>>();
+
+	/**
+	 * Execute a function with exclusive lock on the specified key
+	 */
+	async withLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+		// Wait for any existing lock on this key
+		while (this.locks.has(key)) {
+			await this.locks.get(key);
+		}
+
+		// Create new lock promise
+		let releaseLock: () => void;
+		const lockPromise = new Promise<void>((resolve) => {
+			releaseLock = resolve;
+		});
+
+		this.locks.set(key, lockPromise);
+
+		try {
+			// Execute the function
+			return await fn();
+		} finally {
+			// Release the lock
+			this.locks.delete(key);
+			releaseLock!();
+		}
+	}
+}
+
+/**
+ * Write queue that coalesces multiple rapid writes into batches
+ * Reduces I/O operations by collecting writes over a short time window
+ */
+class WriteQueue<T> {
+	private pendingWrites = new Map<string, { value: T; timestamp: number }>();
+	private flushTimer: NodeJS.Timeout | null = null;
+	private coalesceMs: number;
+	private writeFunction: (key: string, value: T) => Promise<void>;
+
+	constructor(writeFunction: (key: string, value: T) => Promise<void>, coalesceMs: number = 100) {
+		this.writeFunction = writeFunction;
+		this.coalesceMs = coalesceMs;
+	}
+
+	/**
+	 * Schedule a write operation, coalescing with other writes in the same time window
+	 */
+	schedule(key: string, value: T): void {
+		// Update or add to pending writes (last write wins for same key)
+		this.pendingWrites.set(key, { value, timestamp: Date.now() });
+
+		// Schedule flush if not already scheduled
+		if (!this.flushTimer) {
+			this.flushTimer = setTimeout(() => this.flush(), this.coalesceMs);
+		}
+	}
+
+	/**
+	 * Force immediate flush of all pending writes
+	 */
+	async flush(): Promise<void> {
+		if (this.flushTimer) {
+			clearTimeout(this.flushTimer);
+			this.flushTimer = null;
+		}
+
+		if (this.pendingWrites.size === 0) {
+			return;
+		}
+
+		// Copy and clear pending writes
+		const writes = Array.from(this.pendingWrites.entries());
+		this.pendingWrites.clear();
+
+		// Execute all writes in parallel
+		await Promise.all(
+			writes.map(([key, { value }]) => this.writeFunction(key, value))
+		);
+	}
+
+	/**
+	 * Get number of pending writes
+	 */
+	get size(): number {
+		return this.pendingWrites.size;
+	}
+}
+
 export class StorageService<T extends StorageValue> {
 	protected storage;
+	protected storagePath: string;
 	protected watches = new Map<string, () => void>();
 	protected migrationConfig?: MigrationConfig<T>;
 	protected lastUpdateSource = new Map<string, number>();
+	private lockManager = new StorageLockManager();
+	private writeQueue: WriteQueue<T>;
 
 	constructor(migrationConfig?: MigrationConfig<T>) {
-		const storagePath = isDev
+		this.storagePath = isDev
 			? join(process.cwd(), "storage")
 			: join(userDataManager.storagePath, "storage");
 		this.storage = createStorage<T>({
 			driver: fsDriver({
-				base: storagePath,
+				base: this.storagePath,
 			}),
 		});
 		this.migrationConfig = migrationConfig;
+
+		// Initialize write queue with actual write function
+		this.writeQueue = new WriteQueue<T>(
+			async (key: string, value: T) => {
+				await this.lockManager.withLock(key, async () => {
+					await this.atomicWriteWithRetry(key, value);
+				});
+			},
+			100 // 100ms coalesce window
+		);
 	}
 
 	protected ensureJsonExtension(key: string): string {
 		return key.endsWith(".json") ? key : `${key}.json`;
+	}
+
+	/**
+	 * Atomic write implementation to prevent file corruption
+	 * Uses write-to-temp + rename pattern which is atomic on POSIX systems
+	 */
+	private async atomicWrite(key: string, value: T): Promise<void> {
+		const filePath = join(this.storagePath, key);
+		const tempPath = `${filePath}.tmp.${Date.now()}.${process.pid}`;
+
+		try {
+			// Serialize value to JSON
+			const content = JSON.stringify(value, null, 2);
+
+			// Write to temporary file
+			await fs.writeFile(tempPath, content, "utf8");
+
+			// Fsync to ensure data is on disk
+			const fileHandle = await fs.open(tempPath, "r+");
+			try {
+				await fileHandle.datasync();
+			} finally {
+				await fileHandle.close();
+			}
+
+			// Atomic rename (overwrites existing file atomically on POSIX)
+			await fs.rename(tempPath, filePath);
+		} catch (error) {
+			// Clean up temp file if it exists
+			try {
+				await fs.unlink(tempPath);
+			} catch {
+				// Ignore cleanup errors
+			}
+			throw error;
+		}
+	}
+
+	/**
+	 * Atomic write with retry logic and exponential backoff
+	 * Retries failed writes up to maxRetries times with increasing delays
+	 */
+	private async atomicWriteWithRetry(
+		key: string,
+		value: T,
+		maxRetries: number = 3
+	): Promise<void> {
+		let lastError: Error | undefined;
+
+		for (let attempt = 0; attempt <= maxRetries; attempt++) {
+			try {
+				await this.atomicWrite(key, value);
+				return; // Success - exit
+			} catch (error) {
+				lastError = error instanceof Error ? error : new Error(String(error));
+
+				// Don't retry on last attempt
+				if (attempt === maxRetries) {
+					break;
+				}
+
+				// Calculate exponential backoff delay: 100ms, 200ms, 400ms, ...
+				const delayMs = Math.min(100 * Math.pow(2, attempt), 2000);
+
+				console.warn(
+					`[StorageService] Write failed for key "${key}", attempt ${attempt + 1}/${maxRetries + 1}. ` +
+					`Retrying in ${delayMs}ms...`,
+					lastError.message
+				);
+
+				// Wait before retry
+				await new Promise((resolve) => setTimeout(resolve, delayMs));
+			}
+		}
+
+		// All retries exhausted
+		console.error(
+			`[StorageService] Write failed for key "${key}" after ${maxRetries + 1} attempts`,
+			lastError
+		);
+		throw lastError;
 	}
 
 	async setItem(event: IpcMainInvokeEvent, key: string, value: T): Promise<void> {
@@ -36,7 +224,8 @@ export class StorageService<T extends StorageValue> {
 
 		this.lastUpdateSource.set(jsonKey, event.sender.id);
 
-		await this.storage.setItem(jsonKey, versionedValue);
+		// Schedule write through queue for automatic coalescing
+		this.writeQueue.schedule(jsonKey, versionedValue);
 	}
 
 	async getItem(_event: IpcMainInvokeEvent, key: string): Promise<T | null> {
@@ -93,15 +282,17 @@ export class StorageService<T extends StorageValue> {
 	async setItems(event: IpcMainInvokeEvent, items: StorageItem<T>[]): Promise<void> {
 		const formattedItems = items.map((item) => ({
 			key: this.ensureJsonExtension(item.key),
-			value: item.value,
-			options: {},
+			value: this.addVersionIfNeeded(item.value as T),
 		}));
 
 		formattedItems.forEach((item) => {
 			this.lastUpdateSource.set(item.key, event.sender.id);
 		});
 
-		await this.storage.setItems(formattedItems);
+		// Schedule all writes through queue for automatic coalescing
+		formattedItems.forEach((item) => {
+			this.writeQueue.schedule(item.key, item.value);
+		});
 	}
 
 	async watch(_event: IpcMainInvokeEvent, watchKey: string): Promise<void> {
@@ -134,6 +325,8 @@ export class StorageService<T extends StorageValue> {
 	}
 
 	async dispose(): Promise<void> {
+		// Flush any pending writes before disposing
+		await this.writeQueue.flush();
 		await this.storage.dispose();
 	}
 
@@ -157,7 +350,11 @@ export class StorageService<T extends StorageValue> {
 
 	async setItemInternal(key: string, value: T): Promise<void> {
 		const versionedValue = this.addVersionIfNeeded(value);
-		await this.storage.setItem(this.ensureJsonExtension(key), versionedValue);
+		const jsonKey = this.ensureJsonExtension(key);
+		// Use lock, atomic write, and retry to prevent corruption and handle failures
+		await this.lockManager.withLock(jsonKey, async () => {
+			await this.atomicWriteWithRetry(jsonKey, versionedValue);
+		});
 	}
 
 	async hasItemInternal(key: string): Promise<boolean> {
@@ -189,9 +386,12 @@ export class StorageService<T extends StorageValue> {
 
 			const migratedValue = this.migrationConfig.migrate(value, currentVersion);
 
-			// 保存迁移后的数据回原位置
+			// Save migrated data with atomic write, lock, and retry
 			if (migratedValue !== value) {
-				await this.storage.setItem(this.ensureJsonExtension(key), migratedValue);
+				const jsonKey = this.ensureJsonExtension(key);
+				await this.lockManager.withLock(jsonKey, async () => {
+					await this.atomicWriteWithRetry(jsonKey, migratedValue);
+				});
 				if (this.migrationConfig.debug) {
 					console.log(`[StorageService] Migration completed and saved for key: ${key}`);
 				}
