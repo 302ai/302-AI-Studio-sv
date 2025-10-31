@@ -130,7 +130,7 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 	async getThreadsData(): Promise<Array<ThreadData> | null> {
 		try {
 			const metadata = await this.getThreadMetadata();
-			if (!metadata || metadata.threadIds.length === 0) {
+			if (!metadata) {
 				return null;
 			}
 

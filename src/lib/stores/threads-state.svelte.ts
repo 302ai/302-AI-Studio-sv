@@ -31,7 +31,6 @@ class ThreadsState {
 			const threadsData = await threadService.getThreads();
 
 			this.threads = threadsData ?? currentThreads;
-			console.log("Threads loaded:", this.threads.length);
 		} catch (error) {
 			console.error("Failed to load threads:", error);
 			this.threads = currentThreads;
@@ -50,8 +49,7 @@ class ThreadsState {
 			await threadService.addFavorite(threadId);
 		}
 
-		await this.#loadThreads();
-		await broadcastService.broadcastExcludeSource("thread-list-updated", {});
+		await broadcastService.broadcastToAll("thread-list-updated", {});
 	}, 200);
 
 	async renameThread(threadId: string, newName: string): Promise<void> {
@@ -66,9 +64,8 @@ class ThreadsState {
 				if (this.activeThreadId === threadId) {
 					this.activeThreadId = "";
 				}
-
-				// Broadcast to other tabs about the deletion
-				await broadcastService.broadcastExcludeSource("thread-list-updated", { threadId });
+				// 主动从本地状态中移除该 thread，确保 UI 立即更新
+				this.threads = this.threads.filter((t) => t.threadId !== threadId);
 			}
 			return success;
 		} catch (error) {
