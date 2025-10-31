@@ -62,6 +62,20 @@
 			});
 		}
 
+		// Generate data URL for PDF files
+		if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+			return new Promise((resolve) => {
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					resolve(e.target?.result as string);
+				};
+				reader.onerror = () => {
+					resolve(undefined);
+				};
+				reader.readAsDataURL(file);
+			});
+		}
+
 		return undefined;
 	}
 

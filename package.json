@@ -124,6 +124,7 @@
 		"@inlang/paraglide-js": "^2.3.2",
 		"@lobehub/icons-static-svg": "^1.66.0",
 		"@modelcontextprotocol/sdk": "^1.20.0",
+		"@opendocsg/pdf2md": "^0.2.2",
 		"@sveltejs/adapter-static": "^3.0.9",
 		"@zumer/snapdom": "^1.9.14",
 		"archiver": "^7.0.1",

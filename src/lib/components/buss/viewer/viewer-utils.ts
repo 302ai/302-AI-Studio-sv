@@ -19,6 +19,15 @@ export function formatFileSize(bytes: number): string {
 	return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
 }
 
+/**
+ * Check if the attachment preview should be displayed as a thumbnail image
+ * Only images and videos should show their preview as thumbnail
+ */
+export function shouldShowPreviewAsThumbnail(attachment: AttachmentFile): boolean {
+	const { type } = attachment;
+	return type.startsWith("image/") || type.startsWith("video/");
+}
+
 export function getViewerType(attachment: AttachmentFile): ViewerType {
 	const { type, name } = attachment;
 

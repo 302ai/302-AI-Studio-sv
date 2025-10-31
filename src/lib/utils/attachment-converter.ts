@@ -1,5 +1,6 @@
-import type { FileUIPart } from "ai";
+import pdf2md from "@opendocsg/pdf2md";
 import type { AttachmentFile } from "@shared/types";
+import type { FileUIPart } from "ai";
 
 export type MessagePart = FileUIPart | { type: "text"; text: string };
 
@@ -16,6 +17,11 @@ export type AttachmentMetadata = {
 function isMediaFile(attachment: AttachmentFile): boolean {
 	const mediaTypes = ["image/", "audio/", "video/"];
 	return mediaTypes.some((type) => attachment.type.startsWith(type));
+}
+
+function isPdfFile(attachment: AttachmentFile): boolean {
+	const { type, name } = attachment;
+	return type === "application/pdf" || name.toLowerCase().endsWith(".pdf");
 }
 
 function isTextFile(attachment: AttachmentFile): boolean {
@@ -73,6 +79,27 @@ function isTextFile(attachment: AttachmentFile): boolean {
 	return textExtensions.some((ext) => name.toLowerCase().endsWith(ext));
 }
 
+async function readPdfFile(attachment: AttachmentFile): Promise<string> {
+	try {
+		if (!attachment.file) {
+			throw new Error("No file available for PDF parsing");
+		}
+
+		// Convert File to ArrayBuffer (browser-compatible)
+		const arrayBuffer = await attachment.file.arrayBuffer();
+		const uint8Array = new Uint8Array(arrayBuffer);
+
+		// Parse PDF to Markdown using Uint8Array (browser-compatible)
+		const markdown = await pdf2md(uint8Array);
+		return markdown;
+	} catch (error) {
+		console.error("Failed to parse PDF:", error);
+		throw new Error(
+			`Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+		);
+	}
+}
+
 async function readTextFile(attachment: AttachmentFile): Promise<string> {
 	if (attachment.file) {
 		return await attachment.file.text();
@@ -125,6 +152,19 @@ export async function convertAttachmentToMessagePart(
 				filename: attachment.name,
 				url,
 			},
+		};
+	}
+
+	// Handle PDF files - parse to markdown and treat as text
+	if (isPdfFile(attachment)) {
+		const content = await readPdfFile(attachment);
+
+		return {
+			part: {
+				type: "text",
+				text: `[File: ${attachment.name}]\n\`\`\`markdown\n${content}\n\`\`\``,
+			},
+			textContent: content,
 		};
 	}
 
