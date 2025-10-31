@@ -126,7 +126,7 @@
 	type="file"
 	multiple
 	class="hidden"
-	accept="image/*,text/*,audio/*,video/*,.pdf,.doc,.docx,.json,.csv,.xlsx,.xls"
+	accept="image/*,text/*,audio/*,video/*,.pdf,.json,.csv,.xlsx,.xls"
 	onchange={handleFileSelect}
 />
 
