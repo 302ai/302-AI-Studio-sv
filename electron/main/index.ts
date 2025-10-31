@@ -24,6 +24,73 @@ if (started) {
 	app.quit();
 }
 
+// Implement single instance lock to prevent multiple app instances
+const gotTheLock = app.requestSingleInstanceLock();
+
+if (!gotTheLock) {
+	// Another instance is already running, quit this instance
+	app.quit();
+} else {
+	// This instance got the lock, listen for second instance attempts
+	app.on("second-instance", () => {
+		// When a second instance tries to start, focus the main window instead
+		const mainWindow = windowService.getMainWindow();
+		if (mainWindow) {
+			if (mainWindow.isMinimized()) {
+				mainWindow.restore();
+			}
+			if (!mainWindow.isVisible()) {
+				mainWindow.show();
+			}
+			mainWindow.focus();
+		}
+	});
+
+	// This method will be called when Electron has finished
+	// initialization and is ready to create browser windows.
+	// Some APIs can only be used after this event occurs.
+	app.on("ready", async () => {
+		await init();
+		const serverPort = await initServer();
+		console.log(`Server initialized on port ${serverPort}`);
+		WebContentsFactory.setServerPort(serverPort);
+		await windowService.initShellWindows();
+	});
+
+	// Quit when all windows are closed, except on macOS. There, it's common
+	// for applications and their menu bar to stay active until the user quits
+	// explicitly with Cmd + Q.
+	app.on("window-all-closed", () => {
+		if (!isMac) app.quit();
+	});
+
+	// macOS specific handling for Cmd+Q to ensure proper cleanup
+	if (isMac) {
+		// Handle Cmd+Q (or menu quit) - ensure window close listeners fire
+		app.on("before-quit", (event) => {
+			if (UpdaterService.isInstallingUpdateNow()) return;
+
+			event.preventDefault();
+			// Enable force quitting mode to bypass macOS hide behavior
+			windowService.setCMDQ(true);
+
+			// Close windows in reverse order so main window closes last
+			const windows = windowService.getOrderedWindows().reverse();
+			windows.forEach((window) => {
+				window.close();
+			});
+
+			app.exit();
+		});
+	}
+
+	app.on("activate", () => {
+		const mainWindow = windowService.getMainWindow();
+		if (mainWindow) mainWindow.show();
+		else windowService.initShellWindows();
+	});
+}
+
 async function init() {
 	// Register auto-generated IPC handlers
 	registerIpcHandlers();
@@ -76,47 +143,3 @@ async function init() {
 		return net.fetch(`file://${normalized}`);
 	});
 }
-
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on("ready", async () => {
-	await init();
-	const serverPort = await initServer();
-	console.log(`Server initialized on port ${serverPort}`);
-	WebContentsFactory.setServerPort(serverPort);
-	await windowService.initShellWindows();
-});
-
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
-app.on("window-all-closed", () => {
-	if (!isMac) app.quit();
-});
-
-// macOS specific handling for Cmd+Q to ensure proper cleanup
-if (isMac) {
-	// Handle Cmd+Q (or menu quit) - ensure window close listeners fire
-	app.on("before-quit", (event) => {
-		if (UpdaterService.isInstallingUpdateNow()) return;
-
-		event.preventDefault();
-		// Enable force quitting mode to bypass macOS hide behavior
-		windowService.setCMDQ(true);
-
-		// Close windows in reverse order so main window closes last
-		const windows = windowService.getOrderedWindows().reverse();
-		windows.forEach((window) => {
-			window.close();
-		});
-
-		app.exit();
-	});
-}
-
-app.on("activate", () => {
-	const mainWindow = windowService.getMainWindow();
-	if (mainWindow) mainWindow.show();
-	else windowService.initShellWindows();
-});
