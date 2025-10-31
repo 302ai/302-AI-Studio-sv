@@ -1,5 +1,6 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import type { ThreadData, ThreadMetadata } from "@shared/types";
+import { debounce } from "es-toolkit";
 
 const { threadService, broadcastService } = window.electronAPI;
 const { onThreadListUpdate } = window.electronAPI;
@@ -13,7 +14,6 @@ export const persistedThreadState = new PersistedState<ThreadMetadata>(
 );
 
 class ThreadsState {
-	#favorites = $derived(persistedThreadState.current.favorites);
 	threads = $state<ThreadData[]>([]);
 
 	constructor() {
@@ -40,69 +40,19 @@ class ThreadsState {
 
 	activeThreadId = $state<string>(window.thread.id);
 
-	#addFavorite(threadId: string, current: ThreadMetadata): void {
-		if (this.#isFavorite(threadId)) return;
-		persistedThreadState.current = {
-			threadIds: current.threadIds,
-			favorites: [...current.favorites, threadId],
-		};
-	}
-
-	#removeFavorite(threadId: string, current: ThreadMetadata): void {
-		const index = current.favorites.indexOf(threadId);
-		if (index === -1) return;
-		persistedThreadState.current = {
-			threadIds: current.threadIds,
-			favorites: [...current.favorites.slice(0, index), ...current.favorites.slice(index + 1)],
-		};
-	}
-
-	#isFavorite(threadId: string): boolean {
-		return this.#favorites.includes(threadId);
-	}
-
-	toggleFavorite(threadId: string) {
-		const current = persistedThreadState.current;
-		const isFavoriteNow = current.favorites.includes(threadId);
+	toggleFavorite = debounce(async (threadId: string) => {
+		const threadData = this.threads.find((t) => t.threadId === threadId);
+		const isFavoriteNow = threadData?.isFavorite ?? false;
 
 		if (isFavoriteNow) {
-			this.#removeFavorite(threadId, current);
+			await threadService.removeFavorite(threadId);
 		} else {
-			this.#addFavorite(threadId, current);
+			await threadService.addFavorite(threadId);
 		}
 
-		const threadData = this.threads.find((t) => t.threadId === threadId);
-		if (threadData) {
-			threadData.isFavorite = !isFavoriteNow;
-		}
-
-		// Broadcast to other windows/tabs (excluding current source) with updated threads
-		setTimeout(() => {
-			broadcastService.broadcastExcludeSource("thread-list-updated", {});
-		}, 100);
-	}
-
-	// toggleFavorite = debounce(async (threadId: string) => {
-	// 	// Get current state from persisted storage (source of truth)
-	// 	const current = persistedThreadState.current;
-	// 	const isFavoriteNow = current.favorites.includes(threadId);
-
-	// 	// Update persisted storage based on current actual state
-	// 	if (isFavoriteNow) {
-	// 		this.#removeFavorite(threadId, current);
-	// 	} else {
-	// 		this.#addFavorite(threadId, current);
-	// 	}
-
-	// 	// Update UI to match persisted state
-	// 	const threadData = this.threads.find((t) => t.threadId === threadId);
-	// 	if (threadData) {
-	// 		threadData.isFavorite = !isFavoriteNow;
-	// 	}
-
-	// 	// Broadcast to other windows/tabs (excluding current source)
-	// 	await broadcastService.broadcastExcludeSource("thread-list-updated", { threadId });
-	// }, 150);
+		await this.#loadThreads();
+		await broadcastService.broadcastExcludeSource("thread-list-updated", {});
+	}, 200);
 
 	async renameThread(threadId: string, newName: string): Promise<void> {
 		await threadService.renameThread(threadId, newName);

@@ -13,9 +13,21 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 	}
 
 	private async getThreadMetadata(): Promise<ThreadMetadata | null> {
-		const result = await this.getItemInternal("thread-metadata");
+		const maxRetries = 3;
+		const delayMs = 50;
 
-		return result;
+		for (let attempt = 0; attempt < maxRetries; attempt++) {
+			const result = await this.getItemInternal("thread-metadata");
+			if (result !== null) {
+				return result;
+			}
+
+			if (attempt < maxRetries - 1) {
+				await new Promise((resolve) => setTimeout(resolve, delayMs));
+			}
+		}
+
+		return null;
 	}
 
 	async addThread(threadId: string): Promise<void> {
@@ -68,6 +80,25 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 		} catch (error) {
 			console.error(`Failed to rename thread ${threadId}:`, error);
 			throw error;
+		}
+	}
+
+	async addFavorite(threadId: string): Promise<void> {
+		const metadata = await this.getThreadMetadata();
+		if (metadata && !metadata.favorites.includes(threadId)) {
+			metadata.favorites.push(threadId);
+			await this.setItemInternal("thread-metadata", metadata);
+		}
+	}
+
+	async removeFavorite(threadId: string): Promise<void> {
+		const metadata = await this.getThreadMetadata();
+		if (metadata) {
+			const index = metadata.favorites.indexOf(threadId);
+			if (index > -1) {
+				metadata.favorites.splice(index, 1);
+				await this.setItemInternal("thread-metadata", metadata);
+			}
 		}
 	}
 

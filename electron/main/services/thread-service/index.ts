@@ -57,6 +57,26 @@ export class ThreadService {
 			return false;
 		}
 	}
+
+	async addFavorite(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
+		try {
+			await threadStorage.addFavorite(threadId);
+			return true;
+		} catch (error) {
+			console.error("ThreadService: Failed to add favorite:", error);
+			return false;
+		}
+	}
+
+	async removeFavorite(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
+		try {
+			await threadStorage.removeFavorite(threadId);
+			return true;
+		} catch (error) {
+			console.error("ThreadService: Failed to remove favorite:", error);
+			return false;
+		}
+	}
 }
 
 export const threadService = new ThreadService();
