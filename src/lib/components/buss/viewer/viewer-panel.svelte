@@ -13,7 +13,6 @@
 	import {
 		AudioViewer,
 		CodeViewer,
-		DocumentViewer,
 		ImageViewer,
 		TextViewer,
 		UnknownViewer,
@@ -52,7 +51,8 @@
 			{:else if viewerType === "code"}
 				<CodeViewer {attachment} fileName={attachment.name} />
 			{:else if viewerType === "document"}
-				<DocumentViewer src={attachment.preview} fileName={attachment.name} />
+				<!-- <DocumentViewer src={attachment.preview} fileName={attachment.name} /> -->
+				<UnknownViewer />
 			{:else if viewerType === "text"}
 				<TextViewer {attachment} />
 			{:else}

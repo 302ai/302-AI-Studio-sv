@@ -47,11 +47,7 @@ export class BroadcastService {
 			);
 	}
 
-	async broadcastToAll(
-		_event: IpcMainInvokeEvent,
-		broadcastEvent: BroadcastEvent,
-		data: any,
-	): Promise<void> {
+	broadcastToAll(_event: IpcMainInvokeEvent, broadcastEvent: BroadcastEvent, data: any): void {
 		const allWebContents = webContents.getAllWebContents();
 		allWebContents.forEach((webContents) =>
 			this.sendBroadcast(webContents, broadcastEvent, data, -1),
