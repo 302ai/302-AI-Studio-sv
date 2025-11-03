@@ -222,6 +222,7 @@ export function registerIpcHandlers() {
 	);
 
 	// appService service registration
+	ipcMain.handle("appService:getTheme", (event) => appService.getTheme(event));
 	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
 	ipcMain.handle("appService:restartApp", (event) => appService.restartApp(event));
 	ipcMain.handle("appService:resetAllData", (event) => appService.resetAllData(event));
@@ -361,6 +362,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("aiApplicationService:getAiApplicationUrl");
 	ipcMain.removeHandler("aiApplicationService:handle302AIProviderChange");
 	ipcMain.removeHandler("aiApplicationService:handleAiApplicationReload");
+	ipcMain.removeHandler("appService:getTheme");
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("appService:restartApp");
 	ipcMain.removeHandler("appService:resetAllData");

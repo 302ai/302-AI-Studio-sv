@@ -458,8 +458,12 @@ export class WindowService {
 				devTools: true,
 				sandbox: false,
 				webSecurity: false,
+				additionalArguments: [`--theme=${shouldUseDarkColors ? "dark" : "light"}`],
 			},
 		});
+
+		// Set background color to match theme
+		settingsView.setBackgroundColor(shouldUseDarkColors ? "#121212" : "#f1f1f1");
 
 		this.settingsWindow.contentView.addChildView(settingsView);
 		const { width, height } = this.settingsWindow.getContentBounds();

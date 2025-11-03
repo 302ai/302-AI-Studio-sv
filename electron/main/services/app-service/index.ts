@@ -22,6 +22,15 @@ export class AppService {
 		nativeTheme.themeSource = state.theme;
 	}
 
+	async getTheme(_event: IpcMainInvokeEvent): Promise<Theme> {
+		const state = await themeStorage.getThemeState();
+		if (state === null) {
+			// Fallback to system theme if no saved theme
+			return "system";
+		}
+		return state.theme;
+	}
+
 	async setTheme(_event: IpcMainInvokeEvent, theme: Theme): Promise<void> {
 		nativeTheme.themeSource = theme;
 		const allWindows = BrowserWindow.getAllWindows();
