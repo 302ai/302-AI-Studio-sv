@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { ViewerPanel } from "$lib/components/buss/viewer/index.js";
-	import { formatFileSize, getFileIcon } from "$lib/components/buss/viewer/viewer-utils.js";
+	import {
+		formatFileSize,
+		getFileIcon,
+		shouldShowPreviewAsThumbnail,
+	} from "$lib/components/buss/viewer/viewer-utils.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Eye, Trash2 } from "@lucide/svelte";
@@ -30,11 +34,11 @@
 					class={cn(
 						"relative size-14",
 						"flex items-center justify-center",
-						attachment.preview ? "" : "bg-muted",
+						attachment.preview && shouldShowPreviewAsThumbnail(attachment) ? "" : "bg-muted",
 					)}
 					onclick={() => openViewer(attachment)}
 				>
-					{#if attachment.preview}
+					{#if attachment.preview && shouldShowPreviewAsThumbnail(attachment)}
 						<img
 							src={attachment.preview}
 							alt={attachment.name}

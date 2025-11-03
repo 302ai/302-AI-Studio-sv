@@ -1,5 +1,6 @@
 import type { ThreadData } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
+import { broadcastService } from "../broadcast-service";
 import { threadStorage } from "../storage-service/thread-storage";
 
 export class ThreadService {
@@ -34,6 +35,10 @@ export class ThreadService {
 	async deleteThread(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
 		try {
 			await threadStorage.deleteThread(threadId);
+			broadcastService.broadcastChannelToAll("broadcast-event", {
+				broadcastEvent: "thread-list-updated",
+				data: {},
+			});
 			return true;
 		} catch (error) {
 			console.error("ThreadService: Failed to delete thread:", error);
@@ -51,6 +56,26 @@ export class ThreadService {
 			return true;
 		} catch (error) {
 			console.error("ThreadService: Failed to rename thread:", error);
+			return false;
+		}
+	}
+
+	async addFavorite(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
+		try {
+			await threadStorage.addFavorite(threadId);
+			return true;
+		} catch (error) {
+			console.error("ThreadService: Failed to add favorite:", error);
+			return false;
+		}
+	}
+
+	async removeFavorite(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
+		try {
+			await threadStorage.removeFavorite(threadId);
+			return true;
+		} catch (error) {
+			console.error("ThreadService: Failed to remove favorite:", error);
 			return false;
 		}
 	}

@@ -13,16 +13,21 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 	}
 
 	private async getThreadMetadata(): Promise<ThreadMetadata | null> {
-		const result = await this.getItemInternal("thread-metadata");
-		if (!result) {
-			const defaultMetadata: ThreadMetadata = {
-				threadIds: [],
-				favorites: [],
-			};
-			await this.setItemInternal("thread-metadata", defaultMetadata);
-			return defaultMetadata;
+		const maxRetries = 3;
+		const delayMs = 50;
+
+		for (let attempt = 0; attempt < maxRetries; attempt++) {
+			const result = await this.getItemInternal("thread-metadata");
+			if (result !== null) {
+				return result;
+			}
+
+			if (attempt < maxRetries - 1) {
+				await new Promise((resolve) => setTimeout(resolve, delayMs));
+			}
 		}
-		return result;
+
+		return null;
 	}
 
 	async addThread(threadId: string): Promise<void> {
@@ -78,6 +83,25 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 		}
 	}
 
+	async addFavorite(threadId: string): Promise<void> {
+		const metadata = await this.getThreadMetadata();
+		if (metadata && !metadata.favorites.includes(threadId)) {
+			metadata.favorites.push(threadId);
+			await this.setItemInternal("thread-metadata", metadata);
+		}
+	}
+
+	async removeFavorite(threadId: string): Promise<void> {
+		const metadata = await this.getThreadMetadata();
+		if (metadata) {
+			const index = metadata.favorites.indexOf(threadId);
+			if (index > -1) {
+				metadata.favorites.splice(index, 1);
+				await this.setItemInternal("thread-metadata", metadata);
+			}
+		}
+	}
+
 	async getThread(threadId: string): Promise<ThreadData | null> {
 		try {
 			const metadata = await this.getThreadMetadata();
@@ -106,8 +130,8 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 	async getThreadsData(): Promise<Array<ThreadData> | null> {
 		try {
 			const metadata = await this.getThreadMetadata();
-			if (!metadata || metadata.threadIds.length === 0) {
-				return [];
+			if (!metadata) {
+				return null;
 			}
 
 			const allThreads: Array<ThreadData> = [];

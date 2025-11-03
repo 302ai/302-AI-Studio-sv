@@ -1,5 +1,8 @@
 <script lang="ts">
-	import { getFileIcon } from "$lib/components/buss/viewer/viewer-utils.js";
+	import {
+		getFileIcon,
+		shouldShowPreviewAsThumbnail,
+	} from "$lib/components/buss/viewer/viewer-utils.js";
 	import type { AttachmentFile } from "@shared/types";
 
 	import { cn } from "$lib/utils";
@@ -15,11 +18,11 @@
 	class={cn(
 		"relative size-14",
 		"flex items-center justify-center",
-		attachment.preview ? "" : "bg-muted",
+		attachment.preview && shouldShowPreviewAsThumbnail(attachment) ? "" : "bg-muted",
 	)}
 	onclick={() => openViewer(attachment)}
 >
-	{#if attachment.preview}
+	{#if attachment.preview && shouldShowPreviewAsThumbnail(attachment)}
 		<img src={attachment.preview} alt={attachment.name} class="h-full w-full object-cover" />
 	{:else}
 		{@const IconComponent = getFileIcon(attachment)}

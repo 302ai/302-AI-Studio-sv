@@ -264,21 +264,16 @@ export class PluginLoader {
 		}
 
 		// Dynamic import of plugin module
-		// In production, this would need to handle require() for CommonJS modules
+		// Use import() which works with both ESM and CommonJS
 		let pluginModule: { default?: ProviderPlugin; [key: string]: unknown };
 
 		try {
-			// For TypeScript/ESM
-			if (modulePath.endsWith(".ts") || modulePath.endsWith(".mjs")) {
-				// In development with ts-node or similar, this will work
-				// Note: This requires the TypeScript file to be importable
-				pluginModule = await import(modulePath);
-			} else {
-				// For CommonJS - dynamic require
+			// Convert file path to file:// URL for import()
+			const { pathToFileURL } = await import("url");
+			const moduleUrl = pathToFileURL(modulePath).href;
 
-				// eslint-disable-next-line @typescript-eslint/no-require-imports
-				pluginModule = { default: require(modulePath) };
-			}
+			console.log(`[PluginLoader] Importing plugin from: ${moduleUrl}`);
+			pluginModule = await import(moduleUrl);
 		} catch (error) {
 			console.error(`[PluginLoader] Failed to import plugin module:`, error);
 			throw new Error(`Failed to load plugin module: ${error}`);

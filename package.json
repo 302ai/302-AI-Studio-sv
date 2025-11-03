@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "25.44.7",
+	"version": "25.44.31",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -124,6 +124,7 @@
 		"@inlang/paraglide-js": "^2.3.2",
 		"@lobehub/icons-static-svg": "^1.66.0",
 		"@modelcontextprotocol/sdk": "^1.20.0",
+		"@opendocsg/pdf2md": "^0.2.2",
 		"@sveltejs/adapter-static": "^3.0.9",
 		"@zumer/snapdom": "^1.9.14",
 		"archiver": "^7.0.1",
@@ -141,6 +142,7 @@
 		"katex": "^0.16.25",
 		"ky": "^1.11.0",
 		"ldrs": "^1.1.7",
+		"mammoth": "^1.11.0",
 		"markdown-it": "^14.1.0",
 		"markdown-it-texmath": "^1.0.0",
 		"mitt": "^3.0.1",
@@ -152,7 +154,8 @@
 		"superjson": "^2.2.2",
 		"svelte-dnd-action": "^0.9.65",
 		"svelte-image-viewer": "^5.0.0",
-		"ts-pattern": "^5.8.0"
+		"ts-pattern": "^5.8.0",
+		"xlsx": "^0.18.5"
 	},
 	"packageManager": "pnpm@10.18.3+sha512.bbd16e6d7286fd7e01f6b3c0b3c932cda2965c06a908328f74663f10a9aea51f1129eea615134bf992831b009eabe167ecb7008b597f40ff9bc75946aadfb08d",
 	"pnpm": {

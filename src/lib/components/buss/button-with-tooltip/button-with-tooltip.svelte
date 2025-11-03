@@ -13,6 +13,7 @@
 		onclick?: (event: MouseEvent) => void;
 		children?: Snippet;
 		onOpenChange?: (open: boolean) => void;
+		delayDuration?: number;
 	}
 </script>
 
@@ -37,12 +38,13 @@
 		onclick,
 		children,
 		onOpenChange,
+		delayDuration = 500,
 	}: ButtonWithTooltipProps = $props();
 
 	const buttonClass = $derived(cn(buttonVariants({ variant, size }), className));
 </script>
 
-<TooltipProvider>
+<TooltipProvider {delayDuration}>
 	<Tooltip {onOpenChange} ignoreNonKeyboardFocus={true}>
 		<TooltipTrigger class={cn(buttonClass, "group rounded-[10px]")} {disabled} {onclick} {style}>
 			{@render children?.()}

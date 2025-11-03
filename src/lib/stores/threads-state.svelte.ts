@@ -1,5 +1,5 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
-import type { ThreadMetadata } from "@shared/types";
+import type { ThreadData, ThreadMetadata } from "@shared/types";
 import { debounce } from "es-toolkit";
 
 const { threadService, broadcastService } = window.electronAPI;
@@ -14,60 +14,43 @@ export const persistedThreadState = new PersistedState<ThreadMetadata>(
 );
 
 class ThreadsState {
-	#threadIds = $derived(persistedThreadState.current.threadIds);
-	#favorites = $derived(persistedThreadState.current.favorites);
-	#lastSyncTime = $state(Date.now());
+	threads = $state<ThreadData[]>([]);
 
 	constructor() {
+		this.#loadThreads();
+
 		onThreadListUpdate(() => {
-			console.log("Threads updated from other tab, triggering sync");
-			this.#lastSyncTime = Date.now();
+			console.log("Threads updated from broadcast, re-syncing");
+			this.#loadThreads();
 		});
 	}
 
-	threads = $derived.by(async () => {
-		const threadIds = this.#threadIds;
-		const lastSyncTime = this.#lastSyncTime;
-
-		console.log("Thread recalculation triggered by:", {
-			threadIdsLength: threadIds.length,
-			lastSyncTime: lastSyncTime,
-		});
-
-		if (threadIds.length === 0) return [];
+	async #loadThreads(): Promise<void> {
+		const currentThreads = this.threads;
 		try {
 			const threadsData = await threadService.getThreads();
-			return threadsData ?? [];
+
+			this.threads = threadsData ?? currentThreads;
 		} catch (error) {
 			console.error("Failed to load threads:", error);
-			return [];
+			this.threads = currentThreads;
 		}
-	});
+	}
 
 	activeThreadId = $state<string>(window.thread.id);
 
-	#addFavorite(threadId: string): void {
-		if (this.#isFavorite(threadId)) return;
-		persistedThreadState.current.favorites.push(threadId);
-	}
+	toggleFavorite = debounce(async (threadId: string) => {
+		const threadData = this.threads.find((t) => t.threadId === threadId);
+		const isFavoriteNow = threadData?.isFavorite ?? false;
 
-	#removeFavorite(threadId: string): void {
-		const index = persistedThreadState.current.favorites.indexOf(threadId);
-		if (index === -1) return;
-		persistedThreadState.current.favorites.splice(index, 1);
-	}
-
-	#isFavorite(threadId: string): boolean {
-		return this.#favorites.includes(threadId);
-	}
-
-	toggleFavorite = debounce((threadId: string): void => {
-		if (this.#isFavorite(threadId)) {
-			this.#removeFavorite(threadId);
+		if (isFavoriteNow) {
+			await threadService.removeFavorite(threadId);
 		} else {
-			this.#addFavorite(threadId);
+			await threadService.addFavorite(threadId);
 		}
-	}, 100);
+
+		await broadcastService.broadcastToAll("thread-list-updated", {});
+	}, 200);
 
 	async renameThread(threadId: string, newName: string): Promise<void> {
 		await threadService.renameThread(threadId, newName);
@@ -78,24 +61,11 @@ class ThreadsState {
 		try {
 			const success = await threadService.deleteThread(threadId);
 			if (success) {
-				// Remove from local state immediately for UI responsiveness
-				// const currentMetadata = persistedThreadState.current;
-				// const threadIndex = currentMetadata.threadIds.indexOf(threadId);
-				// if (threadIndex > -1) {
-				// 	currentMetadata.threadIds.splice(threadIndex, 1);
-				// }
-				// const favoriteIndex = currentMetadata.favorites.indexOf(threadId);
-				// if (favoriteIndex > -1) {
-				// 	currentMetadata.favorites.splice(favoriteIndex, 1);
-				// }
-
-				// If the deleted thread was the active one, clear the active thread
 				if (this.activeThreadId === threadId) {
 					this.activeThreadId = "";
 				}
-
-				// Broadcast to other tabs about the deletion
-				await broadcastService.broadcastExcludeSource("thread-list-updated", { threadId });
+				// 主动从本地状态中移除该 thread，确保 UI 立即更新
+				this.threads = this.threads.filter((t) => t.threadId !== threadId);
 			}
 			return success;
 		} catch (error) {

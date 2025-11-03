@@ -6,6 +6,7 @@
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Ghost, Settings } from "@lucide/svelte";
+	import { fly } from "svelte/transition";
 	import AppSidebar from "./components/app-sidebar.svelte";
 	import SidebarShortcutHandler from "./components/sidebar-shortcut-handler.svelte";
 
@@ -25,6 +26,7 @@
 	<Sidebar.Inset class="relative flex-1">
 		<div
 			class="absolute z-50 flex h-12 w-full flex-row items-center justify-between bg-transparent px-2"
+			transition:fly={{ y: -10, duration: 500 }}
 		>
 			<ButtonWithTooltip
 				tooltip={useSidebar().state === "expanded"
@@ -61,7 +63,7 @@
 				</ButtonWithTooltip>
 			</div>
 		</div>
-		<div class="flex-1 overflow-auto py-6">
+		<div class="flex-1 overflow-auto py-6" transition:fly={{ y: 20, duration: 800 }}>
 			{@render children?.()}
 		</div>
 	</Sidebar.Inset>

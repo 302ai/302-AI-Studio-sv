@@ -792,7 +792,7 @@
 				</div>
 			{:else}
 				<div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-					{#each marketplacePlugins as plugin (plugin.metadata.id)}
+					{#each marketplacePlugins.filter((p) => p?.metadata?.id) as plugin (plugin.metadata.id)}
 						<div
 							class="group relative rounded-lg border p-4 transition-all hover:border-primary hover:shadow-md"
 						>

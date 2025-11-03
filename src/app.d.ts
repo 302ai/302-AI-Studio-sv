@@ -77,6 +77,7 @@ declare global {
 			isDev: boolean;
 			serverPort: number;
 		};
+		initialTheme: string | null;
 	}
 }
 
