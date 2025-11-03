@@ -614,6 +614,9 @@ class ChatState {
 				persistedChatParamsState.current.title = generatedTitle;
 				tabBarState.updateTabTitle(persistedChatParamsState.current.id, generatedTitle);
 
+				// Force flush to ensure all changes are persisted before broadcasting
+				persistedChatParamsState.flush();
+
 				// Broadcast update event to trigger sidebar refresh
 				await broadcastService.broadcastToAll("thread-list-updated", {});
 
@@ -997,6 +1000,9 @@ export const chat = new Chat({
 		// Update the updatedAt timestamp
 		// eslint-disable-next-line svelte/prefer-svelte-reactivity
 		persistedChatParamsState.current.updatedAt = new Date();
+
+		// Force flush to ensure all changes are persisted before broadcasting
+		persistedChatParamsState.flush();
 
 		await broadcastService.broadcastToAll("thread-list-updated", {});
 	},
