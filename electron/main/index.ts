@@ -85,9 +85,22 @@ if (!gotTheLock) {
 	}
 
 	app.on("activate", () => {
-		const mainWindow = windowService.getMainWindow();
-		if (mainWindow) mainWindow.show();
-		else windowService.initShellWindows();
+		// Check if windows are currently being initialized
+		if (windowService.isInitializingWindows()) {
+			console.log("[Main] Windows are initializing, skipping activate handler");
+			return;
+		}
+
+		// Check if any windows exist (not just main window)
+		if (windowService.hasAnyWindows()) {
+			const mainWindow = windowService.getMainWindow();
+			if (mainWindow) {
+				mainWindow.show();
+			}
+		} else {
+			// Only initialize if no windows exist
+			windowService.initShellWindows();
+		}
 	});
 }
 

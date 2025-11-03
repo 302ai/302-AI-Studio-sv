@@ -27,6 +27,7 @@ export class WindowService {
 	private windows: BrowserWindow[] = [];
 	private isCMDQ = false;
 	private settingsWindow: BrowserWindow | null = null;
+	private isInitializing = false;
 
 	constructor() {
 		emitter.on("general-settings:language-changed", ({ language }) => {
@@ -70,35 +71,60 @@ export class WindowService {
 		this.isCMDQ = value;
 	}
 
+	isInitializingWindows(): boolean {
+		return this.isInitializing;
+	}
+
+	hasAnyWindows(): boolean {
+		return this.windows.length > 0;
+	}
+
 	async initShellWindows() {
-		const windowsTabs = await tabStorage.getAllWindowsTabs();
-		if (isNull(windowsTabs)) {
-			const { shellWindow } = await this.createShellWindow();
-			this.setMainWindow(shellWindow.id);
+		// Prevent duplicate initialization
+		if (this.isInitializing) {
+			console.log("[WindowService] Window initialization already in progress, skipping");
 			return;
 		}
 
-		const windows: BrowserWindow[] = [];
-		const newWindowIds: number[] = [];
-
-		for (const [index, tabs] of windowsTabs.entries()) {
-			// Skip empty windows
-			if (tabs.length === 0) {
-				delete windowsTabs[index];
-				continue;
-			}
-			const { shellWindow, shellView } = await this.createShellWindow();
-			tabService.initWindowShellView(shellWindow.id, shellView);
-			windows.push(shellWindow);
-			newWindowIds.push(shellWindow.id);
-			await tabService.initWindowTabs(shellWindow, tabs);
-
-			if (index === 0) {
-				this.setMainWindow(shellWindow.id);
-			}
+		// Prevent re-initialization if windows already exist
+		if (this.windows.length > 0) {
+			console.log("[WindowService] Windows already exist, skipping initialization");
+			return;
 		}
 
-		await tabStorage.initWindowMapping(newWindowIds, windowsTabs);
+		this.isInitializing = true;
+		try {
+			const windowsTabs = await tabStorage.getAllWindowsTabs();
+			if (isNull(windowsTabs)) {
+				const { shellWindow } = await this.createShellWindow();
+				this.setMainWindow(shellWindow.id);
+				return;
+			}
+
+			const windows: BrowserWindow[] = [];
+			const newWindowIds: number[] = [];
+
+			for (const [index, tabs] of windowsTabs.entries()) {
+				// Skip empty windows
+				if (tabs.length === 0) {
+					delete windowsTabs[index];
+					continue;
+				}
+				const { shellWindow, shellView } = await this.createShellWindow();
+				tabService.initWindowShellView(shellWindow.id, shellView);
+				windows.push(shellWindow);
+				newWindowIds.push(shellWindow.id);
+				await tabService.initWindowTabs(shellWindow, tabs);
+
+				if (index === 0) {
+					this.setMainWindow(shellWindow.id);
+				}
+			}
+
+			await tabStorage.initWindowMapping(newWindowIds, windowsTabs);
+		} finally {
+			this.isInitializing = false;
+		}
 	}
 
 	async createShellWindow(
