@@ -9,6 +9,7 @@
 	import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
+	import { compressFile } from "$lib/utils/file-compressor";
 	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
 	import { toast } from "svelte-sonner";
@@ -86,12 +87,20 @@
 
 	async function generatePreview(file: File): Promise<string | undefined> {
 		if (file.type.startsWith("image/")) {
-			return new Promise((resolve) => {
-				const reader = new FileReader();
-				reader.onload = (e) => resolve(e.target?.result as string);
-				reader.onerror = () => resolve(undefined);
-				reader.readAsDataURL(file);
-			});
+			try {
+				// Compress image to ensure base64 size < 1MB before storage
+				const compressedDataURL = await compressFile(file);
+				return compressedDataURL;
+			} catch (error) {
+				console.error("[ChatInputBox] Failed to compress image:", error);
+				// Fallback to original if compression fails
+				return new Promise((resolve) => {
+					const reader = new FileReader();
+					reader.onload = (e) => resolve(e.target?.result as string);
+					reader.onerror = () => resolve(undefined);
+					reader.readAsDataURL(file);
+				});
+			}
 		}
 
 		// Generate data URL for PDF files
@@ -147,29 +156,37 @@
 
 		event.preventDefault();
 
-		const newAttachments: AttachmentFile[] = [];
-
 		for (const file of files) {
-			if (chatState.attachments.length + newAttachments.length >= MAX_ATTACHMENT_COUNT) {
+			if (chatState.attachments.length >= MAX_ATTACHMENT_COUNT) {
 				break;
 			}
 
-			const preview = await generatePreview(file);
 			const filePath = (file as File & { path?: string }).path || file.name;
+			const attachmentId = nanoid();
 
-			newAttachments.push({
-				id: nanoid(),
+			// 立即创建附件对象并添加到列表
+			const attachment: AttachmentFile = {
+				id: attachmentId,
 				name: file.name || `pasted-file-${Date.now()}`,
 				type: file.type,
 				size: file.size,
 				file,
-				preview,
+				preview: undefined, // 预览稍后异步生成
 				filePath,
-			});
-		}
+			};
 
-		if (newAttachments.length > 0) {
-			chatState.addAttachments(newAttachments);
+			// 立即添加附件到状态，这样用户可以立即看到
+			chatState.addAttachment(attachment);
+			// 标记为加载中
+			chatState.setAttachmentLoading(attachmentId, true);
+
+			// 异步生成预览（不阻塞UI）
+			generatePreview(file).then((preview) => {
+				// 更新附件的预览
+				chatState.updateAttachment(attachmentId, { preview });
+				// 标记加载完成
+				chatState.setAttachmentLoading(attachmentId, false);
+			});
 		}
 	}
 </script>

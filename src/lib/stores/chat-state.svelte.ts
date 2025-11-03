@@ -86,6 +86,8 @@ class ChatState {
 	private lastError: ChatError | null = $state(null);
 	private retryInProgress = $state(false);
 	private hydrateCheckInterval: ReturnType<typeof setInterval> | null = null;
+	// Track loading state for attachments (not persisted)
+	loadingAttachmentIds = $state(new Set<string>());
 
 	constructor() {
 		// Watch for PersistedState hydration and sync messages to chat
@@ -857,8 +859,28 @@ class ChatState {
 		this.attachments = [...this.attachments, ...attachments];
 	}
 
+	updateAttachment(id: string, updates: Partial<AttachmentFile>) {
+		this.attachments = this.attachments.map((att) =>
+			att.id === id ? { ...att, ...updates } : att,
+		);
+	}
+
 	removeAttachment(id: string) {
 		this.attachments = this.attachments.filter((att) => att.id !== id);
+		// Also remove from loading state if present
+		this.loadingAttachmentIds.delete(id);
+	}
+
+	setAttachmentLoading(id: string, isLoading: boolean) {
+		if (isLoading) {
+			this.loadingAttachmentIds.add(id);
+		} else {
+			this.loadingAttachmentIds.delete(id);
+		}
+	}
+
+	isAttachmentLoading(id: string): boolean {
+		return this.loadingAttachmentIds.has(id);
 	}
 
 	handleThinkingActiveChange(active: boolean) {
