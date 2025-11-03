@@ -1,5 +1,6 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import type { Theme, ThemeState } from "@shared/types";
+import { setMode } from "mode-watcher";
 import { untrack } from "svelte";
 
 const getSystemTheme = (): ThemeState => {
@@ -20,19 +21,9 @@ $effect.root(() => {
 		const currentState = persistedThemeState.current;
 		window.electronAPI.appService.setTheme(currentState.theme).then(() => {
 			untrack(() => {
-				if (currentState.shouldUseDarkColors) {
-					document.documentElement.classList.add("no-transition", "dark");
-					document.documentElement.classList.remove("light");
-				} else {
-					document.documentElement.classList.add("no-transition", "dark");
-					document.documentElement.classList.remove("dark");
-				}
-
+				// Use mode-watcher's setMode to ensure consistent theme management across all windows
+				setMode(currentState.theme);
 				transitionState.isTransitioning = false;
-
-				setTimeout(() => {
-					document.documentElement.classList.remove("no-transition");
-				}, 1000);
 			});
 		});
 	});

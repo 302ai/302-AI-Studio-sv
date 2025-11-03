@@ -6,7 +6,7 @@
 	import type { Theme } from "@shared/types";
 	import { setTheme, persistedThemeState } from "$lib/stores/theme.state.svelte";
 
-	let selectedKey = persistedThemeState.current.theme;
+	let selectedKey = $derived(persistedThemeState.current.theme);
 
 	const themeOptions = [
 		{
@@ -30,8 +30,7 @@
 	];
 
 	async function handleSelect(key: string) {
-		selectedKey = key as Theme;
-		setTheme(selectedKey as Theme);
+		setTheme(key as Theme);
 	}
 </script>
 
