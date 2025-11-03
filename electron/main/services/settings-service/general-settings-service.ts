@@ -13,10 +13,14 @@ export class GeneralSettingsService {
 
 	async handleLanguageChanged(event: IpcMainInvokeEvent, language: LanguageCode): Promise<void> {
 		const allWebContents = webContents.getAllWebContents();
+
+		// Reload all webContents except the sender to apply language change
+		// PersistedState will restore chat messages and thread data from storage
 		allWebContents.forEach((webContent) => {
 			if (webContent.id === event.sender.id) return;
 			webContent.reload();
 		});
+
 		emitter.emit("general-settings:language-changed", { language });
 	}
 }

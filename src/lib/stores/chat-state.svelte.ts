@@ -27,32 +27,51 @@ export interface Thread {
 }
 
 const tab = window?.tab ?? null;
-const threadId = tab?.threadId ?? "shell";
-console.log("app-chat-messages:" + threadId);
+// Ensure we have a valid threadId, even if window.tab is corrupted or missing after reload
+const threadId =
+	tab &&
+	typeof tab === "object" &&
+	"threadId" in tab &&
+	typeof tab.threadId === "string" &&
+	tab.threadId
+		? tab.threadId
+		: "shell";
 
-const initialMessages = Array.isArray(window?.messages) ? clone(window.messages) : [];
+// Check if window.thread has valid data (not just an empty object from failed temp file load)
+// A valid thread should have at least an 'id' property that matches our threadId
+const hasValidThreadData =
+	window?.thread &&
+	typeof window.thread === "object" &&
+	"id" in window.thread &&
+	window.thread.id === threadId;
 
-const initialThread: ThreadParmas = clone(
-	window?.thread ?? {
-		id: threadId,
-		title: "New Chat",
-		inputValue: "",
-		attachments: [],
-		mcpServers: [],
-		mcpServerIds: [],
-		isThinkingActive: false,
-		isOnlineSearchActive: false,
-		isMCPActive: false,
-		isPrivateChatActive: false,
-		selectedModel: null,
-		temperature: null,
-		topP: null,
-		maxTokens: null,
-		frequencyPenalty: null,
-		presencePenalty: null,
-		updatedAt: new Date(),
-	},
-);
+// Use window data if valid (first load with temp files), otherwise use defaults
+// PersistedState will restore from storage if available, overriding these initial values
+const initialMessages: ChatMessage[] = Array.isArray(window?.messages)
+	? clone(window.messages)
+	: [];
+
+const initialThread: ThreadParmas = hasValidThreadData
+	? clone(window.thread as ThreadParmas)
+	: {
+			id: threadId,
+			title: "New Chat",
+			inputValue: "",
+			attachments: [],
+			mcpServers: [],
+			mcpServerIds: [],
+			isThinkingActive: false,
+			isOnlineSearchActive: false,
+			isMCPActive: false,
+			isPrivateChatActive: false,
+			selectedModel: null,
+			temperature: null,
+			topP: null,
+			maxTokens: null,
+			frequencyPenalty: null,
+			presencePenalty: null,
+			updatedAt: new Date(),
+		};
 
 export const persistedMessagesState = new PersistedState<ChatMessage[]>(
 	"app-chat-messages:" + threadId,
@@ -66,6 +85,39 @@ export const persistedChatParamsState = new PersistedState<ThreadParmas>(
 class ChatState {
 	private lastError: ChatError | null = $state(null);
 	private retryInProgress = $state(false);
+	private hydrateCheckInterval: ReturnType<typeof setInterval> | null = null;
+
+	constructor() {
+		// Watch for PersistedState hydration and sync messages to chat
+		// This handles the case where reload happens before hydration completes
+		this.hydrateCheckInterval = setInterval(() => {
+			if (persistedMessagesState.isHydrated && persistedChatParamsState.isHydrated) {
+				this.syncPersistedStatesToChat();
+				if (this.hydrateCheckInterval) {
+					clearInterval(this.hydrateCheckInterval);
+					this.hydrateCheckInterval = null;
+				}
+			}
+		}, 50);
+
+		// Also clear after 5 seconds to prevent infinite checking
+		setTimeout(() => {
+			if (this.hydrateCheckInterval) {
+				clearInterval(this.hydrateCheckInterval);
+				this.hydrateCheckInterval = null;
+			}
+		}, 5000);
+	}
+
+	private syncPersistedStatesToChat() {
+		const persistedMessages = persistedMessagesState.snapshot;
+		const currentChatMessages = chat.messages;
+
+		// Sync messages if persisted state has data but chat doesn't (e.g., after reload/hydration)
+		if (persistedMessages.length > 0 && currentChatMessages.length === 0) {
+			chat.messages = persistedMessages;
+		}
+	}
 
 	get id(): string {
 		return persistedChatParamsState.current.id;
