@@ -11,7 +11,11 @@ import {
 	WINDOW_SIZE,
 } from "../../constants";
 import { WebContentsFactory } from "../../factories/web-contents-factory";
-import { withDevToolsShortcuts, withLoadHandlers } from "../../mixins/web-contents-mixins";
+import {
+	withDevToolsShortcuts,
+	withExternalLinkHandler,
+	withLoadHandlers,
+} from "../../mixins/web-contents-mixins";
 import { emitter } from "../broadcast-service";
 import { shortcutService } from "../shortcut-service";
 import { generalSettingsStorage } from "../storage-service/general-settings-storage";
@@ -23,6 +27,7 @@ export class WindowService {
 	private windows: BrowserWindow[] = [];
 	private isCMDQ = false;
 	private settingsWindow: BrowserWindow | null = null;
+	private isInitializing = false;
 
 	constructor() {
 		emitter.on("general-settings:language-changed", ({ language }) => {
@@ -66,35 +71,60 @@ export class WindowService {
 		this.isCMDQ = value;
 	}
 
+	isInitializingWindows(): boolean {
+		return this.isInitializing;
+	}
+
+	hasAnyWindows(): boolean {
+		return this.windows.length > 0;
+	}
+
 	async initShellWindows() {
-		const windowsTabs = await tabStorage.getAllWindowsTabs();
-		if (isNull(windowsTabs)) {
-			const { shellWindow } = await this.createShellWindow();
-			this.setMainWindow(shellWindow.id);
+		// Prevent duplicate initialization
+		if (this.isInitializing) {
+			console.log("[WindowService] Window initialization already in progress, skipping");
 			return;
 		}
 
-		const windows: BrowserWindow[] = [];
-		const newWindowIds: number[] = [];
-
-		for (const [index, tabs] of windowsTabs.entries()) {
-			// Skip empty windows
-			if (tabs.length === 0) {
-				delete windowsTabs[index];
-				continue;
-			}
-			const { shellWindow, shellView } = await this.createShellWindow();
-			tabService.initWindowShellView(shellWindow.id, shellView);
-			windows.push(shellWindow);
-			newWindowIds.push(shellWindow.id);
-			await tabService.initWindowTabs(shellWindow, tabs);
-
-			if (index === 0) {
-				this.setMainWindow(shellWindow.id);
-			}
+		// Prevent re-initialization if windows already exist
+		if (this.windows.length > 0) {
+			console.log("[WindowService] Windows already exist, skipping initialization");
+			return;
 		}
 
-		await tabStorage.initWindowMapping(newWindowIds, windowsTabs);
+		this.isInitializing = true;
+		try {
+			const windowsTabs = await tabStorage.getAllWindowsTabs();
+			if (isNull(windowsTabs)) {
+				const { shellWindow } = await this.createShellWindow();
+				this.setMainWindow(shellWindow.id);
+				return;
+			}
+
+			const windows: BrowserWindow[] = [];
+			const newWindowIds: number[] = [];
+
+			for (const [index, tabs] of windowsTabs.entries()) {
+				// Skip empty windows
+				if (tabs.length === 0) {
+					delete windowsTabs[index];
+					continue;
+				}
+				const { shellWindow, shellView } = await this.createShellWindow();
+				tabService.initWindowShellView(shellWindow.id, shellView);
+				windows.push(shellWindow);
+				newWindowIds.push(shellWindow.id);
+				await tabService.initWindowTabs(shellWindow, tabs);
+
+				if (index === 0) {
+					this.setMainWindow(shellWindow.id);
+				}
+			}
+
+			await tabStorage.initWindowMapping(newWindowIds, windowsTabs);
+		} finally {
+			this.isInitializing = false;
+		}
 	}
 
 	async createShellWindow(
@@ -126,7 +156,7 @@ export class WindowService {
 					? CONFIG.TITLE_BAR_OVERLAY.DARK
 					: CONFIG.TITLE_BAR_OVERLAY.LIGHT
 				: undefined,
-			backgroundColor: shouldUseDarkColors ? "#2d2d2d" : "#f1f1f1",
+			backgroundColor: shouldUseDarkColors ? "#121212" : "#f1f1f1",
 			trafficLightPosition: PLATFORM.IS_MAC ? { x: 12, y: 12 } : undefined,
 			...(PLATFORM.IS_LINUX && {
 				thickFrame: false,
@@ -435,7 +465,7 @@ export class WindowService {
 			minHeight: 600,
 			title: language === "zh" ? "设置" : "Settings",
 			autoHideMenuBar: true,
-			backgroundColor: shouldUseDarkColors ? "#2d2d2d" : "#f1f1f1",
+			backgroundColor: shouldUseDarkColors ? "#121212" : "#f1f1f1",
 			webPreferences: {
 				preload: path.join(import.meta.dirname, "../preload/index.cjs"),
 				devTools: true,
@@ -454,8 +484,12 @@ export class WindowService {
 				devTools: true,
 				sandbox: false,
 				webSecurity: false,
+				additionalArguments: [`--theme=${shouldUseDarkColors ? "dark" : "light"}`],
 			},
 		});
+
+		// Set background color to match theme
+		settingsView.setBackgroundColor(shouldUseDarkColors ? "#121212" : "#f1f1f1");
 
 		this.settingsWindow.contentView.addChildView(settingsView);
 		const { width, height } = this.settingsWindow.getContentBounds();
@@ -468,6 +502,9 @@ export class WindowService {
 
 		// Add devTools shortcuts
 		withDevToolsShortcuts(settingsView);
+
+		// Add external link handler
+		withExternalLinkHandler(settingsView);
 
 		// Load settings page
 		const baseUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost";

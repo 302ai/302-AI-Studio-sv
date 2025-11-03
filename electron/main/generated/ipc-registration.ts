@@ -222,6 +222,7 @@ export function registerIpcHandlers() {
 	);
 
 	// appService service registration
+	ipcMain.handle("appService:getTheme", (event) => appService.getTheme(event));
 	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
 	ipcMain.handle("appService:restartApp", (event) => appService.restartApp(event));
 	ipcMain.handle("appService:resetAllData", (event) => appService.resetAllData(event));
@@ -270,6 +271,12 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("threadService:renameThread", (event, threadId, newName) =>
 		threadService.renameThread(event, threadId, newName),
+	);
+	ipcMain.handle("threadService:addFavorite", (event, threadId) =>
+		threadService.addFavorite(event, threadId),
+	);
+	ipcMain.handle("threadService:removeFavorite", (event, threadId) =>
+		threadService.removeFavorite(event, threadId),
 	);
 
 	// updaterService service registration
@@ -355,6 +362,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("aiApplicationService:getAiApplicationUrl");
 	ipcMain.removeHandler("aiApplicationService:handle302AIProviderChange");
 	ipcMain.removeHandler("aiApplicationService:handleAiApplicationReload");
+	ipcMain.removeHandler("appService:getTheme");
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("appService:restartApp");
 	ipcMain.removeHandler("appService:resetAllData");
@@ -374,6 +382,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("threadService:getThread");
 	ipcMain.removeHandler("threadService:deleteThread");
 	ipcMain.removeHandler("threadService:renameThread");
+	ipcMain.removeHandler("threadService:addFavorite");
+	ipcMain.removeHandler("threadService:removeFavorite");
 	ipcMain.removeHandler("updaterService:checkForUpdatesManually");
 	ipcMain.removeHandler("updaterService:quitAndInstall");
 	ipcMain.removeHandler("updaterService:isUpdateDownloaded");

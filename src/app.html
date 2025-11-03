@@ -3,6 +3,49 @@
 	<head>
 		<meta charset="utf-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<script>
+			// Theme initialization - prevent FOUC (Flash of Unstyled Content)
+			// This runs synchronously before any content is rendered
+			(function () {
+				try {
+					// Get theme from preload script (injected via additionalArguments)
+					const initialTheme = window.initialTheme;
+
+					// Check system preference as fallback
+					const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+					// Determine if dark mode should be applied
+					let shouldUseDark = prefersDark; // default to system preference
+
+					if (initialTheme === "dark") {
+						shouldUseDark = true;
+					} else if (initialTheme === "light") {
+						shouldUseDark = false;
+					}
+					// If initialTheme is "system" or null, use the prefersDark value
+
+					// Apply dark class immediately if needed
+					if (shouldUseDark) {
+						document.documentElement.classList.add("dark");
+					}
+				} catch (error) {
+					// Fallback to system preference on any error
+					console.error("Failed to initialize theme:", error);
+					if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+						document.documentElement.classList.add("dark");
+					}
+				}
+			})();
+		</script>
+		<style>
+			/* Prevent white flash by setting default background immediately */
+			html {
+				background-color: #121212;
+			}
+			html:not(.dark) {
+				background-color: #f9f9f9;
+			}
+		</style>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

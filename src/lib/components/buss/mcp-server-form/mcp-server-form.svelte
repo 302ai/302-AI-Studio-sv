@@ -495,6 +495,8 @@
 	<!-- Tool Details Dialog -->
 	<Dialog.Root bind:open={showToolDialog}>
 		<Dialog.Content class="w-[768px] h-[600px] flex flex-col !overflow-hidden p-6 gap-0">
+			<!-- 隐藏的初始焦点元素，防止自动聚焦到复制按钮 -->
+			<button tabindex="-1" class="sr-only" aria-hidden="true"></button>
 			<div class="flex-shrink-0 mb-4">
 				<h2 class="text-lg font-semibold">{m.mcp_tool_details()}</h2>
 			</div>

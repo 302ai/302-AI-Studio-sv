@@ -2,6 +2,7 @@
 	interface Props {
 		content: string;
 		position?: "bottom" | "right" | "top" | "left";
+		delayDuration?: number;
 	}
 </script>
 
@@ -12,7 +13,7 @@
 	import { toast } from "svelte-sonner";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 
-	const { content, position = "bottom" }: Props = $props();
+	const { content, position = "bottom", delayDuration = 500 }: Props = $props();
 
 	let isCopied = $state(false);
 	let timeoutId: NodeJS.Timeout | null = null;
@@ -40,6 +41,7 @@
 	tooltip={m.title_copy()}
 	onclick={handleCopy}
 	tooltipSide={position}
+	{delayDuration}
 >
 	{#each [{ Icon: Check, visible: isCopied, key: "check" }, { Icon: Copy, visible: !isCopied, key: "copy" }] as { Icon, visible, key } (key)}
 		<Icon

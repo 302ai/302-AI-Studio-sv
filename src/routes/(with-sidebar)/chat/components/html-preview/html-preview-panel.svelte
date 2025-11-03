@@ -37,7 +37,7 @@
 </script>
 
 {#if htmlPreviewState.isVisible}
-	<div class="h-full border-l border-border bg-background flex flex-col">
+	<div class="h-full border-l border-border bg-background flex flex-col pt-6">
 		<div
 			class="flex items-center justify-between px-4 py-3 border-b border-border bg-muted shrink-0"
 		>

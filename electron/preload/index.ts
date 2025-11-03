@@ -15,6 +15,7 @@ import { getAdditionalArgv, loadDataFromTempFile } from "../main/utils";
 
 const serverPortStr = getAdditionalArgv("server-port");
 const serverPort = serverPortStr ? Number.parseInt(serverPortStr, 10) : 8089;
+const initialTheme = getAdditionalArgv("theme") ?? null;
 
 const app = {
 	platform: process.platform,
@@ -180,6 +181,7 @@ if (process.contextIsolated) {
 		contextBridge.exposeInMainWorld("app", app);
 		contextBridge.exposeInMainWorld("thread", thread);
 		contextBridge.exposeInMainWorld("messages", messages);
+		contextBridge.exposeInMainWorld("initialTheme", initialTheme);
 	} catch (error) {
 		console.error("Preload: Error exposing services", { error });
 	}

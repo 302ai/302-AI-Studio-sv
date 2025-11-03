@@ -58,4 +58,6 @@ repos:
             ci,
             build,
             revert,
+            merge,
           ]
+        exclude: '^Merge\s'

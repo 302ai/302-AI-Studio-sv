@@ -63,7 +63,7 @@
 		<!-- 模型列表 -->
 		{#if models.length === 0}
 			<!-- 空状态 -->
-			<div class="text-muted-fg flex flex-1 -translate-y-10 items-center justify-center">
+			<div class="text-muted-fg flex flex-1 items-center justify-center">
 				<div class="flex flex-col items-center gap-2">
 					<svg class="size-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path

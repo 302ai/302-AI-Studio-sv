@@ -123,6 +123,11 @@
 			return;
 		}
 		isLoadingModels = true;
+
+		// 先保存表单数据，确保使用最新的 API key
+		clearTimeout(saveTimeout);
+		await saveFormData();
+
 		await providerState.fetchModelsForProvider(currentProvider);
 		isLoadingModels = false;
 	}

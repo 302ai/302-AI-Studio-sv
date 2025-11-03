@@ -11,6 +11,7 @@ import {
 	withLoadHandlers,
 } from "../../mixins/web-contents-mixins";
 import { TempStorage } from "../../utils/temp-storage";
+import { broadcastService } from "../broadcast-service";
 import { shortcutService } from "../shortcut-service";
 import { storageService } from "../storage-service";
 import { tabStorage } from "../storage-service/tab-storage";
@@ -672,6 +673,11 @@ export class TabService {
 				);
 				await storageService.removeItemInternal("app-thread:" + tab.threadId);
 				await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
+
+				broadcastService.broadcastChannelToAll("broadcast-event", {
+					broadcastEvent: "thread-list-updated",
+					data: {},
+				});
 			}
 		}
 

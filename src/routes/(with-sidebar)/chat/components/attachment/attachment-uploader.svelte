@@ -62,6 +62,47 @@
 			});
 		}
 
+		// Generate data URL for PDF files
+		if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+			return new Promise((resolve) => {
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					resolve(e.target?.result as string);
+				};
+				reader.onerror = () => {
+					resolve(undefined);
+				};
+				reader.readAsDataURL(file);
+			});
+		}
+
+		// Generate data URL for Office documents (Excel, Word, PowerPoint)
+		if (
+			file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+			file.type === "application/vnd.ms-excel" ||
+			file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+			file.type === "application/msword" ||
+			file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
+			file.type === "application/vnd.ms-powerpoint" ||
+			file.name.toLowerCase().endsWith(".xlsx") ||
+			file.name.toLowerCase().endsWith(".xls") ||
+			file.name.toLowerCase().endsWith(".docx") ||
+			file.name.toLowerCase().endsWith(".doc") ||
+			file.name.toLowerCase().endsWith(".pptx") ||
+			file.name.toLowerCase().endsWith(".ppt")
+		) {
+			return new Promise((resolve) => {
+				const reader = new FileReader();
+				reader.onload = (e) => {
+					resolve(e.target?.result as string);
+				};
+				reader.onerror = () => {
+					resolve(undefined);
+				};
+				reader.readAsDataURL(file);
+			});
+		}
+
 		return undefined;
 	}
 
@@ -112,7 +153,7 @@
 	type="file"
 	multiple
 	class="hidden"
-	accept="image/*,text/*,audio/*,video/*,.pdf,.doc,.docx,.json,.csv,.xlsx,.xls"
+	accept="image/*,text/*,audio/*,video/*,.pdf,.json,.csv,.xlsx,.xls,.docx,.doc,.pptx,.ppt"
 	onchange={handleFileSelect}
 />
 
