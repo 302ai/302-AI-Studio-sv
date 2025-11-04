@@ -87,6 +87,8 @@ export function convertMcpServers(legacyServers: LegacyMcpServer[]): McpServer[]
 export function convertThreads(
 	legacyThreads: LegacyThread[],
 	threadMcpServers: LegacyThreadMcpServer[],
+	models: Model[],
+	legacyModels: LegacyModel[],
 ): {
 	threads: Array<{ id: string; data: ThreadParmas }>;
 	metadata: { threadIds: string[]; favorites: string[] };
@@ -95,11 +97,25 @@ export function convertThreads(
 	const threadIds: string[] = [];
 	const favorites: string[] = [];
 
+	// Create a map from legacy model ID to model name
+	const legacyModelIdToName = new Map<string, string>();
+	for (const legacyModel of legacyModels) {
+		legacyModelIdToName.set(legacyModel.id, legacyModel.name);
+	}
+
 	for (const legacy of legacyThreads) {
 		const mcpServerIds = threadMcpServers
 			.filter((tms) => tms.threadId === legacy.id && tms.enabled)
 			.sort((a, b) => a.order - b.order)
 			.map((tms) => tms.mcpServerId);
+
+		// Find the selected model by converting legacy modelId to model name
+		let selectedModel: Model | null = null;
+		if (legacy.modelId && legacyModelIdToName.has(legacy.modelId)) {
+			const modelName = legacyModelIdToName.get(legacy.modelId);
+			// Find the model by name (new system uses name as ID)
+			selectedModel = models.find((m) => m.name === modelName) || null;
+		}
 
 		const threadData: ThreadParmas = {
 			id: legacy.id,
@@ -116,7 +132,7 @@ export function convertThreads(
 			isThinkingActive: false,
 			isOnlineSearchActive: false,
 			isMCPActive: mcpServerIds.length > 0,
-			selectedModel: null,
+			selectedModel: selectedModel,
 			isPrivateChatActive: legacy.isPrivate,
 			updatedAt: new Date(legacy.updatedAt),
 		};

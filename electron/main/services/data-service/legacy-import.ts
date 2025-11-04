@@ -180,6 +180,7 @@ export async function importLegacyJson(): Promise<ImportResult> {
 			legacyData.data.threadMcpServers,
 			legacyData.data.messages,
 			legacyData.data.attachments,
+			legacyData.data.models,
 			stats,
 		);
 		await importSettings(legacyData.data.settings, stats);
@@ -322,13 +323,13 @@ async function importModels(
 			const newModel = {
 				id: legacy.name,
 				name: legacy.name,
-				remark: legacy.remark,
+				remark: legacy.remark || legacy.name,
 				providerId: newProviderId,
-				capabilities: legacy.capabilities || [],
+				capabilities: new Set(legacy.capabilities || []),
 				type: legacy.type || "language",
-				custom: legacy.custom,
-				enabled: legacy.enabled,
-				collected: legacy.collected,
+				custom: legacy.custom ?? false,
+				enabled: legacy.enabled ?? true,
+				collected: legacy.collected ?? false,
 			};
 
 			const key = `${legacy.name}:${newProviderId}`;
@@ -418,6 +419,7 @@ async function importThreads(
 	threadMcpServers: any[],
 	legacyMessages: any[],
 	legacyAttachments: any[],
+	legacyModels: any[],
 	stats: ImportStats,
 ): Promise<void> {
 	try {
@@ -428,6 +430,15 @@ async function importThreads(
 			favorites: [],
 		};
 		const existingThreadIds = new Set(existingMetadata.threadIds);
+
+		// Load the imported models from storage
+		const importedModels = ((await storageService.getItemInternal("app-models")) as any[]) || [];
+
+		// Create a map from legacy model ID to model name
+		const legacyModelIdToName = new Map<string, string>();
+		for (const legacyModel of legacyModels) {
+			legacyModelIdToName.set(legacyModel.id, legacyModel.name);
+		}
 
 		const newThreadIds = [];
 		const newFavorites = [];
@@ -452,6 +463,14 @@ async function importThreads(
 				.sort((a, b) => a.order - b.order)
 				.map((tms) => tms.mcpServerId);
 
+			// Find the selected model by converting legacy modelId to model name
+			let selectedModel = null;
+			if (legacy.modelId && legacyModelIdToName.has(legacy.modelId)) {
+				const modelName = legacyModelIdToName.get(legacy.modelId);
+				// Find the model in imported models by name (new system uses name as ID)
+				selectedModel = importedModels.find((m) => m.name === modelName) || null;
+			}
+
 			const threadData = {
 				id: legacy.id,
 				title: legacy.title,
@@ -467,7 +486,7 @@ async function importThreads(
 				isThinkingActive: false,
 				isOnlineSearchActive: false,
 				isMCPActive: mcpServerIds.length > 0,
-				selectedModel: null,
+				selectedModel: selectedModel,
 				isPrivateChatActive: legacy.isPrivate,
 				updatedAt: new Date(legacy.updatedAt),
 			};
