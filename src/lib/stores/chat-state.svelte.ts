@@ -64,6 +64,7 @@ const initialThread: ThreadParmas = hasValidThreadData
 			isOnlineSearchActive: false,
 			isMCPActive: false,
 			isPrivateChatActive: false,
+			isCodeAgentActive: false,
 			selectedModel: null,
 			temperature: null,
 			topP: null,
@@ -201,6 +202,13 @@ class ChatState {
 	}
 	set title(value: string) {
 		persistedChatParamsState.current.title = value;
+	}
+
+	get isCodeAgentActive(): boolean {
+		return persistedChatParamsState.current.isCodeAgentActive;
+	}
+	set isCodeAgentActive(value: boolean) {
+		persistedChatParamsState.current.isCodeAgentActive = value;
 	}
 
 	// Chat Parameters
@@ -713,6 +721,7 @@ class ChatState {
 				isPrivateChatActive: this.isPrivateChatActive,
 				selectedModel: this.selectedModel,
 				temperature: this.temperature,
+				isCodeAgentActive: this.isCodeAgentActive,
 				topP: this.topP,
 				maxTokens: this.maxTokens,
 				frequencyPenalty: this.frequencyPenalty,
@@ -824,6 +833,7 @@ class ChatState {
 				isOnlineSearchActive: this.isOnlineSearchActive,
 				isMCPActive: this.isMCPActive,
 				isPrivateChatActive: this.isPrivateChatActive,
+				isCodeAgentActive: this.isCodeAgentActive,
 				selectedModel: this.selectedModel,
 				temperature: this.temperature,
 				topP: this.topP,
@@ -925,6 +935,10 @@ class ChatState {
 
 	handleMaxTokensChange(value: number | null) {
 		this.maxTokens = value;
+	}
+
+	handleCodeAgentActiveChange(active: boolean) {
+		this.isCodeAgentActive = active;
 	}
 }
 

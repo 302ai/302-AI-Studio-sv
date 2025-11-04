@@ -16,7 +16,10 @@
 </script>
 
 <script lang="ts">
+	import * as Empty from "$lib/components/ui/empty/index.js";
+
 	import * as Select from "$lib/components/ui/select/index.js";
+	import { m } from "$lib/paraglide/messages";
 	import { cn } from "$lib/utils";
 
 	let {
@@ -43,8 +46,18 @@
 		{placeholder && !value ? placeholder : getLabel(value)}
 	</Select.Trigger>
 	<Select.Content>
-		{#each options as option (option.key || option.value)}
-			<Select.Item value={option.value} label={option.label} />
-		{/each}
+		{#if options.length === 0}
+			<Empty.Root>
+				<Empty.Content>
+					<Empty.Description>
+						{m.select_no_options()}
+					</Empty.Description>
+				</Empty.Content>
+			</Empty.Root>
+		{:else}
+			{#each options as option (option.key || option.value)}
+				<Select.Item value={option.value} label={option.label} />
+			{/each}
+		{/if}
 	</Select.Content>
 </Select.Root>

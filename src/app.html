@@ -7,6 +7,17 @@
 			// Theme initialization - prevent FOUC (Flash of Unstyled Content)
 			// This runs synchronously before any content is rendered
 			(function () {
+				// Check if this is a shell view (shellWebContentsView)
+				// Shell views need transparent background for proper window composition
+				const currentPath = window.location.pathname;
+				const isShellView = currentPath && currentPath.startsWith("/shell/");
+
+				if (isShellView) {
+					// Mark as shell view to skip background color in CSS
+					document.documentElement.classList.add("shell-view");
+					return;
+				}
+
 				try {
 					// Get theme from preload script (injected via additionalArguments)
 					const initialTheme = window.initialTheme;
@@ -39,11 +50,16 @@
 		</script>
 		<style>
 			/* Prevent white flash by setting default background immediately */
-			html {
+			/* Shell views need transparent background for window composition */
+			html:not(.shell-view) {
 				background-color: #121212;
 			}
-			html:not(.dark) {
+			html:not(.dark):not(.shell-view) {
 				background-color: #f9f9f9;
+			}
+			/* Shell view: transparent background */
+			html.shell-view {
+				background-color: transparent;
 			}
 		</style>
 		%sveltekit.head%

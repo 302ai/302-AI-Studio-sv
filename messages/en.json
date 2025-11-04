@@ -602,5 +602,14 @@
 	"plugins_marketplace_select_plugin": "Please select a plugin from marketplace",
 	"plugins_marketplace_search_failed": "Search failed",
 	"plugins_marketplace_refresh_failed": "Failed to refresh marketplace",
-	"plugins_marketplace_refreshed": "Marketplace refreshed"
+	"plugins_marketplace_refreshed": "Marketplace refreshed",
+	"title_code_agent": "Code Agent",
+	"title_local": "Local",
+	"title_remote": "Remote",
+	"title_code_agent_type": "Platform",
+	"title_agent": "Agent",
+	"select_agent": "Please select a code agent",
+	"title_select_session": "Select Session",
+	"select_session": "Please Select a Session",
+	"select_no_options": "The current options are empty..."
 }

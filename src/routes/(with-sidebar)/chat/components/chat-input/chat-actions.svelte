@@ -1,18 +1,20 @@
 <script lang="ts">
-	import { m } from "$lib/paraglide/messages.js";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
+	import { McpServerSelector } from "$lib/components/buss/mcp-server-selector";
+	import { Overlay } from "$lib/components/buss/overlay";
+	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { cn } from "$lib/utils";
 	import mcpIcon from "@lobehub/icons-static-svg/icons/mcp.svg";
-	import { Globe, Lightbulb, Settings2 } from "@lucide/svelte";
+	import { Globe, HatGlasses, Lightbulb, Settings2 } from "@lucide/svelte";
 	import { AttachmentUploader } from "../attachment";
-	import ParametersOverlay from "./parameters-overlay.svelte";
+	import CodeAgentPanel from "../code-agent/code-agent-panel.svelte";
 	import ParametersPanel from "./parameters-panel.svelte";
-	import { McpServerSelector } from "$lib/components/buss/mcp-server-selector";
 
 	let actionDisabled = $derived(chatState.providerType !== "302ai");
 	let isParametersOpen = $state(false);
 	let isMCPSelectorOpen = $state(false);
+	let isCodeAgentOpen = $state(false);
 
 	function handleParametersClose() {
 		isParametersOpen = false;
@@ -95,17 +97,35 @@
 		<Settings2 />
 	</ButtonWithTooltip>
 
-	<ParametersOverlay
+	<Overlay
 		title={m.title_chat_parameters()}
 		open={isParametersOpen}
 		onClose={handleParametersClose}
 	>
 		<ParametersPanel />
-	</ParametersOverlay>
+	</Overlay>
 {/snippet}
 
 {#snippet actionUploadAttachment()}
 	<AttachmentUploader />
+{/snippet}
+
+{#snippet actionCodeAgent()}
+	<ButtonWithTooltip
+		class="hover:!bg-chat-action-hover"
+		tooltip={m.title_code_agent()}
+		onclick={() => (isCodeAgentOpen = true)}
+	>
+		<HatGlasses />
+	</ButtonWithTooltip>
+
+	<Overlay
+		title={m.title_code_agent()}
+		open={isCodeAgentOpen}
+		onClose={() => (isCodeAgentOpen = false)}
+	>
+		<CodeAgentPanel />
+	</Overlay>
 {/snippet}
 
 <div class="flex h-chat-bar items-center gap-chat-bar-gap">
@@ -113,6 +133,7 @@
 	{#if chatState.providerType === "302ai"}
 		{@render actionEnableThinking()}
 		{@render actionEnableOnlineSearch()}
+		{@render actionCodeAgent()}
 	{/if}
 	{@render actionEnableMCP()}
 	{@render actionSetParameters()}

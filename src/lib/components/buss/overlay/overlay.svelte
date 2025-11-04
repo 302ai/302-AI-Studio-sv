@@ -89,7 +89,7 @@
 	<div
 		use:portal
 		class={cn(
-			"fixed inset-0 z-50 flex items-center justify-center bg-black/50 duration-200",
+			"fixed inset-0 z-40 flex items-center justify-center bg-black/50 duration-200",
 			!isClosing ? "animate-in fade-in-0" : "animate-out fade-out-0",
 		)}
 		onclick={handleOverlayClick}
