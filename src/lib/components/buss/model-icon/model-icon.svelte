@@ -1,7 +1,8 @@
 <script lang="ts" module>
-	interface Props {
+	export interface Props {
 		modelName: string;
 		className?: string;
+		forceDark?: boolean;
 	}
 </script>
 
@@ -52,7 +53,7 @@
 	import yiIcon from "@lobehub/icons-static-svg/icons/yi-color.svg";
 	import zhipuIcon from "@lobehub/icons-static-svg/icons/zhipu-color.svg";
 
-	const { modelName, className }: Props = $props();
+	const { modelName, className, forceDark = false }: Props = $props();
 	const coloredIcons = new Set([
 		ai302Icon,
 		azureIcon,
@@ -215,8 +216,7 @@
 	src={iconUrl}
 	class={cn(
 		"h-4 w-4 rounded-full",
-
-		!isColorIcon && "dark:brightness-0 dark:invert dark:filter",
+		!forceDark && !isColorIcon && "dark:brightness-0 dark:invert dark:filter",
 		className,
 	)}
 	alt={modelName || "Model Icon"}

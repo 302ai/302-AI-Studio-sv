@@ -13,25 +13,32 @@
 </script>
 
 <script lang="ts">
+	import { ModelIcon } from "$lib/components/buss/model-icon";
 	import { Button } from "$lib/components/ui/button";
 	import * as Command from "$lib/components/ui/command";
 	import * as ScrollArea from "$lib/components/ui/scroll-area";
 	import { m } from "$lib/paraglide/messages";
-	import { persistedModelState, persistedProviderState } from "$lib/stores/provider-state.svelte";
+	import {
+		persistedModelState,
+		persistedProviderState,
+		providerState,
+	} from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Check, ChevronRight, Star } from "@lucide/svelte";
-	import type { Model, Model as ProviderModel } from "@shared/types";
+	import type { Model, ModelCapability, Model as ProviderModel } from "@shared/types";
 
 	const { trigger, selectedModel, onModelSelect }: ModelSelectProps = $props();
+
 	let isOpen = $state(false);
 	let searchValue = $state("");
-	const collapsedProviders = $state<Record<string, boolean>>({});
 	let hoveredItemId = $state<string | null>(null);
 	let listRef = $state<HTMLElement | null>(null);
-	let scrollTop = $state(0);
+	const collapsedProviders = $state<Record<string, boolean>>({});
 
 	const triggerProps: TriggerProps = {
-		onclick: () => (isOpen = true),
+		onclick: () => {
+			isOpen = true;
+		},
 	};
 
 	// Transform provider-state data to UI format
@@ -40,7 +47,7 @@
 		const models = persistedModelState.current;
 
 		return models
-			.filter((model) => model.enabled) // Only show enabled models
+			.filter((model) => model.enabled)
 			.map((model): Model | null => {
 				const provider = providers.find((p) => p.id === model.providerId);
 				if (!provider) return null;
@@ -60,7 +67,6 @@
 			.filter((model): model is Model => model !== null);
 	});
 
-	// Map provider-state model types to chat types
 	function mapModelType(type: ProviderModel["type"]): Model["type"] {
 		switch (type) {
 			case "language":
@@ -90,7 +96,6 @@
 			)
 				return;
 
-			// Find the provider name by providerId
 			const provider = providers.find((p) => p.id === model.providerId);
 			if (!provider) return;
 
@@ -100,7 +105,6 @@
 			groups[provider.name].push(model);
 		});
 
-		// Sort models within each group: collected first
 		Object.keys(groups).forEach((key) => {
 			if (groups[key].length === 0) {
 				delete groups[key];
@@ -121,9 +125,6 @@
 	}
 
 	function toggleProvider(provider: string) {
-		if (listRef) {
-			scrollTop = listRef.scrollTop;
-		}
 		collapsedProviders[provider] = !collapsedProviders[provider];
 	}
 
@@ -139,16 +140,33 @@
 		hoveredItemId = null;
 	}
 
-	$effect(() => {
-		if (searchValue) {
-			Object.keys(groupedModels()).forEach((provider) => {
-				collapsedProviders[provider] = false;
-			});
-		}
-	});
+	function handleToggleCollected(event: MouseEvent | KeyboardEvent, modelId: string) {
+		event.stopPropagation();
+		event.preventDefault();
+		providerState.toggleModelCollected(modelId);
+	}
 
+	function getCapabilityText(capability: ModelCapability): string {
+		switch (capability) {
+			case "reasoning":
+				return m.text_capability_reasoning();
+			case "vision":
+				return m.text_capability_vision();
+			case "music":
+				return m.text_capability_music();
+			case "video":
+				return m.text_capability_video();
+			case "function_call":
+				return m.text_capability_function_call();
+			default:
+				return "";
+		}
+	}
+
+	// 自动滚动到选中项
 	$effect(() => {
-		if (isOpen && selectedModel) {
+		if (isOpen && listRef && selectedModel) {
+			// 展开包含选中模型的分组
 			Object.entries(groupedModels()).forEach(([provider, models]) => {
 				if (
 					models.some(
@@ -159,34 +177,19 @@
 					collapsedProviders[provider] = false;
 				}
 			});
-		}
-	});
 
-	$effect(() => {
-		if (!isOpen) {
-			scrollTop = 0;
-		}
-	});
-
-	$effect(() => {
-		if (isOpen && listRef) {
+			// 延迟执行滚动，确保 DOM 已渲染
 			setTimeout(() => {
-				if (!listRef) return;
+				if (!listRef || !selectedModel) return;
 
-				if (selectedModel) {
-					const selectedItem = listRef.querySelector(
-						`[data-model-id="${selectedModel.providerId}-${selectedModel.id}"]`,
-					) as HTMLElement;
-					if (selectedItem) {
-						selectedItem.scrollIntoView({
-							behavior: "instant",
-							block: "center",
-						});
-					}
-				} else if (scrollTop > 0) {
-					listRef.scrollTop = scrollTop;
+				const selectedItem = listRef.querySelector(
+					`[data-model-id="${selectedModel.providerId}-${selectedModel.id}"]`,
+				) as HTMLElement;
+
+				if (selectedItem) {
+					selectedItem.scrollIntoView({ behavior: "instant", block: "center" });
 				}
-			}, 10);
+			}, 100);
 		}
 	});
 </script>
@@ -222,36 +225,66 @@
 					</button>
 					{#if !collapsedProviders[provider] || searchValue}
 						{#each models as model (`${model.providerId}-${model.id}`)}
+							{@const isSelected =
+								selectedModel?.id === model.id && selectedModel?.providerId === model.providerId}
+							{@const isHovered = hoveredItemId === `${model.providerId}-${model.id}`}
+							{@const capabilityTexts = Array.from(model.capabilities || [])
+								.map((cap) => getCapabilityText(cap))
+								.filter((text) => text !== "")
+								.join("、")}
+
 							<Command.Item
 								onSelect={() => handleModelSelect(model)}
 								value={model.name}
 								data-model-id="{model.providerId}-{model.id}"
+								title={capabilityTexts || model.name}
 								class={cn(
-									"my-1 h-12",
-									selectedModel?.id === model.id && selectedModel?.providerId === model.providerId
-										? "!bg-accent !text-accent-foreground"
-										: "",
-									(selectedModel?.id !== model.id ||
-										selectedModel?.providerId !== model.providerId) &&
-										hoveredItemId !== `${model.providerId}-${model.id}`
+									"relative my-1 h-12 overflow-hidden",
+									isSelected ? "!bg-primary !text-primary-foreground" : "",
+									!isSelected && !isHovered
 										? "aria-selected:text-foreground aria-selected:bg-transparent"
 										: "",
 								)}
 								onmouseenter={() => handleItemMouseEnter(`${model.providerId}-${model.id}`)}
 								onmouseleave={handleItemMouseLeave}
 							>
-								<div class="flex w-full flex-row items-center justify-between pl-2">
-									<div class="flex flex-row items-center gap-2">
-										{#if model.collected}
-											<Star class="size-3.5 shrink-0 fill-yellow-500 text-yellow-500" />
-										{/if}
-										<span>{model.name}</span>
-										<span class="text-muted-foreground text-sm">{model.type}</span>
+								<div class="flex w-full items-center gap-2 pl-2 pr-1">
+									<div class="flex min-w-0 flex-1 items-center gap-2">
+										<ModelIcon
+											modelName={model.name}
+											className={cn("size-4 shrink-0", isSelected && "brightness-0 invert")}
+										/>
+										<span class="truncate">{model.name}</span>
 									</div>
-									{#if selectedModel?.id === model.id && selectedModel?.providerId === model.providerId}
-										<Check class="h-4 w-4" />
-									{/if}
+
+									<Button
+										variant="ghost"
+										size="icon"
+										class={cn(
+											"h-7 w-7 shrink-0 p-0",
+											isSelected ? "hover:bg-primary-foreground/10" : "hover:bg-accent/50",
+										)}
+										onclick={(e) => handleToggleCollected(e, model.id)}
+										title={model.collected ? m.title_button_unstar() : m.title_button_star()}
+									>
+										<Star
+											class={cn(
+												"size-4",
+												model.collected
+													? "fill-yellow-500 text-yellow-500"
+													: isSelected
+														? "text-primary-foreground/60 hover:text-primary-foreground"
+														: "text-muted-foreground hover:text-foreground",
+											)}
+										/>
+									</Button>
 								</div>
+
+								{#if isSelected}
+									<div class="absolute top-1 right-1">
+										<Check class="h-3.5 w-3.5" />
+									</div>
+								{/if}
 							</Command.Item>
 						{/each}
 					{/if}
