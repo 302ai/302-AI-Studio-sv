@@ -183,8 +183,8 @@ export async function importLegacyJson(): Promise<ImportResult> {
 			legacyData.data.models,
 			stats,
 		);
-		await importSettings(legacyData.data.settings, stats);
-		// await importShortcuts(legacyData.data.shortcuts, stats);
+		await importSettings(legacyData.data.settings, legacyData.data.models, stats);
+		await importShortcuts(legacyData.data.shortcuts, stats);
 
 		const totalAdded =
 			stats.providers.added +
@@ -558,12 +558,18 @@ async function importThreads(
 	}
 }
 
-async function importSettings(legacySettings: any[], stats: ImportStats): Promise<void> {
+async function importSettings(
+	legacySettings: any[],
+	legacyModels: any[],
+	stats: ImportStats,
+): Promise<void> {
 	if (!legacySettings || legacySettings.length === 0) return;
 
 	try {
 		const legacy = legacySettings[0];
-		const existingSettings =
+
+		// Import General Settings
+		const existingGeneralSettings =
 			((await storageService.getItemInternal("GeneralSettingsStorage:state")) as any) || {};
 
 		const layoutMode = legacy.widescreenMode
@@ -573,49 +579,176 @@ async function importSettings(legacySettings: any[], stats: ImportStats): Promis
 				: "default";
 
 		await storageService.setItemInternal("GeneralSettingsStorage:state", {
-			...existingSettings,
-			language: legacy.language || existingSettings.language || "zh",
-			autoUpdate: legacy.autoUpdate ?? existingSettings.autoUpdate ?? false,
+			...existingGeneralSettings,
+			language: legacy.language || existingGeneralSettings.language || "zh",
+			autoUpdate: legacy.autoUpdate ?? existingGeneralSettings.autoUpdate ?? false,
 			layoutMode: layoutMode,
-			privacyAutoInherit: legacy.defaultPrivacyMode ?? existingSettings.privacyAutoInherit ?? false,
+			privacyAutoInherit:
+				legacy.defaultPrivacyMode ?? existingGeneralSettings.privacyAutoInherit ?? false,
 		});
+
+		// Import Preferences Settings
+		const existingPreferencesSettings =
+			((await storageService.getItemInternal("PreferencesSettingsStorage:state")) as any) || {};
+
+		// Load the imported models from storage to match model IDs
+		const importedModels = ((await storageService.getItemInternal("app-models")) as any[]) || [];
+
+		// Create a map from legacy model ID to model name
+		const legacyModelIdToName = new Map<string, string>();
+		for (const legacyModel of legacyModels) {
+			legacyModelIdToName.set(legacyModel.id, legacyModel.name);
+		}
+
+		// Find new session model
+		let newSessionModel = null;
+		if (legacy.newChatModelId && legacy.newChatModelId !== "use-last-model") {
+			const modelName = legacyModelIdToName.get(legacy.newChatModelId);
+			if (modelName) {
+				newSessionModel = importedModels.find((m) => m.name === modelName) || null;
+			}
+		}
+
+		// Find title generation model
+		let titleGenerationModel = null;
+		if (legacy.titleModelId && legacy.titleModelId !== "use-current-chat-model") {
+			const modelName = legacyModelIdToName.get(legacy.titleModelId);
+			if (modelName) {
+				titleGenerationModel = importedModels.find((m) => m.name === modelName) || null;
+			}
+		}
+
+		// Map title generation timing
+		let titleGenerationTiming: "firstTime" | "everyTime" | "off" = "firstTime";
+		if (legacy.titleGenerationTiming === "first-round") {
+			titleGenerationTiming = "firstTime";
+		} else if (legacy.titleGenerationTiming === "every-round") {
+			titleGenerationTiming = "everyTime";
+		} else if (legacy.titleGenerationTiming === "off") {
+			titleGenerationTiming = "off";
+		}
+
+		await storageService.setItemInternal("PreferencesSettingsStorage:state", {
+			...existingPreferencesSettings,
+			autoHideCode: legacy.collapseCodeBlock ?? existingPreferencesSettings.autoHideCode ?? false,
+			autoHideReason: legacy.hideReason ?? existingPreferencesSettings.autoHideReason ?? false,
+			autoCollapseThink:
+				legacy.collapseThinkBlock ?? existingPreferencesSettings.autoCollapseThink ?? false,
+			autoDisableMarkdown:
+				legacy.disableMarkdown ?? existingPreferencesSettings.autoDisableMarkdown ?? false,
+			enableSupermarket:
+				legacy.displayAppStore ?? existingPreferencesSettings.enableSupermarket ?? true,
+			newSessionModel: newSessionModel,
+			autoParseUrl: legacy.enableUrlParse ?? existingPreferencesSettings.autoParseUrl ?? false,
+			searchProvider:
+				legacy.searchService || existingPreferencesSettings.searchProvider || "search1api",
+			streamOutputEnabled:
+				legacy.streamSmootherEnabled ?? existingPreferencesSettings.streamOutputEnabled ?? false,
+			streamSpeed: legacy.streamSpeed || existingPreferencesSettings.streamSpeed || "normal",
+			titleGenerationModel: titleGenerationModel,
+			titleGenerationTiming: titleGenerationTiming,
+		});
+
 		stats.settings.updated++;
 	} catch (error) {
 		console.error("Failed to import settings:", error);
 	}
 }
 
-// async function importShortcuts(legacyShortcuts: any[], stats: ImportStats): Promise<void> {
-// 	try {
-// 		const existingState =
-// 			((await storageService.getItemInternal("ShortcutSettingsStorage:state")) as any) || {};
-// 		const existingShortcuts = existingState.shortcuts || [];
-// 		const existingIds = new Set(existingShortcuts.map((s: any) => s.id));
+/**
+ * Convert kebab-case action name to camelCase
+ * e.g., "clear-messages" -> "clearMessages"
+ *       "switch-to-tab-1" -> "switchToTab1"
+ */
+function convertActionName(kebabAction: string): string {
+	return kebabAction.replace(/-([a-z0-9])/g, (_, letter) => letter.toUpperCase());
+}
 
-// 		const newShortcuts = [];
-// 		for (const legacy of legacyShortcuts) {
-// 			if (existingIds.has(legacy.id)) {
-// 				stats.shortcuts.skipped++;
-// 				continue;
-// 			}
+async function importShortcuts(legacyShortcuts: any[], stats: ImportStats): Promise<void> {
+	if (!legacyShortcuts || legacyShortcuts.length === 0) return;
 
-// 			newShortcuts.push({
-// 				id: legacy.id,
-// 				action: legacy.action,
-// 				keys: legacy.keys,
-// 				scope: legacy.scope,
-// 				order: legacy.order,
-// 			});
-// 			stats.shortcuts.added++;
-// 		}
+	try {
+		const existingState =
+			((await storageService.getItemInternal("ShortcutSettingsStorage:state")) as any) || {};
+		const existingShortcuts = existingState.shortcuts || [];
 
-// 		if (newShortcuts.length > 0) {
-// 			await storageService.setItemInternal("ShortcutSettingsStorage:state", {
-// 				shortcuts: [...existingShortcuts, ...newShortcuts],
-// 			});
-// 		}
-// 	} catch (error) {
-// 		console.error("Failed to import shortcuts:", error);
-// 		stats.shortcuts.failed++;
-// 	}
-// }
+		// Valid actions in the new system (camelCase)
+		const validActions = new Set([
+			"newChat",
+			"clearMessages",
+			"closeCurrentTab",
+			"closeOtherTabs",
+			"deleteCurrentThread",
+			"openSettings",
+			"toggleSidebar",
+			"stopGeneration",
+			"newTab",
+			"regenerateResponse",
+			"search",
+			"createBranch",
+			"restoreLastTab",
+			"screenshot",
+			"nextTab",
+			"previousTab",
+			"toggleModelPanel",
+			"toggleIncognitoMode",
+			"branchAndSend",
+			"switchToTab1",
+			"switchToTab2",
+			"switchToTab3",
+			"switchToTab4",
+			"switchToTab5",
+			"switchToTab6",
+			"switchToTab7",
+			"switchToTab8",
+			"switchToTab9",
+		]);
+
+		// Create a map of action -> existing shortcut for merging
+		const actionToShortcut = new Map<string, any>();
+		for (const shortcut of existingShortcuts) {
+			actionToShortcut.set(shortcut.action, shortcut);
+		}
+
+		// Update shortcuts with legacy data
+		for (const legacy of legacyShortcuts) {
+			// Convert kebab-case to camelCase
+			const camelAction = convertActionName(legacy.action);
+
+			// Only import valid actions
+			if (!validActions.has(camelAction)) {
+				stats.shortcuts.skipped++;
+				continue;
+			}
+
+			if (actionToShortcut.has(camelAction)) {
+				// Update the existing shortcut with legacy keys
+				const existing = actionToShortcut.get(camelAction);
+				existing.keys = legacy.keys;
+				stats.shortcuts.added++;
+			} else {
+				// Add new shortcut (shouldn't happen as we start with defaults)
+				actionToShortcut.set(camelAction, {
+					id: legacy.id,
+					action: camelAction,
+					keys: legacy.keys,
+					scope: legacy.scope,
+					order: legacy.order,
+				});
+				stats.shortcuts.added++;
+			}
+		}
+
+		// Convert map back to array
+		const updatedShortcuts = Array.from(actionToShortcut.values()).sort(
+			(a, b) => a.order - b.order,
+		);
+
+		await storageService.setItemInternal("ShortcutSettingsStorage:state", {
+			shortcuts: updatedShortcuts,
+		});
+	} catch (error) {
+		console.error("Failed to import shortcuts:", error);
+		stats.shortcuts.failed++;
+	}
+}
