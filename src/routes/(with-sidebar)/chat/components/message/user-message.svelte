@@ -184,15 +184,15 @@
 
 <MessageContextMenu onCopy={handleCopyMessage} onEdit={handleEditClick} onDelete={handleDelete}>
 	<div class="group flex flex-col items-end gap-2">
-		<div class=" ax-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg">
-			{#if attachments.length > 0}
-				<div class="space-y-2">
-					{#each attachments as attachment (attachment.id)}
-						<MessageAttachment {attachment} {openViewer} />
-					{/each}
-				</div>
-			{/if}
+		{#if attachments.length > 0}
+			<div class="flex max-w-[80%] flex-wrap gap-2">
+				{#each attachments as attachment (attachment.id)}
+					<MessageAttachment {attachment} {openViewer} />
+				{/each}
+			</div>
+		{/if}
 
+		<div class="max-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg">
 			<div class="whitespace-pre-wrap break-all" use:handleLinkClick>
 				{#each displayParts as part, partIndex (partIndex)}
 					{#if part.type === "text"}
