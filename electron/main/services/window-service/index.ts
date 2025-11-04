@@ -457,10 +457,22 @@ export class WindowService {
 		const { shouldUseDarkColors } = nativeTheme;
 		const language = await generalSettingsStorage.getLanguage();
 
+		// Get the focused window to determine initial size
+		const focusedWindow = BrowserWindow.getFocusedWindow();
+		let windowWidth = 1000;
+		let windowHeight = 700;
+
+		if (focusedWindow && !focusedWindow.isDestroyed()) {
+			const bounds = focusedWindow.getBounds();
+			// Use the focused window's size, but ensure it's not smaller than minimum
+			windowWidth = Math.max(bounds.width, 800);
+			windowHeight = Math.max(bounds.height, 600);
+		}
+
 		// Create settings window with normal title bar
 		this.settingsWindow = new BrowserWindow({
-			width: 1000,
-			height: 700,
+			width: windowWidth,
+			height: windowHeight,
 			minWidth: 800,
 			minHeight: 600,
 			title: language === "zh" ? "设置" : "Settings",
