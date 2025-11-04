@@ -257,6 +257,8 @@
 	"text_label_model_type": "模型类型",
 	"text_label_presence_penalty": "话题新鲜度（Presence Penalty）",
 	"text_label_provider_api_key": "API Key",
+	"text_label_provider_auto_update_models": "自动更新模型",
+	"text_label_provider_auto_update_models_desc": "打开窗口时自动更新模型列表",
 	"text_label_provider_base_url": "Base URL",
 	"text_label_provider_icon": "图标",
 	"text_label_provider_interface_type": "接口类型",

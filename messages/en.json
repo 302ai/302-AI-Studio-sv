@@ -261,6 +261,8 @@
 	"text_label_model_type": "Model Type",
 	"text_label_presence_penalty": "Presence Penalty",
 	"text_label_provider_api_key": "API Key",
+	"text_label_provider_auto_update_models": "Auto Update Models",
+	"text_label_provider_auto_update_models_desc": "Automatically update model list when opening window",
 	"text_label_provider_base_url": "Base URL",
 	"text_label_provider_icon": "Icon",
 	"text_label_provider_interface_type": "Interface Type",

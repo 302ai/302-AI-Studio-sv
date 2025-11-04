@@ -3,6 +3,7 @@
 	import { IconPicker } from "$lib/components/buss/icon-picker/index.js";
 	import { ModelDialog } from "$lib/components/buss/model-dialog/index.js";
 	import { ModelList } from "$lib/components/buss/model-list/index.js";
+	import { SettingSwitchItem } from "$lib/components/buss/settings/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Input } from "$lib/components/ui/input/index.js";
 	import { Label } from "$lib/components/ui/label/index.js";
@@ -11,6 +12,7 @@
 	import { persistedModelState, providerState } from "$lib/stores/provider-state.svelte.js";
 	import { Eye, EyeOff } from "@lucide/svelte";
 	import type { Model, ModelCreateInput, ModelProvider } from "@shared/types";
+	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
 	const apiTypes = [
@@ -74,6 +76,7 @@
 				status: currentProvider.status,
 				websites: { ...currentProvider.websites },
 				icon: currentProvider.icon,
+				autoUpdateModels: currentProvider.autoUpdateModels || false,
 			};
 		}
 
@@ -94,6 +97,7 @@
 				defaultBaseUrl: "",
 			},
 			icon: undefined,
+			autoUpdateModels: false,
 		};
 	});
 
@@ -109,6 +113,7 @@
 				status: formData.status,
 				websites: formData.websites,
 				icon: formData.icon,
+				autoUpdateModels: formData.autoUpdateModels,
 			});
 		}
 	}
@@ -247,6 +252,17 @@
 			)
 			.filter((m) => !pendingRemovedIds.has(m.id)),
 	);
+
+	// 页面加载时自动更新模型（异步执行，不阻塞页面渲染）
+	onMount(() => {
+		if (currentProvider?.autoUpdateModels && currentProvider.apiKey) {
+			// 使用 setTimeout 将更新操作推迟到下一个事件循环
+			// 让页面先完成渲染，避免切换标签页时卡顿
+			setTimeout(() => {
+				handleGetModels();
+			}, 0);
+		}
+	});
 </script>
 
 <div class="flex h-full min-w-0 flex-1 flex-col overflow-hidden p-6">
@@ -343,6 +359,19 @@
 						</a>
 					</p>
 				{/if}
+			</div>
+
+			<!-- 自动更新模型 -->
+			<div class="space-y-2">
+				<Label class="text-sm font-medium">{m.text_label_provider_auto_update_models()}</Label>
+				<SettingSwitchItem
+					label={m.text_label_provider_auto_update_models_desc()}
+					checked={formData.autoUpdateModels}
+					onCheckedChange={(v) => {
+						formData.autoUpdateModels = v;
+						saveFormData();
+					}}
+				/>
 			</div>
 
 			<!-- 接口类型 (仅自定义供应商) -->
