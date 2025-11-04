@@ -1,3 +1,4 @@
+import type { SearchProvider } from "$lib/stores/preferences-settings.state.svelte";
 import { createAnthropic } from "@ai-sdk/anthropic";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
@@ -118,7 +119,7 @@ app.post("/chat/302ai", async (c) => {
 		isMCPActive?: boolean;
 		mcpServerIds?: string[];
 		autoParseUrl?: boolean;
-		searchProvider?: "search1api" | "tavily" | "exa" | "bochaai";
+		searchProvider?: SearchProvider;
 
 		speedOptions?: {
 			enabled: boolean;
