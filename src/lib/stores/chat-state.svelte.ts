@@ -962,6 +962,7 @@ export const chat = new Chat({
 			mcpServerIds: persistedChatParamsState.current.mcpServerIds,
 
 			autoParseUrl: preferencesSettings.autoParseUrl,
+			searchProvider: preferencesSettings.searchProvider,
 
 			speedOptions: {
 				enabled: preferencesSettings.streamOutputEnabled,

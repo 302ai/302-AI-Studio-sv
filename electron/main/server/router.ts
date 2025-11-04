@@ -100,6 +100,7 @@ app.post("/chat/302ai", async (c) => {
 		isMCPActive,
 		mcpServerIds = [],
 		autoParseUrl,
+		searchProvider = "search1api",
 		messages,
 		speedOptions,
 	} = await c.req.json<{
@@ -117,6 +118,7 @@ app.post("/chat/302ai", async (c) => {
 		isMCPActive?: boolean;
 		mcpServerIds?: string[];
 		autoParseUrl?: boolean;
+		searchProvider?: "search1api" | "tavily" | "exa" | "bochaai";
 
 		speedOptions?: {
 			enabled: boolean;
@@ -168,7 +170,7 @@ app.post("/chat/302ai", async (c) => {
 
 	if (isOnlineSearchActive) {
 		provider302Options["web-search"] = true;
-		provider302Options["search-service"] = "search1api";
+		provider302Options["search-service"] = searchProvider;
 	}
 
 	// Get MCP tools if MCP is active
