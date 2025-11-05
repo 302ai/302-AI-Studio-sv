@@ -25,7 +25,7 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
-	import { ChevronDown, Lightbulb, Server } from "@lucide/svelte";
+	import { ChevronDown, Lightbulb, Server, ThumbsDown, ThumbsUp } from "@lucide/svelte";
 	import type { DynamicToolUIPart } from "ai";
 	import { toast } from "svelte-sonner";
 	import MessageActions from "./message-actions.svelte";
@@ -135,6 +135,13 @@
 			toast.error(m.toast_unknown_error());
 		}
 	}
+
+	function handleFeedback(feedback: "like" | "dislike") {
+		// Toggle feedback if clicking the same button
+		const currentFeedback = message.metadata?.feedback;
+		const newFeedback = currentFeedback === feedback ? null : feedback;
+		chatState.updateMessageFeedback(message.id, newFeedback);
+	}
 </script>
 
 {#snippet messageHeader(model: string)}
@@ -146,7 +153,38 @@
 
 {#snippet messageFooter()}
 	<div class="flex items-center gap-2">
-		<MessageActions {message} enabledActions={["copy", "regenerate"]} />
+		{#if !isCurrentMessageStreaming}
+			<MessageActions {message} enabledActions={["copy", "regenerate"]} />
+
+			<div class="h-4 w-px bg-border"></div>
+
+			<!-- Feedback buttons -->
+			<div class="flex items-center gap-1">
+				<button
+					type="button"
+					onclick={() => handleFeedback("like")}
+					class="rounded-md p-1 transition-colors hover:bg-muted {message.metadata?.feedback ===
+					'like'
+						? 'text-green-600 dark:text-green-400'
+						: 'text-muted-foreground'}"
+					title={m.text_feedback_like()}
+				>
+					<ThumbsUp class="h-4 w-4" />
+				</button>
+				<button
+					type="button"
+					onclick={() => handleFeedback("dislike")}
+					class="rounded-md p-1 transition-colors hover:bg-muted {message.metadata?.feedback ===
+					'dislike'
+						? 'text-red-600 dark:text-red-400'
+						: 'text-muted-foreground'}"
+					title={m.text_feedback_dislike()}
+				>
+					<ThumbsDown class="h-4 w-4" />
+				</button>
+			</div>
+		{/if}
+
 		<span class="text-xs text-muted-foreground">
 			{formatTimeAgo(message.metadata?.createdAt?.toLocaleString() || "", getLocale())}
 		</span>

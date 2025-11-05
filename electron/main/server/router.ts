@@ -44,6 +44,34 @@ function addDefinedParams(options: any, params: any) {
 	}
 }
 
+// Add feedback information from metadata to messages
+function enhanceMessagesWithFeedback(messages: UIMessage[]) {
+	return messages.map((msg) => {
+		// Only add feedback for assistant messages that have feedback
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		const metadata = msg.metadata as any;
+		if (msg.role === "assistant" && metadata?.feedback) {
+			const feedbackText =
+				metadata.feedback === "like"
+					? "[User feedback: 👍 Liked this response]"
+					: "[User feedback: 👎 Disliked this response]";
+
+			// Add feedback as a system-like annotation
+			return {
+				...msg,
+				parts: [
+					...msg.parts,
+					{
+						type: "text" as const,
+						text: `\n\n${feedbackText}`,
+					},
+				],
+			};
+		}
+		return msg;
+	});
+}
+
 function smartChunking(buffer: string): string {
 	// whitespace
 	const whitespaceMatch = buffer.match(/^\s+/);
@@ -192,7 +220,7 @@ app.post("/chat/302ai", async (c) => {
 
 	const streamTextOptions = {
 		model: wrapModel,
-		messages: convertToModelMessages(messages),
+		messages: convertToModelMessages(enhanceMessagesWithFeedback(messages)),
 		providerOptions: {
 			"302": provider302Options,
 		},
@@ -246,7 +274,7 @@ app.post("/chat/302ai", async (c) => {
 				const suggestionTextResult = streamText({
 					model: wrapModel,
 					messages: [
-						...convertToModelMessages(messages),
+						...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
 						...responseMessages,
 						{
 							role: "user",
@@ -360,7 +388,7 @@ app.post("/chat/openai", async (c) => {
 
 	const streamTextOptions = {
 		model: wrapModel,
-		messages: convertToModelMessages(messages),
+		messages: convertToModelMessages(enhanceMessagesWithFeedback(messages)),
 		...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
 	};
 
@@ -408,7 +436,7 @@ app.post("/chat/openai", async (c) => {
 				const suggestionTextResult = streamText({
 					model: wrapModel,
 					messages: [
-						...convertToModelMessages(messages),
+						...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
 						...responseMessages,
 						{
 							role: "user",
@@ -522,7 +550,7 @@ app.post("/chat/anthropic", async (c) => {
 
 	const streamTextOptions = {
 		model: wrapModel,
-		messages: convertToModelMessages(messages),
+		messages: convertToModelMessages(enhanceMessagesWithFeedback(messages)),
 		...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
 	};
 
@@ -570,7 +598,7 @@ app.post("/chat/anthropic", async (c) => {
 				const suggestionTextResult = streamText({
 					model: wrapModel,
 					messages: [
-						...convertToModelMessages(messages),
+						...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
 						...responseMessages,
 						{
 							role: "user",
@@ -684,7 +712,7 @@ app.post("/chat/gemini", async (c) => {
 
 	const streamTextOptions = {
 		model: wrapModel,
-		messages: convertToModelMessages(messages),
+		messages: convertToModelMessages(enhanceMessagesWithFeedback(messages)),
 		...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
 	};
 
@@ -732,7 +760,7 @@ app.post("/chat/gemini", async (c) => {
 				const suggestionTextResult = streamText({
 					model: wrapModel,
 					messages: [
-						...convertToModelMessages(messages),
+						...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
 						...responseMessages,
 						{
 							role: "user",

@@ -590,6 +590,24 @@ class ChatState {
 		chat.messages = updatedMessages;
 	}
 
+	updateMessageFeedback(messageId: string, feedback: "like" | "dislike" | null) {
+		const updatedMessages = this.messages.map((msg) => {
+			if (msg.id === messageId) {
+				return {
+					...msg,
+					metadata: {
+						...msg.metadata,
+						feedback: feedback || undefined,
+					},
+				};
+			}
+			return msg;
+		});
+
+		chat.messages = updatedMessages;
+		persistedMessagesState.current = updatedMessages;
+	}
+
 	deleteMessage(messageId: string) {
 		const updatedMessages = this.messages.filter((msg) => msg.id !== messageId);
 		chat.messages = updatedMessages;
