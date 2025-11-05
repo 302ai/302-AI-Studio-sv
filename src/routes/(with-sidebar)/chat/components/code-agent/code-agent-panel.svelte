@@ -3,6 +3,7 @@
 	import SegButton from "$lib/components/buss/settings/seg-button.svelte";
 	import type { SelectOption } from "$lib/components/buss/settings/setting-select.svelte";
 	import SettingSelect from "$lib/components/buss/settings/setting-select.svelte";
+	import * as Empty from "$lib/components/ui/empty/index.js";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import { m } from "$lib/paraglide/messages";
 	import { persistedCodeAgentState } from "$lib/stores/code-agent-state.svelte";
@@ -10,14 +11,14 @@
 
 	let selectedKey = $derived(persistedCodeAgentState.current.type);
 
-	const themeOptions = [
-		{
-			key: "local",
-			label: m.title_local(),
-		},
+	const platformOptions = [
 		{
 			key: "remote",
 			label: m.title_remote(),
+		},
+		{
+			key: "local",
+			label: m.title_local(),
 		},
 	];
 
@@ -38,39 +39,50 @@
 	<div class="flex flex-col gap-y-4 rounded-[10px] bg-background p-4">
 		<div class="gap-settings-gap flex flex-col">
 			<Label class="text-label-fg">{m.title_code_agent_type()}</Label>
-			<SegButton options={themeOptions} {selectedKey} onSelect={handleSelect} />
+			<SegButton options={platformOptions} {selectedKey} onSelect={handleSelect} />
 		</div>
 
-		<Label class="text-label-fg">{m.title_agent()}</Label>
-		<SettingSelect
-			name="agent"
-			value={persistedCodeAgentState.current.agentId}
-			{options}
-			placeholder={m.select_agent()}
-			onValueChange={(v) => (persistedCodeAgentState.current.agentId = v)}
-		/>
-
-		<Label class="text-label-fg">{m.title_select_session()}</Label>
-		<div class="flex w-full flex-row items-center gap-x-2">
+		{#if selectedKey === "remote"}
+			<Label class="text-label-fg">{m.title_agent()}</Label>
 			<SettingSelect
-				name="session"
-				value={persistedCodeAgentState.current.currentSessionId}
-				options={persistedCodeAgentState.current.sessionIds.map((id) => ({
-					key: id,
-					label: id,
-					value: id,
-				}))}
-				placeholder={m.select_session()}
-				onValueChange={(v) => (persistedCodeAgentState.current.currentSessionId = v)}
+				name="agent"
+				value={persistedCodeAgentState.current.agentId}
+				{options}
+				placeholder={m.select_agent()}
+				onValueChange={(v) => (persistedCodeAgentState.current.agentId = v)}
 			/>
 
-			<ButtonWithTooltip
-				class="hover:!bg-chat-action-hover"
-				tooltip={m.label_button_reload()}
-				onclick={() => {}}
-			>
-				<RefreshCcw />
-			</ButtonWithTooltip>
-		</div>
+			<Label class="text-label-fg">{m.title_select_session()}</Label>
+			<div class="flex w-full flex-row items-center gap-x-2">
+				<SettingSelect
+					name="session"
+					value={persistedCodeAgentState.current.currentSessionId}
+					options={persistedCodeAgentState.current.sessionIds.map((id) => ({
+						key: id,
+						label: id,
+						value: id,
+					}))}
+					placeholder={m.select_session()}
+					onValueChange={(v) => (persistedCodeAgentState.current.currentSessionId = v)}
+				/>
+
+				<ButtonWithTooltip
+					class="hover:!bg-chat-action-hover"
+					tooltip={m.label_button_reload()}
+					onclick={() => {}}
+				>
+					<RefreshCcw />
+				</ButtonWithTooltip>
+			</div>
+		{/if}
+		{#if selectedKey === "local"}
+			<Empty.Root>
+				<Empty.Content>
+					<Empty.Description>
+						{m.unsupport()}
+					</Empty.Description>
+				</Empty.Content>
+			</Empty.Root>
+		{/if}
 	</div>
 </div>

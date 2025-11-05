@@ -623,5 +623,6 @@
 	"select_agent": "Please select a code agent",
 	"title_select_session": "Select Session",
 	"select_session": "Please Select a Session",
-	"select_no_options": "The current options are empty..."
+	"select_no_options": "The current options are empty...",
+	"unsupport": "Not supported yet..."
 }

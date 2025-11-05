@@ -611,13 +611,14 @@
 	"plugins_marketplace_search_failed": "搜索失败",
 	"plugins_marketplace_refresh_failed": "刷新市场失败",
 	"plugins_marketplace_refreshed": "市场已刷新",
-	"title_code_agent": "代码助手",
+	"title_code_agent": "代码代理",
 	"title_local": "本地",
 	"title_remote": "远程",
 	"title_code_agent_type": "平台",
-	"title_agent": "助手",
-	"select_agent": "请选择一个代码助手",
+	"title_agent": "代理",
+	"select_agent": "请选择一个代码代理",
 	"title_select_session": "选择会话",
 	"select_session": "请选择一个会话",
-	"select_no_options": "当前选项为空..."
+	"select_no_options": "当前选项为空...",
+	"unsupport": "尚未支持..."
 }
