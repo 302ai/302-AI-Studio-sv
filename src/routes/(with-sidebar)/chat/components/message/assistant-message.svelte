@@ -145,7 +145,7 @@
 {/snippet}
 
 {#snippet messageFooter()}
-	<div class="flex items-center gap-2 opacity-0 group-hover:opacity-100">
+	<div class="flex items-center gap-2">
 		<MessageActions {message} enabledActions={["copy", "regenerate"]} />
 		<span class="text-xs text-muted-foreground">
 			{formatTimeAgo(message.metadata?.createdAt?.toLocaleString() || "", getLocale())}
