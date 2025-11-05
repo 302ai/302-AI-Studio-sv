@@ -55,6 +55,11 @@
 		}),
 	);
 
+	// Check if there's any text content to display (excluding empty strings)
+	const hasDisplayableText = $derived(
+		displayParts.some((part) => part.type === "text" && part.text.trim().length > 0),
+	);
+
 	function openViewer(attachment: AttachmentFile) {
 		selectedAttachment = attachment;
 	}
@@ -192,17 +197,21 @@
 			</div>
 		{/if}
 
-		<div class="max-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg">
-			<div class="whitespace-pre-wrap break-all" use:handleLinkClick>
-				{#each displayParts as part, partIndex (partIndex)}
-					{#if part.type === "text"}
-						<!-- eslint-disable svelte/no-at-html-tags -->
-						<div>{@html linkifyText(part.text)}</div>
-						<!-- eslint-enable svelte/no-at-html-tags -->
-					{/if}
-				{/each}
+		{#if hasDisplayableText}
+			<div
+				class="max-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg"
+			>
+				<div class="whitespace-pre-wrap break-all" use:handleLinkClick>
+					{#each displayParts as part, partIndex (partIndex)}
+						{#if part.type === "text"}
+							<!-- eslint-disable svelte/no-at-html-tags -->
+							<div>{@html linkifyText(part.text)}</div>
+							<!-- eslint-enable svelte/no-at-html-tags -->
+						{/if}
+					{/each}
+				</div>
 			</div>
-		</div>
+		{/if}
 		{@render messageFooter()}
 	</div>
 </MessageContextMenu>
