@@ -238,6 +238,7 @@
 	"text_chat_stop_generation": "停止 ({key})",
 	"text_collapse": "收起",
 	"text_expand": "展开文本",
+	"text_new_exploration": "开启新探索",
 	"text_clear_models_success": "成功清空 {count} 个模型",
 	"text_context_configure": "配置供应商",
 	"text_context_configure_provider": "配置供应商",
