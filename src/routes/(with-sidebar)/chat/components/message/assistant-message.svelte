@@ -25,8 +25,8 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
-	import type { DynamicToolUIPart } from "ai";
 	import { ChevronDown, Lightbulb, Server } from "@lucide/svelte";
+	import type { DynamicToolUIPart } from "ai";
 	import { toast } from "svelte-sonner";
 	import MessageActions from "./message-actions.svelte";
 	import MessageContextMenu from "./message-context-menu.svelte";
@@ -34,6 +34,19 @@
 	import { formatTimeAgo, getAssistantMessageContent } from "./utils";
 
 	let { message }: Props = $props();
+
+	// Extract suggestions from message parts
+	const suggestions = $derived(() => {
+		console.log("[Suggestions] Message parts:", message.parts);
+		const suggestionPart = message.parts.find((part) => part.type === "data-suggestions");
+		console.log("[Suggestions] Found suggestion part:", suggestionPart);
+		if (suggestionPart && "data" in suggestionPart && suggestionPart.data) {
+			const data = suggestionPart.data as { suggestions?: string[] };
+			console.log("[Suggestions] Extracted suggestions:", data.suggestions);
+			return data.suggestions || [];
+		}
+		return [];
+	});
 
 	function getServerIcon(toolName: string): string | null {
 		// Extract server ID from toolName (format: serverId__toolName)
@@ -282,5 +295,30 @@
 		{/if}
 
 		{@render messageFooter()}
+
+		<!-- Suggestions -->
+		{#if suggestions().length > 0 && !isCurrentMessageStreaming}
+			{console.log("[Suggestions] Rendering suggestions UI:", suggestions())}
+			<div class="mt-3 flex flex-wrap gap-2">
+				{#each suggestions() as suggestion, index (index)}
+					<button
+						type="button"
+						onclick={() => {
+							chatState.inputValue = suggestion;
+						}}
+						class="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground transition-colors hover:bg-muted"
+					>
+						{suggestion}
+					</button>
+				{/each}
+			</div>
+		{:else}
+			{console.log(
+				"[Suggestions] Not rendering. Count:",
+				suggestions().length,
+				"Streaming:",
+				isCurrentMessageStreaming,
+			)}
+		{/if}
 	</div>
 </MessageContextMenu>

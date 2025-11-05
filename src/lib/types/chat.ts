@@ -26,6 +26,7 @@ export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
 export type ChatTools = {};
 
 export type CustomUIDataTypes = {
+	suggestions?: string[];
 	[x: string]: unknown;
 };
 
