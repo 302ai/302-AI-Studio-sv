@@ -226,6 +226,7 @@ export function registerIpcHandlers() {
 	ipcMain.handle("appService:setTheme", (event, theme) => appService.setTheme(event, theme));
 	ipcMain.handle("appService:restartApp", (event) => appService.restartApp(event));
 	ipcMain.handle("appService:resetAllData", (event) => appService.resetAllData(event));
+	ipcMain.handle("appService:clearChatHistory", (event) => appService.clearChatHistory(event));
 
 	// dataService service registration
 	ipcMain.handle("dataService:importLegacyJson", (event) => dataService.importLegacyJson(event));
@@ -366,6 +367,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:setTheme");
 	ipcMain.removeHandler("appService:restartApp");
 	ipcMain.removeHandler("appService:resetAllData");
+	ipcMain.removeHandler("appService:clearChatHistory");
 	ipcMain.removeHandler("dataService:importLegacyJson");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("dataService:importStorage");
