@@ -140,14 +140,14 @@
 		</div>
 		<div
 			role="region"
-			class="group/input relative flex items-center justify-center"
+			class="group/input relative flex items-center justify-center pt-12"
 			onmouseenter={() => (isInputAreaHovered = true)}
 			onmouseleave={() => (isInputAreaHovered = false)}
 		>
 			<!-- New Exploration Button -->
 			{#if isInputAreaHovered && !chatState.isStreaming}
 				<div
-					class="absolute -top-12 left-1/2 -translate-x-1/2 animate-in fade-in slide-in-from-bottom-2 duration-200"
+					class="absolute top-0 left-1/2 -translate-x-1/2 animate-in fade-in slide-in-from-bottom-2 duration-200"
 				>
 					<button
 						type="button"
