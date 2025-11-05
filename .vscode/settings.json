@@ -16,5 +16,19 @@
 	"svelte.plugin.typescript.diagnostics.enable": true,
 	"i18n-ally.localesPaths": ["messages", "src/lib/paraglide/messages"],
 	"i18n-ally.sourceLanguage": "zh",
-	"i18n-ally.keystyle": "flat"
+	"i18n-ally.keystyle": "flat",
+	// TypeScript configuration for auto-reloading generated files
+	"typescript.tsserver.watchOptions": {
+		"watchFile": "useFsEvents",
+		"watchDirectory": "useFsEvents",
+		"fallbackPolling": "dynamicPriorityPolling",
+		"synchronousWatchDirectory": true
+	},
+	"files.watcherExclude": {
+		"**/.git/objects/**": true,
+		"**/.git/subtree-cache/**": true,
+		"**/node_modules/**": true,
+		"**/dist/**": true,
+		"**/out/**": true
+	}
 }

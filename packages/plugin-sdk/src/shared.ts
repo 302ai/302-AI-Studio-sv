@@ -70,6 +70,7 @@ export interface ModelProvider {
 	status: ModelProviderStatus;
 	websites: ModelProviderWebsites;
 	icon?: string;
+	autoUpdateModels?: boolean;
 }
 
 /* ============================================================================

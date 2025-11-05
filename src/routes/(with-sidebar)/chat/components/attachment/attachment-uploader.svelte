@@ -121,13 +121,18 @@
 
 		if (!files) return;
 
-		const newAttachments: AttachmentFile[] = [];
+		const currentCount = chatState.attachments.length;
+		const availableSlots = MAX_ATTACHMENT_COUNT - currentCount;
 
-		for (const file of Array.from(files)) {
-			if (chatState.attachments.length + newAttachments.length >= MAX_ATTACHMENT_COUNT) {
-				break;
-			}
+		if (availableSlots <= 0) {
+			target.value = "";
+			return;
+		}
 
+		// Take only the number of files that fit within the limit
+		const filesToAdd = Array.from(files).slice(0, availableSlots);
+
+		for (const file of filesToAdd) {
 			const filePath = (file as File & { path?: string }).path || file.name;
 
 			const attachmentId = nanoid();
@@ -141,8 +146,6 @@
 				preview: undefined,
 				filePath,
 			};
-
-			newAttachments.push(attachment);
 
 			chatState.addAttachment(attachment);
 			chatState.setAttachmentLoading(attachmentId, true);
