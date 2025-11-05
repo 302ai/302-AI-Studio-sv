@@ -18,6 +18,7 @@ import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
+import { sessionState } from "./session-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
 
 const { broadcastService, threadService, storageService, pluginService } = window.electronAPI;
@@ -598,6 +599,24 @@ class ChatState {
 		chat.messages = updatedMessages;
 	}
 
+	updateMessageFeedback(messageId: string, feedback: "like" | "dislike" | null) {
+		const updatedMessages = this.messages.map((msg) => {
+			if (msg.id === messageId) {
+				return {
+					...msg,
+					metadata: {
+						...msg.metadata,
+						feedback: feedback || undefined,
+					},
+				};
+			}
+			return msg;
+		});
+
+		chat.messages = updatedMessages;
+		persistedMessagesState.current = updatedMessages;
+	}
+
 	deleteMessage(messageId: string) {
 		const updatedMessages = this.messages.filter((msg) => msg.id !== messageId);
 		chat.messages = updatedMessages;
@@ -987,6 +1006,8 @@ export const chat = new Chat({
 	onFinish: async ({ messages }) => {
 		console.log("更新完成", $state.snapshot(messages));
 		persistedMessagesState.current = messages;
+
+		sessionState.latestUsedModel = chatState.selectedModel ?? null;
 
 		// Execute after send message hook
 		try {

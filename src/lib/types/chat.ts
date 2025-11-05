@@ -18,6 +18,7 @@ export const messageMetadataSchema = z.object({
 		)
 		.optional(),
 	fileContentPartIndex: z.number().optional(),
+	feedback: z.enum(["like", "dislike"]).optional(),
 });
 
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>;

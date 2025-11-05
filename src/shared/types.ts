@@ -7,6 +7,7 @@ export * from "./storage/ai-applications";
 export * from "./storage/general-settings";
 export * from "./storage/mcp";
 export * from "./storage/provider";
+export * from "./storage/session";
 export * from "./storage/tab";
 export * from "./storage/theme";
 export * from "./storage/thread";

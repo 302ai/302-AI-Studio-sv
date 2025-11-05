@@ -1,5 +1,6 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import type { Model } from "@shared/types";
+import { sessionState } from "./session-state.svelte";
 
 export type SearchProvider = "search1api" | "tavily" | "exa" | "bochaai";
 export type StreamSpeed = "slow" | "normal" | "fast";
@@ -156,7 +157,9 @@ class PreferencesSettingsManager {
 	}
 
 	get titleGenerationModel(): Model | null {
-		return persistedPreferencesSettings.current.titleGenerationModel;
+		return (
+			persistedPreferencesSettings.current.titleGenerationModel ?? sessionState.latestUsedModel
+		);
 	}
 
 	setTitleGenerationModel(model: Model | null): void {
