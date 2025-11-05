@@ -25,8 +25,17 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
-	import { ChevronDown, Lightbulb, Server, ThumbsDown, ThumbsUp } from "@lucide/svelte";
+	import {
+		ChevronDown,
+		Lightbulb,
+		Server,
+		ThumbsDown,
+		ThumbsUp,
+		Volume2,
+		VolumeX,
+	} from "@lucide/svelte";
 	import type { DynamicToolUIPart } from "ai";
+	import { onDestroy } from "svelte";
 	import { toast } from "svelte-sonner";
 	import MessageActions from "./message-actions.svelte";
 	import MessageContextMenu from "./message-context-menu.svelte";
@@ -81,6 +90,26 @@
 	let isReasoningExpanded = $state(!preferencesSettings.autoCollapseThink);
 	let selectedToolPart = $state<DynamicToolUIPart | null>(null);
 	let isToolModalOpen = $state(false);
+	let isReading = $state(false);
+	let currentUtterance: SpeechSynthesisUtterance | null = null;
+	let speechSynthesisAvailable = $state(false);
+
+	// Check if speech synthesis is available
+	$effect(() => {
+		if (typeof window !== "undefined" && window.speechSynthesis) {
+			// Try to get voices to check availability
+			const checkVoices = () => {
+				const voices = window.speechSynthesis.getVoices();
+				if (voices.length > 0) {
+					speechSynthesisAvailable = true;
+					console.log("[ReadAloud] Speech synthesis available with", voices.length, "voices");
+				}
+			};
+
+			checkVoices();
+			window.speechSynthesis.onvoiceschanged = checkVoices;
+		}
+	});
 
 	$effect(() => {
 		if (isStreamingReasoning) {
@@ -142,6 +171,124 @@
 		const newFeedback = currentFeedback === feedback ? null : feedback;
 		chatState.updateMessageFeedback(message.id, newFeedback);
 	}
+
+	async function handleReadAloud() {
+		if (isReading) {
+			// Stop current reading
+			window.speechSynthesis.cancel();
+			isReading = false;
+			currentUtterance = null;
+		} else {
+			// Check if speech synthesis is available
+			if (!window.speechSynthesis) {
+				toast.error("当前浏览器不支持语音朗读");
+				return;
+			}
+
+			// Start reading
+			const textContent = getAssistantMessageContent(message);
+			if (!textContent.trim()) {
+				toast.error("没有可朗读的内容");
+				return;
+			}
+
+			// Cancel any ongoing speech first
+			window.speechSynthesis.cancel();
+
+			// Set language based on content (simple heuristic)
+			const hasChinese = /[\u4e00-\u9fa5]/.test(textContent);
+			const targetLang = hasChinese ? "zh-CN" : "en-US";
+
+			// Get available voices - wait for them to load if necessary
+			let voices = window.speechSynthesis.getVoices();
+			console.log("[ReadAloud] Initial voices:", voices.length);
+
+			if (voices.length === 0) {
+				// Wait for voices to load
+				console.log("[ReadAloud] Waiting for voices to load...");
+				voices = await new Promise<SpeechSynthesisVoice[]>((resolve) => {
+					let timeout: NodeJS.Timeout;
+
+					const handler = () => {
+						const loadedVoices = window.speechSynthesis.getVoices();
+						if (loadedVoices.length > 0) {
+							clearTimeout(timeout);
+							console.log("[ReadAloud] Voices loaded:", loadedVoices.length, loadedVoices);
+							resolve(loadedVoices);
+						}
+					};
+
+					window.speechSynthesis.onvoiceschanged = handler;
+
+					// Also try to trigger loading
+					window.speechSynthesis.getVoices();
+
+					// Timeout after 3 seconds
+					timeout = setTimeout(() => {
+						console.log("[ReadAloud] Timeout waiting for voices");
+						resolve([]);
+					}, 3000);
+				});
+			}
+
+			if (voices.length === 0) {
+				toast.error("系统没有可用的语音引擎，请检查系统语音设置");
+				return;
+			}
+
+			const utterance = new SpeechSynthesisUtterance(textContent);
+
+			// Find a voice for the target language
+			let selectedVoice = voices.find((voice) => voice.lang.startsWith(targetLang.split("-")[0]));
+
+			// Fallback to any available voice
+			if (!selectedVoice) {
+				selectedVoice = voices[0];
+				console.log("[ReadAloud] Using fallback voice:", selectedVoice.name, selectedVoice.lang);
+			}
+
+			utterance.voice = selectedVoice;
+			utterance.lang = selectedVoice.lang;
+			utterance.rate = 1.0;
+			utterance.pitch = 1.0;
+			utterance.volume = 1.0;
+
+			utterance.onstart = () => {
+				isReading = true;
+				console.log("[ReadAloud] Started reading");
+			};
+
+			utterance.onend = () => {
+				isReading = false;
+				currentUtterance = null;
+				console.log("[ReadAloud] Finished reading");
+			};
+
+			utterance.onerror = (event) => {
+				console.error("[ReadAloud] Error:", event);
+				isReading = false;
+				currentUtterance = null;
+				toast.error(`朗读失败: ${event.error}`);
+			};
+
+			currentUtterance = utterance;
+
+			// Start speaking
+			window.speechSynthesis.speak(utterance);
+			console.log(
+				"[ReadAloud] Speech synthesis started with voice:",
+				utterance.voice.name,
+				utterance.voice.lang,
+			);
+		}
+	}
+
+	// Cleanup on component destroy
+	onDestroy(() => {
+		if (isReading) {
+			window.speechSynthesis.cancel();
+		}
+	});
 </script>
 
 {#snippet messageHeader(model: string)}
@@ -155,6 +302,24 @@
 	<div class="flex items-center gap-2">
 		{#if !isCurrentMessageStreaming}
 			<MessageActions {message} enabledActions={["copy", "regenerate"]} />
+
+			<!-- Read aloud button (only show if speech synthesis is available) -->
+			{#if speechSynthesisAvailable}
+				<button
+					type="button"
+					onclick={handleReadAloud}
+					class="rounded-md p-1 transition-colors hover:bg-muted {isReading
+						? 'text-blue-600 dark:text-blue-400'
+						: 'text-muted-foreground'}"
+					title={isReading ? m.text_stop_reading() : m.text_read_aloud()}
+				>
+					{#if isReading}
+						<VolumeX class="h-4 w-4" />
+					{:else}
+						<Volume2 class="h-4 w-4" />
+					{/if}
+				</button>
+			{/if}
 
 			<div class="h-4 w-px bg-border"></div>
 
