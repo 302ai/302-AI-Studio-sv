@@ -14,6 +14,7 @@ import { TempStorage } from "../../utils/temp-storage";
 import { broadcastService } from "../broadcast-service";
 import { shortcutService } from "../shortcut-service";
 import { storageService } from "../storage-service";
+import { sessionStorage } from "../storage-service/session-storage";
 import { tabStorage } from "../storage-service/tab-storage";
 
 type TabConfig = {
@@ -554,9 +555,13 @@ export class TabService {
 		};
 
 		if (type === "chat") {
-			const preferencesSettings = (await storageService.getItemInternal(
-				"PreferencesSettingsStorage:state",
-			)) as unknown as { newSessionModel?: ThreadParmas["selectedModel"] } | null;
+			const [newSessionModel, latestUsedModel] = await Promise.all([
+				storageService.getItemInternal("PreferencesSettingsStorage:state"),
+				sessionStorage.getLatestUsedModel(),
+			]);
+			const preferencesSettings = newSessionModel as unknown as {
+				newSessionModel?: ThreadParmas["selectedModel"];
+			} | null;
 
 			const generalSettings = (await storageService.getItemInternal(
 				"GeneralSettingsStorage:state",
@@ -594,7 +599,7 @@ export class TabService {
 				isThinkingActive: false,
 				isOnlineSearchActive: false,
 				isMCPActive: false,
-				selectedModel: preferencesSettings?.newSessionModel ?? null,
+				selectedModel: preferencesSettings?.newSessionModel ?? latestUsedModel,
 				isPrivateChatActive: inheritedPrivacyState,
 				updatedAt: new Date(),
 			};

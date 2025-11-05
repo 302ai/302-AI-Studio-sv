@@ -18,6 +18,7 @@ import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
+import { sessionState } from "./session-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
 
 const { broadcastService, threadService, storageService, pluginService } = window.electronAPI;
@@ -991,6 +992,8 @@ export const chat = new Chat({
 	onFinish: async ({ messages }) => {
 		console.log("更新完成", $state.snapshot(messages));
 		persistedMessagesState.current = messages;
+
+		sessionState.latestUsedModel = chatState.selectedModel ?? null;
 
 		// Execute after send message hook
 		try {

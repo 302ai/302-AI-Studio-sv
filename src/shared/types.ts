@@ -7,6 +7,7 @@ export * from "./storage/ai-applications";
 export * from "./storage/general-settings";
 export * from "./storage/mcp";
 export * from "./storage/provider";
+export * from "./storage/session";
 export * from "./storage/tab";
 export * from "./storage/theme";
 export * from "./storage/thread";
@@ -16,7 +17,7 @@ export * from "./types/shortcut";
 export * from "@302ai/studio-plugin-sdk";
 
 // Import specific types for use in this file
-import type { Model, ModelType, ModelCapability } from "@302ai/studio-plugin-sdk";
+import type { Model, ModelCapability, ModelType } from "@302ai/studio-plugin-sdk";
 
 // Application-specific plugin types (not in SDK)
 export type PluginSource =
