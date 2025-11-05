@@ -13,6 +13,7 @@
 	import { m } from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
+	import { ChevronDown } from "@lucide/svelte";
 	import type { AttachmentFile } from "@shared/types";
 	import { toast } from "svelte-sonner";
 	import MessageActions from "./message-actions.svelte";
@@ -24,6 +25,9 @@
 	let selectedAttachment = $state<AttachmentFile | null>(null);
 	let isEditDialogOpen = $state(false);
 	let editContent = $state("");
+	let isExpanded = $state(false);
+	let messageContentElement: HTMLDivElement | null = $state(null);
+	let needsCollapse = $state(false);
 
 	async function handleCopy(content: string) {
 		try {
@@ -179,6 +183,36 @@
 			},
 		};
 	}
+
+	function checkLineCount(node: HTMLDivElement) {
+		messageContentElement = node;
+
+		// Check if content exceeds 3 lines
+		const checkHeight = () => {
+			if (!node) return;
+
+			// Get line height
+			const lineHeight = parseFloat(window.getComputedStyle(node).lineHeight);
+			const actualHeight = node.scrollHeight;
+			const lines = Math.round(actualHeight / lineHeight);
+
+			needsCollapse = lines > 3;
+		};
+
+		// Check immediately and on resize
+		checkHeight();
+		window.addEventListener("resize", checkHeight);
+
+		return {
+			destroy() {
+				window.removeEventListener("resize", checkHeight);
+			},
+		};
+	}
+
+	function toggleExpand() {
+		isExpanded = !isExpanded;
+	}
 </script>
 
 {#snippet messageFooter()}
@@ -199,9 +233,16 @@
 
 		{#if hasDisplayableText}
 			<div
-				class="max-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg"
+				class="relative max-w-[80%] rounded-lg bg-chat-user-message-bg px-4 py-2 text-chat-user-message-fg"
 			>
-				<div class="whitespace-pre-wrap break-all" use:handleLinkClick>
+				<div
+					class="whitespace-pre-wrap break-all overflow-hidden transition-all duration-300 {needsCollapse &&
+					!isExpanded
+						? 'max-h-[4.5em]'
+						: ''}"
+					use:handleLinkClick
+					use:checkLineCount
+				>
 					{#each displayParts as part, partIndex (partIndex)}
 						{#if part.type === "text"}
 							<!-- eslint-disable svelte/no-at-html-tags -->
@@ -210,6 +251,39 @@
 						{/if}
 					{/each}
 				</div>
+
+				{#if needsCollapse && !isExpanded}
+					<!-- Gradient overlay -->
+					<div
+						class="pointer-events-none absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-chat-user-message-bg to-transparent"
+					></div>
+
+					<!-- Expand button - positioned absolutely at bottom center -->
+					<div class="absolute bottom-2 left-0 right-0 flex justify-center">
+						<button
+							type="button"
+							onclick={toggleExpand}
+							class="relative z-10 flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs text-primary shadow-md backdrop-blur-sm transition-all hover:shadow-lg dark:bg-[#8334EF] dark:text-white dark:hover:bg-[#7029d6]"
+						>
+							<span>{m.text_expand()}</span>
+							<ChevronDown class="h-3 w-3" />
+						</button>
+					</div>
+				{/if}
+
+				{#if needsCollapse && isExpanded}
+					<!-- Collapse button -->
+					<div class="flex justify-center pt-2">
+						<button
+							type="button"
+							onclick={toggleExpand}
+							class="flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-xs text-primary shadow-md backdrop-blur-sm transition-all hover:shadow-lg dark:bg-[#8334EF] dark:text-white dark:hover:bg-[#7029d6]"
+						>
+							<span>{m.text_collapse()}</span>
+							<ChevronDown class="h-3 w-3 rotate-180" />
+						</button>
+					</div>
+				{/if}
 			</div>
 		{/if}
 		{@render messageFooter()}

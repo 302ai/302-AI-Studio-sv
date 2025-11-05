@@ -240,6 +240,8 @@
 	"text_chat_pending": "AI is thinking",
 	"text_chat_responding": "Responding",
 	"text_chat_stop_generation": "Stop ({key})",
+	"text_collapse": "Collapse",
+	"text_expand": "Expand Text",
 	"text_clear_models_success": "Cleared {count} models successfully",
 	"text_context_configure": "Configure Provider",
 	"text_context_configure_provider": "Configure Provider",
