@@ -308,6 +308,12 @@ export function registerIpcHandlers() {
 	ipcMain.handle("updaterService:setAutoUpdate", (event, enabled) =>
 		updaterService.setAutoUpdate(event, enabled),
 	);
+	ipcMain.handle("updaterService:setUpdateChannel", (event, channel) =>
+		updaterService.setUpdateChannel(event, channel),
+	);
+	ipcMain.handle("updaterService:getUpdateChannel", (event) =>
+		updaterService.getUpdateChannel(event),
+	);
 }
 
 /**
@@ -411,4 +417,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("updaterService:quitAndInstall");
 	ipcMain.removeHandler("updaterService:isUpdateDownloaded");
 	ipcMain.removeHandler("updaterService:setAutoUpdate");
+	ipcMain.removeHandler("updaterService:setUpdateChannel");
+	ipcMain.removeHandler("updaterService:getUpdateChannel");
 }
