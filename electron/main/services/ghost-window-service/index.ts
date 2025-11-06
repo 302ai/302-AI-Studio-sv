@@ -1,5 +1,4 @@
 import { BrowserWindow, screen, type IpcMainInvokeEvent } from "electron";
-import type { WebContentsView } from "electron";
 import { TITLE_BAR_HEIGHT } from "../../constants";
 import { broadcastService } from "../broadcast-service";
 

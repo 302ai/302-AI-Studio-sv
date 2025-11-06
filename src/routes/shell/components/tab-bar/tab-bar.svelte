@@ -118,6 +118,19 @@
 	}
 
 	function handleDragOver(e: DragEvent) {
+		// Check if the dragged tab belongs to current window
+		if (draggedTabId != null) {
+			const currentIndex = tabBarState.tabs.findIndex((t) => t.id === draggedTabId);
+			if (currentIndex === -1) {
+				// Tab not in current window - don't handle dragover
+				// Don't preventDefault to allow cross-window drag to work properly
+				return;
+			}
+		} else {
+			return;
+		}
+
+		// Only handle dragover if tab belongs to current window
 		e.preventDefault();
 		if (!e.dataTransfer) return;
 
