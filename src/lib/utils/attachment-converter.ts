@@ -4,6 +4,7 @@ import type { AttachmentFile } from "@shared/types";
 import type { FileUIPart } from "ai";
 import mammoth from "mammoth";
 import * as XLSX from "xlsx";
+import { compressFile } from "./file-compressor";
 
 export type MessagePart = FileUIPart | { type: "text"; text: string };
 
@@ -221,7 +222,18 @@ export async function convertAttachmentToMessagePart(
 		if (attachment.preview) {
 			url = attachment.preview;
 		} else {
-			url = await fileToDataURL(attachment.file);
+			// For images, use compression to ensure base64 size < 1MB
+			if (attachment.type.startsWith("image/")) {
+				try {
+					url = await compressFile(attachment.file);
+				} catch (error) {
+					console.error("[AttachmentConverter] Failed to compress image, using original:", error);
+					url = await fileToDataURL(attachment.file);
+				}
+			} else {
+				// For audio/video, use original (no compression)
+				url = await fileToDataURL(attachment.file);
+			}
 		}
 
 		return {

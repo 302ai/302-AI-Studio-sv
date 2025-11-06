@@ -4,17 +4,13 @@
 	import { CopyButton } from "$lib/components/buss/copy-button";
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
+	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
 	import { ChevronDown, CodeXml, ImagePlay, MonitorPlay } from "@lucide/svelte";
 	import type { GrammarState, ThemedToken } from "@shikijs/types";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import type { ShikiHighlighter } from "./highlighter";
-	import {
-		DEFAULT_THEME,
-		ensureHighlighter,
-		ensureLanguageLoaded,
-		LANGUAGE_ALIASES,
-	} from "./highlighter";
+	import { ensureHighlighter, ensureLanguageLoaded, LANGUAGE_ALIASES } from "./highlighter";
 
 	interface RenderedToken {
 		id: string;
@@ -43,7 +39,7 @@
 	let grammarState: GrammarState | undefined;
 	let lastCode = "";
 	let lastChunk = "";
-	let resolvedTheme = $state<string>(DEFAULT_THEME);
+	let resolvedTheme = $state<string>("");
 	let preStyle = $state<string | undefined>(undefined);
 	let codeStyle = $state<string | undefined>(undefined);
 	let lines = $state<RenderedLine[]>([]);
@@ -322,11 +318,11 @@
 
 	const updateTheme = (): boolean => {
 		const requested = props.theme?.trim();
-		let next = DEFAULT_THEME as string;
+		let next = persistedThemeState.current.shouldUseDarkColors ? "vitesse-dark" : "vitesse-light";
 		if (requested && highlighter) {
 			try {
 				const loaded = highlighter.getInternalContext().getLoadedThemes();
-				next = loaded.includes(requested) ? requested : DEFAULT_THEME;
+				next = loaded.includes(requested) ? requested : next;
 			} catch (error) {
 				console.warn("Unable to read loaded themes", error);
 			}
@@ -401,6 +397,8 @@
 
 	$effect(() => {
 		if (!highlighter) return;
+		// Re-render when theme prop or app theme changes
+		persistedThemeState.current.shouldUseDarkColors; // Access to track changes
 		if (updateTheme()) {
 			resetState();
 			syncCode(props.code);
@@ -443,7 +441,7 @@
 			{#if !isCollapsed}
 				<pre
 					class="shiki !m-0 !rounded-none !border-0"
-					data-theme={props.theme ?? DEFAULT_THEME}
+					data-theme={props.theme ?? resolvedTheme}
 					data-meta={props.meta ?? undefined}>
 					<code>{props.code}</code>
 				</pre>

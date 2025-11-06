@@ -6,6 +6,7 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { compressFile } from "$lib/utils/file-compressor";
 	import { Paperclip } from "@lucide/svelte";
 	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
@@ -15,16 +16,24 @@
 
 	async function generatePreview(file: File): Promise<string | undefined> {
 		if (file.type.startsWith("image/")) {
-			return new Promise((resolve) => {
-				const reader = new FileReader();
-				reader.onload = (e) => {
-					resolve(e.target?.result as string);
-				};
-				reader.onerror = () => {
-					resolve(undefined);
-				};
-				reader.readAsDataURL(file);
-			});
+			try {
+				// Compress image to ensure base64 size < 1MB before storage
+				const compressedDataURL = await compressFile(file);
+				return compressedDataURL;
+			} catch (error) {
+				console.error("[AttachmentUploader] Failed to compress image:", error);
+				// Fallback to original if compression fails
+				return new Promise((resolve) => {
+					const reader = new FileReader();
+					reader.onload = (e) => {
+						resolve(e.target?.result as string);
+					};
+					reader.onerror = () => {
+						resolve(undefined);
+					};
+					reader.readAsDataURL(file);
+				});
+			}
 		}
 
 		if (file.type.startsWith("video/")) {
@@ -112,32 +121,41 @@
 
 		if (!files) return;
 
-		const newAttachments: AttachmentFile[] = [];
+		const currentCount = chatState.attachments.length;
+		const availableSlots = MAX_ATTACHMENT_COUNT - currentCount;
 
-		for (const file of Array.from(files)) {
-			if (chatState.attachments.length + newAttachments.length >= MAX_ATTACHMENT_COUNT) {
-				break;
-			}
+		if (availableSlots <= 0) {
+			target.value = "";
+			return;
+		}
 
-			const preview = await generatePreview(file);
+		// Take only the number of files that fit within the limit
+		const filesToAdd = Array.from(files).slice(0, availableSlots);
 
-			// 获取文件的系统路径
+		for (const file of filesToAdd) {
 			const filePath = (file as File & { path?: string }).path || file.name;
 
+			const attachmentId = nanoid();
+
 			const attachment: AttachmentFile = {
-				id: nanoid(),
+				id: attachmentId,
 				name: file.name,
 				type: file.type,
 				size: file.size,
 				file: file,
-				preview,
+				preview: undefined,
 				filePath,
 			};
 
-			newAttachments.push(attachment);
+			chatState.addAttachment(attachment);
+			chatState.setAttachmentLoading(attachmentId, true);
+
+			generatePreview(file).then((preview) => {
+				chatState.updateAttachment(attachmentId, { preview });
+				chatState.setAttachmentLoading(attachmentId, false);
+			});
 		}
 
-		chatState.addAttachments(newAttachments);
 		target.value = "";
 	}
 

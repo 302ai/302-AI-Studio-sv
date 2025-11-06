@@ -4,6 +4,8 @@ import type {
 	BroadcastEventData,
 	ShellWindowFullscreenChange,
 	Tab,
+	TabDragGhostClear,
+	TabDragGhostHover,
 	Theme,
 	ThreadParmas,
 } from "@shared/types";
@@ -37,6 +39,8 @@ declare global {
 			onShellWindowFullscreenChange: (
 				callback: (payload: ShellWindowFullscreenChange) => void,
 			) => () => void;
+			onTabDragGhostHover: (callback: (payload: TabDragGhostHover) => void) => () => void;
+			onTabDragGhostClear: (callback: (payload: TabDragGhostClear) => void) => () => void;
 			onTabClearMessages: (
 				callback: (data: { tabId: string; threadId: string }) => void,
 			) => () => void;

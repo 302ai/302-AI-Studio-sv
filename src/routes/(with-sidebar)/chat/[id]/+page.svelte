@@ -5,12 +5,16 @@
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
+	import { MessageSquarePlus } from "@lucide/svelte";
 	import type { ThreadParmas } from "@shared/types";
 	import { onMount } from "svelte";
 	import { AiApplicationItems } from "../components/ai-applications";
 	import { ChatInputBox } from "../components/chat-input";
 	import { HtmlPreviewPanel } from "../components/html-preview";
 	import { MessageList } from "../components/message";
+
+	let isInputAreaHovered = $state(false);
 
 	onMount(() => {
 		// Listen for clear messages event from main process
@@ -101,6 +105,10 @@
 			unsubTriggerSend?.();
 		};
 	});
+
+	async function handleNewExploration() {
+		await tabBarState.handleNewTab(m.title_new_chat(), "chat");
+	}
 </script>
 
 {#if !chatState.hasMessages}
@@ -130,7 +138,28 @@
 				<MessageList messages={chatState.messages} />
 			{/if}
 		</div>
-		<div class="flex items-center justify-center">
+		<div
+			role="region"
+			class="group/input relative flex items-center justify-center pt-12"
+			onmouseenter={() => (isInputAreaHovered = true)}
+			onmouseleave={() => (isInputAreaHovered = false)}
+		>
+			<!-- New Exploration Button -->
+			{#if isInputAreaHovered && !chatState.isStreaming}
+				<div
+					class="absolute top-0 left-1/2 -translate-x-1/2 animate-in fade-in slide-in-from-bottom-2 duration-200"
+				>
+					<button
+						type="button"
+						onclick={handleNewExploration}
+						class="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm text-primary shadow-md backdrop-blur-sm transition-all hover:shadow-lg dark:bg-[#8334EF] dark:text-white dark:hover:bg-[#7029d6]"
+					>
+						<MessageSquarePlus class="h-4 w-4" />
+						<span>{m.text_new_exploration()}</span>
+					</button>
+				</div>
+			{/if}
+
 			<ChatInputBox />
 		</div>
 	</div>

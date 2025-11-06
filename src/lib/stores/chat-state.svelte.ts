@@ -16,8 +16,10 @@ import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
+import { generalSettings } from "./general-settings.state.svelte";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
+import { sessionState } from "./session-state.svelte";
 import { tabBarState } from "./tab-bar-state.svelte";
 
 const { broadcastService, threadService, storageService, pluginService } = window.electronAPI;
@@ -86,6 +88,8 @@ class ChatState {
 	private lastError: ChatError | null = $state(null);
 	private retryInProgress = $state(false);
 	private hydrateCheckInterval: ReturnType<typeof setInterval> | null = null;
+	// Track loading state for attachments (not persisted)
+	loadingAttachmentIds = $state(new Set<string>());
 
 	constructor() {
 		// Watch for PersistedState hydration and sync messages to chat
@@ -588,6 +592,24 @@ class ChatState {
 		chat.messages = updatedMessages;
 	}
 
+	updateMessageFeedback(messageId: string, feedback: "like" | "dislike" | null) {
+		const updatedMessages = this.messages.map((msg) => {
+			if (msg.id === messageId) {
+				return {
+					...msg,
+					metadata: {
+						...msg.metadata,
+						feedback: feedback || undefined,
+					},
+				};
+			}
+			return msg;
+		});
+
+		chat.messages = updatedMessages;
+		persistedMessagesState.current = updatedMessages;
+	}
+
 	deleteMessage(messageId: string) {
 		const updatedMessages = this.messages.filter((msg) => msg.id !== messageId);
 		chat.messages = updatedMessages;
@@ -857,8 +879,28 @@ class ChatState {
 		this.attachments = [...this.attachments, ...attachments];
 	}
 
+	updateAttachment(id: string, updates: Partial<AttachmentFile>) {
+		this.attachments = this.attachments.map((att) =>
+			att.id === id ? { ...att, ...updates } : att,
+		);
+	}
+
 	removeAttachment(id: string) {
 		this.attachments = this.attachments.filter((att) => att.id !== id);
+		// Also remove from loading state if present
+		this.loadingAttachmentIds.delete(id);
+	}
+
+	setAttachmentLoading(id: string, isLoading: boolean) {
+		if (isLoading) {
+			this.loadingAttachmentIds.add(id);
+		} else {
+			this.loadingAttachmentIds.delete(id);
+		}
+	}
+
+	isAttachmentLoading(id: string): boolean {
+		return this.loadingAttachmentIds.has(id);
 	}
 
 	handleThinkingActiveChange(active: boolean) {
@@ -940,16 +982,21 @@ export const chat = new Chat({
 			mcpServerIds: persistedChatParamsState.current.mcpServerIds,
 
 			autoParseUrl: preferencesSettings.autoParseUrl,
+			searchProvider: preferencesSettings.searchProvider,
 
 			speedOptions: {
 				enabled: preferencesSettings.streamOutputEnabled,
 				speed: preferencesSettings.streamSpeed,
 			},
+
+			language: generalSettings.language,
 		}),
 	}),
 	onFinish: async ({ messages }) => {
 		console.log("更新完成", $state.snapshot(messages));
 		persistedMessagesState.current = messages;
+
+		sessionState.latestUsedModel = chatState.selectedModel ?? null;
 
 		// Execute after send message hook
 		try {
