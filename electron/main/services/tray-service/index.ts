@@ -17,16 +17,27 @@ export class TrayService {
 			setTimeout(() => this.updateTrayMenu(), 100);
 
 			// Listen to window events to update menu
-			window.on("show", () => this.updateTrayMenu());
-			window.on("hide", () => this.updateTrayMenu());
-			window.on("minimize", () => this.updateTrayMenu());
-			window.on("restore", () => this.updateTrayMenu());
-			window.on("close", () => this.updateTrayMenu());
-			window.on("closed", () => this.updateTrayMenu());
+			// Use arrow functions to avoid 'this' binding issues
+			const updateMenu = () => {
+				// Small delay to ensure state is updated
+				setTimeout(() => this.updateTrayMenu(), 50);
+			};
+
+			window.on("show", updateMenu);
+			window.on("hide", updateMenu);
+			window.on("minimize", updateMenu);
+			window.on("restore", updateMenu);
+
+			// Don't update on close/closed as window might be destroyed
+			// The closed event in windowService will trigger a new list
+			window.on("closed", () => {
+				// Wait a bit longer for window to be removed from the list
+				setTimeout(() => this.updateTrayMenu(), 150);
+			});
 		});
 
 		app.on("browser-window-focus", () => {
-			this.updateTrayMenu();
+			setTimeout(() => this.updateTrayMenu(), 50);
 		});
 
 		// Listen for language changes
@@ -109,33 +120,40 @@ export class TrayService {
 		const windows = windowService.getOrderedWindows();
 		const mainWindow = windowService.getMainWindow();
 
-		const windowMenuItems = windows.map((win, index) => {
-			const isMain = mainWindow?.id === win.id;
-			const isVisible = win.isVisible();
-			const label = isMain
-				? this.t("主窗口", "Main Window")
-				: this.t(`窗口 ${index + 1}`, `Window ${index + 1}`);
+		// Filter out destroyed windows and create menu items
+		const windowMenuItems = windows
+			.filter((win) => !win.isDestroyed())
+			.map((win, index) => {
+				const isMain = mainWindow?.id === win.id;
+				const isVisible = !win.isDestroyed() && win.isVisible();
+				const label = isMain
+					? this.t("主窗口", "Main Window")
+					: this.t(`窗口 ${index + 1}`, `Window ${index + 1}`);
 
-			return {
-				label: `${label} ${isVisible ? "✓" : ""}`,
-				click: () => {
-					if (isVisible) {
-						win.hide();
-					} else {
-						win.show();
-						win.focus();
-					}
-					// Update menu after state change
-					setTimeout(() => this.updateTrayMenu(), 100);
-				},
-			};
-		});
+				return {
+					label: `${label} ${isVisible ? "✓" : ""}`,
+					click: () => {
+						// Check if window is still valid before operating on it
+						if (win.isDestroyed()) return;
+
+						if (isVisible) {
+							win.hide();
+						} else {
+							win.show();
+							win.focus();
+						}
+						// Update menu after state change
+						setTimeout(() => this.updateTrayMenu(), 100);
+					},
+				};
+			});
 
 		const menuTemplate: Electron.MenuItemConstructorOptions[] = [
 			{
 				label: this.t("显示所有窗口", "Show All Windows"),
 				click: () => {
 					windows.forEach((win) => {
+						if (win.isDestroyed()) return;
 						if (!win.isVisible()) {
 							win.show();
 						}
@@ -148,6 +166,7 @@ export class TrayService {
 				label: this.t("隐藏所有窗口", "Hide All Windows"),
 				click: () => {
 					windows.forEach((win) => {
+						if (win.isDestroyed()) return;
 						if (win.isVisible()) {
 							win.hide();
 						}
