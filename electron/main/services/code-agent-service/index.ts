@@ -9,6 +9,10 @@ export class CodeAgentService {
 		this.storage = codeAgentStorage;
 	}
 
+	async removeCodeAgentState(threadId: string): Promise<void> {
+		await this.storage.removeCodeAgentState(threadId);
+	}
+
 	// ******************************* IPC Methods ******************************* //
 	async createClaudeCodeSandbox(
 		_event: IpcMainInvokeEvent,

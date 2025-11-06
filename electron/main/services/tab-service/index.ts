@@ -1,4 +1,4 @@
-import type { Tab, TabType, ThreadParmas } from "@shared/types";
+import type { ChatMessage, Tab, TabType, ThreadParmas } from "@shared/types";
 import { BrowserWindow, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import { isNull, isUndefined } from "es-toolkit";
 import { nanoid } from "nanoid";
@@ -12,6 +12,7 @@ import {
 } from "../../mixins/web-contents-mixins";
 import { TempStorage } from "../../utils/temp-storage";
 import { broadcastService } from "../broadcast-service";
+import { codeAgentService } from "../code-agent-service";
 import { shortcutService } from "../shortcut-service";
 import { storageService } from "../storage-service";
 import { sessionStorage } from "../storage-service/session-storage";
@@ -181,6 +182,31 @@ export class TabService {
 		}
 	}
 
+	private async afterTabClose(tab: Tab) {
+		const thread = (await storageService.getItemInternal(
+			"app-thread:" + tab.threadId,
+		)) as ThreadParmas | null;
+		const messages = (await storageService.getItemInternal("app-chat-messages:" + tab.threadId)) as
+			| ChatMessage[]
+			| null;
+
+		if (thread?.isPrivateChatActive) {
+			console.log(`[Privacy] Deleting private chat data for tab ${tab.id}, thread ${tab.threadId}`);
+			await storageService.removeItemInternal("app-thread:" + tab.threadId);
+			await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
+			await codeAgentService.removeCodeAgentState(tab.threadId);
+		} else if (messages?.length === 0) {
+			await storageService.removeItemInternal("app-thread:" + tab.threadId);
+			await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
+			await codeAgentService.removeCodeAgentState(tab.threadId);
+		}
+
+		broadcastService.broadcastChannelToAll("broadcast-event", {
+			broadcastEvent: "thread-list-updated",
+			data: {},
+		});
+	}
+
 	// ******************************* Main Process Methods ******************************* //
 	getActiveTabView(windowId: number): WebContentsView | null {
 		const activeTabId = this.windowActiveTabId.get(windowId);
@@ -233,18 +259,7 @@ export class TabService {
 		// Check each tab and delete private chat data
 		for (const tab of windowTabs) {
 			if (tab.type === "chat" && tab.threadId) {
-				const thread = (await storageService.getItemInternal(
-					"app-thread:" + tab.threadId,
-				)) as ThreadParmas | null;
-
-				// If this is a private chat, delete all related data
-				if (thread?.isPrivateChatActive) {
-					console.log(
-						`[Privacy] Deleting private chat data for tab ${tab.id}, thread ${tab.threadId}`,
-					);
-					await storageService.removeItemInternal("app-thread:" + tab.threadId);
-					await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
-				}
+				this.afterTabClose(tab);
 			}
 
 			this.removeTab(window, tab.id);
@@ -784,22 +799,7 @@ export class TabService {
 		// Check if this tab is a private chat and delete its data
 		const tab = this.tabMap.get(tabId);
 		if (tab?.type === "chat" && tab.threadId) {
-			const thread = (await storageService.getItemInternal(
-				"app-thread:" + tab.threadId,
-			)) as ThreadParmas | null;
-
-			if (thread?.isPrivateChatActive) {
-				console.log(
-					`[Privacy] Deleting private chat data for tab ${tabId}, thread ${tab.threadId}`,
-				);
-				await storageService.removeItemInternal("app-thread:" + tab.threadId);
-				await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
-
-				broadcastService.broadcastChannelToAll("broadcast-event", {
-					broadcastEvent: "thread-list-updated",
-					data: {},
-				});
-			}
+			this.afterTabClose(tab);
 		}
 
 		this.removeTab(window, tabId);
@@ -815,17 +815,7 @@ export class TabService {
 		for (const tabIdToClose of tabIdsToClose) {
 			const tab = this.tabMap.get(tabIdToClose);
 			if (tab?.type === "chat" && tab.threadId) {
-				const thread = (await storageService.getItemInternal(
-					"app-thread:" + tab.threadId,
-				)) as ThreadParmas | null;
-
-				if (thread?.isPrivateChatActive) {
-					console.log(
-						`[Privacy] Deleting private chat data for tab ${tabIdToClose}, thread ${tab.threadId}`,
-					);
-					await storageService.removeItemInternal("app-thread:" + tab.threadId);
-					await storageService.removeItemInternal("app-chat-messages:" + tab.threadId);
-				}
+				this.afterTabClose(tab);
 			}
 
 			this.removeTab(window, tabIdToClose);

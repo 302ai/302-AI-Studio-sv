@@ -79,14 +79,19 @@ class CodeAgentState {
 		persistedCodeAgentState.current.sandboxId = value;
 	}
 
-	async createClaudeCodeSandbox() {
+	async createClaudeCodeSandbox(): Promise<"already-exist" | "success" | "failed"> {
 		const sandboxExist = this.sandboxId !== "";
-		if (sandboxExist) return;
+		if (sandboxExist) return "already-exist";
 		const { isOK, sandboxId } = await createClaudeCodeSandbox(threadId);
 		if (isOK) {
 			this.sandboxId = sandboxId;
+			return "success";
 		}
+		return "failed";
 	}
+
+	// TODO: refresh session ids
+	async refreshSessionIds() {}
 }
 
 export const codeAgentState = new CodeAgentState();

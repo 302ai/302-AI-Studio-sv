@@ -5,13 +5,13 @@ import {
 	storageService,
 	pluginService,
 	generalSettingsService,
+	codeAgentService,
 	ghostWindowService,
 	windowService,
 	shortcutService,
 	tabService,
 	aiApplicationService,
 	appService,
-	codeAgentService,
 	dataService,
 	externalLinkService,
 	mcpService,
@@ -146,6 +146,11 @@ export function registerIpcHandlers() {
 		generalSettingsService.handleLanguageChanged(event, language),
 	);
 
+	// codeAgentService service registration
+	ipcMain.handle("codeAgentService:createClaudeCodeSandbox", (event, threadId, llm_model) =>
+		codeAgentService.createClaudeCodeSandbox(event, threadId, llm_model),
+	);
+
 	// ghostWindowService service registration
 	ipcMain.handle("ghostWindowService:startTracking", (event) =>
 		ghostWindowService.startTracking(event),
@@ -245,11 +250,6 @@ export function registerIpcHandlers() {
 	ipcMain.handle("appService:restartApp", (event) => appService.restartApp(event));
 	ipcMain.handle("appService:resetAllData", (event) => appService.resetAllData(event));
 	ipcMain.handle("appService:clearChatHistory", (event) => appService.clearChatHistory(event));
-
-	// codeAgentService service registration
-	ipcMain.handle("codeAgentService:createClaudeCodeSandbox", (event, threadId, llm_model) =>
-		codeAgentService.createClaudeCodeSandbox(event, threadId, llm_model),
-	);
 
 	// dataService service registration
 	ipcMain.handle("dataService:importLegacyJson", (event) => dataService.importLegacyJson(event));
@@ -363,6 +363,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("pluginService:executeAfterSendMessageHook");
 	ipcMain.removeHandler("pluginService:executeErrorHook");
 	ipcMain.removeHandler("generalSettingsService:handleLanguageChanged");
+	ipcMain.removeHandler("codeAgentService:createClaudeCodeSandbox");
 	ipcMain.removeHandler("ghostWindowService:startTracking");
 	ipcMain.removeHandler("ghostWindowService:stopTracking");
 	ipcMain.removeHandler("ghostWindowService:updateInsertIndex");
@@ -395,7 +396,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:restartApp");
 	ipcMain.removeHandler("appService:resetAllData");
 	ipcMain.removeHandler("appService:clearChatHistory");
-	ipcMain.removeHandler("codeAgentService:createClaudeCodeSandbox");
 	ipcMain.removeHandler("dataService:importLegacyJson");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("dataService:importStorage");

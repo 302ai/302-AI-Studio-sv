@@ -238,20 +238,6 @@ class TabBarState {
 		);
 	}
 
-	async handleTabCloseAll() {
-		// Only shell views should handle tab operations
-		if (!this.#isShellView) {
-			console.warn("[TabBarState] handleTabCloseAll called in tab view, ignoring");
-			return;
-		}
-
-		persistedTabState.current[this.#windowId].tabs = [];
-
-		await tabService.handleTabCloseAll();
-
-		this.handleNewTab(m.title_new_chat());
-	}
-
 	async handleNewTab(title: string, type: TabType = "chat", active = true, href?: string) {
 		// This method can be called from both shell views and tab views
 		// Use real window.windowId to ensure correct behavior

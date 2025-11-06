@@ -632,5 +632,6 @@
 	"label_button_create_sandbox": "Create Sandbox",
 	"sandbox_creating": "Sandbox is being created...",
 	"sandbox_created": "Sandbox created successfully!",
-	"sandbox_create_failed": "Sandbox creation failed!"
+	"sandbox_create_failed": "Sandbox creation failed!",
+	"sandbox_already_exist": "A sandbox for the current session already exists"
 }

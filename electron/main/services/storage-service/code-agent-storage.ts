@@ -19,6 +19,11 @@ class CodeAgentStorage extends StorageService<CodeAgentMetadata> {
 		await this.setItemInternal(key, codeAgentMetadata);
 		return { isOK: true };
 	}
+
+	async removeCodeAgentState(threadId: string): Promise<void> {
+		const key = `code-agent-state-${threadId}`;
+		await this.removeItemInternal(key);
+	}
 }
 
 export const codeAgentStorage = new CodeAgentStorage();

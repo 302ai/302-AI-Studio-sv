@@ -628,5 +628,6 @@
 	"label_button_create_sandbox": "创建沙盒",
 	"sandbox_creating": "沙盒创建中...",
 	"sandbox_created": "沙盒创建成功！",
-	"sandbox_create_failed": "沙盒创建失败！"
+	"sandbox_create_failed": "沙盒创建失败！",
+	"sandbox_already_exist": "当前会话的沙盒已存在"
 }

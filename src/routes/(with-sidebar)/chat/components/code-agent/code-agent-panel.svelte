@@ -37,13 +37,29 @@
 		codeAgentState.type = key as "local" | "remote";
 	}
 
-	async function handleCreateSandbox() {
+	async function handleCreateSandbox(agentId: string) {
 		isCreatingSandbox = true;
-		toast.loading(m.sandbox_creating());
+		let status: "success" | "failed" | "already-exist";
+		switch (agentId) {
+			case "claude-code":
+				status = await codeAgentState.createClaudeCodeSandbox();
+				break;
+			default:
+				status = "failed";
+				break;
+		}
 		try {
-			await codeAgentState.createClaudeCodeSandbox();
-			toast.success(m.sandbox_created());
-		} catch (_error) {
+			if (status === "success") {
+				toast.success(m.sandbox_created());
+			}
+			if (status === "failed") {
+				toast.error(m.sandbox_create_failed());
+			}
+			if (status === "already-exist") {
+				toast.info(m.sandbox_already_exist());
+			}
+		} catch (error) {
+			console.error(error);
 			toast.error(m.sandbox_create_failed());
 		} finally {
 			isCreatingSandbox = false;
@@ -54,7 +70,7 @@
 <div class="w-[500px]">
 	<div class="flex flex-col gap-y-4 rounded-[10px] bg-background p-4">
 		<div class="gap-settings-gap flex flex-col">
-			<Label class="text-label-fg">{m.title_code_agent_type()}</Label>
+			<Label class="mb-2 text-label-fg">{m.title_code_agent_type()}</Label>
 			<SegButton options={platformOptions} {selectedKey} onSelect={handleSelect} />
 		</div>
 
@@ -71,10 +87,11 @@
 				<ButtonWithTooltip
 					class="hover:!bg-chat-action-hover"
 					tooltip={m.label_button_create_sandbox()}
-					onclick={handleCreateSandbox}
+					disabled={isCreatingSandbox || !codeAgentState.agentId}
+					onclick={() => handleCreateSandbox(codeAgentState.agentId)}
 				>
 					{#if isCreatingSandbox}
-						<LdrsLoader type="line-spinner" />
+						<LdrsLoader type="line-spinner" size={16} />
 					{:else}
 						<PackagePlus />
 					{/if}
@@ -99,6 +116,7 @@
 					class="hover:!bg-chat-action-hover"
 					tooltip={m.label_button_reload()}
 					onclick={() => {}}
+					disabled={!codeAgentState.agentId}
 				>
 					<RefreshCcw />
 				</ButtonWithTooltip>
