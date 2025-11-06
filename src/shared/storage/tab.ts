@@ -23,3 +23,8 @@ export const TabState = type({
 	"[string]": WindowTabs,
 });
 export type TabState = typeof TabState.infer;
+
+export interface InsertTarget {
+	windowId: string;
+	insertIndex: number;
+}

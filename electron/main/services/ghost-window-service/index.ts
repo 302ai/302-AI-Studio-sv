@@ -1,11 +1,7 @@
+import type { InsertTarget } from "@shared/types";
 import { BrowserWindow, screen, type IpcMainInvokeEvent } from "electron";
 import { TITLE_BAR_HEIGHT } from "../../constants";
 import { broadcastService } from "../broadcast-service";
-
-interface InsertTarget {
-	windowId: string;
-	insertIndex: number;
-}
 
 export class GhostWindowService {
 	private updateInterval: NodeJS.Timeout | null = null;
