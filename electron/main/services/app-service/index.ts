@@ -205,6 +205,42 @@ export class AppService {
 		app.relaunch();
 		app.exit(0);
 	}
+
+	/**
+	 * Clear only chat history (threads and messages) but keep settings
+	 */
+	async clearChatHistory(_event: IpcMainInvokeEvent): Promise<void> {
+		console.log("Clearing chat history...");
+		const { storageService } = await import("../storage-service");
+		const { tabStorage } = await import("../storage-service/tab-storage");
+
+		try {
+			// Get all storage keys
+			const allKeys = await storageService.getKeys(_event);
+			console.log("All storage keys:", allKeys);
+
+			// Filter and delete chat messages and threads
+			const chatAndThreadKeys = allKeys.filter(
+				(key) => key.startsWith("app-chat-messages:") || key.startsWith("app-thread:"),
+			);
+
+			console.log("Deleting chat and thread keys:", chatAndThreadKeys);
+			for (const key of chatAndThreadKeys) {
+				await storageService.removeItem(_event, key);
+			}
+
+			// Remove tab-bar-state file (will be recreated on restart with new initial tab)
+			console.log("Removing tab-bar-state...");
+			await tabStorage.removeItem(_event, "tab-bar-state");
+
+			console.log("Chat history cleared, restarting...");
+			app.relaunch();
+			app.exit(0);
+		} catch (error) {
+			console.error("Failed to clear chat history:", error);
+			throw error;
+		}
+	}
 }
 
 export const appService = new AppService();
