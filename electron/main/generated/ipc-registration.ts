@@ -5,6 +5,7 @@ import {
 	storageService,
 	pluginService,
 	generalSettingsService,
+	ghostWindowService,
 	windowService,
 	shortcutService,
 	tabService,
@@ -145,6 +146,17 @@ export function registerIpcHandlers() {
 		generalSettingsService.handleLanguageChanged(event, language),
 	);
 
+	// ghostWindowService service registration
+	ipcMain.handle("ghostWindowService:startTracking", (event) =>
+		ghostWindowService.startTracking(event),
+	);
+	ipcMain.handle("ghostWindowService:stopTracking", (event) =>
+		ghostWindowService.stopTracking(event),
+	);
+	ipcMain.handle("ghostWindowService:updateInsertIndex", (event, target) =>
+		ghostWindowService.updateInsertIndex(event, target),
+	);
+
 	// windowService service registration
 	ipcMain.handle("windowService:handleOpenSettingsWindow", (event, route) =>
 		windowService.handleOpenSettingsWindow(event, route),
@@ -152,11 +164,16 @@ export function registerIpcHandlers() {
 	ipcMain.handle("windowService:focusWindow", (event, windowId, tabId) =>
 		windowService.focusWindow(event, windowId, tabId),
 	);
+	ipcMain.handle("windowService:handleDropAtPointer", (event, tabId, pointer) =>
+		windowService.handleDropAtPointer(event, tabId, pointer),
+	);
 	ipcMain.handle("windowService:handleSplitShellWindow", (event, triggerTabId) =>
 		windowService.handleSplitShellWindow(event, triggerTabId),
 	);
-	ipcMain.handle("windowService:handleMoveTabIntoExistingWindow", (event, triggerTabId, windowId) =>
-		windowService.handleMoveTabIntoExistingWindow(event, triggerTabId, windowId),
+	ipcMain.handle(
+		"windowService:handleMoveTabIntoExistingWindow",
+		(event, triggerTabId, windowId, insertIndex) =>
+			windowService.handleMoveTabIntoExistingWindow(event, triggerTabId, windowId, insertIndex),
 	);
 
 	// shortcutService service registration
@@ -346,8 +363,12 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("pluginService:executeAfterSendMessageHook");
 	ipcMain.removeHandler("pluginService:executeErrorHook");
 	ipcMain.removeHandler("generalSettingsService:handleLanguageChanged");
+	ipcMain.removeHandler("ghostWindowService:startTracking");
+	ipcMain.removeHandler("ghostWindowService:stopTracking");
+	ipcMain.removeHandler("ghostWindowService:updateInsertIndex");
 	ipcMain.removeHandler("windowService:handleOpenSettingsWindow");
 	ipcMain.removeHandler("windowService:focusWindow");
+	ipcMain.removeHandler("windowService:handleDropAtPointer");
 	ipcMain.removeHandler("windowService:handleSplitShellWindow");
 	ipcMain.removeHandler("windowService:handleMoveTabIntoExistingWindow");
 	ipcMain.removeHandler("shortcutService:init");

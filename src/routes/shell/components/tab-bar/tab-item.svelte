@@ -103,6 +103,8 @@
 
 <ContextMenu.Root {onOpenChange}>
 	<ContextMenu.Trigger
+		draggable={true}
+		data-tab-draggable
 		class={cn(
 			"h-tab rounded-[10px] px-tab-x relative flex cursor-pointer items-center text-sm",
 			isCompact ? "justify-center" : "gap-tab-gap justify-between",

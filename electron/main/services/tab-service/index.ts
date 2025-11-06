@@ -504,6 +504,29 @@ export class TabService {
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return null;
 
+		// ========== CHECK: Prevent duplicate tabs for the same thread ==========
+		const windowId = window.id.toString();
+		const tabState = await tabStorage.getItemInternal("tab-bar-state");
+		if (!isNull(tabState) && tabState[windowId]) {
+			// Check if this thread already has a tab in current window
+			const existingTab = tabState[windowId].tabs.find((t) => t.threadId === threadId);
+			if (existingTab) {
+				console.log(
+					`[TabService] Tab for thread ${threadId} already exists in window ${windowId}, activating it instead`,
+				);
+				// Activate the existing tab instead of creating a new one
+				const updatedTabs = tabState[windowId].tabs.map((t) => ({
+					...t,
+					active: t.id === existingTab.id,
+				}));
+				tabState[windowId] = { tabs: updatedTabs };
+				await tabStorage.setItemInternal("tab-bar-state", tabState);
+				this.focusTabInWindow(window, existingTab.id);
+				return stringify(existingTab);
+			}
+		}
+		// ========================================================================
+
 		const { getHref } = getTabConfig(type);
 		const newTabId = nanoid();
 		const newTab: Tab = {
@@ -528,6 +551,20 @@ export class TabService {
 		}
 
 		this.scheduleWindowResize(window);
+
+		// ========== ATOMIC UPDATE: Add new tab to storage ==========
+		// Reuse windowId variable, re-fetch tabState to get latest
+		const finalTabState = await tabStorage.getItemInternal("tab-bar-state");
+		if (!isNull(finalTabState)) {
+			const currentTabs = finalTabState[windowId]?.tabs || [];
+			const updatedTabs = active
+				? [...currentTabs.map((t) => ({ ...t, active: false })), newTab]
+				: [...currentTabs, newTab];
+			finalTabState[windowId] = { tabs: updatedTabs };
+			await tabStorage.setItemInternal("tab-bar-state", finalTabState);
+			console.log(`[TabService] Added new tab ${newTabId} to window ${windowId} storage`);
+		}
+		// ===========================================================
 
 		return stringify(newTab);
 	}
@@ -623,6 +660,20 @@ export class TabService {
 
 		this.scheduleWindowResize(window);
 
+		// ========== ATOMIC UPDATE: Add new tab to storage ==========
+		const windowId = window.id.toString();
+		const tabState = await tabStorage.getItemInternal("tab-bar-state");
+		if (!isNull(tabState)) {
+			const currentTabs = tabState[windowId]?.tabs || [];
+			const updatedTabs = active
+				? [...currentTabs.map((t) => ({ ...t, active: false })), newTab]
+				: [...currentTabs, newTab];
+			tabState[windowId] = { tabs: updatedTabs };
+			await tabStorage.setItemInternal("tab-bar-state", tabState);
+			console.log(`[TabService] Added new tab ${newTabId} to window ${windowId} storage`);
+		}
+		// ===========================================================
+
 		return stringify(newTab);
 	}
 
@@ -630,12 +681,77 @@ export class TabService {
 		const view = this.tabViewMap.get(tabId);
 		if (isUndefined(view)) return;
 
-		const window = BrowserWindow.fromWebContents(event.sender);
-		if (isNull(window)) return;
+		const callerWindow = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(callerWindow)) return;
 
-		window.contentView.removeChildView(view);
-		window.contentView.addChildView(view);
-		this.switchActiveTab(window, tabId);
+		// Find which window this tab belongs to (based on view location)
+		const tabWindow = this.findWindowForTab(tabId);
+		if (isNull(tabWindow)) {
+			console.error(`[TabService] Cannot find window for tab ${tabId}`);
+			return;
+		}
+
+		// If tab is in a different window, focus that window instead
+		if (tabWindow.id !== callerWindow.id) {
+			console.log(
+				`[TabService] Tab ${tabId} is in window ${tabWindow.id}, but called from window ${callerWindow.id}. Focusing target window instead.`,
+			);
+			// Focus the correct window and activate the tab
+			this.focusTabInWindow(tabWindow, tabId);
+
+			// Update storage
+			const targetWindowId = tabWindow.id.toString();
+			const tabState = await tabStorage.getItemInternal("tab-bar-state");
+			if (!isNull(tabState) && tabState[targetWindowId]) {
+				const updatedTabs = tabState[targetWindowId].tabs.map((t) => ({
+					...t,
+					active: t.id === tabId,
+				}));
+				tabState[targetWindowId] = { tabs: updatedTabs };
+				await tabStorage.setItemInternal("tab-bar-state", tabState);
+				console.log(
+					`[TabService] Activated tab ${tabId} in window ${targetWindowId} (cross-window)`,
+				);
+			}
+
+			// Focus the window
+			if (tabWindow.isMinimized()) tabWindow.restore();
+			if (!tabWindow.isVisible()) tabWindow.show();
+			tabWindow.focus();
+
+			return;
+		}
+
+		// Tab is in the correct window, activate it
+		callerWindow.contentView.removeChildView(view);
+		callerWindow.contentView.addChildView(view);
+		this.switchActiveTab(callerWindow, tabId);
+
+		// ========== ATOMIC UPDATE: Update active state in storage ==========
+		const windowId = callerWindow.id.toString();
+		const tabState = await tabStorage.getItemInternal("tab-bar-state");
+		if (!isNull(tabState) && tabState[windowId]) {
+			const updatedTabs = tabState[windowId].tabs.map((t) => ({
+				...t,
+				active: t.id === tabId,
+			}));
+			tabState[windowId] = { tabs: updatedTabs };
+			await tabStorage.setItemInternal("tab-bar-state", tabState);
+			console.log(`[TabService] Activated tab ${tabId} in window ${windowId} storage`);
+		}
+		// ================================================================
+	}
+
+	private findWindowForTab(tabId: string): BrowserWindow | null {
+		// Search all windows to find which one contains this tab
+		for (const [windowId, views] of this.windowTabView.entries()) {
+			const view = this.tabViewMap.get(tabId);
+			if (view && views.includes(view)) {
+				const window = BrowserWindow.fromId(windowId);
+				return window && !window.isDestroyed() ? window : null;
+			}
+		}
+		return null;
 	}
 
 	async getActiveTab(event: IpcMainInvokeEvent): Promise<Tab | null> {

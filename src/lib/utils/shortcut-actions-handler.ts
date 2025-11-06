@@ -189,8 +189,9 @@ export class ShortcutActionsHandler {
 	}
 
 	private async handleDeleteCurrentThread(): Promise<void> {
-		// Get current active tab's threadId
-		const activeTab = tabBarState.tabs.find((tab) => tab.active);
+		// Get current active tab's threadId using real window tabs
+		const currentTabs = tabBarState.getCurrentWindowTabs();
+		const activeTab = currentTabs.find((tab) => tab.active);
 		const threadId = activeTab?.threadId;
 
 		// Check if there's a valid thread to delete (not shell and not undefined)

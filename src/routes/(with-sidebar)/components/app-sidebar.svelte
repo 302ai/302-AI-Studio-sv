@@ -153,16 +153,22 @@
 	});
 
 	async function handleThreadClick(threadId: string) {
-		const existingTab = tabBarState.tabs.find((tab) => tab.threadId === threadId);
+		// Use getCurrentWindowTabs() to get real tabs in current window
+		const currentTabs = tabBarState.getCurrentWindowTabs();
+		const existingTab = currentTabs.find((tab) => tab.threadId === threadId);
 		if (existingTab) {
+			// Tab exists in current window, activate it
 			await tabBarState.handleActivateTab(existingTab.id);
 		} else {
+			// Tab doesn't exist, create or focus in other window
 			await tabBarState.handleNewTabForExistingThread(threadId);
 		}
 	}
 
 	async function handleThreadDelete(threadId: string) {
-		const relatedTab = tabBarState.tabs.find((tab) => tab.threadId === threadId);
+		// Use getCurrentWindowTabs() to get real tabs in current window
+		const currentTabs = tabBarState.getCurrentWindowTabs();
+		const relatedTab = currentTabs.find((tab) => tab.threadId === threadId);
 		if (relatedTab) {
 			await tabBarState.handleTabClose(relatedTab.id);
 		}
@@ -201,7 +207,9 @@
 	}
 
 	async function handleThreadGenerateTitle(threadId: string) {
-		const relatedTab = tabBarState.tabs.find((tab) => tab.threadId === threadId);
+		// Use getCurrentWindowTabs() to get real tabs in current window
+		const currentTabs = tabBarState.getCurrentWindowTabs();
+		const relatedTab = currentTabs.find((tab) => tab.threadId === threadId);
 
 		if (relatedTab?.type === "chat" && relatedTab.threadId) {
 			const { tabService } = window.electronAPI;
@@ -210,7 +218,9 @@
 	}
 
 	async function handleThreadClearMessages(threadId: string) {
-		const relatedTab = tabBarState.tabs.find((tab) => tab.threadId === threadId);
+		// Use getCurrentWindowTabs() to get real tabs in current window
+		const currentTabs = tabBarState.getCurrentWindowTabs();
+		const relatedTab = currentTabs.find((tab) => tab.threadId === threadId);
 
 		if (relatedTab?.type === "chat" && relatedTab.threadId) {
 			const { tabService } = window.electronAPI;

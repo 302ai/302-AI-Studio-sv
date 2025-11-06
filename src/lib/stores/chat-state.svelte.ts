@@ -16,6 +16,7 @@ import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
+import { generalSettings } from "./general-settings.state.svelte";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { sessionState } from "./session-state.svelte";
@@ -987,6 +988,8 @@ export const chat = new Chat({
 				enabled: preferencesSettings.streamOutputEnabled,
 				speed: preferencesSettings.streamSpeed,
 			},
+
+			language: generalSettings.language,
 		}),
 	}),
 	onFinish: async ({ messages }) => {

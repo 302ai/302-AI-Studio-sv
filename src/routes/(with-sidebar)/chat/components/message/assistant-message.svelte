@@ -91,7 +91,7 @@
 	let selectedToolPart = $state<DynamicToolUIPart | null>(null);
 	let isToolModalOpen = $state(false);
 	let isReading = $state(false);
-	let currentUtterance: SpeechSynthesisUtterance | null = null;
+	let _currentUtterance: SpeechSynthesisUtterance | null = null;
 	let speechSynthesisAvailable = $state(false);
 
 	// Check if speech synthesis is available
@@ -177,7 +177,7 @@
 			// Stop current reading
 			window.speechSynthesis.cancel();
 			isReading = false;
-			currentUtterance = null;
+			_currentUtterance = null;
 		} else {
 			// Check if speech synthesis is available
 			if (!window.speechSynthesis) {
@@ -260,18 +260,18 @@
 
 			utterance.onend = () => {
 				isReading = false;
-				currentUtterance = null;
+				_currentUtterance = null;
 				console.log("[ReadAloud] Finished reading");
 			};
 
 			utterance.onerror = (event) => {
 				console.error("[ReadAloud] Error:", event);
 				isReading = false;
-				currentUtterance = null;
+				_currentUtterance = null;
 				toast.error(`朗读失败: ${event.error}`);
 			};
 
-			currentUtterance = utterance;
+			_currentUtterance = utterance;
 
 			// Start speaking
 			window.speechSynthesis.speak(utterance);
