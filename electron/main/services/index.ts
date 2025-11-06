@@ -13,6 +13,7 @@ import { ShortcutService, shortcutService } from "./shortcut-service";
 import { StorageService, storageService } from "./storage-service";
 import { TabService, tabService } from "./tab-service";
 import { ThreadService, threadService } from "./thread-service";
+import { TrayService, trayService } from "./tray-service";
 import { UpdaterService, updaterService } from "./updater-service";
 import { WindowService, windowService } from "./window-service";
 
@@ -33,6 +34,7 @@ export {
 	StorageService,
 	TabService,
 	ThreadService,
+	TrayService,
 	UpdaterService,
 	WindowService,
 };
@@ -54,6 +56,7 @@ export {
 	storageService,
 	tabService,
 	threadService,
+	trayService,
 	updaterService,
 	windowService,
 };

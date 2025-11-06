@@ -12,7 +12,7 @@ import { WebContentsFactory } from "./factories/web-contents-factory";
 import { registerIpcHandlers } from "./generated/ipc-registration";
 import { initializePluginSystem } from "./plugin-manager";
 import { initServer } from "./server/router";
-import { appService, shortcutService, windowService } from "./services";
+import { appService, shortcutService, trayService, windowService } from "./services";
 import { UpdaterService } from "./services/updater-service";
 
 protocol.registerSchemesAsPrivileged([
@@ -54,6 +54,10 @@ if (!gotTheLock) {
 		const serverPort = await initServer();
 		console.log(`Server initialized on port ${serverPort}`);
 		WebContentsFactory.setServerPort(serverPort);
+
+		// Initialize system tray
+		await trayService.init();
+
 		await windowService.initShellWindows();
 	});
 
