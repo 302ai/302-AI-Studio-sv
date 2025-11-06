@@ -2,8 +2,10 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { McpServerSelector } from "$lib/components/buss/mcp-server-selector";
 	import { Overlay } from "$lib/components/buss/overlay";
+	import Switch from "$lib/components/ui/switch/switch.svelte";
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { codeAgentState } from "$lib/stores/code-agent-state.svelte";
 	import { cn } from "$lib/utils";
 	import mcpIcon from "@lobehub/icons-static-svg/icons/mcp.svg";
 	import { Globe, HatGlasses, Lightbulb, Settings2 } from "@lucide/svelte";
@@ -112,11 +114,14 @@
 
 {#snippet actionCodeAgent()}
 	<ButtonWithTooltip
-		class="hover:!bg-chat-action-hover"
+		class={cn(
+			"hover:!bg-chat-action-hover",
+			codeAgentState.enabled && "!bg-chat-action-active hover:!bg-chat-action-active",
+		)}
 		tooltip={m.title_code_agent()}
 		onclick={() => (isCodeAgentOpen = true)}
 	>
-		<HatGlasses />
+		<HatGlasses class={cn(codeAgentState.enabled && "!text-chat-action-active-fg")} />
 	</ButtonWithTooltip>
 
 	<Overlay
@@ -125,6 +130,11 @@
 		onClose={() => (isCodeAgentOpen = false)}
 	>
 		<CodeAgentPanel />
+		<Switch
+			class={cn("absolute top-4 right-12", "data-[state=unchecked]:border-settings-switch-border")}
+			checked={codeAgentState.enabled}
+			onCheckedChange={(checked) => (codeAgentState.enabled = checked)}
+		/>
 	</Overlay>
 {/snippet}
 

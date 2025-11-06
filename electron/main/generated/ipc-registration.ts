@@ -10,6 +10,7 @@ import {
 	tabService,
 	aiApplicationService,
 	appService,
+	codeAgentService,
 	dataService,
 	externalLinkService,
 	mcpService,
@@ -228,6 +229,11 @@ export function registerIpcHandlers() {
 	ipcMain.handle("appService:resetAllData", (event) => appService.resetAllData(event));
 	ipcMain.handle("appService:clearChatHistory", (event) => appService.clearChatHistory(event));
 
+	// codeAgentService service registration
+	ipcMain.handle("codeAgentService:createClaudeCodeSandbox", (event, threadId, llm_model) =>
+		codeAgentService.createClaudeCodeSandbox(event, threadId, llm_model),
+	);
+
 	// dataService service registration
 	ipcMain.handle("dataService:importLegacyJson", (event) => dataService.importLegacyJson(event));
 	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
@@ -368,6 +374,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:restartApp");
 	ipcMain.removeHandler("appService:resetAllData");
 	ipcMain.removeHandler("appService:clearChatHistory");
+	ipcMain.removeHandler("codeAgentService:createClaudeCodeSandbox");
 	ipcMain.removeHandler("dataService:importLegacyJson");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("dataService:importStorage");

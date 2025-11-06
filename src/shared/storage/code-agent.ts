@@ -1,6 +1,8 @@
 import { type } from "arktype";
 
 export const CodeAgentMetadata = type({
+	enabled: "boolean",
+	threadId: "string",
 	type: "'local' | 'remote'",
 	agentId: "string",
 	/**

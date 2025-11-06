@@ -134,7 +134,6 @@ export interface ThreadParmas {
 	isThinkingActive: boolean;
 	isOnlineSearchActive: boolean;
 	isMCPActive: boolean;
-	isCodeAgentActive: boolean;
 	selectedModel: Model | null;
 	isPrivateChatActive: boolean;
 	updatedAt: Date;

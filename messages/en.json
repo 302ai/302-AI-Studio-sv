@@ -628,5 +628,9 @@
 	"title_select_session": "Select Session",
 	"select_session": "Please Select a Session",
 	"select_no_options": "The current options are empty...",
-	"unsupport": "Not supported yet..."
+	"unsupport": "Not supported yet...",
+	"label_button_create_sandbox": "Create Sandbox",
+	"sandbox_creating": "Sandbox is being created...",
+	"sandbox_created": "Sandbox created successfully!",
+	"sandbox_create_failed": "Sandbox creation failed!"
 }
