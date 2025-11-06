@@ -44,6 +44,15 @@ function addDefinedParams(options: any, params: any) {
 	}
 }
 
+// Generate suggestion prompt based on user's language preference
+function getSuggestionsPrompt(language?: string): string {
+	if (language === "zh") {
+		return '基于我们的对话，建议3个我可能会问的后续问题。只返回一个包含3个字符串的JSON数组，例如：["问题1？", "问题2？", "问题3？"]。不要包含其他文本。';
+	}
+	// Default to English
+	return 'Based on our conversation, suggest 3 follow-up questions I might ask next. Return ONLY a JSON array of 3 strings, like: ["Question 1?", "Question 2?", "Question 3?"]. No other text.';
+}
+
 // Add feedback information from metadata to messages
 function enhanceMessagesWithFeedback(messages: UIMessage[]) {
 	return messages.map((msg) => {
@@ -134,6 +143,7 @@ app.post("/chat/302ai", async (c) => {
 		searchProvider = "search1api",
 		messages,
 		speedOptions,
+		language,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -157,6 +167,7 @@ app.post("/chat/302ai", async (c) => {
 		};
 
 		messages: UIMessage[];
+		language?: string;
 	}>();
 	console.log(
 		baseUrl,
@@ -278,8 +289,7 @@ app.post("/chat/302ai", async (c) => {
 						...responseMessages,
 						{
 							role: "user",
-							content:
-								'Based on our conversation, suggest 3 follow-up questions I might ask next. Return ONLY a JSON array of 3 strings, like: ["Question 1?", "Question 2?", "Question 3?"]. No other text.',
+							content: getSuggestionsPrompt(language),
 						},
 					],
 				});
@@ -341,6 +351,7 @@ app.post("/chat/openai", async (c) => {
 		mcpServerIds = [],
 		messages,
 		speedOptions,
+		language,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -357,6 +368,7 @@ app.post("/chat/openai", async (c) => {
 			speed: "slow" | "normal" | "fast";
 		};
 		messages: UIMessage[];
+		language?: string;
 	}>();
 
 	const openai = createOpenAI({
@@ -440,8 +452,7 @@ app.post("/chat/openai", async (c) => {
 						...responseMessages,
 						{
 							role: "user",
-							content:
-								'Based on our conversation, suggest 3 follow-up questions I might ask next. Return ONLY a JSON array of 3 strings, like: ["Question 1?", "Question 2?", "Question 3?"]. No other text.',
+							content: getSuggestionsPrompt(language),
 						},
 					],
 				});
@@ -503,6 +514,7 @@ app.post("/chat/anthropic", async (c) => {
 		mcpServerIds = [],
 		messages,
 		speedOptions,
+		language,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -519,6 +531,7 @@ app.post("/chat/anthropic", async (c) => {
 			speed: "slow" | "normal" | "fast";
 		};
 		messages: UIMessage[];
+		language?: string;
 	}>();
 
 	const anthropic = createAnthropic({
@@ -602,8 +615,7 @@ app.post("/chat/anthropic", async (c) => {
 						...responseMessages,
 						{
 							role: "user",
-							content:
-								'Based on our conversation, suggest 3 follow-up questions I might ask next. Return ONLY a JSON array of 3 strings, like: ["Question 1?", "Question 2?", "Question 3?"]. No other text.',
+							content: getSuggestionsPrompt(language),
 						},
 					],
 				});
@@ -665,6 +677,7 @@ app.post("/chat/gemini", async (c) => {
 		mcpServerIds = [],
 		messages,
 		speedOptions,
+		language,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -681,6 +694,7 @@ app.post("/chat/gemini", async (c) => {
 			speed: "slow" | "normal" | "fast";
 		};
 		messages: UIMessage[];
+		language?: string;
 	}>();
 
 	const google = createGoogleGenerativeAI({
@@ -764,8 +778,7 @@ app.post("/chat/gemini", async (c) => {
 						...responseMessages,
 						{
 							role: "user",
-							content:
-								'Based on our conversation, suggest 3 follow-up questions I might ask next. Return ONLY a JSON array of 3 strings, like: ["Question 1?", "Question 2?", "Question 3?"]. No other text.',
+							content: getSuggestionsPrompt(language),
 						},
 					],
 				});
