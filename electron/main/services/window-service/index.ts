@@ -17,6 +17,7 @@ import {
 	withLoadHandlers,
 } from "../../mixins/web-contents-mixins";
 import { emitter } from "../broadcast-service";
+import { ghostWindowService } from "../ghost-window-service";
 import { shortcutService } from "../shortcut-service";
 import { generalSettingsStorage } from "../storage-service/general-settings-storage";
 import { tabStorage } from "../storage-service/tab-storage";
@@ -342,8 +343,73 @@ export class WindowService {
 			const tab = tabService.getTabById(tabId);
 			if (isUndefined(tab)) return;
 
+			// Focus the tab view
 			tabService.focusTabInWindow(targetWindow, tabId);
+
+			// Update storage to set this tab as active
+			const tabState = await tabStorage.getItemInternal("tab-bar-state");
+			if (!isNull(tabState) && tabState[windowId]) {
+				const updatedTabs = tabState[windowId].tabs.map((t) => ({
+					...t,
+					active: t.id === tabId,
+				}));
+				tabState[windowId] = { tabs: updatedTabs };
+				await tabStorage.setItemInternal("tab-bar-state", tabState);
+				console.log(`[WindowService] Activated tab ${tabId} in window ${windowId} via focusWindow`);
+			}
 		}
+	}
+
+	async handleDropAtPointer(
+		event: IpcMainInvokeEvent,
+		tabId: string,
+		pointer: { screenX: number; screenY: number },
+	): Promise<
+		| { action: "merged"; targetWindowId: string }
+		| { action: "detached"; newWindowId: string }
+		| null
+	> {
+		console.log(
+			`[WindowService] Dropping tab ${tabId} at pointer (${pointer.screenX}, ${pointer.screenY})`,
+		);
+
+		const originWindow = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(originWindow)) {
+			console.error("[WindowService] Origin window not found");
+			return null;
+		}
+
+		// Get insert target from ghost window service (synchronous read before stop() clears it)
+		const insertTarget = ghostWindowService.getCurrentInsertTargetSync();
+		console.log("[WindowService] Using insert target:", insertTarget);
+
+		// Find target window at pointer position
+		const targetWindowData = this.findWindowAtPoint(pointer.screenX, pointer.screenY);
+
+		if (targetWindowData) {
+			const { win: targetWindow, windowId: targetWindowId } = targetWindowData;
+
+			// Check if pointer is in titlebar area and not the same window
+			if (
+				targetWindowId !== originWindow.id.toString() &&
+				this.isPointInTitlebar(targetWindow, pointer.screenX, pointer.screenY)
+			) {
+				console.log(`[WindowService] Merging tab ${tabId} into window ${targetWindowId}`);
+
+				const toIndex =
+					insertTarget?.windowId === targetWindowId ? insertTarget.insertIndex : undefined;
+				await this.handleMoveTabIntoExistingWindow(event, tabId, targetWindowId, toIndex);
+				return { action: "merged", targetWindowId };
+			}
+		}
+
+		// Fall back to creating new window
+		console.log("[WindowService] No valid drop target found, creating new window");
+		const newWindowId = await this.handleSplitShellWindow(event, tabId);
+		if (newWindowId) {
+			return { action: "detached", newWindowId };
+		}
+		return null;
 	}
 
 	async handleSplitShellWindow(
@@ -364,15 +430,50 @@ export class WindowService {
 		tabService.initWindowShellView(newShellWindowId, shellView);
 		tabService.transferTabToWindow(fromWindow, shellWindow, triggerTabId, triggerTab);
 
-		const newShellWindowTabs = [{ ...triggerTab, active: true }];
-		await tabStorage.updateWindowTabs(newShellWindowId.toString(), newShellWindowTabs);
+		// ========== ATOMIC UPDATE: Update both windows in a single transaction ==========
+		const tabState = await tabStorage.getItemInternal("tab-bar-state");
+		if (isNull(tabState)) return null;
 
-		// Update source window storage to remove the transferred tab
-		// This prevents the tab from being destroyed when the source window closes
-		const sourceTabs = await tabStorage.getTabs(fromWindow.id.toString());
-		if (!isNull(sourceTabs)) {
+		// Add tab to new window
+		const newShellWindowTabs = [{ ...triggerTab, active: true }];
+		tabState[newShellWindowId.toString()] = { tabs: newShellWindowTabs };
+
+		// Remove tab from source window and handle active state
+		const sourceWindowId = fromWindow.id.toString();
+		if (tabState[sourceWindowId]) {
+			const sourceTabs = tabState[sourceWindowId].tabs;
+			const removedTabIndex = sourceTabs.findIndex((tab) => tab.id === triggerTabId);
+			const wasActive = removedTabIndex !== -1 && sourceTabs[removedTabIndex].active;
+
 			const remainingTabs = sourceTabs.filter((tab) => tab.id !== triggerTabId);
-			await tabStorage.updateWindowTabs(fromWindow.id.toString(), remainingTabs);
+
+			// If the removed tab was active and there are remaining tabs, activate one
+			if (wasActive && remainingTabs.length > 0) {
+				// Clear all active flags first
+				remainingTabs.forEach((tab) => {
+					tab.active = false;
+				});
+				// Activate the tab at the same index, or the last one if index is out of bounds
+				const newActiveIndex = Math.min(removedTabIndex, remainingTabs.length - 1);
+				remainingTabs[newActiveIndex].active = true;
+			}
+
+			tabState[sourceWindowId] = { tabs: remainingTabs };
+		}
+
+		// Single atomic write - triggers only ONE sync broadcast
+		await tabStorage.setItemInternal("tab-bar-state", tabState);
+		console.log(
+			`[WindowService] Atomic update: moved tab ${triggerTabId} from window ${sourceWindowId} to window ${newShellWindowId}`,
+		);
+		// =============================================================================
+
+		// If source window has remaining tabs, activate the new active tab's view
+		if (!shouldCloseSourceWindow && tabState[sourceWindowId]?.tabs.length > 0) {
+			const newActiveTab = tabState[sourceWindowId].tabs.find((tab) => tab.active);
+			if (newActiveTab) {
+				tabService.focusTabInWindow(fromWindow, newActiveTab.id);
+			}
 		}
 
 		if (shouldCloseSourceWindow) {
@@ -386,6 +487,7 @@ export class WindowService {
 		event: IpcMainInvokeEvent,
 		triggerTabId: string,
 		windowId: string,
+		insertIndex?: number,
 	) {
 		const fromWindow = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(fromWindow)) return;
@@ -395,9 +497,6 @@ export class WindowService {
 
 		const targetWindow = BrowserWindow.fromId(parseInt(windowId));
 		if (isNull(targetWindow)) return;
-
-		const currentTabs = await tabStorage.getTabs(windowId);
-		if (isNull(currentTabs)) return;
 
 		// Check source window tabs from memory (before transfer removes it)
 		// Use tabService's in-memory state, not storage (which may already be updated by frontend)
@@ -410,17 +509,69 @@ export class WindowService {
 		// Transfer the tab to the target window (preserving WebContentsView)
 		tabService.transferTabToWindow(fromWindow, targetWindow, triggerTabId, movedTab);
 
-		// Update tab storage for the target window
-		const updatedCurrentTabs = currentTabs.map((tab) => ({ ...tab, active: false }));
-		const newTargetWindowTabs = [...updatedCurrentTabs, movedTab];
-		await tabStorage.updateWindowTabs(windowId, newTargetWindowTabs);
+		// ========== ATOMIC UPDATE: Update both windows in a single transaction ==========
+		const tabState = await tabStorage.getItemInternal("tab-bar-state");
+		if (isNull(tabState)) return;
 
-		// Update source window storage to remove the transferred tab
-		// This prevents the tab from being destroyed when the source window closes
-		const sourceTabs = await tabStorage.getTabs(fromWindow.id.toString());
-		if (!isNull(sourceTabs)) {
+		const sourceWindowId = fromWindow.id.toString();
+		const targetWindowId = windowId;
+
+		// Update target window - add the moved tab at specified index
+		const currentTabs = tabState[targetWindowId]?.tabs || [];
+		const updatedCurrentTabs = currentTabs.map((tab) => ({ ...tab, active: false }));
+
+		// Insert at specific index or append to end
+		let newTargetWindowTabs;
+		if (
+			typeof insertIndex === "number" &&
+			insertIndex >= 0 &&
+			insertIndex <= updatedCurrentTabs.length
+		) {
+			newTargetWindowTabs = [
+				...updatedCurrentTabs.slice(0, insertIndex),
+				movedTab,
+				...updatedCurrentTabs.slice(insertIndex),
+			];
+		} else {
+			newTargetWindowTabs = [...updatedCurrentTabs, movedTab];
+		}
+		tabState[targetWindowId] = { tabs: newTargetWindowTabs };
+
+		// Update source window - remove the transferred tab and handle active state
+		if (tabState[sourceWindowId]) {
+			const sourceTabs = tabState[sourceWindowId].tabs;
+			const removedTabIndex = sourceTabs.findIndex((tab) => tab.id === triggerTabId);
+			const wasActive = removedTabIndex !== -1 && sourceTabs[removedTabIndex].active;
+
 			const remainingTabs = sourceTabs.filter((tab) => tab.id !== triggerTabId);
-			await tabStorage.updateWindowTabs(fromWindow.id.toString(), remainingTabs);
+
+			// If the removed tab was active and there are remaining tabs, activate one
+			if (wasActive && remainingTabs.length > 0) {
+				// Clear all active flags first
+				remainingTabs.forEach((tab) => {
+					tab.active = false;
+				});
+				// Activate the tab at the same index, or the last one if index is out of bounds
+				const newActiveIndex = Math.min(removedTabIndex, remainingTabs.length - 1);
+				remainingTabs[newActiveIndex].active = true;
+			}
+
+			tabState[sourceWindowId] = { tabs: remainingTabs };
+		}
+
+		// Single atomic write - triggers only ONE sync broadcast
+		await tabStorage.setItemInternal("tab-bar-state", tabState);
+		console.log(
+			`[WindowService] Atomic update: moved tab ${triggerTabId} from window ${sourceWindowId} to window ${targetWindowId} at index ${insertIndex}`,
+		);
+		// =============================================================================
+
+		// If source window has remaining tabs, activate the new active tab's view
+		if (!shouldCloseSourceWindow && tabState[sourceWindowId]?.tabs.length > 0) {
+			const newActiveTab = tabState[sourceWindowId].tabs.find((tab) => tab.active);
+			if (newActiveTab) {
+				tabService.focusTabInWindow(fromWindow, newActiveTab.id);
+			}
 		}
 
 		// Close source window if it has no remaining tabs after transfer
@@ -430,6 +581,54 @@ export class WindowService {
 			);
 			fromWindow.close();
 		}
+	}
+
+	private findWindowAtPoint(
+		screenX: number,
+		screenY: number,
+	): { win: BrowserWindow; windowId: string } | null {
+		const allWindows = BrowserWindow.getAllWindows();
+
+		// Prefer the currently focused window if it contains the point
+		const focused = BrowserWindow.getFocusedWindow();
+		if (focused && !focused.isDestroyed()) {
+			const fb = focused.getBounds();
+			const withinFocused =
+				screenX >= fb.x &&
+				screenX <= fb.x + fb.width &&
+				screenY >= fb.y &&
+				screenY <= fb.y + fb.height;
+			const focusedId = focused.id.toString();
+			if (withinFocused && focusedId) {
+				return { win: focused, windowId: focusedId };
+			}
+		}
+
+		// Fall back: scan all windows
+		for (const win of allWindows) {
+			if (win.isDestroyed()) continue;
+			const bounds = win.getBounds();
+			const within =
+				screenX >= bounds.x &&
+				screenX <= bounds.x + bounds.width &&
+				screenY >= bounds.y &&
+				screenY <= bounds.y + bounds.height;
+			if (!within) continue;
+			const windowId = win.id.toString();
+			if (windowId) return { win, windowId };
+		}
+		return null;
+	}
+
+	private isPointInTitlebar(win: BrowserWindow, x: number, y: number): boolean {
+		const bounds = win.getBounds();
+		const relativeX = x - bounds.x;
+		const relativeY = y - bounds.y;
+
+		const titlebarHeight = CONFIG.TITLE_BAR_OVERLAY.DARK.height;
+		return (
+			relativeX >= 0 && relativeX <= bounds.width && relativeY >= 0 && relativeY <= titlebarHeight
+		);
 	}
 
 	async openSettingsWindow(route?: string): Promise<void> {

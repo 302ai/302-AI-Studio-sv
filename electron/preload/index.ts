@@ -6,6 +6,8 @@ import type {
 	ShortcutKeyPressEvent,
 	ShortcutSyncEvent,
 	Tab,
+	TabDragGhostClear,
+	TabDragGhostHover,
 	Theme,
 } from "@shared/types";
 import { contextBridge, ipcRenderer } from "electron";
@@ -96,6 +98,26 @@ if (process.contextIsolated) {
 				const listener = (_: unknown, payload: ShellWindowFullscreenChange) => callback(payload);
 				ipcRenderer.on(SHELL_WINDOW_FULLSCREEN_CHANGED, listener);
 				return () => ipcRenderer.removeListener(SHELL_WINDOW_FULLSCREEN_CHANGED, listener);
+			},
+			onTabDragGhostHover: (callback: (payload: TabDragGhostHover) => void) => {
+				const listener = (_: unknown, payload: TabDragGhostHover) => {
+					// Only process if this is the target window
+					if (payload.windowId === windowId) {
+						callback(payload);
+					}
+				};
+				ipcRenderer.on("tab:drag:ghost:hover", listener);
+				return () => ipcRenderer.removeListener("tab:drag:ghost:hover", listener);
+			},
+			onTabDragGhostClear: (callback: (payload: TabDragGhostClear) => void) => {
+				const listener = (_: unknown, payload: TabDragGhostClear) => {
+					// Only process if this is the target window
+					if (payload.windowId === windowId) {
+						callback(payload);
+					}
+				};
+				ipcRenderer.on("tab:drag:ghost:clear", listener);
+				return () => ipcRenderer.removeListener("tab:drag:ghost:clear", listener);
 			},
 			onPersistedStateSync: <T>(key: string, callback: (syncValue: T) => void) => {
 				const listener = (_: unknown, syncValue: T) => callback(syncValue);

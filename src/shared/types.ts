@@ -165,6 +165,17 @@ export interface ShellWindowFullscreenChange {
 	isFullScreen: boolean;
 }
 
+export interface TabDragGhostHover {
+	windowId: string;
+	clientX: number;
+	clientY: number;
+	draggedWidth: number;
+}
+
+export interface TabDragGhostClear {
+	windowId: string;
+}
+
 export interface ImportResult {
 	success: boolean;
 	message: string;
