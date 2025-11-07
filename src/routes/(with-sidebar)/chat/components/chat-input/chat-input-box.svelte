@@ -12,6 +12,7 @@
 	import { generateFilePreview, MAX_ATTACHMENT_COUNT } from "$lib/utils/file-preview";
 	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
+	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { match } from "ts-pattern";
 	import { AttachmentThumbnailBar } from "../attachment";
@@ -20,6 +21,30 @@
 
 	let openModelSelect = $state<() => void>();
 	let isComposing = $state(false); // 跟踪输入法composition状态
+	let textareaRef = $state<HTMLTextAreaElement | null>(null);
+
+	// 自动聚焦到输入框
+	function focusInput() {
+		if (textareaRef) {
+			// 使用 requestAnimationFrame 确保 DOM 已更新
+			requestAnimationFrame(() => {
+				textareaRef?.focus();
+			});
+		}
+	}
+
+	// 组件挂载时自动聚焦
+	onMount(() => {
+		focusInput();
+	});
+
+	// 监听会话 ID 变化，切换会话时自动聚焦
+	$effect(() => {
+		// 监听 chatState.id 的变化
+		const currentThreadId = chatState.id;
+		// 当会话切换时，自动聚焦输入框
+		focusInput();
+	});
 
 	$effect(() => {
 		if (modelPanelState.isOpen && openModelSelect) {
@@ -163,6 +188,7 @@
 		data-layoutid="chat-input-box"
 	>
 		<Textarea
+			bind:ref={textareaRef}
 			class={cn(
 				"w-full resize-none p-0",
 				"border-none shadow-none focus-within:ring-0 focus-within:outline-hidden focus-visible:ring-0",
