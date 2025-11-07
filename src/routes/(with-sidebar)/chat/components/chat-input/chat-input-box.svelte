@@ -36,6 +36,30 @@
 	// 组件挂载时自动聚焦
 	onMount(() => {
 		focusInput();
+
+		// 监听页面可见性变化（tab 切换时触发）
+		const handleVisibilityChange = () => {
+			// 当页面变为可见时，自动聚焦输入框
+			if (document.visibilityState === "visible") {
+				// 延迟一点确保 tab 切换动画完成
+				setTimeout(() => {
+					focusInput();
+				}, 50);
+			}
+		};
+
+		// 监听窗口获得焦点事件（用户切回应用时）
+		const handleWindowFocus = () => {
+			focusInput();
+		};
+
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+		window.addEventListener("focus", handleWindowFocus);
+
+		return () => {
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+			window.removeEventListener("focus", handleWindowFocus);
+		};
 	});
 
 	// 监听会话 ID 变化，切换会话时自动聚焦
