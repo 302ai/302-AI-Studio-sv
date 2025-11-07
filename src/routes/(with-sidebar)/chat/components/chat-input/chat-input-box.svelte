@@ -40,6 +40,11 @@
 	}
 
 	function handleSendMessage() {
+		// 如果不满足发送条件，直接返回，不执行任何操作
+		if (!chatState.sendMessageEnabled) {
+			return;
+		}
+
 		match({
 			isEmpty: chatState.inputValue.trim() === "" && chatState.attachments.length === 0,
 			noProviders: !hasConfiguredProviders(),
