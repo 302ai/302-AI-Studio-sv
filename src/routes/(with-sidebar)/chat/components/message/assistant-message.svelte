@@ -9,6 +9,7 @@
 </script>
 
 <script lang="ts">
+	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { LdrsLoader } from "$lib/components/buss/ldrs-loader/index.js";
 	import { MarkdownRenderer } from "$lib/components/buss/markdown/index.js";
 	import { ModelIcon } from "$lib/components/buss/model-icon/index.js";
@@ -305,48 +306,46 @@
 
 			<!-- Read aloud button (only show if speech synthesis is available) -->
 			{#if speechSynthesisAvailable}
-				<button
-					type="button"
-					onclick={handleReadAloud}
-					class="rounded-md p-1 transition-colors hover:bg-muted {isReading
+				<ButtonWithTooltip
+					tooltipSide="bottom"
+					class="{isReading
 						? 'text-blue-600 dark:text-blue-400'
-						: 'text-muted-foreground'}"
-					title={isReading ? m.text_stop_reading() : m.text_read_aloud()}
+						: 'text-muted-foreground'} hover:!bg-chat-action-hover"
+					tooltip={isReading ? m.text_stop_reading() : m.text_read_aloud()}
+					onclick={handleReadAloud}
 				>
 					{#if isReading}
-						<VolumeX class="h-4 w-4" />
+						<VolumeX />
 					{:else}
-						<Volume2 class="h-4 w-4" />
+						<Volume2 />
 					{/if}
-				</button>
+				</ButtonWithTooltip>
 			{/if}
 
 			<div class="h-4 w-px bg-border"></div>
 
 			<!-- Feedback buttons -->
-			<div class="flex items-center gap-1">
-				<button
-					type="button"
-					onclick={() => handleFeedback("like")}
-					class="rounded-md p-1 transition-colors hover:bg-muted {message.metadata?.feedback ===
-					'like'
+			<div class="flex items-center gap-2">
+				<ButtonWithTooltip
+					tooltipSide="bottom"
+					class="{message.metadata?.feedback === 'like'
 						? 'text-green-600 dark:text-green-400'
-						: 'text-muted-foreground'}"
-					title={m.text_feedback_like()}
+						: 'text-muted-foreground'} hover:!bg-chat-action-hover"
+					tooltip={m.text_feedback_like()}
+					onclick={() => handleFeedback("like")}
 				>
-					<ThumbsUp class="h-4 w-4" />
-				</button>
-				<button
-					type="button"
-					onclick={() => handleFeedback("dislike")}
-					class="rounded-md p-1 transition-colors hover:bg-muted {message.metadata?.feedback ===
-					'dislike'
+					<ThumbsUp />
+				</ButtonWithTooltip>
+				<ButtonWithTooltip
+					tooltipSide="bottom"
+					class="{message.metadata?.feedback === 'dislike'
 						? 'text-red-600 dark:text-red-400'
-						: 'text-muted-foreground'}"
-					title={m.text_feedback_dislike()}
+						: 'text-muted-foreground'} hover:!bg-chat-action-hover"
+					tooltip={m.text_feedback_dislike()}
+					onclick={() => handleFeedback("dislike")}
 				>
-					<ThumbsDown class="h-4 w-4" />
-				</button>
+					<ThumbsDown />
+				</ButtonWithTooltip>
 			</div>
 		{/if}
 
