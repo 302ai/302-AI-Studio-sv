@@ -1,6 +1,23 @@
 import { compressFile } from "./file-compressor";
 
-// Handle Office documents (Excel, Word, PowerPoint)
+/**
+ * Maximum number of attachments allowed per message
+ */
+export const MAX_ATTACHMENT_COUNT = 5;
+
+/**
+ * Maximum file size in MB
+ */
+export const MAX_FILE_SIZE_MB = 10;
+
+/**
+ * Maximum file size in bytes
+ */
+export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+/**
+ * Supported Office document MIME types
+ */
 export const officeMimeTypes = [
 	"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 	"application/vnd.ms-excel",
@@ -9,12 +26,17 @@ export const officeMimeTypes = [
 	"application/vnd.openxmlformats-officedocument.presentationml.presentation",
 	"application/vnd.ms-powerpoint",
 ];
+
+/**
+ * Supported Office document file extensions
+ */
+export const officeExtensions = [".xlsx", ".xls", ".docx", ".doc", ".pptx", ".ppt"];
+
 /**
  * Generate preview for different file types
  * @param file - The file to generate preview for
  * @returns Preview URL as data URL or undefined if not supported
  */
-
 export async function generateFilePreview(file: File): Promise<string | undefined> {
 	// Handle image files with compression
 	if (file.type.startsWith("image/")) {
@@ -79,8 +101,7 @@ export async function generateFilePreview(file: File): Promise<string | undefine
 		});
 	}
 
-	const officeExtensions = [".xlsx", ".xls", ".docx", ".doc", ".pptx", ".ppt"];
-
+	// Handle Office documents
 	const isOfficeFile =
 		officeMimeTypes.includes(file.type) ||
 		officeExtensions.some((ext) => file.name.toLowerCase().endsWith(ext));

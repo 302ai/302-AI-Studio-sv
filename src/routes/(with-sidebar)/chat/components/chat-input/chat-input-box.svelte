@@ -9,13 +9,12 @@
 	import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
-	import { generateFilePreview } from "$lib/utils/file-preview";
+	import { generateFilePreview, MAX_ATTACHMENT_COUNT } from "$lib/utils/file-preview";
 	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
 	import { toast } from "svelte-sonner";
 	import { match } from "ts-pattern";
 	import { AttachmentThumbnailBar } from "../attachment";
-	import { MAX_ATTACHMENT_COUNT } from "../attachment/attachment-uploader.svelte";
 	import ChatActions from "./chat-actions.svelte";
 	import StreamingIndicator from "./streaming-indicator.svelte";
 

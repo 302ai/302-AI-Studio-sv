@@ -1,12 +1,15 @@
 <script lang="ts">
 	import FileUploadIcon from "$lib/assets/icons/ai-application/File-Upload.svg";
 	import { m } from "$lib/paraglide/messages.js";
+	import {
+		MAX_ATTACHMENT_COUNT,
+		MAX_FILE_SIZE_BYTES,
+		MAX_FILE_SIZE_MB,
+	} from "$lib/utils/file-preview";
 	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
 	import { toast } from "svelte-sonner";
 	import { fade } from "svelte/transition";
-	const MAX_ATTACHMENT_COUNT = 5;
-	const MAX_FILE_SIZE_MB = 10;
 
 	interface Props {
 		onFilesAdded: (files: AttachmentFile[]) => void;
@@ -143,8 +146,7 @@
 		}
 
 		// 验证文件大小
-		const maxSize = MAX_FILE_SIZE_MB * 1024 * 1024;
-		const oversizedFiles = fileArray.filter((file) => file.size > maxSize);
+		const oversizedFiles = fileArray.filter((file) => file.size > MAX_FILE_SIZE_BYTES);
 		if (oversizedFiles.length > 0) {
 			toast.warning(m.toast_file_size_exceeded({ size: MAX_FILE_SIZE_MB }));
 			return;

@@ -21,16 +21,11 @@
 
 	function handleFilesAdded(attachments: AttachmentFile[]) {
 		for (const attachment of attachments) {
-			// 立即添加附件到状态，这样用户可以立即看到
 			chatState.addAttachment(attachment);
-			// 标记为加载中
 			chatState.setAttachmentLoading(attachment.id, true);
 
-			// 异步生成预览（不阻塞UI）
 			generateFilePreview(attachment.file).then((preview) => {
-				// 更新附件的预览
 				chatState.updateAttachment(attachment.id, { preview });
-				// 标记加载完成
 				chatState.setAttachmentLoading(attachment.id, false);
 			});
 		}

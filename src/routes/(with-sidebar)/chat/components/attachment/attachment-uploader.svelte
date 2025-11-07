@@ -1,12 +1,8 @@
-<script lang="ts" module>
-	export const MAX_ATTACHMENT_COUNT = 5;
-</script>
-
 <script lang="ts">
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { generateFilePreview } from "$lib/utils/file-preview";
+	import { generateFilePreview, MAX_ATTACHMENT_COUNT } from "$lib/utils/file-preview";
 	import { Paperclip } from "@lucide/svelte";
 	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
