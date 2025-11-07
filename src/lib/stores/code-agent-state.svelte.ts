@@ -31,77 +31,20 @@ export const persistedCodeAgentState = new PersistedState<CodeAgentMetadata>(
 const { createClaudeCodeSandbox } = window.electronAPI.codeAgentService;
 
 class CodeAgentState {
-	get baseUrl(): string {
-		return "https://api.302.ai/302/claude-code/v1";
-	}
+	enabled = $derived(persistedCodeAgentState.current.enabled);
+	type = $derived(persistedCodeAgentState.current.type);
+	agentId = $derived(persistedCodeAgentState.current.agentId);
+	currentSessionId = $derived(persistedCodeAgentState.current.currentSessionId);
+	sessionIds = $derived(persistedCodeAgentState.current.sessionIds);
+	sandboxId = $derived(persistedCodeAgentState.current.sandboxId);
 
-	get ready(): boolean {
-		return this.enabled && this.sandboxId !== "";
-	}
+	baseUrl = $derived("https://api.302.ai/302/claude-code/v1");
+	ready = $derived(this.enabled && this.sandboxId !== "");
 
-	get enabled(): boolean {
-		return persistedCodeAgentState.current.enabled;
-	}
-
-	set enabled(value: boolean) {
+	updateState(partial: Partial<CodeAgentMetadata>): void {
 		persistedCodeAgentState.current = {
 			...persistedCodeAgentState.current,
-			enabled: value,
-		};
-	}
-
-	get currentSessionId(): string {
-		return persistedCodeAgentState.current.currentSessionId;
-	}
-
-	set currentSessionId(value: string) {
-		persistedCodeAgentState.current = {
-			...persistedCodeAgentState.current,
-			currentSessionId: value,
-		};
-	}
-
-	get agentId(): string {
-		return persistedCodeAgentState.current.agentId;
-	}
-
-	set agentId(value: string) {
-		persistedCodeAgentState.current = {
-			...persistedCodeAgentState.current,
-			agentId: value,
-		};
-	}
-
-	get sessionIds(): string[] {
-		return persistedCodeAgentState.current.sessionIds;
-	}
-
-	set sessionIds(value: string[]) {
-		persistedCodeAgentState.current = {
-			...persistedCodeAgentState.current,
-			sessionIds: value,
-		};
-	}
-
-	get type(): "local" | "remote" {
-		return persistedCodeAgentState.current.type;
-	}
-
-	set type(value: "local" | "remote") {
-		persistedCodeAgentState.current = {
-			...persistedCodeAgentState.current,
-			type: value,
-		};
-	}
-
-	get sandboxId(): string {
-		return persistedCodeAgentState.current.sandboxId;
-	}
-
-	set sandboxId(value: string) {
-		persistedCodeAgentState.current = {
-			...persistedCodeAgentState.current,
-			sandboxId: value,
+			...partial,
 		};
 	}
 
@@ -110,10 +53,7 @@ class CodeAgentState {
 		if (sandboxExist) return "already-exist";
 		const { isOK, sandboxId } = await createClaudeCodeSandbox(threadId);
 		if (isOK) {
-			persistedCodeAgentState.current = {
-				...persistedCodeAgentState.current,
-				sandboxId: sandboxId,
-			};
+			this.updateState({ sandboxId });
 			return "success";
 		}
 		return "failed";

@@ -553,8 +553,8 @@ class ChatState {
 
 		const currentModel = this.selectedModel!;
 
-		const codeAgentEnabled = codeAgentState.enabled;
-		const codeAgentModel = codeAgentState.agentId;
+		const codeAgentReady = codeAgentState.ready;
+		const codeAgentModel = codeAgentState.sandboxId;
 
 		try {
 			this.resetError();
@@ -562,7 +562,7 @@ class ChatState {
 			await chat.regenerate({
 				...(messageId && { messageId }),
 				body: {
-					model: codeAgentEnabled ? codeAgentModel : currentModel.id,
+					model: codeAgentReady ? codeAgentModel : currentModel.id,
 					apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 						?.apiKey,
 				},

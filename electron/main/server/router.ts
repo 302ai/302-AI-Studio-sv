@@ -945,7 +945,6 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		searchProvider = "search1api",
 		messages,
 		speedOptions,
-		language,
 	} = await c.req.json<RouterRequestBody>();
 	console.log(
 		"Received request for 302ai-code-agent",
@@ -1056,60 +1055,6 @@ app.post("/chat/302ai-code-agent", async (c) => {
 
 			// Wait for the main response to complete
 			await result.consumeStream();
-			const responseMessages = (await result.response).messages;
-
-			// Generate suggestions based on full conversation
-			try {
-				console.log("[Suggestions] Starting to generate suggestions...");
-				const suggestionTextResult = streamText({
-					model: wrapModel,
-					messages: [
-						...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
-						...responseMessages,
-						{
-							role: "user",
-							content: getSuggestionsPrompt(language),
-						},
-					],
-				});
-
-				// Collect the full text response
-				let fullText = "";
-				for await (const chunk of suggestionTextResult.textStream) {
-					fullText += chunk;
-				}
-				console.log("[Suggestions] Received text:", fullText);
-
-				// Parse the JSON array
-				try {
-					// Clean up the text - remove markdown code blocks if present
-					let cleanText = fullText.trim();
-					if (cleanText.startsWith("```")) {
-						cleanText = cleanText
-							.replace(/```json?\n?/g, "")
-							.replace(/```/g, "")
-							.trim();
-					}
-
-					const suggestions = JSON.parse(cleanText);
-					if (Array.isArray(suggestions) && suggestions.length > 0) {
-						console.log("[Suggestions] Parsed suggestions:", suggestions);
-						writer.write({
-							type: "data-suggestions",
-							data: {
-								suggestions: suggestions.slice(0, 3),
-							},
-						});
-					}
-				} catch (parseError) {
-					console.error("[Suggestions] Failed to parse JSON:", parseError);
-				}
-
-				console.log("[Suggestions] Completed");
-			} catch (error) {
-				console.error("[Suggestions] Failed to generate suggestions:", error);
-				// Continue without suggestions
-			}
 		},
 	});
 

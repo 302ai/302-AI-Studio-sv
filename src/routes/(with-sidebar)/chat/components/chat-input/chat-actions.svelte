@@ -133,7 +133,7 @@
 		<Switch
 			class={cn("absolute top-4 right-12", "data-[state=unchecked]:border-settings-switch-border")}
 			checked={codeAgentState.enabled}
-			onCheckedChange={(checked) => (codeAgentState.enabled = checked)}
+			onCheckedChange={(checked) => codeAgentState.updateState({ enabled: checked })}
 		/>
 	</Overlay>
 {/snippet}

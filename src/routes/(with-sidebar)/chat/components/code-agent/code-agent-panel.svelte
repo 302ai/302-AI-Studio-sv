@@ -8,11 +8,12 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 
 	import { m } from "$lib/paraglide/messages";
-	import { codeAgentState, persistedCodeAgentState } from "$lib/stores/code-agent-state.svelte";
+	import { codeAgentState } from "$lib/stores/code-agent-state.svelte";
 	import { PackagePlus, RefreshCcw } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 
-	let selectedKey = $derived(persistedCodeAgentState.current.type);
+	// Now codeAgentState.type is automatically reactive via $derived
+	let selectedKey = $derived(codeAgentState.type);
 	let isCreatingSandbox = $state(false);
 
 	const platformOptions = [
@@ -34,11 +35,8 @@
 	];
 
 	async function handleSelect(key: string) {
-		// Replace the entire object to trigger reactivity
-		persistedCodeAgentState.current = {
-			...persistedCodeAgentState.current,
-			type: key as "local" | "remote",
-		};
+		// Use the updateState helper method - cleaner API
+		codeAgentState.updateState({ type: key as "local" | "remote" });
 	}
 
 	async function handleCreateSandbox(agentId: string) {
@@ -86,7 +84,7 @@
 					value={codeAgentState.agentId}
 					{options}
 					placeholder={m.select_agent()}
-					onValueChange={(v) => (codeAgentState.agentId = v)}
+					onValueChange={(v) => codeAgentState.updateState({ agentId: v })}
 				/>
 				<ButtonWithTooltip
 					class="hover:!bg-chat-action-hover"
@@ -113,7 +111,7 @@
 						value: id,
 					}))}
 					placeholder={m.select_session()}
-					onValueChange={(v) => (codeAgentState.currentSessionId = v)}
+					onValueChange={(v) => codeAgentState.updateState({ currentSessionId: v })}
 				/>
 
 				<ButtonWithTooltip
