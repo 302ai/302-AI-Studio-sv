@@ -622,5 +622,10 @@
 	"plugins_marketplace_select_plugin": "Please select a plugin from marketplace",
 	"plugins_marketplace_search_failed": "Search failed",
 	"plugins_marketplace_refresh_failed": "Failed to refresh marketplace",
-	"plugins_marketplace_refreshed": "Marketplace refreshed"
+	"plugins_marketplace_refreshed": "Marketplace refreshed",
+	"text_drag_files_here": "Drop files here",
+	"text_drag_files_subtitle": "Maximum 5 attachments, each file up to 10M",
+	"toast_file_count_exceeded": "You can only upload up to {count} files",
+	"toast_file_size_exceeded": "File size cannot exceed {size}M",
+	"toast_max_attachments_reached": "Maximum number of attachments reached"
 }

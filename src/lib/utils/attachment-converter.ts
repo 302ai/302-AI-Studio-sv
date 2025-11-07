@@ -5,6 +5,7 @@ import type { FileUIPart } from "ai";
 import mammoth from "mammoth";
 import * as XLSX from "xlsx";
 import { compressFile } from "./file-compressor";
+import { officeMimeTypes } from "./file-preview";
 
 export type MessagePart = FileUIPart | { type: "text"; text: string };
 
@@ -31,16 +32,6 @@ function isPdfFile(attachment: AttachmentFile): boolean {
 function isOfficeDocumentFile(attachment: AttachmentFile): boolean {
 	const { type, name } = attachment;
 	const lowerName = name.toLowerCase();
-
-	// Check by MIME type
-	const officeMimeTypes = [
-		"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
-		"application/vnd.ms-excel", // .xls
-		"application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
-		"application/msword", // .doc
-		"application/vnd.openxmlformats-officedocument.presentationml.presentation", // .pptx
-		"application/vnd.ms-powerpoint", // .ppt
-	];
 
 	if (officeMimeTypes.includes(type)) return true;
 

@@ -9,7 +9,7 @@
 	import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
-	import { compressFile } from "$lib/utils/file-compressor";
+	import { generateFilePreview } from "$lib/utils/file-preview";
 	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
 	import { toast } from "svelte-sonner";
@@ -85,60 +85,6 @@
 			});
 	}
 
-	async function generatePreview(file: File): Promise<string | undefined> {
-		if (file.type.startsWith("image/")) {
-			try {
-				// Compress image to ensure base64 size < 1MB before storage
-				const compressedDataURL = await compressFile(file);
-				return compressedDataURL;
-			} catch (error) {
-				console.error("[ChatInputBox] Failed to compress image:", error);
-				// Fallback to original if compression fails
-				return new Promise((resolve) => {
-					const reader = new FileReader();
-					reader.onload = (e) => resolve(e.target?.result as string);
-					reader.onerror = () => resolve(undefined);
-					reader.readAsDataURL(file);
-				});
-			}
-		}
-
-		// Generate data URL for PDF files
-		if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
-			return new Promise((resolve) => {
-				const reader = new FileReader();
-				reader.onload = (e) => resolve(e.target?.result as string);
-				reader.onerror = () => resolve(undefined);
-				reader.readAsDataURL(file);
-			});
-		}
-
-		// Generate data URL for Office documents (Excel, Word, PowerPoint)
-		if (
-			file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-			file.type === "application/vnd.ms-excel" ||
-			file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-			file.type === "application/msword" ||
-			file.type === "application/vnd.openxmlformats-officedocument.presentationml.presentation" ||
-			file.type === "application/vnd.ms-powerpoint" ||
-			file.name.toLowerCase().endsWith(".xlsx") ||
-			file.name.toLowerCase().endsWith(".xls") ||
-			file.name.toLowerCase().endsWith(".docx") ||
-			file.name.toLowerCase().endsWith(".doc") ||
-			file.name.toLowerCase().endsWith(".pptx") ||
-			file.name.toLowerCase().endsWith(".ppt")
-		) {
-			return new Promise((resolve) => {
-				const reader = new FileReader();
-				reader.onload = (e) => resolve(e.target?.result as string);
-				reader.onerror = () => resolve(undefined);
-				reader.readAsDataURL(file);
-			});
-		}
-
-		return undefined;
-	}
-
 	async function handlePaste(event: ClipboardEvent) {
 		const items = event.clipboardData?.items;
 		if (!items) return;
@@ -156,8 +102,15 @@
 
 		event.preventDefault();
 
+		processFiles(files);
+	}
+
+	async function processFiles(files: File[]) {
 		for (const file of files) {
 			if (chatState.attachments.length >= MAX_ATTACHMENT_COUNT) {
+				toast.warning(
+					m.toast_max_attachments_reached?.() || `已达到最大附件数量：${MAX_ATTACHMENT_COUNT}`,
+				);
 				break;
 			}
 
@@ -167,7 +120,7 @@
 			// 立即创建附件对象并添加到列表
 			const attachment: AttachmentFile = {
 				id: attachmentId,
-				name: file.name || `pasted-file-${Date.now()}`,
+				name: file.name || `file-${Date.now()}`,
 				type: file.type,
 				size: file.size,
 				file,
@@ -181,7 +134,7 @@
 			chatState.setAttachmentLoading(attachmentId, true);
 
 			// 异步生成预览（不阻塞UI）
-			generatePreview(file).then((preview) => {
+			generateFilePreview(file).then((preview) => {
 				// 更新附件的预览
 				chatState.updateAttachment(attachmentId, { preview });
 				// 标记加载完成
