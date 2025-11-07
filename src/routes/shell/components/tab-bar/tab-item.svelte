@@ -29,6 +29,7 @@
 	import { onDestroy } from "svelte";
 
 	const { handleAiApplicationReload } = window.electronAPI.aiApplicationService;
+	const { storageService } = window.electronAPI;
 
 	const {
 		tab,
@@ -49,6 +50,7 @@
 	let triggerRef = $state<HTMLElement | null>(null);
 	let isCompact = $state(false);
 	let windowTabsInfo = $derived(tabBarState.windowTabsInfo);
+	let hasMessages = $state(false);
 
 	$effect(() => {
 		if (!triggerRef?.parentElement) return;
@@ -70,6 +72,23 @@
 			const width = triggerRef.parentElement.clientWidth;
 			isCompact = width < COMPACT_THRESHOLD_PX;
 			return;
+		}
+	});
+
+	// Check if the tab has messages for screenshot functionality
+	$effect(() => {
+		if (tab.type === "chat" && tab.threadId) {
+			(async () => {
+				try {
+					const messages = await storageService.getItem(`app-chat-messages:${tab.threadId}`);
+					hasMessages = Array.isArray(messages) && messages.length > 0;
+				} catch (error) {
+					console.warn("Failed to check messages for tab:", error);
+					hasMessages = false;
+				}
+			})();
+		} else {
+			hasMessages = false;
 		}
 	});
 
@@ -164,7 +183,7 @@
 		<ContextMenu.Separator />
 
 		{#if tab.type === "chat"}
-			<ContextMenu.Item onSelect={handleScreenshot} disabled={!isActive}>
+			<ContextMenu.Item onSelect={handleScreenshot} disabled={!isActive || !hasMessages}>
 				{m.screenshot_action()}
 			</ContextMenu.Item>
 			<ContextMenu.Separator />
