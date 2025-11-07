@@ -8,11 +8,11 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 
 	import { m } from "$lib/paraglide/messages";
-	import { codeAgentState } from "$lib/stores/code-agent-state.svelte";
+	import { codeAgentState, persistedCodeAgentState } from "$lib/stores/code-agent-state.svelte";
 	import { PackagePlus, RefreshCcw } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 
-	let selectedKey = $derived(codeAgentState.type);
+	let selectedKey = $derived(persistedCodeAgentState.current.type);
 	let isCreatingSandbox = $state(false);
 
 	const platformOptions = [
@@ -34,7 +34,11 @@
 	];
 
 	async function handleSelect(key: string) {
-		codeAgentState.type = key as "local" | "remote";
+		// Replace the entire object to trigger reactivity
+		persistedCodeAgentState.current = {
+			...persistedCodeAgentState.current,
+			type: key as "local" | "remote",
+		};
 	}
 
 	async function handleCreateSandbox(agentId: string) {

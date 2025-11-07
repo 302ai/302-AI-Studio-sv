@@ -25,6 +25,29 @@ import { mcpService } from "../services/mcp-service";
 import { storageService } from "../services/storage-service";
 import { createCitationsFetch } from "./citations-processor";
 
+export type RouterRequestBody = {
+	baseUrl?: string;
+	model?: string;
+	apiKey?: string;
+	temperature?: number;
+	topP?: number;
+	maxTokens?: number;
+	frequencyPenalty?: number;
+	presencePenalty?: number;
+	isThinkingActive?: boolean;
+	isOnlineSearchActive?: boolean;
+	isMCPActive?: boolean;
+	mcpServerIds?: string[];
+	autoParseUrl?: boolean;
+	searchProvider?: SearchProvider;
+	speedOptions?: {
+		enabled: boolean;
+		speed: "slow" | "normal" | "fast";
+	};
+	messages: UIMessage[];
+	language?: string;
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function addDefinedParams(options: any, params: any) {
 	if (params.temperature !== undefined && params.temperature !== null) {
@@ -902,6 +925,195 @@ Requirements:
 		console.error("Title generation error:", error);
 		return c.json({ error: "Failed to generate title" }, 500);
 	}
+});
+
+app.post("/chat/302ai-code-agent", async (c) => {
+	const {
+		baseUrl,
+		model = "gpt-4o",
+		apiKey,
+		temperature,
+		topP,
+		maxTokens,
+		frequencyPenalty,
+		presencePenalty,
+		isThinkingActive,
+		isOnlineSearchActive,
+		isMCPActive,
+		mcpServerIds = [],
+		autoParseUrl,
+		searchProvider = "search1api",
+		messages,
+		speedOptions,
+		language,
+	} = await c.req.json<RouterRequestBody>();
+	console.log(
+		"Received request for 302ai-code-agent",
+		baseUrl,
+		model,
+		apiKey,
+		temperature,
+		topP,
+		maxTokens,
+		frequencyPenalty,
+		presencePenalty,
+		isThinkingActive,
+		isOnlineSearchActive,
+		messages,
+		speedOptions,
+	);
+
+	const openai = createOpenAICompatible({
+		name: "302.AI",
+		baseURL: baseUrl || "https://api.openai.com/v1",
+		apiKey: apiKey || "[REDACTED:sk-secret]",
+		fetch: createCitationsFetch(),
+	});
+
+	const wrapModel = wrapLanguageModel({
+		model: openai.chatModel(model),
+		middleware: [
+			extractReasoningMiddleware({ tagName: "think" }),
+			extractReasoningMiddleware({ tagName: "thinking" }),
+		],
+		providerId: "302.AI",
+	});
+
+	const provider302Options: Record<string, boolean | string> = {};
+
+	if (autoParseUrl) {
+		provider302Options["file-parse"] = true;
+	}
+
+	if (isThinkingActive) {
+		provider302Options["r1-fusion"] = true;
+	}
+
+	if (isOnlineSearchActive) {
+		provider302Options["web-search"] = true;
+		provider302Options["search-service"] = searchProvider;
+	}
+
+	// Get MCP tools if MCP is active
+	let mcpTools = undefined;
+	if (isMCPActive && mcpServerIds.length > 0) {
+		try {
+			const allServers = await storageService.getItemInternal("app-mcp-servers");
+			if (allServers) {
+				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
+				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+			}
+		} catch (error) {
+			console.error("Failed to load MCP tools:", error);
+		}
+	}
+
+	const streamTextOptions = {
+		model: wrapModel,
+		messages: convertToModelMessages(enhanceMessagesWithFeedback(messages)),
+		providerOptions: {
+			"302": provider302Options,
+		},
+		...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
+	};
+
+	addDefinedParams(streamTextOptions, {
+		temperature,
+		topP,
+		maxTokens,
+		frequencyPenalty,
+		presencePenalty,
+	});
+
+	const streamTextOptionsWithTransform = {
+		...streamTextOptions,
+		...(speedOptions?.enabled && {
+			experimental_transform: smoothStream({
+				chunking: smartChunking,
+				delayInMs: getDelayForSpeed(speedOptions.speed),
+			}),
+		}),
+	};
+
+	// Wrap in createUIMessageStream to add suggestions after main response
+	const stream = createUIMessageStream({
+		execute: async ({ writer }) => {
+			// Stream the main text response using Agent
+			const result = new Agent({
+				...streamTextOptionsWithTransform,
+				stopWhen: stepCountIs(20),
+			}).stream(streamTextOptionsWithTransform);
+
+			writer.merge(
+				result.toUIMessageStream({
+					messageMetadata: () => ({
+						model,
+						provider: "ai302",
+						createdAt: new Date().toISOString(),
+					}),
+				}),
+			);
+
+			// Wait for the main response to complete
+			await result.consumeStream();
+			const responseMessages = (await result.response).messages;
+
+			// Generate suggestions based on full conversation
+			try {
+				console.log("[Suggestions] Starting to generate suggestions...");
+				const suggestionTextResult = streamText({
+					model: wrapModel,
+					messages: [
+						...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
+						...responseMessages,
+						{
+							role: "user",
+							content: getSuggestionsPrompt(language),
+						},
+					],
+				});
+
+				// Collect the full text response
+				let fullText = "";
+				for await (const chunk of suggestionTextResult.textStream) {
+					fullText += chunk;
+				}
+				console.log("[Suggestions] Received text:", fullText);
+
+				// Parse the JSON array
+				try {
+					// Clean up the text - remove markdown code blocks if present
+					let cleanText = fullText.trim();
+					if (cleanText.startsWith("```")) {
+						cleanText = cleanText
+							.replace(/```json?\n?/g, "")
+							.replace(/```/g, "")
+							.trim();
+					}
+
+					const suggestions = JSON.parse(cleanText);
+					if (Array.isArray(suggestions) && suggestions.length > 0) {
+						console.log("[Suggestions] Parsed suggestions:", suggestions);
+						writer.write({
+							type: "data-suggestions",
+							data: {
+								suggestions: suggestions.slice(0, 3),
+							},
+						});
+					}
+				} catch (parseError) {
+					console.error("[Suggestions] Failed to parse JSON:", parseError);
+				}
+
+				console.log("[Suggestions] Completed");
+			} catch (error) {
+				console.error("[Suggestions] Failed to generate suggestions:", error);
+				// Continue without suggestions
+			}
+		},
+	});
+
+	return createUIMessageStreamResponse({ stream });
 });
 
 export async function initServer(preferredPort = 8089): Promise<number> {

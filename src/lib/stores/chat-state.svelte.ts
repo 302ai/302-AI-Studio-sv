@@ -1,22 +1,22 @@
-import { PersistedState } from "$lib/hooks/persisted-state.svelte";
-import type { ChatMessage } from "$lib/types/chat";
-import { ChatErrorHandler, type ChatError } from "$lib/utils/error-handler";
-import { notificationState } from "./notification-state.svelte";
-
 import { generateTitle } from "$lib/api/title-generation";
+import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages.js";
 import { DynamicChatTransport } from "$lib/transport/dynamic-chat-transport";
+import type { ChatMessage } from "$lib/types/chat";
 import {
 	convertAttachmentsToMessageParts,
 	type MessagePart,
 } from "$lib/utils/attachment-converter";
 import { clone } from "$lib/utils/clone";
+import { ChatErrorHandler, type ChatError } from "$lib/utils/error-handler";
 import { Chat } from "@ai-sdk/svelte";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
+import { codeAgentState } from "./code-agent-state.svelte";
 import { generalSettings } from "./general-settings.state.svelte";
+import { notificationState } from "./notification-state.svelte";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
 import { persistedProviderState, providerState } from "./provider-state.svelte";
 import { sessionState } from "./session-state.svelte";
@@ -395,6 +395,9 @@ class ChatState {
 				const currentAttachments = [...this.attachments];
 				const currentInputValue = this.inputValue;
 
+				const codeAgentModel = codeAgentState.sandboxId;
+				const codeAgentReady = codeAgentState.ready;
+
 				this.resetError();
 
 				// Execute before send message hook
@@ -474,7 +477,7 @@ class ChatState {
 						},
 						{
 							body: {
-								model: currentModel.id,
+								model: codeAgentReady ? codeAgentModel : currentModel.id,
 								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 									?.apiKey,
 							},
@@ -489,7 +492,7 @@ class ChatState {
 						},
 						{
 							body: {
-								model: currentModel.id,
+								model: codeAgentReady ? codeAgentModel : currentModel.id,
 								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 									?.apiKey,
 							},
@@ -511,7 +514,7 @@ class ChatState {
 						},
 						{
 							body: {
-								model: currentModel.id,
+								model: codeAgentReady ? codeAgentModel : currentModel.id,
 								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 									?.apiKey,
 							},
@@ -522,7 +525,7 @@ class ChatState {
 						{ text: currentInputValue },
 						{
 							body: {
-								model: currentModel.id,
+								model: codeAgentReady ? codeAgentModel : currentModel.id,
 								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 									?.apiKey,
 							},
@@ -550,13 +553,16 @@ class ChatState {
 
 		const currentModel = this.selectedModel!;
 
+		const codeAgentEnabled = codeAgentState.enabled;
+		const codeAgentModel = codeAgentState.agentId;
+
 		try {
 			this.resetError();
 
 			await chat.regenerate({
 				...(messageId && { messageId }),
 				body: {
-					model: currentModel.id,
+					model: codeAgentEnabled ? codeAgentModel : currentModel.id,
 					apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 						?.apiKey,
 				},
@@ -955,9 +961,16 @@ export const chat = new Chat({
 	transport: new DynamicChatTransport<ChatMessage>({
 		api: () => {
 			const port = window.app?.serverPort ?? 8089;
+
+			const codeAgentReady = codeAgentState.ready;
+
 			switch (chatState.currentProvider?.apiType) {
-				case "302ai":
+				case "302ai": {
+					if (codeAgentReady) {
+						return `http://localhost:${port}/chat/302ai-code-agent`;
+					}
 					return `http://localhost:${port}/chat/302ai`;
+				}
 				case "openai":
 					return `http://localhost:${port}/chat/openai`;
 				case "anthropic":
@@ -968,29 +981,33 @@ export const chat = new Chat({
 					return `http://localhost:${port}/chat/302`;
 			}
 		},
-		body: () => ({
-			baseUrl: chatState.currentProvider?.baseUrl,
-			temperature: persistedChatParamsState.current.temperature,
-			topP: persistedChatParamsState.current.topP,
-			maxTokens: persistedChatParamsState.current.maxTokens,
-			frequencyPenalty: persistedChatParamsState.current.frequencyPenalty,
-			presencePenalty: persistedChatParamsState.current.presencePenalty,
+		body: () => {
+			const codeAgentReady = codeAgentState.ready;
 
-			isThinkingActive: persistedChatParamsState.current.isThinkingActive,
-			isOnlineSearchActive: persistedChatParamsState.current.isOnlineSearchActive,
-			isMCPActive: persistedChatParamsState.current.isMCPActive,
-			mcpServerIds: persistedChatParamsState.current.mcpServerIds,
+			return {
+				baseUrl: codeAgentReady ? codeAgentState.baseUrl : chatState.currentProvider?.baseUrl,
+				temperature: persistedChatParamsState.current.temperature,
+				topP: persistedChatParamsState.current.topP,
+				maxTokens: persistedChatParamsState.current.maxTokens,
+				frequencyPenalty: persistedChatParamsState.current.frequencyPenalty,
+				presencePenalty: persistedChatParamsState.current.presencePenalty,
 
-			autoParseUrl: preferencesSettings.autoParseUrl,
-			searchProvider: preferencesSettings.searchProvider,
+				isThinkingActive: persistedChatParamsState.current.isThinkingActive,
+				isOnlineSearchActive: persistedChatParamsState.current.isOnlineSearchActive,
+				isMCPActive: persistedChatParamsState.current.isMCPActive,
+				mcpServerIds: persistedChatParamsState.current.mcpServerIds,
 
-			speedOptions: {
-				enabled: preferencesSettings.streamOutputEnabled,
-				speed: preferencesSettings.streamSpeed,
-			},
+				autoParseUrl: preferencesSettings.autoParseUrl,
+				searchProvider: preferencesSettings.searchProvider,
 
-			language: generalSettings.language,
-		}),
+				speedOptions: {
+					enabled: preferencesSettings.streamOutputEnabled,
+					speed: preferencesSettings.streamSpeed,
+				},
+
+				language: generalSettings.language,
+			};
+		},
 	}),
 	onFinish: async ({ messages }) => {
 		console.log("更新完成", $state.snapshot(messages));

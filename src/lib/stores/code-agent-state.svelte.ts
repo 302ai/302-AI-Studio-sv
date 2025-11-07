@@ -31,12 +31,23 @@ export const persistedCodeAgentState = new PersistedState<CodeAgentMetadata>(
 const { createClaudeCodeSandbox } = window.electronAPI.codeAgentService;
 
 class CodeAgentState {
+	get baseUrl(): string {
+		return "https://api.302.ai/302/claude-code/v1";
+	}
+
+	get ready(): boolean {
+		return this.enabled && this.sandboxId !== "";
+	}
+
 	get enabled(): boolean {
 		return persistedCodeAgentState.current.enabled;
 	}
 
 	set enabled(value: boolean) {
-		persistedCodeAgentState.current.enabled = value;
+		persistedCodeAgentState.current = {
+			...persistedCodeAgentState.current,
+			enabled: value,
+		};
 	}
 
 	get currentSessionId(): string {
@@ -44,7 +55,10 @@ class CodeAgentState {
 	}
 
 	set currentSessionId(value: string) {
-		persistedCodeAgentState.current.currentSessionId = value;
+		persistedCodeAgentState.current = {
+			...persistedCodeAgentState.current,
+			currentSessionId: value,
+		};
 	}
 
 	get agentId(): string {
@@ -52,7 +66,10 @@ class CodeAgentState {
 	}
 
 	set agentId(value: string) {
-		persistedCodeAgentState.current.agentId = value;
+		persistedCodeAgentState.current = {
+			...persistedCodeAgentState.current,
+			agentId: value,
+		};
 	}
 
 	get sessionIds(): string[] {
@@ -60,7 +77,10 @@ class CodeAgentState {
 	}
 
 	set sessionIds(value: string[]) {
-		persistedCodeAgentState.current.sessionIds = value;
+		persistedCodeAgentState.current = {
+			...persistedCodeAgentState.current,
+			sessionIds: value,
+		};
 	}
 
 	get type(): "local" | "remote" {
@@ -68,7 +88,10 @@ class CodeAgentState {
 	}
 
 	set type(value: "local" | "remote") {
-		persistedCodeAgentState.current.type = value;
+		persistedCodeAgentState.current = {
+			...persistedCodeAgentState.current,
+			type: value,
+		};
 	}
 
 	get sandboxId(): string {
@@ -76,7 +99,10 @@ class CodeAgentState {
 	}
 
 	set sandboxId(value: string) {
-		persistedCodeAgentState.current.sandboxId = value;
+		persistedCodeAgentState.current = {
+			...persistedCodeAgentState.current,
+			sandboxId: value,
+		};
 	}
 
 	async createClaudeCodeSandbox(): Promise<"already-exist" | "success" | "failed"> {
@@ -84,7 +110,10 @@ class CodeAgentState {
 		if (sandboxExist) return "already-exist";
 		const { isOK, sandboxId } = await createClaudeCodeSandbox(threadId);
 		if (isOK) {
-			this.sandboxId = sandboxId;
+			persistedCodeAgentState.current = {
+				...persistedCodeAgentState.current,
+				sandboxId: sandboxId,
+			};
 			return "success";
 		}
 		return "failed";
