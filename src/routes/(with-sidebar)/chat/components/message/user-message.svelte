@@ -26,7 +26,7 @@
 	let isEditDialogOpen = $state(false);
 	let editContent = $state("");
 	let isExpanded = $state(false);
-	let messageContentElement: HTMLDivElement | null = $state(null);
+	let _messageContentElement: HTMLDivElement | null = $state(null);
 	let needsCollapse = $state(false);
 
 	async function handleCopy(content: string) {
@@ -185,7 +185,7 @@
 	}
 
 	function checkLineCount(node: HTMLDivElement) {
-		messageContentElement = node;
+		_messageContentElement = node;
 
 		// Check if content exceeds 3 lines
 		const checkHeight = () => {

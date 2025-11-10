@@ -398,7 +398,7 @@
 	$effect(() => {
 		if (!highlighter) return;
 		// Re-render when theme prop or app theme changes
-		persistedThemeState.current.shouldUseDarkColors; // Access to track changes
+		void persistedThemeState.current.shouldUseDarkColors; // Access to track changes
 		if (updateTheme()) {
 			resetState();
 			syncCode(props.code);

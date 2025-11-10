@@ -1,11 +1,16 @@
 <script lang="ts">
 	import { appInfo } from "$lib/app-info";
-	import { SettingInfoItem, SettingSwitchItem } from "$lib/components/buss/settings";
+	import {
+		SettingInfoItem,
+		SettingSelectItem,
+		SettingSwitchItem,
+	} from "$lib/components/buss/settings";
 	import { Button } from "$lib/components/ui/button/index.js";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { generalSettings } from "$lib/stores/general-settings.state.svelte";
 	import Loader2Icon from "@lucide/svelte/icons/loader-2";
+	import type { UpdateChannel } from "@shared/storage/general-settings";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
@@ -23,6 +28,11 @@
 	let updateDownloaded = $state(false);
 
 	let isUpdating = $derived(checking || downloading);
+
+	const updateChannelOptions = [
+		{ value: "stable" as UpdateChannel, label: m.update_channel_stable() },
+		{ value: "beta" as UpdateChannel, label: m.update_channel_beta() },
+	];
 	let statusText = $derived(
 		updateDownloaded
 			? m.restart_to_update()
@@ -107,6 +117,13 @@
 		label={m.auto_update()}
 		checked={generalSettings.autoUpdate}
 		onCheckedChange={(v) => generalSettings.setAutoUpdate(v)}
+	/>
+	<SettingSelectItem
+		label={m.update_channel()}
+		description={m.update_channel_desc()}
+		options={updateChannelOptions}
+		value={generalSettings.updateChannel}
+		onValueChange={(v) => generalSettings.setUpdateChannel(v as UpdateChannel)}
 	/>
 	{#snippet updateButton()}
 		<Button

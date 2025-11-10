@@ -10,7 +10,13 @@
 				// Check if this is a shell view (shellWebContentsView)
 				// Shell views need transparent background for proper window composition
 				const currentPath = window.location.pathname;
-				const isShellView = currentPath && currentPath.startsWith("/shell/");
+				const searchParams = window.location.search;
+
+				// Dev: pathname is /shell/123
+				// Prod: pathname is /, but search is ?route=shell/123
+				const isShellView =
+					(currentPath && currentPath.startsWith("/shell/")) ||
+					(searchParams && searchParams.includes("route=shell/"));
 
 				if (isShellView) {
 					// Mark as shell view to skip background color in CSS

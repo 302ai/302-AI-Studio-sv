@@ -101,7 +101,7 @@
 	$effect(() => {
 		// Re-highlight when code, theme, or app theme changes
 		if (highlighter && props.code) {
-			persistedThemeState.current.shouldUseDarkColors; // Access to track changes
+			void persistedThemeState.current.shouldUseDarkColors; // Access to track changes
 			highlightCode();
 		}
 	});

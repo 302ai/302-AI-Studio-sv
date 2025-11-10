@@ -292,6 +292,7 @@ class TabBarState {
 		console.log(
 			`[TabBarState] handleNewTabForExistingThread: threadId=${threadId}, currentWindowId=${currentWindowId}`,
 		);
+		console.log(`[TabBarState] persistedTabState windows:`, Object.keys(persistedTabState.current));
 
 		// Search in ALL windows (including current) to find if tab already exists
 		const tabStateEntries = Object.entries(persistedTabState.current);
@@ -319,11 +320,23 @@ class TabBarState {
 		}
 
 		// Thread doesn't exist in any tab - create a new tab in current window
-		const threadData = await threadService.getThread(threadId);
-		if (!threadData) return;
+		console.log(`[TabBarState] Thread ${threadId} not found in any tab, creating new tab`);
 
+		const threadData = await threadService.getThread(threadId);
+		if (!threadData) {
+			console.log(`[TabBarState] Thread data not found for ${threadId}`);
+			return;
+		}
+
+		console.log(`[TabBarState] Calling handleNewTabWithThread for thread ${threadId}`);
 		// Backend will create tab and update storage
-		await tabService.handleNewTabWithThread(threadId, threadData.thread.title, "chat", true);
+		const result = await tabService.handleNewTabWithThread(
+			threadId,
+			threadData.thread.title,
+			"chat",
+			true,
+		);
+		console.log(`[TabBarState] handleNewTabWithThread result:`, result);
 		// Wait for PersistedState sync to update frontend
 	}
 

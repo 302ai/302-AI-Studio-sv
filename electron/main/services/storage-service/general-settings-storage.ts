@@ -1,4 +1,8 @@
-import type { GeneralSettingsState, LanguageCode } from "@shared/storage/general-settings";
+import type {
+	GeneralSettingsState,
+	LanguageCode,
+	UpdateChannel,
+} from "@shared/storage/general-settings";
 import { prefixStorage } from "@shared/types";
 import { StorageService } from ".";
 
@@ -22,6 +26,14 @@ export class GeneralSettingsStorage extends StorageService<GeneralSettingsState>
 			return false;
 		}
 		return result.autoUpdate ?? false;
+	}
+
+	async getUpdateChannel(): Promise<UpdateChannel> {
+		const result = await this.getItemInternal("state");
+		if (!result) {
+			return "stable";
+		}
+		return result.updateChannel ?? "stable";
 	}
 }
 
