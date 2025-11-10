@@ -67,13 +67,13 @@ function addDefinedParams(options: any, params: any) {
 	}
 }
 
-// Generate suggestion prompt based on user's language preference
-function getSuggestionsPrompt(language?: string): string {
+// Generate suggestion prompt based on user's language preference and count
+function getSuggestionsPrompt(language?: string, count: number = 3): string {
 	if (language === "zh") {
-		return '基于我们的对话，建议3个我可能会问的后续问题。只返回一个包含3个字符串的JSON数组，例如：["问题1？", "问题2？", "问题3？"]。不要包含其他文本。';
+		return `基于我们的对话，建议${count}个我可能会问的后续问题。只返回一个包含${count}个字符串的JSON数组，例如：["问题1？", "问题2？", "问题3？"]。不要包含其他文本。`;
 	}
 	// Default to English
-	return 'Based on our conversation, suggest 3 follow-up questions I might ask next. Return ONLY a JSON array of 3 strings, like: ["Question 1?", "Question 2?", "Question 3?"]. No other text.';
+	return `Based on our conversation, suggest ${count} follow-up questions I might ask next. Return ONLY a JSON array of ${count} strings, like: ["Question 1?", "Question 2?", "Question 3?"]. No other text.`;
 }
 
 // Add feedback information from metadata to messages
@@ -672,13 +672,22 @@ Requirements:
 });
 
 app.post("/generate-suggestions", async (c) => {
-	const { messages, model, apiKey, baseUrl, providerType, language } = await c.req.json<{
+	const {
+		messages,
+		model,
+		apiKey,
+		baseUrl,
+		providerType,
+		language,
+		count = 3,
+	} = await c.req.json<{
 		messages: UIMessage[];
 		model: string;
 		apiKey?: string;
 		baseUrl?: string;
 		providerType: ModelProvider["apiType"];
 		language?: string;
+		count?: number;
 	}>();
 
 	let languageModel;
@@ -728,7 +737,7 @@ app.post("/generate-suggestions", async (c) => {
 				...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
 				{
 					role: "user",
-					content: getSuggestionsPrompt(language),
+					content: getSuggestionsPrompt(language, count),
 				},
 			],
 		});
@@ -749,7 +758,7 @@ app.post("/generate-suggestions", async (c) => {
 			const suggestions = JSON.parse(cleanText);
 			if (Array.isArray(suggestions) && suggestions.length > 0) {
 				console.log("[Suggestions] Parsed suggestions:", suggestions);
-				return c.json({ suggestions: suggestions.slice(0, 3) });
+				return c.json({ suggestions: suggestions.slice(0, count) });
 			} else {
 				console.log("[Suggestions] Invalid suggestions format");
 				return c.json({ suggestions: [] });

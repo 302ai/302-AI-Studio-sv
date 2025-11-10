@@ -9,6 +9,7 @@ export interface GenerateSuggestionsRequest {
 	baseUrl?: string;
 	providerType: "302ai" | "openai" | "anthropic" | "gemini";
 	language?: string;
+	count?: number;
 }
 
 export interface GenerateSuggestionsResponse {
@@ -20,6 +21,7 @@ export async function generateSuggestions(
 	model: Model,
 	provider: ModelProvider | undefined,
 	language?: string,
+	count?: number,
 	serverPort?: number,
 ): Promise<string[]> {
 	const port = serverPort ?? 8089;
@@ -38,6 +40,7 @@ export async function generateSuggestions(
 				baseUrl: provider?.baseUrl,
 				providerType: provider?.apiType || "openai",
 				language,
+				count: count ?? 3,
 			} satisfies GenerateSuggestionsRequest),
 		});
 

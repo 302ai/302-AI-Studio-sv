@@ -1126,7 +1126,13 @@ export const chat = new Chat({
 
 		// Generate suggestions asynchronously (non-blocking)
 		// This runs in the background and updates the last message when ready
-		if (chatState.selectedModel && chatState.currentProvider) {
+		// Check if suggestions are enabled and timing is set to auto
+		if (
+			preferencesSettings.suggestionsEnabled &&
+			preferencesSettings.suggestionsTiming === "auto" &&
+			chatState.selectedModel &&
+			chatState.currentProvider
+		) {
 			const lastMessage = messages[messages.length - 1];
 			if (lastMessage && lastMessage.role === "assistant") {
 				const serverPort = window.app?.serverPort ?? 8089;
@@ -1137,6 +1143,7 @@ export const chat = new Chat({
 					chatState.selectedModel,
 					chatState.currentProvider,
 					generalSettings.language,
+					preferencesSettings.suggestionsCount,
 					serverPort,
 				)
 					.then((suggestions) => {
