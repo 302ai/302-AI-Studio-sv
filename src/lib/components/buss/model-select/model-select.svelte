@@ -84,31 +84,115 @@
 		}
 	}
 
+	// 优化搜索和多关键词分词
+	function searchAndSortModels(models: Model[], searchTerms: string[]): Model[] {
+		if (searchTerms.length === 0) return models;
+
+		return models
+			.map((model) => {
+				const modelName = model.name.toLowerCase();
+				let score = 0;
+				let matchDetails = {
+					startsWithCount: 0,
+					allKeywordsMatch: true,
+					keywordMatches: 0,
+				};
+
+				// 检查每个搜索词
+				for (const term of searchTerms) {
+					const lowerTerm = term.toLowerCase();
+
+					if (modelName.startsWith(lowerTerm)) {
+						score += 10; // 字首匹配最高分
+						matchDetails.startsWithCount++;
+					} else if (modelName.includes(lowerTerm)) {
+						score += 3; // 包含匹配中等分数
+						matchDetails.keywordMatches++;
+					} else {
+						matchDetails.allKeywordsMatch = false;
+					}
+				}
+
+				// 额外加分项
+				if (matchDetails.allKeywordsMatch) {
+					score += 5; // 所有关键词都匹配
+				}
+
+				if (matchDetails.keywordMatches > 0) {
+					score += matchDetails.keywordMatches; // 按匹配的关键词数量加分
+				}
+
+				return { model, score, matchDetails };
+			})
+			.filter(({ score }) => score > 0) // 只保留有匹配结果的
+			.sort((a, b) => {
+				// 主要按分数排序
+				if (b.score !== a.score) {
+					return b.score - a.score;
+				}
+
+				// 分数相同的情况下，优先字首匹配更多的
+				if (b.matchDetails.startsWithCount !== a.matchDetails.startsWithCount) {
+					return b.matchDetails.startsWithCount - a.matchDetails.startsWithCount;
+				}
+
+				// 然后按匹配的关键词数量排序
+				if (b.matchDetails.keywordMatches !== a.matchDetails.keywordMatches) {
+					return b.matchDetails.keywordMatches - a.matchDetails.keywordMatches;
+				}
+
+				// 最后按字母顺序排序
+				return a.model.name.localeCompare(b.model.name);
+			})
+			.map(({ model }) => model);
+	}
+
 	const groupedModels = $derived(() => {
 		const providers = persistedProviderState.current;
 		const groups: Record<string, Model[]> = {};
+		const searchTerms = searchValue
+			.trim()
+			.split(/\s+/)
+			.filter((term) => term.length > 0);
 
-		transformedModels.forEach((model) => {
-			if (
-				searchValue &&
-				!model.name.toLowerCase().includes(searchValue.toLowerCase()) &&
-				!model.type.toLowerCase().includes(searchValue.toLowerCase())
-			)
-				return;
+		// 如果有搜索词，应用搜索和排序逻辑
+		if (searchTerms.length > 0) {
+			const filteredModels = transformedModels.filter((model) => {
+				// 基础过滤：模型名称或类型包含任意搜索词
+				const modelText = `${model.name} ${model.type}`.toLowerCase();
+				return searchTerms.some((term) => modelText.includes(term.toLowerCase()));
+			});
 
-			const provider = providers.find((p) => p.id === model.providerId);
-			if (!provider) return;
+			// 应用搜索排序
+			const sortedModels = searchAndSortModels(filteredModels, searchTerms);
 
-			if (!groups[provider.name]) {
-				groups[provider.name] = [];
-			}
-			groups[provider.name].push(model);
-		});
+			// 按提供商分组已排序的模型
+			sortedModels.forEach((model) => {
+				const provider = providers.find((p) => p.id === model.providerId);
+				if (!provider) return;
+
+				if (!groups[provider.name]) {
+					groups[provider.name] = [];
+				}
+				groups[provider.name].push(model);
+			});
+		} else {
+			transformedModels.forEach((model) => {
+				const provider = providers.find((p) => p.id === model.providerId);
+				if (!provider) return;
+
+				if (!groups[provider.name]) {
+					groups[provider.name] = [];
+				}
+				groups[provider.name].push(model);
+			});
+		}
 
 		Object.keys(groups).forEach((key) => {
 			if (groups[key].length === 0) {
 				delete groups[key];
-			} else {
+			} else if (searchTerms.length === 0) {
+				// 只在无搜索时按收藏排序
 				groups[key].sort((a, b) => {
 					if (a.collected === b.collected) return 0;
 					return a.collected ? -1 : 1;
