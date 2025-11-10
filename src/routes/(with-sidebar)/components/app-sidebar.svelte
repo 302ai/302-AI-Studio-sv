@@ -154,21 +154,22 @@
 
 	async function handleThreadClick(threadId: string) {
 		// Use getCurrentWindowTabs() to get real tabs in current window
-		const currentTabs = tabBarState.getCurrentWindowTabs();
-		const existingTab = currentTabs.find((tab) => tab.threadId === threadId);
+		const currentTabs = await tabBarState.getAllTabs();
+		const existingTab = currentTabs?.find((tab) => tab.threadId === threadId);
 		if (existingTab) {
 			// Tab exists in current window, activate it
+			console.debug("Tab exists in current window, activate it");
 			await tabBarState.handleActivateTab(existingTab.id);
 		} else {
-			// Tab doesn't exist, create or focus in other window
+			console.debug("Tab doesn't exist, create or focus in other window");
 			await tabBarState.handleNewTabForExistingThread(threadId);
 		}
 	}
 
 	async function handleThreadDelete(threadId: string) {
 		// Use getCurrentWindowTabs() to get real tabs in current window
-		const currentTabs = tabBarState.getCurrentWindowTabs();
-		const relatedTab = currentTabs.find((tab) => tab.threadId === threadId);
+		const currentTabs = await tabBarState.getCurrentWindowTabs();
+		const relatedTab = currentTabs?.find((tab) => tab.threadId === threadId);
 		if (relatedTab) {
 			await tabBarState.handleTabClose(relatedTab.id);
 		}
@@ -208,8 +209,8 @@
 
 	async function handleThreadGenerateTitle(threadId: string) {
 		// Use getCurrentWindowTabs() to get real tabs in current window
-		const currentTabs = tabBarState.getCurrentWindowTabs();
-		const relatedTab = currentTabs.find((tab) => tab.threadId === threadId);
+		const currentTabs = await tabBarState.getCurrentWindowTabs();
+		const relatedTab = currentTabs?.find((tab) => tab.threadId === threadId);
 
 		if (relatedTab?.type === "chat" && relatedTab.threadId) {
 			const { tabService } = window.electronAPI;
@@ -219,8 +220,8 @@
 
 	async function handleThreadClearMessages(threadId: string) {
 		// Use getCurrentWindowTabs() to get real tabs in current window
-		const currentTabs = tabBarState.getCurrentWindowTabs();
-		const relatedTab = currentTabs.find((tab) => tab.threadId === threadId);
+		const currentTabs = await tabBarState.getCurrentWindowTabs();
+		const relatedTab = currentTabs?.find((tab) => tab.threadId === threadId);
 
 		if (relatedTab?.type === "chat" && relatedTab.threadId) {
 			const { tabService } = window.electronAPI;

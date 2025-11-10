@@ -44,9 +44,14 @@ export class TabStorage extends StorageService<TabState> {
 		}
 	}
 
-	async getTabs(windowId: string): Promise<Tab[] | null> {
+	async getTabsByWindowId(windowId: string): Promise<Tab[] | null> {
 		const result = await this.getItemInternal("tab-bar-state");
 		return result ? result[windowId].tabs : null;
+	}
+
+	async getAllTabs(): Promise<Tab[] | null> {
+		const result = await this.getItemInternal("tab-bar-state");
+		return result ? Object.values(result).flatMap((windowTabs) => windowTabs.tabs) : null;
 	}
 
 	async getActiveTabId(windowId: string): Promise<string | null> {
@@ -148,6 +153,10 @@ export class TabStorage extends StorageService<TabState> {
 		if (isNull(tabState)) return;
 		delete tabState[windowId];
 		await this.setItemInternal("tab-bar-state", tabState);
+	}
+
+	async getPersistedTabState(): Promise<TabState | null> {
+		return this.getItemInternal("tab-bar-state");
 	}
 }
 

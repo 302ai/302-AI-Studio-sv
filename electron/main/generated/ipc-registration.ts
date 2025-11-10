@@ -202,6 +202,10 @@ export function registerIpcHandlers() {
 		tabService.handleActivateTab(event, tabId),
 	);
 	ipcMain.handle("tabService:getActiveTab", (event) => tabService.getActiveTab(event));
+	ipcMain.handle("tabService:getAllTabsForCurrentWindow", (event) =>
+		tabService.getAllTabsForCurrentWindow(event),
+	);
+	ipcMain.handle("tabService:getAllTabs", (event) => tabService.getAllTabs(event));
 	ipcMain.handle("tabService:handleTabClose", (event, tabId, newActiveTabId) =>
 		tabService.handleTabClose(event, tabId, newActiveTabId),
 	);
@@ -386,6 +390,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");
 	ipcMain.removeHandler("tabService:getActiveTab");
+	ipcMain.removeHandler("tabService:getAllTabsForCurrentWindow");
+	ipcMain.removeHandler("tabService:getAllTabs");
 	ipcMain.removeHandler("tabService:handleTabClose");
 	ipcMain.removeHandler("tabService:handleTabCloseOthers");
 	ipcMain.removeHandler("tabService:handleTabCloseOffside");

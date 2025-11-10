@@ -17,16 +17,16 @@ class TabBarState {
 	#isShellViewElevated = $state<boolean>(false);
 	#isShellView = $state<boolean>(false);
 
-	// Helper getter to always get the real current window ID
-	// Safe to use in both shell views and tab views
 	get currentWindowId(): string {
 		return window.windowId;
 	}
 
-	// Helper method to get current window's tabs using real windowId
-	// Safe to use in both shell views and tab views
-	getCurrentWindowTabs(): Tab[] {
-		return persistedTabState.current[this.currentWindowId]?.tabs ?? [];
+	async getCurrentWindowTabs(): Promise<Tab[] | null> {
+		return (await tabService.getAllTabsForCurrentWindow()) ?? [];
+	}
+
+	async getAllTabs(): Promise<Tab[] | null> {
+		return (await tabService.getAllTabs()) ?? [];
 	}
 
 	tabs = $derived.by<Tab[]>(() => {
@@ -242,18 +242,18 @@ class TabBarState {
 		// This method can be called from both shell views and tab views
 		// Use real window.windowId to ensure correct behavior
 		const currentWindowId = this.currentWindowId;
-		const currentTabs = this.getCurrentWindowTabs();
+		const currentTabs = await this.getCurrentWindowTabs();
 
 		const shouldCreateNewTab = await match(type)
 			.with("settings", async () => {
-				const existingSettingsTab = currentTabs.find((tab) => tab.type === "settings");
+				const existingSettingsTab = currentTabs?.find((tab) => tab.type === "settings");
 				if (existingSettingsTab) {
 					// Activate existing settings tab
-					const updatedTabs = currentTabs.map((t) => ({
+					const updatedTabs = currentTabs?.map((t) => ({
 						...t,
 						active: t.id === existingSettingsTab.id,
 					}));
-					persistedTabState.current[currentWindowId].tabs = updatedTabs;
+					persistedTabState.current[currentWindowId].tabs = updatedTabs ?? [];
 					await tabService.handleActivateTab(existingSettingsTab.id);
 					return false;
 				}
@@ -278,35 +278,25 @@ class TabBarState {
 		console.log(
 			`[TabBarState] handleNewTabForExistingThread: threadId=${threadId}, currentWindowId=${currentWindowId}`,
 		);
-		console.log(`[TabBarState] persistedTabState windows:`, Object.keys(persistedTabState.current));
 
-		// Search in ALL windows (including current) to find if tab already exists
-		const tabStateEntries = Object.entries(persistedTabState.current);
-		for (const [windowId, windowTabs] of tabStateEntries) {
-			if (!windowTabs) continue;
+		// IMPORTANT: Do NOT use persistedTabState.current here - it may be stale due to async IPC sync
+		// Instead, get the current window's tabs directly from backend
+		const currentWindowTabs = await this.getCurrentWindowTabs();
+		console.log(`[TabBarState] Current window tabs from backend:`, currentWindowTabs);
 
-			const targetTab = windowTabs.tabs.find((tab) => tab.threadId === threadId);
-			if (!targetTab) continue;
-
-			// Found the tab!
-			console.log(
-				`[TabBarState] Found tab ${targetTab.id} in window ${windowId}, current window is ${currentWindowId}`,
-			);
-
-			if (windowId === currentWindowId) {
-				// In current window - activate it
-				console.log(`[TabBarState] Activating tab in current window`);
-				await this.handleActivateTab(targetTab.id);
-			} else {
-				// In another window - focus that window and tab
-				console.log(`[TabBarState] Focusing window ${windowId} with tab ${targetTab.id}`);
-				await windowService.focusWindow(windowId, targetTab.id);
+		// Check if tab with this threadId already exists in current window
+		if (currentWindowTabs && currentWindowTabs.length > 0) {
+			const existingTab = currentWindowTabs.find((tab) => tab.threadId === threadId);
+			if (existingTab) {
+				// Found the tab in current window - activate it
+				console.log(`[TabBarState] Found tab ${existingTab.id} in current window, activating it`);
+				await this.handleActivateTab(existingTab.id);
+				return;
 			}
-			return;
 		}
 
-		// Thread doesn't exist in any tab - create a new tab in current window
-		console.log(`[TabBarState] Thread ${threadId} not found in any tab, creating new tab`);
+		// Thread doesn't exist in current window - create a new tab in current window
+		console.log(`[TabBarState] Thread ${threadId} not found in current window, creating new tab`);
 
 		const threadData = await threadService.getThread(threadId);
 		if (!threadData) {
@@ -421,9 +411,9 @@ class TabBarState {
 		// This method can be called from both shell views and tab views
 		// Use real window.windowId to ensure correct behavior
 		const currentWindowId = this.currentWindowId;
-		const currentTabs = this.getCurrentWindowTabs();
+		const currentTabs = await this.getCurrentWindowTabs();
 
-		const updatedTabs = currentTabs.map((tab) => {
+		const updatedTabs = currentTabs?.map((tab) => {
 			if (tab.threadId === threadId) {
 				return { ...tab, title };
 			}
@@ -431,7 +421,7 @@ class TabBarState {
 		});
 
 		// Use real windowId to ensure correct window is updated
-		persistedTabState.current[currentWindowId].tabs = updatedTabs;
+		persistedTabState.current[currentWindowId].tabs = updatedTabs ?? [];
 	}
 }
 

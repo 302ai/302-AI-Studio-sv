@@ -245,7 +245,7 @@ export class TabService {
 	}
 
 	async removeWindowTabs(windowId: number) {
-		const windowTabs = await tabStorage.getTabs(windowId.toString());
+		const windowTabs = await tabStorage.getTabsByWindowId(windowId.toString());
 		if (isNull(windowTabs)) return;
 		const window = BrowserWindow.fromId(windowId);
 		if (isNull(window)) return;
@@ -274,7 +274,7 @@ export class TabService {
 	 * Used when closing the last window to ensure private data is deleted.
 	 */
 	async cleanupPrivateChatData(windowId: number) {
-		const windowTabs = await tabStorage.getTabs(windowId.toString());
+		const windowTabs = await tabStorage.getTabsByWindowId(windowId.toString());
 		if (isNull(windowTabs)) return;
 
 		console.log(`[Privacy] Cleaning up private chat data for window ${windowId}`);
@@ -811,7 +811,7 @@ export class TabService {
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return null;
 		const [tabs, activeTabId] = await Promise.all([
-			tabStorage.getTabs(window.id.toString()),
+			tabStorage.getTabsByWindowId(window.id.toString()),
 			tabStorage.getActiveTabId(window.id.toString()),
 		]);
 
@@ -821,6 +821,17 @@ export class TabService {
 		if (isUndefined(tab)) return null;
 
 		return tab;
+	}
+
+	async getAllTabsForCurrentWindow(event: IpcMainInvokeEvent): Promise<Tab[] | null> {
+		const window = BrowserWindow.fromWebContents(event.sender);
+		if (isNull(window)) return null;
+		const result = await tabStorage.getTabsByWindowId(window.id.toString());
+		return result;
+	}
+
+	async getAllTabs(_event: IpcMainInvokeEvent): Promise<Tab[] | null> {
+		return (await tabStorage.getAllTabs()) ?? [];
 	}
 
 	async handleTabClose(event: IpcMainInvokeEvent, tabId: string, newActiveTabId: string | null) {
