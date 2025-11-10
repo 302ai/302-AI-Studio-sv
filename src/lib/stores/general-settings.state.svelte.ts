@@ -5,6 +5,7 @@ import type {
 	GeneralSettingsState,
 	LanguageCode,
 	LayoutMode,
+	UpdateChannel,
 } from "@shared/storage/general-settings";
 
 const { generalSettingsService } = window.electronAPI;
@@ -14,6 +15,7 @@ const getDefaults = (): GeneralSettingsState => ({
 	language: (getLocale() as LanguageCode) ?? "zh",
 	privacyAutoInherit: false,
 	autoUpdate: false,
+	updateChannel: "stable",
 });
 
 const persistedGeneralSettings = new PersistedState<GeneralSettingsState>(
@@ -87,6 +89,19 @@ class GeneralSettingsManager {
 		persistedGeneralSettings.current = { ...persistedGeneralSettings.current, autoUpdate: value };
 		// Notify main process to enable/disable auto-check
 		window.electronAPI.updaterService.setAutoUpdate(value);
+	}
+
+	get updateChannel(): UpdateChannel {
+		return persistedGeneralSettings.current.updateChannel ?? "stable";
+	}
+
+	setUpdateChannel(channel: UpdateChannel): void {
+		persistedGeneralSettings.current = {
+			...persistedGeneralSettings.current,
+			updateChannel: channel,
+		};
+		// Notify main process to change update channel
+		window.electronAPI.updaterService.setUpdateChannel(channel);
 	}
 
 	update(partial: Partial<GeneralSettingsState>): void {

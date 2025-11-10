@@ -4,6 +4,10 @@
 	"apply": "Apply",
 	"auto_inherit": "Auto inherit",
 	"auto_update": "Automatic Update",
+	"update_channel": "Update Channel",
+	"update_channel_stable": "Stable",
+	"update_channel_beta": "Beta",
+	"update_channel_desc": "Select the type of updates to receive",
 	"chat_privateChat": "Incognito Mode",
 	"chat_selectModel": "Select a Model",
 	"check_update": "Check",
@@ -633,5 +637,10 @@
 	"sandbox_creating": "Sandbox is being created...",
 	"sandbox_created": "Sandbox created successfully!",
 	"sandbox_create_failed": "Sandbox creation failed!",
-	"sandbox_already_exist": "A sandbox for the current session already exists"
+	"sandbox_already_exist": "A sandbox for the current session already exists",
+	"text_drag_files_here": "Drop files here",
+	"text_drag_files_subtitle": "Maximum 5 attachments, each file up to 10M",
+	"toast_file_count_exceeded": "You can only upload up to {count} files",
+	"toast_file_size_exceeded": "File size cannot exceed {size}M",
+	"toast_max_attachments_reached": "Maximum number of attachments reached"
 }

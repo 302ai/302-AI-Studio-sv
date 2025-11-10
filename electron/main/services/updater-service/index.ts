@@ -1,4 +1,5 @@
 import { isMac } from "@electron/main/constants";
+import type { UpdateChannel } from "@shared/storage/general-settings";
 import { app, autoUpdater, dialog, type IpcMainInvokeEvent } from "electron";
 import { broadcastService } from "../broadcast-service";
 import { generalSettingsService } from "../settings-service/general-settings-service";
@@ -12,15 +13,14 @@ export class UpdaterService {
 	private updateFeedUrl: string;
 	private updateDownloaded = false;
 	private static isInstallingUpdate = false;
+	private currentChannel: UpdateChannel = "stable";
 
 	constructor() {
-		const server = "https://update.electronjs.org";
-		const repo = "302ai/302-AI-Studio-sv";
-		const version = app.getVersion();
 		const platform = process.platform;
 
 		if (platform === "darwin" || platform === "win32") {
-			this.updateFeedUrl = `${server}/${repo}/${platform}-${process.arch}/${version}`;
+			// Initialize with stable channel, will be updated in initializeAutoCheck
+			this.updateFeedUrl = this.buildUpdateFeedUrl("stable");
 			this.setupAutoUpdater();
 			this.initializeAutoCheck();
 		} else {
@@ -29,10 +29,36 @@ export class UpdaterService {
 		}
 	}
 
+	private buildUpdateFeedUrl(channel: UpdateChannel): string {
+		const server = "https://update.electronjs.org";
+		const repo = "302ai/302-AI-Studio-sv";
+		let version = app.getVersion();
+		const platform = process.platform;
+
+		// For beta channel, append -beta suffix if not already present
+		if (channel === "beta" && !version.includes("-beta")) {
+			version = `${version}-beta`;
+		}
+
+		return `${server}/${repo}/${platform}-${process.arch}/${version}`;
+	}
+
+	private updateFeedUrlForChannel(channel: UpdateChannel) {
+		this.currentChannel = channel;
+		this.updateFeedUrl = this.buildUpdateFeedUrl(channel);
+		autoUpdater.setFeedURL({ url: this.updateFeedUrl });
+		console.log(`Update feed URL set to: ${this.updateFeedUrl} (channel: ${channel})`);
+	}
+
 	// ******************************* Private Methods ******************************* //
 	private async initializeAutoCheck() {
-		// Read initial autoUpdate setting
+		// Read initial settings
 		const autoUpdate = await generalSettingsStorage.getAutoUpdate();
+		const updateChannel = await generalSettingsStorage.getUpdateChannel();
+
+		// Update feed URL based on channel
+		this.updateFeedUrlForChannel(updateChannel);
+
 		if (autoUpdate) {
 			setTimeout(() => {
 				this.checkForUpdates();
@@ -174,6 +200,21 @@ export class UpdaterService {
 		} else {
 			this.stopAutoCheck();
 		}
+	}
+
+	async setUpdateChannel(_event: IpcMainInvokeEvent, channel: UpdateChannel): Promise<void> {
+		this.updateFeedUrlForChannel(channel);
+		// If auto-update is enabled, check for updates immediately with new channel
+		const autoUpdate = await generalSettingsStorage.getAutoUpdate();
+		if (autoUpdate) {
+			setTimeout(() => {
+				this.checkForUpdates();
+			}, 500);
+		}
+	}
+
+	async getUpdateChannel(_event: IpcMainInvokeEvent): Promise<UpdateChannel> {
+		return this.currentChannel;
 	}
 
 	destroy() {

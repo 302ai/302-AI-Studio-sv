@@ -6,17 +6,35 @@
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
+	import { generateFilePreview } from "$lib/utils/file-preview";
 	import { MessageSquarePlus } from "@lucide/svelte";
-	import type { ThreadParmas } from "@shared/types";
+	import type { AttachmentFile, ThreadParmas } from "@shared/types";
 	import { onMount } from "svelte";
 	import { AiApplicationItems } from "../components/ai-applications";
 	import { ChatInputBox } from "../components/chat-input";
+	import { FileUploadOverlay } from "../components/file-upload-overlay";
 	import { HtmlPreviewPanel } from "../components/html-preview";
 	import { MessageList } from "../components/message";
 
 	let isInputAreaHovered = $state(false);
+	let fileUploadOverlayRef: FileUploadOverlay | null = $state(null);
+
+	function handleFilesAdded(attachments: AttachmentFile[]) {
+		for (const attachment of attachments) {
+			chatState.addAttachment(attachment);
+			chatState.setAttachmentLoading(attachment.id, true);
+
+			generateFilePreview(attachment.file).then((preview) => {
+				chatState.updateAttachment(attachment.id, { preview });
+				chatState.setAttachmentLoading(attachment.id, false);
+			});
+		}
+	}
 
 	onMount(() => {
+		// 确保覆盖层状态重置
+		fileUploadOverlayRef?.resetOverlay();
+
 		// Listen for clear messages event from main process
 		const unsubClear = window.electronAPI?.onTabClearMessages?.(({ tabId, threadId }) => {
 			console.log("[Chat Page] Received clear messages event:", { tabId, threadId });
@@ -120,7 +138,7 @@
 		{#if preferencesSettings.enableSupermarket}<AiApplicationItems />{/if}
 	</div>
 {:else}
-	<div class="flex h-full flex-col gap-y-4">
+	<div class="flex h-full flex-col gap-y-4 relative">
 		<div class="flex-1 overflow-hidden" data-layoutid="chat-message-list">
 			{#if htmlPreviewState.isVisible}
 				<Resizable.PaneGroup direction="horizontal" class="h-full">
@@ -164,3 +182,10 @@
 		</div>
 	</div>
 {/if}
+
+<!-- File Upload Overlay  -->
+<FileUploadOverlay
+	bind:this={fileUploadOverlayRef}
+	onFilesAdded={handleFilesAdded}
+	currentAttachmentCount={chatState.attachments.length}
+/>

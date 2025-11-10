@@ -5,6 +5,10 @@
 	"auto_inherit": "自动继承",
 	"auto_update": "自动更新",
 	"check_update": "检查更新",
+	"update_channel": "更新渠道",
+	"update_channel_stable": "稳定版",
+	"update_channel_beta": "测试版",
+	"update_channel_desc": "选择接收更新的渠道类型",
 	"common_actions": "操作",
 	"common_cancel": "取消",
 	"common_copy": "复制",
@@ -629,5 +633,10 @@
 	"sandbox_creating": "沙盒创建中...",
 	"sandbox_created": "沙盒创建成功！",
 	"sandbox_create_failed": "沙盒创建失败！",
-	"sandbox_already_exist": "当前会话的沙盒已存在"
+	"sandbox_already_exist": "当前会话的沙盒已存在",
+	"text_drag_files_here": "将文件拖到此区域",
+	"text_drag_files_subtitle": "最多可上传5个附件，每个文件不超过10M",
+	"toast_file_count_exceeded": "最多只能上传{count}个文件",
+	"toast_file_size_exceeded": "文件大小不能超过{size}M",
+	"toast_max_attachments_reached": "已达到最大附件数量"
 }

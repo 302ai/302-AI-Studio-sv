@@ -259,7 +259,8 @@ class ChatState {
 		(this.inputValue.trim() !== "" || this.attachments.length > 0) &&
 			!!this.selectedModel &&
 			!this.isStreaming &&
-			!this.isSubmitted,
+			!this.isSubmitted &&
+			this.loadingAttachmentIds.size === 0, // 确保没有附件正在加载
 	);
 	hasMessages = $derived(this.messages.length > 0);
 	canTogglePrivacy = $derived(!this.hasMessages);
