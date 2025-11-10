@@ -29,7 +29,7 @@
 	import { onDestroy } from "svelte";
 
 	const { handleAiApplicationReload } = window.electronAPI.aiApplicationService;
-	const { storageService } = window.electronAPI;
+	const { storageService, tabService } = window.electronAPI;
 
 	const {
 		tab,
@@ -98,6 +98,18 @@
 
 	const handleScreenshot = async () => {
 		if (tab.type === "chat" && tab.threadId) {
+			// Check if there are messages before taking screenshot
+			if (!hasMessages) {
+				// Broadcast toast message to tab view (content area) so it displays on top
+				// Include threadId so only the current tab shows the toast
+				await window.electronAPI?.broadcastService?.broadcastToAll("show-toast", {
+					type: "warning",
+					message: m.screenshot_no_messages(),
+					threadId: tab.threadId,
+				});
+				return;
+			}
+
 			await window.electronAPI?.broadcastService?.broadcastToAll("trigger-screenshot", {
 				threadId: tab.threadId,
 			});
@@ -183,7 +195,7 @@
 		<ContextMenu.Separator />
 
 		{#if tab.type === "chat"}
-			<ContextMenu.Item onSelect={handleScreenshot} disabled={!isActive || !hasMessages}>
+			<ContextMenu.Item onSelect={handleScreenshot} disabled={!isActive}>
 				{m.screenshot_action()}
 			</ContextMenu.Item>
 			<ContextMenu.Separator />

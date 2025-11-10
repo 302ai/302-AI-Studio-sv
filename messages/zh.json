@@ -525,6 +525,7 @@
 	"screenshot_generating": "正在生成截图...",
 	"screenshot_success": "截图生成成功",
 	"screenshot_failed": "截图失败,请重试",
+	"screenshot_no_messages": "当前对话没有消息内容，无法截图",
 	"settings_importLegacyJson": "导入旧版JSON数据",
 	"settings_importLegacyJsonDesc": "从旧版本的302 AI Studio导入数据（支持providers、models、threads、messages等）",
 	"label_button_reload": "刷新",

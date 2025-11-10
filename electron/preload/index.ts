@@ -85,6 +85,17 @@ if (process.contextIsolated) {
 				ipcRenderer.on("broadcast-event", listener);
 				return () => ipcRenderer.removeListener("broadcast-event", listener);
 			},
+			onShowToast: (
+				callback: (data: { type: string; message: string; threadId?: string }) => void,
+			) => {
+				const listener = (_: unknown, eventData: BroadcastEventData) => {
+					if (eventData.broadcastEvent === "show-toast") {
+						callback(eventData.data as { type: string; message: string; threadId?: string });
+					}
+				};
+				ipcRenderer.on("broadcast-event", listener);
+				return () => ipcRenderer.removeListener("broadcast-event", listener);
+			},
 			onTriggerSendMessage: (callback: (data: { threadId: string }) => void) => {
 				const listener = (_: unknown, eventData: BroadcastEventData) => {
 					if (eventData.broadcastEvent === "trigger-send-message") {
