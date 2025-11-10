@@ -516,24 +516,68 @@ export class TabService {
 		// ========== CHECK: Prevent duplicate tabs for the same thread ==========
 		const windowId = window.id.toString();
 		const tabState = await tabStorage.getItemInternal("tab-bar-state");
-		if (!isNull(tabState) && tabState[windowId]) {
-			// Check if this thread already has a tab in current window
-			const existingTab = tabState[windowId].tabs.find((t) => t.threadId === threadId);
-			if (existingTab) {
-				console.log(
-					`[TabService] Tab for thread ${threadId} already exists in window ${windowId}, activating it instead`,
-				);
-				// Activate the existing tab instead of creating a new one
-				const updatedTabs = tabState[windowId].tabs.map((t) => ({
-					...t,
-					active: t.id === existingTab.id,
-				}));
-				tabState[windowId] = { tabs: updatedTabs };
-				await tabStorage.setItemInternal("tab-bar-state", tabState);
-				this.focusTabInWindow(window, existingTab.id);
-				return stringify(existingTab);
+
+		console.log(`[TabService] handleNewTabWithThread: threadId=${threadId}, windowId=${windowId}`);
+		console.log(`[TabService] Current tabState windows:`, Object.keys(tabState || {}));
+		console.log(`[TabService] tabViewMap size:`, this.tabViewMap.size);
+
+		if (!isNull(tabState)) {
+			// Check in ALL windows, not just current window
+			for (const [wId, wData] of Object.entries(tabState)) {
+				const existingTab = wData.tabs.find((t) => t.threadId === threadId);
+				if (existingTab) {
+					console.log(
+						`[TabService] Found existing tab ${existingTab.id} for thread ${threadId} in window ${wId}`,
+					);
+
+					// Check if the tab's view still exists
+					const existingView = this.tabViewMap.get(existingTab.id);
+					console.log(`[TabService] View exists for tab ${existingTab.id}:`, !!existingView);
+
+					if (existingView) {
+						// View exists - activate it
+						if (wId === windowId) {
+							// Same window
+							console.log(
+								`[TabService] Tab for thread ${threadId} already exists in current window, activating it`,
+							);
+							const updatedTabs = tabState[wId].tabs.map((t) => ({
+								...t,
+								active: t.id === existingTab.id,
+							}));
+							tabState[wId] = { tabs: updatedTabs };
+							await tabStorage.setItemInternal("tab-bar-state", tabState);
+							this.focusTabInWindow(window, existingTab.id);
+							return stringify(existingTab);
+						} else {
+							// Different window - this shouldn't happen in normal flow
+							console.log(
+								`[TabService] Tab for thread ${threadId} exists in window ${wId}, but called from window ${windowId}. Allowing duplicate tab creation.`,
+							);
+							// Let it create a new tab in current window
+							// The old tab will remain in the other window
+							break;
+						}
+					} else {
+						// View doesn't exist (was destroyed) - cleanup storage and create new tab
+						console.log(
+							`[TabService] Tab ${existingTab.id} for thread ${threadId} exists in storage but view is destroyed, cleaning up`,
+						);
+						// Remove the orphaned tab from storage
+						const cleanedTabs = tabState[wId].tabs.filter((t) => t.id !== existingTab.id);
+						tabState[wId] = { tabs: cleanedTabs };
+						await tabStorage.setItemInternal("tab-bar-state", tabState);
+						console.log(
+							`[TabService] Cleaned orphaned tab from window ${wId}, will create new tab`,
+						);
+						// Continue to create new tab
+						break;
+					}
+				}
 			}
 		}
+
+		console.log(`[TabService] No duplicate found, creating new tab for thread ${threadId}`);
 		// ========================================================================
 
 		const { getHref } = getTabConfig(type);
