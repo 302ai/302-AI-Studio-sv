@@ -166,7 +166,7 @@ app.post("/chat/302ai", async (c) => {
 		searchProvider = "search1api",
 		messages,
 		speedOptions,
-		language,
+		language: _language,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -279,82 +279,18 @@ app.post("/chat/302ai", async (c) => {
 		}),
 	};
 
-	// Wrap in createUIMessageStream to add suggestions after main response
-	const stream = createUIMessageStream({
-		execute: async ({ writer }) => {
-			// Stream the main text response using Agent
-			const result = new Agent({
-				...streamTextOptionsWithTransform,
-				stopWhen: stepCountIs(20),
-			}).stream(streamTextOptionsWithTransform);
+	// Stream the main text response using Agent without waiting for suggestions
+	const result = new Agent({
+		...streamTextOptionsWithTransform,
+		stopWhen: stepCountIs(20),
+	}).stream(streamTextOptionsWithTransform);
 
-			writer.merge(
-				result.toUIMessageStream({
-					messageMetadata: () => ({
-						model,
-						provider: "ai302",
-						createdAt: new Date().toISOString(),
-					}),
-				}),
-			);
-
-			// Wait for the main response to complete
-			await result.consumeStream();
-			const responseMessages = (await result.response).messages;
-
-			// Generate suggestions based on full conversation
-			try {
-				console.log("[Suggestions] Starting to generate suggestions...");
-				const suggestionTextResult = streamText({
-					model: wrapModel,
-					messages: [
-						...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
-						...responseMessages,
-						{
-							role: "user",
-							content: getSuggestionsPrompt(language),
-						},
-					],
-				});
-
-				// Collect the full text response
-				let fullText = "";
-				for await (const chunk of suggestionTextResult.textStream) {
-					fullText += chunk;
-				}
-				console.log("[Suggestions] Received text:", fullText);
-
-				// Parse the JSON array
-				try {
-					// Clean up the text - remove markdown code blocks if present
-					let cleanText = fullText.trim();
-					if (cleanText.startsWith("```")) {
-						cleanText = cleanText
-							.replace(/```json?\n?/g, "")
-							.replace(/```/g, "")
-							.trim();
-					}
-
-					const suggestions = JSON.parse(cleanText);
-					if (Array.isArray(suggestions) && suggestions.length > 0) {
-						console.log("[Suggestions] Parsed suggestions:", suggestions);
-						writer.write({
-							type: "data-suggestions",
-							data: {
-								suggestions: suggestions.slice(0, 3),
-							},
-						});
-					}
-				} catch (parseError) {
-					console.error("[Suggestions] Failed to parse JSON:", parseError);
-				}
-
-				console.log("[Suggestions] Completed");
-			} catch (error) {
-				console.error("[Suggestions] Failed to generate suggestions:", error);
-				// Continue without suggestions
-			}
-		},
+	const stream = result.toUIMessageStream({
+		messageMetadata: () => ({
+			model,
+			provider: "ai302",
+			createdAt: new Date().toISOString(),
+		}),
 	});
 
 	return createUIMessageStreamResponse({ stream });
@@ -374,7 +310,7 @@ app.post("/chat/openai", async (c) => {
 		mcpServerIds = [],
 		messages,
 		speedOptions,
-		language,
+		language: _language,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -445,79 +381,15 @@ app.post("/chat/openai", async (c) => {
 		}),
 	};
 
-	// Wrap in createUIMessageStream to add suggestions after main response
-	const stream = createUIMessageStream({
-		execute: async ({ writer }) => {
-			// Stream the main text response
-			const result = streamText(streamTextOptionsWithTransform);
+	// Stream the main text response without waiting for suggestions
+	const result = streamText(streamTextOptionsWithTransform);
 
-			writer.merge(
-				result.toUIMessageStream({
-					messageMetadata: () => ({
-						model,
-						provider: "openai",
-						createdAt: new Date().toISOString(),
-					}),
-				}),
-			);
-
-			// Wait for the main response to complete
-			await result.consumeStream();
-			const responseMessages = (await result.response).messages;
-
-			// Generate suggestions based on full conversation
-			try {
-				console.log("[Suggestions] Starting to generate suggestions...");
-				const suggestionTextResult = streamText({
-					model: wrapModel,
-					messages: [
-						...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
-						...responseMessages,
-						{
-							role: "user",
-							content: getSuggestionsPrompt(language),
-						},
-					],
-				});
-
-				// Collect the full text response
-				let fullText = "";
-				for await (const chunk of suggestionTextResult.textStream) {
-					fullText += chunk;
-				}
-				console.log("[Suggestions] Received text:", fullText);
-
-				// Parse the JSON array
-				try {
-					// Clean up the text - remove markdown code blocks if present
-					let cleanText = fullText.trim();
-					if (cleanText.startsWith("```")) {
-						cleanText = cleanText
-							.replace(/```json?\n?/g, "")
-							.replace(/```/g, "")
-							.trim();
-					}
-
-					const suggestions = JSON.parse(cleanText);
-					if (Array.isArray(suggestions) && suggestions.length > 0) {
-						console.log("[Suggestions] Parsed suggestions:", suggestions);
-						writer.write({
-							type: "data-suggestions",
-							data: {
-								suggestions: suggestions.slice(0, 3),
-							},
-						});
-					}
-				} catch (parseError) {
-					console.error("[Suggestions] Failed to parse JSON:", parseError);
-				}
-
-				console.log("[Suggestions] Completed");
-			} catch (error) {
-				console.error("[Suggestions] Failed to generate suggestions:", error);
-				// Continue without suggestions
-			}
-		},
+	const stream = result.toUIMessageStream({
+		messageMetadata: () => ({
+			model,
+			provider: "openai",
+			createdAt: new Date().toISOString(),
+		}),
 	});
 
 	return createUIMessageStreamResponse({ stream });
@@ -537,7 +409,7 @@ app.post("/chat/anthropic", async (c) => {
 		mcpServerIds = [],
 		messages,
 		speedOptions,
-		language,
+		language: _language,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -608,79 +480,15 @@ app.post("/chat/anthropic", async (c) => {
 		}),
 	};
 
-	// Wrap in createUIMessageStream to add suggestions after main response
-	const stream = createUIMessageStream({
-		execute: async ({ writer }) => {
-			// Stream the main text response
-			const result = streamText(streamTextOptionsWithTransform);
+	// Stream the main text response without waiting for suggestions
+	const result = streamText(streamTextOptionsWithTransform);
 
-			writer.merge(
-				result.toUIMessageStream({
-					messageMetadata: () => ({
-						model,
-						provider: "anthropic",
-						createdAt: new Date().toISOString(),
-					}),
-				}),
-			);
-
-			// Wait for the main response to complete
-			await result.consumeStream();
-			const responseMessages = (await result.response).messages;
-
-			// Generate suggestions based on full conversation
-			try {
-				console.log("[Suggestions] Starting to generate suggestions...");
-				const suggestionTextResult = streamText({
-					model: wrapModel,
-					messages: [
-						...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
-						...responseMessages,
-						{
-							role: "user",
-							content: getSuggestionsPrompt(language),
-						},
-					],
-				});
-
-				// Collect the full text response
-				let fullText = "";
-				for await (const chunk of suggestionTextResult.textStream) {
-					fullText += chunk;
-				}
-				console.log("[Suggestions] Received text:", fullText);
-
-				// Parse the JSON array
-				try {
-					// Clean up the text - remove markdown code blocks if present
-					let cleanText = fullText.trim();
-					if (cleanText.startsWith("```")) {
-						cleanText = cleanText
-							.replace(/```json?\n?/g, "")
-							.replace(/```/g, "")
-							.trim();
-					}
-
-					const suggestions = JSON.parse(cleanText);
-					if (Array.isArray(suggestions) && suggestions.length > 0) {
-						console.log("[Suggestions] Parsed suggestions:", suggestions);
-						writer.write({
-							type: "data-suggestions",
-							data: {
-								suggestions: suggestions.slice(0, 3),
-							},
-						});
-					}
-				} catch (parseError) {
-					console.error("[Suggestions] Failed to parse JSON:", parseError);
-				}
-
-				console.log("[Suggestions] Completed");
-			} catch (error) {
-				console.error("[Suggestions] Failed to generate suggestions:", error);
-				// Continue without suggestions
-			}
-		},
+	const stream = result.toUIMessageStream({
+		messageMetadata: () => ({
+			model,
+			provider: "anthropic",
+			createdAt: new Date().toISOString(),
+		}),
 	});
 
 	return createUIMessageStreamResponse({ stream });
@@ -700,7 +508,7 @@ app.post("/chat/gemini", async (c) => {
 		mcpServerIds = [],
 		messages,
 		speedOptions,
-		language,
+		language: _language,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -771,79 +579,15 @@ app.post("/chat/gemini", async (c) => {
 		}),
 	};
 
-	// Wrap in createUIMessageStream to add suggestions after main response
-	const stream = createUIMessageStream({
-		execute: async ({ writer }) => {
-			// Stream the main text response
-			const result = streamText(streamTextOptionsWithTransform);
+	// Stream the main text response without waiting for suggestions
+	const result = streamText(streamTextOptionsWithTransform);
 
-			writer.merge(
-				result.toUIMessageStream({
-					messageMetadata: () => ({
-						model,
-						provider: "gemini",
-						createdAt: new Date().toISOString(),
-					}),
-				}),
-			);
-
-			// Wait for the main response to complete
-			await result.consumeStream();
-			const responseMessages = (await result.response).messages;
-
-			// Generate suggestions based on full conversation
-			try {
-				console.log("[Suggestions] Starting to generate suggestions...");
-				const suggestionTextResult = streamText({
-					model: wrapModel,
-					messages: [
-						...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
-						...responseMessages,
-						{
-							role: "user",
-							content: getSuggestionsPrompt(language),
-						},
-					],
-				});
-
-				// Collect the full text response
-				let fullText = "";
-				for await (const chunk of suggestionTextResult.textStream) {
-					fullText += chunk;
-				}
-				console.log("[Suggestions] Received text:", fullText);
-
-				// Parse the JSON array
-				try {
-					// Clean up the text - remove markdown code blocks if present
-					let cleanText = fullText.trim();
-					if (cleanText.startsWith("```")) {
-						cleanText = cleanText
-							.replace(/```json?\n?/g, "")
-							.replace(/```/g, "")
-							.trim();
-					}
-
-					const suggestions = JSON.parse(cleanText);
-					if (Array.isArray(suggestions) && suggestions.length > 0) {
-						console.log("[Suggestions] Parsed suggestions:", suggestions);
-						writer.write({
-							type: "data-suggestions",
-							data: {
-								suggestions: suggestions.slice(0, 3),
-							},
-						});
-					}
-				} catch (parseError) {
-					console.error("[Suggestions] Failed to parse JSON:", parseError);
-				}
-
-				console.log("[Suggestions] Completed");
-			} catch (error) {
-				console.error("[Suggestions] Failed to generate suggestions:", error);
-				// Continue without suggestions
-			}
-		},
+	const stream = result.toUIMessageStream({
+		messageMetadata: () => ({
+			model,
+			provider: "gemini",
+			createdAt: new Date().toISOString(),
+		}),
 	});
 
 	return createUIMessageStreamResponse({ stream });
@@ -924,6 +668,99 @@ Requirements:
 	} catch (error) {
 		console.error("Title generation error:", error);
 		return c.json({ error: "Failed to generate title" }, 500);
+	}
+});
+
+app.post("/generate-suggestions", async (c) => {
+	const { messages, model, apiKey, baseUrl, providerType, language } = await c.req.json<{
+		messages: UIMessage[];
+		model: string;
+		apiKey?: string;
+		baseUrl?: string;
+		providerType: ModelProvider["apiType"];
+		language?: string;
+	}>();
+
+	let languageModel;
+	switch (providerType) {
+		case "302ai": {
+			const openai = createOpenAICompatible({
+				name: "302.AI",
+				baseURL: baseUrl || "https://api.openai.com/v1",
+				apiKey: apiKey || "[REDACTED:sk-secret]",
+			});
+			languageModel = openai.chatModel(model);
+			break;
+		}
+		case "openai": {
+			const openai = createOpenAI({
+				baseURL: baseUrl || "https://api.openai.com/v1",
+				apiKey: apiKey || "[REDACTED:sk-secret]",
+			});
+			languageModel = openai.chat(model);
+			break;
+		}
+		case "anthropic": {
+			const anthropic = createAnthropic({
+				baseURL: baseUrl || "https://api.anthropic.com/v1",
+				apiKey: apiKey || "[REDACTED:sk-secret]",
+			});
+			languageModel = anthropic.chat(model);
+			break;
+		}
+		case "gemini": {
+			const google = createGoogleGenerativeAI({
+				baseURL: baseUrl || "https://generativelanguage.googleapis.com/v1beta",
+				apiKey: apiKey || "[REDACTED:sk-secret]",
+			});
+			languageModel = google.chat(model);
+			break;
+		}
+		default:
+			return c.json({ error: "Invalid provider type" }, 400);
+	}
+
+	try {
+		console.log("[Suggestions] Starting to generate suggestions...");
+		const { text } = await generateText({
+			model: languageModel,
+			messages: [
+				...convertToModelMessages(enhanceMessagesWithFeedback(messages)),
+				{
+					role: "user",
+					content: getSuggestionsPrompt(language),
+				},
+			],
+		});
+
+		console.log("[Suggestions] Received text:", text);
+
+		// Parse the JSON array
+		try {
+			// Clean up the text - remove markdown code blocks if present
+			let cleanText = text.trim();
+			if (cleanText.startsWith("```")) {
+				cleanText = cleanText
+					.replace(/```json?\n?/g, "")
+					.replace(/```/g, "")
+					.trim();
+			}
+
+			const suggestions = JSON.parse(cleanText);
+			if (Array.isArray(suggestions) && suggestions.length > 0) {
+				console.log("[Suggestions] Parsed suggestions:", suggestions);
+				return c.json({ suggestions: suggestions.slice(0, 3) });
+			} else {
+				console.log("[Suggestions] Invalid suggestions format");
+				return c.json({ suggestions: [] });
+			}
+		} catch (parseError) {
+			console.error("[Suggestions] Failed to parse JSON:", parseError);
+			return c.json({ suggestions: [] });
+		}
+	} catch (error) {
+		console.error("[Suggestions] Failed to generate suggestions:", error);
+		return c.json({ suggestions: [] });
 	}
 });
 

@@ -1,3 +1,4 @@
+import { generateSuggestions } from "$lib/api/suggestions-generation";
 import { generateTitle } from "$lib/api/title-generation";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages.js";
@@ -1122,5 +1123,67 @@ export const chat = new Chat({
 		persistedChatParamsState.flush();
 
 		await broadcastService.broadcastToAll("thread-list-updated", {});
+
+		// Generate suggestions asynchronously (non-blocking)
+		// This runs in the background and updates the last message when ready
+		if (chatState.selectedModel && chatState.currentProvider) {
+			const lastMessage = messages[messages.length - 1];
+			if (lastMessage && lastMessage.role === "assistant") {
+				const serverPort = window.app?.serverPort ?? 8089;
+
+				// Don't await - let this run in the background
+				generateSuggestions(
+					messages,
+					chatState.selectedModel,
+					chatState.currentProvider,
+					generalSettings.language,
+					serverPort,
+				)
+					.then((suggestions) => {
+						if (suggestions && suggestions.length > 0) {
+							console.log("[Suggestions] Adding to message:", suggestions);
+
+							// Find the message again (it might have changed)
+							const currentMessages = persistedMessagesState.current;
+							const messageIndex = currentMessages.findIndex((m) => m.id === lastMessage.id);
+
+							if (messageIndex !== -1) {
+								// Check if suggestions already exist
+								const hasSuggestions = currentMessages[messageIndex].parts.some(
+									(part) => part.type === "data-suggestions",
+								);
+
+								if (!hasSuggestions) {
+									// Create a new message object with suggestions
+									const updatedMessage = {
+										...currentMessages[messageIndex],
+										parts: [
+											...currentMessages[messageIndex].parts,
+											{
+												type: "data-suggestions" as const,
+												data: {
+													suggestions: suggestions,
+												},
+											},
+										],
+									};
+
+									// Update the messages array
+									const updatedMessages = [...currentMessages];
+									updatedMessages[messageIndex] = updatedMessage;
+
+									// Update both the persisted state and chat.messages to trigger reactivity
+									persistedMessagesState.current = updatedMessages;
+									chat.messages = updatedMessages;
+									console.log("[Suggestions] Successfully added to message");
+								}
+							}
+						}
+					})
+					.catch((error) => {
+						console.error("[Suggestions] Failed to generate:", error);
+					});
+			}
+		}
 	},
 });
