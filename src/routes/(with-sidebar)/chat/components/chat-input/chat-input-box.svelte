@@ -65,7 +65,7 @@
 	// 监听会话 ID 变化，切换会话时自动聚焦
 	$effect(() => {
 		// 监听 chatState.id 的变化
-		const currentThreadId = chatState.id;
+		const _currentThreadId = chatState.id;
 		// 当会话切换时，自动聚焦输入框
 		focusInput();
 	});

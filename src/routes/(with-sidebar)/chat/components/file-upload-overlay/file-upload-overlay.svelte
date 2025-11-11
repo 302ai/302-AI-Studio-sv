@@ -56,13 +56,13 @@
 		}
 	}
 
-	function handleDragEnter(event: DragEvent) {
-		event.preventDefault();
-		// 只有在组件完全准备好后才显示 overlay
-		if (isReady && event.dataTransfer?.types.includes("Files")) {
-			showOverlay = true;
-		}
-	}
+	// function handleDragEnter(event: DragEvent) {
+	// 	event.preventDefault();
+	// 	// 只有在组件完全准备好后才显示 overlay
+	// 	if (isReady && event.dataTransfer?.types.includes("Files")) {
+	// 		showOverlay = true;
+	// 	}
+	// }
 
 	function handleDragOver(event: DragEvent) {
 		event.preventDefault();

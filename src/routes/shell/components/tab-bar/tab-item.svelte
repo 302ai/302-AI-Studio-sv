@@ -29,7 +29,7 @@
 	import { onDestroy } from "svelte";
 
 	const { handleAiApplicationReload } = window.electronAPI.aiApplicationService;
-	const { storageService, tabService } = window.electronAPI;
+	const { storageService } = window.electronAPI;
 
 	const {
 		tab,
