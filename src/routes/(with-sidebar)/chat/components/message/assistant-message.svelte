@@ -382,7 +382,7 @@
 				{#if !preferencesSettings.autoHideReason}
 					<Collapsible bind:open={isReasoningExpanded} class="rounded-lg border bg-muted/30 p-3">
 						<CollapsibleTrigger
-							class="flex w-full items-center justify-between text-left transition-colors hover:bg-muted/20 rounded-md p-2 -m-2"
+							class="flex w-full items-center justify-between text-left transition-colors hover:bg-muted/20 rounded-md p-2"
 						>
 							<div class="flex items-center gap-2">
 								<Lightbulb class="h-4 w-4 text-muted-foreground" />
