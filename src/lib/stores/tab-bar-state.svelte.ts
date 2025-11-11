@@ -261,6 +261,7 @@ class TabBarState {
 			})
 			.with("chat", () => true)
 			.with("aiApplications", () => true)
+			.with("codeAgent", () => true)
 			.exhaustive();
 
 		if (shouldCreateNewTab) {

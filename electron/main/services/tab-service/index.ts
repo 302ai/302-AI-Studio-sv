@@ -26,6 +26,7 @@ const TAB_CONFIGS: Record<TabType, TabConfig> = {
 	chat: { title: "New Chat", getHref: (id) => `/chat/${id}` },
 	settings: { title: "Settings", getHref: () => "/settings/general-settings" },
 	aiApplications: { title: "AI Applications", getHref: () => "/ai-applications" },
+	codeAgent: { title: "Code Agent", getHref: () => "/code-agent" },
 } as const;
 
 const getTabConfig = (type: TabType) => TAB_CONFIGS[type] || TAB_CONFIGS.chat;
