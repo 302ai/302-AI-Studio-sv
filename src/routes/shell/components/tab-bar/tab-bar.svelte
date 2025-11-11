@@ -22,7 +22,7 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import { animateButtonBounce } from "$lib/utils/animation";
-	import { isMac, isWindows } from "$lib/utils/platform";
+	import { isMac } from "$lib/utils/platform";
 	import { Plus } from "@lucide/svelte";
 	import { onDestroy, onMount } from "svelte";
 	import { flip } from "svelte/animate";
@@ -398,7 +398,7 @@
 			isMac &&
 				"transition-[padding-left] duration-200 ease-in-out" &&
 				(isMaximized ? "pl-[10px]" : "pl-[75px]"),
-			isWindows && "pr-[130px]",
+			!isMac && "pr-[130px]",
 		)}
 		bind:this={groupEl}
 		ondragstart={handleDragStart}
