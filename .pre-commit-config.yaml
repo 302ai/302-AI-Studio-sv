@@ -12,11 +12,21 @@ repos:
 
   - repo: local
     hooks:
+      # Complete quality check (equivalent to `pnpm quality`)
+      - id: quality-check
+        name: quality-check (check + lint + format:check)
+        entry: bash -c 'pnpm exec svelte-kit sync && pnpm exec svelte-check --tsconfig ./tsconfig.json && pnpm exec eslint . && pnpm exec prettier --check .'
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # Individual hooks for incremental checks
       - id: svelte-check
         name: svelte-check
-        entry: bash -c 'pnpm exec svelte-check --no-tsconfig --ignore "src/lib/paraglide,src/routes/demo" "$@"' --
+        entry: bash -c 'pnpm exec svelte-kit sync && pnpm exec svelte-check --tsconfig ./tsconfig.json'
         language: system
-        files: \.(svelte)$
+        pass_filenames: false
+        files: \.(svelte|ts)$
 
       - id: prettier
         name: prettier
