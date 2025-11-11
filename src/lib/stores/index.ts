@@ -1,5 +1,6 @@
 import "./ai-applications-state.svelte";
 import "./chat-state.svelte";
+import "./code-agent/index.ts";
 import "./data-settings.state.svelte";
 import "./general-settings.state.svelte";
 import "./mcp-state.svelte";

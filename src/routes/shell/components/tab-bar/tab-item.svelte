@@ -24,7 +24,7 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
-	import { Ghost, LayoutGrid, MessageCircle, Settings, X } from "@lucide/svelte";
+	import { Ghost, HatGlasses, LayoutGrid, MessageCircle, Settings, X } from "@lucide/svelte";
 	import type { Tab } from "@shared/types";
 	import { onDestroy } from "svelte";
 
@@ -129,6 +129,8 @@
 		<Settings />
 	{:else if tabType === "aiApplications"}
 		<LayoutGrid />
+	{:else if tabType === "codeAgent"}
+		<HatGlasses />
 	{/if}
 {/snippet}
 

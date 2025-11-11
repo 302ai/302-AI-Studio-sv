@@ -15,7 +15,8 @@ import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
-import { codeAgentState } from "./code-agent-state.svelte";
+
+import { claudeCodeAgentState } from "./code-agent";
 import { generalSettings } from "./general-settings.state.svelte";
 import { notificationState } from "./notification-state.svelte";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
@@ -397,8 +398,8 @@ class ChatState {
 				const currentAttachments = [...this.attachments];
 				const currentInputValue = this.inputValue;
 
-				const codeAgentModel = codeAgentState.sandboxId;
-				const codeAgentReady = codeAgentState.ready;
+				const codeAgentModel = claudeCodeAgentState.sandboxId;
+				const codeAgentReady = claudeCodeAgentState.ready;
 
 				this.resetError();
 
@@ -555,8 +556,8 @@ class ChatState {
 
 		const currentModel = this.selectedModel!;
 
-		const codeAgentReady = codeAgentState.ready;
-		const codeAgentModel = codeAgentState.sandboxId;
+		const codeAgentReady = claudeCodeAgentState.ready;
+		const codeAgentModel = claudeCodeAgentState.sandboxId;
 
 		try {
 			this.resetError();
@@ -964,7 +965,7 @@ export const chat = new Chat({
 		api: () => {
 			const port = window.app?.serverPort ?? 8089;
 
-			const codeAgentReady = codeAgentState.ready;
+			const codeAgentReady = claudeCodeAgentState.ready;
 
 			switch (chatState.currentProvider?.apiType) {
 				case "302ai": {
@@ -984,10 +985,10 @@ export const chat = new Chat({
 			}
 		},
 		body: () => {
-			const codeAgentReady = codeAgentState.ready;
+			const codeAgentReady = claudeCodeAgentState.ready;
 
 			return {
-				baseUrl: codeAgentReady ? codeAgentState.baseUrl : chatState.currentProvider?.baseUrl,
+				baseUrl: codeAgentReady ? claudeCodeAgentState.baseUrl : chatState.currentProvider?.baseUrl,
 				temperature: persistedChatParamsState.current.temperature,
 				topP: persistedChatParamsState.current.topP,
 				maxTokens: persistedChatParamsState.current.maxTokens,

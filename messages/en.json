@@ -649,5 +649,9 @@
 	"text_drag_files_subtitle": "Maximum 5 attachments, each file up to 10M",
 	"toast_file_count_exceeded": "You can only upload up to {count} files",
 	"toast_file_size_exceeded": "File size cannot exceed {size}M",
-	"toast_max_attachments_reached": "Maximum number of attachments reached"
+	"toast_max_attachments_reached": "Maximum number of attachments reached",
+	"code_agent_claude_code_sandbox_not_exist": "Please create a Claude Code sandbox first",
+	"placeholder_input_session_id": "Please enter a custom session ID...",
+	"text_lack_of_sandbox": "Need to create Claude Code sandbox",
+	"text_button_add": "Add"
 }

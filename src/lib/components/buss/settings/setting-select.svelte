@@ -11,6 +11,7 @@
 		options: SelectOption[];
 		placeholder?: string;
 		class?: string;
+		disabled?: boolean;
 		onValueChange?: (value: string) => void;
 	}
 </script>
@@ -28,6 +29,7 @@
 		options,
 		placeholder,
 		class: className,
+		disabled,
 		onValueChange,
 	}: Props = $props();
 
@@ -42,6 +44,7 @@
 			"!bg-settings-item-bg dark:!bg-settings-item-bg data-[size=default]:h-settings-item w-full",
 			className,
 		)}
+		{disabled}
 	>
 		{placeholder && !value ? placeholder : getLabel(value)}
 	</Select.Trigger>

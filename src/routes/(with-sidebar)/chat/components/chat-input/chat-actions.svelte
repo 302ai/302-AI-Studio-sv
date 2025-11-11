@@ -2,10 +2,10 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { McpServerSelector } from "$lib/components/buss/mcp-server-selector";
 	import { Overlay } from "$lib/components/buss/overlay";
-	import Switch from "$lib/components/ui/switch/switch.svelte";
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { codeAgentState } from "$lib/stores/code-agent-state.svelte";
+
+	import { claudeCodeAgentState } from "$lib/stores/code-agent";
 	import { cn } from "$lib/utils";
 	import mcpIcon from "@lobehub/icons-static-svg/icons/mcp.svg";
 	import { Globe, HatGlasses, Lightbulb, Settings2 } from "@lucide/svelte";
@@ -14,6 +14,8 @@
 	import ParametersPanel from "./parameters-panel.svelte";
 
 	let actionDisabled = $derived(chatState.providerType !== "302ai");
+	let isFreshTab = $derived(false);
+	// let isFreshTab = $derived(!chatState.hasMessages);
 	let isParametersOpen = $state(false);
 	let isMCPSelectorOpen = $state(false);
 	let isCodeAgentOpen = $state(false);
@@ -34,6 +36,10 @@
 		chatState.handleMCPServerIdsChange(selectedIds);
 		chatState.handleMCPActiveChange(selectedIds.length > 0);
 	}
+
+	// function handleCodeAgentSwitchChange(checked: boolean) {
+	// 	claudeCodeAgentState.updateState({ enabled: checked });
+	// }
 </script>
 
 {#snippet actionEnableThinking()}
@@ -116,12 +122,12 @@
 	<ButtonWithTooltip
 		class={cn(
 			"hover:!bg-chat-action-hover",
-			codeAgentState.enabled && "!bg-chat-action-active hover:!bg-chat-action-active",
+			claudeCodeAgentState.ready && "!bg-chat-action-active hover:!bg-chat-action-active",
 		)}
 		tooltip={m.title_code_agent()}
 		onclick={() => (isCodeAgentOpen = true)}
 	>
-		<HatGlasses class={cn(codeAgentState.enabled && "!text-chat-action-active-fg")} />
+		<HatGlasses class={cn(claudeCodeAgentState.ready && "!text-chat-action-active-fg")} />
 	</ButtonWithTooltip>
 
 	<Overlay
@@ -130,11 +136,17 @@
 		onClose={() => (isCodeAgentOpen = false)}
 	>
 		<CodeAgentPanel />
-		<Switch
+		<!-- <Switch
 			class={cn("absolute top-4 right-12", "data-[state=unchecked]:border-settings-switch-border")}
-			checked={codeAgentState.enabled}
-			onCheckedChange={(checked) => codeAgentState.updateState({ enabled: checked })}
-		/>
+			checked={claudeCodeAgentState.enabled}
+			onclick={(e) => {
+				if (!claudeCodeAgentState.sandboxId) {
+					e.preventDefault();
+					toast.warning(m.code_agent_claude_code_sandbox_not_exist());
+				}
+			}}
+			onCheckedChange={(checked) => handleCodeAgentSwitchChange(checked)}
+		/> -->
 	</Overlay>
 {/snippet}
 
@@ -143,8 +155,10 @@
 	{#if chatState.providerType === "302ai"}
 		{@render actionEnableThinking()}
 		{@render actionEnableOnlineSearch()}
-		{@render actionCodeAgent()}
 	{/if}
 	{@render actionEnableMCP()}
 	{@render actionSetParameters()}
+	{#if isFreshTab}
+		{@render actionCodeAgent()}
+	{/if}
 </div>

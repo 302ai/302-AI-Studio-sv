@@ -645,5 +645,9 @@
 	"text_drag_files_subtitle": "最多可上传5个附件，每个文件不超过10M",
 	"toast_file_count_exceeded": "最多只能上传{count}个文件",
 	"toast_file_size_exceeded": "文件大小不能超过{size}M",
-	"toast_max_attachments_reached": "已达到最大附件数量"
+	"toast_max_attachments_reached": "已达到最大附件数量",
+	"code_agent_claude_code_sandbox_not_exist": "请先创建一个Claude Code沙盒",
+	"placeholder_input_session_id": "请输入自定义的对话ID...",
+	"text_lack_of_sandbox": "需要创建Claude Code沙盒",
+	"text_button_add": "添加"
 }

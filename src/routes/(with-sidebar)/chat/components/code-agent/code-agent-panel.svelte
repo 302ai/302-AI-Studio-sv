@@ -1,20 +1,22 @@
 <script lang="ts">
 	import ButtonWithTooltip from "$lib/components/buss/button-with-tooltip/button-with-tooltip.svelte";
-	import LdrsLoader from "$lib/components/buss/ldrs-loader/ldrs-loader.svelte";
 	import SegButton from "$lib/components/buss/settings/seg-button.svelte";
 	import type { SelectOption } from "$lib/components/buss/settings/setting-select.svelte";
 	import SettingSelect from "$lib/components/buss/settings/setting-select.svelte";
+	import { Button } from "$lib/components/ui/button";
 	import * as Empty from "$lib/components/ui/empty/index.js";
+	import { Input } from "$lib/components/ui/input";
 	import Label from "$lib/components/ui/label/label.svelte";
 
 	import { m } from "$lib/paraglide/messages";
-	import { codeAgentState } from "$lib/stores/code-agent-state.svelte";
-	import { PackagePlus, RefreshCcw } from "@lucide/svelte";
-	import { toast } from "svelte-sonner";
+	import { claudeCodeAgentState, codeAgentState } from "$lib/stores/code-agent";
+	import { cn } from "$lib/utils";
+	import { Plus, RefreshCcw } from "@lucide/svelte";
 
-	// Now codeAgentState.type is automatically reactive via $derived
 	let selectedKey = $derived(codeAgentState.type);
-	let isCreatingSandbox = $state(false);
+	// let isCreatingSandbox = $state(false);
+	let showCustomSessionIdInput = $state(false);
+	let customSessionId = $state("");
 
 	const platformOptions = [
 		{
@@ -35,37 +37,52 @@
 	];
 
 	async function handleSelect(key: string) {
-		// Use the updateState helper method - cleaner API
 		codeAgentState.updateState({ type: key as "local" | "remote" });
 	}
 
-	async function handleCreateSandbox(agentId: string) {
-		isCreatingSandbox = true;
-		let status: "success" | "failed" | "already-exist";
-		switch (agentId) {
-			case "claude-code":
-				status = await codeAgentState.createClaudeCodeSandbox();
-				break;
-			default:
-				status = "failed";
-				break;
+	// async function handleCreateSandbox(agentId: string) {
+	// 	isCreatingSandbox = true;
+	// 	let status: "success" | "failed" | "already-exist";
+	// 	switch (agentId) {
+	// 		case "claude-code":
+	// 			status = await claudeCodeAgentState.createClaudeCodeSandbox();
+	// 			break;
+	// 		default:
+	// 			status = "failed";
+	// 			break;
+	// 	}
+	// 	try {
+	// 		if (status === "success") {
+	// 			toast.success(m.sandbox_created());
+	// 		}
+	// 		if (status === "failed") {
+	// 			toast.error(m.sandbox_create_failed());
+	// 		}
+	// 		if (status === "already-exist") {
+	// 			toast.info(m.sandbox_already_exist());
+	// 		}
+	// 	} catch (error) {
+	// 		console.error(error);
+	// 		toast.error(m.sandbox_create_failed());
+	// 	} finally {
+	// 		isCreatingSandbox = false;
+	// 	}
+	// }
+
+	async function handleAddCustomSessionId() {
+		if (customSessionId && customSessionId.trim() !== "") {
+			claudeCodeAgentState.updateState({
+				currentSessionId: customSessionId,
+				sessionIds: [...claudeCodeAgentState.sessionIds, customSessionId],
+			});
+			customSessionId = "";
+			showCustomSessionIdInput = false;
 		}
-		try {
-			if (status === "success") {
-				toast.success(m.sandbox_created());
-			}
-			if (status === "failed") {
-				toast.error(m.sandbox_create_failed());
-			}
-			if (status === "already-exist") {
-				toast.info(m.sandbox_already_exist());
-			}
-		} catch (error) {
-			console.error(error);
-			toast.error(m.sandbox_create_failed());
-		} finally {
-			isCreatingSandbox = false;
-		}
+	}
+
+	function handleCodeAgentSelected(codeAgentId: string) {
+		codeAgentState.updateState({ currentAgentId: codeAgentId });
+		// await handleCreateSandbox(codeAgentId);
 	}
 </script>
 
@@ -78,50 +95,87 @@
 
 		{#if selectedKey === "remote"}
 			<Label class="text-label-fg">{m.title_agent()}</Label>
-			<div class="flex w-full flex-row items-center gap-x-2">
-				<SettingSelect
-					name="agent"
-					value={codeAgentState.agentId}
-					{options}
-					placeholder={m.select_agent()}
-					onValueChange={(v) => codeAgentState.updateState({ agentId: v })}
-				/>
-				<ButtonWithTooltip
-					class="hover:!bg-chat-action-hover"
-					tooltip={m.label_button_create_sandbox()}
-					disabled={isCreatingSandbox || !codeAgentState.agentId}
-					onclick={() => handleCreateSandbox(codeAgentState.agentId)}
+			<div class="flex w-full flex-col gap-y-2">
+				<div class="flex w-full flex-row items-center gap-x-2">
+					<SettingSelect
+						name="agent"
+						value={codeAgentState.currentAgentId}
+						{options}
+						placeholder={m.select_agent()}
+						onValueChange={(codeAgentId) => handleCodeAgentSelected(codeAgentId)}
+					/>
+
+					<!-- <ButtonWithTooltip
+						class="hover:!bg-chat-action-hover"
+						tooltip={m.label_button_create_sandbox()}
+						disabled={isCreatingSandbox || !claudeCodeAgentState.agentId}
+						onclick={() => handleCreateSandbox(claudeCodeAgentState.agentId)}
+					>
+						{#if isCreatingSandbox}
+							<LdrsLoader type="line-spinner" size={16} />
+						{:else}
+							<PackagePlus />
+						{/if}
+					</ButtonWithTooltip> -->
+				</div>
+				<!-- <p
+					class={cn(
+						"text-destructive/50 text-xs",
+						(!claudeCodeAgentState.agentId || (claudeCodeAgentState.agentId && claudeCodeAgentState.sandboxId)) &&
+							"hidden",
+					)}
 				>
-					{#if isCreatingSandbox}
-						<LdrsLoader type="line-spinner" size={16} />
-					{:else}
-						<PackagePlus />
-					{/if}
-				</ButtonWithTooltip>
+					{m.text_lack_of_sandbox()}
+				</p> -->
 			</div>
 
 			<Label class="text-label-fg">{m.title_select_session()}</Label>
 			<div class="flex w-full flex-row items-center gap-x-2">
 				<SettingSelect
 					name="session"
-					value={codeAgentState.currentSessionId}
-					options={codeAgentState.sessionIds.map((id) => ({
+					value={claudeCodeAgentState.currentSessionId}
+					options={claudeCodeAgentState.sessionIds.map((id) => ({
 						key: id,
 						label: id,
 						value: id,
 					}))}
 					placeholder={m.select_session()}
-					onValueChange={(v) => codeAgentState.updateState({ currentSessionId: v })}
+					onValueChange={(v) => claudeCodeAgentState.updateState({ currentSessionId: v })}
 				/>
-
+				<ButtonWithTooltip
+					class={cn(
+						"hover:!bg-chat-action-hover",
+						showCustomSessionIdInput && "!bg-chat-action-hover",
+					)}
+					tooltip={m.common_custom()}
+					onclick={() => {
+						showCustomSessionIdInput = !showCustomSessionIdInput;
+					}}
+				>
+					<Plus />
+				</ButtonWithTooltip>
 				<ButtonWithTooltip
 					class="hover:!bg-chat-action-hover"
 					tooltip={m.label_button_reload()}
 					onclick={() => {}}
-					disabled={!codeAgentState.agentId}
 				>
 					<RefreshCcw />
 				</ButtonWithTooltip>
+			</div>
+			<div
+				class={cn(
+					"flex w-full flex-row items-center gap-x-2 ",
+					!showCustomSessionIdInput && "hidden",
+				)}
+			>
+				<Input
+					class="!bg-settings-item-bg dark:!bg-settings-item-bg h-10 rounded-[10px]"
+					bind:value={customSessionId}
+					placeholder={m.placeholder_input_session_id()}
+				/>
+				<Button variant="secondary" onclick={() => handleAddCustomSessionId()}>
+					{m.text_button_add()}
+				</Button>
 			</div>
 		{/if}
 		{#if selectedKey === "local"}
