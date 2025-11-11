@@ -46,6 +46,12 @@ class CodeAgentState {
 			.otherwise(() => ({ baseUrl: "", model: "" }));
 	}
 
+	getCurrentSessionId(): string {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.currentSessionId)
+			.otherwise(() => "");
+	}
+
 	// async createSandbox(): Promise<CodeAgentCreateResult> {
 	// 	let createResult: CodeAgentCreateResult = "failed";
 	// 	if (this.currentAgentId === "claude-code") {

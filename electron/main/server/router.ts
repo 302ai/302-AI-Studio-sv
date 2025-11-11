@@ -48,6 +48,7 @@ export type RouterRequestBody = {
 	messages: UIMessage[];
 	language?: string;
 	threadId: string;
+	sessionId?: string;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -780,20 +781,21 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		baseUrl,
 		model = "gpt-4o",
 		apiKey,
-		temperature,
-		topP,
-		maxTokens,
-		frequencyPenalty,
-		presencePenalty,
-		isThinkingActive,
-		isOnlineSearchActive,
-		isMCPActive,
-		mcpServerIds = [],
-		autoParseUrl,
-		searchProvider = "search1api",
+		// temperature,
+		// topP,
+		// maxTokens,
+		// frequencyPenalty,
+		// presencePenalty,
+		// isThinkingActive,
+		// isOnlineSearchActive,
+		// isMCPActive,
+		// mcpServerIds = [],
+		// autoParseUrl,
+		// searchProvider = "search1api",
 		messages,
 		speedOptions,
 		threadId,
+		sessionId,
 	} = await c.req.json<RouterRequestBody>();
 
 	const openai = createOpenAICompatible({
@@ -803,23 +805,24 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		fetch: createCitationsFetch(),
 	});
 
-	const { sandboxId } = await codeAgentService.createClaudeCodeSandbox(threadId, model);
+	const { sandboxId } = await codeAgentService.createClaudeCodeSandbox(threadId);
 
 	console.log(
 		"Received request for 302ai-code-agent",
 		baseUrl,
 		sandboxId,
 		apiKey,
-		temperature,
-		topP,
-		maxTokens,
-		frequencyPenalty,
-		presencePenalty,
-		isThinkingActive,
-		isOnlineSearchActive,
+		// temperature,
+		// topP,
+		// maxTokens,
+		// frequencyPenalty,
+		// presencePenalty,
+		// isThinkingActive,
+		// isOnlineSearchActive,
 		messages,
 		speedOptions,
 		threadId,
+		sessionId,
 	);
 
 	const wrapModel = wrapLanguageModel({
@@ -831,34 +834,34 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		providerId: "302.AI",
 	});
 
-	const provider302Options: Record<string, boolean | string> = {};
+	const provider302Options: Record<string, boolean | string> = { session_id: sessionId ?? "" };
 
-	if (autoParseUrl) {
-		provider302Options["file-parse"] = true;
-	}
+	// if (autoParseUrl) {
+	// 	provider302Options["file-parse"] = true;
+	// }
 
-	if (isThinkingActive) {
-		provider302Options["r1-fusion"] = true;
-	}
+	// if (isThinkingActive) {
+	// 	provider302Options["r1-fusion"] = true;
+	// }
 
-	if (isOnlineSearchActive) {
-		provider302Options["web-search"] = true;
-		provider302Options["search-service"] = searchProvider;
-	}
+	// if (isOnlineSearchActive) {
+	// 	provider302Options["web-search"] = true;
+	// 	provider302Options["search-service"] = searchProvider;
+	// }
 
 	// Get MCP tools if MCP is active
-	let mcpTools = undefined;
-	if (isMCPActive && mcpServerIds.length > 0) {
-		try {
-			const allServers = await storageService.getItemInternal("app-mcp-servers");
-			if (allServers) {
-				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
-				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
-			}
-		} catch (error) {
-			console.error("Failed to load MCP tools:", error);
-		}
-	}
+	// let mcpTools = undefined;
+	// if (isMCPActive && mcpServerIds.length > 0) {
+	// 	try {
+	// 		const allServers = await storageService.getItemInternal("app-mcp-servers");
+	// 		if (allServers) {
+	// 			mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
+	// 			console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+	// 		}
+	// 	} catch (error) {
+	// 		console.error("Failed to load MCP tools:", error);
+	// 	}
+	// }
 
 	const streamTextOptions = {
 		model: wrapModel,
@@ -866,16 +869,17 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		providerOptions: {
 			"302": provider302Options,
 		},
-		...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
+
+		// ...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
 	};
 
-	addDefinedParams(streamTextOptions, {
-		temperature,
-		topP,
-		maxTokens,
-		frequencyPenalty,
-		presencePenalty,
-	});
+	// addDefinedParams(streamTextOptions, {
+	// 	temperature,
+	// 	topP,
+	// 	maxTokens,
+	// 	frequencyPenalty,
+	// 	presencePenalty,
+	// });
 
 	const streamTextOptionsWithTransform = {
 		...streamTextOptions,

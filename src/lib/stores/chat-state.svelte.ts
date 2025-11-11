@@ -984,6 +984,7 @@ export const chat = new Chat({
 		},
 		body: () => {
 			const codeAgentEnabled = codeAgentState.enabled;
+			const sessionId = codeAgentEnabled ? codeAgentState.getCurrentSessionId() : "";
 
 			return {
 				baseUrl: codeAgentEnabled
@@ -1011,6 +1012,7 @@ export const chat = new Chat({
 				language: generalSettings.language,
 
 				threadId,
+				sessionId,
 			};
 		},
 	}),
