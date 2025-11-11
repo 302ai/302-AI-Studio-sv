@@ -24,3 +24,12 @@ export const CodeAgentMetadata = type({
 	sandboxId: "string",
 });
 export type CodeAgentMetadata = typeof CodeAgentMetadata.infer;
+
+export const CodeAgentCfgs = type({
+	baseUrl: "string",
+	model: "string",
+});
+export type CodeAgentCfgs = typeof CodeAgentCfgs.infer;
+
+export const CodeAgentCreateResult = type("'already-exist' | 'success' | 'failed'");
+export type CodeAgentCreateResult = typeof CodeAgentCreateResult.infer;

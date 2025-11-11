@@ -5,7 +5,7 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 
-	import { claudeCodeAgentState } from "$lib/stores/code-agent";
+	import { codeAgentState } from "$lib/stores/code-agent";
 	import { cn } from "$lib/utils";
 	import mcpIcon from "@lobehub/icons-static-svg/icons/mcp.svg";
 	import { Globe, HatGlasses, Lightbulb, Settings2 } from "@lucide/svelte";
@@ -14,8 +14,8 @@
 	import ParametersPanel from "./parameters-panel.svelte";
 
 	let actionDisabled = $derived(chatState.providerType !== "302ai");
-	let isFreshTab = $derived(false);
-	// let isFreshTab = $derived(!chatState.hasMessages);
+	// let isFreshTab = $derived(false);
+	let isFreshTab = $derived(!chatState.hasMessages);
 	let isParametersOpen = $state(false);
 	let isMCPSelectorOpen = $state(false);
 	let isCodeAgentOpen = $state(false);
@@ -37,9 +37,13 @@
 		chatState.handleMCPActiveChange(selectedIds.length > 0);
 	}
 
-	// function handleCodeAgentSwitchChange(checked: boolean) {
-	// 	claudeCodeAgentState.updateState({ enabled: checked });
-	// }
+	function handleCodeAgentClick() {
+		if (codeAgentState.enabled) {
+			codeAgentState.updateState({ currentAgentId: "" });
+			return;
+		}
+		isCodeAgentOpen = true;
+	}
 </script>
 
 {#snippet actionEnableThinking()}
@@ -122,12 +126,13 @@
 	<ButtonWithTooltip
 		class={cn(
 			"hover:!bg-chat-action-hover",
-			claudeCodeAgentState.ready && "!bg-chat-action-active hover:!bg-chat-action-active",
+			codeAgentState.enabled && "!bg-chat-action-active hover:!bg-chat-action-active",
 		)}
 		tooltip={m.title_code_agent()}
-		onclick={() => (isCodeAgentOpen = true)}
+		onclick={() => handleCodeAgentClick()}
+		disabled={!isFreshTab}
 	>
-		<HatGlasses class={cn(claudeCodeAgentState.ready && "!text-chat-action-active-fg")} />
+		<HatGlasses class={cn(codeAgentState.enabled && "!text-chat-action-active-fg")} />
 	</ButtonWithTooltip>
 
 	<Overlay
@@ -158,7 +163,5 @@
 	{/if}
 	{@render actionEnableMCP()}
 	{@render actionSetParameters()}
-	{#if isFreshTab}
-		{@render actionCodeAgent()}
-	{/if}
+	{@render actionCodeAgent()}
 </div>

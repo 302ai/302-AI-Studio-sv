@@ -82,7 +82,6 @@
 
 	function handleCodeAgentSelected(codeAgentId: string) {
 		codeAgentState.updateState({ currentAgentId: codeAgentId });
-		// await handleCreateSandbox(codeAgentId);
 	}
 </script>
 

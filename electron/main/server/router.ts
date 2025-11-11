@@ -21,6 +21,7 @@ import {
 } from "ai";
 import getPort from "get-port";
 import { Hono } from "hono";
+import { codeAgentService } from "../services";
 import { mcpService } from "../services/mcp-service";
 import { storageService } from "../services/storage-service";
 import { createCitationsFetch } from "./citations-processor";
@@ -46,6 +47,7 @@ export type RouterRequestBody = {
 	};
 	messages: UIMessage[];
 	language?: string;
+	threadId: string;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -791,11 +793,22 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		searchProvider = "search1api",
 		messages,
 		speedOptions,
+		threadId,
 	} = await c.req.json<RouterRequestBody>();
+
+	const openai = createOpenAICompatible({
+		name: "302.AI",
+		baseURL: baseUrl || "https://api.openai.com/v1",
+		apiKey: apiKey || "[REDACTED:sk-secret]",
+		fetch: createCitationsFetch(),
+	});
+
+	const { sandboxId } = await codeAgentService.createClaudeCodeSandbox(threadId, model);
+
 	console.log(
 		"Received request for 302ai-code-agent",
 		baseUrl,
-		model,
+		sandboxId,
 		apiKey,
 		temperature,
 		topP,
@@ -806,17 +819,11 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		isOnlineSearchActive,
 		messages,
 		speedOptions,
+		threadId,
 	);
 
-	const openai = createOpenAICompatible({
-		name: "302.AI",
-		baseURL: baseUrl || "https://api.openai.com/v1",
-		apiKey: apiKey || "[REDACTED:sk-secret]",
-		fetch: createCitationsFetch(),
-	});
-
 	const wrapModel = wrapLanguageModel({
-		model: openai.chatModel(model),
+		model: openai.chatModel(sandboxId ?? model),
 		middleware: [
 			extractReasoningMiddleware({ tagName: "think" }),
 			extractReasoningMiddleware({ tagName: "thinking" }),

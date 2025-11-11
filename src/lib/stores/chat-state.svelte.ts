@@ -16,7 +16,8 @@ import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/typ
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
 
-import { claudeCodeAgentState } from "./code-agent";
+import type { CodeAgentCfgs } from "@shared/storage/code-agent";
+import { codeAgentState } from "./code-agent";
 import { generalSettings } from "./general-settings.state.svelte";
 import { notificationState } from "./notification-state.svelte";
 import { preferencesSettings } from "./preferences-settings.state.svelte";
@@ -90,6 +91,9 @@ class ChatState {
 	private lastError: ChatError | null = $state(null);
 	private retryInProgress = $state(false);
 	private hydrateCheckInterval: ReturnType<typeof setInterval> | null = null;
+
+	private codeAgentCfgs: CodeAgentCfgs = $derived.by(() => codeAgentState.getCodeAgentCfgs());
+
 	// Track loading state for attachments (not persisted)
 	loadingAttachmentIds = $state(new Set<string>());
 
@@ -398,9 +402,6 @@ class ChatState {
 				const currentAttachments = [...this.attachments];
 				const currentInputValue = this.inputValue;
 
-				const codeAgentModel = claudeCodeAgentState.sandboxId;
-				const codeAgentReady = claudeCodeAgentState.ready;
-
 				this.resetError();
 
 				// Execute before send message hook
@@ -480,7 +481,7 @@ class ChatState {
 						},
 						{
 							body: {
-								model: codeAgentReady ? codeAgentModel : currentModel.id,
+								model: currentModel.id,
 								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 									?.apiKey,
 							},
@@ -495,7 +496,7 @@ class ChatState {
 						},
 						{
 							body: {
-								model: codeAgentReady ? codeAgentModel : currentModel.id,
+								model: currentModel.id,
 								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 									?.apiKey,
 							},
@@ -517,7 +518,7 @@ class ChatState {
 						},
 						{
 							body: {
-								model: codeAgentReady ? codeAgentModel : currentModel.id,
+								model: currentModel.id,
 								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 									?.apiKey,
 							},
@@ -528,7 +529,7 @@ class ChatState {
 						{ text: currentInputValue },
 						{
 							body: {
-								model: codeAgentReady ? codeAgentModel : currentModel.id,
+								model: currentModel.id,
 								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 									?.apiKey,
 							},
@@ -556,16 +557,13 @@ class ChatState {
 
 		const currentModel = this.selectedModel!;
 
-		const codeAgentReady = claudeCodeAgentState.ready;
-		const codeAgentModel = claudeCodeAgentState.sandboxId;
-
 		try {
 			this.resetError();
 
 			await chat.regenerate({
 				...(messageId && { messageId }),
 				body: {
-					model: codeAgentReady ? codeAgentModel : currentModel.id,
+					model: currentModel.id,
 					apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
 						?.apiKey,
 				},
@@ -965,11 +963,11 @@ export const chat = new Chat({
 		api: () => {
 			const port = window.app?.serverPort ?? 8089;
 
-			const codeAgentReady = claudeCodeAgentState.ready;
+			const codeAgentEnabled = codeAgentState.enabled;
 
 			switch (chatState.currentProvider?.apiType) {
 				case "302ai": {
-					if (codeAgentReady) {
+					if (codeAgentEnabled) {
 						return `http://localhost:${port}/chat/302ai-code-agent`;
 					}
 					return `http://localhost:${port}/chat/302ai`;
@@ -985,10 +983,12 @@ export const chat = new Chat({
 			}
 		},
 		body: () => {
-			const codeAgentReady = claudeCodeAgentState.ready;
+			const codeAgentEnabled = codeAgentState.enabled;
 
 			return {
-				baseUrl: codeAgentReady ? claudeCodeAgentState.baseUrl : chatState.currentProvider?.baseUrl,
+				baseUrl: codeAgentEnabled
+					? codeAgentState.getCodeAgentCfgs().baseUrl
+					: chatState.currentProvider?.baseUrl,
 				temperature: persistedChatParamsState.current.temperature,
 				topP: persistedChatParamsState.current.topP,
 				maxTokens: persistedChatParamsState.current.maxTokens,
@@ -1009,6 +1009,8 @@ export const chat = new Chat({
 				},
 
 				language: generalSettings.language,
+
+				threadId,
 			};
 		},
 	}),

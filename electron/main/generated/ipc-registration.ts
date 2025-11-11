@@ -5,7 +5,6 @@ import {
 	storageService,
 	pluginService,
 	generalSettingsService,
-	codeAgentService,
 	ghostWindowService,
 	windowService,
 	shortcutService,
@@ -144,11 +143,6 @@ export function registerIpcHandlers() {
 	// generalSettingsService service registration
 	ipcMain.handle("generalSettingsService:handleLanguageChanged", (event, language) =>
 		generalSettingsService.handleLanguageChanged(event, language),
-	);
-
-	// codeAgentService service registration
-	ipcMain.handle("codeAgentService:createClaudeCodeSandbox", (event, threadId, llm_model) =>
-		codeAgentService.createClaudeCodeSandbox(event, threadId, llm_model),
 	);
 
 	// ghostWindowService service registration
@@ -373,7 +367,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("pluginService:executeAfterSendMessageHook");
 	ipcMain.removeHandler("pluginService:executeErrorHook");
 	ipcMain.removeHandler("generalSettingsService:handleLanguageChanged");
-	ipcMain.removeHandler("codeAgentService:createClaudeCodeSandbox");
 	ipcMain.removeHandler("ghostWindowService:startTracking");
 	ipcMain.removeHandler("ghostWindowService:stopTracking");
 	ipcMain.removeHandler("ghostWindowService:updateInsertIndex");
