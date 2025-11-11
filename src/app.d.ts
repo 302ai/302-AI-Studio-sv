@@ -34,7 +34,9 @@ declare global {
 			};
 			onThemeChange: (callback: (theme: Theme) => void) => () => void;
 			onScreenshotTriggered: (callback: (data: { threadId: string }) => void) => () => void;
-			onShowToast: (callback: (data: { type: string; message: string; threadId?: string }) => void) => () => void;
+			onShowToast: (
+				callback: (data: { type: string; message: string; threadId?: string }) => void,
+			) => () => void;
 			onTriggerSendMessage: (callback: (data: { threadId: string }) => void) => () => void;
 			onThreadListUpdate: (callback: (eventData: BroadcastEventData) => void) => () => void;
 			onShellWindowFullscreenChange: (

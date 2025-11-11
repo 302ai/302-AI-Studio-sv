@@ -69,31 +69,33 @@
 		);
 
 		// Listen for show toast event (from shell view, e.g. tab context menu)
-		const unsubShowToast = window.electronAPI?.onShowToast?.((data: { type: string; message: string; threadId?: string }) => {
-			console.log("[Chat Page] Received show-toast event:", data);
-			
-			// Only show toast if it's for this specific thread (or no threadId specified)
-			if (data.threadId && data.threadId !== chatState.id) {
-				return;
-			}
-			
-			// Display toast in this tab view (content area) so it's visible on top
-			switch (data.type) {
-				case "success":
-					toast.success(data.message);
-					break;
-				case "error":
-					toast.error(data.message);
-					break;
-				case "warning":
-					toast.warning(data.message);
-					break;
-				case "info":
-				default:
-					toast.info(data.message);
-					break;
-			}
-		});
+		const unsubShowToast = window.electronAPI?.onShowToast?.(
+			(data: { type: string; message: string; threadId?: string }) => {
+				console.log("[Chat Page] Received show-toast event:", data);
+
+				// Only show toast if it's for this specific thread (or no threadId specified)
+				if (data.threadId && data.threadId !== chatState.id) {
+					return;
+				}
+
+				// Display toast in this tab view (content area) so it's visible on top
+				switch (data.type) {
+					case "success":
+						toast.success(data.message);
+						break;
+					case "error":
+						toast.error(data.message);
+						break;
+					case "warning":
+						toast.warning(data.message);
+						break;
+					case "info":
+					default:
+						toast.info(data.message);
+						break;
+				}
+			},
+		);
 
 		// Check if we should auto-send on load (for branch and send functionality)
 		const checkAutoSend = async () => {

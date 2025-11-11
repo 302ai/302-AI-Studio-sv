@@ -1,5 +1,11 @@
 import type { SheetWindowConfig } from "@shared/types";
-import { BrowserWindow, nativeTheme, WebContentsView, type IpcMainInvokeEvent } from "electron";
+import {
+	BrowserWindow,
+	nativeTheme,
+	screen,
+	WebContentsView,
+	type IpcMainInvokeEvent,
+} from "electron";
 import windowStateKeeper from "electron-window-state";
 import { isNull, isUndefined } from "es-toolkit";
 import path from "node:path";
@@ -656,22 +662,37 @@ export class WindowService {
 		const { shouldUseDarkColors } = nativeTheme;
 		const language = await generalSettingsStorage.getLanguage();
 
-		// Get the focused window to determine initial size
+		// Get the focused window to determine initial size and position
 		const focusedWindow = BrowserWindow.getFocusedWindow();
 		let windowWidth = 1000;
 		let windowHeight = 700;
+		let windowX: number | undefined;
+		let windowY: number | undefined;
 
 		if (focusedWindow && !focusedWindow.isDestroyed()) {
 			const bounds = focusedWindow.getBounds();
 			// Use the focused window's size, but ensure it's not smaller than minimum
 			windowWidth = Math.max(bounds.width, 800);
 			windowHeight = Math.max(bounds.height, 600);
+
+			// Get the display where the focused window is located
+			const display = screen.getDisplayNearestPoint({
+				x: bounds.x + bounds.width / 2,
+				y: bounds.y + bounds.height / 2,
+			});
+
+			// Calculate center position on the same screen
+			const displayBounds = display.workArea;
+			windowX = Math.floor(displayBounds.x + (displayBounds.width - windowWidth) / 2);
+			windowY = Math.floor(displayBounds.y + (displayBounds.height - windowHeight) / 2);
 		}
 
 		// Create settings window with normal title bar
 		this.settingsWindow = new BrowserWindow({
 			width: windowWidth,
 			height: windowHeight,
+			x: windowX,
+			y: windowY,
 			minWidth: 800,
 			minHeight: 600,
 			title: language === "zh" ? "设置" : "Settings",
