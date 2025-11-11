@@ -65,5 +65,10 @@
 			options={timingOptions}
 			onValueChange={(v) => preferencesSettings.setSuggestionsTiming(v as SuggestionsTiming)}
 		/>
+		<SettingSwitchItem
+			label={m.settings_showOnlyLastSuggestion()}
+			checked={preferencesSettings.showOnlyLastSuggestion}
+			onCheckedChange={(v) => preferencesSettings.setShowOnlyLastSuggestion(v)}
+		/>
 	{/if}
 </div>

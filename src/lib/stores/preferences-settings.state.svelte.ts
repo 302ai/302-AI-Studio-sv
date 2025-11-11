@@ -24,6 +24,7 @@ export interface PreferencesSettingsState {
 	suggestionsEnabled: boolean;
 	suggestionsCount: number;
 	suggestionsTiming: SuggestionsTiming;
+	showOnlyLastSuggestion: boolean;
 }
 
 const getDefaults = (): PreferencesSettingsState => ({
@@ -43,6 +44,7 @@ const getDefaults = (): PreferencesSettingsState => ({
 	suggestionsEnabled: true,
 	suggestionsCount: 3,
 	suggestionsTiming: "auto",
+	showOnlyLastSuggestion: false,
 });
 
 const persistedPreferencesSettings = new PersistedState<PreferencesSettingsState>(
@@ -219,6 +221,17 @@ class PreferencesSettingsManager {
 		persistedPreferencesSettings.current = {
 			...persistedPreferencesSettings.current,
 			suggestionsTiming: timing,
+		};
+	}
+
+	get showOnlyLastSuggestion(): boolean {
+		return persistedPreferencesSettings.current.showOnlyLastSuggestion;
+	}
+
+	setShowOnlyLastSuggestion(value: boolean): void {
+		persistedPreferencesSettings.current = {
+			...persistedPreferencesSettings.current,
+			showOnlyLastSuggestion: value,
 		};
 	}
 
