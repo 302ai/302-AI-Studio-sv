@@ -651,7 +651,7 @@
 	"title_select_session": "选择会话",
 	"select_session": "请选择一个会话",
 	"select_no_options": "当前选项为空...",
-	"unsupport": "尚未支持...",
+	"unsupport": "暂未支持...",
 	"label_button_create_sandbox": "创建沙盒",
 	"sandbox_creating": "沙盒创建中...",
 	"sandbox_created": "沙盒创建成功！",

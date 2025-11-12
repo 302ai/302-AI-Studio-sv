@@ -1,16 +1,18 @@
 import { CodeAgentMetadata } from "@shared/storage/code-agent";
 import { prefixStorage } from "@shared/types";
 import { isNull } from "es-toolkit";
-import { StorageService } from ".";
+import { StorageService } from "..";
 
-class CodeAgentStorage extends StorageService<CodeAgentMetadata> {
+class ClaudeCodeStorage extends StorageService<CodeAgentMetadata> {
+	private prefix = "claude-code-agent-state";
+
 	constructor() {
 		super();
 		this.storage = prefixStorage(this.storage, "CodeAgentStorage");
 	}
 
 	async setClaudeCodeSandboxId(threadId: string, sandboxId: string): Promise<{ isOK: boolean }> {
-		const key = `code-agent-state-${threadId}`;
+		const key = `${this.prefix}-${threadId}`;
 		const codeAgentMetadata = await this.getItemInternal(key);
 
 		if (isNull(codeAgentMetadata)) return { isOK: false };
@@ -20,10 +22,12 @@ class CodeAgentStorage extends StorageService<CodeAgentMetadata> {
 		return { isOK: true };
 	}
 
-	async removeCodeAgentState(threadId: string): Promise<void> {
-		const key = `code-agent-state-${threadId}`;
-		await this.removeItemInternal(key);
+	async getClaudeCodeSandboxId(threadId: string): Promise<{ isOK: boolean; sandboxId: string }> {
+		const key = `${this.prefix}-${threadId}`;
+		const codeAgentMetadata = await this.getItemInternal(key);
+		if (isNull(codeAgentMetadata)) return { isOK: false, sandboxId: "" };
+		return { isOK: true, sandboxId: codeAgentMetadata.sandboxId };
 	}
 }
 
-export const codeAgentStorage = new CodeAgentStorage();
+export const claudeCodeStorage = new ClaudeCodeStorage();

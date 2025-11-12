@@ -32,9 +32,8 @@ export const persistedClaudeCodeAgentState = new PersistedState<CodeAgentMetadat
 	getInitialData(),
 );
 
-const { createClaudeCodeSandbox } = window.electronAPI.codeAgentService;
-
 class ClaudeCodeAgentState {
+	model = $derived(persistedClaudeCodeAgentState.current.model);
 	currentSessionId = $derived(persistedClaudeCodeAgentState.current.currentSessionId);
 	sessionIds = $derived(persistedClaudeCodeAgentState.current.sessionIds);
 	sandboxId = $derived(persistedClaudeCodeAgentState.current.sandboxId);
@@ -48,18 +47,16 @@ class ClaudeCodeAgentState {
 		};
 	}
 
-	async createClaudeCodeSandbox(): Promise<"already-exist" | "success" | "failed"> {
-		const sandboxExist = this.sandboxId !== "";
-		if (sandboxExist) return "already-exist";
-		const { isOK, sandboxId } = await createClaudeCodeSandbox(threadId);
-		if (isOK) {
-			const sessionId = nanoid();
-			const sessionIds = [sessionId, ...this.sessionIds];
-			this.updateState({ sandboxId, currentSessionId: sessionId, sessionIds });
-			return "success";
-		}
-		return "failed";
-	}
+	// async createClaudeCodeSandbox(): Promise<CodeAgentCreateResult> {
+	// 	const sandboxExist = this.sandboxId !== "";
+	// 	if (sandboxExist) return "already-exist";
+	// 	const { isOK, sandboxId } = await createClaudeCodeSandbox(threadId);
+	// 	if (isOK) {
+	// 		this.updateState({ sandboxId });
+	// 		return "success";
+	// 	}
+	// 	return "failed";
+	// }
 
 	// TODO: refresh session ids
 	async refreshSessionIds() {}
