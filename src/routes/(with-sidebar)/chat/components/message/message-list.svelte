@@ -116,7 +116,6 @@
 	});
 
 	$effect(() => {
-		console.log("messae");
 		const viewport = getViewportElement();
 		if (!viewport) return;
 

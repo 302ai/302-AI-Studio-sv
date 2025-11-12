@@ -538,7 +538,7 @@ class ChatState {
 					);
 				}
 
-				threadService.addThread(persistedChatParamsState.current.id);
+				await threadService.addThread(threadId);
 
 				await broadcastService.broadcastToAll("thread-list-updated", { threadId });
 

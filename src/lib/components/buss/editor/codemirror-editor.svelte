@@ -1,4 +1,6 @@
 <script lang="ts">
+	import type { ShikiHighlighter } from "$lib/components/buss/markdown/highlighter";
+	import { ensureHighlighter } from "$lib/components/buss/markdown/highlighter";
 	import { css } from "@codemirror/lang-css";
 	import { html } from "@codemirror/lang-html";
 	import { javascript } from "@codemirror/lang-javascript";
@@ -6,14 +8,12 @@
 	import { markdown } from "@codemirror/lang-markdown";
 	import { python } from "@codemirror/lang-python";
 	import { xml } from "@codemirror/lang-xml";
-	import { Compartment, EditorState, type Extension } from "@codemirror/state";
 	import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
+	import { Compartment, EditorState, type Extension } from "@codemirror/state";
 	import { tags } from "@lezer/highlight";
 	import { basicSetup, EditorView } from "codemirror";
 	import { onDestroy, onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
-	import type { ShikiHighlighter } from "$lib/components/buss/markdown/highlighter";
-	import { ensureHighlighter } from "$lib/components/buss/markdown/highlighter";
 
 	interface Props {
 		value: string;
@@ -21,8 +21,8 @@
 		theme?: "light" | "dark";
 		readOnly?: boolean;
 		fontSize?: number;
-		lineNumbers?: boolean;
-		wordWrap?: boolean;
+		// lineNumbers?: boolean;
+		// wordWrap?: boolean;
 		onChange?: (value: string) => void;
 		onMount?: (view: EditorView) => void;
 	}

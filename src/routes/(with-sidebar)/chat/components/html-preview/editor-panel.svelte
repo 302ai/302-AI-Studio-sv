@@ -62,8 +62,6 @@
 			language={language || "html"}
 			theme="dark"
 			fontSize={14}
-			lineNumbers={true}
-			wordWrap={true}
 			{readOnly}
 			onChange={onValueChange}
 			onMount={handleMount}

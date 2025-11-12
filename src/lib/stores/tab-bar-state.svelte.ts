@@ -30,10 +30,12 @@ class TabBarState {
 	}
 
 	tabs = $derived.by<Tab[]>(() => {
+		const _persistedTabState = persistedTabState.current[this.#windowId];
 		// Only return tabs for shell views, tab views should not access tab bar state
 		if (!this.#isShellView) {
 			return [];
 		}
+
 		return persistedTabState.current[this.#windowId]?.tabs ?? [];
 	});
 
@@ -162,12 +164,6 @@ class TabBarState {
 	}
 
 	async handleTabClose(tabId: string) {
-		// Only shell views should handle tab close
-		if (!this.#isShellView) {
-			console.warn("[TabBarState] handleTabClose called in tab view, ignoring");
-			return;
-		}
-
 		if (!this.#windowId) return;
 
 		const currentTabs = this.tabs;
@@ -182,7 +178,7 @@ class TabBarState {
 
 			setTimeout(() => {
 				this.handleNewTab(m.title_new_chat());
-			}, 100);
+			}, 300);
 		}
 	}
 

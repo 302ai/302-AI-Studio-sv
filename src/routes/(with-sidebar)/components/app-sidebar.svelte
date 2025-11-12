@@ -153,25 +153,22 @@
 	});
 
 	async function handleThreadClick(threadId: string) {
-		// Use getCurrentWindowTabs() to get real tabs in current window
 		const currentTabs = await tabBarState.getAllTabs();
 		const existingTab = currentTabs?.find((tab) => tab.threadId === threadId);
 		if (existingTab) {
-			// Tab exists in current window, activate it
-			console.debug("Tab exists in current window, activate it");
 			await tabBarState.handleActivateTab(existingTab.id);
 		} else {
-			console.debug("Tab doesn't exist, create or focus in other window");
 			await tabBarState.handleNewTabForExistingThread(threadId);
 		}
 	}
 
 	async function handleThreadDelete(threadId: string) {
-		// Use getCurrentWindowTabs() to get real tabs in current window
-		const currentTabs = await tabBarState.getCurrentWindowTabs();
-		const relatedTab = currentTabs?.find((tab) => tab.threadId === threadId);
-		if (relatedTab) {
-			await tabBarState.handleTabClose(relatedTab.id);
+		// Get ALL tabs across all windows, not just current window
+		const allTabs = await tabBarState.getAllTabs();
+		const existingTab = allTabs?.find((tab) => tab.threadId === threadId);
+
+		if (existingTab) {
+			await tabBarState.handleTabClose(existingTab.id);
 		}
 
 		const success = await threadsState.deleteThread(threadId);
