@@ -6,6 +6,7 @@
 	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
 	import type { ChatMessage } from "$lib/types/chat";
 	import { cn } from "$lib/utils";
+	import { ArrowDown, ArrowUp } from "@lucide/svelte";
 	import { snapdom } from "@zumer/snapdom";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -31,6 +32,8 @@
 
 	let shouldAutoScroll = $state(true);
 	let mutationObserver: MutationObserver | null = null;
+	let showScrollToTop = $state(false);
+	let showScrollToBottom = $state(false);
 
 	const containerClass = $derived.by(() => {
 		switch (generalSettings.layoutMode) {
@@ -52,9 +55,35 @@
 		viewport.scrollTop = viewport.scrollHeight;
 	};
 
+	const scrollToTop = (viewport: HTMLElement): void => {
+		viewport.scrollTop = 0;
+	};
+
+	const scrollToBottomSmooth = (): void => {
+		const viewport = getViewportElement();
+		if (!viewport) return;
+		viewport.scrollTo({ top: viewport.scrollHeight, behavior: "smooth" });
+	};
+
+	const scrollToTopSmooth = (): void => {
+		const viewport = getViewportElement();
+		if (!viewport) return;
+		viewport.scrollTo({ top: 0, behavior: "smooth" });
+	};
+
 	const isScrolledNearBottom = (viewport: HTMLElement): boolean => {
 		const threshold = 50;
 		return viewport.scrollTop + viewport.offsetHeight >= viewport.scrollHeight - threshold;
+	};
+
+	const isScrolledNearTop = (viewport: HTMLElement): boolean => {
+		const threshold = 100;
+		return viewport.scrollTop <= threshold;
+	};
+
+	const updateScrollButtonsVisibility = (viewport: HTMLElement): void => {
+		showScrollToTop = !isScrolledNearTop(viewport);
+		showScrollToBottom = !isScrolledNearBottom(viewport);
 	};
 
 	$effect(() => {
@@ -103,9 +132,13 @@
 
 		const handleScroll = (): void => {
 			shouldAutoScroll = isScrolledNearBottom(viewport);
+			updateScrollButtonsVisibility(viewport);
 		};
 
 		viewport.addEventListener("scroll", handleScroll, { passive: true });
+		
+		// Initial visibility check
+		updateScrollButtonsVisibility(viewport);
 
 		return () => {
 			viewport.removeEventListener("scroll", handleScroll);
@@ -176,17 +209,43 @@
 	});
 </script>
 
-<ScrollArea bind:ref={scrollAreaRef} class="h-full w-full pt-12">
-	<div class="flex w-full justify-center">
-		<div bind:this={messageListContainer} class={cn("w-full space-y-4", containerClass)}>
-			{#each messages as message, index (message.id)}
-				{#if message.role === "user"}
-					<UserMessage message={{ ...message, role: "user" as const }} />
-					<SandboxStatusCallout show={index === 0 && messages.length === 1} />
-				{:else if message.role === "assistant"}
-					<AssistantMessage message={{ ...message, role: "assistant" as const }} />
-				{/if}
-			{/each}
+<div class="relative h-full w-full">
+	<ScrollArea bind:ref={scrollAreaRef} class="h-full w-full pt-12">
+		<div class="flex w-full justify-center">
+			<div bind:this={messageListContainer} class={cn("w-full space-y-4", containerClass)}>
+				{#each messages as message, index (message.id)}
+					{#if message.role === "user"}
+						<UserMessage message={{ ...message, role: "user" as const }} />
+						<SandboxStatusCallout show={index === 0 && messages.length === 1} />
+					{:else if message.role === "assistant"}
+						<AssistantMessage message={{ ...message, role: "assistant" as const }} />
+					{/if}
+				{/each}
+			</div>
 		</div>
+	</ScrollArea>
+
+	<!-- Scroll buttons -->
+	<div class="pointer-events-none absolute bottom-4 right-4 flex flex-col gap-2">
+		{#if showScrollToTop}
+			<button
+				type="button"
+				onclick={scrollToTopSmooth}
+				title={m.scroll_to_top()}
+				class="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg transition-all hover:bg-gray-50 hover:shadow-xl dark:bg-gray-800 dark:hover:bg-gray-700"
+			>
+				<ArrowUp class="h-5 w-5 text-gray-700 dark:text-gray-200" />
+			</button>
+		{/if}
+		{#if showScrollToBottom}
+			<button
+				type="button"
+				onclick={scrollToBottomSmooth}
+				title={m.scroll_to_bottom()}
+				class="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-lg transition-all hover:bg-gray-50 hover:shadow-xl dark:bg-gray-800 dark:hover:bg-gray-700"
+			>
+				<ArrowDown class="h-5 w-5 text-gray-700 dark:text-gray-200" />
+			</button>
+		{/if}
 	</div>
-</ScrollArea>
+</div>

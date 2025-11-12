@@ -542,6 +542,8 @@
 	"screenshot_success": "截图生成成功",
 	"screenshot_failed": "截图失败,请重试",
 	"screenshot_no_messages": "当前对话没有消息内容，无法截图",
+	"scroll_to_top": "滚动到顶部",
+	"scroll_to_bottom": "滚动到底部",
 	"settings_importLegacyJson": "导入旧版JSON数据",
 	"settings_importLegacyJsonDesc": "从旧版本的302 AI Studio导入数据（支持providers、models、threads、messages等）",
 	"label_button_reload": "刷新",
