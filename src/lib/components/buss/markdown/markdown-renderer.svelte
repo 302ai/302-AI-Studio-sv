@@ -42,6 +42,8 @@
 		onInstance?: InstanceCallback;
 		transform?: TransformRenderedHtml;
 		codeTheme?: string;
+		messageId?: string;
+		messagePartIndex?: number;
 	}
 
 	type BlockDescriptor =
@@ -356,11 +358,15 @@
 				const slice = tokens.slice(sliceStart, index);
 				pushHtml(slice);
 
+				const rawInfo = (token.info || "").trim();
+				const languageParts = rawInfo.split(/\s+/);
+				const language = languageParts[0] || null;
+
 				descriptors.push({
 					id: `code-${codeIndex}`,
 					kind: "code",
 					code: token.content ?? "",
-					language: (token.info || "").split(/\s+/)[0] || null,
+					language: language,
 					meta: token.info?.replace(/^\s*\S+\s*/, "")?.trim() || null,
 				});
 				codeIndex += 1;
@@ -434,6 +440,8 @@
 				language={block.language}
 				meta={block.meta}
 				theme={props.codeTheme ?? DEFAULT_THEME}
+				messageId={props.messageId}
+				messagePartIndex={props.messagePartIndex}
 			/>
 		{:else}
 			<div use:handleExternalLinks>

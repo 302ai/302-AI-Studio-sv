@@ -195,8 +195,10 @@ export function registerIpcHandlers() {
 	ipcMain.handle("tabService:handleNewTabWithThread", (event, threadId, title, type, active) =>
 		tabService.handleNewTabWithThread(event, threadId, title, type, active),
 	);
-	ipcMain.handle("tabService:handleNewTab", (event, title, type, active, href) =>
-		tabService.handleNewTab(event, title, type, active, href),
+	ipcMain.handle(
+		"tabService:handleNewTab",
+		(event, title, type, active, href, content, previewId) =>
+			tabService.handleNewTab(event, title, type, active, href, content, previewId),
 	);
 	ipcMain.handle("tabService:handleActivateTab", (event, tabId) =>
 		tabService.handleActivateTab(event, tabId),

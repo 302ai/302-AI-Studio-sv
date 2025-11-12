@@ -375,6 +375,8 @@
 				{:else}
 					<MarkdownRenderer
 						content={part.text}
+						messageId={message.id}
+						messagePartIndex={partIndex}
 						codeTheme={persistedThemeState.current.shouldUseDarkColors
 							? "vitesse-dark"
 							: "vitesse-light"}

@@ -31,6 +31,8 @@
 		language: string | null;
 		meta: string | null;
 		theme?: string | null;
+		messageId?: string;
+		messagePartIndex?: number;
 	}
 
 	const props: Props = $props();
@@ -153,7 +155,18 @@
 	};
 
 	const toggleHtmlPreview = () => {
-		htmlPreviewState.togglePreview(props.code);
+		if (props.messageId === undefined || props.messagePartIndex === undefined) {
+			return;
+		}
+		const languageForPreview = resolvedLanguage === "plaintext" ? null : resolvedLanguage;
+		htmlPreviewState.togglePreview({
+			code: props.code,
+			language: languageForPreview,
+			messageId: props.messageId,
+			messagePartIndex: props.messagePartIndex,
+			blockId: props.blockId,
+			meta: props.meta ?? null,
+		});
 	};
 
 	const buildTokenStyle = (token: ThemedToken): string | undefined => {
@@ -306,6 +319,7 @@
 	const ensureLanguage = (): boolean => {
 		const raw = props.language?.toLowerCase().trim() || "plaintext";
 		const effectiveLang = LANGUAGE_ALIASES[raw] ?? raw;
+
 		if (resolvedLanguage !== effectiveLang) {
 			resolvedLanguage = effectiveLang;
 			ensureLanguageLoaded(effectiveLang).catch((error) => {
@@ -472,7 +486,7 @@
 						{/if}
 					</ButtonWithTooltip>
 				{/if}
-				{#if isHtmlCode}
+				{#if isHtmlCode && props.messageId !== undefined && props.messagePartIndex !== undefined}
 					<ButtonWithTooltip
 						class="text-muted-foreground hover:!bg-chat-action-hover"
 						tooltip={htmlPreviewState.isVisible ? "Close preview" : "Preview HTML"}

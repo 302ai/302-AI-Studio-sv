@@ -175,7 +175,7 @@
 	});
 </script>
 
-<ScrollArea bind:ref={scrollAreaRef} class="h-full w-full pt-5">
+<ScrollArea bind:ref={scrollAreaRef} class="h-full w-full pt-12">
 	<div class="flex w-full justify-center">
 		<div bind:this={messageListContainer} class={cn("w-full space-y-4", containerClass)}>
 			{#each messages as message (message.id)}

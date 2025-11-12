@@ -11,6 +11,7 @@
 	import type { AttachmentFile, ThreadParmas } from "@shared/types";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import PageHeader from "../../components/page-header.svelte";
 	import { AiApplicationItems } from "../components/ai-applications";
 	import { ChatInputBox } from "../components/chat-input";
 	import { FileUploadOverlay } from "../components/file-upload-overlay";
@@ -161,35 +162,42 @@
 </script>
 
 {#if !chatState.hasMessages}
-	<div class="flex h-full flex-col items-center justify-center gap-y-6">
-		<div class="flex w-full flex-col items-center justify-center gap-chat-gap-y">
-			<span class="text-center text-chat-slogan" data-layoutid="chat-slogan">{m.app_slogan()}</span>
-			<ChatInputBox />
+	<div class="flex h-full flex-col relative">
+		<PageHeader />
+		<div class="flex flex-1 flex-col items-center justify-center gap-y-6">
+			<div class="flex w-full flex-col items-center justify-center gap-chat-gap-y">
+				<span class="text-center text-chat-slogan" data-layoutid="chat-slogan"
+					>{m.app_slogan()}</span
+				>
+				<ChatInputBox />
+			</div>
+			{#if preferencesSettings.enableSupermarket}<AiApplicationItems />{/if}
 		</div>
-		{#if preferencesSettings.enableSupermarket}<AiApplicationItems />{/if}
 	</div>
 {:else}
-	<div class="flex h-full flex-col gap-y-4 relative">
-		<div class="flex-1 overflow-hidden" data-layoutid="chat-message-list">
+	<div class="flex h-full flex-col gap-y-4">
+		<div class="flex-1 overflow-hidden relative" data-layoutid="chat-message-list">
 			{#if htmlPreviewState.isVisible}
 				<Resizable.PaneGroup direction="horizontal" class="h-full">
-					<Resizable.Pane defaultSize={50} minSize={20}>
-						<div class="h-full overflow-hidden">
+					<Resizable.Pane defaultSize={50} minSize={20} class="min-w-0">
+						<div class="h-full overflow-hidden relative">
+							<PageHeader />
 							<MessageList messages={chatState.messages} />
 						</div>
 					</Resizable.Pane>
 					<Resizable.Handle withHandle />
-					<Resizable.Pane defaultSize={50} minSize={20}>
+					<Resizable.Pane defaultSize={50} minSize={25} class="min-w-0">
 						<HtmlPreviewPanel />
 					</Resizable.Pane>
 				</Resizable.PaneGroup>
 			{:else}
+				<PageHeader />
 				<MessageList messages={chatState.messages} />
 			{/if}
 		</div>
 		<div
 			role="region"
-			class="group/input relative flex items-center justify-center pt-12"
+			class="group/input relative flex items-center justify-center pt-12 pb-6"
 			onmouseenter={() => (isInputAreaHovered = true)}
 			onmouseleave={() => (isInputAreaHovered = false)}
 		>

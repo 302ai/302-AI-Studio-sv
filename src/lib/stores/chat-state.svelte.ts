@@ -10,6 +10,7 @@ import {
 } from "$lib/utils/attachment-converter";
 import { clone } from "$lib/utils/clone";
 import { ChatErrorHandler, type ChatError } from "$lib/utils/error-handler";
+import { replaceCodeBlockAt } from "$lib/utils/markdown-code-block";
 import { Chat } from "@ai-sdk/svelte";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
@@ -617,6 +618,63 @@ class ChatState {
 
 		chat.messages = updatedMessages;
 		persistedMessagesState.current = updatedMessages;
+	}
+
+	updateMessageCodeBlock(
+		messageId: string,
+		messagePartIndex: number,
+		blockId: string,
+		code: string,
+		language?: string | null,
+		meta?: string | null,
+	) {
+		const blockIndex = Number(blockId.replace("code-", ""));
+		if (!Number.isFinite(blockIndex) || Number.isNaN(blockIndex)) {
+			return false;
+		}
+
+		const messageIndex = this.messages.findIndex((msg) => msg.id === messageId);
+		if (messageIndex === -1) {
+			return false;
+		}
+
+		const targetMessage = this.messages[messageIndex];
+		const targetPart = targetMessage.parts?.[messagePartIndex];
+		if (!targetPart || targetPart.type !== "text") {
+			return false;
+		}
+
+		const updatedContent = replaceCodeBlockAt(targetPart.text, blockIndex, {
+			code,
+			language,
+			meta,
+		});
+
+		if (updatedContent === null) {
+			return false;
+		}
+
+		const updatedMessages = this.messages.map((msg, idx) => {
+			if (idx !== messageIndex) {
+				return msg;
+			}
+			return {
+				...msg,
+				parts: msg.parts.map((part, partIdx) => {
+					if (partIdx === messagePartIndex && part.type === "text") {
+						return {
+							...part,
+							text: updatedContent,
+						};
+					}
+					return part;
+				}),
+			};
+		});
+
+		chat.messages = updatedMessages;
+		persistedMessagesState.current = updatedMessages;
+		return true;
 	}
 
 	deleteMessage(messageId: string) {

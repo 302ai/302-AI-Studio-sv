@@ -238,7 +238,28 @@ class TabBarState {
 		);
 	}
 
-	async handleNewTab(title: string, type: TabType = "chat", active = true, href?: string) {
+	async handleTabCloseAll() {
+		// Only shell views should handle tab operations
+		if (!this.#isShellView) {
+			console.warn("[TabBarState] handleTabCloseAll called in tab view, ignoring");
+			return;
+		}
+
+		persistedTabState.current[this.#windowId].tabs = [];
+
+		await tabService.handleTabCloseAll();
+
+		this.handleNewTab(m.title_new_chat());
+	}
+
+	async handleNewTab(
+		title: string,
+		type: TabType = "chat",
+		active = true,
+		href?: string,
+		content?: string,
+		previewId?: string,
+	) {
 		// This method can be called from both shell views and tab views
 		// Use real window.windowId to ensure correct behavior
 		const currentWindowId = this.currentWindowId;
@@ -262,11 +283,25 @@ class TabBarState {
 			.with("chat", () => true)
 			.with("aiApplications", () => true)
 			.with("codeAgent", () => true)
+			.with("htmlPreview", async () => {
+				// Check if a tab with the same previewId already exists
+				if (previewId) {
+					const existingPreviewTab = currentTabs?.find(
+						(tab) => tab.type === "htmlPreview" && tab.previewId === previewId,
+					);
+					if (existingPreviewTab) {
+						// Just activate existing tab, don't update content
+						await tabService.handleActivateTab(existingPreviewTab.id);
+						return false;
+					}
+				}
+				return true;
+			})
 			.exhaustive();
 
 		if (shouldCreateNewTab) {
 			// Backend will create tab and update storage
-			await tabService.handleNewTab(title, type, active, href);
+			await tabService.handleNewTab(title, type, active, href, content, previewId);
 			// Wait for PersistedState sync to update frontend
 		}
 	}

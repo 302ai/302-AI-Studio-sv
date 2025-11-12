@@ -27,6 +27,7 @@ const TAB_CONFIGS: Record<TabType, TabConfig> = {
 	settings: { title: "Settings", getHref: () => "/settings/general-settings" },
 	aiApplications: { title: "AI Applications", getHref: () => "/ai-applications" },
 	codeAgent: { title: "Code Agent", getHref: () => "/code-agent" },
+	htmlPreview: { title: "HTML Preview", getHref: (id) => `/html-preview/${id}` },
 } as const;
 
 const getTabConfig = (type: TabType) => TAB_CONFIGS[type] || TAB_CONFIGS.chat;
@@ -629,6 +630,8 @@ export class TabService {
 		type: TabType = "chat",
 		active: boolean = true,
 		href?: string,
+		content?: string,
+		previewId?: string,
 	): Promise<string | null> {
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) return null;
@@ -643,6 +646,8 @@ export class TabService {
 			type,
 			active,
 			threadId: newThreadId,
+			...(content && { content }), // Add content if provided
+			...(previewId && { previewId }), // Add previewId if provided
 		};
 
 		if (type === "chat") {
