@@ -193,6 +193,7 @@
 	"settings_suggestionsTiming": "Generation Timing",
 	"settings_suggestionsAuto": "Auto Generate",
 	"settings_suggestionsOff": "Off",
+	"settings_showOnlyLastSuggestion": "Show only last AI message suggestions",
 	"sidebar_close": "Close Sidebar",
 	"sidebar_open": "Open Sidebar",
 	"text_alert_chat_error": "Reply failed!",

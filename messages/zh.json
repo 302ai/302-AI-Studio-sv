@@ -191,6 +191,7 @@
 	"settings_suggestionsTiming": "生成时机",
 	"settings_suggestionsAuto": "自动生成",
 	"settings_suggestionsOff": "关闭",
+	"settings_showOnlyLastSuggestion": "只显示最后一条AI回复的建议",
 	"text_alert_chat_error": "回复失败！",
 	"text_alert_chat_error_description": "AI响应失败，请重新尝试...",
 	"text_attachment_viewer_error": "无法查看，附件类型不支持或文件已损坏",

@@ -4,6 +4,7 @@ import { isEmpty } from "es-toolkit/compat";
 import { nanoid } from "nanoid";
 import { storageService, StorageService } from ".";
 import { generalSettingsService } from "../settings-service";
+import { sessionStorage } from "./session-storage";
 
 export class TabStorage extends StorageService<TabState> {
 	constructor() {
@@ -79,6 +80,16 @@ export class TabStorage extends StorageService<TabState> {
 				active: true,
 				threadId,
 			};
+
+			// Get default model same as handleNewTab in tab-service
+			const [preferencesSettingsData, latestUsedModel] = await Promise.all([
+				storageService.getItemInternal("PreferencesSettingsStorage:state"),
+				sessionStorage.getLatestUsedModel(),
+			]);
+			const preferencesSettings = preferencesSettingsData as unknown as {
+				newSessionModel?: ThreadParmas["selectedModel"];
+			} | null;
+
 			const initThread: ThreadParmas = {
 				id: threadId,
 				title,
@@ -94,7 +105,7 @@ export class TabStorage extends StorageService<TabState> {
 				isThinkingActive: false,
 				isOnlineSearchActive: false,
 				isMCPActive: false,
-				selectedModel: null,
+				selectedModel: preferencesSettings?.newSessionModel ?? latestUsedModel,
 				isPrivateChatActive: false,
 				updatedAt: new Date(),
 			};

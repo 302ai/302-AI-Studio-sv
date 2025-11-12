@@ -125,6 +125,8 @@
 		chatState.isLastMessageStreaming && chatState.lastAssistantMessage?.id === message.id,
 	);
 
+	const isLastAssistantMessage = $derived(chatState.lastAssistantMessage?.id === message.id);
+
 	const hasReasoningContent = $derived(message.parts.some((part) => part.type === "reasoning"));
 	const hasTextContent = $derived(message.parts.some((part) => part.type === "text"));
 	const isStreamingReasoning = $derived(
@@ -382,7 +384,7 @@
 				{#if !preferencesSettings.autoHideReason}
 					<Collapsible bind:open={isReasoningExpanded} class="rounded-lg border bg-muted/30 p-3">
 						<CollapsibleTrigger
-							class="flex w-full items-center justify-between text-left transition-colors hover:bg-muted/20 rounded-md p-2 -m-2"
+							class="flex w-full items-center justify-between text-left transition-colors hover:bg-muted/20 rounded-md p-2"
 						>
 							<div class="flex items-center gap-2">
 								<Lightbulb class="h-4 w-4 text-muted-foreground" />
@@ -499,7 +501,7 @@
 		{@render messageFooter()}
 
 		<!-- Suggestions -->
-		{#if suggestions().length > 0 && !isCurrentMessageStreaming}
+		{#if suggestions().length > 0 && !isCurrentMessageStreaming && (!preferencesSettings.showOnlyLastSuggestion || isLastAssistantMessage)}
 			{console.log("[Suggestions] Rendering suggestions UI:", suggestions())}
 			<div class="mt-3 flex flex-wrap gap-2">
 				{#each suggestions() as suggestion, index (index)}
@@ -520,6 +522,10 @@
 				suggestions().length,
 				"Streaming:",
 				isCurrentMessageStreaming,
+				"ShowOnlyLast:",
+				preferencesSettings.showOnlyLastSuggestion,
+				"IsLast:",
+				isLastAssistantMessage,
 			)}
 		{/if}
 	</div>

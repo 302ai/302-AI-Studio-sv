@@ -38,7 +38,7 @@
 				arrowClasses="hidden"
 				sideOffset={5}
 			>
-				<div class="max-w-[300px] min-w-[200px] px-2.5 py-1.5 text-justify break-all hyphens-auto">
+				<div class="max-w-[300px] min-w-[200px] px-2.5 py-1.5 text-left break-words">
 					{tips}
 				</div>
 			</Tooltip.Content>
