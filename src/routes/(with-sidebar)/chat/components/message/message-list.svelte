@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ChatMinimap from "$lib/components/buss/chat/chat-minimap.svelte";
 	import { ScrollArea } from "$lib/components/ui/scroll-area";
 	import * as m from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
@@ -34,6 +35,7 @@
 	let mutationObserver: MutationObserver | null = null;
 	let showScrollToTop = $state(false);
 	let showScrollToBottom = $state(false);
+	let showMinimap = $state(false);
 
 	const containerClass = $derived.by(() => {
 		switch (generalSettings.layoutMode) {
@@ -84,6 +86,9 @@
 	const updateScrollButtonsVisibility = (viewport: HTMLElement): void => {
 		showScrollToTop = !isScrolledNearTop(viewport);
 		showScrollToBottom = !isScrolledNearBottom(viewport);
+		// Show minimap when there are messages and content is scrollable
+		const hasScroll = viewport.scrollHeight > viewport.offsetHeight;
+		showMinimap = messages.length > 0 && hasScroll;
 	};
 
 	$effect(() => {
@@ -135,7 +140,7 @@
 		};
 
 		viewport.addEventListener("scroll", handleScroll, { passive: true });
-		
+
 		// Initial visibility check
 		updateScrollButtonsVisibility(viewport);
 
@@ -209,7 +214,13 @@
 </script>
 
 <div class="relative h-full w-full">
-	<ScrollArea bind:ref={scrollAreaRef} class="h-full w-full pt-12">
+	<ScrollArea
+		bind:ref={scrollAreaRef}
+		class={cn(
+			"h-full w-full pt-12",
+			showMinimap && "[&_[data-slot='scroll-area-scrollbar']]:hidden",
+		)}
+	>
 		<div class="flex w-full justify-center">
 			<div bind:this={messageListContainer} class={cn("w-full space-y-4", containerClass)}>
 				{#each messages as message, index (message.id)}
@@ -224,8 +235,23 @@
 		</div>
 	</ScrollArea>
 
+	<!-- Chat Minimap -->
+	{#if showMinimap}
+		<ChatMinimap
+			{messages}
+			viewport={getViewportElement()}
+			scrollContainer={messageListContainer}
+			class="animate-in fade-in slide-in-from-right-4 duration-300"
+		/>
+	{/if}
+
 	<!-- Scroll buttons -->
-	<div class="pointer-events-none absolute bottom-4 right-4 flex flex-col gap-2">
+	<div
+		class="pointer-events-none absolute bottom-4 flex flex-col gap-2 transition-all duration-300"
+		class:right-[80px]={showMinimap}
+		class:right-4={!showMinimap}
+		style="z-index: 20;"
+	>
 		{#if showScrollToTop}
 			<button
 				type="button"

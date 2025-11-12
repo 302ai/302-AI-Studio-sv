@@ -222,7 +222,7 @@
 {/snippet}
 
 <MessageContextMenu onCopy={handleCopyMessage} onEdit={handleEditClick} onDelete={handleDelete}>
-	<div class="group flex flex-col items-end gap-2">
+	<div class="group flex flex-col items-end gap-2" data-message-id={message.id}>
 		{#if attachments.length > 0}
 			<div class="flex max-w-[80%] flex-wrap gap-2">
 				{#each attachments as attachment (attachment.id)}
