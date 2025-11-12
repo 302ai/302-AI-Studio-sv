@@ -14,8 +14,9 @@
 	import ParametersPanel from "./parameters-panel.svelte";
 
 	let actionDisabled = $derived(chatState.providerType !== "302ai");
-	// let isFreshTab = $derived(false);
 	let isFreshTab = $derived(!chatState.hasMessages);
+	let inCodeAgentMode = $derived(!isFreshTab && codeAgentState.enabled);
+
 	let isParametersOpen = $state(false);
 	let isMCPSelectorOpen = $state(false);
 	let isCodeAgentOpen = $state(false);
@@ -38,11 +39,13 @@
 	}
 
 	function handleCodeAgentClick() {
-		if (codeAgentState.enabled) {
+		if (inCodeAgentMode) {
+			isCodeAgentOpen = true;
+		} else if (codeAgentState.enabled) {
 			codeAgentState.updateState({ currentAgentId: "" });
-			return;
+		} else {
+			isCodeAgentOpen = true;
 		}
-		isCodeAgentOpen = true;
 	}
 </script>
 
@@ -130,7 +133,7 @@
 		)}
 		tooltip={m.title_code_agent()}
 		onclick={() => handleCodeAgentClick()}
-		disabled={!isFreshTab}
+		disabled={isFreshTab ? false : !inCodeAgentMode}
 	>
 		<HatGlasses class={cn(codeAgentState.enabled && "!text-chat-action-active-fg")} />
 	</ButtonWithTooltip>

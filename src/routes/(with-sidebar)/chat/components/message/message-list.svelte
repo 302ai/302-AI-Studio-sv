@@ -10,6 +10,7 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import AssistantMessage from "./assistant-message.svelte";
+	import SandboxStatusCallout from "./code-agent/sandbox-status-calllout.svelte";
 	import {
 		create302Watermark,
 		createContentContainer,
@@ -178,9 +179,10 @@
 <ScrollArea bind:ref={scrollAreaRef} class="h-full w-full pt-5">
 	<div class="flex w-full justify-center">
 		<div bind:this={messageListContainer} class={cn("w-full space-y-4", containerClass)}>
-			{#each messages as message (message.id)}
+			{#each messages as message, index (message.id)}
 				{#if message.role === "user"}
 					<UserMessage message={{ ...message, role: "user" as const }} />
+					<SandboxStatusCallout show={index === 0 && messages.length === 1} />
 				{:else if message.role === "assistant"}
 					<AssistantMessage message={{ ...message, role: "assistant" as const }} />
 				{/if}

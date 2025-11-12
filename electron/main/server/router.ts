@@ -781,17 +781,6 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		baseUrl,
 		model = "gpt-4o",
 		apiKey,
-		// temperature,
-		// topP,
-		// maxTokens,
-		// frequencyPenalty,
-		// presencePenalty,
-		// isThinkingActive,
-		// isOnlineSearchActive,
-		// isMCPActive,
-		// mcpServerIds = [],
-		// autoParseUrl,
-		// searchProvider = "search1api",
 		messages,
 		speedOptions,
 		threadId,
@@ -812,13 +801,6 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		baseUrl,
 		sandboxId,
 		apiKey,
-		// temperature,
-		// topP,
-		// maxTokens,
-		// frequencyPenalty,
-		// presencePenalty,
-		// isThinkingActive,
-		// isOnlineSearchActive,
 		messages,
 		speedOptions,
 		threadId,
@@ -835,51 +817,13 @@ app.post("/chat/302ai-code-agent", async (c) => {
 	});
 
 	const provider302Options: Record<string, boolean | string> = { session_id: sessionId ?? "" };
-
-	// if (autoParseUrl) {
-	// 	provider302Options["file-parse"] = true;
-	// }
-
-	// if (isThinkingActive) {
-	// 	provider302Options["r1-fusion"] = true;
-	// }
-
-	// if (isOnlineSearchActive) {
-	// 	provider302Options["web-search"] = true;
-	// 	provider302Options["search-service"] = searchProvider;
-	// }
-
-	// Get MCP tools if MCP is active
-	// let mcpTools = undefined;
-	// if (isMCPActive && mcpServerIds.length > 0) {
-	// 	try {
-	// 		const allServers = await storageService.getItemInternal("app-mcp-servers");
-	// 		if (allServers) {
-	// 			mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
-	// 			console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
-	// 		}
-	// 	} catch (error) {
-	// 		console.error("Failed to load MCP tools:", error);
-	// 	}
-	// }
-
 	const streamTextOptions = {
 		model: wrapModel,
 		messages: convertToModelMessages(enhanceMessagesWithFeedback(messages)),
 		providerOptions: {
 			"302": provider302Options,
 		},
-
-		// ...(mcpTools && Object.keys(mcpTools).length > 0 && { tools: mcpTools }),
 	};
-
-	// addDefinedParams(streamTextOptions, {
-	// 	temperature,
-	// 	topP,
-	// 	maxTokens,
-	// 	frequencyPenalty,
-	// 	presencePenalty,
-	// });
 
 	const streamTextOptionsWithTransform = {
 		...streamTextOptions,
@@ -891,10 +835,8 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		}),
 	};
 
-	// Wrap in createUIMessageStream to add suggestions after main response
 	const stream = createUIMessageStream({
 		execute: async ({ writer }) => {
-			// Stream the main text response using Agent
 			const result = new Agent({
 				...streamTextOptionsWithTransform,
 				stopWhen: stepCountIs(20),
@@ -910,7 +852,6 @@ app.post("/chat/302ai-code-agent", async (c) => {
 				}),
 			);
 
-			// Wait for the main response to complete
 			await result.consumeStream();
 		},
 	});

@@ -1,5 +1,9 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
-import { CodeAgentCfgs, CodeAgentConfigMetadata } from "@shared/storage/code-agent";
+import {
+	CodeAgentCfgs,
+	CodeAgentConfigMetadata,
+	CodeAgentSandboxStatus,
+} from "@shared/storage/code-agent";
 import { match } from "ts-pattern";
 import { claudeCodeAgentState } from "./claude-code-state.svelte";
 
@@ -29,6 +33,13 @@ class CodeAgentState {
 	currentAgentId = $derived(persistedCodeAgentConfigState.current.currentAgentId);
 
 	enabled = $derived.by(() => persistedCodeAgentConfigState.current.currentAgentId !== "");
+	sandboxStatus = $derived.by<CodeAgentSandboxStatus>(() => {
+		return match(this.currentAgentId)
+			.with("claude-code", () =>
+				claudeCodeAgentState.sandboxId === "" ? "waiting-for-sandbox" : "sandbox-created",
+			)
+			.otherwise(() => "waiting-for-sandbox");
+	});
 
 	updateState(partial: Partial<CodeAgentConfigMetadata>): void {
 		persistedCodeAgentConfigState.current = {

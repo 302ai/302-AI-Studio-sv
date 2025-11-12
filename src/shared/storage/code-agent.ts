@@ -33,3 +33,6 @@ export type CodeAgentCfgs = typeof CodeAgentCfgs.infer;
 
 export const CodeAgentCreateResult = type("'already-exist' | 'success' | 'failed'");
 export type CodeAgentCreateResult = typeof CodeAgentCreateResult.infer;
+
+export const CodeAgentSandboxStatus = type("'waiting-for-sandbox' | 'sandbox-created'");
+export type CodeAgentSandboxStatus = typeof CodeAgentSandboxStatus.infer;
