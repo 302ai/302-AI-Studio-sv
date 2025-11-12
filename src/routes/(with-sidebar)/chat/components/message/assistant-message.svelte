@@ -399,8 +399,23 @@
 							/>
 						</CollapsibleTrigger>
 						<CollapsibleContent class="space-y-2">
-							<div class="pt-3 text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
-								{part.text}
+							<div class="pt-3">
+								{#if preferencesSettings.autoDisableMarkdown}
+									<div class="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">
+										{part.text}
+									</div>
+								{:else}
+									<div class="text-xs text-muted-foreground">
+										<MarkdownRenderer
+											content={part.text}
+											messageId={message.id}
+											messagePartIndex={partIndex}
+											codeTheme={persistedThemeState.current.shouldUseDarkColors
+												? "vitesse-dark"
+												: "vitesse-light"}
+										/>
+									</div>
+								{/if}
 							</div>
 
 							{#if isStreamingReasoning}
