@@ -18,6 +18,18 @@ export type SidebarStateProps = {
 	 * the sub-components and any `bind:` references.
 	 */
 	setOpen: (open: boolean) => void;
+
+	/**
+	 * A getter function that returns whether the current update is from a broadcast event.
+	 * Used to bypass animations when syncing state between inactive tabs.
+	 */
+	isBroadcastUpdate?: Getter<boolean>;
+
+	/**
+	 * A getter function that returns whether the sidebar is in its initialization phase.
+	 * During initialization, transitions are disabled to prevent flash during mount.
+	 */
+	isInitializing?: Getter<boolean>;
 };
 
 class SidebarState {
@@ -27,6 +39,11 @@ class SidebarState {
 	setOpen: SidebarStateProps["setOpen"];
 	#isMobile: IsMobile;
 	state = $derived.by(() => (this.open ? "expanded" : "collapsed"));
+	isBroadcastUpdate = $derived.by(() => this.props.isBroadcastUpdate?.() ?? false);
+	isInitializing = $derived.by(() => this.props.isInitializing?.() ?? false);
+
+	// Combined flag: disable transitions during broadcast updates OR initialization
+	shouldDisableTransitions = $derived(this.isBroadcastUpdate || this.isInitializing);
 
 	constructor(props: SidebarStateProps) {
 		this.setOpen = props.setOpen;

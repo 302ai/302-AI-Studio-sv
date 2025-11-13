@@ -38,6 +38,7 @@ declare global {
 				callback: (data: { type: string; message: string; threadId?: string }) => void,
 			) => () => void;
 			onTriggerSendMessage: (callback: (data: { threadId: string }) => void) => () => void;
+			onSidebarStateChanged: (callback: (data: { open: boolean }) => void) => () => void;
 			onThreadListUpdate: (callback: (eventData: BroadcastEventData) => void) => () => void;
 			onShellWindowFullscreenChange: (
 				callback: (payload: ShellWindowFullscreenChange) => void,

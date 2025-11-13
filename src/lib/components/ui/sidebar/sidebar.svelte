@@ -66,7 +66,8 @@
 		<div
 			data-slot="sidebar-gap"
 			class={cn(
-				"relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
+				"relative w-(--sidebar-width) bg-transparent",
+				sidebar.shouldDisableTransitions ? "" : "transition-[width] duration-200 ease-linear",
 				"group-data-[collapsible=offcanvas]:w-0",
 				"group-data-[side=right]:rotate-180",
 				variant === "floating" || variant === "inset"
@@ -77,7 +78,10 @@
 		<div
 			data-slot="sidebar-container"
 			class={cn(
-				"fixed z-10 hidden w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+				"fixed z-10 hidden w-(--sidebar-width) md:flex",
+				sidebar.shouldDisableTransitions
+					? ""
+					: "transition-[left,right,width] duration-200 ease-linear",
 				!className?.includes("top-") &&
 					!className?.includes("bottom-") &&
 					!className?.includes("h-")

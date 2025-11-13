@@ -153,7 +153,8 @@ export type BroadcastEvent =
 	| "settings-updated"
 	| "trigger-screenshot"
 	| "trigger-send-message"
-	| "show-toast";
+	| "show-toast"
+	| "sidebar-state-changed";
 
 export interface BroadcastEventData {
 	broadcastEvent: BroadcastEvent;

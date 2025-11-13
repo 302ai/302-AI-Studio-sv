@@ -105,6 +105,15 @@ if (process.contextIsolated) {
 				ipcRenderer.on("broadcast-event", listener);
 				return () => ipcRenderer.removeListener("broadcast-event", listener);
 			},
+			onSidebarStateChanged: (callback: (data: { open: boolean }) => void) => {
+				const listener = (_: unknown, eventData: BroadcastEventData) => {
+					if (eventData.broadcastEvent === "sidebar-state-changed") {
+						callback(eventData.data as { open: boolean });
+					}
+				};
+				ipcRenderer.on("broadcast-event", listener);
+				return () => ipcRenderer.removeListener("broadcast-event", listener);
+			},
 			onShellWindowFullscreenChange: (callback: (payload: ShellWindowFullscreenChange) => void) => {
 				const listener = (_: unknown, payload: ShellWindowFullscreenChange) => callback(payload);
 				ipcRenderer.on(SHELL_WINDOW_FULLSCREEN_CHANGED, listener);
