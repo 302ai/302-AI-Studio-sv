@@ -32,11 +32,11 @@ class TabBarState {
 	tabs = $derived.by<Tab[]>(() => {
 		const _persistedTabState = persistedTabState.current[this.#windowId];
 		// Only return tabs for shell views, tab views should not access tab bar state
-		if (!this.#isShellView) {
-			return [];
-		}
+		// if (!this.#isShellView) {
+		// 	return [];
+		// }
 
-		return persistedTabState.current[this.#windowId]?.tabs ?? [];
+		return _persistedTabState?.tabs ?? [];
 	});
 
 	windowTabsInfo = $derived.by(() => {

@@ -12,6 +12,7 @@
 	import { onMount } from "svelte";
 	import CodeBlock from "./code-block.svelte";
 	import { DEFAULT_THEME, ensureHighlighter } from "./highlighter";
+	import TodoListRenderer from "./todo-list-renderer.svelte";
 
 	type MarkdownItInstance = ReturnType<typeof markdownIt>;
 	type MarkdownEnvironment = Record<string, unknown>;
@@ -54,6 +55,15 @@
 				code: string;
 				language: string | null;
 				meta: string | null;
+		  }
+		| {
+				id: string;
+				kind: "todo";
+				todos: Array<{
+					content: string;
+					status: "pending" | "in_progress" | "completed";
+					activeForm: string;
+				}>;
 		  };
 
 	const DEFAULT_OPTIONS: Readonly<MarkdownItOptions> = Object.freeze({
@@ -314,6 +324,59 @@
 		return instance;
 	};
 
+	const detectTodoWriteJson = (
+		code: string,
+		language: string | null,
+	): {
+		isTodoWrite: boolean;
+		todos: Array<{
+			content: string;
+			status: "pending" | "in_progress" | "completed";
+			activeForm: string;
+		}> | null;
+	} => {
+		// Only check JSON code blocks
+		if (language?.toLowerCase() !== "json") {
+			return { isTodoWrite: false, todos: null };
+		}
+
+		try {
+			const trimmed = code.trim();
+			const parsed = JSON.parse(trimmed);
+
+			// Check if it has the todos field with valid structure
+			if (
+				parsed &&
+				typeof parsed === "object" &&
+				"todos" in parsed &&
+				Array.isArray(parsed.todos)
+			) {
+				const todos = parsed.todos;
+
+				// Validate that all todos have the required fields
+				const isValid = todos.every(
+					(todo: unknown) =>
+						todo &&
+						typeof todo === "object" &&
+						"content" in todo &&
+						"status" in todo &&
+						"activeForm" in todo &&
+						typeof (todo as { content: unknown }).content === "string" &&
+						typeof (todo as { activeForm: unknown }).activeForm === "string" &&
+						["pending", "in_progress", "completed"].includes((todo as { status: string }).status),
+				);
+
+				if (isValid && todos.length > 0) {
+					return { isTodoWrite: true, todos };
+				}
+			}
+		} catch (_error) {
+			return { isTodoWrite: false, todos: null };
+		}
+
+		return { isTodoWrite: false, todos: null };
+	};
+
 	const collectBlocks = (markdown: string) => {
 		renderer = createRenderer();
 
@@ -338,6 +401,7 @@
 		let sliceStart = 0;
 		let htmlEnv = { ...envState };
 		let codeIndex = 0;
+		let todoIndex = 0;
 
 		const pushHtml = (tokenSlice: Token[]) => {
 			if (!tokenSlice.length) return;
@@ -362,14 +426,26 @@
 				const languageParts = rawInfo.split(/\s+/);
 				const language = languageParts[0] || null;
 
-				descriptors.push({
-					id: `code-${codeIndex}`,
-					kind: "code",
-					code: token.content ?? "",
-					language: language,
-					meta: token.info?.replace(/^\s*\S+\s*/, "")?.trim() || null,
-				});
-				codeIndex += 1;
+				// Check if this is a todo-write JSON block
+				const todoResult = detectTodoWriteJson(token.content ?? "", language);
+				if (todoResult.isTodoWrite && todoResult.todos) {
+					descriptors.push({
+						id: `todo-${todoIndex}`,
+						kind: "todo",
+						todos: todoResult.todos,
+					});
+					todoIndex += 1;
+				} else {
+					// Regular code block
+					descriptors.push({
+						id: `code-${codeIndex}`,
+						kind: "code",
+						code: token.content ?? "",
+						language: language,
+						meta: token.info?.replace(/^\s*\S+\s*/, "")?.trim() || null,
+					});
+					codeIndex += 1;
+				}
 				sliceStart = index + 1;
 			}
 		}
@@ -443,6 +519,8 @@
 				messageId={props.messageId}
 				messagePartIndex={props.messagePartIndex}
 			/>
+		{:else if block.kind === "todo"}
+			<TodoListRenderer todos={block.todos} />
 		{:else}
 			<div use:handleExternalLinks>
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->

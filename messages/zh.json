@@ -531,6 +531,7 @@
 	"tool_call_rerun": "重新运行",
 	"tool_call_rerun_success": "工具重新运行中...",
 	"tool_call_rerun_error": "重新运行失败",
+	"todo_list_title": "任务列表",
 	"checking_update": "检查中...",
 	"update_available": "发现新版本",
 	"update_not_available": "当前已是最新版本",
