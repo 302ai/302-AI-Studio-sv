@@ -3,9 +3,9 @@
 	max-width: 65ch;
 }
 
-.prose.max-w-none {
+/* .prose.max-w-none {
 	max-width: none;
-}
+} */
 
 .prose h1 {
 	font-size: 2.25rem;
