@@ -452,14 +452,14 @@
 					</ButtonWithTooltip>
 				</div>
 			</div>
-			{#if !isCollapsed}
-				<pre
-					class="shiki !m-0 !rounded-none !border-0"
-					data-theme={props.theme ?? resolvedTheme}
-					data-meta={props.meta ?? undefined}>
-					<code>{props.code}</code>
-				</pre>
-			{/if}
+			<pre
+				class="shiki !m-0 !rounded-none !border-0 overflow-x-auto {isCollapsed
+					? 'max-h-[120px] overflow-y-auto'
+					: ''}"
+				data-theme={props.theme ?? resolvedTheme}
+				data-meta={props.meta ?? undefined}>
+				<code class="block w-max">{props.code}</code>
+			</pre>
 		</div>
 	{/if}
 {:else if props.code.trim() && lines.length > 0}
@@ -508,25 +508,25 @@
 				</ButtonWithTooltip>
 			</div>
 		</div>
-		{#if !isCollapsed}
-			{#if showSvgPreview && isSvgCode}
-				<div class="p-4 bg-background flex items-center justify-center min-h-[200px]">
-					{@html props.code}
-				</div>
-			{:else}
-				<pre
-					class="shiki !m-0 !rounded-none !border-0"
-					data-language={resolvedLanguage}
-					data-theme={resolvedTheme}
-					data-meta={props.meta ?? undefined}
-					style={preStyle}>
-					<code style={codeStyle}>
-						{#each lines as line (line.id)}
-							<span class="line" data-line={line.number}>{@html line.html}</span>
-						{/each}
-					</code>
-				</pre>
-			{/if}
+		{#if showSvgPreview && isSvgCode}
+			<div class="p-4 bg-background flex items-center justify-center min-h-[200px]">
+				{@html props.code}
+			</div>
+		{:else}
+			<pre
+				class="shiki !m-0 !rounded-none !border-0 overflow-x-auto {isCollapsed
+					? 'max-h-[120px] overflow-y-auto'
+					: ''}"
+				data-language={resolvedLanguage}
+				data-theme={resolvedTheme}
+				data-meta={props.meta ?? undefined}
+				style={preStyle}>
+				<code style={codeStyle} class="block w-max">
+					{#each lines as line (line.id)}
+						<span class="line" data-line={line.number}>{@html line.html}</span>
+					{/each}
+				</code>
+			</pre>
 		{/if}
 	</div>
 {/if}
