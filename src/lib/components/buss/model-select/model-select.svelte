@@ -36,6 +36,7 @@
 	let hoveredItemId = $state<string | null>(null);
 	let listRef = $state<HTMLElement | null>(null);
 	const collapsedProviders = $state<Record<string, boolean>>({});
+	let focusedModelIndex = $state(-1);
 
 	const triggerProps: TriggerProps = {
 		onclick: () => {
@@ -212,6 +213,18 @@
 		return groups;
 	});
 
+	// Flattened list of all visible models for keyboard navigation
+	const flattenedModels = $derived.by(() => {
+		const models: Model[] = [];
+		Object.entries(groupedModels()).forEach(([provider, providerModels]) => {
+			// Only include models from expanded providers (or all if searching)
+			if (!collapsedProviders[provider] || searchValue) {
+				models.push(...providerModels);
+			}
+		});
+		return models;
+	});
+
 	function handleModelSelect(model: Model) {
 		onModelSelect(model);
 		isOpen = false;
@@ -237,6 +250,43 @@
 		event.stopPropagation();
 		event.preventDefault();
 		providerState.toggleModelCollected(modelId);
+	}
+
+	function handleKeyDown(event: KeyboardEvent) {
+		if (!isOpen) return;
+
+		const models = flattenedModels;
+		if (models.length === 0) return;
+
+		let handled = false;
+
+		switch (event.key) {
+			case "ArrowDown":
+				event.preventDefault();
+				event.stopPropagation();
+				focusedModelIndex = focusedModelIndex < models.length - 1 ? focusedModelIndex + 1 : 0;
+				handled = true;
+				break;
+			case "ArrowUp":
+				event.preventDefault();
+				event.stopPropagation();
+				focusedModelIndex = focusedModelIndex > 0 ? focusedModelIndex - 1 : models.length - 1;
+				handled = true;
+				break;
+			case "Enter":
+				if (focusedModelIndex >= 0 && focusedModelIndex < models.length) {
+					event.preventDefault();
+					event.stopPropagation();
+					handleModelSelect(models[focusedModelIndex]);
+					handled = true;
+				}
+				break;
+		}
+
+		if (handled && focusedModelIndex >= 0) {
+			// Clear hover state when using keyboard
+			hoveredItemId = null;
+		}
 	}
 
 	function getCapabilityText(capability: ModelCapability): string {
@@ -304,6 +354,56 @@
 			}, 100);
 		}
 	});
+
+	// Keyboard event listener
+	$effect(() => {
+		if (!isOpen) return;
+
+		// Use capture phase to intercept before Command component handles it
+		document.addEventListener("keydown", handleKeyDown, true);
+
+		return () => {
+			document.removeEventListener("keydown", handleKeyDown, true);
+		};
+	});
+
+	// Reset focus index when dialog opens/closes or search changes
+	$effect(() => {
+		if (!isOpen) {
+			focusedModelIndex = -1;
+		} else if (selectedModel) {
+			// When dialog opens, set focus to the currently selected model
+			const models = flattenedModels;
+			const selectedIndex = models.findIndex(
+				(m) => m.id === selectedModel.id && m.providerId === selectedModel.providerId,
+			);
+			focusedModelIndex = selectedIndex >= 0 ? selectedIndex : -1;
+		}
+	});
+
+	$effect(() => {
+		// Reset focus when search value changes
+		if (searchValue) {
+			focusedModelIndex = -1;
+		}
+	});
+
+	// Auto-scroll to focused item when keyboard navigating
+	$effect(() => {
+		if (focusedModelIndex >= 0 && listRef) {
+			const models = flattenedModels;
+			if (focusedModelIndex >= models.length) return;
+
+			const focusedModel = models[focusedModelIndex];
+			const focusedItem = listRef.querySelector(
+				`[data-model-id="${focusedModel.providerId}-${focusedModel.id}"]`,
+			) as HTMLElement;
+
+			if (focusedItem) {
+				focusedItem.scrollIntoView({ behavior: "smooth", block: "nearest" });
+			}
+		}
+	});
 </script>
 
 {#if trigger}
@@ -339,6 +439,10 @@
 						{#each models as model (`${model.providerId}-${model.id}`)}
 							{@const isSelected =
 								selectedModel?.id === model.id && selectedModel?.providerId === model.providerId}
+							{@const modelIndex = flattenedModels.findIndex(
+								(m) => m.id === model.id && m.providerId === model.providerId,
+							)}
+							{@const isFocused = focusedModelIndex === modelIndex}
 							{@const isHovered = hoveredItemId === `${model.providerId}-${model.id}`}
 							{@const capabilityTexts = Array.from(model.capabilities || [])
 								.map((cap) => getCapabilityText(cap))
@@ -349,13 +453,16 @@
 								onSelect={() => handleModelSelect(model)}
 								value={model.name}
 								data-model-id="{model.providerId}-{model.id}"
+								data-focused={isFocused}
 								title={capabilityTexts || model.name}
 								class={cn(
 									"relative my-1 h-12 overflow-hidden",
-									isSelected ? "!bg-primary !text-primary-foreground" : "",
-									!isSelected && !isHovered
-										? "aria-selected:text-foreground aria-selected:bg-transparent"
-										: "",
+									isSelected && "!bg-primary !text-primary-foreground",
+									!isSelected && (isHovered || isFocused) && "bg-accent text-accent-foreground",
+									!isSelected &&
+										!isHovered &&
+										!isFocused &&
+										"aria-selected:text-foreground aria-selected:bg-transparent",
 								)}
 								onmouseenter={() => handleItemMouseEnter(`${model.providerId}-${model.id}`)}
 								onmouseleave={handleItemMouseLeave}
