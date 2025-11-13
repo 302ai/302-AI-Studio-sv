@@ -14,6 +14,7 @@ export interface HtmlPreviewPayload extends HtmlPreviewContext {
 
 export class HtmlPreviewState {
 	isVisible = $state(false);
+	isPinned = $state(false);
 	mode = $state<HtmlPreviewMode>("preview");
 	context = $state<HtmlPreviewContext | null>(null);
 	initialHtml = $state<string | null>(null);
@@ -38,6 +39,7 @@ export class HtmlPreviewState {
 
 	closePreview() {
 		this.isVisible = false;
+		this.isPinned = false;
 		this.mode = "preview";
 		this.context = null;
 		this.initialHtml = null;
@@ -84,6 +86,10 @@ export class HtmlPreviewState {
 	commitChanges() {
 		this.initialHtml = this.editedHtml;
 		this.initialLanguage = this.selectedLanguage;
+	}
+
+	togglePin() {
+		this.isPinned = !this.isPinned;
 	}
 }
 

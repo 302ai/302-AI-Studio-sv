@@ -677,6 +677,8 @@
 	"tooltip_deploying": "部署中...",
 	"tooltip_desktop_view": "桌面视图",
 	"tooltip_mobile_view": "移动视图",
+	"tooltip_pin_panel": "固定",
+	"tooltip_unpin_panel": "取消固定",
 	"title_html_preview": "HTML 预览",
 	"empty_html_preview_title": "没有可预览的内容",
 	"empty_html_preview_description": "请检查控制台获取详细调试信息"

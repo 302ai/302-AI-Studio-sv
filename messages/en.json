@@ -681,6 +681,8 @@
 	"tooltip_deploying": "Deploying...",
 	"tooltip_desktop_view": "Desktop view",
 	"tooltip_mobile_view": "Mobile view",
+	"tooltip_pin_panel": "Pin",
+	"tooltip_unpin_panel": "Unpin",
 	"title_html_preview": "HTML Preview",
 	"empty_html_preview_title": "No preview content",
 	"empty_html_preview_description": "Check the console for more details"

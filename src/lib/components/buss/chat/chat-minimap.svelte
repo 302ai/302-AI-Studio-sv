@@ -30,7 +30,7 @@
 		if (!minimapRef || messageHeights.length === 0) return 0.08;
 
 		const minimapHeight = minimapRef.offsetHeight;
-		const availableHeight = minimapHeight - PADDING_Y * 2;
+		const minimapAvailableHeight = minimapHeight - PADDING_Y * 2;
 		const totalActualHeight = messageHeights.reduce((sum, h) => sum + h, 0);
 		const totalGaps = Math.max(0, (messageHeights.length - 1) * MESSAGE_GAP);
 
@@ -38,7 +38,7 @@
 
 		// Calculate scale to fit content within available height
 		// The scale should ensure: totalActualHeight * scale + totalGaps = availableHeight
-		const scale = (availableHeight - totalGaps) / totalActualHeight;
+		const scale = (minimapAvailableHeight - totalGaps) / totalActualHeight;
 
 		// Use a maximum scale to prevent messages from being too large
 		return Math.min(scale, 0.1);
@@ -394,7 +394,10 @@
 		document.addEventListener("mouseup", handleDragEnd);
 
 		return () => {
-			viewport.removeEventListener("scroll", handleScroll);
+			// viewport.removeEventListener("scroll", handleScroll);
+			if (viewport) {
+				viewport.removeEventListener("scroll", handleScroll);
+			}
 			window.removeEventListener("resize", handleResize);
 			document.removeEventListener("mousemove", handleDragMove);
 			document.removeEventListener("mouseup", handleDragEnd);
@@ -440,7 +443,7 @@
 <div
 	bind:this={minimapRef}
 	class={cn(
-		"fixed right-0 z-10 transition-all duration-300 select-none pointer-events-auto",
+		"absolute right-0 z-10 transition-all duration-300 select-none pointer-events-auto",
 		isHovered || isDragging ? "opacity-100 w-[60px]" : "opacity-70 w-[50px]",
 		className,
 	)}

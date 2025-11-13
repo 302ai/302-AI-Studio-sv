@@ -7,7 +7,9 @@
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { generateFilePreview } from "$lib/utils/file-preview";
+	import { setupPanelResize } from "$lib/utils/panel-resize";
 	import { MessageSquarePlus } from "@lucide/svelte";
+	import GripVerticalIcon from "@lucide/svelte/icons/grip-vertical";
 	import type { AttachmentFile, ThreadParmas } from "@shared/types";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -177,7 +179,28 @@
 {:else}
 	<div class="flex h-full flex-col gap-y-4">
 		<div class="flex-1 overflow-hidden relative" data-layoutid="chat-message-list">
-			{#if htmlPreviewState.isVisible}
+			{#if htmlPreviewState.isVisible && htmlPreviewState.isPinned}
+				<div class="h-full overflow-hidden flex flex-col">
+					<PageHeader />
+					<MessageList messages={chatState.messages} />
+				</div>
+				<div
+					class="absolute right-0 top-0 bottom-0 h-full flex flex-col bg-background border-l border-border z-[100]"
+					style="width: 50%;"
+				>
+					<button
+						type="button"
+						aria-label="Resize panel"
+						class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
+						onmousedown={setupPanelResize}
+					>
+						<div class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
+							<GripVerticalIcon class="size-2.5" />
+						</div>
+					</button>
+					<HtmlPreviewPanel />
+				</div>
+			{:else if htmlPreviewState.isVisible}
 				<Resizable.PaneGroup direction="horizontal" class="h-full">
 					<Resizable.Pane defaultSize={50} minSize={20} class="min-w-0">
 						<div class="h-full overflow-hidden relative">
@@ -186,7 +209,7 @@
 						</div>
 					</Resizable.Pane>
 					<Resizable.Handle withHandle />
-					<Resizable.Pane defaultSize={50} minSize={25} class="min-w-0">
+					<Resizable.Pane defaultSize={50} minSize={20} class="min-w-0" style="min-width: 227px;">
 						<HtmlPreviewPanel />
 					</Resizable.Pane>
 				</Resizable.PaneGroup>

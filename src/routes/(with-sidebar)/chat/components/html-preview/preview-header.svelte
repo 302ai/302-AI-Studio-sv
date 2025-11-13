@@ -1,8 +1,18 @@
 <script lang="ts">
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { m } from "$lib/paraglide/messages.js";
+	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
 	import { cn } from "$lib/utils";
-	import { Copy, Monitor, Rocket, Smartphone, SquareArrowOutUpRight, X } from "@lucide/svelte";
+	import {
+		Copy,
+		Monitor,
+		Pin,
+		PinOff,
+		Rocket,
+		Smartphone,
+		SquareArrowOutUpRight,
+		X,
+	} from "@lucide/svelte";
 
 	interface Props {
 		activeTab: "preview" | "code";
@@ -90,6 +100,18 @@
 				onclick={onOpenInNewTab}
 			>
 				<SquareArrowOutUpRight class="size-4" />
+			</ButtonWithTooltip>
+			<ButtonWithTooltip
+				tooltip={htmlPreviewState.isPinned ? m.tooltip_unpin_panel() : m.tooltip_pin_panel()}
+				class="hover:!bg-icon-btn-hover size-8"
+				tooltipSide="bottom"
+				onclick={() => htmlPreviewState.togglePin()}
+			>
+				{#if htmlPreviewState.isPinned}
+					<Pin class="size-4" />
+				{:else}
+					<PinOff class="size-4" />
+				{/if}
 			</ButtonWithTooltip>
 			<ButtonWithTooltip
 				tooltip={m.label_button_close()}
