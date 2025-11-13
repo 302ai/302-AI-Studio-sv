@@ -57,7 +57,7 @@
 		viewport.scrollTop = viewport.scrollHeight;
 	};
 
-	const scrollToTop = (viewport: HTMLElement): void => {
+	const _scrollToTop = (viewport: HTMLElement): void => {
 		viewport.scrollTop = 0;
 	};
 

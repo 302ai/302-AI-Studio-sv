@@ -2,6 +2,7 @@
 	import type { ChatMessage } from "$lib/types/chat";
 	import { cn } from "$lib/utils";
 	import { onMount } from "svelte";
+	import { SvelteMap } from "svelte/reactivity";
 
 	interface Props {
 		messages: ChatMessage[];
@@ -21,7 +22,6 @@
 	let messageHeights = $state<number[]>([]);
 
 	// Calculate the scale factor for minimap
-	const MINIMAP_WIDTH = 60;
 	const MESSAGE_GAP = 2; // Gap between message previews in minimap
 	const PADDING_Y = 16; // py-4 = 16px top + 16px bottom
 
@@ -52,7 +52,7 @@
 		const heights: number[] = [];
 
 		// Create a map of message IDs to heights
-		const heightMap = new Map<string, number>();
+		const heightMap = new SvelteMap<string, number>();
 		messageElements.forEach((el) => {
 			const id = el.getAttribute("data-message-id");
 			if (id) {
@@ -76,7 +76,6 @@
 		const scrollHeight = viewport.scrollHeight;
 		const scrollTop = viewport.scrollTop;
 		const minimapHeight = minimapRef.offsetHeight;
-		const availableHeight = minimapHeight - PADDING_Y * 2;
 
 		// Safety check: avoid division by zero
 		if (scrollHeight === 0 || messageHeights.length === 0) return;
@@ -163,6 +162,24 @@
 		const clickY = event.clientY - rect.top;
 		const relativeY = Math.max(0, clickY - PADDING_Y);
 
+		performScrollFromPosition(relativeY);
+	};
+
+	const handleMinimapKeydown = (event: KeyboardEvent) => {
+		if (event.key === "Enter" || event.key === " ") {
+			event.preventDefault();
+			// Scroll to middle when activated via keyboard
+			if (!viewport) return;
+			viewport.scrollTo({
+				top: viewport.scrollHeight / 2,
+				behavior: "smooth",
+			});
+		}
+	};
+
+	const performScrollFromPosition = (relativeY: number) => {
+		if (!viewport || !minimapRef || !scrollContainer || messageHeights.length === 0) return;
+
 		// Calculate scale factor and minimap positions (same as updateIndicator)
 		const scaleFactor = getScaleFactor();
 		let cumulativeMinimapHeight = 0;
@@ -225,6 +242,60 @@
 	const handleDragStart = (event: MouseEvent) => {
 		event.preventDefault();
 		isDragging = true;
+	};
+
+	const handleSliderKeydown = (event: KeyboardEvent) => {
+		if (!viewport) return;
+
+		const step = 100; // Scroll step in pixels
+		let handled = false;
+
+		switch (event.key) {
+			case "ArrowUp":
+			case "ArrowLeft":
+				viewport.scrollTop = Math.max(0, viewport.scrollTop - step);
+				handled = true;
+				break;
+			case "ArrowDown":
+			case "ArrowRight":
+				viewport.scrollTop = Math.min(
+					viewport.scrollHeight - viewport.offsetHeight,
+					viewport.scrollTop + step,
+				);
+				handled = true;
+				break;
+			case "Home":
+				viewport.scrollTop = 0;
+				handled = true;
+				break;
+			case "End":
+				viewport.scrollTop = viewport.scrollHeight - viewport.offsetHeight;
+				handled = true;
+				break;
+			case "PageUp":
+				viewport.scrollTop = Math.max(0, viewport.scrollTop - viewport.offsetHeight);
+				handled = true;
+				break;
+			case "PageDown":
+				viewport.scrollTop = Math.min(
+					viewport.scrollHeight - viewport.offsetHeight,
+					viewport.scrollTop + viewport.offsetHeight,
+				);
+				handled = true;
+				break;
+		}
+
+		if (handled) {
+			event.preventDefault();
+		}
+	};
+
+	// Get current scroll position as percentage for ARIA
+	const getScrollPercentage = (): number => {
+		if (!viewport) return 0;
+		const max = viewport.scrollHeight - viewport.offsetHeight;
+		if (max <= 0) return 0;
+		return Math.round((viewport.scrollTop / max) * 100);
 	};
 
 	const handleDragMove = (event: MouseEvent) => {
@@ -366,7 +437,6 @@
 	});
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	bind:this={minimapRef}
 	class={cn(
@@ -378,8 +448,11 @@
 	onmouseenter={() => (isHovered = true)}
 	onmouseleave={() => (isHovered = false)}
 	onclick={handleMinimapClick}
+	onkeydown={handleMinimapKeydown}
 	role="scrollbar"
 	aria-label="Chat minimap"
+	aria-controls={viewport?.id || "chat-viewport"}
+	aria-valuenow={getScrollPercentage()}
 	tabindex="0"
 >
 	<!-- Background with gradient fade -->
@@ -392,12 +465,12 @@
 
 		<!-- Message previews container -->
 		<div class="relative w-full h-full overflow-hidden px-2 py-4 pointer-events-none">
-			{#each messages as message, index}
+			{#each messages as message, index (message.id)}
 				{@const scaleFactor = getScaleFactor()}
 				{@const height = messageHeights[index] ? messageHeights[index] * scaleFactor : 6}
 				<div
 					class={cn(
-						"w-full rounded-[2px] transition-all duration-200",
+						"w-full rounded-[2px]",
 						message.role === "user"
 							? "bg-primary/40 dark:bg-primary/30 shadow-sm"
 							: "bg-gray-500/30 dark:bg-gray-600/25",
@@ -411,19 +484,22 @@
 	</div>
 
 	<!-- Visible area indicator -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		bind:this={visibleIndicator}
 		class={cn(
-			"absolute left-0 right-0 transition-all duration-150 cursor-grab rounded-r-md pointer-events-auto",
+			"absolute left-0 right-0 cursor-grab rounded-r-md pointer-events-auto",
 			isDragging
 				? "cursor-grabbing border-2 border-primary bg-primary/25 shadow-lg"
 				: "border border-primary/70 bg-primary/15 shadow-md hover:bg-primary/20 hover:border-primary",
 		)}
 		style="top: {indicatorTop}px; height: {Math.max(indicatorHeight, 20)}px;"
 		onmousedown={handleDragStart}
+		onkeydown={handleSliderKeydown}
 		role="slider"
 		aria-label="Scroll position indicator"
+		aria-valuenow={getScrollPercentage()}
+		aria-valuemin="0"
+		aria-valuemax="100"
 		tabindex="0"
 	>
 		<!-- Drag handle indicator -->
