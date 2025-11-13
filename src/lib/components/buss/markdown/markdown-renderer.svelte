@@ -10,9 +10,11 @@
 	import texmath from "markdown-it-texmath";
 	import type Token from "markdown-it/lib/token.mjs";
 	import { onMount } from "svelte";
+	import BlockLoading from "./code-agent/block-loading.svelte";
+	import TodoListRenderer from "./code-agent/todo-list-renderer.svelte";
+	import WriteToolRenderer from "./code-agent/write-tool-renderer.svelte";
 	import CodeBlock from "./code-block.svelte";
 	import { DEFAULT_THEME, ensureHighlighter } from "./highlighter";
-	import TodoListRenderer from "./todo-list-renderer.svelte";
 
 	type MarkdownItInstance = ReturnType<typeof markdownIt>;
 	type MarkdownEnvironment = Record<string, unknown>;
@@ -64,6 +66,20 @@
 					status: "pending" | "in_progress" | "completed";
 					activeForm: string;
 				}>;
+		  }
+		| {
+				id: string;
+				kind: "tool-loading";
+				toolType: "todo" | "write" | null;
+				code: string;
+				language: string | null;
+		  }
+		| {
+				id: string;
+				kind: "write";
+				filePath: string;
+				code: string;
+				language: string | null;
 		  };
 
 	const DEFAULT_OPTIONS: Readonly<MarkdownItOptions> = Object.freeze({
@@ -377,6 +393,84 @@
 		return { isTodoWrite: false, todos: null };
 	};
 
+	const detectToolWriteJson = (
+		code: string,
+		language: string | null,
+	): {
+		isToolWrite: boolean;
+		data: {
+			filePath: string;
+			code: string;
+			language: string | null;
+		} | null;
+	} => {
+		// Only check JSON code blocks
+		if (language?.toLowerCase() !== "json") {
+			return { isToolWrite: false, data: null };
+		}
+
+		try {
+			const trimmed = code.trim();
+			const parsed = JSON.parse(trimmed);
+
+			// Check if it has file_path field (Write tool)
+			if (parsed && typeof parsed === "object" && "file_path" in parsed) {
+				const filePath = parsed.file_path;
+
+				if (typeof filePath !== "string" || !filePath) {
+					return { isToolWrite: false, data: null };
+				}
+
+				const ext = filePath.split(".").pop()?.toLowerCase();
+				const languageMap: Record<string, string> = {
+					js: "javascript",
+					jsx: "javascript",
+					ts: "typescript",
+					tsx: "typescript",
+					py: "python",
+					html: "html",
+					htm: "html",
+					css: "css",
+					scss: "scss",
+					sass: "sass",
+					less: "less",
+					json: "json",
+					md: "markdown",
+					yaml: "yaml",
+					yml: "yaml",
+					sh: "bash",
+					bash: "bash",
+					svg: "svg",
+					vue: "vue",
+					svelte: "svelte",
+				};
+
+				const data: {
+					filePath: string;
+					code: string;
+					language: string | null;
+				} = {
+					filePath,
+					code:
+						(parsed.content as string) ||
+						(parsed.new_string as string) ||
+						(parsed.old_string as string) ||
+						"",
+					language: ext && languageMap[ext] ? languageMap[ext] : ext || "plaintext",
+				};
+
+				// At least one code field should exist
+				if (data.code) {
+					return { isToolWrite: true, data };
+				}
+			}
+		} catch (_error) {
+			// Not valid JSON or doesn't match Write tool structure
+		}
+
+		return { isToolWrite: false, data: null };
+	};
+
 	const collectBlocks = (markdown: string) => {
 		renderer = createRenderer();
 
@@ -402,6 +496,8 @@
 		let htmlEnv = { ...envState };
 		let codeIndex = 0;
 		let todoIndex = 0;
+		let hasToolCallMarker = false;
+		let toolCallType: "todo" | "write" | null = null;
 
 		const pushHtml = (tokenSlice: Token[]) => {
 			if (!tokenSlice.length) return;
@@ -416,8 +512,36 @@
 			htmlEnv = { ...envState };
 		};
 
+		const checkForToolCallMarker = (
+			token: Token,
+		): { hasMarker: boolean; type: "todo" | "write" | null } => {
+			if (token.type === "paragraph_open") {
+				const nextToken = tokens[tokens.indexOf(token) + 1];
+				if (nextToken?.type === "inline" && nextToken.content) {
+					if (nextToken.content.includes("🔧 **Tool Call: TodoWrite**")) {
+						return { hasMarker: true, type: "todo" };
+					}
+					if (nextToken.content.includes("🔧 **Tool Call: Write**")) {
+						return { hasMarker: true, type: "write" };
+					}
+				}
+			}
+			return { hasMarker: false, type: null };
+		};
+
 		for (let index = 0; index < tokens.length; index += 1) {
 			const token = tokens[index];
+
+			// Check for tool call markers in paragraph tokens
+			if (!hasToolCallMarker) {
+				const markerCheck = checkForToolCallMarker(token);
+				if (markerCheck.hasMarker && markerCheck.type) {
+					hasToolCallMarker = true;
+					toolCallType = markerCheck.type;
+					continue;
+				}
+			}
+
 			if (token.type === "fence" && token.tag === "code") {
 				const slice = tokens.slice(sliceStart, index);
 				pushHtml(slice);
@@ -426,15 +550,19 @@
 				const languageParts = rawInfo.split(/\s+/);
 				const language = languageParts[0] || null;
 
-				// Check if this is a todo-write JSON block
-				const todoResult = detectTodoWriteJson(token.content ?? "", language);
-				if (todoResult.isTodoWrite && todoResult.todos) {
+				// Check if this is a tool call JSON block
+				if (hasToolCallMarker && language?.toLowerCase() === "json") {
+					// Create loading state for tool call - will be detected and replaced
 					descriptors.push({
-						id: `todo-${todoIndex}`,
-						kind: "todo",
-						todos: todoResult.todos,
+						id: `tool-loading-${todoIndex}`,
+						kind: "tool-loading",
+						toolType: toolCallType,
+						code: token.content ?? "",
+						language: language,
 					});
 					todoIndex += 1;
+					hasToolCallMarker = false;
+					toolCallType = null;
 				} else {
 					// Regular code block
 					descriptors.push({
@@ -481,6 +609,50 @@
 		}
 	});
 
+	// Detect and update loading blocks
+	$effect(() => {
+		if (blocks.length === 0) return;
+
+		const newBlocks = [...blocks];
+		let hasChanges = false;
+
+		for (let i = 0; i < newBlocks.length; i++) {
+			const block = newBlocks[i];
+
+			if (block.kind === "tool-loading") {
+				// Try to detect the JSON content based on tool type
+				if (block.toolType === "todo") {
+					const todoResult = detectTodoWriteJson(block.code, block.language);
+					if (todoResult.isTodoWrite && todoResult.todos) {
+						newBlocks[i] = {
+							id: block.id.replace("tool-loading-", "todo-"),
+							kind: "todo",
+							todos: todoResult.todos,
+						};
+						hasChanges = true;
+					}
+				} else if (block.toolType === "write") {
+					const toolResult = detectToolWriteJson(block.code, block.language);
+					if (toolResult.isToolWrite && toolResult.data) {
+						// It's a write-tool, convert to write block with file path and content
+						newBlocks[i] = {
+							id: block.id.replace("tool-loading-", "write-"),
+							kind: "write",
+							filePath: toolResult.data.filePath,
+							code: toolResult.data.code,
+							language: toolResult.data.language,
+						};
+						hasChanges = true;
+					}
+				}
+			}
+		}
+
+		if (hasChanges) {
+			blocks = newBlocks;
+		}
+	});
+
 	const handleExternalLinks = (node: HTMLElement) => {
 		const links = node.querySelectorAll("a");
 
@@ -521,7 +693,19 @@
 			/>
 		{:else if block.kind === "todo"}
 			<TodoListRenderer todos={block.todos} />
-		{:else}
+		{:else if block.kind === "tool-loading" && block.toolType}
+			<BlockLoading type={block.toolType} />
+		{:else if block.kind === "write"}
+			<WriteToolRenderer
+				blockId={block.id}
+				filePath={block.filePath}
+				code={block.code}
+				language={block.language}
+				theme={props.codeTheme ?? DEFAULT_THEME}
+				messageId={props.messageId}
+				messagePartIndex={props.messagePartIndex}
+			/>
+		{:else if block.kind === "html"}
 			<div use:handleExternalLinks>
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{@html block.html}

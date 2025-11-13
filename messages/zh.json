@@ -682,5 +682,9 @@
 	"tooltip_unpin_panel": "取消固定",
 	"title_html_preview": "HTML 预览",
 	"empty_html_preview_title": "没有可预览的内容",
-	"empty_html_preview_description": "请检查控制台获取详细调试信息"
+	"empty_html_preview_description": "请检查控制台获取详细调试信息",
+	"detecting_todo_list": "正在更新TODO列表...",
+	"detecting_write_tool": "正在写入...",
+	"writing": "写入：",
+	"write": "写入文件路径"
 }

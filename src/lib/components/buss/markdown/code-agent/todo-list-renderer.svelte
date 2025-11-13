@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { m } from "$lib/paraglide/messages.js";
-	import { Check, Circle, Loader } from "@lucide/svelte";
+	import { Check, Circle, CornerDownRight } from "@lucide/svelte";
 
 	interface Todo {
 		content: string;
@@ -28,13 +28,9 @@
 	{#each todos as todo, index (index)}
 		<div class="flex items-center gap-2">
 			{#if todo.status === "completed"}
-				<div
-					class="flex h-4 w-4 items-center justify-center rounded-full bg-green-500 dark:bg-green-600"
-				>
-					<Check class="h-3 w-3 text-white" />
-				</div>
+				<Check class="h-4 w-4 text-muted-foreground" />
 			{:else if todo.status === "in_progress"}
-				<Loader class="h-4 w-4 animate-spin text-blue-500 dark:text-blue-400" />
+				<CornerDownRight class="h-4 w-4 text-muted-foreground" />
 			{:else}
 				<Circle class="h-4 w-4 text-muted-foreground" />
 			{/if}

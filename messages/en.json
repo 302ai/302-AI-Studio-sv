@@ -686,5 +686,9 @@
 	"tooltip_unpin_panel": "Unpin",
 	"title_html_preview": "HTML Preview",
 	"empty_html_preview_title": "No preview content",
-	"empty_html_preview_description": "Check the console for more details"
+	"empty_html_preview_description": "Check the console for more details",
+	"detecting_todo_list": "Updating TODO list...",
+	"detecting_write_tool": "Writing...",
+	"writing": "Write:",
+	"write": "Write file path"
 }
