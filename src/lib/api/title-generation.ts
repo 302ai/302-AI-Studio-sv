@@ -42,9 +42,19 @@ export async function generateTitle(
 		}
 
 		const data: GenerateTitleResponse = await response.json();
-		return data.title;
+		return sanitizeGeneratedTitle(data.title);
 	} catch (error) {
 		console.error("Title generation failed, using fallback:", error);
 		return "";
 	}
+}
+
+const reasoningBlockPattern = /<(think|thinking|reason|reasoning)>[\s\S]*?<\/\1>/gi;
+
+function sanitizeGeneratedTitle(rawTitle: string): string {
+	if (!rawTitle) {
+		return "";
+	}
+
+	return rawTitle.replace(reasoningBlockPattern, "").trim();
 }
