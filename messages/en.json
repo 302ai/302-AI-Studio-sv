@@ -649,7 +649,7 @@
 	"plugins_marketplace_search_failed": "Search failed",
 	"plugins_marketplace_refresh_failed": "Failed to refresh marketplace",
 	"plugins_marketplace_refreshed": "Marketplace refreshed",
-	"title_code_agent": "Code Agent",
+	"title_code_agent": "Agent Mode",
 	"title_local": "Local",
 	"title_remote": "Remote",
 	"title_code_agent_type": "Platform",

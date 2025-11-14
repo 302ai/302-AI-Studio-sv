@@ -18,7 +18,7 @@
 	import * as Command from "$lib/components/ui/command";
 	import * as ScrollArea from "$lib/components/ui/scroll-area";
 	import { m } from "$lib/paraglide/messages";
-	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
+	// import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import {
 		persistedModelState,
 		persistedProviderState,
@@ -26,7 +26,7 @@
 	} from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
 	import { Check, ChevronRight, Star } from "@lucide/svelte";
-	import { CLUADE_CODE_MODELS } from "@shared/constants/codeAgentModel";
+	// import { CLUADE_CODE_MODELS } from "@shared/constants/codeAgentModel";
 	import type { Model, ModelCapability, Model as ProviderModel } from "@shared/types";
 
 	const { trigger, selectedModel, onModelSelect }: ModelSelectProps = $props();
@@ -52,10 +52,10 @@
 		// Filter models based on codeAgentState.enabled
 		let filteredModels = models.filter((model) => model.enabled);
 
-		if (codeAgentState.enabled) {
-			// When code agent is enabled, only show Claude Code models
-			filteredModels = filteredModels.filter((model) => CLUADE_CODE_MODELS.includes(model.id));
-		}
+		// if (codeAgentState.enabled) {
+		// 	// When code agent is enabled, only show Claude Code models
+		// 	filteredModels = filteredModels.filter((model) => CLUADE_CODE_MODELS.includes(model.id));
+		// }
 
 		return filteredModels
 			.map((model): Model | null => {
@@ -349,24 +349,23 @@
 		}
 	}
 
-	// Auto-switch model when code agent is enabled
-	$effect(() => {
-		if (codeAgentState.enabled) {
-			// Find the claude-sonnet-4-5-20250929 model
-			const targetModel = transformedModels.find(
-				(model) => model.id === "claude-sonnet-4-5-20250929",
-			);
+	// $effect(() => {
+	// 	if (codeAgentState.enabled) {
+	// 		// Find the claude-sonnet-4-5-20250929 model
+	// 		const targetModel = transformedModels.find(
+	// 			(model) => model.id === "claude-sonnet-4-5-20250929",
+	// 		);
 
-			// If target model exists and is different from current selection, switch to it
-			if (
-				targetModel &&
-				(selectedModel?.id !== targetModel.id ||
-					selectedModel?.providerId !== targetModel.providerId)
-			) {
-				onModelSelect(targetModel);
-			}
-		}
-	});
+	// 		// If target model exists and is different from current selection, switch to it
+	// 		if (
+	// 			targetModel &&
+	// 			(selectedModel?.id !== targetModel.id ||
+	// 				selectedModel?.providerId !== targetModel.providerId)
+	// 		) {
+	// 			onModelSelect(targetModel);
+	// 		}
+	// 	}
+	// });
 
 	// 自动滚动到选中项
 	$effect(() => {

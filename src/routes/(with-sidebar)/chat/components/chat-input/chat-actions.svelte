@@ -8,7 +8,7 @@
 	import { codeAgentState } from "$lib/stores/code-agent";
 	import { cn } from "$lib/utils";
 	import mcpIcon from "@lobehub/icons-static-svg/icons/mcp.svg";
-	import { Globe, HatGlasses, Lightbulb, Settings2 } from "@lucide/svelte";
+	import { Bot, Globe, Lightbulb, Settings2 } from "@lucide/svelte";
 	import { AttachmentUploader } from "../attachment";
 	import CodeAgentPanel from "../code-agent/code-agent-panel.svelte";
 	import ParametersPanel from "./parameters-panel.svelte";
@@ -128,14 +128,26 @@
 {#snippet actionCodeAgent()}
 	<ButtonWithTooltip
 		class={cn(
-			"hover:!bg-chat-action-hover",
+			"h-9 px-2.5",
+			"hover:!bg-chat-action-hover group/code-agent",
 			codeAgentState.enabled && "!bg-chat-action-active hover:!bg-chat-action-active",
 		)}
 		tooltip={m.title_code_agent()}
 		onclick={() => handleCodeAgentClick()}
 		disabled={isFreshTab ? false : !inCodeAgentMode}
+		size="sm"
 	>
-		<HatGlasses class={cn(codeAgentState.enabled && "!text-chat-action-active-fg")} />
+		<div class="flex items-center">
+			<Bot class={cn("size-4", codeAgentState.enabled && "!text-chat-action-active-fg")} />
+			<span
+				class={cn(
+					"transition-all duration-300 ease-in-out opacity-0 group-hover/code-agent:ml-2 group-hover/code-agent:opacity-100 max-w-0 group-hover/code-agent:max-w-[200px]",
+					codeAgentState.enabled && "!text-chat-action-active-fg",
+				)}
+			>
+				{m.title_code_agent()}
+			</span>
+		</div>
 	</ButtonWithTooltip>
 
 	<Overlay
