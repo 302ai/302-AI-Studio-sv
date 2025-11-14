@@ -105,6 +105,13 @@ if (process.contextIsolated) {
 				ipcRenderer.on("broadcast-event", listener);
 				return () => ipcRenderer.removeListener("broadcast-event", listener);
 			},
+			onCodeAgentSandboxUpdated: (
+				callback: (data: { threadId: string; sandboxId: string }) => void,
+			) => {
+				const listener = (_: unknown, data: { threadId: string; sandboxId: string }) => callback(data);
+				ipcRenderer.on("code-agent:sandbox-updated", listener);
+				return () => ipcRenderer.removeListener("code-agent:sandbox-updated", listener);
+			},
 			onSidebarStateChanged: (callback: (data: { open: boolean }) => void) => {
 				const listener = (_: unknown, eventData: BroadcastEventData) => {
 					if (eventData.broadcastEvent === "sidebar-state-changed") {

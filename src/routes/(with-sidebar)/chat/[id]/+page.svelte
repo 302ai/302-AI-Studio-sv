@@ -1,6 +1,8 @@
 <script lang="ts">
 	import * as Resizable from "$lib/components/ui/resizable/index.js";
 	import { m } from "$lib/paraglide/messages.js";
+	import { agentPreviewState } from "$lib/stores/agent-preview-state.svelte";
+	import { claudeCodeAgentState, codeAgentState } from "$lib/stores/code-agent";
 	import { chat, chatState } from "$lib/stores/chat-state.svelte";
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
@@ -14,6 +16,7 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import PageHeader from "../../components/page-header.svelte";
+	import { AgentPreviewPanel } from "../components/agent-preview";
 	import { AiApplicationItems } from "../components/ai-applications";
 	import { ChatInputBox } from "../components/chat-input";
 	import { FileUploadOverlay } from "../components/file-upload-overlay";
@@ -100,6 +103,19 @@
 			},
 		);
 
+		const unsubSandboxUpdated = window.electronAPI?.onCodeAgentSandboxUpdated?.(
+			(data: { threadId: string; sandboxId: string }) => {
+				if (data.threadId !== chatState.id || !data.sandboxId) {
+					return;
+				}
+				console.log("[Chat Page] Sandbox updated event", data);
+				claudeCodeAgentState.updateState({ sandboxId: data.sandboxId });
+				if (!agentPreviewState.isVisible) {
+					agentPreviewState.openPreview(data.sandboxId);
+				}
+			},
+		);
+
 		// Check if we should auto-send on load (for branch and send functionality)
 		const checkAutoSend = async () => {
 			const threadKey = `app-thread:${chatState.id}`;
@@ -155,7 +171,26 @@
 			unsubGenerateTitle?.();
 			unsubTriggerSend?.();
 			unsubShowToast?.();
+			unsubSandboxUpdated?.();
 		};
+	});
+
+	// 监听 sandbox 创建状态，并在满足条件时自动拉起 Agent 预览面板
+	$effect(() => {
+		const sandboxId = claudeCodeAgentState.sandboxId;
+		console.log("[AgentPreviewWatcher] State", {
+			currentAgentId: codeAgentState.currentAgentId,
+			sandboxId,
+			isVisible: agentPreviewState.isVisible,
+		});
+
+		if (sandboxId && !agentPreviewState.isVisible) {
+			console.log("[AgentPreviewWatcher] Auto open preview", {
+				sandboxId,
+				threadId: chatState.id,
+			});
+			agentPreviewState.openPreview(sandboxId);
+		}
 	});
 
 	async function handleNewExploration() {
@@ -213,9 +248,27 @@
 						<HtmlPreviewPanel />
 					</Resizable.Pane>
 				</Resizable.PaneGroup>
+			{:else if agentPreviewState.isVisible}
+				<Resizable.PaneGroup direction="horizontal" class="h-full">
+					<Resizable.Pane defaultSize={50} minSize={20} class="min-w-0">
+						<div class="h-full overflow-hidden relative">
+							<PageHeader />
+							<MessageList messages={chatState.messages} />
+						</div>
+					</Resizable.Pane>
+					<Resizable.Handle withHandle />
+					<Resizable.Pane defaultSize={50} minSize={20} class="min-w-0" style="min-width: 227px;">
+						<AgentPreviewPanel />
+					</Resizable.Pane>
+				</Resizable.PaneGroup>
 			{:else}
 				<PageHeader />
 				<MessageList messages={chatState.messages} />
+			{/if}
+
+			<!-- AgentPreviewPanel 需要始终挂载以监听状态，但当不在 Resizable 布局时隐藏 -->
+			{#if !htmlPreviewState.isVisible && !agentPreviewState.isVisible}
+				<AgentPreviewPanel />
 			{/if}
 		</div>
 		<div
