@@ -9,31 +9,49 @@
 	let { html, deviceMode = "desktop" }: Props = $props();
 
 	let iframeRef: HTMLIFrameElement | null = $state(null);
+	let currentBlobUrl: string | null = null;
 
 	const renderHtmlContent = () => {
 		if (!iframeRef || !html) {
-			cleanupIframe();
+			if (currentBlobUrl) {
+				URL.revokeObjectURL(currentBlobUrl);
+				currentBlobUrl = null;
+			}
 			if (iframeRef) {
 				iframeRef.src = "about:blank";
 			}
 			return;
 		}
 
-		cleanupIframe();
+		// Clean up previous blob URL if it exists
+		if (currentBlobUrl) {
+			URL.revokeObjectURL(currentBlobUrl);
+		}
+
+		// Create and set new blob URL
 		const blob = new Blob([html], { type: "text/html" });
 		const url = URL.createObjectURL(blob);
+		currentBlobUrl = url;
 		iframeRef.src = url;
 	};
 
 	const cleanupIframe = () => {
-		if (iframeRef && iframeRef.src && iframeRef.src.startsWith("blob:")) {
-			URL.revokeObjectURL(iframeRef.src);
+		if (currentBlobUrl) {
+			URL.revokeObjectURL(currentBlobUrl);
+			currentBlobUrl = null;
+		}
+		if (iframeRef) {
 			iframeRef.src = "about:blank";
 		}
 	};
 
 	$effect(() => {
 		renderHtmlContent();
+	});
+
+	$effect.pre(() => {
+		// Trigger render when html changes
+		void html;
 	});
 
 	onMount(() => {

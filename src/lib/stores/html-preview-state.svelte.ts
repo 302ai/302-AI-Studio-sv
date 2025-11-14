@@ -49,19 +49,30 @@ export class HtmlPreviewState {
 	}
 
 	togglePreview(payload?: HtmlPreviewPayload) {
-		if (this.isVisible) {
-			if (
-				payload &&
-				(!this.context ||
-					this.context.messageId !== payload.messageId ||
-					this.context.messagePartIndex !== payload.messagePartIndex ||
-					this.context.blockId !== payload.blockId)
-			) {
-				this.openPreview(payload);
-			} else {
+		// If no payload provided, just toggle visibility
+		if (!payload) {
+			if (this.isVisible) {
 				this.closePreview();
 			}
-		} else if (payload) {
+			return;
+		}
+
+		// If preview is visible with a different context, switch to new preview
+		if (this.isVisible && this.context) {
+			const isDifferent =
+				this.context.messageId !== payload.messageId ||
+				this.context.messagePartIndex !== payload.messagePartIndex ||
+				this.context.blockId !== payload.blockId;
+
+			if (isDifferent) {
+				// Switch to new preview
+				this.openPreview(payload);
+			} else {
+				// Same content, toggle off
+				this.closePreview();
+			}
+		} else {
+			// Preview not visible or no context, open it
 			this.openPreview(payload);
 		}
 	}
