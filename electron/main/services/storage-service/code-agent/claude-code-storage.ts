@@ -28,6 +28,15 @@ class ClaudeCodeStorage extends StorageService<CodeAgentMetadata> {
 		if (isNull(codeAgentMetadata)) return { isOK: false, sandboxId: "" };
 		return { isOK: true, sandboxId: codeAgentMetadata.sandboxId };
 	}
+
+	async setClaudeCodeModel(threadId: string, llm_model: string): Promise<{ isOK: boolean }> {
+		const key = `${this.prefix}-${threadId}`;
+		const codeAgentMetadata = await this.getItemInternal(key);
+		if (isNull(codeAgentMetadata)) return { isOK: false };
+		codeAgentMetadata.model = llm_model;
+		await this.setItemInternal(key, codeAgentMetadata);
+		return { isOK: true };
+	}
 }
 
 export const claudeCodeStorage = new ClaudeCodeStorage();

@@ -687,5 +687,6 @@
 	"detecting_write_tool": "正在写入...",
 	"writing": "写入：",
 	"write": "写入文件路径",
-	"text_button_open": "开启"
+	"text_button_open": "开启",
+	"toast_code_agent_model_change_failed": "更换沙盒模型失败"
 }

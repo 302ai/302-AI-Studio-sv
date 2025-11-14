@@ -14,8 +14,6 @@
 	import ParametersPanel from "./parameters-panel.svelte";
 
 	let actionDisabled = $derived(chatState.providerType !== "302ai");
-	let isFreshTab = $derived(!chatState.hasMessages);
-	let inCodeAgentMode = $derived(!isFreshTab && codeAgentState.enabled);
 
 	let isParametersOpen = $state(false);
 	let isMCPSelectorOpen = $state(false);
@@ -39,7 +37,10 @@
 	}
 
 	function handleCodeAgentClick() {
-		if (inCodeAgentMode || (!inCodeAgentMode && codeAgentState.enabled)) {
+		if (
+			codeAgentState.inCodeAgentMode ||
+			(!codeAgentState.inCodeAgentMode && codeAgentState.enabled)
+		) {
 			isCodeAgentPanelOpen = true;
 		} else if (codeAgentState.enabled) {
 			codeAgentState.updateState({ currentAgentId: "" });
@@ -138,7 +139,7 @@
 		)}
 		tooltip={m.title_code_agent()}
 		onclick={() => handleCodeAgentClick()}
-		disabled={isFreshTab ? false : !inCodeAgentMode}
+		disabled={codeAgentState.isFreshTab ? false : !codeAgentState.inCodeAgentMode}
 		size="sm"
 	>
 		<div class="flex items-center">
@@ -159,7 +160,7 @@
 		open={isCodeAgentPanelOpen}
 		onClose={handleCodeAgentPanelClose}
 	>
-		<CodeAgentPanel onClose={handleCodeAgentPanelClose} {inCodeAgentMode} />
+		<CodeAgentPanel onClose={handleCodeAgentPanelClose} />
 		<!-- <Switch
 			class={cn("absolute top-4 right-12", "data-[state=unchecked]:border-settings-switch-border")}
 			checked={claudeCodeAgentState.enabled}

@@ -1,16 +1,18 @@
 <script lang="ts">
 	import sendMessageIcon from "$lib/assets/send-message.svg";
+	import { LdrsLoader } from "$lib/components/buss/ldrs-loader";
 	import { ModelSelect } from "$lib/components/buss/model-select";
 	import { Button } from "$lib/components/ui/button";
 	import { Separator } from "$lib/components/ui/separator";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { codeAgentState } from "$lib/stores/code-agent";
 	import { modelPanelState } from "$lib/stores/model-panel-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
 	import { generateFilePreview, MAX_ATTACHMENT_COUNT } from "$lib/utils/file-preview";
-	import type { AttachmentFile } from "@shared/types";
+	import type { AttachmentFile, Model } from "@shared/types";
 	import { nanoid } from "nanoid";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -22,6 +24,7 @@
 	let openModelSelect = $state<() => void>();
 	let isComposing = $state(false); // 跟踪输入法composition状态
 	let textareaRef = $state<HTMLTextAreaElement | null>(null);
+	let isCodeAgentModelChanging = $state(false);
 
 	// 自动聚焦到输入框
 	function focusInput() {
@@ -195,6 +198,21 @@
 			});
 		}
 	}
+
+	async function handleModelSelect(model: Model) {
+		if (codeAgentState.enabled) {
+			isCodeAgentModelChanging = true;
+			const isOK = await codeAgentState.handleCodeAgentModelChange(model);
+			if (!isOK) {
+				toast.error(m.toast_code_agent_model_change_failed());
+			} else {
+				chatState.handleSelectedModelChange(model);
+			}
+			isCodeAgentModelChanging = false;
+		} else {
+			chatState.handleSelectedModelChange(model);
+		}
+	}
 </script>
 
 <div class="relative w-full max-w-chat-max-w" data-layoutid="chat-input-container">
@@ -240,7 +258,7 @@
 			<div class="flex items-center gap-2">
 				<ModelSelect
 					selectedModel={chatState.selectedModel}
-					onModelSelect={(model) => chatState.handleSelectedModelChange(model)}
+					onModelSelect={(model) => handleModelSelect(model)}
 				>
 					{#snippet trigger({ onclick })}
 						{((openModelSelect = () => {
@@ -271,10 +289,15 @@
 								}
 								openModelSelect?.();
 							}}
+							disabled={isCodeAgentModelChanging}
 						>
-							<p class="truncate">
-								{chatState.selectedModel?.name ?? m.text_button_select_model()}
-							</p>
+							{#if isCodeAgentModelChanging}
+								<LdrsLoader type="line-spinner" size={16} />
+							{:else}
+								<p class="truncate">
+									{chatState.selectedModel?.name ?? m.text_button_select_model()}
+								</p>
+							{/if}
 						</Button>
 					{/snippet}
 				</ModelSelect>

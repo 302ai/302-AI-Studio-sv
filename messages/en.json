@@ -691,5 +691,6 @@
 	"detecting_write_tool": "Writing...",
 	"writing": "Write:",
 	"write": "Write file path",
-	"text_button_open": "Enable"
+	"text_button_open": "Enable",
+	"toast_code_agent_model_change_failed": "Failed to replace sandbox model"
 }

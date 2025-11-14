@@ -1,4 +1,6 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { chatState } from "$lib/stores/chat-state.svelte";
+import type { Model } from "@302ai/studio-plugin-sdk";
 import {
 	CodeAgentCfgs,
 	CodeAgentConfigMetadata,
@@ -28,11 +30,16 @@ export const persistedCodeAgentConfigState = new PersistedState<CodeAgentConfigM
 	},
 );
 
+const { updateClaudeCodeSandbox } = window.electronAPI.codeAgentService;
+
 class CodeAgentState {
+	enabled = $derived.by(() => persistedCodeAgentConfigState.current.enabled);
+
 	type = $derived(persistedCodeAgentConfigState.current.type);
 	currentAgentId = $derived(persistedCodeAgentConfigState.current.currentAgentId);
+	isFreshTab = $derived(!chatState.hasMessages);
+	inCodeAgentMode = $derived(!this.isFreshTab && this.enabled);
 
-	enabled = $derived.by(() => persistedCodeAgentConfigState.current.enabled);
 	sandboxStatus = $derived.by<CodeAgentSandboxStatus>(() => {
 		return match(this.currentAgentId)
 			.with("claude-code", () =>
@@ -61,6 +68,21 @@ class CodeAgentState {
 		return match(this.currentAgentId)
 			.with("claude-code", () => claudeCodeAgentState.currentSessionId)
 			.otherwise(() => "");
+	}
+
+	getSandboxId(): string {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.sandboxId)
+			.otherwise(() => "");
+	}
+
+	async handleCodeAgentModelChange(model: Model): Promise<boolean> {
+		if (this.currentAgentId === "claude-code") {
+			const { isOK } = await updateClaudeCodeSandbox(threadId, this.getSandboxId(), model.id);
+			return isOK;
+		}
+
+		return false;
 	}
 
 	// async createSandbox(): Promise<CodeAgentCreateResult> {

@@ -15,10 +15,9 @@
 
 	interface Props {
 		onClose: () => void;
-		inCodeAgentMode: boolean;
 	}
 
-	let { onClose, inCodeAgentMode }: Props = $props();
+	let { onClose }: Props = $props();
 
 	let selectedKey = $derived(codeAgentState.type);
 	// let isCreatingSandbox = $state(false);
@@ -198,8 +197,9 @@
 					>{m.common_cancel()}</Button
 				>
 				{#if codeAgentState.enabled}
-					<Button disabled={inCodeAgentMode} onclick={() => handleOverlayAction("close")}
-						>{m.label_button_close()}</Button
+					<Button
+						disabled={codeAgentState.inCodeAgentMode}
+						onclick={() => handleOverlayAction("close")}>{m.label_button_close()}</Button
 					>
 				{:else}
 					<Button onclick={() => handleOverlayAction("open")}>{m.text_button_open()}</Button>
