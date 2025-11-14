@@ -19,7 +19,7 @@
 
 	let isParametersOpen = $state(false);
 	let isMCPSelectorOpen = $state(false);
-	let isCodeAgentOpen = $state(false);
+	let isCodeAgentPanelOpen = $state(false);
 
 	function handleParametersClose() {
 		isParametersOpen = false;
@@ -39,13 +39,17 @@
 	}
 
 	function handleCodeAgentClick() {
-		if (inCodeAgentMode) {
-			isCodeAgentOpen = true;
+		if (inCodeAgentMode || (!inCodeAgentMode && codeAgentState.enabled)) {
+			isCodeAgentPanelOpen = true;
 		} else if (codeAgentState.enabled) {
 			codeAgentState.updateState({ currentAgentId: "" });
 		} else {
-			isCodeAgentOpen = true;
+			isCodeAgentPanelOpen = true;
 		}
+	}
+
+	function handleCodeAgentPanelClose() {
+		isCodeAgentPanelOpen = false;
 	}
 </script>
 
@@ -152,10 +156,10 @@
 
 	<Overlay
 		title={m.title_code_agent()}
-		open={isCodeAgentOpen}
-		onClose={() => (isCodeAgentOpen = false)}
+		open={isCodeAgentPanelOpen}
+		onClose={handleCodeAgentPanelClose}
 	>
-		<CodeAgentPanel />
+		<CodeAgentPanel onClose={handleCodeAgentPanelClose} {inCodeAgentMode} />
 		<!-- <Switch
 			class={cn("absolute top-4 right-12", "data-[state=unchecked]:border-settings-switch-border")}
 			checked={claudeCodeAgentState.enabled}

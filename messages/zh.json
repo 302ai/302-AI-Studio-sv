@@ -649,7 +649,7 @@
 	"title_local": "本地",
 	"title_remote": "远程",
 	"title_code_agent_type": "平台",
-	"title_agent": "代理",
+	"title_agent": "Agent 框架",
 	"select_agent": "请选择一个代码代理",
 	"title_select_session": "选择会话",
 	"select_session": "请选择一个会话",
@@ -686,5 +686,6 @@
 	"detecting_todo_list": "正在更新TODO列表...",
 	"detecting_write_tool": "正在写入...",
 	"writing": "写入：",
-	"write": "写入文件路径"
+	"write": "写入文件路径",
+	"text_button_open": "开启"
 }

@@ -13,6 +13,13 @@
 	import { cn } from "$lib/utils";
 	import { Plus, RefreshCcw } from "@lucide/svelte";
 
+	interface Props {
+		onClose: () => void;
+		inCodeAgentMode: boolean;
+	}
+
+	let { onClose, inCodeAgentMode }: Props = $props();
+
 	let selectedKey = $derived(codeAgentState.type);
 	// let isCreatingSandbox = $state(false);
 	let showCustomSessionIdInput = $state(false);
@@ -82,6 +89,15 @@
 
 	function handleCodeAgentSelected(codeAgentId: string) {
 		codeAgentState.updateState({ currentAgentId: codeAgentId });
+	}
+
+	function handleOverlayAction(type: "open" | "cancel" | "close") {
+		if (type === "open") {
+			codeAgentState.updateState({ enabled: true });
+		} else if (type === "close") {
+			codeAgentState.updateState({ enabled: false });
+		}
+		onClose();
 	}
 </script>
 
@@ -175,6 +191,19 @@
 				<Button variant="secondary" onclick={() => handleAddCustomSessionId()}>
 					{m.text_button_add()}
 				</Button>
+			</div>
+
+			<div class="flex flex-row justify-between">
+				<Button variant="secondary" onclick={() => handleOverlayAction("cancel")}
+					>{m.common_cancel()}</Button
+				>
+				{#if codeAgentState.enabled}
+					<Button disabled={inCodeAgentMode} onclick={() => handleOverlayAction("close")}
+						>{m.label_button_close()}</Button
+					>
+				{:else}
+					<Button onclick={() => handleOverlayAction("open")}>{m.text_button_open()}</Button>
+				{/if}
 			</div>
 		{/if}
 		{#if selectedKey === "local"}

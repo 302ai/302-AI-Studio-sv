@@ -32,7 +32,7 @@ class CodeAgentState {
 	type = $derived(persistedCodeAgentConfigState.current.type);
 	currentAgentId = $derived(persistedCodeAgentConfigState.current.currentAgentId);
 
-	enabled = $derived.by(() => persistedCodeAgentConfigState.current.currentAgentId !== "");
+	enabled = $derived.by(() => persistedCodeAgentConfigState.current.enabled);
 	sandboxStatus = $derived.by<CodeAgentSandboxStatus>(() => {
 		return match(this.currentAgentId)
 			.with("claude-code", () =>

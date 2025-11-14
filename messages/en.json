@@ -653,7 +653,7 @@
 	"title_local": "Local",
 	"title_remote": "Remote",
 	"title_code_agent_type": "Platform",
-	"title_agent": "Agent",
+	"title_agent": "Agent Framework",
 	"select_agent": "Please select a code agent",
 	"title_select_session": "Select Session",
 	"select_session": "Please Select a Session",
@@ -690,5 +690,6 @@
 	"detecting_todo_list": "Updating TODO list...",
 	"detecting_write_tool": "Writing...",
 	"writing": "Write:",
-	"write": "Write file path"
+	"write": "Write file path",
+	"text_button_open": "Enable"
 }
