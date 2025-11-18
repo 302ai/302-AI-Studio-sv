@@ -1,9 +1,14 @@
 import { spawn, type ChildProcess } from "child_process";
+import { promises as fs } from "fs";
+import path from "path";
 import {
 	JSONRPC_VERSION,
 	type AcpMessage,
+	type AcpNotification,
+	type AcpPermissionRequest,
 	type AcpRequest,
 	type AcpResponse,
+	type AcpSessionUpdate,
 	type PendingRequest,
 } from "../types/acpTypes";
 
@@ -13,6 +18,32 @@ export class ACPConnection {
 	private nextRequestId = 0;
 	private initializeResponse: AcpResponse | null = null;
 	private sessionId: string | null = null;
+	private workingDir: string = process.cwd();
+
+	public onSessionUpdate: (data: AcpSessionUpdate) => void = () => {};
+	public onPermissionRequest: (data: AcpPermissionRequest) => Promise<{
+		optionId: string;
+	}> = () => Promise.resolve({ optionId: "allow" }); // Returns a resolved Promise for interface consistency
+	public onEndTurn: () => void = () => {}; // Handler for end_turn messages
+	public onFileOperation: (operation: {
+		method: string;
+		path: string;
+		content?: string;
+		sessionId: string;
+	}) => void = () => {};
+
+	private sendMessage(message: AcpRequest | AcpNotification): void {
+		if (this.child?.stdin) {
+			const jsonString = JSON.stringify(message);
+			// Windows 可能需要 \r\n 换行符
+			const lineEnding = process.platform === "win32" ? "\r\n" : "\n";
+			const fullMessage = jsonString + lineEnding;
+
+			this.child.stdin.write(fullMessage);
+		} else {
+			// Child process not available, cannot send message
+		}
+	}
 
 	private sendRequest<T = unknown>(method: string, params?: Record<string, unknown>): Promise<T> {
 		const id = this.nextRequestId++;
@@ -66,7 +97,7 @@ export class ACPConnection {
 
 			this.pendingRequests.set(id, pendingRequest);
 
-			// this.sendMessage(message);
+			this.sendMessage(message);
 
 			console.log("[ACP] Sending request:", JSON.stringify(message));
 		});
@@ -82,11 +113,257 @@ export class ACPConnection {
 				},
 			},
 		};
-
+		console.error("[ACP] Using NPX approach for Claude ACP bridge");
 		const response = await this.sendRequest<AcpResponse>("initialize", initializeParams);
-
+		console.log("initialize response==>", JSON.stringify(response));
 		this.initializeResponse = response;
 		return response;
+	}
+
+	private pauseRequestTimeout(requestId: number): void {
+		const request = this.pendingRequests.get(requestId);
+		if (request && !request.isPaused && request.timeoutId) {
+			clearTimeout(request.timeoutId);
+			request.isPaused = true;
+			request.timeoutId = undefined;
+		}
+	}
+
+	private resumeRequestTimeout(requestId: number): void {
+		const request = this.pendingRequests.get(requestId);
+		if (request && request.isPaused) {
+			const elapsedTime = Date.now() - request.startTime;
+			const remainingTime = Math.max(0, request.timeoutDuration - elapsedTime);
+
+			if (remainingTime > 0) {
+				request.timeoutId = setTimeout(() => {
+					if (this.pendingRequests.has(requestId) && !request.isPaused) {
+						this.pendingRequests.delete(requestId);
+						request.reject(new Error(`Request ${request.method} timed out`));
+					}
+				}, remainingTime);
+				request.isPaused = false;
+			} else {
+				// 时间已超过，立即触发超时
+				this.pendingRequests.delete(requestId);
+				request.reject(new Error(`Request ${request.method} timed out`));
+			}
+		}
+	}
+
+	// 暂停所有 session/prompt 请求的超时
+	private pauseSessionPromptTimeouts(): void {
+		let _pausedCount = 0;
+		for (const [id, request] of this.pendingRequests) {
+			if (request.method === "session/prompt") {
+				this.pauseRequestTimeout(id);
+				_pausedCount++;
+			}
+		}
+	}
+
+	// 恢复所有 session/prompt 请求的超时
+	private resumeSessionPromptTimeouts(): void {
+		let _resumedCount = 0;
+		for (const [id, request] of this.pendingRequests) {
+			if (request.method === "session/prompt" && request.isPaused) {
+				this.resumeRequestTimeout(id);
+				_resumedCount++;
+			}
+		}
+	}
+
+	private async handlePermissionRequest(params: AcpPermissionRequest): Promise<{
+		outcome: { outcome: string; optionId: string };
+	}> {
+		// 暂停所有 session/prompt 请求的超时计时器
+		this.pauseSessionPromptTimeouts();
+		try {
+			const response = await this.onPermissionRequest(params);
+
+			// 根据用户的选择决定outcome
+			const optionId = response.optionId;
+			const outcome = optionId.includes("reject") ? "rejected" : "selected";
+
+			return {
+				outcome: {
+					outcome,
+					optionId: optionId,
+				},
+			};
+		} catch (error) {
+			// 处理超时或其他错误情况，默认拒绝
+			console.error("Permission request failed:", error);
+			return {
+				outcome: {
+					outcome: "rejected",
+					optionId: "reject_once", // 默认拒绝
+				},
+			};
+		} finally {
+			// 无论成功还是失败，都恢复 session/prompt 请求的超时计时器
+			this.resumeSessionPromptTimeouts();
+		}
+	}
+
+	private resolveWorkspacePath(targetPath: string): string {
+		// Absolute paths are used as-is; relative paths are anchored to the conversation workspace
+		// 绝对路径保持不变， 相对路径锚定到当前会话的工作区
+		if (!targetPath) return this.workingDir;
+		if (path.isAbsolute(targetPath)) {
+			return targetPath;
+		}
+		return path.join(this.workingDir, targetPath);
+	}
+
+	private async handleReadTextFile(params: { path: string }): Promise<{ content: string }> {
+		try {
+			const content = await fs.readFile(params.path, "utf-8");
+			return { content };
+		} catch (error) {
+			throw new Error(
+				`Failed to read file: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
+	}
+
+	// Normalize read operations to the conversation workspace before touching the filesystem
+	// 访问文件前先把读取操作映射到会话工作区
+	private async handleReadOperation(params: {
+		path: string;
+		sessionId?: string;
+	}): Promise<{ content: string }> {
+		const resolvedReadPath = this.resolveWorkspacePath(params.path);
+		this.onFileOperation({
+			method: "fs/read_text_file",
+			path: resolvedReadPath,
+			sessionId: params.sessionId || "",
+		});
+		return await this.handleReadTextFile({ ...params, path: resolvedReadPath });
+	}
+
+	private async handleWriteTextFile(params: { path: string; content: string }): Promise<null> {
+		try {
+			await fs.mkdir(path.dirname(params.path), { recursive: true });
+			await fs.writeFile(params.path, params.content, "utf-8");
+			return null;
+		} catch (error) {
+			throw new Error(
+				`Failed to write file: ${error instanceof Error ? error.message : String(error)}`,
+			);
+		}
+	}
+
+	// Normalize write operations and emit UI events so the workspace view stays in sync
+	// 将写入操作归一化并通知 UI，保持工作区视图同步
+	private async handleWriteOperation(params: {
+		path: string;
+		content: string;
+		sessionId?: string;
+	}): Promise<null> {
+		const resolvedWritePath = this.resolveWorkspacePath(params.path);
+		this.onFileOperation({
+			method: "fs/write_text_file",
+			path: resolvedWritePath,
+			content: params.content,
+			sessionId: params.sessionId || "",
+		});
+		return await this.handleWriteTextFile({ ...params, path: resolvedWritePath });
+	}
+
+	private sendResponseMessage(response: AcpResponse): void {
+		if (this.child?.stdin) {
+			const jsonString = JSON.stringify(response);
+			// Windows 可能需要 \r\n 换行符
+			const lineEnding = process.platform === "win32" ? "\r\n" : "\n";
+			const fullMessage = jsonString + lineEnding;
+
+			this.child.stdin.write(fullMessage);
+		}
+	}
+
+	private async handleIncomingRequest(message: AcpRequest | AcpNotification): Promise<void> {
+		const { method, params } = message;
+
+		try {
+			let result = null;
+
+			switch (method) {
+				case "session/update":
+					this.onSessionUpdate(params);
+					break;
+				case "session/request_permission":
+					result = await this.handlePermissionRequest(params);
+					break;
+				case "fs/read_text_file":
+					result = await this.handleReadOperation(params);
+					break;
+				case "fs/write_text_file":
+					result = await this.handleWriteOperation(params);
+					break;
+				default:
+					break;
+			}
+
+			// If this is a request (has id), send response
+			if ("id" in message && typeof message.id === "number") {
+				this.sendResponseMessage({
+					jsonrpc: JSONRPC_VERSION,
+					id: message.id,
+					result,
+				});
+			}
+		} catch (error) {
+			if ("id" in message && typeof message.id === "number") {
+				this.sendResponseMessage({
+					jsonrpc: JSONRPC_VERSION,
+					id: message.id,
+					error: {
+						code: -32603,
+						message: error instanceof Error ? error.message : String(error),
+					},
+				});
+			}
+		}
+	}
+
+	private handleMessage(message: AcpMessage): void {
+		try {
+			// 修复：优先检查是否为 request（有 method 字段），而不是仅基于 ID
+			if ("method" in message) {
+				// This is a request or notification
+				this.handleIncomingRequest(message).catch((_error) => {
+					// Handle request errors silently
+				});
+			} else if (
+				"id" in message &&
+				typeof message.id === "number" &&
+				this.pendingRequests.has(message.id)
+			) {
+				// This is a response to a previous request
+				const { resolve, reject } = this.pendingRequests.get(message.id)!;
+				this.pendingRequests.delete(message.id);
+
+				if ("result" in message) {
+					// Check for end_turn message
+					if (
+						message.result &&
+						typeof message.result === "object" &&
+						message.result.stopReason === "end_turn"
+					) {
+						this.onEndTurn();
+					}
+					resolve(message.result);
+				} else if ("error" in message) {
+					const errorMsg = message.error?.message || "Unknown ACP error";
+					reject(new Error(errorMsg));
+				}
+			} else {
+				// Unknown message format, ignore
+			}
+		} catch (_error) {
+			// Handle message parsing errors silently
+		}
 	}
 
 	private async setupChildProcessHandlers(backend: string): Promise<void> {
@@ -135,6 +412,7 @@ export class ACPConnection {
 					try {
 						const message = JSON.parse(line) as AcpMessage;
 						console.log("AcpMessage==>", JSON.stringify(message));
+						this.handleMessage(message);
 					} catch (_serror) {
 						// Ignore parsing errors for non-JSON messages
 					}
@@ -171,6 +449,9 @@ export class ACPConnection {
 			shell: isWindows,
 		});
 
+		console.log("Claude Code ACP process started");
+		console.log("workspacePath==>", workspacePath);
+
 		await this.setupChildProcessHandlers("claude");
 	}
 
@@ -189,7 +470,7 @@ export class ACPConnection {
 			throw new Error("No active ACP session");
 		}
 
-		// console.log('Sending ACP session...', prompt);
+		console.log("Sending ACP session...", prompt);
 
 		return await this.sendRequest("session/prompt", {
 			sessionId: this.sessionId,

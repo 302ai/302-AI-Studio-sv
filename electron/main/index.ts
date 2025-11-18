@@ -167,7 +167,7 @@ async function init() {
 		await connection.connect();
 
 		console.log("Creating session...");
-		await connection.newSession("/path/to/your/project");
+		await connection.newSession();
 
 		console.log("Sending prompt...");
 		const response = await connection.sendPrompt("Hello, Claude!");
