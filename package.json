@@ -134,6 +134,7 @@
 		"@modelcontextprotocol/sdk": "^1.20.0",
 		"@opendocsg/pdf2md": "^0.2.2",
 		"@sveltejs/adapter-static": "^3.0.9",
+		"@zed-industries/claude-code-acp": "^0.10.4",
 		"@zumer/snapdom": "^1.9.14",
 		"archiver": "^7.0.1",
 		"arktype": "^2.1.22",

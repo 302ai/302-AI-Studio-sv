@@ -7,6 +7,7 @@ import type { ShortcutBinding, ShortcutScope } from "@shared/types/shortcut";
 import { app, net, protocol } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
+import { ACPConnection } from "./agent/acp/acp-connection";
 import { isMac } from "./constants";
 import { WebContentsFactory } from "./factories/web-contents-factory";
 import { registerIpcHandlers } from "./generated/ipc-registration";
@@ -159,4 +160,21 @@ async function init() {
 
 		return net.fetch(`file://${normalized}`);
 	});
+
+	const connection = new ACPConnection();
+	try {
+		console.log("Connecting...");
+		await connection.connect();
+
+		console.log("Creating session...");
+		await connection.newSession("/path/to/your/project");
+
+		console.log("Sending prompt...");
+		const response = await connection.sendPrompt("Hello, Claude!");
+		console.log("Response:", response);
+	} catch (error) {
+		console.error("Error:", error);
+	} finally {
+		connection.disconnect();
+	}
 }
