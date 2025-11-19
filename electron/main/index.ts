@@ -172,6 +172,9 @@ async function init() {
 		console.log("Sending prompt...");
 		const response = await connection.sendPrompt("Hello, Claude!");
 		console.log("Response:", response);
+
+		const response2 = await connection.sendPrompt("实现一个计算器html页面");
+		console.log("Response2:", response2);
 	} catch (error) {
 		console.error("Error:", error);
 	} finally {

@@ -385,3 +385,23 @@ export interface PendingRequest<T = unknown> {
 	startTime: number;
 	timeoutDuration: number;
 }
+
+export interface SetModelRequest {
+	sessionId: string;
+	modelId: string;
+}
+
+export interface SetModelResponse {
+	_meta?: Record<string, unknown>;
+}
+
+export interface Model {
+	modelId: string;
+	name: string;
+	description?: string;
+}
+
+export interface ModelsInfo {
+	availableModels: Model[];
+	currentModelId: string;
+}

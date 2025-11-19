@@ -9,7 +9,10 @@ import {
 	type AcpRequest,
 	type AcpResponse,
 	type AcpSessionUpdate,
+	type Model,
+	type ModelsInfo,
 	type PendingRequest,
+	type SetModelResponse,
 } from "../types/acpTypes";
 
 export class ACPConnection {
@@ -19,6 +22,9 @@ export class ACPConnection {
 	private initializeResponse: AcpResponse | null = null;
 	private sessionId: string | null = null;
 	private workingDir: string = process.cwd();
+
+	private availableModels: Model[] = [];
+	private currentModelId: string | null = null;
 
 	public onSessionUpdate: (data: AcpSessionUpdate) => void = () => {};
 	public onPermissionRequest: (data: AcpPermissionRequest) => Promise<{
@@ -413,7 +419,7 @@ export class ACPConnection {
 						const message = JSON.parse(line) as AcpMessage;
 						console.log("AcpMessage==>", JSON.stringify(message));
 						this.handleMessage(message);
-					} catch (_serror) {
+					} catch (_error) {
 						// Ignore parsing errors for non-JSON messages
 					}
 				}
@@ -456,13 +462,48 @@ export class ACPConnection {
 	}
 
 	async newSession(cwd: string = process.cwd()): Promise<AcpResponse> {
-		const response = await this.sendRequest<AcpResponse & { sessionId?: string }>("session/new", {
+		const response = await this.sendRequest<
+			AcpResponse & { sessionId?: string; models?: ModelsInfo }
+		>("session/new", {
 			cwd,
 			mcpServers: [] as unknown[],
 		});
 
 		this.sessionId = response.sessionId || null;
+
+		if (response.models) {
+			this.availableModels = response.models.availableModels;
+			this.currentModelId = response.models.currentModelId;
+		}
+
 		return response;
+	}
+
+	// 新增：获取可用模型列表
+	getAvailableModels(): Model[] {
+		return this.availableModels;
+	}
+
+	// 新增：获取当前模型
+	getCurrentModelId(): string | null {
+		return this.currentModelId;
+	}
+
+	// 新增：切换模型
+	async setModel(modelId: string): Promise<void> {
+		if (!this.sessionId) {
+			throw new Error("No active ACP session");
+		}
+
+		console.log(`Switching model to: ${modelId}`);
+
+		await this.sendRequest<SetModelResponse>("session/set_model", {
+			sessionId: this.sessionId,
+			modelId: modelId,
+		});
+
+		this.currentModelId = modelId;
+		console.log(`Model switched successfully to: ${modelId}`);
 	}
 
 	async sendPrompt(prompt: string): Promise<AcpResponse> {
