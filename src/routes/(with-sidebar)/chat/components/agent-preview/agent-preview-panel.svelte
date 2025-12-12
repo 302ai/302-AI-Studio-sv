@@ -13,8 +13,8 @@
 		type AgentPreviewSyncEnvelope,
 	} from "$lib/stores/agent-preview-state.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
+	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
@@ -194,7 +194,7 @@
 		try {
 			// Then refresh sessions to get workspace_path for the current session
 			// This ensures the file tree has the correct workspace path before loading
-			await claudeCodeSandboxState.refreshSessions(sandboxId);
+			// await claudeCodeSandboxState.refreshSessions(sandboxId);
 
 			const [info, savedPath] = await Promise.all([
 				agentPreviewState.getDeploymentInfo(sandboxId, sessionId),

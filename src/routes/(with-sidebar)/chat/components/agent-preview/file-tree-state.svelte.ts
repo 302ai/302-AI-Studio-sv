@@ -34,6 +34,15 @@ interface TreeCache {
 }
 
 /**
+ * Breadcrumb segment for navigation
+ */
+export interface BreadcrumbSegment {
+	name: string;
+	path: string;
+	isLast: boolean;
+}
+
+/**
  * Path utility functions
  */
 const pathUtils = {
@@ -76,6 +85,9 @@ export class FileTreeState {
 	treeNodesCache = $state<TreeCache | null>(null);
 	syncUnsubscribe: (() => void) | null = null;
 
+	// Navigation state - current directory being viewed
+	currentDirectory = $state<string>(DEFAULT_WORKSPACE_PATH);
+
 	// Derived state
 	isStreaming = $derived(chatState.isStreaming || chatState.isSubmitted);
 
@@ -84,16 +96,34 @@ export class FileTreeState {
 		return this.workspacePath || DEFAULT_WORKSPACE_PATH;
 	}
 
+	// Derived: breadcrumb segments for current directory
+	get breadcrumbSegments(): BreadcrumbSegment[] {
+		return this.buildBreadcrumb(this.currentDirectory);
+	}
+
+	// Derived: items in current directory (flat view)
+	get currentItems(): SandboxFileInfo[] {
+		return this.getDirectoryItems(this.currentDirectory);
+	}
+
+	// Check if currently at root directory
+	get isAtRoot(): boolean {
+		return this.currentDirectory === this.rootPath;
+	}
+
 	constructor(sandboxId: string, workspacePath?: string) {
 		this.sandboxId = sandboxId;
 		if (workspacePath) {
 			this.workspacePath = workspacePath;
 			this.expandedDirs = new SvelteSet([workspacePath]);
+			this.currentDirectory = workspacePath;
 		}
 	}
 
 	updateSandboxId(sandboxId: string) {
 		this.sandboxId = sandboxId;
+		// Reset navigation to root on sandbox change
+		this.currentDirectory = this.rootPath;
 	}
 
 	updateWorkspacePath(workspacePath: string) {
@@ -101,6 +131,8 @@ export class FileTreeState {
 			this.workspacePath = workspacePath;
 			// Update expanded dirs to include the new workspace path
 			this.expandedDirs = new SvelteSet([workspacePath]);
+			// Reset navigation to new root
+			this.currentDirectory = workspacePath;
 		}
 	}
 
@@ -262,7 +294,7 @@ export class FileTreeState {
 	 * Save file list to storage, preserving existing data
 	 */
 	private async saveToStorage(
-		updates?: Partial<{ selectedFilePath: string | null }>,
+		updates?: Partial<{ selectedFilePath: string | null; currentNavigationDirectory?: string }>,
 		shouldBroadcast: boolean = false,
 	): Promise<void> {
 		const sessionId = claudeCodeAgentState.currentSessionId;
@@ -282,6 +314,10 @@ export class FileTreeState {
 			currentWorkingDirectory: existingStorage?.currentWorkingDirectory,
 			terminalHistory: existingStorage?.terminalHistory,
 			type: existingStorage?.type,
+			currentNavigationDirectory:
+				updates?.currentNavigationDirectory ??
+				this.currentDirectory ??
+				existingStorage?.currentNavigationDirectory,
 			lastUpdated: new SvelteDate().toISOString(),
 		});
 
@@ -314,10 +350,15 @@ export class FileTreeState {
 				this.files = storage.fileList;
 				this.treeNodes = this.buildTreeStructure(this.files);
 				this.loadedDirs = this.inferLoadedDirsFromFiles(this.files);
+				// Restore navigation directory from storage
+				if (storage.currentNavigationDirectory) {
+					this.currentDirectory = storage.currentNavigationDirectory;
+				}
 			} else if (clearIfNotFound) {
 				this.files = [];
 				this.treeNodes = [];
 				this.loadedDirs = new SvelteSet();
+				this.currentDirectory = this.rootPath;
 			} else {
 				console.log("[FileTree] No data in storage, keeping existing files");
 			}
@@ -327,6 +368,7 @@ export class FileTreeState {
 				this.files = [];
 				this.treeNodes = [];
 				this.loadedDirs = new SvelteSet();
+				this.currentDirectory = this.rootPath;
 			}
 		}
 	}
@@ -452,31 +494,6 @@ export class FileTreeState {
 		this.treeNodesCache = null;
 		this.expandedDirs = new SvelteSet([this.rootPath]);
 		await this.loadFiles(this.rootPath, false, true);
-	}
-
-	/**
-	 * Toggle directory expansion
-	 */
-	async toggleDir(path: string): Promise<void> {
-		const isExpanding = !this.expandedDirs.has(path);
-
-		if (isExpanding) {
-			// Expanding: fetch folder contents if not already loaded and no direct children exist
-			if (!this.loadedDirs.has(path) && !this.hasDirectChildren(path)) {
-				await this.loadFiles(path, true); // Merge mode
-			} else if (!this.loadedDirs.has(path) && this.hasDirectChildren(path)) {
-				// We have children from storage, mark as loaded without fetching
-				this.loadedDirs = addToSet(this.loadedDirs, path);
-			}
-
-			this.expandedDirs = addToSet(this.expandedDirs, path);
-		} else {
-			// Collapsing: just remove from expanded set
-			this.expandedDirs = removeFromSet(this.expandedDirs, path);
-		}
-
-		// Rebuild tree to update expanded state
-		this.rebuildTree();
 	}
 
 	/**
@@ -1178,5 +1195,116 @@ export class FileTreeState {
 		if (file.type === "file") {
 			this.selectedFile = file.path;
 		}
+	}
+
+	// ==================== Navigation Methods ====================
+
+	/**
+	 * Build breadcrumb segments from a path
+	 */
+	buildBreadcrumb(path: string): BreadcrumbSegment[] {
+		const segments: BreadcrumbSegment[] = [];
+		const rootPath = this.rootPath;
+
+		// Always add root as first segment
+		const rootName = pathUtils.getFileName(rootPath) || "root";
+		segments.push({
+			name: rootName,
+			path: rootPath,
+			isLast: path === rootPath,
+		});
+
+		if (path === rootPath) {
+			return segments;
+		}
+
+		// Get the relative path from root
+		const relativePath = path.startsWith(rootPath) ? path.slice(rootPath.length) : path;
+		const parts = relativePath.split("/").filter(Boolean);
+
+		let currentPath = rootPath;
+		for (let i = 0; i < parts.length; i++) {
+			currentPath = `${currentPath}/${parts[i]}`;
+			segments.push({
+				name: parts[i],
+				path: currentPath,
+				isLast: i === parts.length - 1,
+			});
+		}
+
+		return segments;
+	}
+
+	/**
+	 * Get immediate children of a directory (flat view)
+	 */
+	getDirectoryItems(dirPath: string): SandboxFileInfo[] {
+		const normalizedDir = pathUtils.normalize(dirPath);
+		const normalizedDirPath = normalizedDir.endsWith("/")
+			? normalizedDir.slice(0, -1)
+			: normalizedDir;
+
+		return this.files.filter((file) => {
+			const parentDir = pathUtils.getParentDir(file.path);
+			return parentDir === normalizedDirPath;
+		});
+	}
+
+	/**
+	 * Get parent directory path
+	 */
+	getParentDirectory(path: string): string {
+		const parent = pathUtils.getParentDir(path);
+		// Don't go above root
+		if (!parent || parent.length < this.rootPath.length) {
+			return this.rootPath;
+		}
+		return parent;
+	}
+
+	/**
+	 * Navigate to a directory
+	 */
+	async navigateToDirectory(path: string): Promise<void> {
+		if (!path) {
+			return;
+		}
+
+		// Update current directory
+		this.currentDirectory = path;
+
+		// Load directory contents if not already loaded
+		if (!this.loadedDirs.has(path) && !this.hasDirectChildren(path)) {
+			await this.loadFiles(path, true);
+		} else if (!this.loadedDirs.has(path) && this.hasDirectChildren(path)) {
+			this.loadedDirs = addToSet(this.loadedDirs, path);
+		}
+
+		// Also expand the directory in tree view for consistency
+		if (!this.expandedDirs.has(path)) {
+			this.expandedDirs = addToSet(this.expandedDirs, path);
+		}
+
+		// Save navigation state to storage
+		await this.saveToStorage({ currentNavigationDirectory: path }, false);
+	}
+
+	/**
+	 * Navigate back to parent directory
+	 */
+	async navigateBack(): Promise<void> {
+		if (this.isAtRoot) {
+			return;
+		}
+
+		const parentPath = this.getParentDirectory(this.currentDirectory);
+		await this.navigateToDirectory(parentPath);
+	}
+
+	/**
+	 * Navigate to root directory
+	 */
+	async navigateToRoot(): Promise<void> {
+		await this.navigateToDirectory(this.rootPath);
 	}
 }

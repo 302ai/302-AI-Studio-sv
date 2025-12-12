@@ -45,6 +45,8 @@ export interface AgentPreviewStorage {
 	// Terminal history (commands and outputs with their cwd)
 	terminalHistory?: TerminalHistoryLine[];
 	type?: CodeAgentType;
+	// File tree navigation current directory
+	currentNavigationDirectory?: string;
 }
 
 // Main storage structure: [sandboxId:sessionId] -> AgentPreviewStorage
