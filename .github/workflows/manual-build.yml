@@ -87,6 +87,7 @@ jobs:
       - name: Build application
         if: github.event.inputs.platform == 'all' || github.event.inputs.platform == matrix.platform
         env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
           NODE_ENV: production
           # macOS 签名和公证环境变量
           APPLE_ID: ${{ secrets.APPLE_ID }}
