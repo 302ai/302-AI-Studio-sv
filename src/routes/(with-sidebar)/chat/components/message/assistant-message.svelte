@@ -381,7 +381,7 @@
 </script>
 
 {#snippet messageHeader(model: string)}
-	<div class="flex items-center gap-2">
+	<div class="flex items-center gap-2 mb-2">
 		<ModelIcon className="size-6" modelName={model} />
 		<span class="text-xs text-muted-foreground">{model}</span>
 	</div>

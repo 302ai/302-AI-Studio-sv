@@ -8,50 +8,50 @@
 } */
 
 .prose h1 {
-	font-size: 2.25rem;
+	font-size: 1.25rem;
 	font-weight: 800;
-	line-height: 1.111;
-	margin-top: 0;
-	margin-bottom: 0.889rem;
-	color: #111827;
+	line-height: 1.5;
+	margin-bottom: 1rem;
+	color: #262626;
 }
 
 .prose h2 {
-	font-size: 1.875rem;
+	font-size: 1.125rem;
 	font-weight: 700;
-	line-height: 1.333;
-	margin-top: 2rem;
+	line-height: 1.375;
 	margin-bottom: 1rem;
-	color: #111827;
+	color: #262626;
 }
 
 .prose h3 {
-	font-size: 1.5rem;
+	font-size: 1rem;
 	font-weight: 600;
-	line-height: 1.333;
-	margin-top: 1.6rem;
-	margin-bottom: 0.6rem;
-	color: #111827;
+	line-height: 1.375;
+	margin-bottom: 1rem;
+	color: #262626;
 }
 
-.prose h4 {
-	font-size: 1.25rem;
+.prose h4,
+.prose h5,
+.prose h6 {
+	font-size: 1rem;
 	font-weight: 600;
-	line-height: 1.4;
-	margin-top: 1.5rem;
-	margin-bottom: 0.5rem;
-	color: #111827;
+	line-height: 1.375;
+	margin-bottom: 1rem;
+	color: #262626;
 }
 
 .prose p {
-	margin-top: 1rem;
 	margin-bottom: 1rem;
-	line-height: 1.5;
+	font-size: 1rem;
+	font-weight: 400;
+	line-height: 1.375;
+	color: #1d2129;
 }
 
 .prose strong {
 	font-weight: 600;
-	color: #111827;
+	color: #1d2129;
 }
 
 .prose em {
@@ -64,23 +64,20 @@
 	border-radius: 0.375rem;
 	font-size: 0.875rem;
 	font-weight: 600;
-	color: #111827;
+	color: #1d2129;
 }
 
 .prose ul {
-	margin-top: 1.25rem;
 	margin-bottom: 1.25rem;
 	padding-left: 1.625rem;
 }
 
 .prose ol {
-	margin-top: 1.25rem;
 	margin-bottom: 1.25rem;
 	padding-left: 1.625rem;
 }
 
 .prose li {
-	margin-top: 0.5rem;
 	margin-bottom: 0.5rem;
 }
 
@@ -116,14 +113,22 @@
 	counter-reset: list-counter;
 }
 
+.prose hr {
+	font-size: 0.875rem;
+	margin: 1rem 0;
+	border: none;
+	border-top: 1px solid #f3f3f3;
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
 .prose blockquote {
 	font-weight: 500;
 	font-style: italic;
-	color: #111827;
+	color: #1d2129;
 	border-left-width: 0.25rem;
 	border-left-color: #e5e7eb;
 	quotes: "\201C" "\201D" "\2018" "\2019";
-	margin-top: 1.6rem;
 	margin-bottom: 1.6rem;
 	padding-left: 1rem;
 }
@@ -132,7 +137,6 @@
 	width: 100%;
 	table-layout: auto;
 	text-align: left;
-	margin-top: 2rem;
 	margin-bottom: 2rem;
 	font-size: 0.875rem;
 	line-height: 1.714;
@@ -144,7 +148,7 @@
 }
 
 .prose thead th {
-	color: #111827;
+	color: #1d2129;
 	font-weight: 600;
 	vertical-align: bottom;
 	padding-right: 0.571rem;
@@ -207,18 +211,28 @@
 
 /* Dark Mode Support */
 .dark .prose {
-	color: #d1d5db;
+	color: #dbdbdb;
 }
 
 .dark .prose h1,
 .dark .prose h2,
 .dark .prose h3,
-.dark .prose h4 {
-	color: #f9fafb;
+.dark .prose h4,
+.dark .prose h5,
+.dark .prose h6 {
+	color: #dedede;
+}
+
+.dark .prose p {
+	color: #dbdbdb;
 }
 
 .dark .prose strong {
-	color: #f9fafb;
+	color: #dbdbdb;
+}
+
+.dark .prose hr {
+	border-top-color: #222222;
 }
 
 .dark .prose code {
@@ -231,12 +245,12 @@
 }
 
 .dark .prose blockquote {
-	color: #f9fafb;
+	color: #dbdbdb;
 	border-left-color: #374151;
 }
 
 .dark .prose thead th {
-	color: #f9fafb;
+	color: #dbdbdb;
 }
 
 .dark .prose thead {
