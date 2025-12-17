@@ -23,14 +23,14 @@ jobs:
         include:
           - os: windows-latest
             platform: windows
-          - os: macos-latest
-            arch: arm64
-            platform: macos
-          - os: macos-15-intel
+          # --- 修改开始：MacOS 配置改为 x64 ---
+          - os: macos-13  # macos-13 是目前 GitHub 稳定的 Intel (x64) runner
             arch: x64
             platform: macos
+          # --- 修改结束 ---
+          # 注释掉 arm64/latest 以只构建 x64，或者你可以保留两者
           # - os: macos-latest
-          #   arch: universal
+          #   arch: arm64
           #   platform: macos
           - os: ubuntu-latest
             platform: linux
@@ -56,7 +56,8 @@ jobs:
           cache: "pnpm"
 
       - name: Import Code-Signing Certificates (macOS)
-        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && startsWith(matrix.os, 'macos')
+        # 这里的判断改为 matrix.platform == 'macos' 更通用
+        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.platform == 'macos'
         uses: Apple-Actions/import-codesign-certs@v5
         with:
           p12-file-base64: ${{ secrets.MAC_CERTS }}
@@ -104,14 +105,19 @@ jobs:
             out/make/squirrel.windows/**/*
             out/make/zip/win32/**/*
 
+      # --- 修改开始：MacOS 上传条件 ---
       - name: Upload macOS artifacts
-        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.os == 'macos-latest'
+        # 关键修改：不再检查 matrix.os == 'macos-latest'，而是检查 matrix.platform == 'macos'
+        # 这样无论是 macos-13 还是 macos-latest 都能上传
+        if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'macos') && matrix.platform == 'macos'
         uses: actions/upload-artifact@v4
         with:
-          name: macos-build-${{ github.run_number }}
+          # 在名字里加上 x64 方便区分，如果你还构建 arm64 可以加上 ${{ matrix.arch }}
+          name: macos-x64-build-${{ github.run_number }}
           path: |
             out/make/*.dmg
             out/make/zip/**/*
+      # --- 修改结束 ---
 
       - name: Upload Linux artifacts
         if: (github.event.inputs.platform == 'all' || github.event.inputs.platform == 'linux') && matrix.os == 'ubuntu-latest'
