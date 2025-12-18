@@ -134,7 +134,7 @@
 			{@const displayApiKey = userState.ssoApiKey || userState.userInfo?.api_key}
 			{#if displayApiKey}
 				<div class="flex items-center gap-2">
-					<code class="bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm">
+					<code class="bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-semibold text-sm">
 						{displayApiKey.slice(0, 8)}...
 					</code>
 					<Button

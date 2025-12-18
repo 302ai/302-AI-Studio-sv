@@ -90,7 +90,7 @@
 </script>
 
 <!-- Agent Sandbox List Section -->
-<div class="space-y-4">
+<div class="space-y-3">
 	<div class="flex items-center justify-between">
 		<h2 class="text-base font-medium">{m.title_agent_sandbox_list()}</h2>
 		<Button

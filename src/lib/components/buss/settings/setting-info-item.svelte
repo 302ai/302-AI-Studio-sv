@@ -6,7 +6,7 @@
 		value?: string;
 		class?: string;
 		action?: Snippet;
-		isBold?: Boolean;
+		isBold?: boolean;
 	}
 </script>
 
