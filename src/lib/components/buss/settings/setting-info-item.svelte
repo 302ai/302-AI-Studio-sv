@@ -6,6 +6,7 @@
 		value?: string;
 		class?: string;
 		action?: Snippet;
+		isBold?: Boolean;
 	}
 </script>
 
@@ -13,7 +14,7 @@
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { cn } from "$lib/utils";
 
-	const { label, value, class: className, action }: Props = $props();
+	const { label, value, class: className, action, isBold }: Props = $props();
 </script>
 
 <div
@@ -25,7 +26,11 @@
 	<div class="flex items-center gap-2">
 		<Label class="text-sm font-normal">{label}</Label>
 		{#if value}
-			<Label class="text-muted-foreground text-sm font-normal">{value}</Label>
+			{#if isBold}
+				<Label class="text-sm font-semibold truncate">{value}</Label>
+			{:else}
+				<Label class="text-label-fg font-normal">{value}</Label>
+			{/if}
 		{/if}
 	</div>
 	{#if action}

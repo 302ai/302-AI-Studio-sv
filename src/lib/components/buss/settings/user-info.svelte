@@ -134,9 +134,7 @@
 			{@const displayApiKey = userState.ssoApiKey || userState.userInfo?.api_key}
 			{#if displayApiKey}
 				<div class="flex items-center gap-2">
-					<code
-						class="bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold"
-					>
+					<code class="bg-muted relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm">
 						{displayApiKey.slice(0, 8)}...
 					</code>
 					<Button
@@ -203,18 +201,22 @@
 		<SettingInfoItem
 			label={m.settings_current_balance()}
 			value="${formatCurrency(userState.userInfo.balance)}"
+			isBold
 		/>
 		<SettingInfoItem
 			label={m.settings_total_consumed()}
 			value="${formatCurrency(userState.userInfo.gpt_cost)}"
+			isBold
 		/>
 		<SettingInfoItem
 			label={m.settings_total_requests()}
 			value={String(userState.userInfo.gpt_request_times)}
+			isBold
 		/>
 		<SettingInfoItem
 			label={m.settings_total_earnings()}
 			value="${formatCurrency(userState.userInfo.total_earning)}"
+			isBold
 		/>
 	</div>
 
