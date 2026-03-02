@@ -952,6 +952,7 @@
 	"toast_file_operation_invalid_sandbox_id": "无效的沙盒 ID 格式",
 	"toast_file_operation_invalid_path": "无效的路径格式",
 	"toast_file_operation_load_failed": "加载文件失败",
+	"toast_file_operation_network_error": "获取文件列表失败",
 	"toast_file_uploading": "正在上传文件...",
 	"toast_file_upload_success": "文件上传成功",
 	"toast_file_upload_failed": "文件上传失败",

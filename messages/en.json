@@ -952,6 +952,7 @@
 	"toast_file_operation_invalid_sandbox_id": "Invalid sandbox ID format",
 	"toast_file_operation_invalid_path": "Invalid path format",
 	"toast_file_operation_load_failed": "Failed to load files",
+	"toast_file_operation_network_error": "Failed to fetch file list",
 	"toast_file_uploading": "Uploading file...",
 	"toast_file_upload_success": "File uploaded successfully",
 	"toast_file_upload_failed": "Failed to upload file",
