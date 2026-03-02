@@ -2,15 +2,15 @@ import { type } from "arktype";
 
 export const codeAgentType = type("'local' | 'remote'");
 export type CodeAgentType = typeof codeAgentType.infer;
-export const CodeAgentConfigMetadata = type({
+export const codeAgentConfigMetadata = type({
 	enabled: "boolean",
 	threadId: "string",
 	type: codeAgentType,
 	currentAgentId: "string",
 	isDeleted: "boolean",
-	inPlanMode: "boolean?",
+	// inPlanMode: "boolean?",
 });
-export type CodeAgentConfigMetadata = typeof CodeAgentConfigMetadata.infer;
+export type CodeAgentConfigMetadata = typeof codeAgentConfigMetadata.infer;
 export const skill = type({
 	name: "string",
 	description: "string",
@@ -49,6 +49,7 @@ export const codeAgentMetadata = type({
 	 * If true, auto-generated titles will not overwrite the note.
 	 */
 	isManualNote: "boolean",
+	inPlanMode: "boolean",
 });
 export type CodeAgentMetadata = typeof codeAgentMetadata.infer;
 

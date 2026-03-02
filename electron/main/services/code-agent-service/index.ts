@@ -512,6 +512,7 @@ export class CodeAgentService {
 				variables: [],
 				skills: [],
 				thinkingBudget: "medium" as const,
+				inPlanMode: false,
 			};
 			await claudeCodeStorage.setItemInternal(stateKey, state);
 
@@ -523,7 +524,6 @@ export class CodeAgentService {
 				type: "remote" as const, // Remote = Claude Code sandbox
 				currentAgentId: "claude-code",
 				isDeleted: false,
-				inPlanMode: false,
 			};
 			await codeAgentStorage.setItemInternal(configKey, config);
 

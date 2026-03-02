@@ -7,8 +7,8 @@ import { persistedTabState } from "$lib/stores/tab-bar-state.svelte";
 import type { ChatMessage } from "$lib/types/chat";
 import type { Model } from "@302ai/studio-plugin-sdk";
 import {
-	CodeAgentConfigMetadata,
 	type CodeAgentCfgs,
+	type CodeAgentConfigMetadata,
 	type CodeAgentSandboxStatus,
 	type CodeAgentType,
 	type Skill,
@@ -73,7 +73,7 @@ class CodeAgentState {
 		() => persistedCodeAgentConfigState.current?.currentAgentId ?? "claude-code",
 	);
 	isDeleted = $derived.by(() => persistedCodeAgentConfigState.current?.isDeleted ?? false);
-	inPlanMode = $derived.by(() => persistedCodeAgentConfigState.current?.inPlanMode ?? false);
+	// inPlanMode = $derived.by(() => persistedCodeAgentConfigState.current?.inPlanMode ?? false);
 
 	isFreshTab = $derived(!chatState.hasMessages);
 	inCodeAgentMode = $derived(!this.isFreshTab && this.enabled);
@@ -248,8 +248,10 @@ class CodeAgentState {
 		}
 	}
 
-	updatePlanMode(inPlanMode: boolean): void {
-		this.updateState({ inPlanMode });
+	updateInPlanMode(inPlanMode: boolean): void {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.updateInPlanMode(inPlanMode);
+		}
 	}
 
 	async executeCodeAgentMode(): Promise<{ isOK: boolean; sandboxInfo?: ClaudeCodeSandboxInfo }> {
@@ -285,6 +287,12 @@ class CodeAgentState {
 				};
 			})
 			.otherwise(() => ({ baseUrl: "", model: "" }));
+	}
+
+	get inPlanMode(): boolean {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.inPlanMode)
+			.otherwise(() => false);
 	}
 
 	get currentSessionId(): string {

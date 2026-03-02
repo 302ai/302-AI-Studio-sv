@@ -266,7 +266,7 @@ export class ShortcutActionsHandler {
 			`[RendererActionsHandler] handleTogglePlanMode. Enabled: ${codeAgentState.enabled}, InPlanMode: ${codeAgentState.inPlanMode}`,
 		);
 		if (!codeAgentState.enabled) return;
-		codeAgentState.updatePlanMode(!codeAgentState.inPlanMode);
+		codeAgentState.updateInPlanMode(!codeAgentState.inPlanMode);
 	}
 }
 

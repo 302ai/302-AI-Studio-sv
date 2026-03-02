@@ -107,7 +107,7 @@
 			toast.info(m.toast_stop_taskboard_first());
 			return;
 		}
-		codeAgentState.updatePlanMode(!codeAgentState.inPlanMode);
+		codeAgentState.updateInPlanMode(!codeAgentState.inPlanMode);
 	}
 
 	// For responsiveness

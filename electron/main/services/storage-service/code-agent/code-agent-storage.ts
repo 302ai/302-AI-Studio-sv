@@ -1,7 +1,7 @@
 import {
-	type CodeAgentType,
-	CodeAgentConfigMetadata,
+	type CodeAgentConfigMetadata,
 	type CodeAgentGlobalConfigs,
+	type CodeAgentType,
 } from "@shared/storage/code-agent";
 import { prefixStorage } from "@shared/types";
 import { isNull } from "es-toolkit";

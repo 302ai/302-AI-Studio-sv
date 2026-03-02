@@ -33,7 +33,7 @@
 			!hasDisabledPlanMode
 		) {
 			console.log("[ExitPlanMode effect] Calling updatePlanMode(false)");
-			codeAgentState.updatePlanMode(false);
+			codeAgentState.updateInPlanMode(false);
 			hasDisabledPlanMode = true;
 		}
 	});

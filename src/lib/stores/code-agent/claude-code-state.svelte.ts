@@ -64,6 +64,7 @@ function getInitialData() {
 		skills: BUILTIN_SKILLS,
 		thinkingBudget: "off",
 		isManualNote: false,
+		inPlanMode: false,
 	};
 	return initialData;
 }
@@ -98,6 +99,7 @@ class ClaudeCodeAgentState {
 	currentWorkspacePath = $derived(
 		persistedClaudeCodeAgentState.current?.currentWorkspacePath ?? "",
 	);
+	inPlanMode = $derived(persistedClaudeCodeAgentState.current?.inPlanMode ?? false);
 
 	agentMode = $derived.by<"new" | "existing">(() => {
 		return this.selectedSessionId === "new" ? "new" : "existing";
@@ -368,6 +370,10 @@ class ClaudeCodeAgentState {
 
 	updateThinkingBudget(thinkingBudget: ThinkingBudgetType) {
 		this.updateState({ thinkingBudget });
+	}
+
+	updateInPlanMode(inPlanMode: boolean): void {
+		this.updateState({ inPlanMode });
 	}
 
 	async handleAgentModeExecute(): Promise<{
