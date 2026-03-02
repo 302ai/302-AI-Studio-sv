@@ -25,7 +25,6 @@ import { toast } from "svelte-sonner";
 
 import { chatParameters } from "$lib/stores/chat-paramters/chat-parameters.svelte";
 
-import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 import { resolvePrompt } from "@shared/utils/chat-parameters";
 import { claudeCodeSandboxState, codeAgentGlobalConfigsState, codeAgentState } from "./code-agent";
 import { codeAgentTaskboardState } from "./code-agent/code-agent-taskboard-state.svelte";
@@ -1252,7 +1251,7 @@ class ChatState {
 				// 使用 handleThreadTitleUpdated 以正确检查 isManualNote 标志
 				if (codeAgentState.enabled) {
 					try {
-						await claudeCodeAgentState.handleThreadTitleUpdated({ title: result.title });
+						await codeAgentState.handleThreadTitleUpdated({ title: result.title });
 						console.log("[ChatState] Session note synced to 302.AI");
 					} catch (syncError) {
 						console.error("[ChatState] Failed to sync session note:", syncError);
@@ -1605,14 +1604,14 @@ export const chat = new Chat({
 			const codeAgentEnabled = codeAgentState.enabled;
 			const sessionId = codeAgentEnabled
 				? (() => {
-						if (claudeCodeAgentState.currentSessionId) {
-							return claudeCodeAgentState.currentSessionId;
+						if (codeAgentState.currentSessionId) {
+							return codeAgentState.currentSessionId;
 						}
 
 						// Fallback: If no session exists, generate a new one
 						// This should rarely happen if the flow is controlled correctly
 						const newSessionId = nanoid();
-						claudeCodeAgentState.updateCurrentSessionId(newSessionId);
+						codeAgentState.updateCurrentSessionId(newSessionId);
 						return newSessionId;
 					})()
 				: "";
@@ -1643,7 +1642,7 @@ export const chat = new Chat({
 
 				threadId,
 				sessionId,
-				sandboxName: claudeCodeAgentState.sandboxRemark,
+				sandboxName: codeAgentState.sandboxRemark,
 
 				// Resolved system prompt with variables substituted
 				// Note: input variable is not supported for system prompts

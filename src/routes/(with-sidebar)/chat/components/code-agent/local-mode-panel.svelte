@@ -12,7 +12,6 @@
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
@@ -45,7 +44,7 @@
 		}
 
 		// Call handleLocalEnabled to update persisted state
-		claudeCodeAgentState.handleLocalEnabled(sessionId, workspacePath);
+		codeAgentState.handleLocalEnabled(sessionId, workspacePath);
 
 		// Set enabled and close panel
 		codeAgentState.updateEnabled(true, false);

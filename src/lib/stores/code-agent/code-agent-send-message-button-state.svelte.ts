@@ -4,7 +4,6 @@ import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
 import { chatState } from "../chat-state.svelte";
 import { mcpState } from "../mcp-state.svelte";
-import { claudeCodeAgentState } from "./claude-code-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
 import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
 import { localClaudeCodeSandboxState } from "./local-claude-code-sandbox-state.svelte";
@@ -179,7 +178,7 @@ class CodeAgentSendMessageButtonState {
 
 					// Update currentWorkspacePath with the actual path from server
 					if (workspace_path) {
-						claudeCodeAgentState.updateCurrentWorkspacePath(workspace_path);
+						codeAgentState.updateCurrentWorkspacePath(workspace_path);
 					}
 
 					// Refresh sessions to sync the new workspace_path to local storage

@@ -417,6 +417,121 @@ class CodeAgentState {
 			claudeCodeAgentState.handleSkillForceUseToggle(skillName, forceUse);
 		}
 	}
+
+	// --- Proxy getters for properties accessed by external consumers ---
+
+	get sandboxRemark(): string {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.sandboxRemark)
+			.otherwise(() => "");
+	}
+
+	get agentMode(): "new" | "existing" {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.agentMode)
+			.otherwise(() => "new");
+	}
+
+	// --- Proxy methods for operations accessed by external consumers ---
+
+	updateCurrentWorkspacePath(workspacePath: string): void {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.updateCurrentWorkspacePath(workspacePath);
+		}
+	}
+
+	init(): void {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.init();
+		}
+	}
+
+	handleEnabled(): void {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.handleEnabled();
+		}
+	}
+
+	handleLocalEnabled(sessionId: string, workspacePath: string): void {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.handleLocalEnabled(sessionId, workspacePath);
+		}
+	}
+
+	async handleCreateNewSandbox(): Promise<boolean> {
+		if (this.currentAgentId === "claude-code") {
+			return claudeCodeAgentState.handleCreateNewSandbox();
+		}
+		return false;
+	}
+
+	// --- Proxy getter/setter for UI form state (used via bind in components) ---
+
+	get selectedSandboxId(): string {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.selectedSandboxId)
+			.otherwise(() => "auto");
+	}
+	set selectedSandboxId(value: string) {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.selectedSandboxId = value;
+		}
+	}
+
+	get selectedSandboxRemark(): string {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.selectedSandboxRemark)
+			.otherwise(() => "");
+	}
+	set selectedSandboxRemark(value: string) {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.selectedSandboxRemark = value;
+		}
+	}
+
+	get selectedSessionId(): string {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.selectedSessionId)
+			.otherwise(() => "new");
+	}
+	set selectedSessionId(value: string) {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.selectedSessionId = value;
+		}
+	}
+
+	get selectedWorkspacePath(): string {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.selectedWorkspacePath)
+			.otherwise(() => "new");
+	}
+	set selectedWorkspacePath(value: string) {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.selectedWorkspacePath = value;
+		}
+	}
+
+	get customSandboxName(): string {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.customSandboxName)
+			.otherwise(() => "");
+	}
+	set customSandboxName(value: string) {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.customSandboxName = value;
+		}
+	}
+
+	get selectedSessionRemark(): string {
+		return match(this.currentAgentId)
+			.with("claude-code", () => claudeCodeAgentState.selectedSessionRemark)
+			.otherwise(() => "");
+	}
+	set selectedSessionRemark(value: string) {
+		if (this.currentAgentId === "claude-code") {
+			claudeCodeAgentState.selectedSessionRemark = value;
+		}
+	}
 }
 
 export const codeAgentState = new CodeAgentState();

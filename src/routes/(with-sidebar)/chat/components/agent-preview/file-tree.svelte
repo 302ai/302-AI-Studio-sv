@@ -6,7 +6,6 @@
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { Input } from "$lib/components/ui/input";
 	import { m } from "$lib/paraglide/messages";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import {
 		ArrowDownToLine,
@@ -269,7 +268,7 @@
 
 	// Combined effect to handle sandboxId/sessionId changes and loading
 	$effect(() => {
-		const currentSessionId = claudeCodeAgentState.currentSessionId;
+		const currentSessionId = codeAgentState.currentSessionId;
 		const sandboxChanged = sandboxId !== previousSandboxId;
 		const sessionChanged = currentSessionId !== previousSessionId;
 

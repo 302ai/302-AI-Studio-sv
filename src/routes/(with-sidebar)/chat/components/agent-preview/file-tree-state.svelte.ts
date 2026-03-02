@@ -14,7 +14,7 @@ import {
 	type AgentPreviewSyncEnvelope,
 } from "$lib/stores/agent-preview-state.svelte";
 import { chatState } from "$lib/stores/chat-state.svelte";
-import { claudeCodeAgentState, codeAgentState } from "$lib/stores/code-agent";
+import { codeAgentState } from "$lib/stores/code-agent";
 import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 import { toast } from "svelte-sonner";
 import { SvelteDate, SvelteMap, SvelteSet } from "svelte/reactivity";
@@ -280,7 +280,7 @@ export class FileTreeState {
 		updates?: Partial<{ selectedFilePath: string | null }>,
 		shouldBroadcast: boolean = false,
 	): Promise<void> {
-		const sessionId = claudeCodeAgentState.currentSessionId;
+		const sessionId = codeAgentState.currentSessionId;
 		if (!sessionId) {
 			return;
 		}
@@ -320,7 +320,7 @@ export class FileTreeState {
 			return;
 		}
 
-		const sessionId = claudeCodeAgentState.currentSessionId;
+		const sessionId = codeAgentState.currentSessionId;
 		if (!sessionId) {
 			return;
 		}

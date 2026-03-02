@@ -20,7 +20,6 @@
 	import { m } from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { mcpState } from "$lib/stores/mcp-state.svelte";
 	import { cn } from "$lib/utils";
@@ -32,7 +31,7 @@
 	let { onClose }: Props = $props();
 
 	onMount(() => {
-		claudeCodeAgentState.init();
+		codeAgentState.init();
 	});
 
 	let disabled = $derived(!codeAgentState.isFreshTab);
@@ -49,7 +48,7 @@
 
 	async function handleCreateSandbox() {
 		isCreatingSandbox = true;
-		const isOK = await claudeCodeAgentState.handleCreateNewSandbox();
+		const isOK = await codeAgentState.handleCreateNewSandbox();
 		if (isOK) {
 			isCreateSandboxDialogOpen = false;
 		}
@@ -81,7 +80,7 @@
 			}
 		}
 
-		claudeCodeAgentState.handleEnabled();
+		codeAgentState.handleEnabled();
 
 		handleOverlayAction("enabled");
 	}
@@ -102,7 +101,7 @@
 		</div>
 		<SettingSelect
 			name="session"
-			value={claudeCodeAgentState.selectedSessionId}
+			value={codeAgentState.selectedSessionId}
 			groupedOptions={claudeCodeSandboxState.groupedSessions}
 			placeholder={m.select_session_placeholder()}
 			{disabled}
@@ -133,7 +132,7 @@
 					<Label class="text-label-fg">{m.title_sandbox_id()}</Label>
 					<Input
 						class="!bg-settings-item-bg dark:!bg-settings-item-bg h-10 rounded-[10px]"
-						bind:value={claudeCodeAgentState.customSandboxName}
+						bind:value={codeAgentState.customSandboxName}
 						placeholder={m.placeholder_input_sandbox_remark()}
 					/>
 
@@ -155,7 +154,7 @@
 		</div>
 		<SettingSelect
 			name="sandbox"
-			value={claudeCodeAgentState.selectedSandboxId}
+			value={codeAgentState.selectedSandboxId}
 			options={claudeCodeSandboxState.sandboxes}
 			placeholder={m.select_sandbox_placeholder()}
 			onValueChange={(v) => claudeCodeSandboxState.handleSelectSandbox(v)}
@@ -171,7 +170,7 @@
 		<Label class="text-label-fg text-xs">{m.local_platform_work_directory()}</Label>
 		<SettingSelect
 			name="workspacePath"
-			value={claudeCodeAgentState.selectedWorkspacePath}
+			value={codeAgentState.selectedWorkspacePath}
 			groupedOptions={claudeCodeSandboxState.workspacePathOptions}
 			placeholder={m.local_platform_new_work_directory_placeholder()}
 			onValueChange={(v) => claudeCodeSandboxState.handleWorkspaceSelected(v)}

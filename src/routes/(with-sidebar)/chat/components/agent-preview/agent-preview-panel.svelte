@@ -31,7 +31,6 @@
 	} from "$lib/stores/agent-preview-state.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 
@@ -232,20 +231,20 @@
 
 	// --- Derived ---
 	const isAgentMode = $derived(codeAgentState.enabled);
-	const currentSandboxId = $derived(claudeCodeAgentState.sandboxId);
+	const currentSandboxId = $derived(codeAgentState.sandboxId);
 	const currentSessionId = $derived.by(() => {
 		// If currentSessionId matches one of the known valid sessionIds, use it
 		if (
-			claudeCodeAgentState.currentSessionId
+			codeAgentState.currentSessionId
 			// &&
-			// claudeCodeAgentState.sessionIds.some(
-			// 	(s) => getId(s) === claudeCodeAgentState.currentSessionId,
+			// codeAgentState.sessionIds.some(
+			// 	(s) => getId(s) === codeAgentState.currentSessionId,
 			// )
 		) {
-			return claudeCodeAgentState.currentSessionId;
+			return codeAgentState.currentSessionId;
 		}
 		// Otherwise fallback to the first available session ID (assuming single active session in most cases)
-		// const firstValidSession = claudeCodeAgentState.sessionIds.find((s) => getId(s));
+		// const firstValidSession = codeAgentState.sessionIds.find((s) => getId(s));
 		// if (firstValidSession) {
 		// 	return getId(firstValidSession);
 		// }

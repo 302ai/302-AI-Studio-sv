@@ -18,7 +18,6 @@ import { match } from "ts-pattern";
 import { chat, chatState } from "../chat-state.svelte";
 import { shouldPauseAfterTaskRestore } from "./taskboard-auto-execution-policy";
 import { claudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
-import { claudeCodeAgentState } from "./claude-code-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
 import { withLoadingState } from "./utils";
 
@@ -46,7 +45,7 @@ export class CodeAgentTaskboardState {
 	#taskResolve: ((success: boolean) => void) | null = null;
 
 	isInitialized = $derived(
-		codeAgentState.enabled && codeAgentState.isFreshTab && claudeCodeAgentState.agentMode === "new",
+		codeAgentState.enabled && codeAgentState.isFreshTab && codeAgentState.agentMode === "new",
 	);
 
 	inProgressTask = $derived<Task | null>(
@@ -453,7 +452,7 @@ export class CodeAgentTaskboardState {
 				// Emit event when all tasks are completed
 				emitter.emit(EventNames.TASKBOARD_ALL_TASKS_DONE, {
 					sandboxId: codeAgentState.sandboxId,
-					sessionId: claudeCodeAgentState.currentSessionId,
+					sessionId: codeAgentState.currentSessionId,
 					taskCount: this.tasklist.filter((t) => t.status === "done").length,
 				});
 

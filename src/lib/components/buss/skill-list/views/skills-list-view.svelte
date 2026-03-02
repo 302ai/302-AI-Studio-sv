@@ -7,7 +7,6 @@
 	import Input from "$lib/components/ui/input/input.svelte";
 	import ScrollArea from "$lib/components/ui/scroll-area/scroll-area.svelte";
 	import { m } from "$lib/paraglide/messages";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import {
 		skillsCategoryState,
@@ -56,8 +55,8 @@
 	}: Props = $props();
 
 	const usedSkills = $derived(codeAgentState.skills);
-	const currentSandboxId = $derived(claudeCodeAgentState.sandboxId);
-	const currentSessionId = $derived(claudeCodeAgentState.currentSessionId);
+	const currentSandboxId = $derived(codeAgentState.sandboxId);
+	const currentSessionId = $derived(codeAgentState.currentSessionId);
 
 	let searchQuery = $state("");
 	let deleteDialogOpen = $state(false);

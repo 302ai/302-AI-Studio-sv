@@ -36,7 +36,6 @@
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import { persistedClaudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import {
 		codeAgentState,
 		persistedCodeAgentConfigState,
@@ -58,7 +57,7 @@
 	let tempSessionRemark = $state("");
 
 	let currentSandboxRemark = $derived.by(() => {
-		const sandboxId = claudeCodeAgentState.sandboxId;
+		const sandboxId = codeAgentState.sandboxId;
 		const currentSandbox = persistedClaudeCodeSandboxState.current.find(
 			(s) => s.sandboxId === sandboxId,
 		);
@@ -68,8 +67,8 @@
 	let currentSessionRemark = $derived.by(() => {
 		return match(codeAgentState.type)
 			.with("remote", () => {
-				const sandboxId = claudeCodeAgentState.sandboxId;
-				const sessionId = claudeCodeAgentState.currentSessionId;
+				const sandboxId = codeAgentState.sandboxId;
+				const sessionId = codeAgentState.currentSessionId;
 				const currentSandbox = persistedClaudeCodeSandboxState.current.find(
 					(s) => s.sandboxId === sandboxId,
 				);
@@ -77,7 +76,7 @@
 				return currentSession?.note ?? currentSession?.sessionId ?? m.title_new_chat();
 			})
 			.with("local", () => {
-				const sessionId = claudeCodeAgentState.currentSessionId;
+				const sessionId = codeAgentState.currentSessionId;
 				const currentSession = localClaudeCodeSandboxState.sessions.find(
 					(s) => s.session_id === sessionId,
 				);

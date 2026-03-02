@@ -3,7 +3,6 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { agentPreviewState } from "$lib/stores/agent-preview-state.svelte";
 	import { chat, chatState } from "$lib/stores/chat-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { codeAgentTaskboardState } from "$lib/stores/code-agent/code-agent-taskboard-state.svelte";
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
@@ -263,8 +262,8 @@
 
 	// Auto-open preview panel when sandbox is first created (edge trigger)
 	$effect(() => {
-		const sandboxId = claudeCodeAgentState.sandboxId;
-		const currentSessionId = claudeCodeAgentState.currentSessionId;
+		const sandboxId = codeAgentState.sandboxId;
+		const currentSessionId = codeAgentState.currentSessionId;
 		// Only open when sandboxId changes from empty to non-empty
 		if (codeAgentState.inCodeAgentMode && sandboxId && currentSessionId) {
 			agentPreviewState.openPreview(sandboxId);
