@@ -2,13 +2,17 @@ import { type } from "arktype";
 
 export const codeAgentType = type("'local' | 'remote'");
 export type CodeAgentType = typeof codeAgentType.infer;
+export const agentClass = type("'claude-code' | 'open-claw'");
+export type AgentClass = typeof agentClass.infer;
+export const codingAgentClass = type("'claude-code'");
+export type CodingAgentClass = typeof codingAgentClass.infer;
 export const codeAgentConfigMetadata = type({
 	enabled: "boolean",
 	threadId: "string",
 	type: codeAgentType,
-	currentAgentId: "string",
+	currentAgentId: agentClass,
+	codingAgentId: codingAgentClass,
 	isDeleted: "boolean",
-	// inPlanMode: "boolean?",
 });
 export type CodeAgentConfigMetadata = typeof codeAgentConfigMetadata.infer;
 export const skill = type({

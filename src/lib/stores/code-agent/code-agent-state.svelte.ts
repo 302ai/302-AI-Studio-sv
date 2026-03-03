@@ -7,6 +7,7 @@ import { persistedTabState } from "$lib/stores/tab-bar-state.svelte";
 import type { ChatMessage } from "$lib/types/chat";
 import type { Model } from "@302ai/studio-plugin-sdk";
 import {
+	type AgentClass,
 	type CodeAgentCfgs,
 	type CodeAgentConfigMetadata,
 	type CodeAgentSandboxStatus,
@@ -45,6 +46,7 @@ const INITIAL_CODE_AGENT_CONFIG: CodeAgentConfigMetadata = {
 	threadId: threadId,
 	type: "remote",
 	currentAgentId: "claude-code",
+	codingAgentId: "claude-code",
 	isDeleted: false,
 };
 
@@ -71,6 +73,11 @@ class CodeAgentState {
 	});
 	currentAgentId = $derived.by(
 		() => persistedCodeAgentConfigState.current?.currentAgentId ?? "claude-code",
+	);
+	codingAgentId = $derived.by(() =>
+		(persistedCodeAgentConfigState.current?.codingAgentId ?? this.currentAgentId === "open-claw")
+			? "claude-code"
+			: this.currentAgentId,
 	);
 	isDeleted = $derived.by(() => persistedCodeAgentConfigState.current?.isDeleted ?? false);
 	// inPlanMode = $derived.by(() => persistedCodeAgentConfigState.current?.inPlanMode ?? false);
@@ -227,8 +234,9 @@ class CodeAgentState {
 		};
 	}
 
-	updateCurrentAgentId(agentId: string): void {
-		this.updateState({ currentAgentId: agentId });
+	updateCurrentAgentId(agentId: AgentClass): void {
+		const codingAgentId = agentId === "open-claw" ? "claude-code" : agentId;
+		this.updateState({ currentAgentId: agentId, codingAgentId });
 	}
 
 	updateType(type: CodeAgentType): void {

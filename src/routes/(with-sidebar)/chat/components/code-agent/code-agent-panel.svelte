@@ -47,7 +47,7 @@
 	} from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
-	import type { CodeAgentType } from "@shared/storage/code-agent";
+	import { agentClass, type CodeAgentType } from "@shared/storage/code-agent";
 
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
@@ -106,7 +106,9 @@
 	}
 
 	function handleCodeAgentSelected(codeAgentId: string) {
-		codeAgentState.updateCurrentAgentId(codeAgentId);
+		if (agentClass.allows(codeAgentId)) {
+			codeAgentState.updateCurrentAgentId(codeAgentId);
+		}
 	}
 
 	async function handleUpdateSandboxRemark() {

@@ -5,6 +5,7 @@
 	import { codeAgentState } from "$lib/stores/code-agent";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { cn } from "$lib/utils";
+	import { agentClass } from "@shared/storage/code-agent";
 	import { RefreshCcw } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
@@ -26,7 +27,9 @@
 	}
 
 	function handleCodeAgentSelected(codeAgentId: string) {
-		codeAgentState.updateCurrentAgentId(codeAgentId);
+		if (agentClass.allows(codeAgentId)) {
+			codeAgentState.updateCurrentAgentId(codeAgentId);
+		}
 	}
 
 	onMount(async () => await localClaudeCodeSandboxState.refreshSessions());

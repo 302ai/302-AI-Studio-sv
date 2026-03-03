@@ -518,11 +518,12 @@ export class CodeAgentService {
 
 			// Also create the code agent config to enable code agent mode
 			const configKey = `code-agent-config-state-${threadId}`;
-			const config = {
+			const config: CodeAgentConfigMetadata = {
 				enabled: true,
 				threadId,
 				type: "remote" as const, // Remote = Claude Code sandbox
 				currentAgentId: "claude-code",
+				codingAgentId: "claude-code",
 				isDeleted: false,
 			};
 			await codeAgentStorage.setItemInternal(configKey, config);
