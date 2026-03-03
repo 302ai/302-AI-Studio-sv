@@ -17,6 +17,11 @@
 			label: "Claude Code",
 			value: "claude-code",
 		},
+		// {
+		// 	key: "open-claw",
+		// 	label: "Open Claw",
+		// 	value: "open-claw",
+		// },
 	];
 
 	export interface Props {

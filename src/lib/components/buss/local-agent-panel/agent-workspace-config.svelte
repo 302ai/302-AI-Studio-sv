@@ -2,22 +2,31 @@
 	import { SettingSelect } from "$lib/components/buss/settings";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
+	import { codeAgentState } from "$lib/stores/code-agent";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { cn } from "$lib/utils";
 	import { RefreshCcw } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 
-	let { mode = "settings" }: { mode?: "settings" | "chat" } = $props();
-	void mode; // Mark as intentionally unused for future use
-
-	// Local state for agent framework (currently only claude-code)
-	let agentFramework = $state("claude-code");
-
-	const frameworkOptions = [{ value: "claude-code", label: "claude code" }];
-
+	const frameworkOptions = [
+		{
+			key: "claude-code",
+			label: "Claude Code",
+			value: "claude-code",
+		},
+		{
+			key: "open-claw",
+			label: "Open Claw",
+			value: "open-claw",
+		},
+	];
 	async function handleRefresh() {
 		await localClaudeCodeSandboxState.refreshSessions();
+	}
+
+	function handleCodeAgentSelected(codeAgentId: string) {
+		codeAgentState.updateCurrentAgentId(codeAgentId);
 	}
 
 	onMount(async () => await localClaudeCodeSandboxState.refreshSessions());
@@ -26,8 +35,13 @@
 <div class="space-y-4">
 	<!-- Agent Framework -->
 	<div class="space-y-2">
-		<Label class="text-label-fg font-normal">{m.local_platform_agent_framework()}</Label>
-		<SettingSelect name="Agent Framework" bind:value={agentFramework} options={frameworkOptions} />
+		<Label class="text-label-fg font-normal">{m.title_agent()}</Label>
+		<SettingSelect
+			name="Agent Framework"
+			value={codeAgentState.currentAgentId}
+			options={frameworkOptions}
+			onValueChange={(codeAgentId) => handleCodeAgentSelected(codeAgentId)}
+		/>
 	</div>
 
 	<!-- Select Session -->
