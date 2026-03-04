@@ -4,7 +4,7 @@ export const codeAgentType = type("'local' | 'remote'");
 export type CodeAgentType = typeof codeAgentType.infer;
 export const agentClass = type("'claude-code' | 'open-claw'");
 export type AgentClass = typeof agentClass.infer;
-export const codingAgentClass = type("'claude-code'");
+export const codingAgentClass = type("'claude-code' | 'open-claw'");
 export type CodingAgentClass = typeof codingAgentClass.infer;
 export const codeAgentConfigMetadata = type({
 	enabled: "boolean",
@@ -109,7 +109,7 @@ export const createClaudeCodeSandboxResponse = type({
 });
 export type CreateClaudeCodeSandboxResponse = typeof createClaudeCodeSandboxResponse.infer;
 
-export const openClawChannelType = type("'飞书' | '纸飞机' | '钉钉' | '企业微信'");
+export const openClawChannelType = type("'fei-shu'");
 export type OpenClawChannelType = typeof openClawChannelType.infer;
 
 export const openClawChannelCredentials = type({
@@ -119,10 +119,7 @@ export const openClawChannelCredentials = type({
 export type OpenClawChannelCredentials = typeof openClawChannelCredentials.infer;
 
 export const openClawCredentialsMap = type({
-	飞书: openClawChannelCredentials,
-	纸飞机: openClawChannelCredentials,
-	钉钉: openClawChannelCredentials,
-	企业微信: openClawChannelCredentials,
+	"fei-shu": openClawChannelCredentials,
 });
 export type OpenClawCredentialsMap = typeof openClawCredentialsMap.infer;
 

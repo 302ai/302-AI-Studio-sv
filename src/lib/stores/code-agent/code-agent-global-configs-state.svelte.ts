@@ -15,12 +15,9 @@ function getInitialData() {
 		notificationsEnabled: false,
 		lastVibeMode: "remote" as const,
 		openClawConfig: {
-			currentChannel: "飞书" as const,
+			currentChannel: "fei-shu" as const,
 			credentials: {
-				飞书: { appid: "", appSecret: "" },
-				纸飞机: { appid: "", appSecret: "" },
-				钉钉: { appid: "", appSecret: "" },
-				企业微信: { appid: "", appSecret: "" },
+				"fei-shu": { appid: "", appSecret: "" },
 			},
 		},
 	};

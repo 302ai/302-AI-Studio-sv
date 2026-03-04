@@ -29,12 +29,7 @@
 			description: m.agent_framework_open_claw_description(),
 		},
 	];
-	const channelOptions = [
-		{ value: "飞书", label: m.open_claw_channel_feishu() },
-		{ value: "纸飞机", label: m.open_claw_channel_telegram() },
-		{ value: "钉钉", label: m.open_claw_channel_dingtalk() },
-		{ value: "企业微信", label: m.open_claw_channel_wecom() },
-	];
+	const channelOptions = [{ value: "fei-shu", label: m.open_claw_channel_feishu() }];
 	let tempAppid = $state("");
 	let tempAppSecret = $state("");
 	let isSyncingFromState = $state(false);
@@ -49,6 +44,7 @@
 		});
 	}
 
+	// TODO: optimize code
 	$effect(() => {
 		if (!codeAgentGlobalConfigsState.isHydrated || !hasLocalSynced || isSyncingFromState) {
 			return;
