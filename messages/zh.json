@@ -405,6 +405,7 @@
 	"search_case_sensitive": "区分大小写",
 	"search_whole_word": "全字匹配",
 	"search_regex": "正则表达式",
+	"search_no_results": "没有结果",
 	"title_max_tokens_tips": "聊天完成时生成的最大令牌数。 输入标记和生成标记的总长度受模型上下文长度的限制。",
 	"title_mcpServers": "搜索MCP服务",
 	"title_online_search": "联网搜索",

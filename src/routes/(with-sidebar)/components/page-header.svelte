@@ -402,7 +402,7 @@
 							{#if searchInputValue && totalMatches > 0}
 								{currentMatchIndex}/{totalMatches}
 							{:else}
-								没有结果
+								{m.search_no_results()}
 							{/if}
 						</span>
 						<button
