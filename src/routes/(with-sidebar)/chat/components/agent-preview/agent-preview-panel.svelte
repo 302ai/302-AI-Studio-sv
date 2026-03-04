@@ -256,6 +256,14 @@
 
 	// Tabs definition
 	let tabs: PreviewTab[] = $derived.by(() => {
+		// open-claw mode: only show file and terminal tabs (highest priority)
+		if (codeAgentState.currentAgentId === "open-claw") {
+			return [
+				{ id: "code", label: m.label_tab_file() },
+				{ id: TAB_TERMINAL, label: m.label_tab_terminal() },
+			];
+		}
+
 		// Skills-only mode OR no sandbox: show skills and taskboard tabs
 		if (isSkillsOnlyMode || !currentSandboxId) {
 			return [
@@ -280,9 +288,16 @@
 
 	// 0. Auto-switch to valid tab when no sandbox (skills or taskboard are valid)
 	$effect(() => {
-		// When there's no sandbox, ensure we're on a valid tab (skills or taskboard)
-		if (!currentSandboxId && activeTab !== TAB_SKILLS && activeTab !== TAB_TASKBOARD) {
-			agentPreviewState.setActiveTab(TAB_SKILLS);
+		// When there's no sandbox, ensure we're on a valid tab
+		if (!currentSandboxId) {
+			if (codeAgentState.currentAgentId === "open-claw") {
+				// open-claw only has code and terminal tabs
+				if (activeTab !== TAB_CODE && activeTab !== TAB_TERMINAL) {
+					agentPreviewState.setActiveTab(TAB_CODE);
+				}
+			} else if (activeTab !== TAB_SKILLS && activeTab !== TAB_TASKBOARD) {
+				agentPreviewState.setActiveTab(TAB_SKILLS);
+			}
 		}
 	});
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import * as Tooltip from "$lib/components/ui/tooltip";
 	import { cn } from "$lib/utils";
 	import { type Icon as IconType } from "@lucide/svelte";
 	import { onMount } from "svelte";
@@ -9,6 +10,7 @@
 		label: string;
 		description?: string;
 		iconSize?: number;
+		tooltip?: string;
 	}
 
 	interface Props {
@@ -96,34 +98,73 @@
 	<div class={cn("flex w-full gap-2", contentClass)}>
 		{#each options as option, index (option.key)}
 			{@const isActive = selectedKey === option.key}
-			<button
-				bind:this={itemElements[index]}
-				class={cn(
-					"h-seg-thumb relative z-2 flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-md text-sm",
-					isActive
-						? activeThumbClass || "text-accent-foreground"
-						: "text-secondary-foreground hover:bg-tab-hover z-1",
-					thumbClass,
-					disabled && "cursor-not-allowed opacity-50",
-				)}
-				type="button"
-				{disabled}
-				onmousedown={() => handleSelect(option.key)}
-				aria-pressed={isActive}
-			>
-				<div class="flex flex-col items-center justify-center">
-					<div class="flex items-center justify-center gap-1">
-						{#if option.icon}
-							<!-- {@html option.icon} -->
-							<option.icon size={option.iconSize} />
+			{#if option.tooltip}
+				<Tooltip.Root delayDuration={400}>
+					<Tooltip.Trigger>
+						{#snippet child({ props })}
+							<button
+								{...props}
+								bind:this={itemElements[index]}
+								class={cn(
+									"h-seg-thumb relative z-2 flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-md text-sm",
+									isActive
+										? activeThumbClass || "text-accent-foreground"
+										: "text-secondary-foreground hover:bg-tab-hover z-1",
+									thumbClass,
+									disabled && "cursor-not-allowed opacity-50",
+								)}
+								type="button"
+								{disabled}
+								onmousedown={() => handleSelect(option.key)}
+								aria-pressed={isActive}
+							>
+								<div class="flex flex-col items-center justify-center">
+									<div class="flex items-center justify-center gap-1">
+										{#if option.icon}
+											<option.icon size={option.iconSize} />
+										{/if}
+										<span>{option.label}</span>
+									</div>
+									{#if option.description}
+										<span class="text-[10px] opacity-60 leading-tight">{option.description}</span>
+									{/if}
+								</div>
+							</button>
+						{/snippet}
+					</Tooltip.Trigger>
+					<Tooltip.Content>
+						{option.tooltip}
+					</Tooltip.Content>
+				</Tooltip.Root>
+			{:else}
+				<button
+					bind:this={itemElements[index]}
+					class={cn(
+						"h-seg-thumb relative z-2 flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-md text-sm",
+						isActive
+							? activeThumbClass || "text-accent-foreground"
+							: "text-secondary-foreground hover:bg-tab-hover z-1",
+						thumbClass,
+						disabled && "cursor-not-allowed opacity-50",
+					)}
+					type="button"
+					{disabled}
+					onmousedown={() => handleSelect(option.key)}
+					aria-pressed={isActive}
+				>
+					<div class="flex flex-col items-center justify-center">
+						<div class="flex items-center justify-center gap-1">
+							{#if option.icon}
+								<option.icon size={option.iconSize} />
+							{/if}
+							<span>{option.label}</span>
+						</div>
+						{#if option.description}
+							<span class="text-[10px] opacity-60 leading-tight">{option.description}</span>
 						{/if}
-						<span>{option.label}</span>
 					</div>
-					{#if option.description}
-						<span class="text-[10px] opacity-60 leading-tight">{option.description}</span>
-					{/if}
-				</div>
-			</button>
+				</button>
+			{/if}
 		{/each}
 	</div>
 </div>

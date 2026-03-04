@@ -258,14 +258,16 @@
 		}
 	});
 
-	// Track previous sandboxId for edge detection
+	// Auto-open preview panel once on page load when sandbox already exists (tab restoration).
+	// Subsequent sandbox creation is handled by the onSandboxCreated IPC event above.
+	let hasAutoOpened = false;
 
-	// Auto-open preview panel when sandbox is first created (edge trigger)
 	$effect(() => {
 		const sandboxId = codeAgentState.sandboxId;
 		const currentSessionId = codeAgentState.currentSessionId;
-		// Only open when sandboxId changes from empty to non-empty
-		if (codeAgentState.inCodeAgentMode && sandboxId && currentSessionId) {
+
+		if (!hasAutoOpened && codeAgentState.inCodeAgentMode && sandboxId && currentSessionId) {
+			hasAutoOpened = true;
 			agentPreviewState.openPreview(sandboxId);
 		}
 	});

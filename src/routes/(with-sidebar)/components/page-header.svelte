@@ -40,9 +40,10 @@
 	// Check if agent preview button (with full tabs) should be shown
 	const showAgentPreviewButton = $derived(
 		codeAgentState.enabled &&
-			codeAgentState.currentAgentId === "claude-code" &&
-			codeAgentState.sandboxId !== "" &&
-			codeAgentState.currentSessionId !== "",
+			((codeAgentState.currentAgentId === "claude-code" &&
+				codeAgentState.sandboxId !== "" &&
+				codeAgentState.currentSessionId !== "") ||
+				codeAgentState.currentAgentId === "open-claw"),
 	);
 
 	// Handle agent preview toggle (full mode with sandbox)
@@ -50,9 +51,13 @@
 		if (agentPreviewState.isVisible) {
 			agentPreviewState.closePreview();
 		} else {
-			const sandboxId = codeAgentState.sandboxId;
-			if (sandboxId) {
-				agentPreviewState.openPreview(sandboxId);
+			if (codeAgentState.currentAgentId === "open-claw") {
+				agentPreviewState.openPreview("local");
+			} else {
+				const sandboxId = codeAgentState.sandboxId;
+				if (sandboxId) {
+					agentPreviewState.openPreview(sandboxId);
+				}
 			}
 		}
 	}

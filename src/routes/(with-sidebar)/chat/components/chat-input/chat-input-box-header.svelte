@@ -12,6 +12,7 @@
 	import { MAX_ATTACHMENT_COUNT } from "$lib/utils/file-preview";
 	import { Settings } from "@lucide/svelte";
 	import CodeAgentPanel from "../code-agent/code-agent-panel.svelte";
+	import AgentClassToggle from "./agent-class-toggle.svelte";
 
 	let selectedMode = $derived(codeAgentState.enabled ? "vibe" : "chat");
 
@@ -19,6 +20,8 @@
 		{ key: "chat", label: m.title_chat_mode() },
 		{ key: "vibe", label: m.title_code_agent() },
 	]);
+
+	const isVibeLocal = $derived(codeAgentState.enabled && codeAgentState.type === "local");
 	const description = $derived(
 		selectedMode === "chat"
 			? m.title_chat_mode_description()
@@ -110,8 +113,13 @@
 		{/if}
 	</div>
 
-	{#if !chatState.hasMessages}
-		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-		<p class="text-xs text-muted-foreground">{@html description}</p>
-	{/if}
+	<div class="flex items-center gap-2">
+		{#if isVibeLocal && chatState.hasMessages}
+			<AgentClassToggle />
+		{/if}
+		{#if !chatState.hasMessages}
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			<p class="text-xs text-muted-foreground">{@html description}</p>
+		{/if}
+	</div>
 </div>
