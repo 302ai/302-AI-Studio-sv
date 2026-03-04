@@ -1953,26 +1953,8 @@ export class LocalVibeService {
 		// Clean up stale machine and system connections before init
 		// This handles the case where a previous install left orphaned state
 		try {
-			try {
-				await execAsync("podman machine stop ai302-machine");
-			} catch {
-				// Machine not running or doesn't exist, fine
-			}
-			try {
-				await execAsync("podman machine rm -f ai302-machine");
-			} catch {
-				// Machine doesn't exist, fine
-			}
-			try {
-				await execAsync("podman system connection rm ai302-machine");
-			} catch {
-				// Connection doesn't exist, fine
-			}
-			try {
-				await execAsync("podman system connection rm ai302-machine-root");
-			} catch {
-				// Connection doesn't exist, fine
-			}
+			await execAsync("podman machine stop ai302-machine");
+
 			console.log("[LocalVibeService] Cleaned up stale machine/connections for 'ai302-machine'");
 			broadcastService.broadcastChannelToAll("install-log", {
 				step: "init-podman",
