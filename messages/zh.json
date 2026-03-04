@@ -225,6 +225,7 @@
 	"document_viewer_cannot_preview": "无法在浏览器中直接预览此文档",
 	"document_viewer_download_instruction": "请下载文件后使用相应的应用程序打开",
 	"document_viewer_download_button": "下载文件",
+	"title_files": "相关文件",
 	"document_viewer_filename": "文件名",
 	"document_viewer_filesize": "文件大小",
 	"document_viewer_loading": "加载中...",
