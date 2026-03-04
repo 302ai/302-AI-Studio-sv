@@ -9,6 +9,7 @@
 		label: string;
 		description?: string;
 		iconSize?: number;
+		disabled?: boolean;
 	}
 
 	interface Props {
@@ -71,6 +72,10 @@
 	});
 
 	function handleSelect(key: string) {
+		const option = options.find((o) => o.key === key);
+		if (option?.disabled) {
+			return;
+		}
 		onSelect(key);
 	}
 </script>
@@ -96,6 +101,7 @@
 	<div class={cn("flex w-full gap-2", contentClass)}>
 		{#each options as option, index (option.key)}
 			{@const isActive = selectedKey === option.key}
+			{@const isDisabled = option.disabled || disabled}
 			<button
 				bind:this={itemElements[index]}
 				class={cn(
@@ -104,12 +110,13 @@
 						? activeThumbClass || "text-accent-foreground"
 						: "text-secondary-foreground hover:bg-tab-hover z-1",
 					thumbClass,
-					disabled && "cursor-not-allowed opacity-50",
+					isDisabled && "cursor-not-allowed opacity-50",
 				)}
 				type="button"
-				{disabled}
+				disabled={isDisabled}
 				onmousedown={() => handleSelect(option.key)}
 				aria-pressed={isActive}
+				aria-disabled={isDisabled}
 			>
 				<div class="flex flex-col items-center justify-center">
 					<div class="flex items-center justify-center gap-1">

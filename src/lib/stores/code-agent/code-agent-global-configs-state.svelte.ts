@@ -1,6 +1,10 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages.js";
-import { type CodeAgentGlobalConfigs } from "@shared/storage/code-agent";
+import {
+	type CodeAgentGlobalConfigs,
+	type OpenClawChannelCredentials,
+	type OpenClawChannelType,
+} from "@shared/storage/code-agent";
 import { toast } from "svelte-sonner";
 import { persistedProviderState } from "../provider-state.svelte";
 
@@ -10,6 +14,15 @@ function getInitialData() {
 		autoDeploy: true,
 		notificationsEnabled: false,
 		lastVibeMode: "remote" as const,
+		openClawConfig: {
+			currentChannel: "飞书" as const,
+			credentials: {
+				飞书: { appid: "", appSecret: "" },
+				纸飞机: { appid: "", appSecret: "" },
+				钉钉: { appid: "", appSecret: "" },
+				企业微信: { appid: "", appSecret: "" },
+			},
+		},
 	};
 	return initialData;
 }
@@ -26,6 +39,15 @@ class CodeAgentGlobalConfigsState {
 		persistedCodeAgentGlobalConfigsState.current?.notificationsEnabled ?? false,
 	);
 	lastVibeMode = $derived(persistedCodeAgentGlobalConfigsState.current?.lastVibeMode ?? "remote");
+	isHydrated = $derived(persistedCodeAgentGlobalConfigsState.isHydrated);
+	openClawConfig = $derived.by(() => {
+		return (
+			persistedCodeAgentGlobalConfigsState.current?.openClawConfig ??
+			getInitialData().openClawConfig
+		);
+	});
+	currentChannel = $derived(this.openClawConfig.currentChannel);
+	currentCredentials = $derived(this.openClawConfig.credentials[this.currentChannel]);
 
 	constructor() {
 		$effect.root(() => {
@@ -78,6 +100,43 @@ class CodeAgentGlobalConfigsState {
 				toast.info(m.toast_notification_permission_required());
 			}
 		}
+	}
+
+	updateOpenClawCurrentChannel(channel: OpenClawChannelType) {
+		const currentConfig = this.openClawConfig;
+		this.#updateState({
+			openClawConfig: {
+				...currentConfig,
+				currentChannel: channel,
+			},
+		});
+	}
+
+	updateOpenClawChannelCredentials(
+		channel: OpenClawChannelType,
+		credentials: Partial<OpenClawChannelCredentials>,
+	) {
+		const currentConfig = this.openClawConfig;
+		this.#updateState({
+			openClawConfig: {
+				...currentConfig,
+				credentials: {
+					...currentConfig.credentials,
+					[channel]: {
+						...currentConfig.credentials[channel],
+						...credentials,
+					},
+				},
+			},
+		});
+	}
+
+	updateOpenClawCurrentChannelAppId(appid: string) {
+		this.updateOpenClawChannelCredentials(this.currentChannel, { appid });
+	}
+
+	updateOpenClawCurrentChannelAppSecret(appSecret: string) {
+		this.updateOpenClawChannelCredentials(this.currentChannel, { appSecret });
 	}
 }
 

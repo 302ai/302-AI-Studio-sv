@@ -109,11 +109,35 @@ export const createClaudeCodeSandboxResponse = type({
 });
 export type CreateClaudeCodeSandboxResponse = typeof createClaudeCodeSandboxResponse.infer;
 
+export const openClawChannelType = type("'飞书' | '纸飞机' | '钉钉' | '企业微信'");
+export type OpenClawChannelType = typeof openClawChannelType.infer;
+
+export const openClawChannelCredentials = type({
+	appid: "string",
+	appSecret: "string",
+});
+export type OpenClawChannelCredentials = typeof openClawChannelCredentials.infer;
+
+export const openClawCredentialsMap = type({
+	飞书: openClawChannelCredentials,
+	纸飞机: openClawChannelCredentials,
+	钉钉: openClawChannelCredentials,
+	企业微信: openClawChannelCredentials,
+});
+export type OpenClawCredentialsMap = typeof openClawCredentialsMap.infer;
+
+export const openClawConfig = type({
+	currentChannel: openClawChannelType,
+	credentials: openClawCredentialsMap,
+});
+export type OpenClawConfig = typeof openClawConfig.infer;
+
 export const codeAgentGlobalConfigs = type({
 	apiKey: "string",
 	autoDeploy: "boolean",
 	notificationsEnabled: "boolean",
 	lastVibeMode: "'local' | 'remote'",
+	"openClawConfig?": openClawConfig,
 });
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
 

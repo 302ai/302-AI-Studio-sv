@@ -14,12 +14,12 @@
 	export const options: SelectOption[] = [
 		{
 			key: "claude-code",
-			label: "Claude Code",
+			label: m.agent_framework_claude_code_label(),
 			value: "claude-code",
 		},
 		// {
 		// 	key: "open-claw",
-		// 	label: "Open Claw",
+		// 	label: m.agent_framework_open_claw_label(),
 		// 	value: "open-claw",
 		// },
 	];
@@ -35,7 +35,6 @@
 	import SandboxCard from "$lib/components/buss/local-agent-panel/sandbox-card.svelte";
 	import SegButton from "$lib/components/buss/settings/seg-button.svelte";
 	import type { SelectOption } from "$lib/components/buss/settings/setting-select.svelte";
-	import SettingSelect from "$lib/components/buss/settings/setting-select.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
@@ -47,7 +46,7 @@
 	} from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
-	import { agentClass, type CodeAgentType } from "@shared/storage/code-agent";
+	import { type CodeAgentType } from "@shared/storage/code-agent";
 
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
@@ -105,11 +104,11 @@
 		codeAgentState.updateType(key as CodeAgentType);
 	}
 
-	function handleCodeAgentSelected(codeAgentId: string) {
-		if (agentClass.allows(codeAgentId)) {
-			codeAgentState.updateCurrentAgentId(codeAgentId);
-		}
-	}
+	// function handleCodeAgentSelected(codeAgentId: string) {
+	// 	if (agentClass.allows(codeAgentId)) {
+	// 		codeAgentState.updateCurrentAgentId(codeAgentId);
+	// 	}
+	// }
 
 	async function handleUpdateSandboxRemark() {
 		if (!tempSandboxRemark || !isSandboxRemarkChanged) return;
@@ -157,19 +156,7 @@
 			</div>
 
 			{#if displayType === "remote"}
-				<Label class="text-label-fg">{m.title_agent()}</Label>
-				<SettingSelect
-					name="agent"
-					value={codeAgentState.currentAgentId}
-					{options}
-					{disabled}
-					placeholder={m.select_agent()}
-					onValueChange={(codeAgentId) => handleCodeAgentSelected(codeAgentId)}
-				/>
-
-				{#if codeAgentState.currentAgentId === "claude-code"}
-					<ClaudeCodePanel {onClose} />
-				{/if}
+				<ClaudeCodePanel {onClose} />
 			{/if}
 			{#if displayType === "local"}
 				<div class="max-h-[500px] overflow-y-auto pr-2">

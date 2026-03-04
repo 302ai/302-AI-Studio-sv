@@ -7,6 +7,7 @@
 <script lang="ts">
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { LdrsLoader } from "$lib/components/buss/ldrs-loader";
+	import { SegButton } from "$lib/components/buss/settings";
 	import { onMount } from "svelte";
 
 	import SettingSelect from "$lib/components/buss/settings/setting-select.svelte";
@@ -39,6 +40,21 @@
 	let isRefreshing = $state(false);
 	let isCreateSandboxDialogOpen = $state(false);
 	let isCreatingSandbox = $state(false);
+
+	// TODO: 完成远程 Open Claw 功能后移除 disabled 标记
+	const agentFrameworkOptions = [
+		{
+			key: "claude-code",
+			label: m.agent_framework_claude_code_label(),
+			description: m.agent_framework_claude_code_description(),
+		},
+		{
+			key: "open-claw",
+			label: m.agent_framework_open_claw_label(),
+			description: m.agent_framework_open_claw_remote_developing(),
+			disabled: true, // TODO: 完成远程 Open Claw 功能后移除此行
+		},
+	];
 
 	async function handleRefresh() {
 		isRefreshing = true;
@@ -83,6 +99,11 @@
 		codeAgentState.handleEnabled();
 
 		handleOverlayAction("enabled");
+	}
+
+	function handleAgentFrameworkSelect(_: string) {
+		// 远程模式下只支持 claude-code，open-claw 已被禁用
+		// 此函数为空实现，仅满足 SegButton 的 onSelect 要求
 	}
 </script>
 
@@ -228,6 +249,17 @@
 		</Button>
 	</div>
 {/snippet}
+
+<!-- Agent Framework Selection -->
+<div class="space-y-2">
+	<Label class="text-label-fg font-normal">{m.title_agent()}</Label>
+	<SegButton
+		options={agentFrameworkOptions}
+		selectedKey="claude-code"
+		onSelect={handleAgentFrameworkSelect}
+		class="w-full"
+	/>
+</div>
 
 {@render selectSession()}
 {@render advancedSettings()}
