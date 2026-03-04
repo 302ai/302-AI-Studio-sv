@@ -550,14 +550,16 @@
 					{@render actionEnableThinking(true)}
 				{/if}
 
-				{@render actionEnableMCP(true)}
+				{#if codeAgentState.currentAgentId !== "open-claw"}
+					{@render actionEnableMCP(true)}
+				{/if}
 
-				{#if codeAgentState.enabled}
+				{#if codeAgentState.enabled && codeAgentState.currentAgentId !== "open-claw"}
 					{@render actionEnablePlanMode(true)}
 					{@render actionEnableSkills(true)}
 					{@render actionEnabledAgentThinking(true)}
 					{@render actionTaskOrchestration(true)}
-				{:else}
+				{:else if !codeAgentState.enabled}
 					{@render actionSetParameters(true)}
 				{/if}
 			</div>
@@ -571,7 +573,7 @@
 >
 	{@render actionUploadAttachment()}
 
-	{#if isCollapsed}
+	{#if isCollapsed && !(codeAgentState.enabled && codeAgentState.currentAgentId === "open-claw")}
 		{@render actionToolCase()}
 	{:else}
 		<div class="flex items-center gap-chat-bar-gap shrink-0">
@@ -584,14 +586,16 @@
 				{@render actionEnableThinking()}
 			{/if}
 
-			{@render actionEnableMCP()}
+			{#if codeAgentState.currentAgentId !== "open-claw"}
+				{@render actionEnableMCP()}
+			{/if}
 
-			{#if codeAgentState.enabled}
+			{#if codeAgentState.enabled && codeAgentState.currentAgentId !== "open-claw"}
 				{@render actionEnablePlanMode()}
 				{@render actionEnableSkills()}
 				{@render actionEnabledAgentThinking()}
 				{@render actionTaskOrchestration()}
-			{:else}
+			{:else if !codeAgentState.enabled}
 				{@render actionSetParameters()}
 			{/if}
 		</div>
