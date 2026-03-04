@@ -37,6 +37,7 @@
 	import type { DynamicToolUIPart } from "ai";
 	import { onDestroy } from "svelte";
 	import { toast } from "svelte-sonner";
+	import AssistantReasoningItem from "./assistant-reasoning-item.svelte";
 	import {
 		AskUserQuestionCard,
 		ClaudeCodeToolCard,
@@ -50,8 +51,8 @@
 		isClaudeCodeToolType,
 		isMcpToolType,
 	} from "./claude-code-tools";
+	import AgentTaskFiles from "./code-agent/agent-task-files.svelte";
 	import AgentTaskResult from "./code-agent/agent-task-result.svelte";
-	import AssistantReasoningItem from "./assistant-reasoning-item.svelte";
 	import ExportDialog from "./export-dialog.svelte";
 	import MessageActions from "./message-actions.svelte";
 	import MessageContextMenu from "./message-context-menu.svelte";
@@ -645,6 +646,11 @@
 				isExportDialogOpen = open;
 			}}
 		/>
+
+		<!-- Result Download Files -->
+		{#if codeAgentState.inCodeAgentMode && message.metadata?.result?.result_files}
+			<AgentTaskFiles files={message.metadata.result.result_files} />
+		{/if}
 
 		{@render messageFooter()}
 

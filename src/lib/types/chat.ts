@@ -13,6 +13,7 @@ export const resultMetadataSchema = z.object({
 	session_id: z.string().optional(),
 	total_cost_usd: z.number().optional(),
 	uuid: z.string().optional(),
+	result_files: z.array(z.string()).optional(),
 });
 
 export type ResultMetadata = z.infer<typeof resultMetadataSchema>;
