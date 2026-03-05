@@ -149,13 +149,22 @@
 		}
 	}
 
+	let messageBoxEl: HTMLDivElement | null = null;
+
 	function clearSearchHighlights(container: HTMLElement): void {
 		const highlights = container.querySelectorAll("mark.search-highlight");
+		console.log(highlights);
 		for (const mark of highlights) {
 			const text = document.createTextNode(mark.textContent ?? "");
+			// const parent = mark.parentNode
+			// ?.normalize()
 			mark.replaceWith(text);
+			// console.log(parent);
+			if (messageBoxEl != null) {
+				messageBoxEl!.normalize();
+			}
 		}
-
+		/*
 		// Merge adjacent text nodes
 		const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
 		const nodesToMerge: Text[] = [];
@@ -179,6 +188,7 @@
 				node2.remove();
 			}
 		}
+		*/
 	}
 
 	const containerClass = $derived.by(() => {
@@ -316,7 +326,6 @@
 		};
 	});
 
-	// Effect to apply DOM highlighting and scroll to first match
 	$effect(() => {
 		const keyword = searchHighlightState.searchKeyword;
 		const caseSensitive = searchHighlightState.caseSensitive;
@@ -513,7 +522,7 @@
 	});
 </script>
 
-<div class="relative h-full w-full">
+<div class="relative h-full w-full" bind:this={messageBoxEl}>
 	<ScrollArea
 		bind:ref={scrollAreaRef}
 		class={cn(
