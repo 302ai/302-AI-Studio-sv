@@ -48,16 +48,6 @@ export class LocalVibeService {
 	}
 
 	/**
-	 * Copy a file or directory from host system to workspace (Internal use)
-	 */
-	async copyToWorkspace(
-		sourcePath: string,
-		containerPath: string,
-	): Promise<{ success: boolean; error?: string }> {
-		return this._copyToWorkspace(sourcePath, containerPath);
-	}
-
-	/**
 	 * Core logic for copying to workspace
 	 */
 	private async _copyToWorkspace(
@@ -102,59 +92,6 @@ export class LocalVibeService {
 			return { success: true };
 		} catch (error) {
 			console.error("[LocalVibeService] Copy to workspace failed:", error);
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			return { success: false, error: errorMessage };
-		}
-	}
-
-	/**
-	 * Write content directly to workspace file (Internal use)
-	 */
-	async writeToWorkspace(
-		content: Buffer | string,
-		containerPath: string,
-	): Promise<{ success: boolean; error?: string }> {
-		return this._writeToWorkspace(content, containerPath);
-	}
-
-	/**
-	 * Core logic for writing to workspace
-	 */
-	private async _writeToWorkspace(
-		content: Buffer | string,
-		containerPath: string,
-	): Promise<{ success: boolean; error?: string }> {
-		try {
-			const composeDir = this.getRuntimeComposeDir();
-			const CONTAINER_ROOT = "/home/user";
-			let targetPath: string;
-
-			const normalizedContainerPath = containerPath.replace(/\\/g, "/");
-
-			if (normalizedContainerPath.startsWith(CONTAINER_ROOT)) {
-				const relativePath = normalizedContainerPath.substring(CONTAINER_ROOT.length);
-				const safeRelativePath = relativePath.replace(/\.\./g, "");
-				targetPath = path.join(composeDir, safeRelativePath);
-			} else if (path.isAbsolute(containerPath)) {
-				targetPath = containerPath;
-			} else {
-				const workspaceDir = path.join(composeDir, "workspace");
-				const safeSubPath = normalizedContainerPath.replace(/\.\./g, "");
-				const cleanSubPath = safeSubPath.startsWith("/") ? safeSubPath.substring(1) : safeSubPath;
-				targetPath = path.join(workspaceDir, cleanSubPath);
-			}
-
-			const targetDir = path.dirname(targetPath);
-			if (!fs.existsSync(targetDir)) {
-				fs.mkdirSync(targetDir, { recursive: true });
-			}
-
-			console.log(`[LocalVibeService] Writing content to ${targetPath}`);
-			fs.writeFileSync(targetPath, content);
-
-			return { success: true };
-		} catch (error) {
-			console.error("[LocalVibeService] Write to workspace failed:", error);
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			return { success: false, error: errorMessage };
 		}
@@ -935,30 +872,6 @@ export class LocalVibeService {
 	}
 
 	/**
-	 * Checks if WSL has any Linux distributions installed
-	 * @returns { isOk: boolean; hasDistributions: boolean } - isOk: operation success, hasDistributions: whether WSL has any distros installed
-	 */
-	private async checkWSLDistributions(): Promise<{
-		isOk: boolean;
-		hasDistributions: boolean;
-	}> {
-		try {
-			const { stdout } = await execAsync("wsl --list --verbose");
-			// Check if output indicates no distributions
-			// Chinese: "适用于 Linux 的 Windows 子系统没有已安装的分发。"
-			// English: "Windows Subsystem for Linux has no installed distributions."
-			const hasDistro =
-				!stdout.includes("没有已安装的分发") &&
-				!stdout.toLowerCase().includes("has no installed distributions") &&
-				stdout.trim().length > 0;
-			return { isOk: true, hasDistributions: hasDistro };
-		} catch (_error) {
-			// If command fails, assume no distributions
-			return { isOk: true, hasDistributions: false };
-		}
-	}
-
-	/**
 	 * Checks the Windows feature state of WSL using DISM
 	 * @returns { isOk: boolean; state: 'disabled' | 'enabled' | 'enabled-pending-reboot'; error?: string }
 	 */
@@ -1031,143 +944,11 @@ export class LocalVibeService {
 		}
 	}
 
-	/**
-	 * Enables WSL feature using DISM with administrator privileges
-	 * @returns { isOk: boolean; needsReboot?: boolean; wasCancelled?: boolean; error?: string }
-	 */
-	private async enableWSLFeature(): Promise<{
-		isOk: boolean;
-		needsReboot?: boolean;
-		wasCancelled?: boolean;
-		error?: string;
-	}> {
-		if (process.platform !== "win32") {
-			return { isOk: true, needsReboot: false };
-		}
-
-		try {
-			broadcastService.broadcastChannelToAll("install-log", {
-				step: "enable-wsl",
-				type: "start",
-				data: await this.t("正在启用 WSL 功能...", "Enabling WSL feature..."),
-			});
-
-			// Use wsl --install which automatically enables WSL feature
-			// --no-distribution: don't install a Linux distribution, just enable WSL
-			const result = await this.runCommandWithBroadcast(
-				"wsl",
-				["--install", "--no-distribution"],
-				"enable-wsl",
-			);
-
-			if (!result.isOk) {
-				// Check if user needs to run as administrator
-				const errorMsg = result.output || "";
-				if (
-					errorMsg.toLowerCase().includes("administrator") ||
-					errorMsg.toLowerCase().includes("管理员")
-				) {
-					broadcastService.broadcastChannelToAll("install-log", {
-						step: "enable-wsl",
-						type: "error",
-						data: await this.t(
-							"需要管理员权限来启用 WSL。请以管理员身份运行应用。",
-							"Administrator privileges required to enable WSL. Please run the application as administrator.",
-						),
-					});
-					return { isOk: false, error: errorMsg };
-				}
-
-				return { isOk: false, error: errorMsg };
-			}
-
-			// wsl --install succeeded, need reboot
-			broadcastService.broadcastChannelToAll("install-log", {
-				step: "enable-wsl",
-				type: "complete",
-				data: await this.t(
-					"WSL 功能已启用，需要重启系统",
-					"WSL feature enabled successfully, system restart required",
-				),
-			});
-			return { isOk: true, needsReboot: true };
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[LocalVibeService] Failed to enable WSL feature:", errorMessage);
-
-			broadcastService.broadcastChannelToAll("install-log", {
-				step: "enable-wsl",
-				type: "error",
-				data: errorMessage,
-			});
-
-			return { isOk: false, error: errorMessage };
-		}
-	}
-
-	/**
-	 * Comprehensive WSL status check combining feature state and operational state
-	 * @returns { isOk: boolean; featureState: string; isOperational: boolean; requiresRestart: boolean; error?: string }
-	 */
-	private async checkWSLStatus(): Promise<{
-		isOk: boolean;
-		featureState: "disabled" | "enabled" | "enabled-pending-reboot";
-		isOperational: boolean;
-		requiresRestart: boolean;
-		error?: string;
-	}> {
-		const featureCheck = await this.checkWSLFeatureState();
-
-		if (!featureCheck.isOk) {
-			return {
-				isOk: false,
-				featureState: "disabled",
-				isOperational: false,
-				requiresRestart: false,
-				error: featureCheck.error,
-			};
-		}
-
-		if (featureCheck.state === "enabled-pending-reboot") {
-			return {
-				isOk: true,
-				featureState: "enabled-pending-reboot",
-				isOperational: false,
-				requiresRestart: true,
-			};
-		}
-
-		if (featureCheck.state === "disabled") {
-			return {
-				isOk: true,
-				featureState: "disabled",
-				isOperational: false,
-				requiresRestart: false,
-			};
-		}
-
-		const operationalCheck = await this.checkWSL();
-
-		return {
-			isOk: true,
-			featureState: "enabled",
-			isOperational: operationalCheck.isValid,
-			requiresRestart: false,
-		};
-	}
-
 	private async checkHomebrew(): Promise<{
 		isOk: boolean;
 		isValid: boolean;
 	}> {
 		return this.checkCommand("brew --version");
-	}
-
-	private async checkAptGet(): Promise<{
-		isOk: boolean;
-		isValid: boolean;
-	}> {
-		return this.checkCommand("apt-get --version");
 	}
 
 	/**
@@ -1382,33 +1163,6 @@ export class LocalVibeService {
 				return { isOk: true, exists: false };
 			}
 			return { isOk: false, exists: false };
-		}
-	}
-
-	/**
-	 * Checks if the ai302-machine is currently running
-	 * @returns { isOk: boolean; isRunning: boolean } - isOk: operation success, isRunning: whether machine is running
-	 */
-	private async checkPodmanMachineRunning(): Promise<{ isOk: boolean; isRunning: boolean }> {
-		try {
-			const { stdout } = await execAsync("podman machine list --format json");
-			const machines = JSON.parse(stdout) as Array<{
-				Name: string;
-				Running?: boolean;
-				State?: string;
-			}>;
-			const machine = machines.find((m) => m.Name === "ai302-machine");
-			if (!machine) {
-				return { isOk: true, isRunning: false };
-			}
-			// Check both Running field and State field
-			const isRunning = machine.Running === true || machine.State === "running";
-			return { isOk: true, isRunning };
-		} catch (error) {
-			if (isCommandNotFound(error)) {
-				return { isOk: true, isRunning: false };
-			}
-			return { isOk: false, isRunning: false };
 		}
 	}
 
