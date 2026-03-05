@@ -1131,7 +1131,7 @@
 														: ''}"
 													sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
 													referrerpolicy="no-referrer"
-													title="Sandbox Preview"
+													title={m.title_sandbox_preview()}
 													src={deployment.url}
 												></iframe>
 											{/key}

@@ -105,7 +105,7 @@ export class ShortcutActionsHandler {
 
 	private async handleCreateBranch(): Promise<void> {
 		if (chatState.messages.length === 0) {
-			toast.error("No messages to branch from");
+			toast.error(m.toast_no_messages_to_branch());
 			return;
 		}
 
@@ -128,7 +128,7 @@ export class ShortcutActionsHandler {
 
 	private async handleBranchAndSend(): Promise<void> {
 		if (chatState.messages.length === 0) {
-			toast.error("No messages to branch from");
+			toast.error(m.toast_no_messages_to_branch());
 			return;
 		}
 

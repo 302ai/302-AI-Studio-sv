@@ -280,14 +280,14 @@
 		} else {
 			// Check if speech synthesis is available
 			if (!window.speechSynthesis) {
-				toast.error("当前浏览器不支持语音朗读");
+				toast.error(m.toast_read_aloud_not_supported());
 				return;
 			}
 
 			// Start reading
 			const textContent = assistantMessageContent;
 			if (!textContent.trim()) {
-				toast.error("没有可朗读的内容");
+				toast.error(m.toast_read_aloud_no_content());
 				return;
 			}
 
@@ -331,7 +331,7 @@
 			}
 
 			if (voices.length === 0) {
-				toast.error("系统没有可用的语音引擎，请检查系统语音设置");
+				toast.error(m.toast_read_aloud_no_voice());
 				return;
 			}
 
@@ -368,7 +368,7 @@
 				isReading = false;
 				_currentUtterance = null;
 				if (!_isUserCancelled) {
-					toast.error(`朗读失败: ${event.error}`);
+					toast.error(m.toast_read_aloud_failed({ error: event.error }));
 				}
 				_isUserCancelled = false;
 			};

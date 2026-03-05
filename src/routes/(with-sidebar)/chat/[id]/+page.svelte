@@ -407,7 +407,7 @@
 			>
 				<button
 					type="button"
-					aria-label="Resize panel"
+					aria-label={m.title_resize_panel()}
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>
@@ -451,7 +451,7 @@
 			>
 				<button
 					type="button"
-					aria-label="Resize panel"
+					aria-label={m.title_resize_panel()}
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>
@@ -495,7 +495,7 @@
 			>
 				<button
 					type="button"
-					aria-label="Resize panel"
+					aria-label={m.title_resize_panel()}
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>

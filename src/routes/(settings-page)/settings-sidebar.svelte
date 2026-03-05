@@ -110,7 +110,7 @@
 			bind:this={containerElement}
 			class="relative flex w-full flex-col gap-y-1 border-none"
 			role="tablist"
-			aria-label="Settings Navigation"
+			aria-label={m.title_settings_navigation()}
 		>
 			{#if indicatorStyle.top && selectedIndex !== -1}
 				<div
