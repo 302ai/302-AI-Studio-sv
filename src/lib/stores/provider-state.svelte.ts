@@ -1,4 +1,4 @@
-import { getAllModels, getModelsByProvider } from "$lib/api/models.js";
+import { getModelsByProvider } from "$lib/api/models.js";
 import { DEFAULT_PROVIDERS } from "$lib/datas/providers.js";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages.js";
@@ -336,6 +336,8 @@ class ProviderState {
 						? getFilteredModels(result.data.models).length
 						: result.data.models.length;
 
+				await window.electronAPI.localVibeService.updateOpenclawModels();
+
 				toast.success(
 					m.text_fetch_models_success({
 						count: displayCount.toString(),
@@ -359,33 +361,7 @@ class ProviderState {
 			return false;
 		}
 	}
-	async fetchAllModels(): Promise<boolean> {
-		try {
-			const result = await getAllModels(persistedProviderState.current);
-			if (result.success && result.data) {
-				// 保留所有用户手动添加的模型
-				const userAddedModels = persistedModelState.current.filter((model) => {
-					return model.isAddedByUser === true;
-				});
 
-				// 获取用户添加的模型ID集合，用于去重
-				const userAddedModelIds = new Set(userAddedModels.map((m) => m.id));
-
-				// 过滤掉与用户添加模型ID重复的新模型
-				const newModelsWithoutDuplicates = result.data.models.filter(
-					(m) => !userAddedModelIds.has(m.id),
-				);
-
-				persistedModelState.current = [...userAddedModels, ...newModelsWithoutDuplicates];
-
-				return true;
-			}
-			return false;
-		} catch (error) {
-			console.error("Failed to fetch all models:", error);
-			return false;
-		}
-	}
 	async refreshProviderModels(providerId: string): Promise<boolean> {
 		const provider = this.getProvider(providerId);
 		if (!provider) return false;
@@ -401,18 +377,6 @@ class ProviderState {
 	 * @param provider - The provider to apply default model for
 	 */
 	async applyDefaultModelIfNeeded(provider: ModelProvider): Promise<void> {
-		// Check if user already has a model preference set
-		// We process them independently now, so we proceed to find a default model first
-		// const hasExistingModelPreference =
-		// 	preferencesSettings.newSessionModel !== null || sessionState.latestUsedModel !== null;
-
-		// if (hasExistingModelPreference) {
-		// 	console.log(
-		// 		`[Provider] User already has model preference, skipping default model setup for ${provider.name}`,
-		// 	);
-		// 	return;
-		// }
-
 		// Find the default model from the fetched models
 		const models = persistedModelState.current;
 		if (models.length === 0) {
@@ -573,6 +537,9 @@ class ProviderState {
 					.filter((models) => models.providerId !== latestProvider.id)
 					.concat(userAddedModels)
 					.concat(newModelsWithoutDuplicates);
+
+				await window.electronAPI.localVibeService.updateOpenclawModels();
+
 				return true;
 			} else {
 				await this.updateProvider(latestProvider.id, { status: "error" });

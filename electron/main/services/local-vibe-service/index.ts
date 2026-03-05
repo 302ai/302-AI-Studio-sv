@@ -1,7 +1,9 @@
 import { getLocalSandboxHealthStatus } from "@electron/main/apis/code-agent";
 import { PLATFORM } from "@electron/main/constants/index";
+import { OPENCLAW_DEFAULT_CONFIG } from "@electron/main/datas/openclaw-template";
 import { broadcastService } from "@electron/main/services/broadcast-service";
 import { generalSettingsService } from "@electron/main/services/settings-service/general-settings-service";
+import { storageService } from "@electron/main/services/storage-service";
 import { providerStorage } from "@electron/main/services/storage-service/provider-storage";
 import { isCommandNotFound } from "@electron/main/utils/cmd";
 import { exec, spawn, type SpawnOptions } from "child_process";
@@ -348,7 +350,9 @@ export class LocalVibeService {
 		const envFilePath = path.join(runtimeDir, ".env");
 		const dbDir = path.join(runtimeDir, "db");
 		const workspaceDir = path.join(runtimeDir, "workspace");
+		const openclawDir = path.join(runtimeDir, ".openclaw");
 		const dbFilePath = path.join(dbDir, "app.db");
+		const openclawFilePath = path.join(openclawDir, "openclaw.json");
 
 		// Copy template compose to runtime directory
 		fs.copyFileSync(templatePath, runtimeComposePath);
@@ -370,7 +374,7 @@ export class LocalVibeService {
 
 		// Ensure bind-mounted directories are writable by the container user.
 		// Rootless Podman containers often run with a different uid/gid than the host user.
-		for (const dir of [runtimeDir, dbDir, workspaceDir]) {
+		for (const dir of [runtimeDir, dbDir, workspaceDir, openclawDir]) {
 			if (!fs.existsSync(dir)) {
 				fs.mkdirSync(dir, { recursive: true });
 			}
@@ -388,6 +392,24 @@ export class LocalVibeService {
 			fs.chmodSync(dbFilePath, 0o666);
 		} catch (error) {
 			console.warn("[Local Vibe] Failed to prepare runtime sqlite file:", error);
+		}
+
+		try {
+			if (!fs.existsSync(openclawFilePath)) {
+				const config = JSON.parse(JSON.stringify(OPENCLAW_DEFAULT_CONFIG));
+
+				if (apiKey) {
+					config.models.providers.ai302.apiKey = apiKey;
+				}
+
+				await this._mergeModelsIntoOpenclawConfig(config);
+
+				const presetContent = JSON.stringify(config, null, 2);
+				fs.writeFileSync(openclawFilePath, presetContent, "utf-8");
+			}
+			fs.chmodSync(openclawFilePath, 0o666);
+		} catch (error) {
+			console.warn("[Local Vibe] Failed to prepare openclaw.json file:", error);
 		}
 
 		// Find available port (starting from default, will find next available if occupied)
@@ -2452,6 +2474,83 @@ export class LocalVibeService {
 			};
 		} finally {
 			this.isOperating = false;
+		}
+	}
+
+	/**
+	 * Helper method to fetch app-models and merge them into the given OpenClaw configuration object
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	private async _mergeModelsIntoOpenclawConfig(config: any): Promise<void> {
+		try {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const appModels = (await storageService.getItemInternal("app-models")) as any[];
+
+			if (Array.isArray(appModels)) {
+				const filteredModels = appModels.filter(
+					(m) => m.providerId === "302AI" && m.isFeatured === true && m.openai_compatible === true,
+				);
+
+				if (filteredModels.length > 0) {
+					if (!config.agents) config.agents = {};
+					if (!config.agents.defaults) config.agents.defaults = {};
+					if (!config.agents.defaults.models) config.agents.defaults.models = {};
+
+					// Clear all ai302-prefixed models before adding new ones
+					// Preserve models with other prefixes
+					const existingModels = config.agents.defaults.models;
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					const nonAi302Models: Record<string, any> = {};
+
+					for (const [key, value] of Object.entries(existingModels)) {
+						if (!key.startsWith("ai302/")) {
+							nonAi302Models[key] = value;
+						}
+					}
+
+					// Replace models with only non-ai302 models
+					config.agents.defaults.models = nonAi302Models;
+
+					// Add fresh ai302 models
+					filteredModels.forEach((m) => {
+						config.agents.defaults.models[`ai302/${m.id}`] = {};
+					});
+				}
+			}
+		} catch (error) {
+			console.warn(
+				"[Local Vibe] Failed to fetch and parse app-models for openclaw configuration",
+				error,
+			);
+		}
+	}
+
+	/**
+	 * Updates the agents.defaults.models inside openclaw.json based on current app-models
+	 * Called via IPC from the renderer process
+	 */
+	async updateOpenclawModels(
+		_event: IpcMainInvokeEvent,
+	): Promise<{ success: boolean; error?: string }> {
+		try {
+			const runtimeDir = this.getRuntimeComposeDir();
+			const openclawFilePath = path.join(runtimeDir, ".openclaw", "openclaw.json");
+
+			if (!fs.existsSync(openclawFilePath)) {
+				return { success: false, error: "openclaw.json does not exist" };
+			}
+
+			const content = fs.readFileSync(openclawFilePath, "utf-8");
+			const config = JSON.parse(content);
+
+			await this._mergeModelsIntoOpenclawConfig(config);
+
+			fs.writeFileSync(openclawFilePath, JSON.stringify(config, null, 2), "utf-8");
+			return { success: true };
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			console.error("[Local Vibe] Failed to update openclaw.json models:", errorMessage);
+			return { success: false, error: errorMessage };
 		}
 	}
 }
