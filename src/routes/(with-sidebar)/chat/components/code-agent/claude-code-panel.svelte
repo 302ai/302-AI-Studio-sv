@@ -254,10 +254,11 @@
 <div class="space-y-2">
 	<Label class="text-label-fg font-normal">{m.title_agent()}</Label>
 	<SegButton
+		class="!h-[52px]"
+		thumbClass="!h-[40px]"
 		options={agentFrameworkOptions}
 		selectedKey="claude-code"
 		onSelect={handleAgentFrameworkSelect}
-		class="w-full"
 	/>
 </div>
 
