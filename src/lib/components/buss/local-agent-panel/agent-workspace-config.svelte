@@ -97,12 +97,14 @@
 									<div class=" text-muted-foreground flex items-center gap-2 text-xs">
 										<a
 											href="https://open.feishu.cn/app?lang=zh-CN"
-											class="text-primary hover:underline">点击此处获取ID和密钥</a
+											class="text-primary hover:underline"
+											>{m.open_claw_feishu_get_id_and_secret()}</a
 										>
 										<div class="text-muted-foreground/50">|</div>
 										<a
 											href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
-											class="text-primary hover:underline">查看部署教程</a
+											class="text-primary hover:underline"
+											>{m.open_claw_feishu_view_deployment_tutorial()}</a
 										>
 									</div>
 								</div>

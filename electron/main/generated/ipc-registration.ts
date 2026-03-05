@@ -237,6 +237,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("localVibeService:startPodmanMachine", (event) =>
 		localVibeService.startPodmanMachine(event),
 	);
+	ipcMain.handle("localVibeService:updateOpenclawModels", (event) =>
+		localVibeService.updateOpenclawModels(event),
+	);
 
 	// codeAgentService service registration
 	ipcMain.handle(
@@ -639,6 +642,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("localVibeService:stopLocalSandboxByIpc");
 	ipcMain.removeHandler("localVibeService:ensureLocalSandboxRunning");
 	ipcMain.removeHandler("localVibeService:startPodmanMachine");
+	ipcMain.removeHandler("localVibeService:updateOpenclawModels");
 	ipcMain.removeHandler("codeAgentService:updateClaudeCodeSandboxModel");
 	ipcMain.removeHandler("codeAgentService:checkClaudeCodeSandbox");
 	ipcMain.removeHandler("codeAgentService:updateClaudeCodeSandboxesByIpc");

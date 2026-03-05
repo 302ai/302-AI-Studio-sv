@@ -772,6 +772,8 @@
 	"open_claw_channel_telegram": "telegram",
 	"open_claw_channel_dingtalk": "钉钉",
 	"open_claw_channel_wecom": "企业微信",
+	"open_claw_feishu_get_id_and_secret": "点击此处获取ID和密钥",
+	"open_claw_feishu_view_deployment_tutorial": "查看部署教程",
 	"agent_framework_claude_code_label": "Claude Code",
 	"agent_framework_open_claw_label": "Open Claw",
 	"agent_framework_open_claw_remote_developing": "远程 Open Claw 功能努力开发中，敬请期待...",

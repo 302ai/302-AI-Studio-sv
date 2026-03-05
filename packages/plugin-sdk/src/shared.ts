@@ -37,6 +37,7 @@ export interface Model {
 	isFeatured: boolean;
 	isAddedByUser?: boolean;
 	is_custom_model?: boolean;
+	openai_compatible?: boolean;
 }
 
 /* ============================================================================
