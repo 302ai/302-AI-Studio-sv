@@ -109,23 +109,8 @@ export const createClaudeCodeSandboxResponse = type({
 });
 export type CreateClaudeCodeSandboxResponse = typeof createClaudeCodeSandboxResponse.infer;
 
-export const openClawChannelType = type("'fei-shu'");
-export type OpenClawChannelType = typeof openClawChannelType.infer;
-
-export const openClawChannelCredentials = type({
-	appid: "string",
-	appSecret: "string",
-});
-export type OpenClawChannelCredentials = typeof openClawChannelCredentials.infer;
-
-export const openClawCredentialsMap = type({
-	"fei-shu": openClawChannelCredentials,
-});
-export type OpenClawCredentialsMap = typeof openClawCredentialsMap.infer;
-
 export const openClawConfig = type({
-	currentChannel: openClawChannelType,
-	credentials: openClawCredentialsMap,
+	"fei-shu": type({ appId: "string", appSecret: "string" }),
 });
 export type OpenClawConfig = typeof openClawConfig.infer;
 
@@ -134,7 +119,7 @@ export const codeAgentGlobalConfigs = type({
 	autoDeploy: "boolean",
 	notificationsEnabled: "boolean",
 	lastVibeMode: "'local' | 'remote'",
-	"openClawConfig?": openClawConfig,
+	openClawConfig: openClawConfig,
 });
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
 

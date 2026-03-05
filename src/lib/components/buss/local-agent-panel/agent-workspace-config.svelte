@@ -29,48 +29,6 @@
 			description: m.agent_framework_open_claw_description(),
 		},
 	];
-	const channelOptions = [{ value: "fei-shu", label: m.open_claw_channel_feishu() }];
-	let tempAppid = $state("");
-	let tempAppSecret = $state("");
-	let isSyncingFromState = $state(false);
-	let hasLocalSynced = $state(false);
-
-	function syncCredentialsToLocal() {
-		isSyncingFromState = true;
-		tempAppid = codeAgentGlobalConfigsState.currentCredentials.appid;
-		tempAppSecret = codeAgentGlobalConfigsState.currentCredentials.appSecret;
-		queueMicrotask(() => {
-			isSyncingFromState = false;
-		});
-	}
-
-	// TODO: optimize code
-	$effect(() => {
-		if (!codeAgentGlobalConfigsState.isHydrated || !hasLocalSynced || isSyncingFromState) {
-			return;
-		}
-		if (tempAppid !== codeAgentGlobalConfigsState.currentCredentials.appid) {
-			codeAgentGlobalConfigsState.updateOpenClawCurrentChannelAppId(tempAppid);
-		}
-	});
-
-	$effect(() => {
-		if (!codeAgentGlobalConfigsState.isHydrated || !hasLocalSynced || isSyncingFromState) {
-			return;
-		}
-		if (tempAppSecret !== codeAgentGlobalConfigsState.currentCredentials.appSecret) {
-			codeAgentGlobalConfigsState.updateOpenClawCurrentChannelAppSecret(tempAppSecret);
-		}
-	});
-
-	$effect(() => {
-		if (!codeAgentGlobalConfigsState.isHydrated) {
-			return;
-		}
-		hasLocalSynced = false;
-		syncCredentialsToLocal();
-		hasLocalSynced = true;
-	});
 
 	async function handleRefresh() {
 		await localClaudeCodeSandboxState.refreshSessions();
@@ -80,13 +38,6 @@
 		if (agentClass.allows(codeAgentId)) {
 			codeAgentState.updateCurrentAgentId(codeAgentId);
 		}
-	}
-
-	function handleOpenClawChannelChange(value: string) {
-		hasLocalSynced = false;
-		codeAgentGlobalConfigsState.updateOpenClawCurrentChannel(
-			value as typeof codeAgentGlobalConfigsState.currentChannel,
-		);
 	}
 
 	onMount(async () => {
@@ -116,30 +67,35 @@
 					>
 				</AccordionTrigger>
 				<AccordionContent class="pt-2 space-y-2">
-					<SettingSelect
-						name="Channel"
-						value={codeAgentGlobalConfigsState.currentChannel}
-						options={channelOptions}
-						onValueChange={handleOpenClawChannelChange}
-					/>
-					<div class="rounded-lg border p-4 space-y-4">
-						<!-- <div>
+					<Accordion type="single" value="fei-shu" class="w-full rounded-settings-item">
+						<AccordionItem value="fei-shu" class="border-b-0">
+							<AccordionTrigger class="py-3 px-4 bg-input">
+								<Label class=" font-normal no-underline hover:underline cursor-pointer">飞书</Label>
+							</AccordionTrigger>
+							<AccordionContent class="pt-2 space-y-2">
+								<div class="rounded-lg border p-4 space-y-4">
+									<!-- <div>
 							<span class={cn("size-2 rounded-full", statusColorClass)}></span>
 						</div> -->
-						<SettingInputField
-							label={m.open_claw_appid()}
-							placeholder={m.open_claw_placeholder_appid()}
-							bind:value={tempAppid}
-							required={true}
-						/>
-						<SettingInputField
-							label={m.open_claw_app_secret()}
-							placeholder={m.open_claw_placeholder_app_secret()}
-							bind:value={tempAppSecret}
-							required={true}
-							type="password"
-						/>
-					</div>
+									<!-- bind:value={tempAppid} -->
+									<SettingInputField
+										label={m.open_claw_appid()}
+										placeholder={m.open_claw_placeholder_appid()}
+										required={true}
+										bind:value={codeAgentGlobalConfigsState.openClawConfig["fei-shu"].appId}
+									/>
+									<!-- bind:value={tempAppSecret} -->
+									<SettingInputField
+										label={m.open_claw_app_secret()}
+										placeholder={m.open_claw_placeholder_app_secret()}
+										required={true}
+										type="password"
+										bind:value={codeAgentGlobalConfigsState.openClawConfig["fei-shu"].appSecret}
+									/>
+								</div>
+							</AccordionContent>
+						</AccordionItem>
+					</Accordion>
 				</AccordionContent>
 			</AccordionItem>
 		</Accordion>

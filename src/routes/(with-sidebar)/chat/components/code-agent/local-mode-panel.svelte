@@ -12,7 +12,6 @@
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { codeAgentGlobalConfigsState } from "$lib/stores/code-agent/code-agent-global-configs-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
@@ -28,17 +27,6 @@
 	function handleLocalModeConfirm() {
 		const sessionId = localClaudeCodeSandboxState.selectedSessionId;
 		const workspacePath = localClaudeCodeSandboxState.selectedWorkspacePath;
-
-		if (codeAgentState.currentAgentId === "open-claw") {
-			console.log(codeAgentGlobalConfigsState.currentCredentials);
-			console.log(codeAgentGlobalConfigsState.openClawConfig);
-
-			const { appid, appSecret } = codeAgentGlobalConfigsState.currentCredentials;
-			if (!appid.trim() || !appSecret.trim()) {
-				toast.warning(m.toast_open_claw_missing_credentials());
-				return;
-			}
-		}
 
 		// Get skills (same as remote mode)
 		codeAgentState.getSkillList(true);

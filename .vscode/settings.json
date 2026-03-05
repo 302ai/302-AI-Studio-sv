@@ -6,7 +6,7 @@
 		"source.fixAll.eslint": "explicit"
 	},
 	"[typescript]": {
-		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.defaultFormatter": "vscode.typescript-language-features",
 		"editor.formatOnSave": true
 	},
 	"[svelte]": {
