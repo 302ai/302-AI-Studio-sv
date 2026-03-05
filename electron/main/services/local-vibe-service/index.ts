@@ -500,7 +500,7 @@ export class LocalVibeService {
 			const runtimeDir = this.getRuntimeComposeDir();
 
 			// Auto-pull latest images before starting
-			// This ensures we have the correct platform (linux/amd64) and latest version
+			// This ensures we have the latest version for the current platform
 			const pullResult = await this.runPodmanComposePull();
 			if (!pullResult.isOk) {
 				console.warn("[Local Vibe] Auto-pull failed, trying to start anyway:", pullResult.error);
@@ -561,10 +561,10 @@ export class LocalVibeService {
 				return { isOk: false, error: "Runtime compose file not found." };
 			}
 
-			// Execute: podman-compose -f <path> --podman-pull-args "--platform linux/amd64" pull
+			// Execute: podman-compose -f <path> pull
 			const result = await this.runCommandWithBroadcast(
 				"podman-compose",
-				["-f", `"${composePath}"`, "--podman-pull-args", '"--platform linux/amd64"', "pull"],
+				["-f", `"${composePath}"`, "pull"],
 				"podman-compose-pull",
 			);
 
@@ -1882,9 +1882,16 @@ export class LocalVibeService {
 				await new Promise((resolve) => setTimeout(resolve, delayMs));
 			}
 
-			const initArgs = PLATFORM.IS_WINDOWS
-				? ["machine", "init", "--rootful", "ai302-machine"]
-				: ["machine", "init", "ai302-machine"];
+			const initArgs = [
+				"machine",
+				"init",
+				"--cpus",
+				"4",
+				"--memory",
+				"4096",
+				...(PLATFORM.IS_WINDOWS ? ["--rootful"] : []),
+				"ai302-machine",
+			];
 			const result = await this.runCommandWithBroadcast("podman", initArgs, "init-podman");
 
 			if (result.isOk) {
