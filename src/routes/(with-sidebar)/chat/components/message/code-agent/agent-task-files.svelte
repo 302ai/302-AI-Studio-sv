@@ -15,10 +15,23 @@
 	let { files }: Props = $props();
 
 	let isDownloading = $state<Record<string, boolean>>({});
-	// Force re-render key - incremented when download state changes to workaround Svelte 5 reactivity issue
-	let renderKey = $state(0);
+	let fileItems = $derived(
+		files.map((file) => ({
+			file,
+			downloading: Boolean(isDownloading[file]),
+		})),
+	);
+
+	function handleDownloadClick(event: MouseEvent, filePath: string) {
+		event.stopPropagation();
+		handleDownloadFile(filePath);
+	}
 
 	async function handleDownloadFile(filePath: string) {
+		if (isDownloading[filePath]) {
+			return;
+		}
+
 		if (!claudeCodeAgentState.sandboxId) {
 			toast.error(m.toast_download_failed());
 			return;
@@ -26,7 +39,6 @@
 
 		try {
 			isDownloading = { ...isDownloading, [filePath]: true };
-			renderKey++; // Force re-render
 			const response = await downloadSandboxFile(claudeCodeAgentState.sandboxId, filePath);
 
 			// Handle direct content / Blob
@@ -59,8 +71,10 @@
 			console.error("Failed to download file:", error);
 			toast.error(m.toast_download_failed());
 		} finally {
-			isDownloading = { ...isDownloading, [filePath]: false };
-			renderKey++; // Force re-render
+			// Reset to undefined by removing key to keep state map clean.
+			const nextState = { ...isDownloading };
+			delete nextState[filePath];
+			isDownloading = nextState;
 		}
 	}
 </script>
@@ -72,31 +86,36 @@
 			{m.title_files()}
 		</h4>
 		<div class="flex flex-wrap gap-2">
-			{#each files as file (file + renderKey)}
-				{@const isFileDownloading = isDownloading[file]}
+			{#each fileItems as item (item.file)}
 				<div
 					class="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-muted/30 hover:bg-muted/50 transition-colors"
 				>
-					<span class="text-xs truncate max-w-[200px]" title={file}>{file.split("/").pop()}</span>
-					<ButtonWithTooltip
-						tooltipSide="top"
-						class="h-5 w-5 p-0 shrink-0 text-muted-foreground hover:text-foreground shadow-none bg-transparent hover:!bg-transparent"
-						variant="ghost"
-						tooltip={m.export_button()}
-						disabled={isFileDownloading}
-						onclick={(e) => {
-							e.stopPropagation();
-							handleDownloadFile(file);
-						}}
+					<span class="text-xs truncate max-w-[200px]" title={item.file}
+						>{item.file.split("/").pop()}</span
 					>
-						{#if isFileDownloading}
+					{#if item.downloading}
+						<ButtonWithTooltip
+							tooltipSide="top"
+							class="h-5 w-5 p-0 shrink-0 text-muted-foreground hover:text-foreground shadow-none bg-transparent hover:!bg-transparent"
+							variant="ghost"
+							tooltip={m.export_button()}
+							onclick={(e) => handleDownloadClick(e, item.file)}
+						>
 							<div
 								class="h-3 w-3 animate-spin rounded-full border-2 border-primary border-t-transparent"
 							></div>
-						{:else}
+						</ButtonWithTooltip>
+					{:else}
+						<ButtonWithTooltip
+							tooltipSide="top"
+							class="h-5 w-5 p-0 shrink-0 text-muted-foreground hover:text-foreground shadow-none bg-transparent hover:!bg-transparent"
+							variant="ghost"
+							tooltip={m.export_button()}
+							onclick={(e) => handleDownloadClick(e, item.file)}
+						>
 							<Download class="h-3 w-3" />
-						{/if}
-					</ButtonWithTooltip>
+						</ButtonWithTooltip>
+					{/if}
 				</div>
 			{/each}
 		</div>
