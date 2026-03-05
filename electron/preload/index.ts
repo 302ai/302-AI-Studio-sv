@@ -34,11 +34,15 @@ const windowId = getAdditionalArgv("window-id") ?? "";
 const tabFilePath = getAdditionalArgv("tab-file") ?? "";
 const threadFilePath = getAdditionalArgv("thread-file") ?? "";
 const messagesFilePath = getAdditionalArgv("messages-file") ?? "";
+const codeAgentConfigFilePath = getAdditionalArgv("code-agent-config-file") ?? "";
+const claudeCodeAgentStateFilePath = getAdditionalArgv("claude-code-agent-state-file") ?? "";
 
 const tab = loadDataFromTempFile(tabFilePath) ?? {};
 const tabs: Tab[] = []; // tabs are managed by tab service, not needed in preload
 const thread = loadDataFromTempFile(threadFilePath) ?? {};
 const messages = loadDataFromTempFile(messagesFilePath) ?? {};
+const codeAgentConfig = loadDataFromTempFile(codeAgentConfigFilePath);
+const claudeCodeAgentState = loadDataFromTempFile(claudeCodeAgentStateFilePath);
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
@@ -388,6 +392,8 @@ if (process.contextIsolated) {
 		contextBridge.exposeInMainWorld("app", app);
 		contextBridge.exposeInMainWorld("thread", thread);
 		contextBridge.exposeInMainWorld("messages", messages);
+		contextBridge.exposeInMainWorld("codeAgentConfig", codeAgentConfig);
+		contextBridge.exposeInMainWorld("claudeCodeAgentState", claudeCodeAgentState);
 		contextBridge.exposeInMainWorld("initialTheme", initialTheme);
 	} catch (error) {
 		console.error("Preload: Error exposing services", { error });

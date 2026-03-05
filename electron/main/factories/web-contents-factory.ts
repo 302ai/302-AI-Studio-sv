@@ -24,6 +24,8 @@ export interface TabWebContentsConfig extends WebContentsConfig {
 	tab: Tab;
 	threadFilePath: string;
 	messagesFilePath: string;
+	codeAgentConfigFilePath?: string;
+	claudeCodeAgentStateFilePath?: string;
 }
 
 export interface ShellWebContentsConfig extends WebContentsConfig {
@@ -242,7 +244,7 @@ export class WebContentsFactory {
 	}
 
 	static createTabView(config: TabWebContentsConfig): WebContentsView {
-		// Use temp file for tab data to avoid command li	ne argument length limits
+		// Use temp file for tab data to avoid command line argument length limits
 		const tabFilePath = TempStorage.writeData(config.tab, "tab");
 
 		const additionalArgs = [
@@ -250,6 +252,13 @@ export class WebContentsFactory {
 			`--thread-file=${config.threadFilePath}`,
 			`--messages-file=${config.messagesFilePath}`,
 		];
+
+		if (config.codeAgentConfigFilePath) {
+			additionalArgs.push(`--code-agent-config-file=${config.codeAgentConfigFilePath}`);
+		}
+		if (config.claudeCodeAgentStateFilePath) {
+			additionalArgs.push(`--claude-code-agent-state-file=${config.claudeCodeAgentStateFilePath}`);
+		}
 
 		return this.create({
 			...config,

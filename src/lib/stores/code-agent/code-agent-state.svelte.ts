@@ -24,6 +24,7 @@ import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
 import { localClaudeCodeSandboxState } from "./local-claude-code-sandbox-state.svelte";
 import { localEnvState } from "./local-env-state.svelte";
 import { withLoadingState } from "./utils";
+import { clone } from "$lib/utils/clone";
 
 const tab = window.tab ?? null;
 
@@ -41,18 +42,24 @@ const tabId =
 		? tab.id
 		: "shell";
 
-const INITIAL_CODE_AGENT_CONFIG: CodeAgentConfigMetadata = {
-	enabled: false,
-	threadId: threadId,
-	type: "remote",
-	currentAgentId: "claude-code",
-	codingAgentId: "claude-code",
-	isDeleted: false,
-};
+function getInitialData() {
+	if (window?.codeAgentConfig) {
+		return clone(window.codeAgentConfig as CodeAgentConfigMetadata);
+	}
+	const initialData: CodeAgentConfigMetadata = {
+		enabled: false,
+		threadId: threadId,
+		type: "remote",
+		currentAgentId: "claude-code",
+		codingAgentId: "claude-code",
+		isDeleted: false,
+	};
+	return initialData;
+}
 
 export const persistedCodeAgentConfigState = new PersistedState<CodeAgentConfigMetadata>(
 	"CodeAgentStorage:code-agent-config-state" + "-" + threadId,
-	INITIAL_CODE_AGENT_CONFIG,
+	getInitialData(),
 );
 
 const { updateClaudeCodeSandboxModel } = window.electronAPI.codeAgentService;
@@ -229,7 +236,7 @@ class CodeAgentState {
 
 	private updateState(partial: Partial<CodeAgentConfigMetadata>): void {
 		persistedCodeAgentConfigState.current = {
-			...(persistedCodeAgentConfigState.current ?? INITIAL_CODE_AGENT_CONFIG),
+			...(persistedCodeAgentConfigState.current ?? getInitialData()),
 			...partial,
 		};
 	}
