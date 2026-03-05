@@ -122,7 +122,7 @@
 							<!-- {@html option.icon} -->
 							<option.icon size={option.iconSize} />
 						{/if}
-						<span>{option.label}{option.disabled}</span>
+						<span>{option.label}</span>
 					</div>
 					{#if option.description}
 						<span class="text-[10px] opacity-60 leading-tight">{option.description}</span>

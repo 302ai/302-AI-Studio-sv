@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Button } from "$lib/components/ui/button/index.js";
 	import Input from "$lib/components/ui/input/input.svelte";
 	import Label from "$lib/components/ui/label/label.svelte";
 	import { cn } from "$lib/utils";
@@ -53,9 +54,11 @@
 			)}
 		/>
 		{#if type === "password"}
-			<button
+			<Button
+				variant="ghost"
+				size="sm"
 				type="button"
-				class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+				class="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
 				{disabled}
 				onclick={() => (showPassword = !showPassword)}
 			>
@@ -64,7 +67,7 @@
 				{:else}
 					<Eye class="h-4 w-4" />
 				{/if}
-			</button>
+			</Button>
 		{/if}
 	</div>
 </div>

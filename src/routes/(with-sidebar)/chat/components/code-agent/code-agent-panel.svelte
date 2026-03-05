@@ -141,7 +141,7 @@
 </script>
 
 {#snippet initializePanel()}
-	<div class="w-[600px]">
+	<div class="w-[600px] max-h-[500px] overflow-y-auto">
 		<div class="flex flex-col gap-y-4 rounded-[10px] bg-background p-4">
 			<div class="gap-settings-gap flex flex-col">
 				<Label class="mb-2 text-label-fg">{m.title_code_agent_type()}</Label>
@@ -159,7 +159,8 @@
 				<ClaudeCodePanel {onClose} />
 			{/if}
 			{#if displayType === "local"}
-				<div class="max-h-[500px] overflow-y-auto pr-2">
+				<!-- max-h-[500px] overflow-y-auto -->
+				<div class="pr-2">
 					<LocalModePanel {onClose} />
 				</div>
 			{/if}

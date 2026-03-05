@@ -59,22 +59,22 @@
 	</div>
 
 	{#if codeAgentState.currentAgentId == "open-claw"}
-		<Accordion type="single" value="channel-settings" class="w-full">
+		<Accordion type="single" value="channel-settings" class="w-full m-0">
 			<AccordionItem value="channel-settings" class="border-b-0">
 				<AccordionTrigger class="py-2 hover:no-underline">
 					<Label class="text-label-fg font-normal no-underline hover:underline cursor-pointer"
 						>{m.agent_framework_open_claw_set_channel()}</Label
 					>
 				</AccordionTrigger>
-				<AccordionContent class="pt-2 space-y-2">
+				<AccordionContent class="pb-1 pt-0 space-y-2">
 					<Accordion type="single" value="fei-shu" class="w-full rounded-settings-item">
 						<AccordionItem value="fei-shu" class="border-b-0">
-							<AccordionTrigger class="py-3 px-4 bg-input hover:no-underline">
+							<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
 								<Label class=" font-normal no-underline cursor-pointer"
 									>{m.open_claw_channel_feishu()}</Label
 								>
 							</AccordionTrigger>
-							<AccordionContent class="pt-2 space-y-2">
+							<AccordionContent class="pb-0 pt-2 space-y-2">
 								<div class="rounded-lg border p-4 space-y-4">
 									<!-- <div>
 							<span class={cn("size-2 rounded-full", statusColorClass)}></span>
@@ -94,15 +94,15 @@
 										bind:value={codeAgentGlobalConfigsState.feishu.appSecret}
 										class="[&>label]:text-label-fg"
 									/>
-									<div class="flex justify-start items-center">
+									<div class=" text-muted-foreground flex items-center gap-2 text-xs">
 										<a
 											href="https://open.feishu.cn/app?lang=zh-CN"
-											class="text-primary hover:opacity-50">点击此处获取ID和密钥</a
+											class="text-primary hover:underline">点击此处获取ID和密钥</a
 										>
-										<div class="h-5 w-0.5 bg-gray-200 mx-1"></div>
+										<div class="text-muted-foreground/50">|</div>
 										<a
 											href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
-											class="text-primary hover:opacity-50">查看部署教程</a
+											class="text-primary hover:underline">查看部署教程</a
 										>
 									</div>
 								</div>
