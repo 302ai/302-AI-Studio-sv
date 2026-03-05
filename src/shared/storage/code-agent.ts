@@ -109,17 +109,12 @@ export const createClaudeCodeSandboxResponse = type({
 });
 export type CreateClaudeCodeSandboxResponse = typeof createClaudeCodeSandboxResponse.infer;
 
-export const openClawConfig = type({
-	"fei-shu": type({ appId: "string", appSecret: "string" }),
-});
-export type OpenClawConfig = typeof openClawConfig.infer;
-
 export const codeAgentGlobalConfigs = type({
 	apiKey: "string",
 	autoDeploy: "boolean",
 	notificationsEnabled: "boolean",
 	lastVibeMode: "'local' | 'remote'",
-	openClawConfig: openClawConfig,
+	feishu: type({ appId: "string", appSecret: "string" }),
 });
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
 

@@ -1,6 +1,6 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages.js";
-import { type CodeAgentGlobalConfigs, type OpenClawConfig } from "@shared/storage/code-agent";
+import { type CodeAgentGlobalConfigs } from "@shared/storage/code-agent";
 import { toast } from "svelte-sonner";
 import { persistedProviderState } from "../provider-state.svelte";
 
@@ -10,9 +10,7 @@ function getInitialData() {
 		autoDeploy: true,
 		notificationsEnabled: false,
 		lastVibeMode: "remote" as const,
-		openClawConfig: {
-			"fei-shu": { appId: "", appSecret: "" },
-		},
+		feishu: { appId: "", appSecret: "" },
 	};
 	return initialData;
 }
@@ -30,12 +28,9 @@ class CodeAgentGlobalConfigsState {
 	);
 	lastVibeMode = $derived(persistedCodeAgentGlobalConfigsState.current?.lastVibeMode ?? "remote");
 	isHydrated = $derived(persistedCodeAgentGlobalConfigsState.isHydrated);
-	openClawConfig = $derived.by(() => {
-		return (
-			persistedCodeAgentGlobalConfigsState.current?.openClawConfig ??
-			getInitialData().openClawConfig
-		);
-	});
+	feishu = $derived(
+		persistedCodeAgentGlobalConfigsState.current.feishu ?? { appId: "", appSecret: "" },
+	);
 
 	constructor() {
 		$effect.root(() => {
@@ -88,10 +83,6 @@ class CodeAgentGlobalConfigsState {
 				toast.info(m.toast_notification_permission_required());
 			}
 		}
-	}
-
-	updateOpenClawConfig(config: OpenClawConfig) {
-		this.#updateState({ openClawConfig: config });
 	}
 }
 

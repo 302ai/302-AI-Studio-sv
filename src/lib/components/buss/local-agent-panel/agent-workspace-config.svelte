@@ -61,7 +61,7 @@
 	{#if codeAgentState.currentAgentId == "open-claw"}
 		<Accordion type="single" value="channel-settings" class="w-full">
 			<AccordionItem value="channel-settings" class="border-b-0">
-				<AccordionTrigger class="py-2">
+				<AccordionTrigger class="py-2 hover:no-underline">
 					<Label class="text-label-fg font-normal no-underline hover:underline cursor-pointer"
 						>{m.agent_framework_open_claw_set_channel()}</Label
 					>
@@ -69,8 +69,8 @@
 				<AccordionContent class="pt-2 space-y-2">
 					<Accordion type="single" value="fei-shu" class="w-full rounded-settings-item">
 						<AccordionItem value="fei-shu" class="border-b-0">
-							<AccordionTrigger class="py-3 px-4 bg-input">
-								<Label class=" font-normal no-underline hover:underline cursor-pointer"
+							<AccordionTrigger class="py-3 px-4 bg-input hover:no-underline">
+								<Label class=" font-normal no-underline cursor-pointer"
 									>{m.open_claw_channel_feishu()}</Label
 								>
 							</AccordionTrigger>
@@ -83,17 +83,28 @@
 									<SettingInputField
 										label={m.open_claw_appid()}
 										placeholder={m.open_claw_placeholder_appid()}
-										required={true}
-										bind:value={codeAgentGlobalConfigsState.openClawConfig["fei-shu"].appId}
+										bind:value={codeAgentGlobalConfigsState.feishu.appId}
+										class="[&>label]:text-label-fg"
 									/>
 									<!-- bind:value={tempAppSecret} -->
 									<SettingInputField
 										label={m.open_claw_app_secret()}
 										placeholder={m.open_claw_placeholder_app_secret()}
-										required={true}
 										type="password"
-										bind:value={codeAgentGlobalConfigsState.openClawConfig["fei-shu"].appSecret}
+										bind:value={codeAgentGlobalConfigsState.feishu.appSecret}
+										class="[&>label]:text-label-fg"
 									/>
+									<div class="flex justify-start items-center">
+										<a
+											href="https://open.feishu.cn/app?lang=zh-CN"
+											class="text-primary hover:opacity-50">点击此处获取ID和密钥</a
+										>
+										<div class="h-5 w-0.5 bg-gray-200 mx-1"></div>
+										<a
+											href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
+											class="text-primary hover:opacity-50">查看部署教程</a
+										>
+									</div>
 								</div>
 							</AccordionContent>
 						</AccordionItem>

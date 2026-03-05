@@ -43,11 +43,9 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 			autoDeploy: true,
 			notificationsEnabled: false,
 			lastVibeMode: "remote" as const,
-			openClawConfig: {
-				"fei-shu": {
-					appId: "",
-					appSecret: "",
-				},
+			feishu: {
+				appId: "",
+				appSecret: "",
 			},
 		};
 		try {
