@@ -17,6 +17,7 @@ import { persistedClaudeCodeSandboxState } from "./claude-code-sandbox-state.sve
 import { codeAgentState } from "./code-agent-state.svelte";
 import { BUILTIN_SKILLS } from "./constant";
 import { persistedLocalClaudeCodeSessionsState } from "./local-claude-code-sandbox-state.svelte";
+import { clone } from "$lib/utils/clone";
 
 export interface ClaudeCodeSandboxInfo {
 	sandboxId: string;
@@ -53,6 +54,9 @@ const threadId =
 		: "shell";
 
 function getInitialData() {
+	if (window.claudeCodeAgentState) {
+		return clone(window.claudeCodeAgentState as CodeAgentMetadata);
+	}
 	const initialData: CodeAgentMetadata = {
 		model: "claude-sonnet-4-5-20250929",
 		currentWorkspacePath: "",
@@ -61,7 +65,7 @@ function getInitialData() {
 		currentSessionId: "",
 		sandboxId: "",
 		sandboxRemark: "",
-		skills: BUILTIN_SKILLS,
+		skills: [...BUILTIN_SKILLS],
 		thinkingBudget: "off",
 		isManualNote: false,
 		inPlanMode: false,
