@@ -20,7 +20,6 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { getLocale } from "$lib/paraglide/runtime";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { mcpState } from "$lib/stores/mcp-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
@@ -435,7 +434,7 @@
 				<MessageSquareShare />
 			</ButtonWithTooltip>
 
-			{#if codeAgentState.inCodeAgentMode && message.metadata?.result}
+			{#if message.metadata?.result}
 				<AgentTaskResult result={message.metadata.result} />
 			{/if}
 
@@ -648,9 +647,7 @@
 		/>
 
 		<!-- Result Download Files -->
-		{#if codeAgentState.inCodeAgentMode && message.metadata?.result?.result_files}
-			<AgentTaskFiles files={message.metadata.result.result_files} />
-		{/if}
+		<AgentTaskFiles files={[...(message.metadata?.result?.result_files ?? [])]} />
 
 		{@render messageFooter()}
 
