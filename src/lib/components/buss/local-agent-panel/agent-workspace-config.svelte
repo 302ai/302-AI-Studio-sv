@@ -70,7 +70,9 @@
 					<Accordion type="single" value="fei-shu" class="w-full rounded-settings-item">
 						<AccordionItem value="fei-shu" class="border-b-0">
 							<AccordionTrigger class="py-3 px-4 bg-input">
-								<Label class=" font-normal no-underline hover:underline cursor-pointer">飞书</Label>
+								<Label class=" font-normal no-underline hover:underline cursor-pointer"
+									>{m.open_claw_channel_feishu()}</Label
+								>
 							</AccordionTrigger>
 							<AccordionContent class="pt-2 space-y-2">
 								<div class="rounded-lg border p-4 space-y-4">
