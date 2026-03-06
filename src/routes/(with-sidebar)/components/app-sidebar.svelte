@@ -163,7 +163,8 @@
 
 			if (
 				(config as CodeAgentConfigMetadata)?.enabled &&
-				(config as CodeAgentConfigMetadata)?.currentAgentId === "claude-code"
+				((config as CodeAgentConfigMetadata)?.currentAgentId === "claude-code" ||
+					(config as CodeAgentConfigMetadata)?.currentAgentId === "open-claw")
 			) {
 				// Get the Claude Code state for this thread
 				const claudeStateKey = `CodeAgentStorage:claude-code-agent-state-${threadId}`;
