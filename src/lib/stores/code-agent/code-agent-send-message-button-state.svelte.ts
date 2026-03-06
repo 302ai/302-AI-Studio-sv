@@ -25,15 +25,17 @@ class CodeAgentSendMessageButtonState {
 	 * - Shows toast notifications for starting/started states
 	 * - Uses localEnvState.sandboxStarting for shared loading state
 	 * - Updates codeAgentState.localBaseUrl on success
-	 * @returns { isOk: boolean; error?: string }
 	 */
 	async ensureLocalSandboxReady(): Promise<{ isOk: boolean; error?: string }> {
-		// Only check for local mode
 		if (codeAgentState.type !== "local") {
 			return { isOk: true };
 		}
 
-		this.isChecking = true;
+		const startedChecking = !this.isChecking;
+		if (startedChecking) {
+			this.isChecking = true;
+		}
+
 		try {
 			const result = await localEnvState.ensureSandboxRunning();
 
@@ -58,7 +60,9 @@ class CodeAgentSendMessageButtonState {
 			console.error("[CodeAgent] Failed to ensure local sandbox ready:", errorMessage);
 			return { isOk: false, error: errorMessage };
 		} finally {
-			this.isChecking = false;
+			if (startedChecking) {
+				this.isChecking = false;
+			}
 		}
 	}
 
@@ -147,7 +151,6 @@ class CodeAgentSendMessageButtonState {
 			const localSandboxResult = await this.ensureLocalSandboxReady();
 			if (!localSandboxResult.isOk) {
 				toast.error(m.code_agent_local_sandbox_start_failed());
-				this.isChecking = false;
 				return;
 			}
 
@@ -157,7 +160,6 @@ class CodeAgentSendMessageButtonState {
 
 			const { isOK, sandboxInfo } = await codeAgentState.executeCodeAgentMode();
 			if (!isOK) {
-				this.isChecking = false;
 				return;
 			}
 
@@ -276,7 +278,6 @@ class CodeAgentSendMessageButtonState {
 						if (!response.success || faileds.length > 0) {
 							console.error("Failed to upload files:", faileds.map((r) => r.error).join(", "));
 							toast.error(m.taskboard_error_attachment_upload_failed());
-							this.isChecking = false;
 							return;
 						}
 					}
@@ -290,7 +291,7 @@ class CodeAgentSendMessageButtonState {
 					await codeAgentState.handleCodeAgentModelChange(chatState.selectedModel);
 				}
 
-				// 在 sandbox 确定后，添加用户选择的 MCP 服务器
+				// 在 sandbox 确认后，添加用户选择的 MCP 服务器
 				if (chatState.mcpServerIds.length > 0) {
 					const infos = mcpState.getMCPInfosByIds(chatState.mcpServerIds);
 					if (infos.length > 0) {
@@ -307,7 +308,6 @@ class CodeAgentSendMessageButtonState {
 					const shouldContinue: boolean = yield "wait_user_choice";
 					if (!shouldContinue) {
 						codeAgentState.isCodeAgentPanelOpen = true;
-						this.isChecking = false;
 						return;
 					}
 				}
