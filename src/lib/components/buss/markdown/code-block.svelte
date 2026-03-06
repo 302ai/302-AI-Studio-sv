@@ -64,6 +64,7 @@
 	let preStyle = $state<string | undefined>(undefined);
 	let codeStyle = $state<string | undefined>(undefined);
 	let lines = $state<RenderedLine[]>([]);
+	const lineCount = $derived(lines.length);
 	let isCollapsed = $state(preferencesSettings.autoHideCode);
 	let showSvgPreview = $state(false);
 	let isSvgCode = $state(false);
@@ -701,7 +702,7 @@
 			</pre>
 		</div>
 	{/if}
-{:else if props.code.trim() && lines.length > 0}
+{:else if props.code.trim() && lineCount > 0}
 	<div data-code-block-wrapper class="rounded-xl overflow-hidden border border-border my-7 bg-card">
 		<div
 			class="flex justify-between items-center px-4 py-2 bg-muted border-b border-border min-h-10"
