@@ -6,7 +6,7 @@
 		"source.fixAll.eslint": "explicit"
 	},
 	"[typescript]": {
-		"editor.defaultFormatter": "vscode.typescript-language-features",
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
 		"editor.formatOnSave": true
 	},
 	"[svelte]": {
@@ -30,9 +30,5 @@
 		"**/node_modules/**": true,
 		"**/dist/**": true,
 		"**/out/**": true
-	},
-	"[json]": {
-		"editor.defaultFormatter": "vscode.json-language-features"
-	},
-	"cSpell.words": ["feishu"]
+	}
 }

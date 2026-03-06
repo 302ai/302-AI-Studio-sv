@@ -5,6 +5,7 @@ import * as m from "$lib/paraglide/messages";
 import { chatState } from "$lib/stores/chat-state.svelte";
 import { persistedTabState } from "$lib/stores/tab-bar-state.svelte";
 import type { ChatMessage } from "$lib/types/chat";
+import { clone } from "$lib/utils/clone";
 import type { Model } from "@302ai/studio-plugin-sdk";
 import {
 	type AgentClass,
@@ -24,10 +25,8 @@ import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
 import { localClaudeCodeSandboxState } from "./local-claude-code-sandbox-state.svelte";
 import { localEnvState } from "./local-env-state.svelte";
 import { withLoadingState } from "./utils";
-import { clone } from "$lib/utils/clone";
 
 const tab = window.tab ?? null;
-
 const threadId =
 	tab &&
 	typeof tab === "object" &&
@@ -36,15 +35,15 @@ const threadId =
 	tab.threadId
 		? tab.threadId
 		: "shell";
-
 const tabId =
 	tab && typeof tab === "object" && "id" in tab && typeof tab.id === "string" && tab.id
 		? tab.id
 		: "shell";
+const codeAgentConfig = window.codeAgentConfig;
 
 function getInitialData() {
-	if (window?.codeAgentConfig) {
-		return clone(window.codeAgentConfig as CodeAgentConfigMetadata);
+	if (codeAgentConfig) {
+		return clone(codeAgentConfig as CodeAgentConfigMetadata);
 	}
 	const initialData: CodeAgentConfigMetadata = {
 		enabled: false,

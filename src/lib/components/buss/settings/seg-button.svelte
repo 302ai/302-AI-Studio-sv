@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { cn } from "$lib/utils";
-	import { type Icon as IconType } from "@lucide/svelte";
-	import { onMount } from "svelte";
+	import { onMount, type Component, type Snippet } from "svelte";
 
-	interface SegmentedOption {
+	export interface SegmentedOption {
 		key: string;
-		icon?: typeof IconType;
+		icon?: Component;
+		iconSnippet?: Snippet;
 		label: string;
 		description?: string;
 		iconSize?: number;
@@ -118,11 +118,14 @@
 			>
 				<div class="flex flex-col items-center justify-center">
 					<div class="flex items-center justify-center gap-1">
-						{#if option.icon}
-							<!-- {@html option.icon} -->
+						{#if option.iconSnippet}
+							{@render option.iconSnippet()}
+						{:else if option.icon}
 							<option.icon size={option.iconSize} />
 						{/if}
-						<span>{option.label}</span>
+						{#if option.label}
+							<span>{option.label}</span>
+						{/if}
 					</div>
 					{#if option.description}
 						<span class="text-[10px] opacity-60 leading-tight">{option.description}</span>
