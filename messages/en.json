@@ -1345,6 +1345,7 @@
 	"local_platform_installed": "Installed",
 	"local_platform_not_installed": "Not Installed",
 	"local_platform_health_status": "Health",
+	"local_platform_open_claw": "open-claw",
 	"local_platform_healthy": "Healthy",
 	"local_platform_unhealthy": "Unhealthy",
 	"local_platform_try_restart": "Try to restart",

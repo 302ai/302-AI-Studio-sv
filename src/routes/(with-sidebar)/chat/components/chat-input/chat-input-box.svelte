@@ -430,7 +430,13 @@
 		const unsub = onShortcutAction((action) => {
 			if (action.action === "sendMessage" && textareaRef === document.activeElement) {
 				if (isMac && isInCompositionCooldown()) return;
-				if (codeAgentState.enabled && codeAgentSendMessageButtonState.isChecking) return;
+				if (
+					codeAgentState.enabled &&
+					(codeAgentSendMessageButtonState.isChecking ||
+						codeAgentSendMessageButtonState.isOpenClawSendDisabled)
+				) {
+					return;
+				}
 				handleSendMessage();
 			}
 		});
@@ -586,7 +592,8 @@
 							<button
 								disabled={!chatState.sendMessageEnabled ||
 									isLocalSandboxStarting ||
-									codeAgentSendMessageButtonState.isChecking}
+									codeAgentSendMessageButtonState.isChecking ||
+									codeAgentSendMessageButtonState.isOpenClawSendDisabled}
 								class={cn(
 									"shrink-0 flex size-9 items-center cursor-pointer justify-center rounded-[10px] bg-chat-send-message-button text-foreground hover:!bg-chat-send-message-button/80",
 

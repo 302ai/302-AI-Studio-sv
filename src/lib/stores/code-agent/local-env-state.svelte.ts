@@ -58,6 +58,7 @@ class LocalEnvState {
 
 	// Sandbox health status
 	sandboxHealthStatus = $state<SandboxHealthStatus>("unknown");
+	openClawHealthStatus = $state<SandboxHealthStatus>("unknown");
 
 	// Installation logs
 	installLogs = $state<InstallLogEntry[]>([]);
@@ -245,6 +246,7 @@ class LocalEnvState {
 		this.sandboxLogs = [];
 		this.broadcastSandboxState({ starting: true });
 		this.sandboxHealthStatus = "unknown";
+		this.openClawHealthStatus = "unknown";
 		try {
 			const result = await window.electronAPI.localVibeService.startPodmanMachine();
 
@@ -317,6 +319,7 @@ class LocalEnvState {
 				this.sandboxRunning = false;
 				this.broadcastSandboxState({ running: false });
 				this.sandboxHealthStatus = "unknown";
+				this.openClawHealthStatus = "unknown";
 			}
 
 			return result.isOk;
@@ -514,7 +517,13 @@ class LocalEnvState {
 		// Subscribe to local-sandbox-health-check channel
 		if (!this.unsubscribeSandboxHealth) {
 			this.unsubscribeSandboxHealth = window.electronAPI.onLocalSandboxHealthCheck(
-				(data: { isOk: boolean; isHealth: boolean; error?: string; timestamp: number }) => {
+				(data: {
+					isOk: boolean;
+					isHealth: boolean;
+					isOcHealth?: boolean;
+					error?: string;
+					timestamp: number;
+				}) => {
 					if (data.isOk) {
 						if (data.isHealth) {
 							this.sandboxHealthStatus = "healthy";
@@ -528,12 +537,16 @@ class LocalEnvState {
 						} else {
 							this.sandboxHealthStatus = "unhealthy";
 						}
+						this.openClawHealthStatus =
+							data.isOcHealth === undefined ? "unknown" : data.isOcHealth ? "healthy" : "unhealthy";
 					} else {
 						this.sandboxHealthStatus = "unknown";
+						this.openClawHealthStatus = "unknown";
 					}
 					console.log(
 						"[LocalEnvState] Sandbox health check:",
 						this.sandboxHealthStatus,
+						this.openClawHealthStatus,
 						data.error ?? "no error",
 					);
 				},

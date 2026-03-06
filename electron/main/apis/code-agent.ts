@@ -406,6 +406,7 @@ export async function getSkillContent(
 export const localSandboxHealthResponseSchema = type({
 	success: "boolean",
 	status: "string",
+	"oc_status?": "string",
 });
 export type LocalSandboxHealthResponse = typeof localSandboxHealthResponseSchema.infer;
 

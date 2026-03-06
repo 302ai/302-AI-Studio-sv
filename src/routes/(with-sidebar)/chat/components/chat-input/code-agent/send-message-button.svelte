@@ -20,7 +20,8 @@
 	let disabled = $derived(
 		!chatState.sendMessageEnabled ||
 			codeAgentState.isDeleted ||
-			codeAgentSendMessageButtonState.isChecking,
+			codeAgentSendMessageButtonState.isChecking ||
+			codeAgentSendMessageButtonState.isOpenClawSendDisabled,
 	);
 </script>
 
