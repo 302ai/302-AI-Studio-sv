@@ -196,7 +196,7 @@
 <ContextMenu.Root>
 	<ContextMenu.Trigger
 		class={cn(
-			"ring-primary hover:bg-muted/50 h-[50px] w-full cursor-default outline-transparent",
+			"ring-primary hover:bg-muted/50 h-[50px] w-full cursor-default outline-transparent text-sm",
 			!isLast ? "border-border border-b" : "",
 		)}
 	>

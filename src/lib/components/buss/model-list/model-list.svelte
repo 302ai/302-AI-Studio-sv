@@ -40,7 +40,7 @@
 	<div class="flex h-full w-full flex-col overflow-hidden rounded-xl">
 		<!-- 表格头部 -->
 		<div
-			class="text-muted-fg bg-muted grid h-10 w-full flex-shrink-0"
+			class="text-muted-fg bg-muted grid h-10 w-full flex-shrink-0 text-xs"
 			style="grid-template-columns: 2fr 0.8fr 1.2fr 1fr;"
 		>
 			<div class="flex h-full items-center pl-4 outline-hidden">
@@ -63,7 +63,7 @@
 		<!-- 模型列表 -->
 		{#if models.length === 0}
 			<!-- 空状态 -->
-			<div class="text-muted-fg flex flex-1 items-center justify-center">
+			<div class="text-muted-fg flex flex-1 items-center justify-center text-sm">
 				<div class="flex flex-col items-center gap-2">
 					<svg class="size-9" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
