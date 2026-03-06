@@ -117,7 +117,7 @@ class CodeAgentState {
 			return;
 		}
 
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			await claudeCodeAgentState.handleChatFinished({
 				...event,
 				sendRetryMessage: async (content: string) => {
@@ -131,7 +131,7 @@ class CodeAgentState {
 	};
 
 	handleThreadTitleUpdated = async (event: { title: string }) => {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			await claudeCodeAgentState.handleThreadTitleUpdated(event);
 			if (this.type === "local") {
 				await localClaudeCodeSandboxState.refreshSessions();
@@ -409,7 +409,7 @@ class CodeAgentState {
 			(loading) => (this.isUpdatingSandboxRemark = loading),
 			() =>
 				match(this.currentAgentId)
-					.with("claude-code", () =>
+					.with("claude-code", "open-claw", () =>
 						claudeCodeSandboxState.updateSandboxRemark(claudeCodeAgentState.sandboxId, remark),
 					)
 					.otherwise(() => false),
@@ -421,7 +421,9 @@ class CodeAgentState {
 			(loading) => (this.isUpdatingSessionRemark = loading),
 			async () => {
 				const isOK = await match(this.currentAgentId)
-					.with("claude-code", () => claudeCodeAgentState.updateSessionRemark(remark, true))
+					.with("claude-code", "open-claw", () =>
+						claudeCodeAgentState.updateSessionRemark(remark, true),
+					)
 					.otherwise(() => false);
 
 				if (isOK && this.type === "local") {
@@ -456,31 +458,31 @@ class CodeAgentState {
 	// --- Proxy methods for operations accessed by external consumers ---
 
 	updateCurrentWorkspacePath(workspacePath: string): void {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.updateCurrentWorkspacePath(workspacePath);
 		}
 	}
 
 	init(): void {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.init();
 		}
 	}
 
 	handleEnabled(): void {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.handleEnabled();
 		}
 	}
 
 	handleLocalEnabled(sessionId: string, workspacePath: string): void {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.handleLocalEnabled(sessionId, workspacePath);
 		}
 	}
 
 	async handleCreateNewSandbox(): Promise<boolean> {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			return claudeCodeAgentState.handleCreateNewSandbox();
 		}
 		return false;
@@ -490,11 +492,11 @@ class CodeAgentState {
 
 	get selectedSandboxId(): string {
 		return match(this.currentAgentId)
-			.with("claude-code", () => claudeCodeAgentState.selectedSandboxId)
+			.with("claude-code", "open-claw", () => claudeCodeAgentState.selectedSandboxId)
 			.otherwise(() => "auto");
 	}
 	set selectedSandboxId(value: string) {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.selectedSandboxId = value;
 		}
 	}
@@ -505,7 +507,7 @@ class CodeAgentState {
 			.otherwise(() => "");
 	}
 	set selectedSandboxRemark(value: string) {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.selectedSandboxRemark = value;
 		}
 	}
@@ -516,7 +518,7 @@ class CodeAgentState {
 			.otherwise(() => "new");
 	}
 	set selectedSessionId(value: string) {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.selectedSessionId = value;
 		}
 	}
@@ -527,7 +529,7 @@ class CodeAgentState {
 			.otherwise(() => "new");
 	}
 	set selectedWorkspacePath(value: string) {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.selectedWorkspacePath = value;
 		}
 	}
@@ -538,7 +540,7 @@ class CodeAgentState {
 			.otherwise(() => "");
 	}
 	set customSandboxName(value: string) {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.customSandboxName = value;
 		}
 	}
@@ -549,7 +551,7 @@ class CodeAgentState {
 			.otherwise(() => "");
 	}
 	set selectedSessionRemark(value: string) {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.selectedSessionRemark = value;
 		}
 	}

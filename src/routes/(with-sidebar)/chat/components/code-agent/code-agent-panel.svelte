@@ -93,7 +93,11 @@
 	let isSessionRemarkChanged = $derived(tempSessionRemark !== currentSessionRemark);
 
 	$effect(() => {
-		if (codeAgentState.inCodeAgentMode && codeAgentState.currentAgentId === "claude-code") {
+		if (
+			codeAgentState.inCodeAgentMode &&
+			(codeAgentState.currentAgentId === "claude-code" ||
+				codeAgentState.currentAgentId === "open-claw")
+		) {
 			tempSandboxRemark = currentSandboxRemark;
 
 			tempSessionRemark = currentSessionRemark;
