@@ -207,6 +207,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("localVibeService:getLocalBaseUrl", (event) =>
 		localVibeService.getLocalBaseUrl(event),
 	);
+	ipcMain.handle("localVibeService:getOpenClawBaseUrl", (event) =>
+		localVibeService.getOpenClawBaseUrl(event),
+	);
 	ipcMain.handle("localVibeService:getSandboxStatus", (event) =>
 		localVibeService.getSandboxStatus(event),
 	);
@@ -630,6 +633,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("localVibeService:renameWorkspaceDirectory");
 	ipcMain.removeHandler("localVibeService:listWorkspaceDirectories");
 	ipcMain.removeHandler("localVibeService:getLocalBaseUrl");
+	ipcMain.removeHandler("localVibeService:getOpenClawBaseUrl");
 	ipcMain.removeHandler("localVibeService:getSandboxStatus");
 	ipcMain.removeHandler("localVibeService:triggerSystemRestart");
 	ipcMain.removeHandler("localVibeService:validPodman");

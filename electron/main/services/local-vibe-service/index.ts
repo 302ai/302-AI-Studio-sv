@@ -21,10 +21,13 @@ const execAsync = promisify(exec);
 
 /** Default port for local sandbox API */
 export const DEFAULT_SANDBOX_PORT = 8123;
+export const DEFAULT_OPENCLAW_PORT = 18789;
 
 export class LocalVibeService {
 	/** Default port for local sandbox API */
 	private runtimePort: number | null = null;
+	/** Default port for openclaw API */
+	private runtimeOpenClawPort: number | null = null;
 	private isOperating = false;
 
 	constructor() {
@@ -110,6 +113,13 @@ export class LocalVibeService {
 	 */
 	public getRuntimePort(): number | null {
 		return this.runtimePort;
+	}
+
+	/**
+	 * Get the runtime openclaw port
+	 */
+	public getRuntimeOpenClawPort(): number | null {
+		return this.runtimeOpenClawPort;
 	}
 
 	/**
@@ -299,6 +309,15 @@ export class LocalVibeService {
 	}
 
 	/**
+	 * Get the local openclaw base URL for the runtime via IPC
+	 */
+	async getOpenClawBaseUrl(_event: IpcMainInvokeEvent): Promise<string | null> {
+		const port = this.getRuntimeOpenClawPort();
+		if (!port) return null;
+		return `http://localhost:${port}`;
+	}
+
+	/**
 	 * Get the current sandbox status via IPC
 	 * Used by new renderer windows to sync their state
 	 */
@@ -412,23 +431,36 @@ export class LocalVibeService {
 			console.warn("[Local Vibe] Failed to prepare openclaw.json file:", error);
 		}
 
-		// Find available port (starting from default, will find next available if occupied)
+		// Find available port for Sandbox (starting from default, will find next available if occupied)
 		const preferredPort = isNull(this.runtimePort) ? DEFAULT_SANDBOX_PORT : this.runtimePort + 1;
 		const hostPort = await getPort({ port: preferredPort });
 
 		// Store the allocated port
 		this.runtimePort = hostPort;
 
+		// Find available port for OpenClaw
+		const preferredOpenClawPort = isNull(this.runtimeOpenClawPort)
+			? DEFAULT_OPENCLAW_PORT
+			: this.runtimeOpenClawPort + 1;
+		const openClawPort = await getPort({
+			port: [preferredOpenClawPort, DEFAULT_OPENCLAW_PORT],
+		});
+
+		// Store the allocated port
+		this.runtimeOpenClawPort = openClawPort;
+
 		// Write .env file with runtime values
 		const envContent = [
 			`AI302_API_KEY=${apiKey}`,
 			`HOST_DATA_PATH=${runtimeDir}`,
 			`HOST_PORT=${hostPort}`,
+			`OPENCLAW_PORT=${openClawPort}`,
 		].join("\n");
 		fs.writeFileSync(envFilePath, envContent, "utf-8");
 
 		console.log("[Local Vibe] Runtime compose prepared at:", runtimeDir);
 		console.log("[Local Vibe] Allocated host port:", hostPort);
+		console.log("[Local Vibe] Allocated OpenClaw port:", openClawPort);
 
 		return hostPort;
 	}
@@ -442,6 +474,7 @@ export class LocalVibeService {
 	private async runPodmanComposeUp(): Promise<{
 		isOk: boolean;
 		port?: number;
+		openClawPort?: number;
 		output?: string;
 		error?: string;
 	}> {
@@ -454,6 +487,7 @@ export class LocalVibeService {
 
 			// Prepare runtime compose with .env file (includes port detection)
 			const hostPort = await this.prepareRuntimeCompose(apiKey);
+			const openClawPort = this.getRuntimeOpenClawPort() ?? DEFAULT_OPENCLAW_PORT;
 
 			const composePath = this.getRuntimeComposePath();
 			const runtimeDir = this.getRuntimeComposeDir();
@@ -493,7 +527,7 @@ export class LocalVibeService {
 			}
 
 			console.log("[Local Vibe] podman-compose up -d:", result.output);
-			return { isOk: true, port: hostPort, output: result.output };
+			return { isOk: true, port: hostPort, openClawPort, output: result.output };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			console.error("[Local Vibe] podman-compose up -d error:", errorMessage);
@@ -2221,11 +2255,12 @@ export class LocalVibeService {
 	 * Ensures the local sandbox is running, starting it if necessary
 	 * This is an idempotent operation - safe to call multiple times
 	 * @param _event The IPC main invoke event
-	 * @returns { isOk: boolean; port?: number; error?: string; wasAlreadyRunning: boolean }
+	 * @returns { isOk: boolean; port?: number; openClawPort?: number; error?: string; wasAlreadyRunning: boolean }
 	 */
 	async ensureLocalSandboxRunning(_event: IpcMainInvokeEvent): Promise<{
 		isOk: boolean;
 		port?: number;
+		openClawPort?: number;
 		error?: string;
 		wasAlreadyRunning: boolean;
 	}> {
@@ -2236,8 +2271,9 @@ export class LocalVibeService {
 			if (healthCheck.isHealth) {
 				// Sandbox is already running
 				const port = this.getRuntimePort() ?? DEFAULT_SANDBOX_PORT;
+				const openClawPort = this.getRuntimeOpenClawPort() ?? DEFAULT_OPENCLAW_PORT;
 				console.log("[Local Vibe] Local sandbox already running on port:", port);
-				return { isOk: true, port, wasAlreadyRunning: true };
+				return { isOk: true, port, openClawPort, wasAlreadyRunning: true };
 			}
 
 			// Sandbox is not running, start it
@@ -2255,6 +2291,7 @@ export class LocalVibeService {
 			return {
 				isOk: true,
 				port: startResult.port,
+				openClawPort: startResult.openClawPort,
 				wasAlreadyRunning: startResult.alreadyStarted ?? false,
 			};
 		} catch (error) {
@@ -2271,12 +2308,13 @@ export class LocalVibeService {
 	 * Checks output for success message or already started state
 	 * After successful start, automatically runs podman compose up -d
 	 * @param _event The IPC main invoke event
-	 * @returns { isOk: boolean; alreadyStarted?: boolean; port?: number; output?: string; error?: string; composeOutput?: string; composeError?: string } - isOk: operation success, alreadyStarted: machine was already running, port: allocated host port, output: command output, error: error message if failed, composeOutput: podman compose output, composeError: podman compose error
+	 * @returns { isOk: boolean; alreadyStarted?: boolean; port?: number; openClawPort?: number; output?: string; error?: string; composeOutput?: string; composeError?: string } - isOk: operation success, alreadyStarted: machine was already running, port: allocated host port, output: command output, error: error message if failed, composeOutput: podman compose output, composeError: podman compose error
 	 */
 	async startPodmanMachine(_event: IpcMainInvokeEvent): Promise<{
 		isOk: boolean;
 		alreadyStarted?: boolean;
 		port?: number;
+		openClawPort?: number;
 		output?: string;
 		error?: string;
 		composeOutput?: string;
@@ -2308,6 +2346,7 @@ export class LocalVibeService {
 					isOk: true,
 					alreadyStarted: false,
 					port: composeResult.port,
+					openClawPort: composeResult.openClawPort,
 					output: "Linux rootless mode - no machine needed",
 					composeOutput: composeResult.output,
 					composeError: composeResult.error,
@@ -2468,6 +2507,7 @@ export class LocalVibeService {
 				isOk: true,
 				alreadyStarted,
 				port: composeResult?.port,
+				openClawPort: composeResult?.openClawPort,
 				output,
 				composeOutput: composeResult?.output,
 				composeError: composeResult?.error,
