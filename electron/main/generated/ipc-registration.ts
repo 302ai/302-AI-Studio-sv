@@ -238,6 +238,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("localVibeService:startPodmanMachine", (event) =>
 		localVibeService.startPodmanMachine(event),
 	);
+	ipcMain.handle("localVibeService:restartPodmanMachine", (event) =>
+		localVibeService.restartPodmanMachine(event),
+	);
 	ipcMain.handle("localVibeService:updateOpenclawModels", (event) =>
 		localVibeService.updateOpenclawModels(event),
 	);
@@ -516,6 +519,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("openClawService:getOpenClawWebUiUrl", (event) =>
 		openClawService.getOpenClawWebUiUrl(event),
 	);
+	ipcMain.handle("openClawService:applyOpenClawChannelConfig", (event) =>
+		openClawService.applyOpenClawChannelConfig(event),
+	);
 
 	// providerService service registration
 	ipcMain.handle("providerService:handle302AIProviderChange", (event, apiKey) =>
@@ -648,6 +654,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("localVibeService:stopLocalSandboxByIpc");
 	ipcMain.removeHandler("localVibeService:ensureLocalSandboxRunning");
 	ipcMain.removeHandler("localVibeService:startPodmanMachine");
+	ipcMain.removeHandler("localVibeService:restartPodmanMachine");
 	ipcMain.removeHandler("localVibeService:updateOpenclawModels");
 	ipcMain.removeHandler("codeAgentService:updateClaudeCodeSandboxModel");
 	ipcMain.removeHandler("codeAgentService:checkClaudeCodeSandbox");
@@ -726,6 +733,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("notificationService:notifyTaskCompleted");
 	ipcMain.removeHandler("notificationService:requestPermission");
 	ipcMain.removeHandler("openClawService:getOpenClawWebUiUrl");
+	ipcMain.removeHandler("openClawService:applyOpenClawChannelConfig");
 	ipcMain.removeHandler("providerService:handle302AIProviderChange");
 	ipcMain.removeHandler("providerService:get302AIApiKey");
 	ipcMain.removeHandler("threadService:addThread");

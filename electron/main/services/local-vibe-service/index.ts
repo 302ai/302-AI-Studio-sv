@@ -8,8 +8,8 @@ import { providerStorage } from "@electron/main/services/storage-service/provide
 import { isCommandNotFound } from "@electron/main/utils/cmd";
 import { exec, spawn, type SpawnOptions } from "child_process";
 import { app, shell, type IpcMainInvokeEvent } from "electron";
-import { isNull } from "es-toolkit/predicate";
 import { get, set } from "es-toolkit/compat";
+import { isNull } from "es-toolkit/predicate";
 import fs from "fs";
 import { cp, readdir } from "fs/promises";
 import getPort from "get-port";
@@ -2514,6 +2514,11 @@ export class LocalVibeService {
 		} finally {
 			this.isOperating = false;
 		}
+	}
+
+	async restartPodmanMachine(_event: IpcMainInvokeEvent) {
+		const execAsync = promisify(exec);
+		await execAsync("podman restart local-cc-api");
 	}
 
 	/**

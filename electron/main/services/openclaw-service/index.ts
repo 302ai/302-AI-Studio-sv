@@ -1,7 +1,8 @@
 import { type IpcMainInvokeEvent } from "electron";
-import fs from "fs/promises";
 import { get, set } from "es-toolkit/compat";
+import fs from "fs/promises";
 import { localVibeService } from "../local-vibe-service";
+import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
 
 export class OpenClawService {
 	/**
@@ -68,6 +69,21 @@ export class OpenClawService {
 		const gatewayToken = await this.getOpenClawConfig<string>("gateway.auth.token");
 
 		return `http://localhost:${port}/?token=${gatewayToken || ""}`;
+	}
+
+	private restartPodman() {
+		// podman restart local-cc-api
+	}
+
+	/*
+	 */
+	async applyOpenClawChannelConfig(_event: IpcMainInvokeEvent) {
+		const {
+			data: { feishu },
+		} = await codeAgentGlobalConfigsStorage.getGlobalConfigs();
+
+		await this.setOpenClawConfig("channels.feishu.appId", feishu.appId);
+		await this.setOpenClawConfig("channels.feishu.appSecret", feishu.appSecret);
 	}
 }
 

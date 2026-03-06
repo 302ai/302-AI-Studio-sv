@@ -1,21 +1,15 @@
 <script lang="ts">
 	import { SegButton, SettingSelect } from "$lib/components/buss/settings";
-	import {
-		Accordion,
-		AccordionContent,
-		AccordionItem,
-		AccordionTrigger,
-	} from "$lib/components/ui/accordion";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
-	import { codeAgentGlobalConfigsState, codeAgentState } from "$lib/stores/code-agent";
+	import { codeAgentState } from "$lib/stores/code-agent";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { cn } from "$lib/utils";
 	import { RefreshCcw } from "@lucide/svelte";
 	import { agentClass } from "@shared/storage/code-agent";
 	import { onMount } from "svelte";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
-	import SettingInputField from "../settings/setting-input-field.svelte";
+	import OpenClawConfigPanel from "../open-claw-config-panel/open-claw-config-panel.svelte";
 
 	const frameworkOptions = [
 		{
@@ -59,61 +53,7 @@
 	</div>
 
 	{#if codeAgentState.currentAgentId == "open-claw"}
-		<Accordion type="single" value="channel-settings" class="w-full m-0">
-			<AccordionItem value="channel-settings" class="border-b-0">
-				<AccordionTrigger class="py-2 hover:no-underline">
-					<Label class="text-label-fg font-normal no-underline hover:underline cursor-pointer"
-						>{m.agent_framework_open_claw_set_channel()}</Label
-					>
-				</AccordionTrigger>
-				<AccordionContent class="pb-1 pt-0 space-y-2">
-					<Accordion type="single" value="fei-shu" class="w-full rounded-settings-item">
-						<AccordionItem value="fei-shu" class="border-b-0">
-							<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-								<Label class=" font-normal no-underline cursor-pointer"
-									>{m.open_claw_channel_feishu()}</Label
-								>
-							</AccordionTrigger>
-							<AccordionContent class="pb-0 pt-2 space-y-2">
-								<div class="rounded-lg border p-4 space-y-4">
-									<!-- <div>
-							<span class={cn("size-2 rounded-full", statusColorClass)}></span>
-						</div> -->
-									<!-- bind:value={tempAppid} -->
-									<SettingInputField
-										label={m.open_claw_appid()}
-										placeholder={m.open_claw_placeholder_appid()}
-										bind:value={codeAgentGlobalConfigsState.feishu.appId}
-										class="[&>label]:text-label-fg"
-									/>
-									<!-- bind:value={tempAppSecret} -->
-									<SettingInputField
-										label={m.open_claw_app_secret()}
-										placeholder={m.open_claw_placeholder_app_secret()}
-										type="password"
-										bind:value={codeAgentGlobalConfigsState.feishu.appSecret}
-										class="[&>label]:text-label-fg"
-									/>
-									<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-										<a
-											href="https://open.feishu.cn/app?lang=zh-CN"
-											class="text-primary hover:underline"
-											>{m.open_claw_feishu_get_id_and_secret()}</a
-										>
-										<div class="text-muted-foreground/50">|</div>
-										<a
-											href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
-											class="text-primary hover:underline"
-											>{m.open_claw_feishu_view_deployment_tutorial()}</a
-										>
-									</div>
-								</div>
-							</AccordionContent>
-						</AccordionItem>
-					</Accordion>
-				</AccordionContent>
-			</AccordionItem>
-		</Accordion>
+		<OpenClawConfigPanel />
 	{/if}
 
 	<!-- Select Session -->

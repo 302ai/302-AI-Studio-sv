@@ -48,6 +48,7 @@
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { type CodeAgentType } from "@shared/storage/code-agent";
 
+	import OpenClawConfigPanel from "$lib/components/buss/open-claw-config-panel/open-claw-config-panel.svelte";
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
 	import ClaudeCodePanel from "./claude-code-panel.svelte";
@@ -228,6 +229,10 @@
 						{/if}
 					</Button>
 				</div>
+
+				{#if codeAgentState.currentAgentId == "open-claw"}
+					<OpenClawConfigPanel />
+				{/if}
 			</div>
 
 			{#if codeAgentState.type === "local" && !codeAgentState.isFreshTab}
