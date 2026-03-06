@@ -801,6 +801,10 @@ export class AgentPreviewState {
 		// };
 		this.sandBoxId = sandBoxId;
 		this.mode = "preview";
+		this.isSkillsOnlyMode = false;
+		if (codeAgentState.currentAgentId === "open-claw") {
+			this.activeTab = this.activeTab === "terminal" ? "terminal" : "code";
+		}
 		this.isVisible = true;
 	}
 

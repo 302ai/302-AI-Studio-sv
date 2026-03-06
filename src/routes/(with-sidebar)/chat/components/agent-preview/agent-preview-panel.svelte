@@ -286,18 +286,18 @@
 
 	// --- Effects & Logic ---
 
-	// 0. Auto-switch to valid tab when no sandbox (skills or taskboard are valid)
+	// 0. 保证当前 tab 始终落在当前模式可用的范围内
 	$effect(() => {
-		// When there's no sandbox, ensure we're on a valid tab
-		if (!currentSandboxId) {
-			if (codeAgentState.currentAgentId === "open-claw") {
-				// open-claw only has code and terminal tabs
-				if (activeTab !== TAB_CODE && activeTab !== TAB_TERMINAL) {
-					agentPreviewState.setActiveTab(TAB_CODE);
-				}
-			} else if (activeTab !== TAB_SKILLS && activeTab !== TAB_TASKBOARD) {
-				agentPreviewState.setActiveTab(TAB_SKILLS);
+		if (codeAgentState.currentAgentId === "open-claw") {
+			if (activeTab !== TAB_CODE && activeTab !== TAB_TERMINAL) {
+				agentPreviewState.setActiveTab(TAB_CODE);
 			}
+			return;
+		}
+
+		// When there's no sandbox, ensure we're on a valid tab
+		if (!currentSandboxId && activeTab !== TAB_SKILLS && activeTab !== TAB_TASKBOARD) {
+			agentPreviewState.setActiveTab(TAB_SKILLS);
 		}
 	});
 

@@ -269,7 +269,7 @@ class CodeAgentState {
 	}
 
 	async executeCodeAgentMode(): Promise<{ isOK: boolean; sandboxInfo?: ClaudeCodeSandboxInfo }> {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			// Local mode: skip sandbox verification, return virtual sandboxInfo
 			if (this.type === "local") {
 				return claudeCodeAgentState.handleLocalModeExecute();
@@ -281,14 +281,14 @@ class CodeAgentState {
 	}
 
 	updateCurrentSessionId(sessionId: string): void {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.updateCurrentSessionId(sessionId);
 		}
 	}
 
 	get codeAgentCfgs(): CodeAgentCfgs {
 		return match(this.currentAgentId)
-			.with("claude-code", () => {
+			.with("claude-code", "open-claw", () => {
 				if (this.type === "local") {
 					return {
 						baseUrl: this.localBaseUrl,
@@ -311,25 +311,25 @@ class CodeAgentState {
 
 	get currentSessionId(): string {
 		return match(this.currentAgentId)
-			.with("claude-code", () => claudeCodeAgentState.currentSessionId)
+			.with("claude-code", "open-claw", () => claudeCodeAgentState.currentSessionId)
 			.otherwise(() => "");
 	}
 
 	get sandboxId(): string {
 		return match(this.currentAgentId)
-			.with("claude-code", () => claudeCodeAgentState.sandboxId)
+			.with("claude-code", "open-claw", () => claudeCodeAgentState.sandboxId)
 			.otherwise(() => "");
 	}
 
 	get sessionId(): string {
 		return match(this.currentAgentId)
-			.with("claude-code", () => claudeCodeAgentState.currentSessionId)
+			.with("claude-code", "open-claw", () => claudeCodeAgentState.currentSessionId)
 			.otherwise(() => "");
 	}
 
 	get currentModel(): string {
 		return match(this.currentAgentId)
-			.with("claude-code", () => claudeCodeAgentState.model)
+			.with("claude-code", "open-claw", () => claudeCodeAgentState.model)
 			.otherwise(() => "");
 	}
 
@@ -371,9 +371,8 @@ class CodeAgentState {
 					})),
 		);
 	}
-
 	async handleCodeAgentModelChange(model: Model): Promise<boolean> {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			const { isOK } = await updateClaudeCodeSandboxModel(threadId, this.sandboxId, model.id);
 			return isOK;
 		}
@@ -382,7 +381,7 @@ class CodeAgentState {
 	}
 
 	updateSandboxModel(model: string): void {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.updateSandboxModel(model);
 		}
 	}

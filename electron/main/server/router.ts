@@ -77,6 +77,7 @@ export type RouterRequestBody = {
 	workspacePath?: string;
 	thinkingBudget?: ThinkingBudgetType;
 	vibeMode?: CodeAgentType;
+	agentType?: number;
 	contextSummary?: string;
 	compressedMessageCount?: number;
 };
@@ -1579,6 +1580,7 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		workspacePath,
 		thinkingBudget,
 		vibeMode,
+		agentType,
 	} = await c.req.json<RouterRequestBody>();
 
 	// Persist lastVibeMode when it changes
@@ -1611,6 +1613,7 @@ app.post("/chat/302ai-code-agent", async (c) => {
 			workspacePath,
 			thinkingBudget,
 			vibeMode,
+			agentType,
 		}),
 	);
 
@@ -1793,6 +1796,7 @@ CHECK BEFORE EVERY ACTION:
 		...(inPlanMode && !isCreateSkillMode ? { action: "plan" } : {}),
 		...(inTaskOrchestrationMode ? { action: "sync_tasks_json" } : {}),
 		...(thinkingBudget ? { max_thinking_token: THINKING_BUDGET_MAP[thinkingBudget] } : {}),
+		...(agentType !== undefined ? { agent_type: agentType } : {}),
 	};
 
 	console.log("[302ai-code-agent] Messages:", JSON.stringify(requestBody.messages));

@@ -1680,6 +1680,7 @@ export const chat = new Chat({
 						contextSummary: chatState.contextSummary,
 						compressedMessageCount: chatState.compressedMessageCount ?? 0,
 					}),
+				...(codeAgentEnabled && codeAgentState.currentAgentId === "open-claw" && { agentType: 1 }),
 			};
 		},
 	}),
