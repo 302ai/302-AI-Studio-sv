@@ -1377,5 +1377,7 @@
 	"local_platform_prerequisites_missing": "请先完成前置安装，参考「前置安装指南」",
 	"local_platform_checking": "检测中",
 	"local_platform_unknown": "未知",
-	"title_local_mode_description": "面向复杂任务，使用{type} "
+	"title_local_mode_description": "面向复杂任务，使用{type} ",
+	"openclaw_webui_failed_to_load": "无法加载 OpenClaw WebUI 页面",
+	"openclaw_webui_ensure_running": "请确保 OpenClaw 服务正在运行"
 }

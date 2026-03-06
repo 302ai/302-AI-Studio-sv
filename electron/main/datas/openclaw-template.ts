@@ -57,11 +57,11 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 	channels: {
 		feishu: {
 			enabled: true,
-			dmPolicy: "pairing",
-			groupPolicy: "open",
-			accounts: {
-				default: { appId: "", appSecret: "", domain: "feishu" },
-			},
+			appId: "",
+			appSecret: "",
+			domain: "feishu",
+			dmPolicy: "open",
+			allowFrom: ["*"],
 		},
 	},
 	gateway: {

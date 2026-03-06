@@ -1376,5 +1376,8 @@
 	"local_platform_prerequisites_missing": "Please complete the prerequisites first. See the Prerequisites Guide.",
 	"local_platform_checking": "Checking",
 	"local_platform_unknown": "Unknown",
-	"title_local_mode_description": "For complex tasks, use {type} "
+	"title_local_mode_description": "For complex tasks, use {type} ",
+	"document_viewer_cannot_preview": "This document cannot be previewed directly in the browser",
+	"openclaw_webui_failed_to_load": "Failed to load OpenClaw WebUI page",
+	"openclaw_webui_ensure_running": "Please make sure the OpenClaw service is running"
 }

@@ -46,6 +46,7 @@
 		DEVICE_MODE_DESKTOP,
 		DEVICE_MODE_MOBILE,
 		TAB_CODE,
+		TAB_OPENCLAW_WEBUI,
 		TAB_PREVIEW,
 		TAB_SKILLS,
 		TAB_TASKBOARD,
@@ -54,6 +55,7 @@
 		type TabType,
 	} from "./constants";
 	import FileTree from "./file-tree.svelte";
+	import OpenClawWebUI from "./openclaw-webui.svelte";
 	import SessionDeleted from "./session-deleted.svelte";
 	import Terminal from "./terminal.svelte";
 	import { handleError, isFileStillSelected } from "./utils";
@@ -253,21 +255,19 @@
 
 	// Skills-only mode: only show skills tab when no sandbox
 	const isSkillsOnlyMode = $derived(agentPreviewState.isSkillsOnlyMode);
-	const isLocalOpenClawMode = $derived(
-		codeAgentState.currentAgentId === "open-claw" && codeAgentState.type === "local",
-	);
+	const isOpenClawMode = $derived(codeAgentState.currentAgentId === "open-claw");
 
 	// Tabs definition
 	let tabs: PreviewTab[] = $derived.by(() => {
 		// open-claw 远程模式只显示文件和终端；本地模式额外放开预览
 		if (codeAgentState.currentAgentId === "open-claw") {
 			const openClawTabs: PreviewTab[] = [
-				{ id: "code", label: m.label_tab_file() },
+				{ id: TAB_PREVIEW, label: m.label_tab_preview() },
+				{ id: TAB_CODE, label: m.label_tab_file() },
 				{ id: TAB_TERMINAL, label: m.label_tab_terminal() },
+				{ id: TAB_OPENCLAW_WEBUI, label: "WebUI" },
 			];
-			if (isLocalOpenClawMode) {
-				openClawTabs.unshift({ id: TAB_PREVIEW, label: m.label_tab_preview() });
-			}
+
 			return openClawTabs;
 		}
 
@@ -296,11 +296,11 @@
 	// 0. 保证当前 tab 始终落在当前模式可用的范围内
 	$effect(() => {
 		if (codeAgentState.currentAgentId === "open-claw") {
-			const validTabs = isLocalOpenClawMode
-				? [TAB_PREVIEW, TAB_CODE, TAB_TERMINAL]
-				: [TAB_CODE, TAB_TERMINAL];
+			const validTabs = isOpenClawMode
+				? [TAB_PREVIEW, TAB_CODE, TAB_TERMINAL, TAB_OPENCLAW_WEBUI]
+				: [TAB_CODE, TAB_TERMINAL, TAB_OPENCLAW_WEBUI];
 			if (!validTabs.includes(activeTab)) {
-				agentPreviewState.setActiveTab(isLocalOpenClawMode ? TAB_PREVIEW : TAB_CODE);
+				agentPreviewState.setActiveTab(isOpenClawMode ? TAB_PREVIEW : TAB_CODE);
 			}
 			return;
 		}
@@ -841,6 +841,21 @@
 	};
 
 	const handleOpenInNewTab = async () => {
+		if (activeTab === TAB_OPENCLAW_WEBUI) {
+			try {
+				const url = await window.electronAPI.openClawService.getOpenClawWebUiUrl();
+				if (url) {
+					await window.electronAPI.externalLinkService.openExternalLink(url);
+				} else {
+					toast.error(m.openclaw_webui_failed_to_load());
+				}
+			} catch (error) {
+				console.error("[OpenClaw WebUI] Failed to open external link:", error);
+				toast.error(m.openclaw_webui_failed_to_load());
+			}
+			return;
+		}
+
 		// In agent mode, if we have a deployment URL, create a new tab with iframe
 		if (isAgentMode && deployment.url && currentSandboxId && currentSessionId) {
 			// Create HTML content with iframe pointing to deployment URL
@@ -849,7 +864,7 @@
 			// Generate unique previewId based on sandboxId and sessionId
 			const previewId = `agent-preview-${currentSandboxId}-${currentSessionId}`;
 
-			await tabBarState.handleNewTab(
+			tabBarState.handleNewTab(
 				m.title_html_preview(),
 				"htmlPreview",
 				true,
@@ -865,7 +880,7 @@
 			? `${htmlPreviewState.context.messageId}-${htmlPreviewState.context.messagePartIndex}-${htmlPreviewState.context.blockId}`
 			: undefined;
 
-		await tabBarState.handleNewTab(
+		tabBarState.handleNewTab(
 			m.title_html_preview(),
 			"htmlPreview",
 			true,
@@ -1415,6 +1430,10 @@
 										<SkillCreateHistoryView />
 									{/if}
 								</div>
+							</div>
+						{:else if activeTab === TAB_OPENCLAW_WEBUI && isAgentMode}
+							<div class="flex h-full flex-col min-h-0 overflow-hidden">
+								<OpenClawWebUI />
 							</div>
 						{/if}
 					</div>

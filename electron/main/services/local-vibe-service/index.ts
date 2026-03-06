@@ -21,7 +21,7 @@ const execAsync = promisify(exec);
 
 /** Default port for local sandbox API */
 export const DEFAULT_SANDBOX_PORT = 8123;
-export const DEFAULT_OPENCLAW_PORT = 18789;
+export const DEFAULT_OPENCLAW_PORT = 18123;
 
 export class LocalVibeService {
 	/** Default port for local sandbox API */
@@ -120,6 +120,13 @@ export class LocalVibeService {
 	 */
 	public getRuntimeOpenClawPort(): number | null {
 		return this.runtimeOpenClawPort;
+	}
+
+	/**
+	 * Get the path to openclaw.json
+	 */
+	public getOpenClawConfigPath(): string {
+		return path.join(this.getRuntimeComposeDir(), ".openclaw", "openclaw.json");
 	}
 
 	/**
@@ -304,15 +311,6 @@ export class LocalVibeService {
 	 */
 	async getLocalBaseUrl(_event: IpcMainInvokeEvent): Promise<string | null> {
 		const port = this.getRuntimePort();
-		if (!port) return null;
-		return `http://localhost:${port}`;
-	}
-
-	/**
-	 * Get the local openclaw base URL for the runtime via IPC
-	 */
-	async getOpenClawBaseUrl(_event: IpcMainInvokeEvent): Promise<string | null> {
-		const port = this.getRuntimeOpenClawPort();
 		if (!port) return null;
 		return `http://localhost:${port}`;
 	}

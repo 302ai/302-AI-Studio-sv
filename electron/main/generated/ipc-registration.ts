@@ -20,6 +20,7 @@ import {
 	externalLinkService,
 	mcpService,
 	notificationService,
+	openClawService,
 	providerService,
 	threadService,
 	updaterService,
@@ -206,9 +207,6 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("localVibeService:getLocalBaseUrl", (event) =>
 		localVibeService.getLocalBaseUrl(event),
-	);
-	ipcMain.handle("localVibeService:getOpenClawBaseUrl", (event) =>
-		localVibeService.getOpenClawBaseUrl(event),
 	);
 	ipcMain.handle("localVibeService:getSandboxStatus", (event) =>
 		localVibeService.getSandboxStatus(event),
@@ -514,6 +512,11 @@ export function registerIpcHandlers() {
 		notificationService.requestPermission(event),
 	);
 
+	// openClawService service registration
+	ipcMain.handle("openClawService:getOpenClawWebUiUrl", (event) =>
+		openClawService.getOpenClawWebUiUrl(event),
+	);
+
 	// providerService service registration
 	ipcMain.handle("providerService:handle302AIProviderChange", (event, apiKey) =>
 		providerService.handle302AIProviderChange(event, apiKey),
@@ -633,7 +636,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("localVibeService:renameWorkspaceDirectory");
 	ipcMain.removeHandler("localVibeService:listWorkspaceDirectories");
 	ipcMain.removeHandler("localVibeService:getLocalBaseUrl");
-	ipcMain.removeHandler("localVibeService:getOpenClawBaseUrl");
 	ipcMain.removeHandler("localVibeService:getSandboxStatus");
 	ipcMain.removeHandler("localVibeService:triggerSystemRestart");
 	ipcMain.removeHandler("localVibeService:validPodman");
@@ -723,6 +725,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("mcpService:closeServer");
 	ipcMain.removeHandler("notificationService:notifyTaskCompleted");
 	ipcMain.removeHandler("notificationService:requestPermission");
+	ipcMain.removeHandler("openClawService:getOpenClawWebUiUrl");
 	ipcMain.removeHandler("providerService:handle302AIProviderChange");
 	ipcMain.removeHandler("providerService:get302AIApiKey");
 	ipcMain.removeHandler("threadService:addThread");
