@@ -253,15 +253,22 @@
 
 	// Skills-only mode: only show skills tab when no sandbox
 	const isSkillsOnlyMode = $derived(agentPreviewState.isSkillsOnlyMode);
+	const isLocalOpenClawMode = $derived(
+		codeAgentState.currentAgentId === "open-claw" && codeAgentState.type === "local",
+	);
 
 	// Tabs definition
 	let tabs: PreviewTab[] = $derived.by(() => {
-		// open-claw mode: only show file and terminal tabs (highest priority)
+		// open-claw 远程模式只显示文件和终端；本地模式额外放开预览
 		if (codeAgentState.currentAgentId === "open-claw") {
-			return [
+			const openClawTabs: PreviewTab[] = [
 				{ id: "code", label: m.label_tab_file() },
 				{ id: TAB_TERMINAL, label: m.label_tab_terminal() },
 			];
+			if (isLocalOpenClawMode) {
+				openClawTabs.unshift({ id: TAB_PREVIEW, label: m.label_tab_preview() });
+			}
+			return openClawTabs;
 		}
 
 		// Skills-only mode OR no sandbox: show skills and taskboard tabs
@@ -289,8 +296,11 @@
 	// 0. 保证当前 tab 始终落在当前模式可用的范围内
 	$effect(() => {
 		if (codeAgentState.currentAgentId === "open-claw") {
-			if (activeTab !== TAB_CODE && activeTab !== TAB_TERMINAL) {
-				agentPreviewState.setActiveTab(TAB_CODE);
+			const validTabs = isLocalOpenClawMode
+				? [TAB_PREVIEW, TAB_CODE, TAB_TERMINAL]
+				: [TAB_CODE, TAB_TERMINAL];
+			if (!validTabs.includes(activeTab)) {
+				agentPreviewState.setActiveTab(isLocalOpenClawMode ? TAB_PREVIEW : TAB_CODE);
 			}
 			return;
 		}

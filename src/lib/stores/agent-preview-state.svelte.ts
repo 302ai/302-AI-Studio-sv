@@ -803,7 +803,13 @@ export class AgentPreviewState {
 		this.mode = "preview";
 		this.isSkillsOnlyMode = false;
 		if (codeAgentState.currentAgentId === "open-claw") {
-			this.activeTab = this.activeTab === "terminal" ? "terminal" : "code";
+			const validTabs: AgentPreviewTab[] =
+				codeAgentState.type === "local" ? ["preview", "code", "terminal"] : ["code", "terminal"];
+			this.activeTab = validTabs.includes(this.activeTab)
+				? this.activeTab
+				: codeAgentState.type === "local"
+					? "preview"
+					: "code";
 		}
 		this.isVisible = true;
 	}
