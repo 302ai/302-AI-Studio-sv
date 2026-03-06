@@ -22,17 +22,23 @@
 	]);
 
 	const isVibeLocal = $derived(codeAgentState.enabled && codeAgentState.type === "local");
-	const description = $derived(
-		selectedMode === "chat"
+	const agentIdLabelMap = new Map<"claude-code" | "open-claw", string>([
+		["claude-code", "Claude Code"],
+		["open-claw", "Open Claw"],
+	]);
+	const description = $derived.by(() => {
+		const agentIdLabe = agentIdLabelMap.get(codeAgentState.currentAgentId);
+
+		return selectedMode === "chat"
 			? m.title_chat_mode_description()
 			: codeAgentState.type === "local"
 				? m.title_local_mode_description({
-						type: `<span class="text-primary">${m.title_local()}</span>`,
+						type: `<span class="text-primary">${m.title_local()}${agentIdLabe}</span>`,
 					})
 				: m.title_code_agent_description({
-						type: `<span class="text-primary">${m.title_remote()}</span>`,
-					}),
-	);
+						type: `<span class="text-primary">${m.title_remote()}${agentIdLabe}</span>`,
+					});
+	});
 
 	function handleModeSelect(key: string) {
 		const isVibe = key === "vibe";

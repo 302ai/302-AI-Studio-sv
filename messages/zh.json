@@ -1311,7 +1311,7 @@
 	"title_chat_mode": "聊天模式",
 	"title_code_agent_settings": " Vibe模式设置",
 	"title_chat_mode_description": "快问快答，适合日常使用",
-	"title_code_agent_description": "面向复杂任务，使用{type} Claude Code",
+	"title_code_agent_description": "面向复杂任务，使用{type} ",
 	"taskboard_repeat_times": "重复执行次数",
 	"taskboard_auto_decompose": "自动拆解",
 	"taskboard_auto_decompose_title": "AI 任务拆解",
@@ -1377,5 +1377,5 @@
 	"local_platform_prerequisites_missing": "请先完成前置安装，参考「前置安装指南」",
 	"local_platform_checking": "检测中",
 	"local_platform_unknown": "未知",
-	"title_local_mode_description": "面向复杂任务，使用{type} Claude Code"
+	"title_local_mode_description": "面向复杂任务，使用{type} "
 }

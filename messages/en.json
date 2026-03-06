@@ -1310,7 +1310,7 @@
 	"title_chat_mode": "Chat Model",
 	"title_code_agent_settings": "Vibe Mode Settings",
 	"title_chat_mode_description": "Quick questions and answers, suitable for daily use",
-	"title_code_agent_description": "For complex tasks, use {type} Claude Code",
+	"title_code_agent_description": "For complex tasks, use {type} ",
 	"taskboard_repeat_times": "Repeat Execution Times",
 	"taskboard_auto_decompose": "Auto Decompose",
 	"taskboard_auto_decompose_title": "AI Task Decomposition",
@@ -1376,5 +1376,5 @@
 	"local_platform_prerequisites_missing": "Please complete the prerequisites first. See the Prerequisites Guide.",
 	"local_platform_checking": "Checking",
 	"local_platform_unknown": "Unknown",
-	"title_local_mode_description": "For complex tasks, use {type} Claude Code"
+	"title_local_mode_description": "For complex tasks, use {type} "
 }
