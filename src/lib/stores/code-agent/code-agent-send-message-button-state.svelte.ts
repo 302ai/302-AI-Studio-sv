@@ -169,27 +169,55 @@ class CodeAgentSendMessageButtonState {
 				if (codeAgentTaskboardState.isInitialized) {
 					const isSessionIdEmpty = codeAgentState.sessionId === "";
 					const sessionId: string = isSessionIdEmpty ? nanoid() : codeAgentState.sessionId;
+					const shouldSkipInitProject = codeAgentState.type === "local" && !isSessionIdEmpty;
 
-					const { workspace_path } = await initProject({
-						sandboxId: sandboxInfo.sandboxId,
-						sessionId,
-						workspacePath: codeAgentState.currentWorkspacePath,
-					});
+					if (shouldSkipInitProject) {
+						workspacePath = codeAgentState.currentWorkspacePath;
 
-					workspacePath = workspace_path;
+						if (!workspacePath) {
+							workspacePath = localClaudeCodeSandboxState.sessions.find(
+								(session) => session.session_id === sessionId,
+							)?.workspace_path;
+						}
 
-					// Update currentWorkspacePath with the actual path from server
-					if (workspace_path) {
-						codeAgentState.updateCurrentWorkspacePath(workspace_path);
+						if (!workspacePath) {
+							await localClaudeCodeSandboxState.refreshSessions();
+							workspacePath = localClaudeCodeSandboxState.sessions.find(
+								(session) => session.session_id === sessionId,
+							)?.workspace_path;
+						}
+					} else {
+						const { workspace_path } = await initProject({
+							sandboxId: sandboxInfo.sandboxId,
+							sessionId,
+							workspacePath: codeAgentState.currentWorkspacePath,
+						});
+
+						workspacePath = workspace_path;
+
+						// Update currentWorkspacePath with the actual path from server
+						if (workspace_path) {
+							codeAgentState.updateCurrentWorkspacePath(workspace_path);
+						}
+
+						// Refresh sessions to sync the new workspace_path to local storage
+						if (codeAgentState.type === "local") {
+							await localClaudeCodeSandboxState.refreshSessions();
+						} else {
+							await window.electronAPI.codeAgentService.updateClaudeCodeSessions(
+								sandboxInfo.sandboxId,
+							);
+						}
 					}
 
-					// Refresh sessions to sync the new workspace_path to local storage
-					if (codeAgentState.type === "local") {
-						await localClaudeCodeSandboxState.refreshSessions();
-					} else {
-						await window.electronAPI.codeAgentService.updateClaudeCodeSessions(
-							sandboxInfo.sandboxId,
-						);
+					if (!workspacePath) {
+						console.error("[CodeAgent] Missing workspace path for taskboard:", {
+							type: codeAgentState.type,
+							sessionId,
+							currentWorkspacePath: codeAgentState.currentWorkspacePath,
+						});
+						toast.error(m.taskboard_error_sandbox_not_initialized());
+						return;
 					}
 
 					// Collect all files to upload in a single batch request

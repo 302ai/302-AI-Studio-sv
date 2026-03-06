@@ -133,17 +133,21 @@ export type InitProjectResponse = typeof initProjectResponseSchema.infer;
 
 export async function initProject(request: InitProjectRequest): Promise<InitProjectResponse> {
 	try {
+		const agentTypePayload = codeAgentState.currentAgentId === "open-claw" ? { agent_type: 1 } : {};
+
 		// Local mode only needs session_id + workspace_path, remote mode needs sandbox_id too
 		const requestBody =
 			codeAgentState.type === "local"
 				? {
 						session_id: request.sessionId,
 						workspace_path: request.workspacePath ?? "",
+						...agentTypePayload,
 					}
 				: {
 						sandbox_id: request.sandboxId,
 						session_id: request.sessionId,
 						workspace_path: request.workspacePath ?? "",
+						...agentTypePayload,
 					};
 
 		const kyInstance = await getCodeAgentKy();
