@@ -5,6 +5,7 @@ import { type ListSkillsResponse } from "$lib/api/skills/base-apis";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
 import type { ChatMessage } from "$lib/types/chat";
+import { clone } from "$lib/utils/clone";
 import {
 	type CodeAgentMetadata,
 	type CodeAgentType,
@@ -17,7 +18,6 @@ import { persistedClaudeCodeSandboxState } from "./claude-code-sandbox-state.sve
 import { codeAgentState } from "./code-agent-state.svelte";
 import { BUILTIN_SKILLS } from "./constant";
 import { persistedLocalClaudeCodeSessionsState } from "./local-claude-code-sandbox-state.svelte";
-import { clone } from "$lib/utils/clone";
 
 export interface ClaudeCodeSandboxInfo {
 	sandboxId: string;
