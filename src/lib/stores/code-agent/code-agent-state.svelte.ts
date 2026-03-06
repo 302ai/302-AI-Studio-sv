@@ -335,7 +335,7 @@ class CodeAgentState {
 
 	get currentWorkspacePath(): string {
 		return match(this.currentAgentId)
-			.with("claude-code", () => claudeCodeAgentState.currentWorkspacePath)
+			.with("claude-code", "open-claw", () => claudeCodeAgentState.currentWorkspacePath)
 			.otherwise(() => "");
 	}
 
