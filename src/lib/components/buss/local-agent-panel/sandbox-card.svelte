@@ -22,6 +22,7 @@
 	let isSandboxLoading = $derived(localEnvState.sandboxStarting);
 	let podmanInstalled = $derived(localEnvState.podmanInstalled);
 	let healthStatus = $derived(localEnvState.sandboxHealthStatus);
+	let openClawHealthStatus = $derived(localEnvState.openClawHealthStatus);
 	let sandboxLogs = $derived(localEnvState.sandboxLogs);
 	let sandboxFailed = $derived(localEnvState.sandboxFailed);
 	let fileDirectory = $state("");
@@ -45,6 +46,11 @@
 		!sandboxRunning
 			? { status: "gray" as const, text: m.local_platform_unknown() }
 			: getHealthStatusProps(healthStatus),
+	);
+	let openClawHealthProps = $derived(
+		!sandboxRunning
+			? { status: "gray" as const, text: m.local_platform_unknown() }
+			: getHealthStatusProps(openClawHealthStatus),
 	);
 
 	async function handleStartSandbox() {
@@ -95,6 +101,17 @@
 					status={healthProps.status}
 					text={healthProps.text}
 					showWarning={healthStatus === "unhealthy"}
+					warningTooltip={m.local_platform_try_restart()}
+				/>
+			</div>
+			<div class="flex items-center gap-3">
+				<Label class="text-muted-foreground min-w-16 font-normal"
+					>{m.local_platform_open_claw()}</Label
+				>
+				<StatusIndicator
+					status={openClawHealthProps.status}
+					text={openClawHealthProps.text}
+					showWarning={openClawHealthStatus === "unhealthy"}
 					warningTooltip={m.local_platform_try_restart()}
 				/>
 			</div>

@@ -17,6 +17,12 @@ class CodeAgentSendMessageButtonState {
 
 	showLackOfDiskDialog = $state(false);
 	isChecking = $state(false);
+	isOpenClawSendDisabled = $derived.by(
+		() =>
+			codeAgentState.type === "local" &&
+			codeAgentState.currentAgentId === "open-claw" &&
+			localEnvState.openClawHealthStatus === "unhealthy",
+	);
 
 	/**
 	 * Ensures the local sandbox is ready for use in local mode
@@ -29,6 +35,10 @@ class CodeAgentSendMessageButtonState {
 	async ensureLocalSandboxReady(): Promise<{ isOk: boolean; error?: string }> {
 		if (codeAgentState.type !== "local") {
 			return { isOk: true };
+		}
+
+		if (this.isOpenClawSendDisabled) {
+			return { isOk: false };
 		}
 
 		const startedChecking = !this.isChecking;

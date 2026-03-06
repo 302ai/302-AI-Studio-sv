@@ -343,13 +343,20 @@ if (process.contextIsolated) {
 				callback: (data: {
 					isOk: boolean;
 					isHealth: boolean;
+					isOcHealth?: boolean;
 					error?: string;
 					timestamp: number;
 				}) => void,
 			) => {
 				const listener = (
 					_: unknown,
-					data: { isOk: boolean; isHealth: boolean; error?: string; timestamp: number },
+					data: {
+						isOk: boolean;
+						isHealth: boolean;
+						isOcHealth?: boolean;
+						error?: string;
+						timestamp: number;
+					},
 				) => callback(data);
 				ipcRenderer.on("local-sandbox-health-check", listener);
 				return () => ipcRenderer.removeListener("local-sandbox-health-check", listener);

@@ -116,6 +116,7 @@ declare global {
 				callback: (data: {
 					isOk: boolean;
 					isHealth: boolean;
+					isOcHealth?: boolean;
 					error?: string;
 					timestamp: number;
 				}) => void,

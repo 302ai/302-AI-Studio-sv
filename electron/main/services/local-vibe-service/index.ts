@@ -1177,11 +1177,16 @@ export class LocalVibeService {
 	private async checkLocalSandboxHealth(): Promise<{
 		isOk: boolean;
 		isHealth: boolean;
+		isOcHealth?: boolean;
 		error?: string;
 	}> {
 		try {
-			await getLocalSandboxHealthStatus();
-			return { isOk: true, isHealth: true };
+			const response = await getLocalSandboxHealthStatus();
+			return {
+				isOk: true,
+				isHealth: response.status === "ok",
+				isOcHealth: response.oc_status ? response.oc_status === "ok" : undefined,
+			};
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			// Suppress error logging if operating (starting/stopping) or if it's a connection error
