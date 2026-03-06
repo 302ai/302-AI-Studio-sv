@@ -9,6 +9,7 @@ import { isCommandNotFound } from "@electron/main/utils/cmd";
 import { exec, spawn, type SpawnOptions } from "child_process";
 import { app, shell, type IpcMainInvokeEvent } from "electron";
 import { isNull } from "es-toolkit/predicate";
+import { get, set } from "es-toolkit/compat";
 import fs from "fs";
 import { cp, readdir } from "fs/promises";
 import getPort from "get-port";
@@ -416,7 +417,7 @@ export class LocalVibeService {
 				const config = JSON.parse(JSON.stringify(OPENCLAW_DEFAULT_CONFIG));
 
 				if (apiKey) {
-					config.models.providers.ai302.apiKey = apiKey;
+					set(config, "models.providers.ai302.apiKey", apiKey);
 				}
 
 				await this._mergeModelsIntoOpenclawConfig(config);
@@ -2530,13 +2531,16 @@ export class LocalVibeService {
 				);
 
 				if (filteredModels.length > 0) {
-					if (!config.agents) config.agents = {};
-					if (!config.agents.defaults) config.agents.defaults = {};
-					if (!config.agents.defaults.models) config.agents.defaults.models = {};
+					// Ensure nested path exists using set
+					if (!get(config, "agents.defaults.models")) {
+						set(config, "agents.defaults.models", {});
+					}
+
+					// Get existing models using es-toolkit get
+					const existingModels = get(config, "agents.defaults.models") as Record<string, unknown>;
 
 					// Clear all ai302-prefixed models before adding new ones
 					// Preserve models with other prefixes
-					const existingModels = config.agents.defaults.models;
 					// eslint-disable-next-line @typescript-eslint/no-explicit-any
 					const nonAi302Models: Record<string, any> = {};
 
@@ -2547,12 +2551,14 @@ export class LocalVibeService {
 					}
 
 					// Replace models with only non-ai302 models
-					config.agents.defaults.models = nonAi302Models;
+					set(config, "agents.defaults.models", nonAi302Models);
 
 					// Add fresh ai302 models
+					const newModels = { ...nonAi302Models };
 					filteredModels.forEach((m) => {
-						config.agents.defaults.models[`ai302/${m.id}`] = {};
+						newModels[`ai302/${m.id}`] = {};
 					});
+					set(config, "agents.defaults.models", newModels);
 				}
 			}
 		} catch (error) {
