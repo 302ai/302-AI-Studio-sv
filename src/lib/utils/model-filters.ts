@@ -19,15 +19,23 @@ function isModelFeatured(model: Model): boolean {
  * 获取过滤后的模型列表
  * @param models - 模型列表
  * @param enabledOnly - 是否只返回已启用的模型（默认 false）
+ * @param openaiCompatible - 是否返回openai规范的模型（默认 false）
  * @returns 过滤后的模型列表
  * @description 对于 302AI provider 的模型，只返回 isFeatured === true 或 isAddedByUser === true 的模型；其他 provider 不应用此过滤
  */
-export function getFilteredModels(models: Model[], enabledOnly: boolean = false): Model[] {
+export function getFilteredModels(
+	models: Model[],
+	enabledOnly: boolean = false,
+	openaiCompatible: boolean = false,
+): Model[] {
 	return models.filter((m) => {
 		if (enabledOnly && !m.enabled) return false;
 		// 对于 302AI provider 的模型，应用过滤条件：只显示 isFeatured === true 或 isAddedByUser === true 的模型
 		if (m.providerId === "302AI") {
-			return isModelFeatured(m) || isModelAddedByUser(m);
+			return (
+				(isModelFeatured(m) || isModelAddedByUser(m)) &&
+				(!openaiCompatible || m.openai_compatible === openaiCompatible)
+			);
 		}
 		// 其他 provider 不应用过滤条件，返回所有模型
 		return true;

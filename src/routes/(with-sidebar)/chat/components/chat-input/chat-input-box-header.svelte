@@ -14,6 +14,9 @@
 	import CodeAgentPanel from "../code-agent/code-agent-panel.svelte";
 	import AgentClassToggle from "./agent-class-toggle.svelte";
 
+	let { onIsVibeChange } = $props<{
+		onIsVibeChange: (isVibe: boolean) => void;
+	}>();
 	let selectedMode = $derived(codeAgentState.enabled ? "vibe" : "chat");
 
 	const modeOptions = $derived([
@@ -42,6 +45,7 @@
 
 	function handleModeSelect(key: string) {
 		const isVibe = key === "vibe";
+		onIsVibeChange(isVibe);
 		codeAgentState.updateEnabled(isVibe);
 
 		// 切换到聊天模式时，自动删除超出限制的附件（保留最新的）
