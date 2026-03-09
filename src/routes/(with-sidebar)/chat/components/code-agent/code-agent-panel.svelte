@@ -175,7 +175,9 @@
 
 {#snippet configurationPanel()}
 	<div class="w-[500px]">
-		<div class="flex flex-col gap-y-4 rounded-[10px] bg-background p-4">
+		<div
+			class="flex flex-col gap-y-4 rounded-[10px] bg-background p-4 max-h-[500px] overflow-y-auto"
+		>
 			{#if codeAgentState.type === "local"}
 				<div class="rounded-lg border p-4 space-y-4">
 					<PodmanCard isOpen={false} onInstall={handleInstall} />

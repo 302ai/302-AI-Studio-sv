@@ -82,8 +82,8 @@
 					<AccordionContent class="pb-0 pt-2 space-y-2">
 						<div class="rounded-lg border p-4 space-y-4">
 							<!-- <div>
-							<span class={cn("size-2 rounded-full", statusColorClass)}></span>
-						</div> -->
+								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
+								</div> -->
 							<!-- bind:value={tempAppid} -->
 							<SettingInputField
 								label={m.open_claw_appid()}
