@@ -803,6 +803,7 @@
 	"label_tab_code": "Code",
 	"label_tab_file": "Files",
 	"label_tab_terminal": "Terminal",
+	"label_tab_manage": "Manage",
 	"label_tab_taskboard": "Taskboard",
 	"taskboard_title": "AI Taskboard",
 	"taskboard_subtitle": "Add tasks during execution; drag to reorder pending tasks; auto-check on completion",

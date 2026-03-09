@@ -265,7 +265,7 @@
 				{ id: TAB_PREVIEW, label: m.label_tab_preview() },
 				{ id: TAB_CODE, label: m.label_tab_file() },
 				{ id: TAB_TERMINAL, label: m.label_tab_terminal() },
-				{ id: TAB_OPENCLAW_WEBUI, label: "WebUI" },
+				{ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() },
 			];
 
 			return openClawTabs;

@@ -804,6 +804,7 @@
 	"label_tab_code": "代码",
 	"label_tab_file": "文件",
 	"label_tab_terminal": "终端",
+	"label_tab_manage": "管理",
 	"label_tab_taskboard": "任务板",
 	"taskboard_title": "AI 任务板",
 	"taskboard_subtitle": "执行中可添加任务；可拖动未开始任务排序；完成自动打勾",
