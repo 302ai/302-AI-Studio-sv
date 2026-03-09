@@ -71,10 +71,6 @@ export class OpenClawService {
 		return `http://localhost:${port}/?token=${gatewayToken || ""}`;
 	}
 
-	private restartPodman() {
-		// podman restart local-cc-api
-	}
-
 	/*
 	 */
 	async applyOpenClawChannelConfig(_event: IpcMainInvokeEvent) {
