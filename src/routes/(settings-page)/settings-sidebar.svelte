@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
@@ -135,6 +136,10 @@
 					role="tab"
 					aria-selected={isSelected}
 					tabindex={isSelected ? 0 : -1}
+					onclick={(e) => {
+						e.preventDefault();
+						goto(item.path);
+					}}
 				>
 					<span class="w-full text-right">{item.labelKey}</span>
 				</a>
