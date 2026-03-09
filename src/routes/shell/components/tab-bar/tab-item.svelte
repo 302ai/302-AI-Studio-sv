@@ -19,6 +19,7 @@
 </script>
 
 <script lang="ts">
+	import OpenClawRaw from "$lib/assets/icons/code-agent/openclaw.svg?raw";
 	import { Button } from "$lib/components/ui/button";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import { m } from "$lib/paraglide/messages.js";
@@ -127,6 +128,11 @@
 		<MessageCircleQuestionMark />
 	{:else if tabType === "skillsHub"}
 		<ShoppingBag />
+	{:else if tabType === "openClawWebUi"}
+		<span class="flex h-4 w-4 items-center justify-center [&>svg]:h-full [&>svg]:w-full">
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html OpenClawRaw}
+		</span>
 	{/if}
 {/snippet}
 
@@ -201,7 +207,7 @@
 			<ContextMenu.Separator />
 		{/if}
 
-		{#if tab.type === "aiApplications" || tab.type === "helpDocs" || tab.type === "skillsHub"}
+		{#if tab.type === "aiApplications" || tab.type === "helpDocs" || tab.type === "skillsHub" || tab.type === "openClawWebUi"}
 			<ContextMenu.Item onSelect={() => handleAiApplicationReloadIpc(tab.id)}>
 				{m.label_button_reload()}
 			</ContextMenu.Item>

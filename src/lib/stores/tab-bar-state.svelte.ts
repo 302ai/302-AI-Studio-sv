@@ -383,6 +383,16 @@ class TabBarState {
 			.with("chat", () => true)
 			.with("aiApplications", () => true)
 			.with("codeAgent", () => true)
+			.with("openClawWebUi", async () => {
+				const existingOpenClawTab = currentTabs?.find(
+					(tab) => tab.type === "openClawWebUi" && (!href || tab.href === href),
+				);
+				if (existingOpenClawTab) {
+					await tabService.handleActivateTab(existingOpenClawTab.id);
+					return false;
+				}
+				return true;
+			})
 			.with("htmlPreview", async () => {
 				// Check if a tab with the same previewId already exists
 				if (previewId) {

@@ -845,12 +845,12 @@
 			try {
 				const url = await window.electronAPI.openClawService.getOpenClawWebUiUrl();
 				if (url) {
-					await window.electronAPI.externalLinkService.openExternalLink(url);
+					await tabBarState.handleNewTab("OpenClaw", "openClawWebUi", true, url);
 				} else {
 					toast.error(m.openclaw_webui_failed_to_load());
 				}
 			} catch (error) {
-				console.error("[OpenClaw WebUI] Failed to open external link:", error);
+				console.error("[OpenClaw WebUI] Failed to open internal tab:", error);
 				toast.error(m.openclaw_webui_failed_to_load());
 			}
 			return;
