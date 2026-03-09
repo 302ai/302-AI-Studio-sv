@@ -14,6 +14,25 @@
 	let confirmDialogOpen = $state(false);
 	let applyConfigLoading = $state(false);
 
+	// 使用 Getter/Setter 代理模式处理 feishu 配置的绑定，解决派生状态只读及判空问题
+	const feishuAppId = {
+		get value() {
+			return codeAgentGlobalConfigsState.feishu.appId;
+		},
+		set value(v: string) {
+			codeAgentGlobalConfigsState.updateFeishuAppId(v);
+		},
+	};
+
+	const feishuAppSecret = {
+		get value() {
+			return codeAgentGlobalConfigsState.feishu.appSecret;
+		},
+		set value(v: string) {
+			codeAgentGlobalConfigsState.updateFeishuAppSecret(v);
+		},
+	};
+
 	async function handleConfirmDialogOk() {
 		applyConfigLoading = true;
 		try {
@@ -69,7 +88,7 @@
 							<SettingInputField
 								label={m.open_claw_appid()}
 								placeholder={m.open_claw_placeholder_appid()}
-								bind:value={codeAgentGlobalConfigsState.feishu.appId}
+								bind:value={feishuAppId.value}
 								class="[&>label]:text-label-fg"
 							/>
 							<!-- bind:value={tempAppSecret} -->
@@ -77,7 +96,7 @@
 								label={m.open_claw_app_secret()}
 								placeholder={m.open_claw_placeholder_app_secret()}
 								type="password"
-								bind:value={codeAgentGlobalConfigsState.feishu.appSecret}
+								bind:value={feishuAppSecret.value}
 								class="[&>label]:text-label-fg"
 							/>
 							<div class="flex items-center justify-between">

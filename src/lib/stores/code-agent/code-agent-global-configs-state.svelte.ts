@@ -73,6 +73,18 @@ class CodeAgentGlobalConfigsState {
 		this.#updateState({ autoDeploy: !this.autoDeploy });
 	}
 
+	updateFeishuConfig(config: { appId: string; appSecret: string }) {
+		this.#updateState({ feishu: config });
+	}
+
+	updateFeishuAppId(appId: string) {
+		this.#updateState({ feishu: { ...this.feishu, appId } });
+	}
+
+	updateFeishuAppSecret(appSecret: string) {
+		this.#updateState({ feishu: { ...this.feishu, appSecret } });
+	}
+
 	async toggleNotificationsEnabled() {
 		const newState = !this.notificationsEnabled;
 		this.#updateState({ notificationsEnabled: newState });
