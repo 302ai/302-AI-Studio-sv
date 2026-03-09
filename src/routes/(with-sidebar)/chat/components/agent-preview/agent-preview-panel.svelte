@@ -167,6 +167,19 @@
 		return LANGUAGE_MAP[ext || ""] || "text";
 	}
 
+	function resolvePreviewActiveTab(
+		availableTabs: ReadonlyArray<PreviewTab>,
+		currentTab: TabType,
+	): TabType | null {
+		if (availableTabs.length === 0) {
+			return null;
+		}
+
+		return availableTabs.some((tab) => tab.id === currentTab)
+			? currentTab
+			: (availableTabs[0].id as TabType);
+	}
+
 	// --- State ---
 	// Sync activeTab with agentPreviewState
 	let activeTab = $derived(agentPreviewState.activeTab as TabType);
@@ -255,7 +268,6 @@
 
 	// Skills-only mode: only show skills tab when no sandbox
 	const isSkillsOnlyMode = $derived(agentPreviewState.isSkillsOnlyMode);
-	const isOpenClawMode = $derived(codeAgentState.currentAgentId === "open-claw");
 
 	// Tabs definition
 	let tabs: PreviewTab[] = $derived.by(() => {
@@ -295,19 +307,9 @@
 
 	// 0. 保证当前 tab 始终落在当前模式可用的范围内
 	$effect(() => {
-		if (codeAgentState.currentAgentId === "open-claw") {
-			const validTabs = isOpenClawMode
-				? [TAB_PREVIEW, TAB_CODE, TAB_TERMINAL, TAB_OPENCLAW_WEBUI]
-				: [TAB_CODE, TAB_TERMINAL, TAB_OPENCLAW_WEBUI];
-			if (!validTabs.includes(activeTab)) {
-				agentPreviewState.setActiveTab(isOpenClawMode ? TAB_PREVIEW : TAB_CODE);
-			}
-			return;
-		}
-
-		// When there's no sandbox, ensure we're on a valid tab
-		if (!currentSandboxId && activeTab !== TAB_SKILLS && activeTab !== TAB_TASKBOARD) {
-			agentPreviewState.setActiveTab(TAB_SKILLS);
+		const normalizedTab = resolvePreviewActiveTab(tabs, activeTab);
+		if (normalizedTab && normalizedTab !== activeTab) {
+			agentPreviewState.setActiveTab(normalizedTab);
 		}
 	});
 
