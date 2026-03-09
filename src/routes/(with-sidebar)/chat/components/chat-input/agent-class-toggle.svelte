@@ -1,9 +1,9 @@
 <script lang="ts">
+	import OpenClawRaw from "$lib/assets/icons/code-agent/openclaw.svg?raw";
 	import { SegButton } from "$lib/components/buss/settings";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { cn } from "$lib/utils";
 	import ClaudeCodeRaw from "@lobehub/icons-static-svg/icons/claudecode.svg?raw";
-	import OpenClawRaw from "@lobehub/icons-static-svg/icons/openclaw.svg?raw";
 
 	function handleAgentSelect(key: string) {
 		codeAgentState.updateCurrentAgentId(key as "claude-code" | "open-claw");
