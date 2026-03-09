@@ -1354,7 +1354,7 @@
 	"local_platform_installed": "已安装",
 	"local_platform_not_installed": "未安装",
 	"local_platform_health_status": "健康状态",
-	"local_platform_open_claw": "open-claw",
+	"local_platform_open_claw": "OpenClaw",
 	"local_platform_healthy": "健康",
 	"local_platform_unhealthy": "异常",
 	"local_platform_try_restart": "尝试重新启动",

@@ -271,7 +271,6 @@
 
 	// Tabs definition
 	let tabs: PreviewTab[] = $derived.by(() => {
-		// open-claw 远程模式只显示文件和终端；本地模式额外放开预览
 		if (codeAgentState.currentAgentId === "open-claw") {
 			const openClawTabs: PreviewTab[] = [
 				{ id: TAB_PREVIEW, label: m.label_tab_preview() },
@@ -299,6 +298,7 @@
 			t.push({ id: TAB_TERMINAL, label: m.label_tab_terminal() });
 			t.push({ id: TAB_SKILLS, label: "Skills" });
 			t.push({ id: TAB_TASKBOARD, label: m.label_tab_taskboard() });
+			t.push({ id: TAB_OPENCLAW_WEBUI, label: "WebUI" });
 		}
 		return t;
 	});
