@@ -33,6 +33,24 @@
 		},
 	};
 
+	const dingtalkClientId = {
+		get value() {
+			return codeAgentGlobalConfigsState.dingtalk.clientId;
+		},
+		set value(v: string) {
+			codeAgentGlobalConfigsState.updateDingtalkClientId(v);
+		},
+	};
+
+	const dingtalkClientSecret = {
+		get value() {
+			return codeAgentGlobalConfigsState.dingtalk.clientSecret;
+		},
+		set value(v: string) {
+			codeAgentGlobalConfigsState.updateDingtalkClientSecret(v);
+		},
+	};
+
 	async function handleConfirmDialogOk() {
 		applyConfigLoading = true;
 		try {
@@ -108,6 +126,50 @@
 									<div class="text-muted-foreground/50">|</div>
 									<a
 										href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
+										class="text-primary hover:underline"
+										>{m.open_claw_feishu_view_deployment_tutorial()}</a
+									>
+								</div>
+							</div>
+						</div>
+					</AccordionContent>
+				</AccordionItem>
+			</Accordion>
+			<Accordion type="single" value="dingtalk" class="w-full rounded-settings-item">
+				<AccordionItem value="dingtalk" class="border-b-0">
+					<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+						<Label class=" font-normal no-underline cursor-pointer"
+							>{m.open_claw_channel_dingtalk()}</Label
+						>
+					</AccordionTrigger>
+					<AccordionContent class="pb-0 pt-2 space-y-2">
+						<div class="rounded-lg border p-4 space-y-4">
+							<!-- <div>
+								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
+								</div> -->
+							<!-- bind:value={tempAppid} -->
+							<SettingInputField
+								label={m.open_claw_dingtalk_client_id()}
+								placeholder={m.open_claw_dingtalk_placeholder_client_id()}
+								bind:value={dingtalkClientId.value}
+								class="[&>label]:text-label-fg"
+							/>
+							<!-- bind:value={tempAppSecret} -->
+							<SettingInputField
+								label={m.open_claw_dingtalk_client_secret()}
+								placeholder={m.open_claw_dingtalk_placeholder_client_secret()}
+								type="password"
+								bind:value={dingtalkClientSecret.value}
+								class="[&>label]:text-label-fg"
+							/>
+							<div class="flex items-center justify-between">
+								<div class=" text-muted-foreground flex items-center gap-2 text-xs">
+									<a href="https://open.dingtalk.com" class="text-primary hover:underline"
+										>{m.open_claw_feishu_get_id_and_secret()}</a
+									>
+									<div class="text-muted-foreground/50">|</div>
+									<a
+										href="https://studio.302.ai/zh/docs/advanced/open-claw/dingtalk"
 										class="text-primary hover:underline"
 										>{m.open_claw_feishu_view_deployment_tutorial()}</a
 									>

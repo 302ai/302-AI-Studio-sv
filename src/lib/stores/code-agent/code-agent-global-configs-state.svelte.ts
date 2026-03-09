@@ -11,6 +11,7 @@ function getInitialData() {
 		notificationsEnabled: false,
 		lastVibeMode: "remote" as const,
 		feishu: { appId: "", appSecret: "" },
+		dingtalk: { clientId: "", clientSecret: "" },
 	};
 	return initialData;
 }
@@ -30,6 +31,9 @@ class CodeAgentGlobalConfigsState {
 	isHydrated = $derived(persistedCodeAgentGlobalConfigsState.isHydrated);
 	feishu = $derived(
 		persistedCodeAgentGlobalConfigsState.current.feishu ?? { appId: "", appSecret: "" },
+	);
+	dingtalk = $derived(
+		persistedCodeAgentGlobalConfigsState.current.dingtalk ?? { clientId: "", clientSecret: "" },
 	);
 
 	constructor() {
@@ -83,6 +87,14 @@ class CodeAgentGlobalConfigsState {
 
 	updateFeishuAppSecret(appSecret: string) {
 		this.#updateState({ feishu: { ...this.feishu, appSecret } });
+	}
+
+	updateDingtalkClientId(clientId: string) {
+		this.#updateState({ dingtalk: { ...this.dingtalk, clientId } });
+	}
+
+	updateDingtalkClientSecret(clientSecret: string) {
+		this.#updateState({ dingtalk: { ...this.dingtalk, clientSecret } });
 	}
 
 	async toggleNotificationsEnabled() {

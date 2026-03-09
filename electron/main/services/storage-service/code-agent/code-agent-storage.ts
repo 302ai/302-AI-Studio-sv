@@ -47,6 +47,10 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 				appId: "",
 				appSecret: "",
 			},
+			dingtalk: {
+				clientId: "",
+				clientSecret: "",
+			},
 		};
 		try {
 			const data = await this.getItemInternal("code-agent-global-configs");

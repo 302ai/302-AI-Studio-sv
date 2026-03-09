@@ -79,11 +79,13 @@ export class OpenClawService {
 	 */
 	async applyOpenClawChannelConfig(_event: IpcMainInvokeEvent) {
 		const {
-			data: { feishu },
+			data: { feishu, dingtalk },
 		} = await codeAgentGlobalConfigsStorage.getGlobalConfigs();
 
 		await this.setOpenClawConfig("channels.feishu.appId", feishu.appId);
 		await this.setOpenClawConfig("channels.feishu.appSecret", feishu.appSecret);
+		await this.setOpenClawConfig("channels.dingtalk.clientId", dingtalk.clientId);
+		await this.setOpenClawConfig("channels.dingtalk.clientSecret", dingtalk.clientSecret);
 	}
 }
 
