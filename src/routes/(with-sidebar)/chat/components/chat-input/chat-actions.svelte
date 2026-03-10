@@ -554,11 +554,14 @@
 					{@render actionEnableMCP(true)}
 				{/if}
 
+				{#if codeAgentState.enabled}
+					{@render actionTaskOrchestration(true)}
+				{/if}
+
 				{#if codeAgentState.enabled && codeAgentState.currentAgentId !== "open-claw"}
 					{@render actionEnablePlanMode(true)}
 					{@render actionEnableSkills(true)}
 					{@render actionEnabledAgentThinking(true)}
-					{@render actionTaskOrchestration(true)}
 				{:else if !codeAgentState.enabled}
 					{@render actionSetParameters(true)}
 				{/if}
@@ -590,11 +593,14 @@
 				{@render actionEnableMCP()}
 			{/if}
 
+			{#if codeAgentState.enabled}
+				{@render actionTaskOrchestration()}
+			{/if}
+
 			{#if codeAgentState.enabled && codeAgentState.currentAgentId !== "open-claw"}
 				{@render actionEnablePlanMode()}
 				{@render actionEnableSkills()}
 				{@render actionEnabledAgentThinking()}
-				{@render actionTaskOrchestration()}
 			{:else if !codeAgentState.enabled}
 				{@render actionSetParameters()}
 			{/if}
