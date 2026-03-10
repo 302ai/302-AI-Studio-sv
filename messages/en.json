@@ -24,6 +24,7 @@
 	"label_button_default": "Default",
 	"label_button_new_tab": "Open a new tab",
 	"label_button_open_in_new_tab": "Open in new tab",
+	"label_button_open_in_browser": "Open in Default Browser",
 	"label_button_ultra_wide": "Ultra Wide",
 	"label_button_wide": "Wide",
 	"language": "Language",

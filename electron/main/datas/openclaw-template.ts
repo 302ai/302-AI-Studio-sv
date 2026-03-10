@@ -88,7 +88,6 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 				source: "npm",
 				spec: "@openclaw/feishu",
 				installPath: "/home/user/.openclaw/extensions/feishu",
-				installedAt: "2026-03-03T10:30:40.123Z",
 			},
 		},
 	},

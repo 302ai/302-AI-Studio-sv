@@ -42,6 +42,7 @@
 	import { onDestroy } from "svelte";
 
 	const { handleAiApplicationReloadIpc } = window.electronAPI.aiApplicationService;
+	const { openExternalLink } = window.electronAPI.externalLinkService;
 
 	const {
 		tab,
@@ -103,6 +104,10 @@
 				threadId: tab.threadId,
 			});
 		}
+	};
+
+	const handleOpenInBrowser = async () => {
+		await openExternalLink(tab.href);
 	};
 </script>
 
@@ -211,6 +216,9 @@
 			<ContextMenu.Item onSelect={() => handleAiApplicationReloadIpc(tab.id)}>
 				{m.label_button_reload()}
 			</ContextMenu.Item>
+			<ContextMenu.Item onSelect={handleOpenInBrowser}>
+				{m.label_button_open_in_browser()}
+			</ContextMenu.Item>
 			<ContextMenu.Separator />
 		{/if}
 
@@ -251,12 +259,6 @@
 				{m.label_button_move_tab_into_new_window()}
 			</ContextMenu.Item>
 		{/if}
-
-		<!-- <ContextMenu.Separator />
-
-		<ContextMenu.Item onSelect={() => {}}>
-			{m.label_button_incognito_model()}
-		</ContextMenu.Item> -->
 
 		<ContextMenu.Separator />
 
