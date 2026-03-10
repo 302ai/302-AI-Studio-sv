@@ -1185,7 +1185,7 @@ export class LocalVibeService {
 			return {
 				isOk: true,
 				isHealth: response.status === "ok",
-				isOcHealth: response.oc_status ? response.oc_status === "ok" : undefined,
+				isOcHealth: response.oc_status === "ok",
 			};
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);

@@ -67,6 +67,10 @@ class LocalEnvState {
 	sandboxLogs = $state<string[]>([]);
 	sandboxFailed = $state(false);
 
+	// OpenClaw startup grace period
+	private ocStartupGraceUntil: number = 0;
+	private readonly OC_STARTUP_GRACE_PERIOD_MS = 60000;
+
 	// WSL restart required notification
 	wslRestartRequired = $state<{
 		reason: string;
@@ -279,6 +283,10 @@ class LocalEnvState {
 				this.sandboxRunning = true;
 				this.broadcastSandboxState({ running: true });
 				this.sandboxHealthStatus = "unknown";
+				this.openClawHealthStatus = "unknown";
+
+				// Container started, internal services need time. Start grace period.
+				this.ocStartupGraceUntil = Date.now() + this.OC_STARTUP_GRACE_PERIOD_MS;
 
 				// Wait for the first health check result
 				await this.waitForHealthCheck(100);
@@ -320,6 +328,7 @@ class LocalEnvState {
 				this.broadcastSandboxState({ running: false });
 				this.sandboxHealthStatus = "unknown";
 				this.openClawHealthStatus = "unknown";
+				this.ocStartupGraceUntil = 0;
 			}
 
 			return result.isOk;
@@ -520,7 +529,7 @@ class LocalEnvState {
 				(data: {
 					isOk: boolean;
 					isHealth: boolean;
-					isOcHealth?: boolean;
+					isOcHealth: boolean;
 					error?: string;
 					timestamp: number;
 				}) => {
@@ -537,11 +546,22 @@ class LocalEnvState {
 						} else {
 							this.sandboxHealthStatus = "unhealthy";
 						}
-						this.openClawHealthStatus =
-							data.isOcHealth === undefined ? "unknown" : data.isOcHealth ? "healthy" : "unhealthy";
+
+						if (data.isOcHealth) {
+							this.openClawHealthStatus = "healthy";
+							this.ocStartupGraceUntil = 0;
+						} else {
+							// If during startup or within grace period, treat as unknown instead of unhealthy
+							if (this.sandboxStarting || Date.now() < this.ocStartupGraceUntil) {
+								this.openClawHealthStatus = "unknown";
+							} else {
+								this.openClawHealthStatus = "unhealthy";
+							}
+						}
 					} else {
 						this.sandboxHealthStatus = "unknown";
 						this.openClawHealthStatus = "unknown";
+						this.ocStartupGraceUntil = 0;
 					}
 					console.log(
 						"[LocalEnvState] Sandbox health check:",
@@ -558,11 +578,18 @@ class LocalEnvState {
 			this.unsubscribeSandboxState = window.electronAPI.onLocalSandboxStateChanged(
 				(data: { starting?: boolean; running?: boolean }) => {
 					if (data.starting !== undefined) {
+						// If another tab reports starting changed from true to false, start grace period
+						if (this.sandboxStarting && !data.starting) {
+							this.ocStartupGraceUntil = Date.now() + this.OC_STARTUP_GRACE_PERIOD_MS;
+						}
 						this.sandboxStarting = data.starting;
 						console.log("[LocalEnvState] Sandbox starting state changed:", data.starting);
 					}
 					if (data.running !== undefined) {
 						this.sandboxRunning = data.running;
+						if (!data.running) {
+							this.ocStartupGraceUntil = 0;
+						}
 						console.log("[LocalEnvState] Sandbox running state changed:", data.running);
 					}
 				},

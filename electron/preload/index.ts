@@ -343,7 +343,7 @@ if (process.contextIsolated) {
 				callback: (data: {
 					isOk: boolean;
 					isHealth: boolean;
-					isOcHealth?: boolean;
+					isOcHealth: boolean;
 					error?: string;
 					timestamp: number;
 				}) => void,
@@ -353,7 +353,7 @@ if (process.contextIsolated) {
 					data: {
 						isOk: boolean;
 						isHealth: boolean;
-						isOcHealth?: boolean;
+						isOcHealth: boolean;
 						error?: string;
 						timestamp: number;
 					},

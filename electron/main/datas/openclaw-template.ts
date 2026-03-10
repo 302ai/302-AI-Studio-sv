@@ -1,8 +1,4 @@
 export const OPENCLAW_DEFAULT_CONFIG = {
-	meta: {
-		lastTouchedVersion: "2026.3.2",
-		lastTouchedAt: "2026-03-04T02:39:57.108Z",
-	},
 	update: {
 		checkOnStart: false,
 	},
@@ -26,8 +22,8 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 						reasoning: false,
 						input: ["text", "image"],
 						cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-						contextWindow: 320000,
-						maxTokens: 320000,
+						contextWindow: 202752,
+						maxTokens: 16384,
 					},
 				],
 			},

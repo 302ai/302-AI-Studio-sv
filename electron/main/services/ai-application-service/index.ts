@@ -158,7 +158,6 @@ export class AiApplicationService {
 	async handleAiApplicationReloadIpc(_event: IpcMainInvokeEvent, tabId: string): Promise<void> {
 		const tabView = tabService.getTabView(tabId);
 		if (isUndefined(tabView)) return;
-
 		tabView.webContents.reload();
 	}
 

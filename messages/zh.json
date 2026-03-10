@@ -3,6 +3,7 @@
 	"app_slogan": "嗨，准备好和我一起探索世界了吗?",
 	"apply": "应用",
 	"code_agent_one_click_install": "一键安装",
+	"code_agent_one_click_start": "启动本地容器",
 	"auto_inherit": "自动继承",
 	"auto_update": "自动更新",
 	"check_update": "检查更新",
@@ -1388,6 +1389,6 @@
 	"local_platform_checking": "检测中",
 	"local_platform_unknown": "未知",
 	"title_local_mode_description": "面向复杂任务，使用{type} ",
-	"openclaw_webui_failed_to_load": "无法加载 OpenClaw WebUI 页面",
+	"openclaw_webui_failed_to_load": "无法加载 OpenClaw 管理页面",
 	"openclaw_webui_ensure_running": "请确保 OpenClaw 服务正在运行"
 }

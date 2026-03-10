@@ -109,6 +109,15 @@
 	const handleOpenInBrowser = async () => {
 		await openExternalLink(tab.href);
 	};
+
+	const handleRefresh = async () => {
+		if (tab.type === "openClawWebUi") {
+			await window.electronAPI.openClawService.handleOpenClawWebUiReloadIpc(tab.id);
+			return;
+		}
+
+		await handleAiApplicationReloadIpc(tab.id);
+	};
 </script>
 
 {#snippet tabIcon()}
@@ -213,7 +222,7 @@
 		{/if}
 
 		{#if tab.type === "aiApplications" || tab.type === "helpDocs" || tab.type === "skillsHub" || tab.type === "openClawWebUi"}
-			<ContextMenu.Item onSelect={() => handleAiApplicationReloadIpc(tab.id)}>
+			<ContextMenu.Item onSelect={handleRefresh}>
 				{m.label_button_reload()}
 			</ContextMenu.Item>
 			<ContextMenu.Item onSelect={handleOpenInBrowser}>

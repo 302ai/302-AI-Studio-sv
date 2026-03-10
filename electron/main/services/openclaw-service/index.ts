@@ -1,10 +1,20 @@
 import { type IpcMainInvokeEvent } from "electron";
-import { get, set } from "es-toolkit/compat";
+import { get, isUndefined, set } from "es-toolkit/compat";
 import fs from "fs/promises";
 import { localVibeService } from "../local-vibe-service";
 import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
+import { tabService } from "../tab-service";
 
 export class OpenClawService {
+	private async _getOpenClawWebUiUrl(): Promise<string | null> {
+		const port = localVibeService.getRuntimeOpenClawPort();
+		if (!port) return null;
+
+		const gatewayToken = await this.getOpenClawConfig<string>("gateway.auth.token");
+
+		return `http://localhost:${port}/?token=${gatewayToken || ""}`;
+	}
+
 	/**
 	 * Get OpenClaw configuration from config file
 	 * @param path - Optional dot-notation path to a specific config property (e.g., "gateway.auth.token")
@@ -63,15 +73,11 @@ export class OpenClawService {
 	}
 
 	async getOpenClawWebUiUrl(_event: IpcMainInvokeEvent) {
-		const port = localVibeService.getRuntimeOpenClawPort();
-		if (!port) return null;
-
-		const gatewayToken = await this.getOpenClawConfig<string>("gateway.auth.token");
-
-		return `http://localhost:${port}/?token=${gatewayToken || ""}`;
+		return await this._getOpenClawWebUiUrl();
 	}
 
-	/*
+	/**
+	 * Apply channel configurations to OpenClaw
 	 */
 	async applyOpenClawChannelConfig(_event: IpcMainInvokeEvent) {
 		const {
@@ -82,6 +88,15 @@ export class OpenClawService {
 		await this.setOpenClawConfig("channels.feishu.appSecret", feishu.appSecret);
 		await this.setOpenClawConfig("channels.dingtalk.clientId", dingtalk.clientId);
 		await this.setOpenClawConfig("channels.dingtalk.clientSecret", dingtalk.clientSecret);
+	}
+
+	async handleOpenClawWebUiReloadIpc(_event: IpcMainInvokeEvent, tabId: string) {
+		const tabView = tabService.getTabView(tabId);
+		if (isUndefined(tabView)) return;
+		const url = await this._getOpenClawWebUiUrl();
+		console.log("[OpenClawService] Reloading OpenClaw Web UI with URL:", url);
+		if (!url) return;
+		tabView.webContents.loadURL(url);
 	}
 }
 

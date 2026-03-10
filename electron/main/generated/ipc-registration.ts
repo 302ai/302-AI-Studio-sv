@@ -522,6 +522,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("openClawService:applyOpenClawChannelConfig", (event) =>
 		openClawService.applyOpenClawChannelConfig(event),
 	);
+	ipcMain.handle("openClawService:handleOpenClawWebUiReloadIpc", (event, tabId) =>
+		openClawService.handleOpenClawWebUiReloadIpc(event, tabId),
+	);
 
 	// providerService service registration
 	ipcMain.handle("providerService:handle302AIProviderChange", (event, apiKey) =>
@@ -734,6 +737,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("notificationService:requestPermission");
 	ipcMain.removeHandler("openClawService:getOpenClawWebUiUrl");
 	ipcMain.removeHandler("openClawService:applyOpenClawChannelConfig");
+	ipcMain.removeHandler("openClawService:handleOpenClawWebUiReloadIpc");
 	ipcMain.removeHandler("providerService:handle302AIProviderChange");
 	ipcMain.removeHandler("providerService:get302AIApiKey");
 	ipcMain.removeHandler("threadService:addThread");
