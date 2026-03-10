@@ -11,8 +11,10 @@ export class OpenClawService {
 		if (!port) return null;
 
 		const gatewayToken = await this.getOpenClawConfig<string>("gateway.auth.token");
+		const url = `http://localhost:${port}/?token=${gatewayToken || ""}`;
+		console.log("[OpenClawService] WebUI URL:", url);
 
-		return `http://localhost:${port}/?token=${gatewayToken || ""}`;
+		return url;
 	}
 
 	/**

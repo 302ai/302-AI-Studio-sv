@@ -323,10 +323,15 @@ export class LocalVibeService {
 	async getSandboxStatus(_event: IpcMainInvokeEvent): Promise<{
 		isRunning: boolean;
 		isOperating: boolean;
+		isOcHealth: boolean;
 	}> {
 		// sandboxStatus === 'running': verify with an actual health check
 		const result = await this.checkLocalSandboxHealth();
-		return { isRunning: result.isHealth, isOperating: this.isOperating };
+		return {
+			isRunning: result.isHealth,
+			isOperating: this.isOperating,
+			isOcHealth: result.isOcHealth,
+		};
 	}
 
 	/**
@@ -1177,7 +1182,7 @@ export class LocalVibeService {
 	private async checkLocalSandboxHealth(): Promise<{
 		isOk: boolean;
 		isHealth: boolean;
-		isOcHealth?: boolean;
+		isOcHealth: boolean;
 		error?: string;
 	}> {
 		try {
@@ -1194,7 +1199,7 @@ export class LocalVibeService {
 			if (!this.isOperating && !this.isExpectedSandboxHealthConnectionError(errorMessage)) {
 				console.error("[LocalVibeService] Local sandbox health check failed:", errorMessage);
 			}
-			return { isOk: true, isHealth: false, error: errorMessage };
+			return { isOk: true, isHealth: false, isOcHealth: false, error: errorMessage };
 		}
 	}
 

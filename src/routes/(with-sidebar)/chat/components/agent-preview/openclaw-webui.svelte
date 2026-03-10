@@ -12,24 +12,46 @@
 	let isLoading = $state(true);
 
 	const loadUrl = async () => {
-		isLoading = true;
 		try {
-			// Get the OpenClaw WebUI URL from the main process
 			const url = await window.electronAPI.openClawService.getOpenClawWebUiUrl();
 			webUiUrl = url;
 		} catch (error) {
 			console.error("[OpenClaw WebUI] Failed to get URL:", error);
-		} finally {
-			isLoading = false;
 		}
 	};
 
-	onMount(() => {
-		loadUrl();
+	onMount(async () => {
+		// startSandboxListening() registers broadcast listeners and returns the
+		// syncInitialState() promise — await it alongside loadUrl() so isLoading
+		// stays true until we know both the sandbox state and the webui URL.
+		const syncPromise = localEnvState.startSandboxListening();
+		await Promise.all([syncPromise, loadUrl()]);
+		isLoading = false;
+	});
+
+	// Keep track of the last health status to detect when it transitions to healthy
+	let previousHealthStatus = $state<string>("unknown");
+
+	$effect(() => {
+		const currentStatus = localEnvState.openClawHealthStatus;
+
+		// If health status transitioned to healthy, re-fetch the URL.
+		// The port or token might have changed or been generated during startup.
+		if (currentStatus === "healthy" && previousHealthStatus !== "healthy") {
+			loadUrl();
+		}
+
+		previousHealthStatus = currentStatus;
 	});
 
 	const handleStartSandbox = async () => {
 		await localEnvState.startSandbox();
+	};
+
+	const handleReload = async () => {
+		isLoading = true;
+		await loadUrl();
+		isLoading = false;
 	};
 </script>
 
@@ -46,9 +68,9 @@
 {/snippet}
 
 <div class="h-full w-full bg-background relative flex flex-col">
-	{#if isLoading || localEnvState.sandboxStarting || (localEnvState.sandboxHealthStatus === "healthy" && localEnvState.openClawHealthStatus !== "healthy")}
-		<div class="flex-1 flex items-center justify-center">
-			<LoaderCircle class="h-8 w-8 animate-spin text-muted-foreground" />
+	{#if isLoading}
+		<div class="flex-1 flex flex-col items-center justify-center">
+			<LoaderCircle class="h-8 w-8 animate-spin" />
 		</div>
 	{:else if localEnvState.openClawHealthStatus === "healthy" && webUiUrl}
 		<iframe
@@ -68,11 +90,22 @@
 					<Empty.Description>{m.openclaw_webui_ensure_running()}</Empty.Description>
 				</Empty.Header>
 				<Empty.Content class="flex-row gap-4">
-					<Button onclick={handleStartSandbox} disabled={localEnvState.sandboxStarting}>
-						<Play class="h-4 w-4" />
+					{@const waitingForOpenClaw =
+						localEnvState.sandboxRunning && localEnvState.openClawHealthStatus !== "healthy"}
+					<Button
+						onclick={handleStartSandbox}
+						disabled={localEnvState.sandboxStarting || waitingForOpenClaw}
+					>
+						{#if localEnvState.sandboxStarting || waitingForOpenClaw}
+							<div class="flex-1 flex items-center justify-center">
+								<LoaderCircle class="h-8 w-8 animate-spin" />
+							</div>
+						{:else}
+							<Play class="h-4 w-4" />
+						{/if}
 						{m.code_agent_one_click_start()}
 					</Button>
-					<Button variant="secondary" onclick={loadUrl} disabled={isLoading}>
+					<Button variant="secondary" onclick={handleReload} disabled={isLoading}>
 						<RefreshCw class="h-4 w-4" />
 						{m.label_button_reload()}
 					</Button>

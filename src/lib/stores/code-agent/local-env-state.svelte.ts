@@ -239,6 +239,10 @@ class LocalEnvState {
 	 * Calls localVibeService.startPodmanMachine() and prints output with [Local Vibe] prefix
 	 */
 	async startSandbox(): Promise<boolean> {
+		// Ensure broadcast listeners are active before any state changes,
+		// so waitForHealthCheck() can receive health check results.
+		this.startSandboxListening();
+
 		toast.info(m.code_agent_local_sandbox_starting());
 		if (!this.podmanInstalled) {
 			console.error("[LocalEnvState] Cannot start sandbox: Podman not installed");
@@ -466,10 +470,14 @@ class LocalEnvState {
 			const status = (await window.electronAPI.localVibeService.getSandboxStatus()) as {
 				isRunning: boolean;
 				isOperating: boolean;
+				isOcHealth: boolean;
 			};
 			if (status.isRunning) {
 				this.sandboxRunning = true;
 				this.sandboxHealthStatus = "healthy";
+				if (status.isOcHealth) {
+					this.openClawHealthStatus = "healthy";
+				}
 			}
 			if (status.isOperating) {
 				this.sandboxStarting = true;
@@ -501,11 +509,12 @@ class LocalEnvState {
 	}
 
 	/**
-	 * Start listening to Sandbox-related broadcast channels
+	 * Start listening to Sandbox-related broadcast channels.
+	 * Returns the syncInitialState() promise so callers can await it if needed.
 	 */
-	startSandboxListening(): void {
+	startSandboxListening(): Promise<void> {
 		// Sync initial state first
-		this.syncInitialState();
+		const syncPromise = this.syncInitialState();
 
 		// Subscribe to install-log channel for sandbox-related logs
 		// This ensures real-time log updates while sandbox is starting/stopping
@@ -595,6 +604,8 @@ class LocalEnvState {
 				},
 			);
 		}
+
+		return syncPromise;
 	}
 
 	/**
@@ -644,6 +655,10 @@ class LocalEnvState {
 		error?: string;
 		wasAlreadyRunning: boolean;
 	}> {
+		// Ensure broadcast listeners are active so health check updates are received,
+		// even when called from non-UI contexts (chat-state, send-message-button-state, etc.)
+		this.startSandboxListening();
+
 		// If already starting, wait for completion (prevent concurrent starts)
 		if (this.sandboxStarting) {
 			// Wait for the current start operation to complete
