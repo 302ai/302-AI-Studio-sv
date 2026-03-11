@@ -12,6 +12,8 @@ function getInitialData() {
 		lastVibeMode: "remote" as const,
 		feishu: { appId: "", appSecret: "" },
 		dingtalk: { clientId: "", clientSecret: "" },
+		qqbot: { appId: "", clientSecret: "" },
+		wecom: { botId: "", secret: "" },
 	};
 	return initialData;
 }
@@ -35,6 +37,10 @@ class CodeAgentGlobalConfigsState {
 	dingtalk = $derived(
 		persistedCodeAgentGlobalConfigsState.current.dingtalk ?? { clientId: "", clientSecret: "" },
 	);
+	qqbot = $derived(
+		persistedCodeAgentGlobalConfigsState.current.qqbot ?? { appId: "", clientSecret: "" },
+	);
+	wecom = $derived(persistedCodeAgentGlobalConfigsState.current.wecom ?? { botId: "", secret: "" });
 
 	constructor() {
 		$effect.root(() => {
@@ -95,6 +101,22 @@ class CodeAgentGlobalConfigsState {
 
 	updateDingtalkClientSecret(clientSecret: string) {
 		this.#updateState({ dingtalk: { ...this.dingtalk, clientSecret } });
+	}
+
+	updateQqbotAppId(appId: string) {
+		this.#updateState({ qqbot: { ...this.qqbot, appId } });
+	}
+
+	updateQqbotClientSecret(clientSecret: string) {
+		this.#updateState({ qqbot: { ...this.qqbot, clientSecret } });
+	}
+
+	updateWecomBotId(botId: string) {
+		this.#updateState({ wecom: { ...this.wecom, botId } });
+	}
+
+	updateWecomSecret(secret: string) {
+		this.#updateState({ wecom: { ...this.wecom, secret } });
 	}
 
 	async toggleNotificationsEnabled() {

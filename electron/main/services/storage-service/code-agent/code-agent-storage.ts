@@ -51,6 +51,14 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 				clientId: "",
 				clientSecret: "",
 			},
+			qqbot: {
+				appId: "",
+				clientSecret: "",
+			},
+			wecom: {
+				botId: "",
+				secret: "",
+			},
 		};
 		try {
 			const data = await this.getItemInternal("code-agent-global-configs");

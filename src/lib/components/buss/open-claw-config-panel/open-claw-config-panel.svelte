@@ -14,7 +14,6 @@
 	let confirmDialogOpen = $state(false);
 	let applyConfigLoading = $state(false);
 
-	// 使用 Getter/Setter 代理模式处理 feishu 配置的绑定，解决派生状态只读及判空问题
 	const feishuAppId = {
 		get value() {
 			return codeAgentGlobalConfigsState.feishu.appId;
@@ -51,6 +50,42 @@
 		},
 	};
 
+	const qqbotAppId = {
+		get value() {
+			return codeAgentGlobalConfigsState.qqbot.appId;
+		},
+		set value(v: string) {
+			codeAgentGlobalConfigsState.updateQqbotAppId(v);
+		},
+	};
+
+	const qqbotClientSecret = {
+		get value() {
+			return codeAgentGlobalConfigsState.qqbot.clientSecret;
+		},
+		set value(v: string) {
+			codeAgentGlobalConfigsState.updateQqbotClientSecret(v);
+		},
+	};
+
+	const wecomBotId = {
+		get value() {
+			return codeAgentGlobalConfigsState.wecom.botId;
+		},
+		set value(v: string) {
+			codeAgentGlobalConfigsState.updateWecomBotId(v);
+		},
+	};
+
+	const wecomSecret = {
+		get value() {
+			return codeAgentGlobalConfigsState.wecom.secret;
+		},
+		set value(v: string) {
+			codeAgentGlobalConfigsState.updateWecomSecret(v);
+		},
+	};
+
 	async function handleConfirmDialogOk() {
 		applyConfigLoading = true;
 		try {
@@ -82,7 +117,191 @@
 	}
 </script>
 
-<Accordion type="single" value="channel-settings" class="w-full m-0">
+{#snippet feishu()}
+	<Accordion type="single" class="w-full rounded-settings-item">
+		<AccordionItem value="fei-shu" class="border-b-0">
+			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+				<Label class=" font-normal no-underline cursor-pointer"
+					>{m.open_claw_channel_feishu()}</Label
+				>
+			</AccordionTrigger>
+			<AccordionContent class="pb-0 pt-2 space-y-2">
+				<div class="rounded-lg border p-4 space-y-4">
+					<!-- <div>
+								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
+								</div> -->
+					<!-- bind:value={tempAppid} -->
+					<SettingInputField
+						label={m.open_claw_appid()}
+						placeholder={m.open_claw_placeholder_appid()}
+						bind:value={feishuAppId.value}
+						class="[&>label]:text-label-fg"
+					/>
+					<!-- bind:value={tempAppSecret} -->
+					<SettingInputField
+						label={m.open_claw_app_secret()}
+						placeholder={m.open_claw_placeholder_app_secret()}
+						type="password"
+						bind:value={feishuAppSecret.value}
+						class="[&>label]:text-label-fg"
+					/>
+					<div class="flex items-center justify-between">
+						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
+							<a href="https://open.feishu.cn/app?lang=zh-CN" class="text-primary hover:underline"
+								>{m.open_claw_feishu_get_id_and_secret()}</a
+							>
+							<div class="text-muted-foreground/50">|</div>
+							<a
+								href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
+								class="text-primary hover:underline"
+								>{m.open_claw_feishu_view_deployment_tutorial()}</a
+							>
+						</div>
+					</div>
+				</div>
+			</AccordionContent>
+		</AccordionItem>
+	</Accordion>
+{/snippet}
+
+{#snippet dingtalk()}
+	<Accordion type="single" class="w-full rounded-settings-item">
+		<AccordionItem value="dingtalk" class="border-b-0">
+			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+				<Label class=" font-normal no-underline cursor-pointer"
+					>{m.open_claw_channel_dingtalk()}</Label
+				>
+			</AccordionTrigger>
+			<AccordionContent class="pb-0 pt-2 space-y-2">
+				<div class="rounded-lg border p-4 space-y-4">
+					<!-- <div>
+								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
+								</div> -->
+					<!-- bind:value={tempAppid} -->
+					<SettingInputField
+						label={m.open_claw_dingtalk_client_id()}
+						placeholder={m.open_claw_dingtalk_placeholder_client_id()}
+						bind:value={dingtalkClientId.value}
+						class="[&>label]:text-label-fg"
+					/>
+					<!-- bind:value={tempAppSecret} -->
+					<SettingInputField
+						label={m.open_claw_dingtalk_client_secret()}
+						placeholder={m.open_claw_dingtalk_placeholder_client_secret()}
+						type="password"
+						bind:value={dingtalkClientSecret.value}
+						class="[&>label]:text-label-fg"
+					/>
+					<div class="flex items-center justify-between">
+						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
+							<a href="https://open-dev.dingtalk.com/" class="text-primary hover:underline"
+								>{m.open_claw_feishu_get_id_and_secret()}</a
+							>
+							<div class="text-muted-foreground/50">|</div>
+							<a
+								href="https://studio.302.ai/zh/docs/advanced/open-claw/dingtalk"
+								class="text-primary hover:underline"
+								>{m.open_claw_feishu_view_deployment_tutorial()}</a
+							>
+						</div>
+					</div>
+				</div>
+			</AccordionContent>
+		</AccordionItem>
+	</Accordion>
+{/snippet}
+
+{#snippet qqbot()}
+	<Accordion type="single" class="w-full rounded-settings-item">
+		<AccordionItem value="qqbot" class="border-b-0">
+			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+				<Label class=" font-normal no-underline cursor-pointer">QQ机器人</Label>
+			</AccordionTrigger>
+			<AccordionContent class="pb-0 pt-2 space-y-2">
+				<div class="rounded-lg border p-4 space-y-4">
+					<!-- <div>
+								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
+								</div> -->
+					<!-- bind:value={tempAppid} -->
+					<SettingInputField
+						label="App ID"
+						placeholder="请输入App ID"
+						bind:value={qqbotAppId.value}
+						class="[&>label]:text-label-fg"
+					/>
+					<!-- bind:value={tempAppSecret} -->
+					<SettingInputField
+						label="Client Secret"
+						placeholder="请输入Client Secret"
+						type="password"
+						bind:value={qqbotClientSecret.value}
+						class="[&>label]:text-label-fg"
+					/>
+					<div class="flex items-center justify-between">
+						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
+							<a href="https://open-dev.dingtalk.com/" class="text-primary hover:underline"
+								>{m.open_claw_feishu_get_id_and_secret()}</a
+							>
+							<div class="text-muted-foreground/50">|</div>
+							<a
+								href="https://studio.302.ai/zh/docs/advanced/open-claw/dingtalk"
+								class="text-primary hover:underline"
+								>{m.open_claw_feishu_view_deployment_tutorial()}</a
+							>
+						</div>
+					</div>
+				</div>
+			</AccordionContent>
+		</AccordionItem>
+	</Accordion>
+{/snippet}
+
+{#snippet wecom()}
+	<Accordion type="single" class="w-full rounded-settings-item">
+		<AccordionItem value="wecom" class="border-b-0">
+			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+				<Label class=" font-normal no-underline cursor-pointer">企业微信（智能机器人）</Label>
+			</AccordionTrigger>
+			<AccordionContent class="pb-0 pt-2 space-y-2">
+				<div class="rounded-lg border p-4 space-y-4">
+					<!-- <div>
+								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
+								</div> -->
+					<!-- bind:value={tempAppid} -->
+					<SettingInputField
+						label="BotId"
+						placeholder="请输入BotId"
+						bind:value={wecomBotId.value}
+						class="[&>label]:text-label-fg"
+					/>
+					<!-- bind:value={tempAppSecret} -->
+					<SettingInputField
+						label="Secret"
+						placeholder="请输入Secret"
+						type="password"
+						bind:value={wecomSecret.value}
+						class="[&>label]:text-label-fg"
+					/>
+					<div class="flex items-center justify-between">
+						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
+							<a href="https://open-dev.dingtalk.com/" class="text-primary hover:underline"
+								>{m.open_claw_feishu_get_id_and_secret()}</a
+							>
+							<div class="text-muted-foreground/50">|</div>
+							<a
+								href="https://studio.302.ai/zh/docs/advanced/open-claw/dingtalk"
+								class="text-primary hover:underline"
+								>{m.open_claw_feishu_view_deployment_tutorial()}</a
+							>
+						</div>
+					</div>
+				</div>
+			</AccordionContent>
+		</AccordionItem>
+	</Accordion>
+{/snippet}
+
+<Accordion type="single" class="w-full m-0">
 	<AccordionItem value="channel-settings" class="border-b-0">
 		<AccordionTrigger class="py-2 hover:no-underline">
 			<Label class="text-label-fg font-normal no-underline hover:underline cursor-pointer"
@@ -90,95 +309,10 @@
 			>
 		</AccordionTrigger>
 		<AccordionContent class="pb-1 pt-0 space-y-2">
-			<Accordion type="single" value="fei-shu" class="w-full rounded-settings-item">
-				<AccordionItem value="fei-shu" class="border-b-0">
-					<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-						<Label class=" font-normal no-underline cursor-pointer"
-							>{m.open_claw_channel_feishu()}</Label
-						>
-					</AccordionTrigger>
-					<AccordionContent class="pb-0 pt-2 space-y-2">
-						<div class="rounded-lg border p-4 space-y-4">
-							<!-- <div>
-								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
-								</div> -->
-							<!-- bind:value={tempAppid} -->
-							<SettingInputField
-								label={m.open_claw_appid()}
-								placeholder={m.open_claw_placeholder_appid()}
-								bind:value={feishuAppId.value}
-								class="[&>label]:text-label-fg"
-							/>
-							<!-- bind:value={tempAppSecret} -->
-							<SettingInputField
-								label={m.open_claw_app_secret()}
-								placeholder={m.open_claw_placeholder_app_secret()}
-								type="password"
-								bind:value={feishuAppSecret.value}
-								class="[&>label]:text-label-fg"
-							/>
-							<div class="flex items-center justify-between">
-								<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-									<a
-										href="https://open.feishu.cn/app?lang=zh-CN"
-										class="text-primary hover:underline">{m.open_claw_feishu_get_id_and_secret()}</a
-									>
-									<div class="text-muted-foreground/50">|</div>
-									<a
-										href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
-										class="text-primary hover:underline"
-										>{m.open_claw_feishu_view_deployment_tutorial()}</a
-									>
-								</div>
-							</div>
-						</div>
-					</AccordionContent>
-				</AccordionItem>
-			</Accordion>
-			<Accordion type="single" value="dingtalk" class="w-full rounded-settings-item">
-				<AccordionItem value="dingtalk" class="border-b-0">
-					<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-						<Label class=" font-normal no-underline cursor-pointer"
-							>{m.open_claw_channel_dingtalk()}</Label
-						>
-					</AccordionTrigger>
-					<AccordionContent class="pb-0 pt-2 space-y-2">
-						<div class="rounded-lg border p-4 space-y-4">
-							<!-- <div>
-								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
-								</div> -->
-							<!-- bind:value={tempAppid} -->
-							<SettingInputField
-								label={m.open_claw_dingtalk_client_id()}
-								placeholder={m.open_claw_dingtalk_placeholder_client_id()}
-								bind:value={dingtalkClientId.value}
-								class="[&>label]:text-label-fg"
-							/>
-							<!-- bind:value={tempAppSecret} -->
-							<SettingInputField
-								label={m.open_claw_dingtalk_client_secret()}
-								placeholder={m.open_claw_dingtalk_placeholder_client_secret()}
-								type="password"
-								bind:value={dingtalkClientSecret.value}
-								class="[&>label]:text-label-fg"
-							/>
-							<div class="flex items-center justify-between">
-								<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-									<a href="https://open-dev.dingtalk.com/" class="text-primary hover:underline"
-										>{m.open_claw_feishu_get_id_and_secret()}</a
-									>
-									<div class="text-muted-foreground/50">|</div>
-									<a
-										href="https://studio.302.ai/zh/docs/advanced/open-claw/dingtalk"
-										class="text-primary hover:underline"
-										>{m.open_claw_feishu_view_deployment_tutorial()}</a
-									>
-								</div>
-							</div>
-						</div>
-					</AccordionContent>
-				</AccordionItem>
-			</Accordion>
+			{@render feishu()}
+			{@render dingtalk()}
+			{@render qqbot()}
+			{@render wecom()}
 			<div class="flex flex-col items-end">
 				<Button class="w-24" onclick={() => (confirmDialogOpen = true)}>
 					<RefreshCw class="size-4" />

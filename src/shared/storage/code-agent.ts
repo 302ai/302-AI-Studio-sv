@@ -116,6 +116,8 @@ export const codeAgentGlobalConfigs = type({
 	lastVibeMode: "'local' | 'remote'",
 	feishu: type({ appId: "string", appSecret: "string" }),
 	dingtalk: type({ clientId: "string", clientSecret: "string" }),
+	qqbot: type({ appId: "string", clientSecret: "string" }),
+	wecom: type({ botId: "string", secret: "string" }),
 });
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
 
