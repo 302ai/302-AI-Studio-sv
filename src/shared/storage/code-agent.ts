@@ -118,6 +118,7 @@ export const codeAgentGlobalConfigs = type({
 	dingtalk: type({ clientId: "string", clientSecret: "string" }),
 	qqbot: type({ appId: "string", clientSecret: "string" }),
 	wecom: type({ botId: "string", secret: "string" }),
+	telegram: type({ botToken: "string", allowFrom: "string[]" }),
 });
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
 

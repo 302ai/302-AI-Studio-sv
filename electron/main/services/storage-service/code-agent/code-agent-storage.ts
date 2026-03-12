@@ -59,6 +59,10 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 				botId: "",
 				secret: "",
 			},
+			telegram: {
+				botToken: "",
+				allowFrom: [],
+			},
 		};
 		try {
 			const data = await this.getItemInternal("code-agent-global-configs");
