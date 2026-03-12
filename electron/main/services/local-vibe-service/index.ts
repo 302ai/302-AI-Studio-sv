@@ -1799,6 +1799,68 @@ export class LocalVibeService {
 	}
 
 	/**
+	 * Configures WSL automount options in /etc/wsl.conf inside the ai302-machine VM.
+	 * This fixes file permission issues on Windows by enabling metadata and setting proper
+	 * uid/gid/umask values for mounted Windows drives.
+	 *
+	 * Only runs on Windows. Uses `podman machine ssh` to write wsl.conf and then
+	 * runs `wsl --shutdown` to apply changes on next start.
+	 *
+	 * @returns { isOk: boolean } - isOk: operation success
+	 */
+	private async _configureWslConf(): Promise<{ isOk: boolean }> {
+		// Only run on Windows - WSL is Windows-specific
+		if (!PLATFORM.IS_WINDOWS) {
+			return { isOk: true };
+		}
+
+		console.log("[Local Vibe] Configuring WSL automount options in /etc/wsl.conf...");
+		broadcastService.broadcastChannelToAll("install-log", {
+			step: "wsl-conf-configure",
+			type: "stdout",
+			data: "Configuring WSL automount options...",
+		});
+
+		// Use podman machine ssh to write wsl.conf
+		// The SSH command runs as the core user inside the VM, so we use sudo tee to write to /etc/wsl.conf
+		// Build the wsl.conf content using single quotes to avoid escape sequence issues
+		const wslConfContent =
+			'[automount]\\noptions = "metadata,uid=1000,gid=1000,umask=022,fmask=011"';
+		const sshCommand = `echo -e '${wslConfContent}' | sudo tee /etc/wsl.conf`;
+
+		const result = await this.runCommandWithBroadcast(
+			"podman",
+			["machine", "ssh", "ai302-machine", sshCommand],
+			"wsl-conf-configure",
+		);
+
+		if (!result.isOk) {
+			console.error("[Local Vibe] Failed to configure wsl.conf:", result.output);
+			return { isOk: false };
+		}
+
+		console.log(
+			"[Local Vibe] wsl.conf written successfully, shutting down WSL to apply changes...",
+		);
+
+		// Shutdown WSL to apply changes on next start
+		// This is required for WSL to pick up the new wsl.conf settings
+		const shutdownResult = await this.runCommandWithBroadcast(
+			"wsl",
+			["--shutdown"],
+			"wsl-shutdown",
+		);
+
+		if (!shutdownResult.isOk) {
+			console.error("[Local Vibe] Failed to shutdown WSL:", shutdownResult.output);
+			// wsl.conf was written but shutdown failed - return partial success
+			// Next start will still pick up the config
+		}
+
+		return { isOk: true };
+	}
+
+	/**
 	 * Installs Podman with platform-specific logic
 	 *
 	 * Platform flows:
@@ -2410,6 +2472,16 @@ export class LocalVibeService {
 					);
 				}
 				await localVibeStorage.setData({ needUpdateVmConfig: false });
+			}
+
+			// Configure WSL automount options for Windows (fixes file permission issues)
+			// This must happen before machine start since wsl --shutdown would stop a running machine
+			if (localVibeData.needUpdateWslConf) {
+				const wslResult = await this._configureWslConf();
+				if (wslResult.isOk) {
+					await localVibeStorage.setData({ needUpdateWslConf: false });
+				}
+				// On failure, flag remains true for next attempt
 			}
 
 			// Start the Podman machine
