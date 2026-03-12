@@ -419,18 +419,55 @@ export class LocalVibeService {
 		}
 
 		try {
-			if (!fs.existsSync(openclawFilePath)) {
-				const config = JSON.parse(JSON.stringify(OPENCLAW_DEFAULT_CONFIG));
+			// Always start with template as base
+			const templateConfig = JSON.parse(JSON.stringify(OPENCLAW_DEFAULT_CONFIG)) as Record<
+				string,
+				unknown
+			>;
 
-				if (apiKey) {
-					set(config, "models.providers.ai302.apiKey", apiKey);
+			// Set API keys in template for all providers
+			if (apiKey) {
+				const templateProviders = get(templateConfig, "models.providers") as
+					| Record<string, Record<string, unknown>>
+					| undefined;
+				if (templateProviders) {
+					for (const providerName of Object.keys(templateProviders)) {
+						set(templateConfig, `models.providers.${providerName}.apiKey`, apiKey);
+					}
 				}
-
-				await this._mergeModelsIntoOpenclawConfig(config);
-
-				const presetContent = JSON.stringify(config, null, 2);
-				fs.writeFileSync(openclawFilePath, presetContent, "utf-8");
 			}
+
+			// Merge app-models into template config
+			await this._mergeModelsIntoOpenclawConfig(templateConfig);
+
+			let finalConfig: Record<string, unknown>;
+
+			if (!fs.existsSync(openclawFilePath)) {
+				// New file: use template directly
+				finalConfig = templateConfig;
+				console.log("[Local Vibe] Creating new openclaw.json");
+			} else {
+				// Existing file: merge template's new fields into existing config
+				const existingContent = fs.readFileSync(openclawFilePath, "utf-8");
+				const existingConfig = JSON.parse(existingContent) as Record<string, unknown>;
+				finalConfig = this._mergeTemplateIntoExistingConfig(existingConfig, templateConfig);
+				console.log("[Local Vibe] Merged template updates into existing openclaw.json");
+			}
+
+			// Always update API key to latest value (force update) for all providers
+			if (apiKey) {
+				const providers = get(finalConfig, "models.providers") as
+					| Record<string, Record<string, unknown>>
+					| undefined;
+				if (providers) {
+					for (const providerName of Object.keys(providers)) {
+						set(finalConfig, `models.providers.${providerName}.apiKey`, apiKey);
+					}
+				}
+			}
+
+			const presetContent = JSON.stringify(finalConfig, null, 2);
+			fs.writeFileSync(openclawFilePath, presetContent, "utf-8");
 			fs.chmodSync(openclawFilePath, 0o666);
 		} catch (error) {
 			console.warn("[Local Vibe] Failed to prepare openclaw.json file:", error);
@@ -2549,20 +2586,89 @@ export class LocalVibeService {
 	}
 
 	/**
+	 * Recursively merges template config into existing config.
+	 * Adds new fields from template that don't exist in existing config.
+	 * Preserves existing values (user customizations take priority).
+	 */
+	private _mergeTemplateIntoExistingConfig(
+		existingConfig: Record<string, unknown>,
+		templateConfig: Record<string, unknown>,
+	): Record<string, unknown> {
+		const merged = JSON.parse(JSON.stringify(existingConfig)) as Record<string, unknown>;
+
+		const mergeDeep = (
+			target: Record<string, unknown>,
+			source: Record<string, unknown>,
+			path = "",
+		) => {
+			for (const key in source) {
+				const currentPath = path ? `${path}.${key}` : key;
+				const sourceValue = source[key];
+				const targetValue = target[key];
+
+				if (!(key in target)) {
+					// Template has field that existing config doesn't have -> add it
+					target[key] = sourceValue;
+					console.log(`[Local Vibe] Added new config field: ${currentPath}`);
+				} else if (
+					typeof sourceValue === "object" &&
+					sourceValue !== null &&
+					!Array.isArray(sourceValue) &&
+					typeof targetValue === "object" &&
+					targetValue !== null &&
+					!Array.isArray(targetValue)
+				) {
+					// Both are plain objects -> recursive merge
+					mergeDeep(
+						targetValue as Record<string, unknown>,
+						sourceValue as Record<string, unknown>,
+						currentPath,
+					);
+				}
+				// Otherwise: keep existing value (user customization takes priority)
+			}
+		};
+
+		mergeDeep(merged, templateConfig);
+		return merged;
+	}
+
+	/**
 	 * Helper method to fetch app-models and merge them into the given OpenClaw configuration object
 	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private async _mergeModelsIntoOpenclawConfig(config: any): Promise<void> {
+	private async _mergeModelsIntoOpenclawConfig(config: Record<string, unknown>): Promise<void> {
 		try {
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const appModels = (await storageService.getItemInternal("app-models")) as any[];
+			const appModels = (await storageService.getItemInternal("app-models")) as
+				| Array<Record<string, unknown>>
+				| undefined;
 
 			if (Array.isArray(appModels)) {
-				const filteredModels = appModels.filter(
-					(m) => m.providerId === "302AI" && m.isFeatured === true && m.openai_compatible === true,
+				// cc-* models: only need providerId === "302AI"
+				const ccModels = appModels.filter(
+					(m) => m.providerId === "302AI" && (m.id as string).startsWith("cc-"),
+				);
+				// *-for-coding models: need all conditions
+				const forCodingModels = appModels.filter(
+					(m) =>
+						m.providerId === "302AI" &&
+						(m.id as string).endsWith("-for-coding") &&
+						m.isFeatured === true &&
+						m.openai_compatible === true,
+				);
+				// Standard models: need all conditions
+				const ai302Models = appModels.filter(
+					(m) =>
+						m.providerId === "302AI" &&
+						!(m.id as string).startsWith("cc-") &&
+						!(m.id as string).endsWith("-for-coding") &&
+						m.isFeatured === true &&
+						m.openai_compatible === true,
 				);
 
-				if (filteredModels.length > 0) {
+				// Combine coding models
+				const ai302CodingModels = [...ccModels, ...forCodingModels];
+
+				if (ai302Models.length > 0 || ai302CodingModels.length > 0) {
 					// Ensure nested path exists using set
 					if (!get(config, "agents.defaults.models")) {
 						set(config, "agents.defaults.models", {});
@@ -2587,9 +2693,17 @@ export class LocalVibeService {
 
 					// Add fresh ai302 models
 					const newModels = { ...nonAi302Models };
-					filteredModels.forEach((m) => {
+
+					// Add standard ai302 models
+					ai302Models.forEach((m) => {
 						newModels[`ai302/${m.id}`] = {};
 					});
+
+					// Add ai302-coding models
+					ai302CodingModels.forEach((m) => {
+						newModels[`ai302-coding/${m.id}`] = {};
+					});
+
 					set(config, "agents.defaults.models", newModels);
 				}
 			}

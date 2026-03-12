@@ -27,12 +27,35 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 					},
 				],
 			},
+			"ai302-coding": {
+				baseUrl: "https://api.302.ai/v1",
+				apiKey: "",
+				api: "anthropic-messages",
+				models: [
+					{
+						id: "kimi-for-coding",
+						name: "kimi-for-coding",
+						reasoning: false,
+						input: ["text", "image"],
+						cost: {
+							input: 0,
+							output: 0,
+							cacheRead: 0,
+							cacheWrite: 0,
+						},
+						contextWindow: 262144,
+						maxTokens: 32768,
+					},
+				],
+			},
 		},
 	},
 	agents: {
 		defaults: {
 			model: { primary: "ai302/glm-5" },
-			models: {},
+			models: {
+				"ai302-coding/kimi-for-coding": {},
+			},
 			imageModel: { primary: "ai302/gemini-3.1-flash-image-preview" },
 			workspace: "/home/user/.openclaw/workspace",
 			compaction: { mode: "safeguard" },
