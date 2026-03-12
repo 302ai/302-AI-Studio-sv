@@ -1821,16 +1821,16 @@ export class LocalVibeService {
 			data: "Configuring WSL automount options...",
 		});
 
-		// Use podman machine ssh to write wsl.conf
-		// The SSH command runs as the core user inside the VM, so we use sudo tee to write to /etc/wsl.conf
-		// Build the wsl.conf content using single quotes to avoid escape sequence issues
+		// Use podman machine ssh with root user to write wsl.conf
+		// -u root avoids needing sudo (which may be disabled on Windows 11)
+		// tee -a appends to the file instead of overwriting
 		const wslConfContent =
 			'[automount]\\noptions = "metadata,uid=1000,gid=1000,umask=022,fmask=011"';
-		const sshCommand = `echo -e '${wslConfContent}' | sudo tee /etc/wsl.conf`;
+		const sshCommand = `echo -e '${wslConfContent}' | tee -a /etc/wsl.conf`;
 
 		const result = await this.runCommandWithBroadcast(
 			"podman",
-			["machine", "ssh", "ai302-machine", sshCommand],
+			["machine", "ssh", "-u", "root", "ai302-machine", sshCommand],
 			"wsl-conf-configure",
 		);
 
