@@ -2612,21 +2612,44 @@ export class LocalVibeService {
 					console.log(`[Local Vibe] Added new config field: ${currentPath}`);
 				} else if (Array.isArray(sourceValue) && Array.isArray(targetValue)) {
 					// Both are arrays -> merge by adding new items from template
-					// Keep existing items (user customizations) and add new template items
-					const existingSet = new Set(targetValue as unknown[]);
-					const newItems = (sourceValue as unknown[]).filter((item) => !existingSet.has(item));
+					// Check if items are objects with `id` fields (e.g. model definitions)
+					const isObjectArrayWithId =
+						(sourceValue as unknown[]).length > 0 &&
+						typeof (sourceValue as unknown[])[0] === "object" &&
+						(sourceValue as unknown[])[0] !== null &&
+						"id" in ((sourceValue as unknown[])[0] as Record<string, unknown>);
 
-					if (newItems.length > 0) {
-						// Template items first (maintains order), then user-added items not in template
-						target[key] = [
-							...(sourceValue as unknown[]),
-							...(targetValue as unknown[]).filter(
-								(item) => !(sourceValue as unknown[]).includes(item),
-							),
-						];
-						console.log(
-							`[Local Vibe] Merged array field: ${currentPath}, added ${newItems.length} new items`,
+					if (isObjectArrayWithId) {
+						// Deduplicate by `id` to prevent duplicate models accumulating across restarts
+						const existingIds = new Set(
+							(targetValue as Array<Record<string, unknown>>).map((item) => item.id),
 						);
+						const newItems = (sourceValue as Array<Record<string, unknown>>).filter(
+							(item) => !existingIds.has(item.id),
+						);
+
+						if (newItems.length > 0) {
+							target[key] = [...(targetValue as unknown[]), ...newItems];
+							console.log(
+								`[Local Vibe] Merged array field: ${currentPath}, added ${newItems.length} new items (by id)`,
+							);
+						}
+					} else {
+						// Primitive arrays: use Set-based dedup (reference equality is fine for primitives)
+						const existingSet = new Set(targetValue as unknown[]);
+						const newItems = (sourceValue as unknown[]).filter((item) => !existingSet.has(item));
+
+						if (newItems.length > 0) {
+							target[key] = [
+								...(sourceValue as unknown[]),
+								...(targetValue as unknown[]).filter(
+									(item) => !(sourceValue as unknown[]).includes(item),
+								),
+							];
+							console.log(
+								`[Local Vibe] Merged array field: ${currentPath}, added ${newItems.length} new items`,
+							);
+						}
 					}
 				} else if (
 					typeof sourceValue === "object" &&

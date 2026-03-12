@@ -32,6 +32,14 @@ export function getFilteredModels(
 		if (enabledOnly && !m.enabled) return false;
 		// 对于 302AI provider 的模型，应用过滤条件：只显示 isFeatured === true 或 isAddedByUser === true 的模型
 		if (m.providerId === "302AI") {
+			// cc-* 模型应该在 OpenClaw 模式下显示，即使 openai_compatible 为 false
+			const isCcModel = m.id.startsWith("cc-");
+
+			// 如果是 cc 模型且在 OpenClaw 模式下，忽略 openai_compatible 检查
+			if (isCcModel && openaiCompatible) {
+				return isModelFeatured(m) || isModelAddedByUser(m);
+			}
+
 			return (
 				(isModelFeatured(m) || isModelAddedByUser(m)) &&
 				(!openaiCompatible || m.openai_compatible === openaiCompatible)
