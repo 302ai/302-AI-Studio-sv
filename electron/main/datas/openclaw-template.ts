@@ -53,9 +53,7 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 	agents: {
 		defaults: {
 			model: { primary: "ai302/glm-5" },
-			models: {
-				"ai302-coding/kimi-for-coding": {},
-			},
+			models: {},
 			imageModel: { primary: "ai302/gemini-3.1-flash-image-preview" },
 			workspace: "/home/user/.openclaw/workspace",
 			compaction: { mode: "safeguard" },
