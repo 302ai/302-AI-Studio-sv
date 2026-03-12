@@ -1843,18 +1843,44 @@ export class LocalVibeService {
 			"[Local Vibe] wsl.conf written successfully, shutting down WSL to apply changes...",
 		);
 
-		// Shutdown WSL to apply changes on next start
-		// This is required for WSL to pick up the new wsl.conf settings
-		const shutdownResult = await this.runCommandWithBroadcast(
-			"wsl",
-			["--shutdown"],
-			"wsl-shutdown",
+		// Shutdown WSL so the new wsl.conf is picked up on next start
+		await this.runCommandWithBroadcast("wsl", ["--shutdown"], "wsl-shutdown");
+
+		// Stop the Podman machine cleanly before restarting
+		// wsl --shutdown terminates WSL but the Podman machine process may still be running
+		await this.runCommandWithBroadcast(
+			"podman",
+			["machine", "stop", "ai302-machine"],
+			"podman-machine-stop-after-wsl-config",
 		);
 
-		if (!shutdownResult.isOk) {
-			console.error("[Local Vibe] Failed to shutdown WSL:", shutdownResult.output);
-			// wsl.conf was written but shutdown failed - return partial success
-			// Next start will still pick up the config
+		await this.runCommandWithBroadcast(
+			"podman",
+			["machine", "set", "ai302-machine", "--rootful=false"],
+			"podman-machine-set-after-wsl-config",
+		);
+
+		// Restart the Podman machine so the new wsl.conf takes effect
+		console.log("[Local Vibe] Restarting machine after WSL config...");
+		const restartResult = await this.runCommandWithBroadcast(
+			"podman",
+			["machine", "start", "ai302-machine"],
+			"podman-machine-restart-after-wsl-config",
+		);
+
+		if (!restartResult.isOk && !restartResult.output.includes("already running")) {
+			console.error(
+				"[Local Vibe] Failed to restart machine after WSL config:",
+				restartResult.output,
+			);
+			return { isOk: false };
+		}
+
+		// Wait for machine to be ready again
+		const ready = await this.waitForPodmanReady(60_000);
+		if (!ready) {
+			console.error("[Local Vibe] Machine timed out after WSL config restart");
+			return { isOk: false };
 		}
 
 		return { isOk: true };
@@ -2474,16 +2500,6 @@ export class LocalVibeService {
 				await localVibeStorage.setData({ needUpdateVmConfig: false });
 			}
 
-			// Configure WSL automount options for Windows (fixes file permission issues)
-			// This must happen before machine start since wsl --shutdown would stop a running machine
-			if (localVibeData.needUpdateWslConf) {
-				const wslResult = await this._configureWslConf();
-				if (wslResult.isOk) {
-					await localVibeStorage.setData({ needUpdateWslConf: false });
-				}
-				// On failure, flag remains true for next attempt
-			}
-
 			// Start the Podman machine
 			const startResult = await this.runCommandWithBroadcast(
 				"podman",
@@ -2592,6 +2608,17 @@ export class LocalVibeService {
 					);
 					return { isOk: false, error: timeoutMsg };
 				}
+			}
+
+			// Configure WSL automount options for Windows (fixes file permission issues)
+			// This must happen AFTER machine is running (SSH requires running VM)
+			// _configureWslConf handles: write wsl.conf → wsl --shutdown → restart machine
+			if (localVibeData.needUpdateWslConf && PLATFORM.IS_WINDOWS) {
+				const wslResult = await this._configureWslConf();
+				if (wslResult.isOk) {
+					await localVibeStorage.setData({ needUpdateWslConf: false });
+				}
+				// On failure, flag remains true for next attempt
 			}
 
 			// Execute podman compose up -d after successful start (or if already running)
