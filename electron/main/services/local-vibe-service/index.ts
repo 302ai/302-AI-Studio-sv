@@ -2642,71 +2642,71 @@ export class LocalVibeService {
 				| Array<Record<string, unknown>>
 				| undefined;
 
-			if (Array.isArray(appModels)) {
-				// cc-* models: only need providerId === "302AI"
-				const ccModels = appModels.filter(
-					(m) => m.providerId === "302AI" && (m.id as string).startsWith("cc-"),
-				);
-				// *-for-coding models: need all conditions
-				const forCodingModels = appModels.filter(
-					(m) =>
-						m.providerId === "302AI" &&
-						(m.id as string).endsWith("-for-coding") &&
-						m.isFeatured === true &&
-						m.openai_compatible === true,
-				);
-				// Standard models: need all conditions
-				const ai302Models = appModels.filter(
-					(m) =>
-						m.providerId === "302AI" &&
-						!(m.id as string).startsWith("cc-") &&
-						!(m.id as string).endsWith("-for-coding") &&
-						m.isFeatured === true &&
-						m.openai_compatible === true,
-				);
+			if (!Array.isArray(appModels) || appModels.length === 0) {
+				return;
+			}
 
-				// Combine coding models
-				const ai302CodingModels = [...ccModels, ...forCodingModels];
+			// === 单次遍历分桶 ===
+			const ccModels: Record<string, unknown>[] = [];
+			const forCodingModels: Record<string, unknown>[] = [];
+			const ai302Models: Record<string, unknown>[] = [];
 
-				if (ai302Models.length > 0 || ai302CodingModels.length > 0) {
-					// Ensure nested path exists using set
-					if (!get(config, "agents.defaults.models")) {
-						set(config, "agents.defaults.models", {});
-					}
+			for (const m of appModels) {
+				if (m.providerId !== "302AI") continue;
 
-					// Get existing models using es-toolkit get
-					const existingModels = get(config, "agents.defaults.models") as Record<string, unknown>;
+				const id = m.id as string;
 
-					// Clear all ai302-prefixed models before adding new ones
-					// Preserve models with other prefixes
-					// eslint-disable-next-line @typescript-eslint/no-explicit-any
-					const nonAi302Models: Record<string, any> = {};
+				// 1. cc-* 模型
+				if (id.startsWith("cc-")) {
+					ccModels.push(m);
+					continue;
+				}
 
-					for (const [key, value] of Object.entries(existingModels)) {
-						if (!key.startsWith("ai302/")) {
-							nonAi302Models[key] = value;
-						}
-					}
+				// 2. *-for-coding 模型
+				if (id.endsWith("-for-coding") && m.isFeatured === true && m.openai_compatible === true) {
+					forCodingModels.push(m);
+					continue;
+				}
 
-					// Replace models with only non-ai302 models
-					set(config, "agents.defaults.models", nonAi302Models);
-
-					// Add fresh ai302 models
-					const newModels = { ...nonAi302Models };
-
-					// Add standard ai302 models
-					ai302Models.forEach((m) => {
-						newModels[`ai302/${m.id}`] = {};
-					});
-
-					// Add ai302-coding models
-					ai302CodingModels.forEach((m) => {
-						newModels[`ai302-coding/${m.id}`] = {};
-					});
-
-					set(config, "agents.defaults.models", newModels);
+				// 3. 普通 ai302 模型（排除上面两种 + 必须是 featured + openai_compatible）
+				if (m.isFeatured === true && m.openai_compatible === true) {
+					ai302Models.push(m);
 				}
 			}
+
+			const ai302CodingModels = [...ccModels, ...forCodingModels];
+
+			// 没有需要处理的模型就直接返回
+			if (ai302Models.length === 0 && ai302CodingModels.length === 0) {
+				return;
+			}
+
+			if (!get(config, "agents.defaults.models")) {
+				set(config, "agents.defaults.models", {});
+			}
+
+			const existingModels = get(config, "agents.defaults.models") as Record<string, unknown>;
+
+			// 保留非 ai302 前缀的模型
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			const nonAi302Models: Record<string, any> = {};
+			for (const [key, value] of Object.entries(existingModels)) {
+				if (!key.startsWith("ai302/")) {
+					nonAi302Models[key] = value;
+				}
+			}
+
+			// 重新组装 ai302 模型
+			const newModels = { ...nonAi302Models };
+
+			ai302Models.forEach((m) => {
+				newModels[`ai302/${m.id}`] = {};
+			});
+			ai302CodingModels.forEach((m) => {
+				newModels[`ai302-coding/${m.id}`] = {};
+			});
+
+			set(config, "agents.defaults.models", newModels);
 		} catch (error) {
 			console.warn(
 				"[Local Vibe] Failed to fetch and parse app-models for openclaw configuration",
