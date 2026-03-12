@@ -4,6 +4,7 @@ import { OPENCLAW_DEFAULT_CONFIG } from "@electron/main/datas/openclaw-template"
 import { broadcastService } from "@electron/main/services/broadcast-service";
 import { generalSettingsService } from "@electron/main/services/settings-service/general-settings-service";
 import { storageService } from "@electron/main/services/storage-service";
+import { localVibeStorage } from "@electron/main/services/storage-service/code-agent/local-vibe-storage";
 import { providerStorage } from "@electron/main/services/storage-service/provider-storage";
 import { isCommandNotFound } from "@electron/main/utils/cmd";
 import { exec, spawn, type SpawnOptions } from "child_process";
@@ -2393,6 +2394,22 @@ export class LocalVibeService {
 					);
 					return { isOk: false, error: initErrorMsg };
 				}
+			}
+
+			// Apply VM resource config if flagged (machine must be stopped at this point)
+			// - Existing machine: run `podman machine set` to update CPU/memory to required values
+			// - Newly initialized machine: `init` already applied correct values, just clear the flag
+			const { data: localVibeData } = await localVibeStorage.getData();
+			if (localVibeData.needUpdateVmConfig) {
+				if (machineCheck.exists) {
+					console.log("[Local Vibe] Applying VM config update (--cpus 4 --memory 4096)...");
+					await this.runCommandWithBroadcast(
+						"podman",
+						["machine", "set", "ai302-machine", "--cpus", "4", "--memory", "4096"],
+						"podman-machine-set",
+					);
+				}
+				await localVibeStorage.setData({ needUpdateVmConfig: false });
 			}
 
 			// Start the Podman machine

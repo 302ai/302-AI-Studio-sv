@@ -143,3 +143,11 @@ export const listLocalClaudeCodeSessionsResponse = type({
 	session_list: localSessionInfoSchema.array(),
 });
 export type ListLocalClaudeCodeSessionsResponse = typeof listLocalClaudeCodeSessionsResponse.infer;
+
+export const localVibeStorageData = type({
+	/** Whether the VM configuration needs to be updated */
+	needUpdateVmConfig: "boolean",
+	/** Whether wsl.conf needs to be updated */
+	needUpdateWslConf: "boolean",
+});
+export type LocalVibeStorageData = typeof localVibeStorageData.infer;
