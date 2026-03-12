@@ -1824,14 +1824,20 @@ export class LocalVibeService {
 		// Use podman machine ssh with root user to write wsl.conf
 		// -u root avoids needing sudo (which may be disabled on Windows 11)
 		// tee -a appends to the file instead of overwriting
-		const wslConfContent =
-			'[automount]\\noptions = "metadata,uid=1000,gid=1000,umask=022,fmask=011"';
-		const sshCommand = `echo -e '${wslConfContent}' | tee -a /etc/wsl.conf`;
+		const wslConfContent = [
+			`[automount]`,
+			`options = "metadata,uid=1000,gid=1000,umask=022,fmask=011"`,
+		];
+
+		const sshCommand =
+			`echo '${wslConfContent[0]}' >> /etc/wsl.conf && ` +
+			`echo '${wslConfContent[1]}' >> /etc/wsl.conf`;
 
 		const result = await this.runCommandWithBroadcast(
 			"podman",
-			["machine", "ssh", "-u", "root", "ai302-machine", sshCommand],
+			["machine", "ssh", "--username", "root", "ai302-machine", sshCommand],
 			"wsl-conf-configure",
+			false,
 		);
 
 		if (!result.isOk) {
