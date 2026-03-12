@@ -9,7 +9,7 @@ const STORAGE_KEY = "local-vibe-data";
 const DEFAULT_DATA: LocalVibeStorageData = {
 	// Linux runs Podman in rootless mode with no VM, so machine config does not apply
 	needUpdateVmConfig: !PLATFORM.IS_LINUX,
-	needUpdateWslConf: PLATFORM.IS_WINDOWS,
+	// needUpdateWslConf: PLATFORM.IS_WINDOWS,
 };
 
 class LocalVibeStorage extends StorageService<LocalVibeStorageData> {

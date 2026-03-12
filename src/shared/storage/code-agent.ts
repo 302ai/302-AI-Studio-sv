@@ -148,6 +148,6 @@ export const localVibeStorageData = type({
 	/** Whether the VM configuration needs to be updated */
 	needUpdateVmConfig: "boolean",
 	/** Whether wsl.conf needs to be updated */
-	needUpdateWslConf: "boolean",
+	// needUpdateWslConf: "boolean",
 });
 export type LocalVibeStorageData = typeof localVibeStorageData.infer;
