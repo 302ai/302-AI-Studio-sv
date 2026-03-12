@@ -118,6 +118,7 @@ export const codeAgentGlobalConfigs = type({
 	dingtalk: type({ clientId: "string", clientSecret: "string" }),
 	qqbot: type({ appId: "string", clientSecret: "string" }),
 	wecom: type({ botId: "string", secret: "string" }),
+	telegram: type({ botToken: "string", allowFrom: "string[]" }),
 });
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
 
@@ -148,6 +149,6 @@ export const localVibeStorageData = type({
 	/** Whether the VM configuration needs to be updated */
 	needUpdateVmConfig: "boolean",
 	/** Whether wsl.conf needs to be updated */
-	// needUpdateWslConf: "boolean",
+	needUpdateWslConf: "boolean",
 });
 export type LocalVibeStorageData = typeof localVibeStorageData.infer;

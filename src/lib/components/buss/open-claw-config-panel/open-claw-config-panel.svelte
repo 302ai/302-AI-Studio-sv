@@ -86,6 +86,24 @@
 		},
 	};
 
+	const telegramBotToken = {
+		get value() {
+			return codeAgentGlobalConfigsState.telegram.botToken;
+		},
+		set value(v: string) {
+			codeAgentGlobalConfigsState.updateTelegramBotToken(v);
+		},
+	};
+
+	const telegramAllowFrom = {
+		get value() {
+			return codeAgentGlobalConfigsState.telegram.allowFrom.join(",");
+		},
+		set value(v: string) {
+			codeAgentGlobalConfigsState.updateTelegramAllowFrom(v.split(","));
+		},
+	};
+
 	async function handleConfirmDialogOk() {
 		applyConfigLoading = true;
 		try {
@@ -174,10 +192,6 @@
 			</AccordionTrigger>
 			<AccordionContent class="pb-0 pt-2 space-y-2">
 				<div class="rounded-lg border p-4 space-y-4">
-					<!-- <div>
-								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
-								</div> -->
-					<!-- bind:value={tempAppid} -->
 					<SettingInputField
 						label={m.open_claw_dingtalk_client_id()}
 						placeholder={m.open_claw_dingtalk_placeholder_client_id()}
@@ -215,36 +229,33 @@
 	<Accordion type="single" class="w-full rounded-settings-item">
 		<AccordionItem value="qqbot" class="border-b-0">
 			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-				<Label class=" font-normal no-underline cursor-pointer">QQ机器人</Label>
+				<Label class=" font-normal no-underline cursor-pointer">{m.open_claw_channel_qqbot()}</Label
+				>
 			</AccordionTrigger>
 			<AccordionContent class="pb-0 pt-2 space-y-2">
 				<div class="rounded-lg border p-4 space-y-4">
-					<!-- <div>
-								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
-								</div> -->
-					<!-- bind:value={tempAppid} -->
 					<SettingInputField
-						label="App ID"
-						placeholder="请输入App ID"
+						label={m.open_claw_qqbot_app_id()}
+						placeholder={m.open_claw_qqbot_placeholder_app_id()}
 						bind:value={qqbotAppId.value}
 						class="[&>label]:text-label-fg"
 					/>
 					<!-- bind:value={tempAppSecret} -->
 					<SettingInputField
-						label="Client Secret"
-						placeholder="请输入Client Secret"
+						label={m.open_claw_qqbot_app_secret()}
+						placeholder={m.open_claw_qqbot_placeholder_app_secret()}
 						type="password"
 						bind:value={qqbotClientSecret.value}
 						class="[&>label]:text-label-fg"
 					/>
 					<div class="flex items-center justify-between">
 						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-							<a href="https://open-dev.dingtalk.com/" class="text-primary hover:underline"
+							<a href="https://q.qq.com/#/" class="text-primary hover:underline"
 								>{m.open_claw_feishu_get_id_and_secret()}</a
 							>
 							<div class="text-muted-foreground/50">|</div>
 							<a
-								href="https://studio.302.ai/zh/docs/advanced/open-claw/dingtalk"
+								href="https://studio.302.ai/zh/docs/advanced/open-claw/qqbot"
 								class="text-primary hover:underline"
 								>{m.open_claw_feishu_view_deployment_tutorial()}</a
 							>
@@ -260,36 +271,74 @@
 	<Accordion type="single" class="w-full rounded-settings-item">
 		<AccordionItem value="wecom" class="border-b-0">
 			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-				<Label class=" font-normal no-underline cursor-pointer">企业微信（智能机器人）</Label>
+				<Label class=" font-normal no-underline cursor-pointer">{m.open_claw_channel_wecom()}</Label
+				>
 			</AccordionTrigger>
 			<AccordionContent class="pb-0 pt-2 space-y-2">
 				<div class="rounded-lg border p-4 space-y-4">
-					<!-- <div>
-								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
-								</div> -->
-					<!-- bind:value={tempAppid} -->
 					<SettingInputField
-						label="BotId"
-						placeholder="请输入BotId"
+						label={m.open_claw_wecom_bot_id()}
+						placeholder={m.open_claw_wecom_placeholder_bot_id()}
 						bind:value={wecomBotId.value}
 						class="[&>label]:text-label-fg"
 					/>
 					<!-- bind:value={tempAppSecret} -->
 					<SettingInputField
-						label="Secret"
-						placeholder="请输入Secret"
+						label={m.open_claw_wecom_secret()}
+						placeholder={m.open_claw_wecom_placeholder_secret()}
 						type="password"
 						bind:value={wecomSecret.value}
 						class="[&>label]:text-label-fg"
 					/>
 					<div class="flex items-center justify-between">
 						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-							<a href="https://open-dev.dingtalk.com/" class="text-primary hover:underline"
+							<a href="https://work.weixin.qq.com/" class="text-primary hover:underline"
 								>{m.open_claw_feishu_get_id_and_secret()}</a
 							>
 							<div class="text-muted-foreground/50">|</div>
 							<a
-								href="https://studio.302.ai/zh/docs/advanced/open-claw/dingtalk"
+								href="https://studio.302.ai/zh/docs/advanced/open-claw/wecom"
+								class="text-primary hover:underline"
+								>{m.open_claw_feishu_view_deployment_tutorial()}</a
+							>
+						</div>
+					</div>
+				</div>
+			</AccordionContent>
+		</AccordionItem>
+	</Accordion>
+{/snippet}
+
+{#snippet telegram()}
+	<Accordion type="single" class="w-full rounded-settings-item">
+		<AccordionItem value="telegram" class="border-b-0">
+			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+				<Label class=" font-normal no-underline cursor-pointer">Telegram</Label>
+			</AccordionTrigger>
+			<AccordionContent class="pb-0 pt-2 space-y-2">
+				<div class="rounded-lg border p-4 space-y-4">
+					<SettingInputField
+						label="Bot Token"
+						placeholder="请输入Bot Token"
+						bind:value={telegramBotToken.value}
+						class="[&>label]:text-label-fg"
+					/>
+					<!-- bind:value={tempAppSecret} -->
+					<SettingInputField
+						label="Allow From"
+						placeholder="请输入allowFrom,使用','分割"
+						type="password"
+						bind:value={telegramAllowFrom.value}
+						class="[&>label]:text-label-fg"
+					/>
+					<div class="flex items-center justify-between">
+						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
+							<a href="https://t.me/BotFather" class="text-primary hover:underline"
+								>{m.open_claw_feishu_get_id_and_secret()}</a
+							>
+							<div class="text-muted-foreground/50">|</div>
+							<a
+								href="https://studio.302.ai/zh/docs/advanced/open-claw/telegram"
 								class="text-primary hover:underline"
 								>{m.open_claw_feishu_view_deployment_tutorial()}</a
 							>
@@ -313,6 +362,7 @@
 			{@render dingtalk()}
 			{@render qqbot()}
 			{@render wecom()}
+			{@render telegram()}
 			<div class="flex flex-col items-end">
 				<Button class="w-24" onclick={() => (confirmDialogOpen = true)}>
 					<RefreshCw class="size-4" />
