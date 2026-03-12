@@ -1,5 +1,5 @@
 import { type IpcMainInvokeEvent } from "electron";
-import { get, isUndefined, set } from "es-toolkit/compat";
+import { get, isUndefined, merge, set } from "es-toolkit/compat";
 import fs from "fs/promises";
 import { localVibeService } from "../local-vibe-service";
 import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
@@ -82,20 +82,24 @@ export class OpenClawService {
 	 * Apply channel configurations to OpenClaw
 	 */
 	async applyOpenClawChannelConfig(_event: IpcMainInvokeEvent) {
-		const {
-			data: { feishu, dingtalk, qqbot, wecom, telegram },
-		} = await codeAgentGlobalConfigsStorage.getGlobalConfigs();
+		const [{ data }, channels] = await Promise.all([
+			codeAgentGlobalConfigsStorage.getGlobalConfigs(),
+			this.getOpenClawConfig("channels"),
+		]);
+		this.setOpenClawConfig("channels", merge(channels, data));
 
-		await this.setOpenClawConfig("channels.feishu.appId", feishu.appId ?? "");
-		await this.setOpenClawConfig("channels.feishu.appSecret", feishu.appSecret ?? "");
-		await this.setOpenClawConfig("channels.dingtalk.clientId", dingtalk.clientId ?? "");
-		await this.setOpenClawConfig("channels.dingtalk.clientSecret", dingtalk.clientSecret ?? "");
-		await this.setOpenClawConfig("channels.qqbot.appId", qqbot.appId ?? "");
-		await this.setOpenClawConfig("channels.qqbot.clientSecret", qqbot.clientSecret ?? "");
-		await this.setOpenClawConfig("channels.wecom.botId", wecom.botId ?? "");
-		await this.setOpenClawConfig("channels.wecom.secret", wecom.secret ?? "");
-		await this.setOpenClawConfig("channels.telegram.botToken", telegram.botToken ?? "");
-		await this.setOpenClawConfig("channels.telegram.allowFrom", telegram.allowFrom ?? []);
+		/* await Promise.all([
+			this.setOpenClawConfig("channels.feishu.appId", feishu.appId ?? ""),
+			this.setOpenClawConfig("channels.feishu.appSecret", feishu.appSecret ?? ""),
+			this.setOpenClawConfig("channels.dingtalk.clientId", dingtalk.clientId ?? ""),
+			this.setOpenClawConfig("channels.dingtalk.clientSecret", dingtalk.clientSecret ?? ""),
+			this.setOpenClawConfig("channels.qqbot.appId", qqbot.appId ?? ""),
+			this.setOpenClawConfig("channels.qqbot.clientSecret", qqbot.clientSecret ?? ""),
+			this.setOpenClawConfig("channels.wecom.botId", wecom.botId ?? ""),
+			this.setOpenClawConfig("channels.wecom.secret", wecom.secret ?? ""),
+			this.setOpenClawConfig("channels.telegram.botToken", telegram.botToken ?? ""),
+			this.setOpenClawConfig("channels.telegram.allowFrom", telegram.allowFrom ?? []),
+		]); */
 	}
 
 	async handleOpenClawWebUiReloadIpc(_event: IpcMainInvokeEvent, tabId: string) {
