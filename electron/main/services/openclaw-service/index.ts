@@ -86,20 +86,7 @@ export class OpenClawService {
 			codeAgentGlobalConfigsStorage.getGlobalConfigs(),
 			this.getOpenClawConfig("channels"),
 		]);
-		this.setOpenClawConfig("channels", merge(channels, data));
-
-		/* await Promise.all([
-			this.setOpenClawConfig("channels.feishu.appId", feishu.appId ?? ""),
-			this.setOpenClawConfig("channels.feishu.appSecret", feishu.appSecret ?? ""),
-			this.setOpenClawConfig("channels.dingtalk.clientId", dingtalk.clientId ?? ""),
-			this.setOpenClawConfig("channels.dingtalk.clientSecret", dingtalk.clientSecret ?? ""),
-			this.setOpenClawConfig("channels.qqbot.appId", qqbot.appId ?? ""),
-			this.setOpenClawConfig("channels.qqbot.clientSecret", qqbot.clientSecret ?? ""),
-			this.setOpenClawConfig("channels.wecom.botId", wecom.botId ?? ""),
-			this.setOpenClawConfig("channels.wecom.secret", wecom.secret ?? ""),
-			this.setOpenClawConfig("channels.telegram.botToken", telegram.botToken ?? ""),
-			this.setOpenClawConfig("channels.telegram.allowFrom", telegram.allowFrom ?? []),
-		]); */
+		await this.setOpenClawConfig("channels", merge(channels, data));
 	}
 
 	async handleOpenClawWebUiReloadIpc(_event: IpcMainInvokeEvent, tabId: string) {
