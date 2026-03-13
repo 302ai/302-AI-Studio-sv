@@ -765,7 +765,7 @@
 	"title_agent": "Agent 框架",
 	"agent_framework_claude_code_description": "一个 AI 编程助手",
 	"agent_framework_open_claw_description": "在各种聊天软件里直接跟 AI 对话",
-	"agent_framework_open_claw_set_channel": "渠道设置",
+	"agent_framework_open_claw_set_channel": "OpenClaw 渠道设置",
 	"open_claw_appid": "App ID",
 	"open_claw_app_secret": "App Secret",
 	"open_claw_placeholder_appid": "请输入App ID",

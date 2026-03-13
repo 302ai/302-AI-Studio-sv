@@ -7,7 +7,7 @@
 	import { m } from "$lib/paraglide/messages";
 	import { codeAgentGlobalConfigsState } from "$lib/stores/code-agent";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
-	import { Loader2, RefreshCw } from "@lucide/svelte";
+	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import SettingInputField from "../settings/setting-input-field.svelte";
 
@@ -350,11 +350,10 @@
 	</Accordion>
 {/snippet}
 
-<Accordion type="single" class="w-full m-0">
+<Accordion type="single" value="channel-settings" class="w-full m-0">
 	<AccordionItem value="channel-settings" class="border-b-0">
 		<AccordionTrigger class="py-2 hover:no-underline">
-			<Label class="text-label-fg font-normal no-underline hover:underline cursor-pointer"
-				>{m.agent_framework_open_claw_set_channel()}</Label
+			<Label class="text-label-fg cursor-pointer">{m.agent_framework_open_claw_set_channel()}</Label
 			>
 		</AccordionTrigger>
 		<AccordionContent class="pb-1 pt-0 space-y-2">
@@ -364,7 +363,7 @@
 			{@render wecom()}
 			{@render telegram()}
 			<div class="flex flex-col items-end">
-				<Button class="w-24" onclick={() => (confirmDialogOpen = true)}>
+				<Button class="w-fit" onclick={() => (confirmDialogOpen = true)}>
 					<RefreshCw class="size-4" />
 					{m.open_claw_update_config()}
 				</Button>
@@ -386,7 +385,7 @@
 			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
 			<AlertDialog.Action onclick={handleConfirmDialogOk} disabled={applyConfigLoading}>
 				{#if applyConfigLoading}
-					<Loader2 class="h-4 w-4 animate-spin" />
+					<LoaderCircle class="h-4 w-4 animate-spin" />
 				{/if}
 				{m.open_claw_update()}
 			</AlertDialog.Action>

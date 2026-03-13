@@ -764,7 +764,7 @@
 	"title_agent": "Agent Framework",
 	"agent_framework_claude_code_description": "An AI coding assistant",
 	"agent_framework_open_claw_description": "Chat directly with AI in various chat software",
-	"agent_framework_open_claw_set_channel": "Channel Settings",
+	"agent_framework_open_claw_set_channel": "OpenClaw Channel Settings",
 	"open_claw_appid": "App ID",
 	"open_claw_app_secret": "App Secret",
 	"open_claw_placeholder_appid": "Enter App ID",
