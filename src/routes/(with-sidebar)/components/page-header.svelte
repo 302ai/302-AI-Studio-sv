@@ -43,7 +43,7 @@
 			((codeAgentState.currentAgentId === "claude-code" &&
 				codeAgentState.sandboxId !== "" &&
 				codeAgentState.currentSessionId !== "") ||
-				codeAgentState.currentAgentId === "open-claw"),
+				(codeAgentState.currentAgentId === "open-claw" && codeAgentState.currentSessionId !== "")),
 	);
 
 	// Handle agent preview toggle (full mode with sandbox)
