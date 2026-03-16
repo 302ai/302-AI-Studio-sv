@@ -11,7 +11,7 @@ import { exec, spawn, type SpawnOptions } from "child_process";
 import { app, shell, type IpcMainInvokeEvent } from "electron";
 import { get, set } from "es-toolkit/compat";
 import { isNull } from "es-toolkit/predicate";
-import fs from "fs";
+import fs, { readFileSync } from "fs";
 import { cp, readdir } from "fs/promises";
 import getPort from "get-port";
 import path from "path";
@@ -1576,7 +1576,7 @@ export class LocalVibeService {
 	 * Platform-specific installation:
 	 * - Windows: pip install podman-compose
 	 * - macOS: brew install podman-compose
-	 * - Linux: pip3 install podman-compose or apt-get install podman-compose
+	 * - Linux: pip3 install podman-compose or apt-get / dnf / pacman install podman-compose
 	 *
 	 * Broadcasts log events via "install-log" channel with step: "install-podman-compose"
 	 *
@@ -1622,6 +1622,7 @@ export class LocalVibeService {
 			);
 		} else if (platform === "linux") {
 			// Linux: Try pip first, fallback to apt-get
+			this._getLinuxDistro();
 			const pipResult = await this.runCommandWithBroadcast(
 				"pip3",
 				["install", "podman-compose"],
@@ -1630,12 +1631,56 @@ export class LocalVibeService {
 			if (pipResult.isOk) {
 				return pipResult;
 			}
-			// Fallback to apt-get
-			return this.runLinuxPrivilegedCommandWithBroadcast(
-				"apt-get",
-				["install", "-y", "podman-compose"],
-				"install-podman-compose",
-			);
+
+			const distributionInstallFn = new Map([
+				/* debian */
+				[
+					"debian",
+					() =>
+						this.runLinuxPrivilegedCommandWithBroadcast(
+							"apt-get",
+							["install", "-y", "podman-compose"],
+							"install-podman-compose",
+						),
+				],
+				/* arch linux */
+				[
+					"arch",
+					() =>
+						this.runLinuxPrivilegedCommandWithBroadcast(
+							"pacman",
+							["-S", "--noconfirm", "podman-compose"],
+							"install-podman-compose",
+						),
+				],
+				/* rhel */
+				[
+					"rhel",
+					() =>
+						this.runLinuxPrivilegedCommandWithBroadcast(
+							"dnf",
+							["install", "-y", "podman-compose"],
+							"install-podman-compose",
+						),
+				],
+				/* unknown */
+				[
+					"unknown",
+					() =>
+						this.runLinuxPrivilegedCommandWithBroadcast(
+							"apt-get",
+							["install", "-y", "podman-compose"],
+							"install-podman-compose",
+						),
+				],
+			]);
+
+			const id = this._normalizeLinuxDistro(this._getLinuxDistro());
+			if (!distributionInstallFn.has(id)) {
+				return distributionInstallFn.get("unknown")!.call(this);
+			}
+			console.log(id);
+			return distributionInstallFn.get(id)!.call(this);
 		}
 
 		return { isOk: false };
@@ -1930,6 +1975,81 @@ export class LocalVibeService {
 	}
 
 	/**
+	 * Detects the current Linux distribution by reading `/etc/os-release`.
+	 *
+	 * This function parses the `ID` field in `/etc/os-release` to determine the
+	 * Linux distribution type (e.g., "debian", "ubuntu", "arch", "manjaro").
+	 *
+	 * Only runs on Linux. If the file cannot be read or parsed, returns "unknown".
+	 *
+	 * @returns {string} - The Linux distribution ID, or "unknown" if detection fails.
+	 *
+	 * Example return values:
+	 * - "debian" for Debian
+	 * - "ubuntu" for Ubuntu
+	 * - "arch" for Arch Linux
+	 * - "manjaro" for Manjaro
+	 */
+	private _getLinuxDistro(): string {
+		try {
+			const osRelease = readFileSync("/etc/os-release", "utf-8");
+			const lines = osRelease.split("\n");
+			const info: Record<string, string> = {};
+			lines.forEach((line) => {
+				const match = line.match(/^(\w+)=(.*)$/);
+				if (match) {
+					const [, key, value] = match;
+					info[key] = value.replace(/"/g, "");
+				}
+			});
+			return info["ID"] || "unknown"; // example: 'debian', 'ubuntu', 'arch', 'manjaro'
+		} catch (err) {
+			console.error("read failed /etc/os-release:", err);
+			return "unknown";
+		}
+	}
+
+	/**
+	 * Normalizes a Linux distribution ID or ID_LIKE string into one of the main families:
+	 * 'debian', 'arch', 'rhel', or 'unknown'.
+	 *
+	 * @param id {string} - ID from /etc/os-release
+	 * @returns {'debian' | 'arch' | 'rhel' | 'unknown'}
+	 */
+	_normalizeLinuxDistro(id: string): "debian" | "arch" | "rhel" | "unknown" {
+		const debianDistros = [
+			"debian",
+			"ubuntu",
+			"linuxmint",
+			"pop",
+			"mx",
+			"elementary",
+			"deepin",
+			"kali",
+			"steamos",
+			"kde-neon",
+		];
+
+		const archDistros = ["arch", "manjaro", "endeavouros", "arco", "rebornos", "artix"];
+
+		const rhelDistros = ["rhel", "centos", "almalinux", "rocky", "fedora", "ol"];
+
+		id = id.toLowerCase();
+
+		if (debianDistros.includes(id)) {
+			return "debian";
+		}
+		if (archDistros.includes(id)) {
+			return "arch";
+		}
+		if (rhelDistros.includes(id)) {
+			return "rhel";
+		}
+
+		return "unknown";
+	}
+
+	/**
 	 * Installs Podman with platform-specific logic
 	 *
 	 * Platform flows:
@@ -1951,7 +2071,25 @@ export class LocalVibeService {
 		const result = await match(platform)
 			.with("win32", () => this._installPodmanWindows())
 			.with("darwin", () => this._installPodmanMacOS())
-			.with("linux", () => this._installPodmanLinux())
+			.with("linux", () => {
+				const distributionInstallFn = new Map([
+					/* debian */
+					["debian", this._installPodmanDebianLinux],
+					/* arch linux */
+					["arch", this._installPodmanArchLinux],
+					/* rhel */
+					["rhel", this._installPodmanRedHatLinux],
+					/* unknown */
+					["unknown", this._installPodmanDebianLinux],
+				]);
+
+				const id = this._normalizeLinuxDistro(this._getLinuxDistro());
+				if (!distributionInstallFn.has(id)) {
+					return this._installPodmanDebianLinux();
+				}
+				console.log(id);
+				return distributionInstallFn.get(id)!.call(this);
+			})
 			.otherwise(() => {
 				console.error(`[LocalVibeService] Unsupported platform: ${platform}`);
 				return { isOk: false };
@@ -2208,7 +2346,7 @@ export class LocalVibeService {
 	 * 1. Install Podman via apt-get (if not already installed)
 	 * 2. Install podman-compose (if not already installed)
 	 */
-	private async _installPodmanLinux(): Promise<{ isOk: boolean }> {
+	private async _installPodmanDebianLinux(): Promise<{ isOk: boolean }> {
 		// Check if Podman is already installed
 		const podmanCheck = await this.checkCommand("podman --version");
 		const composeCheck = await this.checkPodmanCompose();
@@ -2227,6 +2365,106 @@ export class LocalVibeService {
 			const podmanInstall = await this.runLinuxPrivilegedCommandWithBroadcast(
 				"apt-get",
 				["-y", "install", "podman"],
+				"install-podman",
+			);
+			if (!podmanInstall.isOk) return { isOk: false };
+		} else {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman",
+				type: "stdout",
+				data: "Podman already installed, skipping installation",
+			});
+		}
+
+		// 2. Install podman-compose (only if not already installed)
+		if (!composeCheck.isValid) {
+			const composeInstall = await this.installPodmanCompose();
+			if (!composeInstall.isOk) return { isOk: false };
+		} else {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman-compose",
+				type: "stdout",
+				data: "podman-compose already installed, skipping installation",
+			});
+		}
+
+		return { isOk: true };
+	}
+
+	/**
+	 * Linux installation flow (Arch linux: https://archlinux.org/):
+	 * 1. Install Podman via pacman (if not already installed)
+	 * 2. Install podman-compose (if not already installed)
+	 */
+	private async _installPodmanArchLinux(): Promise<{ isOk: boolean }> {
+		// Check if Podman is already installed
+		const podmanCheck = await this.checkCommand("podman --version");
+		const composeCheck = await this.checkPodmanCompose();
+
+		if (podmanCheck.isValid && composeCheck.isValid) {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman",
+				type: "stdout",
+				data: "Podman and podman-compose already installed, skipping installation",
+			});
+			return { isOk: true };
+		}
+
+		// 1. Install Podman (only if not already installed)
+		if (!podmanCheck.isValid) {
+			const podmanInstall = await this.runLinuxPrivilegedCommandWithBroadcast(
+				"pacman",
+				["-Sy", "--noconfirm", "podman", "python-pip"],
+				"install-podman",
+			);
+			if (!podmanInstall.isOk) return { isOk: false };
+		} else {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman",
+				type: "stdout",
+				data: "Podman already installed, skipping installation",
+			});
+		}
+
+		// 2. Install podman-compose (only if not already installed)
+		if (!composeCheck.isValid) {
+			const composeInstall = await this.installPodmanCompose();
+			if (!composeInstall.isOk) return { isOk: false };
+		} else {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman-compose",
+				type: "stdout",
+				data: "podman-compose already installed, skipping installation",
+			});
+		}
+
+		return { isOk: true };
+	}
+
+	/**
+	 * Linux installation flow (Red Hat):
+	 * 1. Install Podman via dnf (if not already installed)
+	 * 2. Install podman-compose (if not already installed)
+	 */
+	private async _installPodmanRedHatLinux(): Promise<{ isOk: boolean }> {
+		// Check if Podman is already installed
+		const podmanCheck = await this.checkCommand("podman --version");
+		const composeCheck = await this.checkPodmanCompose();
+
+		if (podmanCheck.isValid && composeCheck.isValid) {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman",
+				type: "stdout",
+				data: "Podman and podman-compose already installed, skipping installation",
+			});
+			return { isOk: true };
+		}
+
+		// 1. Install Podman (only if not already installed)
+		if (!podmanCheck.isValid) {
+			const podmanInstall = await this.runLinuxPrivilegedCommandWithBroadcast(
+				"dnf",
+				["install", "-y", "podman"],
 				"install-podman",
 			);
 			if (!podmanInstall.isOk) return { isOk: false };
