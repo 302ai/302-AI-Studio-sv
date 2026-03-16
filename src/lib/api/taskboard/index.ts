@@ -24,6 +24,7 @@ async function validateAndRepairTaskList(
 		parsed = JSON.parse(content);
 	} catch (error) {
 		console.warn("Task list JSON parse failed, returning empty list:", error);
+		console.error("Task list content:", content);
 		return [];
 	}
 
@@ -160,7 +161,14 @@ export async function updateTasklist(
 	try {
 		const tasksFilePath = `${cwd}/${TODO_TASKS_FILE_PATH}`;
 
-		const jsonContent = JSON.stringify(tasks);
+		let jsonContent: string;
+		try {
+			jsonContent = JSON.stringify(tasks);
+		} catch (error) {
+			console.error("Failed to stringify tasks:", error);
+			console.error("Tasks content:", tasks);
+			return { isOk: false };
+		}
 		console.log("Updating task list content:", jsonContent);
 		const base64Content =
 			"data:application/json;base64," +
