@@ -465,6 +465,19 @@ class ClaudeCodeProcessor {
 	}
 
 	private handleResultEvent(data: ClaudeCodeEvent): string | null {
+		const contentStr = data.choices?.[0]?.delta?.content ?? data.result ?? "";
+
+		// Extract result files from content
+		// Matches both plain and backtick-wrapped paths:
+		//   - /home/user/workspace/file.html
+		//   - `/home/user/workspace/file.html` — description
+		const resultFiles: string[] = [];
+		const fileRegex = /^- `?(\/[^\s`]+)`?/gm;
+		let match;
+		while ((match = fileRegex.exec(contentStr)) !== null) {
+			resultFiles.push(match[1]);
+		}
+
 		// Extract relevant fields from result event
 		const resultMetadata = {
 			type: data.type,
@@ -473,7 +486,8 @@ class ClaudeCodeProcessor {
 			duration_ms: data.duration_ms,
 			duration_api_ms: data.duration_api_ms,
 			num_turns: data.num_turns,
-			content: data.choices?.[0]?.delta?.content ?? data.result ?? "",
+			content: contentStr,
+			result_files: resultFiles.length > 0 ? resultFiles : undefined,
 			session_id: data.session_id,
 			total_cost_usd: data.total_cost_usd,
 			uuid: data.uuid,
@@ -521,6 +535,44 @@ class ClaudeCodeProcessor {
 		}
 
 		return metadataStr;
+	}
+
+	/**
+	 * Handle pre-formatted message-metadata events from remote 302.AI API.
+	 * Remote mode sends events already in AI SDK UIMessageStream format.
+	 * We need to extract result_files from content and store result metadata
+	 * for later merging with pre_deploy_check events.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	private handlePreFormattedMetadata(data: any): string | null {
+		const metadata = data.metadata;
+		if (!metadata) {
+			return `data: ${JSON.stringify(data)}`;
+		}
+
+		// If this is a result metadata, extract result_files from content
+		if (metadata.type === "result" && metadata.content) {
+			const resultFiles: string[] = [];
+			const fileRegex = /^- `?(\/[^\s`]+)`?/gm;
+			let match;
+			while ((match = fileRegex.exec(metadata.content)) !== null) {
+				resultFiles.push(match[1]);
+			}
+			if (resultFiles.length > 0 && !metadata.result_files) {
+				metadata.result_files = resultFiles;
+			}
+
+			// Check if this metadata includes preDeploy info
+			if (metadata.preDeploy) {
+				// Merge result_files into the metadata and store
+				this.resultMetadata = { ...metadata };
+			} else {
+				// Store for later merging with pre_deploy_check
+				this.resultMetadata = { ...metadata };
+			}
+		}
+
+		return `data: ${JSON.stringify(data)}`;
 	}
 
 	/**

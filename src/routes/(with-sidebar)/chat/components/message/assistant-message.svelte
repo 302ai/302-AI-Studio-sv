@@ -20,7 +20,6 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { getLocale } from "$lib/paraglide/runtime";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { mcpState } from "$lib/stores/mcp-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
@@ -37,6 +36,7 @@
 	import type { DynamicToolUIPart } from "ai";
 	import { onDestroy } from "svelte";
 	import { toast } from "svelte-sonner";
+	import AssistantReasoningItem from "./assistant-reasoning-item.svelte";
 	import {
 		AskUserQuestionCard,
 		ClaudeCodeToolCard,
@@ -50,8 +50,8 @@
 		isClaudeCodeToolType,
 		isMcpToolType,
 	} from "./claude-code-tools";
+	import AgentTaskFiles from "./code-agent/agent-task-files.svelte";
 	import AgentTaskResult from "./code-agent/agent-task-result.svelte";
-	import AssistantReasoningItem from "./assistant-reasoning-item.svelte";
 	import ExportDialog from "./export-dialog.svelte";
 	import MessageActions from "./message-actions.svelte";
 	import MessageContextMenu from "./message-context-menu.svelte";
@@ -434,7 +434,7 @@
 				<MessageSquareShare />
 			</ButtonWithTooltip>
 
-			{#if codeAgentState.inCodeAgentMode && message.metadata?.result}
+			{#if message.metadata?.result}
 				<AgentTaskResult result={message.metadata.result} />
 			{/if}
 
@@ -645,6 +645,9 @@
 				isExportDialogOpen = open;
 			}}
 		/>
+
+		<!-- Result Download Files -->
+		<AgentTaskFiles files={[...(message.metadata?.result?.result_files ?? [])]} />
 
 		{@render messageFooter()}
 
