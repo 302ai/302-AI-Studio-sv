@@ -186,6 +186,7 @@ export async function updateTasklist(
 					save_path: tasksFilePath,
 				},
 			],
+			ts: Date.now(),
 		});
 
 		if (!response.success || !response.result?.[0]?.success) {

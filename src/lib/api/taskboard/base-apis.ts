@@ -176,6 +176,7 @@ export const batchUploadFileRequestSchema = type({
 		content: "string",
 		save_path: "string",
 	}).array(),
+	ts: "number?",
 });
 export type BatchUploadFileRequest = typeof batchUploadFileRequestSchema.infer;
 
