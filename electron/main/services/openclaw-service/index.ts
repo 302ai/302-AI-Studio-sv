@@ -1,5 +1,6 @@
+import { SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
 import { type IpcMainInvokeEvent } from "electron";
-import { get, isUndefined, merge, set } from "es-toolkit/compat";
+import { get, isUndefined, merge, pick, set } from "es-toolkit/compat";
 import fs from "fs/promises";
 import { localVibeService } from "../local-vibe-service";
 import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
@@ -82,11 +83,14 @@ export class OpenClawService {
 	 * Apply channel configurations to OpenClaw
 	 */
 	async applyOpenClawChannelConfig(_event: IpcMainInvokeEvent) {
-		const [{ data }, channels] = await Promise.all([
+		const [configs, channels] = await Promise.all([
 			codeAgentGlobalConfigsStorage.getGlobalConfigs(),
 			this.getOpenClawConfig("channels"),
 		]);
-		await this.setOpenClawConfig("channels", merge(channels, data));
+
+		const filteredData = pick(configs.data, SUPPORTED_CHANNELS);
+
+		await this.setOpenClawConfig("channels", merge(channels, filteredData));
 	}
 
 	async handleOpenClawWebUiReloadIpc(_event: IpcMainInvokeEvent, tabId: string) {

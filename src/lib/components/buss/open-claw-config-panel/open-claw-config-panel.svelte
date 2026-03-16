@@ -108,7 +108,9 @@
 		applyConfigLoading = true;
 		try {
 			await window.electronAPI.openClawService.applyOpenClawChannelConfig();
-			await window.electronAPI.localVibeService.restartPodmanMachine();
+			if (localEnvState.openClawHealthStatus === "healthy") {
+				await window.electronAPI.localVibeService.restartPodmanMachine();
+			}
 		} catch (e) {
 			const error = e as NodeJS.ErrnoException;
 			if (error.code === "ENOENT") {
