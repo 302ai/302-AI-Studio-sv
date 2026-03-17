@@ -106,6 +106,11 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 				spec: "@openclaw/feishu",
 				installPath: "/home/user/.openclaw/extensions/feishu",
 			},
+			channels: {
+				source: "npm",
+				spec: "@openclaw-china/channels",
+				installPath: "/home/user/.openclaw/extensions/channels",
+			},
 		},
 	},
 	skills: {
