@@ -79,6 +79,8 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 			domain: "feishu",
 			dmPolicy: "open",
 			allowFrom: ["*"],
+			groupAllowFrom: [],
+			groupPolicy: "open",
 		},
 	},
 	gateway: {
