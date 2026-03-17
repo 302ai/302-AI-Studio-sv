@@ -23,6 +23,11 @@ import { nanoid } from "nanoid";
 import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
 
+import { startListeningOpenClawCronJobs, stopListeningOpenClawCronJobs } from "$lib/api/openclaw";
+import {
+	pushOpenClawCronJobRecord,
+	type OpenClawCronJobResultResponse,
+} from "$lib/api/openclaw/base-apis";
 import { chatParameters } from "$lib/stores/chat-paramters/chat-parameters.svelte";
 
 import { resolvePrompt } from "@shared/utils/chat-parameters";
@@ -207,7 +212,11 @@ class ChatState {
 	isCreateSkillMode = $state(false);
 	private _isSearchInput = $state(false);
 
-	async handleSendMessage() {}
+	// Task result rendering state and queue
+	isRenderingTaskResult = $state(false);
+	private pendingTaskResults = $state<OpenClawCronJobResultResponse["data"][number]["runs"][]>([]);
+
+	private isActive = $derived(tabBarState.activeTab?.id === tab.id);
 
 	/**
 	 * Cancel any pending suggestions generation request.
@@ -279,6 +288,36 @@ class ChatState {
 	}
 
 	constructor() {
+		// Effect to control Cron polling based on Vibe mode and Active Tab
+		$effect.root(() => {
+			$effect(() => {
+				// Only start polling if: Vibe mode enabled + Tab active + SessionId exists
+				if (
+					codeAgentState.enabled &&
+					codeAgentState.type === "local" &&
+					localEnvState.openClawHealthStatus === "healthy" &&
+					this.isActive &&
+					codeAgentState.currentSessionId
+				) {
+					startListeningOpenClawCronJobs(codeAgentState.currentSessionId, (runs) => {
+						if (runs && runs.length > 0) {
+							this.pendingTaskResults.push(runs);
+						}
+					});
+				} else {
+					// Immediately stop when switching tabs or exiting Vibe mode
+					untrack(() => stopListeningOpenClawCronJobs());
+				}
+			});
+
+			// Effect to consume the pending task results when chat is ready (not streaming)
+			$effect(() => {
+				if (this.isReady && this.pendingTaskResults.length > 0 && !this.isRenderingTaskResult) {
+					untrack(() => this.processNextTaskResult());
+				}
+			});
+		});
+
 		// Watch for busy state and report to ThreadStateService
 		$effect.root(() => {
 			$effect(() => {
@@ -525,7 +564,8 @@ class ChatState {
 			!!this.selectedModel &&
 			!this.isStreaming &&
 			!this.isSubmitted &&
-			this.loadingAttachmentIds.size === 0, // 确保没有附件正在加载
+			this.loadingAttachmentIds.size === 0 && // 确保没有附件正在加载
+			!this.isRenderingTaskResult, // 确保当前不在渲染后台任务
 	);
 	hasMessages = $derived(this.messages.length > 0);
 
@@ -1570,6 +1610,55 @@ class ChatState {
 
 	handleMaxTokensChange(value: number | null) {
 		this.maxTokens = value;
+	}
+
+	private async processNextTaskResult() {
+		if (this.pendingTaskResults.length === 0 || this.isRenderingTaskResult) return;
+		this.isRenderingTaskResult = true;
+
+		try {
+			const newMessages: ChatMessage[] = [];
+			const cronJobRecords: { job_id: string; ts: number }[] = [];
+
+			while (this.pendingTaskResults.length > 0) {
+				const runsArray = this.pendingTaskResults.shift();
+				if (!runsArray || !Array.isArray(runsArray)) continue;
+
+				for (const run of runsArray) {
+					const taskMsg: ChatMessage = {
+						id: nanoid(),
+						role: "assistant",
+						parts: [{ type: "text" as const, text: run.summary ?? run.error }],
+						metadata: {
+							createdAt: `${run.ts}`,
+							isOCCronJobResult: true,
+							OCCronJobRunData: run,
+							model: run.model ?? "openclaw",
+						},
+					};
+					newMessages.push(taskMsg);
+					cronJobRecords.push({ job_id: run.jobId, ts: run.ts });
+				}
+			}
+
+			if (newMessages.length > 0) {
+				this.messages = [...this.messages, ...newMessages];
+				persistedMessagesState.current = this.messages;
+
+				// Sync processed cron job records to backend
+				try {
+					await pushOpenClawCronJobRecord({ items: cronJobRecords });
+				} catch (error) {
+					console.error("[CronPoll] failed to push cron job records:", error);
+				}
+
+				console.log(`[CronPoll] successfully merged ${newMessages.length} cron job results`);
+			}
+		} catch (error) {
+			console.error("[CronPoll] failed to merge cron job results:", error);
+		} finally {
+			this.isRenderingTaskResult = false;
+		}
 	}
 }
 

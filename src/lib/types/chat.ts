@@ -46,6 +46,9 @@ export const messageMetadataSchema = z.object({
 	systemPromptContent: z.string().optional(),
 	systemPromptVariables: z.array(z.string()).optional(),
 	systemPromptMap: z.record(z.string(), z.string()).optional(),
+	// OpenClaw
+	isOCCronJobResult: z.boolean().optional(),
+	OCCronJobRunData: z.any().optional(),
 });
 
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
