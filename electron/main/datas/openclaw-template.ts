@@ -108,4 +108,17 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 			},
 		},
 	},
+	skills: {
+		load: {
+			extraDirs: ["/home/user/skills"],
+			watch: true,
+			watchDebounceMs: 250,
+		},
+		entries: {
+			"302ai-search": {
+				enabled: true,
+				apiKey: "",
+			},
+		},
+	},
 };

@@ -435,6 +435,8 @@ export class LocalVibeService {
 						set(templateConfig, `models.providers.${providerName}.apiKey`, apiKey);
 					}
 				}
+				// Set API key for skills
+				set(templateConfig, "skills.entries.302ai-search.apiKey", apiKey);
 			}
 
 			// Merge app-models into template config
@@ -464,6 +466,8 @@ export class LocalVibeService {
 						set(finalConfig, `models.providers.${providerName}.apiKey`, apiKey);
 					}
 				}
+				// Set API key for skills
+				set(finalConfig, "skills.entries.302ai-search.apiKey", apiKey);
 			}
 
 			const presetContent = JSON.stringify(finalConfig, null, 2);
