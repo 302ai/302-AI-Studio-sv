@@ -590,6 +590,16 @@ $effect.root(() => {
 		}
 	});
 
+	// Auto-start sandbox health check listening when local Vibe mode is active.
+	// This ensures cron job monitoring starts for threads loaded from the sidebar
+	// without requiring the user to open the Vibe mode settings panel.
+	// startSandboxListening() is idempotent (guarded by unsubscribe checks).
+	$effect(() => {
+		if (codeAgentState.enabled && codeAgentState.type === "local") {
+			localEnvState.startSandboxListening();
+		}
+	});
+
 	// Listen to local sandbox state changes, refresh baseUrl when sandbox is running
 	const offLocalSandboxState = window.electronAPI.onLocalSandboxStateChanged((data) => {
 		if (data.running && codeAgentState.type === "local") {

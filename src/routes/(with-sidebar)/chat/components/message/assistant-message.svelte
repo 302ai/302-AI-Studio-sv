@@ -401,9 +401,13 @@
 {/snippet}
 
 {#snippet messageFooter()}
+	{@const isOCCronJobResult = message.metadata?.isOCCronJobResult === true}
 	<div class="flex items-center gap-2">
 		{#if !isCurrentMessageStreaming}
-			<MessageActions {message} enabledActions={["copy", "regenerate"]} />
+			<MessageActions
+				{message}
+				enabledActions={isOCCronJobResult ? ["copy"] : ["copy", "regenerate"]}
+			/>
 
 			<!-- Read aloud button (only show if speech synthesis is available) -->
 			{#if speechSynthesisAvailable}
@@ -434,35 +438,37 @@
 				<MessageSquareShare />
 			</ButtonWithTooltip>
 
-			{#if message.metadata?.result}
-				<AgentTaskResult result={message.metadata.result} />
+			{#if !isOCCronJobResult}
+				{#if message.metadata?.result}
+					<AgentTaskResult result={message.metadata.result} />
+				{/if}
+
+				<div class="h-4 w-px bg-border"></div>
+
+				<!-- Feedback buttons -->
+				<div class="flex items-center gap-2">
+					<ButtonWithTooltip
+						tooltipSide="bottom"
+						class="{message.metadata?.feedback === 'like'
+							? 'text-green-600 dark:text-green-400'
+							: 'text-muted-foreground'} hover:!bg-chat-action-hover"
+						tooltip={m.text_feedback_like()}
+						onclick={() => handleFeedback("like")}
+					>
+						<ThumbsUp />
+					</ButtonWithTooltip>
+					<ButtonWithTooltip
+						tooltipSide="bottom"
+						class="{message.metadata?.feedback === 'dislike'
+							? 'text-red-600 dark:text-red-400'
+							: 'text-muted-foreground'} hover:!bg-chat-action-hover"
+						tooltip={m.text_feedback_dislike()}
+						onclick={() => handleFeedback("dislike")}
+					>
+						<ThumbsDown />
+					</ButtonWithTooltip>
+				</div>
 			{/if}
-
-			<div class="h-4 w-px bg-border"></div>
-
-			<!-- Feedback buttons -->
-			<div class="flex items-center gap-2">
-				<ButtonWithTooltip
-					tooltipSide="bottom"
-					class="{message.metadata?.feedback === 'like'
-						? 'text-green-600 dark:text-green-400'
-						: 'text-muted-foreground'} hover:!bg-chat-action-hover"
-					tooltip={m.text_feedback_like()}
-					onclick={() => handleFeedback("like")}
-				>
-					<ThumbsUp />
-				</ButtonWithTooltip>
-				<ButtonWithTooltip
-					tooltipSide="bottom"
-					class="{message.metadata?.feedback === 'dislike'
-						? 'text-red-600 dark:text-red-400'
-						: 'text-muted-foreground'} hover:!bg-chat-action-hover"
-					tooltip={m.text_feedback_dislike()}
-					onclick={() => handleFeedback("dislike")}
-				>
-					<ThumbsDown />
-				</ButtonWithTooltip>
-			</div>
 		{/if}
 
 		<span class="text-xs text-muted-foreground">

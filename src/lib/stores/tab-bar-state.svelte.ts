@@ -148,28 +148,6 @@ class TabBarState {
 			console.log(`Window ID changed from ${this.#windowId} to ${newWindowId}`);
 			this.#windowId = newWindowId;
 		});
-
-		// Listen for window ID changes when tab is moved between windows
-		// Tab views need this to update window.windowId, but should NOT update TabBarState's #windowId
-		// window.addEventListener("windowIdChanged", (event: Event) => {
-		// 	const customEvent = event as CustomEvent<{ newWindowId: string }>;
-		// 	const { newWindowId } = customEvent.detail;
-
-		// 	if (this.#isShellView) {
-		// 		// Shell views should never be migrated, log warning if this happens
-		// 		console.warn(
-		// 			`[TabBarState] Unexpected windowId change in shell view from ${this.#windowId} to ${newWindowId}`,
-		// 		);
-		// 	} else {
-		// 		// Tab views are migrated between windows
-		// 		// Do NOT update #windowId to prevent this tab view's TabBarState from interfering
-		// 		console.log(
-		// 			`[TabBarState] Tab view migrated to window ${newWindowId}, keeping TabBarState disabled`,
-		// 		);
-		// 	}
-		// 	// CRITICAL: Do NOT update #windowId
-		// 	// This prevents migrated tab views from reading/writing other windows' tab state
-		// });
 	}
 
 	// ******************************* Private Methods ******************************* //
@@ -185,6 +163,10 @@ class TabBarState {
 			...t,
 			active: t.id === activeTabId,
 		}));
+	}
+
+	get activeTab() {
+		return persistedTabState.current[this.#windowId]?.tabs.find((t) => t.active);
 	}
 
 	async #handleTabRemovalWithActiveState(
