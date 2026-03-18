@@ -43,7 +43,7 @@
 
 	<!-- Platform Section -->
 	<div class="space-y-2">
-		<h2 class="text-sm font-medium text-muted-foreground">{m.title_agent_platform()}</h2>
+		<h2 class="text-sm text-label-fg">{m.title_agent_platform()}</h2>
 		<SegButton
 			options={platformOptions}
 			selectedKey={selectedPlatform}
