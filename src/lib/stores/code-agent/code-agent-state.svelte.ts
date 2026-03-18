@@ -118,11 +118,15 @@ class CodeAgentState {
 		}
 
 		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
+			const sendRetryMessage = codeAgentGlobalConfigsState.autoFixDeployFailure
+				? async (content: string) => {
+						await chatState.sendMessage({ content });
+					}
+				: undefined;
+
 			await claudeCodeAgentState.handleChatFinished({
 				...event,
-				sendRetryMessage: async (content: string) => {
-					await chatState.sendMessage({ content });
-				},
+				sendRetryMessage,
 			});
 		}
 

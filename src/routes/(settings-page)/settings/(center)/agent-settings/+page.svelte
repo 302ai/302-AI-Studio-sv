@@ -35,6 +35,11 @@
 		onCheckedChange={() => codeAgentGlobalConfigsState.toggleAutoDeploy()}
 	/>
 	<SettingSwitchItem
+		label={m.auto_fix_deploy_failure()}
+		checked={codeAgentGlobalConfigsState.autoFixDeployFailure}
+		onCheckedChange={() => codeAgentGlobalConfigsState.toggleAutoFixDeployFailure()}
+	/>
+	<SettingSwitchItem
 		label={m.settings_notificationsEnabled()}
 		checked={codeAgentGlobalConfigsState.notificationsEnabled}
 		onCheckedChange={() => codeAgentGlobalConfigsState.toggleNotificationsEnabled()}

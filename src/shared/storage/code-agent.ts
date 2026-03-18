@@ -112,6 +112,7 @@ export type CreateClaudeCodeSandboxResponse = typeof createClaudeCodeSandboxResp
 export const codeAgentGlobalConfigs = type({
 	apiKey: "string",
 	autoDeploy: "boolean",
+	autoFixDeployFailure: "boolean",
 	notificationsEnabled: "boolean",
 	lastVibeMode: "'local' | 'remote'",
 	feishu: type({ appId: "string", appSecret: "string" }),

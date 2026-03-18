@@ -41,6 +41,7 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 		const defaultData = {
 			apiKey: "",
 			autoDeploy: true,
+			autoFixDeployFailure: true,
 			notificationsEnabled: false,
 			lastVibeMode: "remote" as const,
 			feishu: {

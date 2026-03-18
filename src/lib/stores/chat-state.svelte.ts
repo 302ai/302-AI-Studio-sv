@@ -1630,7 +1630,7 @@ class ChatState {
 						role: "assistant",
 						parts: [{ type: "text" as const, text: run.summary ?? run.error }],
 						metadata: {
-							createdAt: `${run.ts}`,
+							createdAt: new Date(run.ts).toISOString(),
 							isOCCronJobResult: true,
 							OCCronJobRunData: run,
 							model: run.model ?? "openclaw",

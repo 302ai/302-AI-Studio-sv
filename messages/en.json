@@ -1399,5 +1399,6 @@
 	"title_local_mode_description": "For complex tasks, use {type} ",
 	"document_viewer_cannot_preview": "This document cannot be previewed directly in the browser",
 	"openclaw_webui_failed_to_load": "Unable to load OpenClaw admin page",
-	"openclaw_webui_ensure_running": "Please make sure the OpenClaw service is running"
+	"openclaw_webui_ensure_running": "Please make sure the OpenClaw service is running",
+	"auto_fix_deploy_failure": "Automatic Repair Deployment Failure"
 }

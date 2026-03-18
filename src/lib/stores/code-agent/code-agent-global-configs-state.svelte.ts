@@ -8,6 +8,7 @@ function getInitialData() {
 	const initialData = {
 		apiKey: "",
 		autoDeploy: true,
+		autoFixDeployFailure: true,
 		notificationsEnabled: false,
 		lastVibeMode: "remote" as const,
 		feishu: { appId: "", appSecret: "" },
@@ -27,6 +28,9 @@ export const persistedCodeAgentGlobalConfigsState = new PersistedState<CodeAgent
 class CodeAgentGlobalConfigsState {
 	apiKey = $derived(persistedCodeAgentGlobalConfigsState.current?.apiKey ?? "");
 	autoDeploy = $derived(persistedCodeAgentGlobalConfigsState.current?.autoDeploy ?? true);
+	autoFixDeployFailure = $derived(
+		persistedCodeAgentGlobalConfigsState.current?.autoFixDeployFailure ?? true,
+	);
 	notificationsEnabled = $derived(
 		persistedCodeAgentGlobalConfigsState.current?.notificationsEnabled ?? false,
 	);
@@ -85,6 +89,10 @@ class CodeAgentGlobalConfigsState {
 
 	toggleAutoDeploy() {
 		this.#updateState({ autoDeploy: !this.autoDeploy });
+	}
+
+	toggleAutoFixDeployFailure() {
+		this.#updateState({ autoFixDeployFailure: !this.autoFixDeployFailure });
 	}
 
 	updateFeishuConfig(config: { appId: string; appSecret: string }) {
