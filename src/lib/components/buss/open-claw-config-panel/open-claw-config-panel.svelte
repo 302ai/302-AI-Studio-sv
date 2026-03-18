@@ -42,77 +42,45 @@
 		codeAgentGlobalConfigsState.updateFeishuAppSecret,
 	);
 
-	const dingtalkClientId = {
-		get value() {
-			return codeAgentGlobalConfigsState.dingtalk.clientId;
-		},
-		set value(v: string) {
-			codeAgentGlobalConfigsState.updateDingtalkClientId(v);
-		},
-	};
+	const dingtalkClientId = bind(
+		() => codeAgentGlobalConfigsState.dingtalk.clientId,
+		codeAgentGlobalConfigsState.updateDingtalkClientId,
+	);
 
-	const dingtalkClientSecret = {
-		get value() {
-			return codeAgentGlobalConfigsState.dingtalk.clientSecret;
-		},
-		set value(v: string) {
-			codeAgentGlobalConfigsState.updateDingtalkClientSecret(v);
-		},
-	};
+	const dingtalkClientSecret = bind(
+		() => codeAgentGlobalConfigsState.dingtalk.clientSecret,
+		codeAgentGlobalConfigsState.updateDingtalkClientSecret,
+	);
 
-	const qqbotAppId = {
-		get value() {
-			return codeAgentGlobalConfigsState.qqbot.appId;
-		},
-		set value(v: string) {
-			codeAgentGlobalConfigsState.updateQqbotAppId(v);
-		},
-	};
+	const qqbotAppId = bind(
+		() => codeAgentGlobalConfigsState.qqbot.appId,
+		codeAgentGlobalConfigsState.updateQqbotAppId,
+	);
 
-	const qqbotClientSecret = {
-		get value() {
-			return codeAgentGlobalConfigsState.qqbot.clientSecret;
-		},
-		set value(v: string) {
-			codeAgentGlobalConfigsState.updateQqbotClientSecret(v);
-		},
-	};
+	const qqbotClientSecret = bind(
+		() => codeAgentGlobalConfigsState.qqbot.clientSecret,
+		codeAgentGlobalConfigsState.updateQqbotClientSecret,
+	);
 
-	const wecomBotId = {
-		get value() {
-			return codeAgentGlobalConfigsState.wecom.botId;
-		},
-		set value(v: string) {
-			codeAgentGlobalConfigsState.updateWecomBotId(v);
-		},
-	};
+	const wecomBotId = bind(
+		() => codeAgentGlobalConfigsState.wecom.botId,
+		codeAgentGlobalConfigsState.updateWecomBotId,
+	);
 
-	const wecomSecret = {
-		get value() {
-			return codeAgentGlobalConfigsState.wecom.secret;
-		},
-		set value(v: string) {
-			codeAgentGlobalConfigsState.updateWecomSecret(v);
-		},
-	};
+	const wecomSecret = bind(
+		() => codeAgentGlobalConfigsState.wecom.secret,
+		codeAgentGlobalConfigsState.updateWecomSecret,
+	);
 
-	const telegramBotToken = {
-		get value() {
-			return codeAgentGlobalConfigsState.telegram.botToken;
-		},
-		set value(v: string) {
-			codeAgentGlobalConfigsState.updateTelegramBotToken(v);
-		},
-	};
+	const telegramBotToken = bind(
+		() => codeAgentGlobalConfigsState.telegram.botToken,
+		codeAgentGlobalConfigsState.updateTelegramBotToken,
+	);
 
-	const telegramAllowFrom = {
-		get value() {
-			return codeAgentGlobalConfigsState.telegram.allowFrom.join(",");
-		},
-		set value(v: string) {
-			codeAgentGlobalConfigsState.updateTelegramAllowFrom(v.split(","));
-		},
-	};
+	const telegramAllowFrom = bind(
+		() => codeAgentGlobalConfigsState.telegram.allowFrom.join(","),
+		(v: string) => codeAgentGlobalConfigsState.updateTelegramAllowFrom(v.split(",")),
+	);
 
 	async function handleConfirmDialogOk() {
 		applyConfigLoading = true;
