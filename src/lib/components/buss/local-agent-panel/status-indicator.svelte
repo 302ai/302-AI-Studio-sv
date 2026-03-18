@@ -49,8 +49,23 @@
 				<TriangleAlert class="size-4 text-destructive" />
 			</Tooltip.Trigger>
 			{#if warningTooltip}
-				<Tooltip.Content class="bg-overlay text-overlay-foreground">
+				<Tooltip.Content
+					class="relative overflow-visible rounded-md border border-border bg-overlay text-overlay-foreground shadow-md"
+					arrowClasses="hidden"
+					side="top"
+					sideOffset={10}
+				>
 					<p>{warningTooltip}</p>
+					<span class="pointer-events-none absolute top-full left-1/2 block -translate-x-1/2">
+						<span
+							class="absolute left-1/2 top-0 block h-0 w-0 -translate-x-1/2 border-x-[6px] border-t-[7px] border-x-transparent"
+							style="border-top-color: var(--border);"
+						></span>
+						<span
+							class="absolute left-1/2 top-[-1px] block h-0 w-0 -translate-x-1/2 border-x-[5px] border-t-[6px] border-x-transparent"
+							style="border-top-color: var(--overlay);"
+						></span>
+					</span>
 				</Tooltip.Content>
 			{/if}
 		</Tooltip.Root>
