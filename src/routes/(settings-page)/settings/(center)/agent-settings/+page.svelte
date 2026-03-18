@@ -6,6 +6,7 @@
 	import LocalPlatform from "./local-platform.svelte";
 	import RemotePlatform from "./remote-platform.svelte";
 
+	import OpenClawConfigPanel from "$lib/components/buss/open-claw-config-panel/open-claw-config-panel.svelte";
 	import DeployedWebsitesList from "./deployed-websites-list.svelte";
 
 	const platformOptions = [
@@ -61,6 +62,7 @@
 	{#if selectedPlatform === "remote"}
 		<RemotePlatform />
 	{:else if selectedPlatform === "local"}
+		<OpenClawConfigPanel />
 		<LocalPlatform />
 	{/if}
 </div>

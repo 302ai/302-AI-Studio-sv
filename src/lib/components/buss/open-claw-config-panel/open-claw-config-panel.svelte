@@ -23,23 +23,24 @@
 
 	const { className }: Props = $props();
 
-	const feishuAppId = {
+	const bind = <T,>(get: () => T, set: (v: T) => void) => ({
 		get value() {
-			return codeAgentGlobalConfigsState.feishu.appId;
+			return get();
 		},
-		set value(v: string) {
-			codeAgentGlobalConfigsState.updateFeishuAppId(v);
+		set value(v: T) {
+			set(v);
 		},
-	};
+	});
 
-	const feishuAppSecret = {
-		get value() {
-			return codeAgentGlobalConfigsState.feishu.appSecret;
-		},
-		set value(v: string) {
-			codeAgentGlobalConfigsState.updateFeishuAppSecret(v);
-		},
-	};
+	const feishuAppId = bind(
+		() => codeAgentGlobalConfigsState.feishu.appId,
+		codeAgentGlobalConfigsState.updateFeishuAppId,
+	);
+
+	const feishuAppSecret = bind(
+		() => codeAgentGlobalConfigsState.feishu.appSecret,
+		codeAgentGlobalConfigsState.updateFeishuAppSecret,
+	);
 
 	const dingtalkClientId = {
 		get value() {
