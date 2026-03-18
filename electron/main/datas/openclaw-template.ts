@@ -81,6 +81,29 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 			allowFrom: ["*"],
 			groupPolicy: "open",
 		},
+		telegram: {
+			enabled: true,
+			dmPolicy: "open",
+			botToken: "",
+			allowFrom: ["*"],
+			groupPolicy: "open",
+		},
+		dingtalk: {
+			clientId: "",
+			clientSecret: "",
+			enableAICard: true,
+			enabled: true,
+		},
+		qqbot: {
+			enabled: true,
+			appId: "",
+			clientSecret: "",
+		},
+		wecom: {
+			enabled: true,
+			botId: "",
+			secret: "",
+		},
 	},
 	gateway: {
 		port: 18789,
