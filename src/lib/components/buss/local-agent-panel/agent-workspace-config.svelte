@@ -1,5 +1,12 @@
 <script lang="ts">
 	import { SegButton, SettingSelect } from "$lib/components/buss/settings";
+	import SettingInputField from "$lib/components/buss/settings/setting-input-field.svelte";
+	import {
+		Accordion,
+		AccordionContent,
+		AccordionItem,
+		AccordionTrigger,
+	} from "$lib/components/ui/accordion";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import { codeAgentState } from "$lib/stores/code-agent";
@@ -83,6 +90,43 @@
 			contentClass="w-[var(--bits-select-anchor-width)]"
 		/>
 	</div>
+
+	{#if codeAgentState.currentAgentId == "open-claw"}
+		<Accordion type="single" class="w-full rounded-settings-item">
+			<AccordionItem value="fei-shu" class="border-b-0">
+				<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+					<Label class=" font-normal no-underline cursor-pointer">飞书会话ID</Label>
+				</AccordionTrigger>
+				<AccordionContent class="pb-0 pt-2 space-y-2">
+					<div class="rounded-lg border p-4 space-y-4">
+						<!-- <div>
+								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
+								</div> -->
+						<!-- bind:value={tempAppid} -->
+						<SettingInputField
+							label="会话id"
+							placeholder="请输入会话id"
+							class="[&>label]:text-label-fg"
+						/>
+						<!-- bind:value={tempAppSecret} -->
+						<div class="flex items-center justify-between">
+							<div class=" text-muted-foreground flex items-center gap-2 text-xs">
+								<a href="https://open.feishu.cn/app?lang=zh-CN" class="text-primary hover:underline"
+									>{m.open_claw_feishu_get_id_and_secret()}</a
+								>
+								<div class="text-muted-foreground/50">|</div>
+								<a
+									href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
+									class="text-primary hover:underline"
+									>{m.open_claw_feishu_view_deployment_tutorial()}</a
+								>
+							</div>
+						</div>
+					</div>
+				</AccordionContent>
+			</AccordionItem>
+		</Accordion>
+	{/if}
 
 	<!-- Work Directory -->
 	<div class="space-y-2">
