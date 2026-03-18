@@ -1633,7 +1633,7 @@ class ChatState {
 							createdAt: new Date(run.ts).toISOString(),
 							isOCCronJobResult: true,
 							OCCronJobRunData: run,
-							model: run.model ?? "openclaw",
+							model: "openclaw",
 						},
 					};
 					newMessages.push(taskMsg);

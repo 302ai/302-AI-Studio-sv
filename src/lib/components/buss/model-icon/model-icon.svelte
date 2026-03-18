@@ -8,8 +8,8 @@
 </script>
 
 <script lang="ts">
+	import openclawIconRaw from "$lib/assets/icons/code-agent/openclaw-color.svg?raw";
 	import { cn } from "$lib/utils";
-	import openclawIconRaw from "$lib/assets/icons/code-agent/openclaw.svg?raw";
 	import adobeIcon from "@lobehub/icons-static-svg/icons/adobe-color.svg";
 	import ai302Icon from "@lobehub/icons-static-svg/icons/ai302-color.svg";
 	import anthropicIcon from "@lobehub/icons-static-svg/icons/anthropic.svg";
