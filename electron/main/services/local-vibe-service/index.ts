@@ -1,5 +1,6 @@
+import { isLinux } from "$lib/utils/platform";
 import { getLocalSandboxHealthStatus } from "@electron/main/apis/code-agent";
-import { isLinux, PLATFORM } from "@electron/main/constants/index";
+import { PLATFORM } from "@electron/main/constants/index";
 import { OPENCLAW_DEFAULT_CONFIG } from "@electron/main/datas/openclaw-template";
 import { broadcastService } from "@electron/main/services/broadcast-service";
 import { generalSettingsService } from "@electron/main/services/settings-service/general-settings-service";
