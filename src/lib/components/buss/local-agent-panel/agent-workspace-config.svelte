@@ -53,7 +53,8 @@
 	</div>
 
 	{#if codeAgentState.currentAgentId == "open-claw"}
-		<OpenClawConfigPanel />
+		<!-- NOTE: Hidden channel configuration -->
+		<OpenClawConfigPanel className="hidden" />
 	{/if}
 
 	<!-- Select Session -->

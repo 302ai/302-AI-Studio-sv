@@ -1,3 +1,9 @@
+<script lang="ts" module>
+	interface Props {
+		className?: string;
+	}
+</script>
+
 <script lang="ts">
 	import { AccordionContent, AccordionItem, AccordionTrigger } from "$lib/components/ui/accordion";
 	import Accordion from "$lib/components/ui/accordion/accordion.svelte";
@@ -14,6 +20,8 @@
 
 	let confirmDialogOpen = $state(false);
 	let applyConfigLoading = $state(false);
+
+	const { className }: Props = $props();
 
 	const feishuAppId = {
 		get value() {
@@ -354,7 +362,7 @@
 	</Accordion>
 {/snippet}
 
-<Accordion type="single" value="channel-settings" class="w-full m-0">
+<Accordion type="single" value="channel-settings" class="w-full m-0 {className}">
 	<AccordionItem value="channel-settings" class="border-b-0">
 		<AccordionTrigger class="py-2 hover:no-underline">
 			<Label class="text-label-fg cursor-pointer">{m.agent_framework_open_claw_set_channel()}</Label
