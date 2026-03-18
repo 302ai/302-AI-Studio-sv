@@ -1,0 +1,26 @@
+services:
+  local-cc-api:
+    # Use a fully-qualified image reference for Podman (short names are often disabled).
+    image: ghcr.io/302ai/cc-local-api:oc
+    container_name: local-cc-api
+    ports:
+      # host port injected from .env file at runtime (with conflict detection)
+      - "${HOST_PORT}:8000"
+      - "${OPENCLAW_PORT}:18789"
+    environment:
+      # sqlite file path inside container
+      - DB_SQLITE_PATH=/home/user/db/app.db
+      - ROOT_SAVE_PATH=/home/user
+      # set these as needed
+      - ANTHROPIC_BASE_URL=https://api.302.ai
+      - ANTHROPIC_AUTH_TOKEN=${AI302_API_KEY}
+      - ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-5.2
+      # injected from .env file at runtime
+      - AI302_API_KEY=${AI302_API_KEY}
+      - IS_SANDBOX=1
+    volumes:
+      # host path injected from .env file at runtime
+      - type: bind
+        source: ${HOST_DATA_PATH}
+        target: /home/user
+    restart: unless-stopped

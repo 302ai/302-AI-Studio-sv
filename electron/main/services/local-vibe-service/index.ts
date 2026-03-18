@@ -137,10 +137,12 @@ export class LocalVibeService {
 	 * In production: docker-compose.yml in app resources directory
 	 */
 	private getDockerComposePath(): string {
+		const dockercomposeFileName =
+			process.platform == "linux" ? "docker-compose.yml.linux" : "docker-compose.yml";
 		if (app.isPackaged) {
-			return path.join(process.resourcesPath, "docker-compose.yml");
+			return path.join(process.resourcesPath, dockercomposeFileName);
 		}
-		return path.join(process.cwd(), "static", "docker-compose.yml");
+		return path.join(process.cwd(), "static", dockercomposeFileName);
 	}
 
 	/**
@@ -2724,6 +2726,13 @@ export class LocalVibeService {
 				// Start local sandbox health check
 				await new Promise((resolve) => setTimeout(resolve, 3000));
 				await this.startLocalSandboxHealthCheck();
+
+				console.log("xxx", this.getRuntimeComposeDir());
+				await this.runLinuxPrivilegedCommandWithBroadcast(
+					"chmod",
+					["-R", "o+rx", path.join(this.getRuntimeComposeDir())],
+					"fix-openclaw-channels-perm",
+				);
 
 				return {
 					isOk: true,
