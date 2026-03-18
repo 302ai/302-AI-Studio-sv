@@ -7,9 +7,10 @@ import { storageService } from "@electron/main/services/storage-service";
 import { localVibeStorage } from "@electron/main/services/storage-service/code-agent/local-vibe-storage";
 import { providerStorage } from "@electron/main/services/storage-service/provider-storage";
 import { isCommandNotFound } from "@electron/main/utils/cmd";
+import { deepMergeWithOverride, omitByPrefix } from "@electron/main/utils/object-utils";
 import { exec, spawn, type SpawnOptions } from "child_process";
 import { app, shell, type IpcMainInvokeEvent } from "electron";
-import { get, set } from "es-toolkit/compat";
+import { cloneDeep, get, set } from "es-toolkit/compat";
 import { isNull } from "es-toolkit/predicate";
 import fs, { readFileSync } from "fs";
 import { cp, readdir } from "fs/promises";
@@ -422,10 +423,7 @@ export class LocalVibeService {
 
 		try {
 			// Always start with template as base
-			const templateConfig = JSON.parse(JSON.stringify(OPENCLAW_DEFAULT_CONFIG)) as Record<
-				string,
-				unknown
-			>;
+			const templateConfig = cloneDeep(OPENCLAW_DEFAULT_CONFIG) as Record<string, unknown>;
 
 			// Set API keys in template for all providers
 			if (apiKey) {
@@ -442,7 +440,7 @@ export class LocalVibeService {
 			}
 
 			// Merge app-models into template config
-			await this._mergeModelsIntoOpenclawConfig(templateConfig);
+			await this._mergeModelsConfig(templateConfig);
 
 			let finalConfig: Record<string, unknown>;
 
@@ -451,25 +449,14 @@ export class LocalVibeService {
 				finalConfig = templateConfig;
 				console.log("[Local Vibe] Creating new openclaw.json");
 			} else {
-				// Existing file: merge template's new fields into existing config
+				// Existing file: merge template into existing config with forced API key override
 				const existingContent = fs.readFileSync(openclawFilePath, "utf-8");
 				const existingConfig = JSON.parse(existingContent) as Record<string, unknown>;
-				finalConfig = this._mergeTemplateIntoExistingConfig(existingConfig, templateConfig);
-				console.log("[Local Vibe] Merged template updates into existing openclaw.json");
-			}
 
-			// Always update API key to latest value (force update) for all providers
-			if (apiKey) {
-				const providers = get(finalConfig, "models.providers") as
-					| Record<string, Record<string, unknown>>
-					| undefined;
-				if (providers) {
-					for (const providerName of Object.keys(providers)) {
-						set(finalConfig, `models.providers.${providerName}.apiKey`, apiKey);
-					}
-				}
-				// Set API key for skills
-				set(finalConfig, "skills.entries.302ai-search.apiKey", apiKey);
+				// API keys and skills keys must always sync from template (force override)
+				const overridePaths = this._getApiKeyOverridePaths(templateConfig);
+				finalConfig = this._mergeTemplateConfig(existingConfig, templateConfig, overridePaths);
+				console.log("[Local Vibe] Merged template updates into existing openclaw.json");
 			}
 
 			const presetContent = JSON.stringify(finalConfig, null, 2);
@@ -2942,98 +2929,125 @@ export class LocalVibeService {
 	}
 
 	/**
-	 * Recursively merges template config into existing config.
-	 * Adds new fields from template that don't exist in existing config.
-	 * Preserves existing values (user customizations take priority).
+	 * Get paths for all API keys that need to be force-overridden during merge.
+	 * Dynamically collects paths from the template config so new providers/skills
+	 * are automatically included without hardcoding.
 	 */
-	private _mergeTemplateIntoExistingConfig(
+	private _getApiKeyOverridePaths(templateConfig: Record<string, unknown>): string[] {
+		const overridePaths: string[] = [];
+
+		const providers = get(templateConfig, "models.providers") as
+			| Record<string, unknown>
+			| undefined;
+		if (providers) {
+			for (const providerName of Object.keys(providers)) {
+				overridePaths.push(`models.providers.${providerName}.apiKey`);
+			}
+		}
+
+		const skillEntries = get(templateConfig, "skills.entries") as
+			| Record<string, unknown>
+			| undefined;
+		if (skillEntries) {
+			for (const skillName of Object.keys(skillEntries)) {
+				overridePaths.push(`skills.entries.${skillName}.apiKey`);
+			}
+		}
+
+		return overridePaths;
+	}
+
+	/**
+	 * Merges template config into existing config with selective field override support.
+	 *
+	 * Default behaviour: user configuration wins (existing values preserved).
+	 * Override behaviour: paths listed in `overridePaths` are replaced from template.
+	 *
+	 * @param existingConfig User's existing configuration
+	 * @param templateConfig Template with new fields and default values
+	 * @param overridePaths Dot-paths that should be force-overridden (e.g., API keys)
+	 * @returns Merged configuration (new object — inputs are not mutated)
+	 */
+	private _mergeTemplateConfig(
 		existingConfig: Record<string, unknown>,
 		templateConfig: Record<string, unknown>,
+		overridePaths: string[] = [],
 	): Record<string, unknown> {
-		const merged = JSON.parse(JSON.stringify(existingConfig)) as Record<string, unknown>;
-
-		const mergeDeep = (
-			target: Record<string, unknown>,
-			source: Record<string, unknown>,
-			path = "",
-		) => {
-			for (const key in source) {
-				const currentPath = path ? `${path}.${key}` : key;
-				const sourceValue = source[key];
-				const targetValue = target[key];
-
-				if (!(key in target)) {
-					// Template has field that existing config doesn't have -> add it
-					target[key] = sourceValue;
-					console.log(`[Local Vibe] Added new config field: ${currentPath}`);
-				} else if (Array.isArray(sourceValue) && Array.isArray(targetValue)) {
-					// Both are arrays -> merge by adding new items from template
-					// Check if items are objects with `id` fields (e.g. model definitions)
-					const isObjectArrayWithId =
-						(sourceValue as unknown[]).length > 0 &&
-						typeof (sourceValue as unknown[])[0] === "object" &&
-						(sourceValue as unknown[])[0] !== null &&
-						"id" in ((sourceValue as unknown[])[0] as Record<string, unknown>);
-
-					if (isObjectArrayWithId) {
-						// Deduplicate by `id` to prevent duplicate models accumulating across restarts
-						const existingIds = new Set(
-							(targetValue as Array<Record<string, unknown>>).map((item) => item.id),
-						);
-						const newItems = (sourceValue as Array<Record<string, unknown>>).filter(
-							(item) => !existingIds.has(item.id),
-						);
-
-						if (newItems.length > 0) {
-							target[key] = [...(targetValue as unknown[]), ...newItems];
-							console.log(
-								`[Local Vibe] Merged array field: ${currentPath}, added ${newItems.length} new items (by id)`,
-							);
-						}
-					} else {
-						// Primitive arrays: use Set-based dedup (reference equality is fine for primitives)
-						const existingSet = new Set(targetValue as unknown[]);
-						const newItems = (sourceValue as unknown[]).filter((item) => !existingSet.has(item));
-
-						if (newItems.length > 0) {
-							target[key] = [
-								...(sourceValue as unknown[]),
-								...(targetValue as unknown[]).filter(
-									(item) => !(sourceValue as unknown[]).includes(item),
-								),
-							];
-							console.log(
-								`[Local Vibe] Merged array field: ${currentPath}, added ${newItems.length} new items`,
-							);
-						}
-					}
-				} else if (
-					typeof sourceValue === "object" &&
-					sourceValue !== null &&
-					!Array.isArray(sourceValue) &&
-					typeof targetValue === "object" &&
-					targetValue !== null &&
-					!Array.isArray(targetValue)
-				) {
-					// Both are plain objects -> recursive merge
-					mergeDeep(
-						targetValue as Record<string, unknown>,
-						sourceValue as Record<string, unknown>,
-						currentPath,
-					);
-				}
-				// Otherwise: keep existing value (user customization takes priority)
-			}
-		};
-
-		mergeDeep(merged, templateConfig);
+		const merged = cloneDeep(existingConfig);
+		deepMergeWithOverride(merged, templateConfig, overridePaths);
 		return merged;
 	}
 
 	/**
-	 * Helper method to fetch app-models and merge them into the given OpenClaw configuration object
+	 * Classify app-models from storage into normal and coding categories.
+	 * Single-pass classification for performance.
 	 */
-	private async _mergeModelsIntoOpenclawConfig(config: Record<string, unknown>): Promise<void> {
+	private _classifyModels(appModels: Array<Record<string, unknown>>): {
+		normalModels: Array<Record<string, unknown>>;
+		codingModels: Array<Record<string, unknown>>;
+	} {
+		const normalModels: Record<string, unknown>[] = [];
+		const codingModels: Record<string, unknown>[] = [];
+
+		for (const m of appModels) {
+			if (m.providerId !== "302AI") continue;
+
+			const id = m.id as string;
+
+			// cc-* models → coding
+			if (id.startsWith("cc-")) {
+				codingModels.push(m);
+				continue;
+			}
+
+			const isFeatured = m.isFeatured === true;
+			const isCompatible = m.openai_compatible === true;
+
+			// *-for-coding + featured + compatible → coding
+			if (id.endsWith("-for-coding") && isFeatured && isCompatible) {
+				codingModels.push(m);
+				continue;
+			}
+
+			// Regular ai302 models (featured + compatible)
+			if (isFeatured && isCompatible) {
+				normalModels.push(m);
+			}
+		}
+
+		return { normalModels, codingModels };
+	}
+
+	/**
+	 * Build the `agents.defaults.models` object from classified models.
+	 * Preserves non-ai302 keys from existing config while rebuilding ai302 entries.
+	 */
+	private _buildModelConfig(
+		existingModels: Record<string, unknown>,
+		classified: {
+			normalModels: Array<Record<string, unknown>>;
+			codingModels: Array<Record<string, unknown>>;
+		},
+	): Record<string, unknown> {
+		// Keep models that don't belong to ai302 or ai302-coding providers
+		const preservedModels = omitByPrefix(existingModels, ["ai302/", "ai302-coding/"]);
+		const newModels: Record<string, unknown> = { ...preservedModels };
+
+		for (const m of classified.normalModels) {
+			newModels[`ai302/${m.id}`] = {};
+		}
+		for (const m of classified.codingModels) {
+			newModels[`ai302-coding/${m.id}`] = {};
+		}
+
+		return newModels;
+	}
+
+	/**
+	 * Fetch app-models from storage and merge them into the given OpenClaw configuration.
+	 * Replaces all ai302/* and ai302-coding/* model entries with fresh data.
+	 */
+	private async _mergeModelsConfig(config: Record<string, unknown>): Promise<void> {
 		try {
 			const appModels = (await storageService.getItemInternal("app-models")) as
 				| Array<Record<string, unknown>>
@@ -3043,38 +3057,9 @@ export class LocalVibeService {
 				return;
 			}
 
-			// === 单次遍历分桶 ===
-			const ccModels: Record<string, unknown>[] = [];
-			const forCodingModels: Record<string, unknown>[] = [];
-			const ai302Models: Record<string, unknown>[] = [];
+			const classified = this._classifyModels(appModels);
 
-			for (const m of appModels) {
-				if (m.providerId !== "302AI") continue;
-
-				const id = m.id as string;
-
-				// 1. cc-* 模型
-				if (id.startsWith("cc-")) {
-					ccModels.push(m);
-					continue;
-				}
-
-				// 2. *-for-coding 模型
-				if (id.endsWith("-for-coding") && m.isFeatured === true && m.openai_compatible === true) {
-					forCodingModels.push(m);
-					continue;
-				}
-
-				// 3. 普通 ai302 模型（排除上面两种 + 必须是 featured + openai_compatible）
-				if (m.isFeatured === true && m.openai_compatible === true) {
-					ai302Models.push(m);
-				}
-			}
-
-			const ai302CodingModels = [...ccModels, ...forCodingModels];
-
-			// 没有需要处理的模型就直接返回
-			if (ai302Models.length === 0 && ai302CodingModels.length === 0) {
+			if (classified.normalModels.length === 0 && classified.codingModels.length === 0) {
 				return;
 			}
 
@@ -3083,26 +3068,7 @@ export class LocalVibeService {
 			}
 
 			const existingModels = get(config, "agents.defaults.models") as Record<string, unknown>;
-
-			// 保留非 ai302 前缀的模型
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			const nonAi302Models: Record<string, any> = {};
-			for (const [key, value] of Object.entries(existingModels)) {
-				if (!key.startsWith("ai302/")) {
-					nonAi302Models[key] = value;
-				}
-			}
-
-			// 重新组装 ai302 模型
-			const newModels = { ...nonAi302Models };
-
-			ai302Models.forEach((m) => {
-				newModels[`ai302/${m.id}`] = {};
-			});
-			ai302CodingModels.forEach((m) => {
-				newModels[`ai302-coding/${m.id}`] = {};
-			});
-
+			const newModels = this._buildModelConfig(existingModels, classified);
 			set(config, "agents.defaults.models", newModels);
 		} catch (error) {
 			console.warn(
@@ -3113,8 +3079,8 @@ export class LocalVibeService {
 	}
 
 	/**
-	 * Updates the agents.defaults.models inside openclaw.json based on current app-models
-	 * Called via IPC from the renderer process
+	 * Updates the agents.defaults.models inside openclaw.json based on current app-models.
+	 * Called via IPC from the renderer process.
 	 */
 	async updateOpenclawModels(
 		_event: IpcMainInvokeEvent,
@@ -3130,7 +3096,7 @@ export class LocalVibeService {
 			const content = fs.readFileSync(openclawFilePath, "utf-8");
 			const config = JSON.parse(content);
 
-			await this._mergeModelsIntoOpenclawConfig(config);
+			await this._mergeModelsConfig(config);
 
 			fs.writeFileSync(openclawFilePath, JSON.stringify(config, null, 2), "utf-8");
 			return { success: true };
