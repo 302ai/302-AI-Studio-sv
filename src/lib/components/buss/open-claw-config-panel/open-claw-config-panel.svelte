@@ -34,47 +34,47 @@
 
 	const feishuAppId = bind(
 		() => codeAgentGlobalConfigsState.feishu.appId,
-		codeAgentGlobalConfigsState.updateFeishuAppId,
+		codeAgentGlobalConfigsState.updateFeishuAppId.bind(codeAgentGlobalConfigsState),
 	);
 
 	const feishuAppSecret = bind(
 		() => codeAgentGlobalConfigsState.feishu.appSecret,
-		codeAgentGlobalConfigsState.updateFeishuAppSecret,
+		codeAgentGlobalConfigsState.updateFeishuAppSecret.bind(codeAgentGlobalConfigsState),
 	);
 
 	const dingtalkClientId = bind(
 		() => codeAgentGlobalConfigsState.dingtalk.clientId,
-		codeAgentGlobalConfigsState.updateDingtalkClientId,
+		codeAgentGlobalConfigsState.updateDingtalkClientId.bind(codeAgentGlobalConfigsState),
 	);
 
 	const dingtalkClientSecret = bind(
 		() => codeAgentGlobalConfigsState.dingtalk.clientSecret,
-		codeAgentGlobalConfigsState.updateDingtalkClientSecret,
+		codeAgentGlobalConfigsState.updateDingtalkClientSecret.bind(codeAgentGlobalConfigsState),
 	);
 
 	const qqbotAppId = bind(
 		() => codeAgentGlobalConfigsState.qqbot.appId,
-		codeAgentGlobalConfigsState.updateQqbotAppId,
+		codeAgentGlobalConfigsState.updateQqbotAppId.bind(codeAgentGlobalConfigsState),
 	);
 
 	const qqbotClientSecret = bind(
 		() => codeAgentGlobalConfigsState.qqbot.clientSecret,
-		codeAgentGlobalConfigsState.updateQqbotClientSecret,
+		codeAgentGlobalConfigsState.updateQqbotClientSecret.bind(codeAgentGlobalConfigsState),
 	);
 
 	const wecomBotId = bind(
 		() => codeAgentGlobalConfigsState.wecom.botId,
-		codeAgentGlobalConfigsState.updateWecomBotId,
+		codeAgentGlobalConfigsState.updateWecomBotId.bind(codeAgentGlobalConfigsState),
 	);
 
 	const wecomSecret = bind(
 		() => codeAgentGlobalConfigsState.wecom.secret,
-		codeAgentGlobalConfigsState.updateWecomSecret,
+		codeAgentGlobalConfigsState.updateWecomSecret.bind(codeAgentGlobalConfigsState),
 	);
 
 	const telegramBotToken = bind(
 		() => codeAgentGlobalConfigsState.telegram.botToken,
-		codeAgentGlobalConfigsState.updateTelegramBotToken,
+		codeAgentGlobalConfigsState.updateTelegramBotToken.bind(codeAgentGlobalConfigsState),
 	);
 
 	const telegramAllowFrom = bind(
