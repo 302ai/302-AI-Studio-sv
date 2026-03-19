@@ -506,6 +506,7 @@ export function convertAiSdkMessagesToOpenAiMessages(messages: unknown): OpenAIC
 	});
 }
 
+/*
 /**
  * Skill type for forced skill injection.
  */

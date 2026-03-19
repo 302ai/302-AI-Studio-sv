@@ -54,7 +54,7 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 		defaults: {
 			model: { primary: "ai302/glm-5" },
 			models: {},
-			imageModel: { primary: "ai302/gemini-3.1-flash-image-preview" },
+			imageModel: { primary: "ai302/kimi-k2.5" },
 			workspace: "/home/user/.openclaw/workspace",
 			compaction: { mode: "safeguard" },
 			elevatedDefault: "full",
