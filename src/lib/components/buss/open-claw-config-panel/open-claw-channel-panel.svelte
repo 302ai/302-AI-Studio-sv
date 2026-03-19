@@ -7,6 +7,22 @@
 	import { m } from "$lib/paraglide/messages";
 	import { RefreshCw } from "@lucide/svelte";
 	import SettingInputField from "../settings/setting-input-field.svelte";
+	import ConfirmDialog from "./confirm-dialog.svelte";
+
+	let confirmDialogOpen = $state(false);
+	let applyConfigLoading = $state(false);
+
+	async function handleConfirmDialogOk() {
+		applyConfigLoading = true;
+		try {
+			// TODO: Unimplemented functions
+		} catch (e) {
+			console.warn(e);
+		} finally {
+			confirmDialogOpen = false;
+			applyConfigLoading = false;
+		}
+	}
 
 	async function handleNewSettingsTab(route: string) {
 		await window.electronAPI.windowService.handleOpenSettingsWindow(route);
@@ -16,7 +32,7 @@
 {#snippet feishu()}
 	<Accordion type="single" class="w-full rounded-settings-item">
 		<AccordionItem value="fei-shu" class="border-b-0">
-			<AccordionTrigger class="hover:no-underline py-2 hover:text-primary">
+			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
 				<Label class="font-normal no-underline cursor-pointer">{m.open_claw_channel_feishu()}</Label
 				>
 			</AccordionTrigger>
@@ -48,7 +64,7 @@
 {#snippet telegram()}
 	<Accordion type="single" class="w-full rounded-settings-item">
 		<AccordionItem value="fei-shu" class="border-b-0">
-			<AccordionTrigger class="hover:no-underline py-2 hover:text-primary">
+			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
 				<Label class=" font-normal no-underline cursor-pointer"
 					>{m.open_claw_channel_telegram()}</Label
 				>
@@ -88,7 +104,7 @@
 			{@render feishu()}
 			{@render telegram()}
 			<div class="flex flex-col items-end">
-				<Button class="w-fit">
+				<Button class="w-fit" onclick={() => (confirmDialogOpen = true)}>
 					<RefreshCw class="size-4" />
 					{m.open_claw_update_config()}
 				</Button>
@@ -96,3 +112,5 @@
 		</AccordionContent>
 	</AccordionItem>
 </Accordion>
+
+<ConfirmDialog bind:confirmDialogOpen bind:applyConfigLoading {handleConfirmDialogOk} />

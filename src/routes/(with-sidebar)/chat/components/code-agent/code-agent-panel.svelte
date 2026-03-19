@@ -48,20 +48,12 @@
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { type CodeAgentType } from "@shared/storage/code-agent";
 
+	import OpenClawChannelPanel from "$lib/components/buss/open-claw-config-panel/open-claw-channel-panel.svelte";
 	import OpenClawConfigPanel from "$lib/components/buss/open-claw-config-panel/open-claw-config-panel.svelte";
-	import SettingInputField from "$lib/components/buss/settings/setting-input-field.svelte";
-	import {
-		Accordion,
-		AccordionContent,
-		AccordionItem,
-		AccordionTrigger,
-	} from "$lib/components/ui/accordion";
-	import { RefreshCw } from "@lucide/svelte";
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
 	import ClaudeCodePanel from "./claude-code-panel.svelte";
 	import LocalModePanel from "./local-mode-panel.svelte";
-	import OpenClawChannelPanel from "$lib/components/buss/open-claw-config-panel/open-claw-channel-panel.svelte";
 
 	let { onClose }: Props = $props();
 
@@ -238,60 +230,6 @@
 					<!-- NOTE: Hidden channel configuration -->
 					<OpenClawConfigPanel className="hidden" />
 					<OpenClawChannelPanel />
-					<Accordion type="single" value="channel-settings" class="w-full m-0 ">
-						<AccordionItem value="channel-settings" class="border-b-0">
-							<AccordionTrigger class="py-2 hover:no-underline">
-								<Label class="text-label-fg cursor-pointer"
-									>{m.agent_framework_open_claw_set_channel()}</Label
-								>
-							</AccordionTrigger>
-							<AccordionContent class="pb-1 pt-0 space-y-2">
-								<Accordion type="single" class="w-full rounded-settings-item">
-									<AccordionItem value="fei-shu" class="border-b-0">
-										<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-											<Label class=" font-normal no-underline cursor-pointer">飞书会话ID</Label>
-										</AccordionTrigger>
-										<AccordionContent class="pb-0 pt-2 space-y-2">
-											<div class="rounded-lg border p-4 space-y-4">
-												<!-- <div>
-								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
-								</div> -->
-												<!-- bind:value={tempAppid} -->
-												<SettingInputField
-													label="会话id"
-													placeholder="请输入会话id"
-													class="[&>label]:text-label-fg"
-												/>
-												<!-- bind:value={tempAppSecret} -->
-												<div class="flex items-center justify-between">
-													<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-														<a
-															href="https://open.feishu.cn/app?lang=zh-CN"
-															class="text-primary hover:underline"
-															>{m.open_claw_feishu_get_id_and_secret()}</a
-														>
-														<div class="text-muted-foreground/50">|</div>
-														<a
-															href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
-															class="text-primary hover:underline"
-															>{m.open_claw_feishu_view_deployment_tutorial()}</a
-														>
-													</div>
-												</div>
-											</div>
-										</AccordionContent>
-									</AccordionItem>
-								</Accordion>
-
-								<div class="flex flex-col items-end">
-									<Button class="w-fit">
-										<RefreshCw class="size-4" />
-										{m.open_claw_update_config()}
-									</Button>
-								</div>
-							</AccordionContent>
-						</AccordionItem>
-					</Accordion>
 				{/if}
 			</div>
 

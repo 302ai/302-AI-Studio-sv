@@ -7,16 +7,16 @@
 <script lang="ts">
 	import { AccordionContent, AccordionItem, AccordionTrigger } from "$lib/components/ui/accordion";
 	import Accordion from "$lib/components/ui/accordion/accordion.svelte";
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/field";
 	import { m } from "$lib/paraglide/messages";
 	import { codeAgentGlobalConfigsState } from "$lib/stores/code-agent";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
-	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
+	import { isWindows } from "$lib/utils/platform";
+	import { RefreshCw } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import SettingInputField from "../settings/setting-input-field.svelte";
-	import { isWindows } from "$lib/utils/platform";
+	import ConfirmDialog from "./confirm-dialog.svelte";
 
 	let confirmDialogOpen = $state(false);
 	let applyConfigLoading = $state(false);
@@ -356,23 +356,4 @@
 	</AccordionItem>
 </Accordion>
 
-<AlertDialog.Root bind:open={confirmDialogOpen}>
-	<AlertDialog.Content>
-		<AlertDialog.Header>
-			<AlertDialog.Title>{m.open_claw_update_config()}</AlertDialog.Title>
-			<AlertDialog.Description>
-				{m.open_claw_update_config_dialog_description()}
-			</AlertDialog.Description>
-		</AlertDialog.Header>
-
-		<AlertDialog.Footer>
-			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
-			<AlertDialog.Action onclick={handleConfirmDialogOk} disabled={applyConfigLoading}>
-				{#if applyConfigLoading}
-					<LoaderCircle class="h-4 w-4 animate-spin" />
-				{/if}
-				{m.open_claw_update()}
-			</AlertDialog.Action>
-		</AlertDialog.Footer>
-	</AlertDialog.Content>
-</AlertDialog.Root>
+<ConfirmDialog bind:confirmDialogOpen bind:applyConfigLoading {handleConfirmDialogOk} />
