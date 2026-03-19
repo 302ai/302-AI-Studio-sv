@@ -425,12 +425,18 @@ export class TabService {
 				type: "aiApplication",
 			});
 		} else {
-			const [thread, messages, codeAgentConfig, claudeCodeAgentState] = await Promise.all([
-				storageService.getItemInternal("app-thread:" + tab.threadId),
-				storageService.getItemInternal("app-chat-messages:" + tab.threadId),
-				storageService.getItemInternal(`CodeAgentStorage:code-agent-config-state-${tab.threadId}`),
-				storageService.getItemInternal(`CodeAgentStorage:claude-code-agent-state-${tab.threadId}`),
-			]);
+			const [thread, messages, codeAgentConfig, claudeCodeAgentState, openclawConfig] =
+				await Promise.all([
+					storageService.getItemInternal("app-thread:" + tab.threadId),
+					storageService.getItemInternal("app-chat-messages:" + tab.threadId),
+					storageService.getItemInternal(
+						`CodeAgentStorage:code-agent-config-state-${tab.threadId}`,
+					),
+					storageService.getItemInternal(
+						`CodeAgentStorage:claude-code-agent-state-${tab.threadId}`,
+					),
+					storageService.getItemInternal(`OpenClawStorage:openclaw-config-state-${tab.threadId}`),
+				]);
 
 			const threadFilePath = TempStorage.writeData(thread, "thread");
 			const messagesFilePath = TempStorage.writeData(messages, "messages");
@@ -439,6 +445,8 @@ export class TabService {
 				claudeCodeAgentState,
 				"claude-code-agent-state",
 			);
+
+			const openclawConfigFilePath = TempStorage.writeData(openclawConfig, "openclaw-config");
 
 			// Create view using factory
 			view = WebContentsFactory.createTabView({
@@ -449,6 +457,7 @@ export class TabService {
 				messagesFilePath,
 				codeAgentConfigFilePath,
 				claudeCodeAgentStateFilePath,
+				openclawConfigFilePath,
 			});
 		}
 

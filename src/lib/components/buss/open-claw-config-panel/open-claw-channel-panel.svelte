@@ -5,6 +5,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
+	import { openclawConfigState } from "$lib/stores/code-agent/openclaw/openclaw-config-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
 	import SettingInputField from "../settings/setting-input-field.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
@@ -24,6 +25,20 @@
 		}
 	}
 
+	const bind = <T,>(get: () => T, set: (v: T) => void) => ({
+		get value() {
+			return get();
+		},
+		set value(v: T) {
+			set(v);
+		},
+	});
+
+	const feishuSessionId = bind(
+		() => openclawConfigState.feishuSessionId,
+		openclawConfigState.updateFeishuSessionId.bind(openclawConfigState),
+	);
+
 	async function handleNewSettingsTab(route: string) {
 		await window.electronAPI.windowService.handleOpenSettingsWindow(route);
 	}
@@ -42,6 +57,7 @@
 						label={`${m.open_claw_channel_session_id_optional()}`}
 						placeholder={m.placeholder_input_session_id()}
 						class="[&>label]:text-label-fg"
+						bind:value={feishuSessionId.value}
 					/>
 					<div class="flex items-center justify-between text-muted-foreground text-xs">
 						<button

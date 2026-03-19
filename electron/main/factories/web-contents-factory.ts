@@ -26,6 +26,7 @@ export interface TabWebContentsConfig extends WebContentsConfig {
 	messagesFilePath: string;
 	codeAgentConfigFilePath?: string;
 	claudeCodeAgentStateFilePath?: string;
+	openclawConfigFilePath?: string;
 }
 
 export interface ShellWebContentsConfig extends WebContentsConfig {

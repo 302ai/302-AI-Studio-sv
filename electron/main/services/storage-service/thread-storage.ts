@@ -6,8 +6,8 @@ import {
 } from "@shared/types";
 import { storageService, StorageService } from ".";
 import { emitter } from "../broadcast-service";
-import { codeAgentService } from "../code-agent-service";
 import { chatParametersService } from "../chat-parameters-service";
+import { codeAgentService } from "../code-agent-service";
 
 export class ThreadStorage extends StorageService<ThreadMetadata> {
 	constructor() {
@@ -79,6 +79,7 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 			storageService.removeItemInternal("plan-answers:" + threadId),
 			storageService.removeItemInternal("html-preview-deployments:" + threadId),
 			storageService.removeItemInternal("AgentPreviewStorage:agent-preview-data-" + threadId),
+			storageService.removeItemInternal("OpenClawStorage:openclaw-config-state-" + threadId),
 			codeAgentService.removeCodeAgentState(threadId),
 			chatParametersService.removeChatParameters(threadId),
 		]);

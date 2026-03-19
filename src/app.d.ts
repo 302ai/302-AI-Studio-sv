@@ -136,6 +136,7 @@ declare global {
 		messages: ChatMessage[];
 		codeAgentConfig: CodeAgentConfigMetadata;
 		claudeCodeAgentState: CodeAgentMetadata;
+		openclawConfig: OpenClawConfig;
 		app: {
 			platform: string;
 			isDev: boolean;
