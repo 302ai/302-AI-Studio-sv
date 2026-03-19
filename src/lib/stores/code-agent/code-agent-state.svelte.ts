@@ -345,7 +345,7 @@ class CodeAgentState {
 
 	get skills(): Skill[] {
 		return match(this.currentAgentId)
-			.with("claude-code", () => claudeCodeAgentState.skills)
+			.with("claude-code", "open-claw", () => claudeCodeAgentState.skills)
 			.otherwise(() => []);
 	}
 
@@ -366,7 +366,7 @@ class CodeAgentState {
 			(loading) => (this.isLoadingSkills = loading),
 			() =>
 				match(this.currentAgentId)
-					.with("claude-code", () => claudeCodeAgentState.listClaudeCodeSkills(isInit))
+					.with("claude-code", "open-claw", () => claudeCodeAgentState.listClaudeCodeSkills(isInit))
 					.otherwise(() => ({
 						success: false,
 						user_skills: [],
@@ -397,13 +397,13 @@ class CodeAgentState {
 	}
 
 	handleSkillsUse(skills: Skill[]): void {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.handleSkillUse(skills);
 		}
 	}
 
 	handleSkillsRemove(skills: Skill[]): void {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.handleSkillRemove(skills);
 		}
 	}
@@ -440,7 +440,7 @@ class CodeAgentState {
 	}
 
 	handleSkillForceUseToggle(skillName: string, forceUse: boolean): void {
-		if (this.currentAgentId === "claude-code") {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.handleSkillForceUseToggle(skillName, forceUse);
 		}
 	}

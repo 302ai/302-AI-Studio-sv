@@ -1400,5 +1400,6 @@
 	"title_local_mode_description": "面向复杂任务，使用{type} ",
 	"openclaw_webui_failed_to_load": "无法加载 OpenClaw 管理页面",
 	"openclaw_webui_ensure_running": "请确保 OpenClaw 服务正在运行",
-	"auto_fix_deploy_failure": "自动修复部署失败"
+	"auto_fix_deploy_failure": "自动修复部署失败",
+	"skills_openclaw_bundled": "OC内置"
 }

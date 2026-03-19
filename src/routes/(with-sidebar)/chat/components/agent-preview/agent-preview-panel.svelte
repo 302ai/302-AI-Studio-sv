@@ -276,6 +276,7 @@
 				{ id: TAB_PREVIEW, label: m.label_tab_preview() },
 				{ id: TAB_CODE, label: m.label_tab_file() },
 				{ id: TAB_TERMINAL, label: m.label_tab_terminal() },
+				{ id: TAB_SKILLS, label: "Skills" },
 				{ id: TAB_TASKBOARD, label: m.label_tab_taskboard() },
 				{ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() },
 			];

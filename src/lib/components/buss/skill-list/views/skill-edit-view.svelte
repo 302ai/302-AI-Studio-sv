@@ -4,6 +4,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { m } from "$lib/paraglide/messages";
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
+	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import { Loader2 } from "@lucide/svelte";
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
@@ -34,6 +35,8 @@
 	});
 
 	const isBuiltin = $derived(skill?.isBuiltin ?? false);
+	const isOpenClawBundled = $derived(isOpenClawBundledSkill(skill));
+	const isReadOnly = $derived(isBuiltin || isOpenClawBundled);
 
 	const { readFile, scanDirectory, writeFile } = window.electronAPI.appService;
 
@@ -239,7 +242,7 @@
 				bind:formData
 				bind:this={manualFormRef}
 				rootPath={skillRootDir}
-				readOnly={isBuiltin}
+				readOnly={isReadOnly}
 				{changedFiles}
 				onFileChange={handleFileChange}
 				onRootPathChange={handleRootPathChange}
@@ -254,7 +257,7 @@
 			<Button
 				class="flex-1 bg-violet-500 hover:bg-violet-600"
 				onclick={handleSave}
-				disabled={isLoading || isSaving || isBuiltin}
+				disabled={isLoading || isSaving || isReadOnly}
 			>
 				{#if isSaving}
 					<Loader2 class="mr-2 h-4 w-4 animate-spin" />

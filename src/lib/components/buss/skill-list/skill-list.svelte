@@ -7,6 +7,7 @@
 	import Input from "$lib/components/ui/input/input.svelte";
 	import { m } from "$lib/paraglide/messages";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
+	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import { Plus, Search, ShoppingBag } from "@lucide/svelte";
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
@@ -55,8 +56,14 @@
 	let isDeleting = $state(false);
 	let downloadingSkills = new SvelteSet<string>();
 
+	const currentAgentId = $derived(codeAgentState.currentAgentId);
+
 	// Combine skills with source flag
-	const allSkills = $derived<Skill[]>([...builtinSkills, ...userSkills]);
+	const allSkills = $derived<Skill[]>(
+		[...builtinSkills, ...userSkills].filter(
+			(skill) => !(currentAgentId === "claude-code" && isOpenClawBundledSkill(skill)),
+		),
+	);
 
 	const filteredSkills = $derived(
 		allSkills.filter(
@@ -76,6 +83,10 @@
 	}
 
 	function handleEdit(skill: Skill) {
+		if (isOpenClawBundledSkill(skill)) {
+			return;
+		}
+
 		editingSkill = skill;
 		editDialogOpen = true;
 	}
@@ -109,6 +120,10 @@
 	}
 
 	function handleDelete(skill: Skill) {
+		if (isOpenClawBundledSkill(skill)) {
+			return;
+		}
+
 		deletingSkill = skill;
 		deleteDialogOpen = true;
 	}
@@ -209,9 +224,9 @@
 					onSelect={handleSelectSkill}
 					{onUse}
 					{onRemove}
-					onEdit={handleEdit}
+					onEdit={isOpenClawBundledSkill(item) ? undefined : handleEdit}
 					onDownload={handleDownload}
-					onDelete={handleDelete}
+					onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 					downloading={downloadingSkills.has(item.name)}
 					{onForceUseToggle}
 				/>
@@ -234,7 +249,7 @@
 	skill={selectedSkill}
 	downloading={selectedSkill ? downloadingSkills.has(selectedSkill.name) : false}
 	{onUse}
-	onEdit={handleEdit}
+	onEdit={selectedSkill && !isOpenClawBundledSkill(selectedSkill) ? handleEdit : undefined}
 	onDownload={handleDownload}
 />
 

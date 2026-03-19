@@ -20,6 +20,8 @@ export const skill = type({
 	description: "string",
 	description_zh: "string",
 	isBuiltin: "boolean?",
+	source: "string?",
+	bundled: "boolean?",
 	content: "string?",
 	/** Whether this skill should be forcefully included in prompts when enabled */
 	forceUse: "boolean?",

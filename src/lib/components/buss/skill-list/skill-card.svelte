@@ -7,6 +7,7 @@
 	import { m } from "$lib/paraglide/messages";
 	import { generalSettings } from "$lib/stores/general-settings.state.svelte";
 	import { cn } from "$lib/utils";
+	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import { Ellipsis, Loader2, Zap } from "@lucide/svelte";
 	import type { Skill } from "@shared/types";
 
@@ -45,15 +46,25 @@
 	}: Props = $props();
 
 	// Built-in skills cannot be edited or deleted, only downloaded
-	const canEdit = $derived(!isBuiltin && !!onEdit);
-	const canDelete = $derived(!isBuiltin && !!onDelete);
-	const showMenu = $derived(canEdit || !!onDownload || canDelete);
+	const isOpenClawBundled = $derived(isOpenClawBundledSkill(skill));
+	const canDownload = $derived(!isOpenClawBundled && !!onDownload);
+	const canEdit = $derived(!isBuiltin && !isOpenClawBundled && !!onEdit);
+	const canDelete = $derived(!isBuiltin && !isOpenClawBundled && !!onDelete);
+	const showMenu = $derived(canEdit || canDownload || canDelete);
 
 	const description = $derived(
 		generalSettings.language === "zh" && skill.description_zh
 			? skill.description_zh
 			: skill.description,
 	);
+
+	const skillTags = $derived.by(() => {
+		const tags: string[] = [];
+		if (isOpenClawBundled) {
+			tags.push(m.skills_openclaw_bundled());
+		}
+		return tags;
+	});
 
 	function handleCardClick() {
 		// Always go to detail page when clicking the card
@@ -88,7 +99,7 @@
 	onclick={handleCardClick}
 >
 	<!-- Selection Checkbox -->
-	{#if selectable}
+	{#if selectable && !isOpenClawBundled}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
@@ -134,10 +145,10 @@
 										{m.text_button_edit()}
 									</DropdownMenu.Item>
 								{/if}
-								{#if onDownload}
+								{#if canDownload}
 									<DropdownMenu.Item
 										disabled={downloading}
-										onclick={() => onDownload(skill)}
+										onclick={() => onDownload?.(skill)}
 										class={downloading ? "opacity-50" : ""}
 									>
 										{#if downloading}
@@ -156,10 +167,14 @@
 					</div>
 				{/if}
 			</div>
-			{#if isBuiltin}
-				<Badge variant="secondary" class="w-fit px-1.5 py-0.5 text-[10px] font-medium">
-					{m.skills_builtin()}
-				</Badge>
+			{#if skillTags.length > 0}
+				<div class="flex flex-wrap items-center gap-1.5">
+					{#each skillTags as tag (tag)}
+						<Badge variant="secondary" class="w-fit px-1.5 py-0.5 text-[10px] font-medium">
+							{tag}
+						</Badge>
+					{/each}
+				</div>
 			{/if}
 		</div>
 	</div>

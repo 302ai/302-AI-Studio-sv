@@ -558,10 +558,14 @@
 					{@render actionTaskOrchestration(true)}
 				{/if}
 
-				{#if codeAgentState.enabled && codeAgentState.currentAgentId !== "open-claw"}
-					{@render actionEnablePlanMode(true)}
+				{#if codeAgentState.enabled}
+					{#if codeAgentState.currentAgentId !== "open-claw"}
+						{@render actionEnablePlanMode(true)}
+					{/if}
 					{@render actionEnableSkills(true)}
-					{@render actionEnabledAgentThinking(true)}
+					{#if codeAgentState.currentAgentId !== "open-claw"}
+						{@render actionEnabledAgentThinking(true)}
+					{/if}
 				{:else if !codeAgentState.enabled}
 					{@render actionSetParameters(true)}
 				{/if}
@@ -597,10 +601,14 @@
 				{@render actionTaskOrchestration()}
 			{/if}
 
-			{#if codeAgentState.enabled && codeAgentState.currentAgentId !== "open-claw"}
-				{@render actionEnablePlanMode()}
+			{#if codeAgentState.enabled}
+				{#if codeAgentState.currentAgentId !== "open-claw"}
+					{@render actionEnablePlanMode()}
+				{/if}
 				{@render actionEnableSkills()}
-				{@render actionEnabledAgentThinking()}
+				{#if codeAgentState.currentAgentId !== "open-claw"}
+					{@render actionEnabledAgentThinking()}
+				{/if}
 			{:else if !codeAgentState.enabled}
 				{@render actionSetParameters()}
 			{/if}

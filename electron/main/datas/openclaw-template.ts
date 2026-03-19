@@ -146,7 +146,7 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 	},
 	skills: {
 		load: {
-			extraDirs: ["/home/user/skills"],
+			extraDirs: ["/home/user/skills", "/home/user/.claude/skills"],
 			watch: true,
 			watchDebounceMs: 250,
 		},
