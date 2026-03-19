@@ -10,9 +10,9 @@ class OpenClawConfigStorage extends StorageService<OpenClawConfig> {
 		this.storage = prefixStorage(this.storage, "OpenClawStorage");
 	}
 
-	async getOpenClawConfig(): Promise<{ isOK: boolean; data: OpenClawConfig }> {
+	async getOpenClawConfig(threadId: string): Promise<{ isOK: boolean; data: OpenClawConfig }> {
 		try {
-			const data = await this.getItemInternal(this.prefix);
+			const data = await this.getItemInternal(this.prefix + "-" + threadId);
 			if (!data) return { isOK: false, data: { feishuSessionId: "", agentId: "" } };
 			return { isOK: true, data };
 		} catch (error) {

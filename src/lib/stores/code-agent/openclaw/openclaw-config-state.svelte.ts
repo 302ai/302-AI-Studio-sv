@@ -47,6 +47,10 @@ class OpenClawConfigState {
 	updateAgentId(agentId: string) {
 		this.#updateState({ agentId });
 	}
+
+	async updateBindings() {
+		await window.electronAPI.openClawService.applyOpenClawBindingsConfig(threadId);
+	}
 }
 
 export const openclawConfigState = new OpenClawConfigState();

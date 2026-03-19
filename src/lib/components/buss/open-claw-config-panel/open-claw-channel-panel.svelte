@@ -17,6 +17,7 @@
 		applyConfigLoading = true;
 		try {
 			// TODO: Unimplemented functions
+			await openclawConfigState.updateBindings();
 		} catch (e) {
 			console.warn(e);
 		} finally {

@@ -5,7 +5,19 @@ import { get, isUndefined, merge, pick, set } from "es-toolkit/compat";
 import fs from "fs/promises";
 import { localVibeService } from "../local-vibe-service";
 import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
+import { openClawConfigStorage } from "../storage-service/openclaw/openclaw-config-storage";
 import { tabService } from "../tab-service";
+
+type OpenClawBindingConfig = {
+	agentId: string;
+	match: {
+		channel: string;
+		peer: {
+			kind: string;
+			id: string;
+		};
+	};
+};
 
 export class OpenClawService {
 	private async _getOpenClawWebUiUrl(): Promise<string | null> {
@@ -92,6 +104,38 @@ export class OpenClawService {
 		const filteredData = pick(configs.data, isWin ? WIN_SUPPORTED_CHANNELS : SUPPORTED_CHANNELS);
 
 		await this.setOpenClawConfig("channels", merge(channels, filteredData));
+	}
+
+	/**
+	 * Apply channel bindings configurations to OpenClaw
+	 * @returns void
+	 */
+	async applyOpenClawBindingsConfig(_event: IpcMainInvokeEvent, threadId: string) {
+		const bindings: Array<OpenClawBindingConfig> = (await this.getOpenClawConfig("bindings")) || [];
+		const config = await openClawConfigStorage.getOpenClawConfig(threadId);
+		if (!config.isOK) {
+			console.error("Error: call openClawConfigStorage.getOpenClawConfig call :");
+			return;
+		}
+		const localBindings: OpenClawBindingConfig = {
+			agentId: config.data.agentId,
+			match: {
+				channel: "feishu",
+				peer: {
+					kind: "group",
+					id: config.data.feishuSessionId,
+				},
+			},
+		};
+
+		const index = bindings.findIndex((v) => v.agentId === localBindings.agentId);
+		if (index !== -1) {
+			bindings[index] = localBindings;
+		} else {
+			bindings.push(localBindings);
+		}
+
+		await this.setOpenClawConfig("bindings", bindings);
 	}
 
 	async handleOpenClawWebUiReloadIpc(_event: IpcMainInvokeEvent, tabId: string) {
