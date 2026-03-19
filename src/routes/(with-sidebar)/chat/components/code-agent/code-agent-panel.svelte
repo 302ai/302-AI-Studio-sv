@@ -61,6 +61,7 @@
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
 	import ClaudeCodePanel from "./claude-code-panel.svelte";
 	import LocalModePanel from "./local-mode-panel.svelte";
+	import OpenClawChannelPanel from "$lib/components/buss/open-claw-config-panel/open-claw-channel-panel.svelte";
 
 	let { onClose }: Props = $props();
 
@@ -236,6 +237,7 @@
 				{#if codeAgentState.currentAgentId == "open-claw"}
 					<!-- NOTE: Hidden channel configuration -->
 					<OpenClawConfigPanel className="hidden" />
+					<OpenClawChannelPanel />
 					<Accordion type="single" value="channel-settings" class="w-full m-0 ">
 						<AccordionItem value="channel-settings" class="border-b-0">
 							<AccordionTrigger class="py-2 hover:no-underline">

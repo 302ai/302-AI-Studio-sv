@@ -118,7 +118,7 @@
 {#snippet feishu()}
 	<Accordion type="single" class="w-full rounded-settings-item">
 		<AccordionItem value="fei-shu" class="border-b-0">
-			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+			<AccordionTrigger id="feishu" class="py-3.5 px-4 bg-input hover:no-underline">
 				<Label class=" font-normal no-underline cursor-pointer"
 					>{m.open_claw_channel_feishu()}</Label
 				>
