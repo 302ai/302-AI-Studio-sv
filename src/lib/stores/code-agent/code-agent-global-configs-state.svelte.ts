@@ -1,6 +1,10 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages.js";
-import { type CodeAgentGlobalConfigs } from "@shared/storage/code-agent";
+import {
+	type CodeAgentGlobalConfigs,
+	type CodeAgentType,
+	type CodingAgentClass,
+} from "@shared/storage/code-agent";
 import { toast } from "svelte-sonner";
 import { persistedProviderState } from "../provider-state.svelte";
 
@@ -10,7 +14,8 @@ function getInitialData() {
 		autoDeploy: true,
 		autoFixDeployFailure: true,
 		notificationsEnabled: false,
-		lastVibeMode: "remote" as const,
+		lastVibeMode: "remote" as CodeAgentType,
+		lastAgentId: "claude-code" as CodingAgentClass,
 		feishu: { appId: "", appSecret: "" },
 		dingtalk: { clientId: "", clientSecret: "" },
 		qqbot: { appId: "", clientSecret: "" },
@@ -35,6 +40,9 @@ class CodeAgentGlobalConfigsState {
 		persistedCodeAgentGlobalConfigsState.current?.notificationsEnabled ?? false,
 	);
 	lastVibeMode = $derived(persistedCodeAgentGlobalConfigsState.current?.lastVibeMode ?? "remote");
+	lastAgentId = $derived(
+		persistedCodeAgentGlobalConfigsState.current?.lastAgentId ?? "claude-code",
+	);
 	isHydrated = $derived(persistedCodeAgentGlobalConfigsState.isHydrated);
 	feishu = $derived(
 		persistedCodeAgentGlobalConfigsState.current.feishu ?? { appId: "", appSecret: "" },
@@ -81,6 +89,10 @@ class CodeAgentGlobalConfigsState {
 
 	updateApiKey(apiKey: string) {
 		this.#updateState({ apiKey });
+	}
+
+	updateLastAgentId(agentId: CodingAgentClass): void {
+		this.#updateState({ lastAgentId: agentId });
 	}
 
 	resetApiKey() {

@@ -5,7 +5,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { serve } from "@hono/node-server";
-import type { CodeAgentType } from "@shared/storage/code-agent";
+import type { CodeAgentType, CodingAgentClass } from "@shared/storage/code-agent";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { ChatMessage, McpServer, Skill, ThinkingBudgetType } from "@shared/types";
 import {
@@ -1593,6 +1593,13 @@ app.post("/chat/302ai-code-agent", async (c) => {
 
 	const { data: codeAgentConfig } = await codeAgentService.getCodeAgentConfig(threadId);
 	const { sandboxId } = await codeAgentService.getClaudeCodeSandboxId(threadId);
+
+	// Persist lastAgentId when it changes
+	const currentAgentId = codeAgentConfig.currentAgentId as CodingAgentClass;
+	if (globalConfigs.lastAgentId !== currentAgentId) {
+		await codeAgentGlobalConfigsStorage.setLastAgentId(currentAgentId);
+		console.log("[302ai-code-agent] Updated lastAgentId to:", currentAgentId);
+	}
 
 	// Notify the frontend that sandbox is ready (triggers preview panel to open)
 	tabService.notifySandboxCreated(threadId, sandboxId);

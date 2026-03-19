@@ -2,6 +2,7 @@ import {
 	type CodeAgentConfigMetadata,
 	type CodeAgentGlobalConfigs,
 	type CodeAgentType,
+	type CodingAgentClass,
 } from "@shared/storage/code-agent";
 import { prefixStorage } from "@shared/types";
 import { isNull } from "es-toolkit";
@@ -43,7 +44,8 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 			autoDeploy: true,
 			autoFixDeployFailure: true,
 			notificationsEnabled: false,
-			lastVibeMode: "remote" as const,
+			lastVibeMode: "remote" as CodeAgentType,
+			lastAgentId: "claude-code" as CodingAgentClass,
 			feishu: {
 				appId: "",
 				appSecret: "",
@@ -83,6 +85,18 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 			return { isOK: true };
 		} catch (error) {
 			console.error("Error setting lastVibeMode:", error);
+			return { isOK: false };
+		}
+	}
+
+	async setLastAgentId(agentId: CodingAgentClass): Promise<{ isOK: boolean }> {
+		try {
+			const { data: currentData } = await this.getGlobalConfigs();
+			const updatedData = { ...currentData, lastAgentId: agentId };
+			await this.setItemInternal("code-agent-global-configs", updatedData);
+			return { isOK: true };
+		} catch (error) {
+			console.error("Error setting lastAgentId:", error);
 			return { isOK: false };
 		}
 	}
