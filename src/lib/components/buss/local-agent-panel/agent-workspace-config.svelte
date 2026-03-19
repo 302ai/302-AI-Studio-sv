@@ -7,6 +7,7 @@
 		AccordionItem,
 		AccordionTrigger,
 	} from "$lib/components/ui/accordion";
+	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import { codeAgentState } from "$lib/stores/code-agent";
@@ -17,7 +18,6 @@
 	import { onMount } from "svelte";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 	import OpenClawConfigPanel from "../open-claw-config-panel/open-claw-config-panel.svelte";
-	import { Button } from "$lib/components/ui/button";
 
 	const frameworkOptions = [
 		{
@@ -47,6 +47,72 @@
 	});
 </script>
 
+{#snippet feishu()}
+	<Accordion type="single" class="w-full rounded-settings-item">
+		<AccordionItem value="fei-shu" class="border-b-0">
+			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+				<Label class=" font-normal no-underline cursor-pointer">飞书会话ID</Label>
+			</AccordionTrigger>
+			<AccordionContent class="pb-0 pt-2 space-y-2">
+				<div class="rounded-lg border p-4 space-y-4">
+					<SettingInputField
+						label="会话id"
+						placeholder="请输入会话id"
+						class="[&>label]:text-label-fg"
+					/>
+					<!-- bind:value={tempAppSecret} -->
+					<div class="flex items-center justify-between">
+						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
+							<a href="https://open.feishu.cn/app?lang=zh-CN" class="text-primary hover:underline"
+								>点击此处获取会话id</a
+							>
+							<!-- <div class="text-muted-foreground/50">|</div>
+											<a
+												href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
+												class="text-primary hover:underline"
+												>{m.open_claw_feishu_view_deployment_tutorial()}</a
+											> -->
+						</div>
+					</div>
+				</div>
+			</AccordionContent>
+		</AccordionItem>
+	</Accordion>
+{/snippet}
+
+{#snippet telegram()}
+	<Accordion type="single" class="w-full rounded-settings-item">
+		<AccordionItem value="fei-shu" class="border-b-0">
+			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+				<Label class=" font-normal no-underline cursor-pointer">Telegram会话ID</Label>
+			</AccordionTrigger>
+			<AccordionContent class="pb-0 pt-2 space-y-2">
+				<div class="rounded-lg border p-4 space-y-4">
+					<SettingInputField
+						label="会话id"
+						placeholder="请输入会话id"
+						class="[&>label]:text-label-fg"
+					/>
+					<!-- bind:value={tempAppSecret} -->
+					<div class="flex items-center justify-between">
+						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
+							<a href="https://open.feishu.cn/app?lang=zh-CN" class="text-primary hover:underline"
+								>点击此处获取会话id</a
+							>
+							<!-- <div class="text-muted-foreground/50">|</div>
+											<a
+												href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
+												class="text-primary hover:underline"
+												>{m.open_claw_feishu_view_deployment_tutorial()}</a
+											> -->
+						</div>
+					</div>
+				</div>
+			</AccordionContent>
+		</AccordionItem>
+	</Accordion>
+{/snippet}
+
 <div class="space-y-4">
 	<!-- Agent Framework -->
 	<div class="space-y-2">
@@ -71,43 +137,8 @@
 					>
 				</AccordionTrigger>
 				<AccordionContent class="pb-1 pt-0 space-y-2">
-					<Accordion type="single" class="w-full rounded-settings-item">
-						<AccordionItem value="fei-shu" class="border-b-0">
-							<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-								<Label class=" font-normal no-underline cursor-pointer">飞书会话ID</Label>
-							</AccordionTrigger>
-							<AccordionContent class="pb-0 pt-2 space-y-2">
-								<div class="rounded-lg border p-4 space-y-4">
-									<!-- <div>
-								<span class={cn("size-2 rounded-full", statusColorClass)}></span>
-								</div> -->
-									<!-- bind:value={tempAppid} -->
-									<SettingInputField
-										label="会话id"
-										placeholder="请输入会话id"
-										class="[&>label]:text-label-fg"
-									/>
-									<!-- bind:value={tempAppSecret} -->
-									<div class="flex items-center justify-between">
-										<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-											<a
-												href="https://open.feishu.cn/app?lang=zh-CN"
-												class="text-primary hover:underline"
-												>{m.open_claw_feishu_get_id_and_secret()}</a
-											>
-											<div class="text-muted-foreground/50">|</div>
-											<a
-												href="https://studio.302.ai/zh/docs/advanced/open-claw/feishu"
-												class="text-primary hover:underline"
-												>{m.open_claw_feishu_view_deployment_tutorial()}</a
-											>
-										</div>
-									</div>
-								</div>
-							</AccordionContent>
-						</AccordionItem>
-					</Accordion>
-
+					{@render feishu()}
+					{@render telegram()}
 					<div class="flex flex-col items-end">
 						<Button class="w-fit">
 							<RefreshCw class="size-4" />
