@@ -67,9 +67,7 @@
 		}
 
 		codeAgentState.updateType(codeAgentGlobalConfigsState.lastVibeMode);
-
-		// Apply lastAgentId when switching to vibe mode
-		if (isVibe) {
+		if (isVibe && codeAgentState.type === "local") {
 			codeAgentState.updateCurrentAgentId(codeAgentGlobalConfigsState.lastAgentId);
 		}
 	}

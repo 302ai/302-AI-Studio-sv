@@ -109,12 +109,6 @@
 		codeAgentState.updateType(key as CodeAgentType);
 	}
 
-	// function handleCodeAgentSelected(codeAgentId: string) {
-	// 	if (agentClass.allows(codeAgentId)) {
-	// 		codeAgentState.updateCurrentAgentId(codeAgentId);
-	// 	}
-	// }
-
 	async function handleUpdateSandboxRemark() {
 		if (!tempSandboxRemark || !isSandboxRemarkChanged) return;
 		await codeAgentState.updateSandboxRemark(tempSandboxRemark);
