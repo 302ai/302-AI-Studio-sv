@@ -122,8 +122,15 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 	},
 	plugins: {
 		enabled: true,
-		allow: ["feishu"],
-		entries: { feishu: { enabled: true } },
+		allow: ["feishu", "channels", "telegram"],
+		entries: {
+			feishu: {
+				enabled: true,
+			},
+			channels: {
+				enabled: true,
+			},
+		},
 		installs: {
 			feishu: {
 				source: "npm",
