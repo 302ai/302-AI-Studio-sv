@@ -455,6 +455,7 @@ export class LocalVibeService {
 
 				// API keys and skills keys must always sync from template (force override)
 				const overridePaths = this._getApiKeyOverridePaths(templateConfig);
+
 				finalConfig = this._mergeTemplateConfig(existingConfig, templateConfig, overridePaths);
 				console.log("[Local Vibe] Merged template updates into existing openclaw.json");
 			}

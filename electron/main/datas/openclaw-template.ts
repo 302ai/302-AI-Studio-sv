@@ -1,4 +1,5 @@
 export const OPENCLAW_DEFAULT_CONFIG = {
+	_version: 1,
 	update: {
 		checkOnStart: false,
 	},
@@ -128,7 +129,7 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 				enabled: true,
 			},
 			channels: {
-				enabled: true,
+				enabled: false,
 			},
 		},
 		installs: {

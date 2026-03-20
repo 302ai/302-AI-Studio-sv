@@ -157,5 +157,6 @@ export const localVibeStorageData = type({
 	needUpdateVmConfig: "boolean",
 	/** Whether wsl.conf needs to be updated */
 	needUpdateWslConf: "boolean",
+	openclawJsonTemplateVersion: "number",
 });
 export type LocalVibeStorageData = typeof localVibeStorageData.infer;

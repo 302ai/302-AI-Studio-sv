@@ -10,6 +10,7 @@ const DEFAULT_DATA: LocalVibeStorageData = {
 	// Linux runs Podman in rootless mode with no VM, so machine config does not apply
 	needUpdateVmConfig: !PLATFORM.IS_LINUX,
 	needUpdateWslConf: PLATFORM.IS_WINDOWS,
+	openclawJsonTemplateVersion: 1,
 };
 
 class LocalVibeStorage extends StorageService<LocalVibeStorageData> {
