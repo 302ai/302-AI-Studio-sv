@@ -1,5 +1,5 @@
 export const OPENCLAW_DEFAULT_CONFIG = {
-	_version: 1,
+	// _version: 1,
 	update: {
 		checkOnStart: false,
 	},
