@@ -1,4 +1,6 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
+import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 import type { OpenClawConfig } from "@shared/storage/openclaw";
 import { clone } from "es-toolkit/compat";
 
@@ -32,6 +34,13 @@ export const persistedOpenclawConfigState = new PersistedState<OpenClawConfig>(
 class OpenClawConfigState {
 	feishuSessionId = $derived(persistedOpenclawConfigState.current?.feishuSessionId ?? "");
 	agentId = $derived(persistedOpenclawConfigState.current?.agentId ?? "");
+
+	currentOcAgentId = $derived.by(() => {
+		const sessionId = claudeCodeAgentState.currentSessionId;
+		if (!sessionId) return "";
+		const session = localClaudeCodeSandboxState.sessions.find((s) => s.session_id === sessionId);
+		return session?.oc_agent_id ?? "";
+	});
 
 	#updateState(partial: Partial<OpenClawConfig>): void {
 		persistedOpenclawConfigState.current = {

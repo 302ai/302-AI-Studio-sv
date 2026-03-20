@@ -13,10 +13,12 @@
 	let confirmDialogOpen = $state(false);
 	let applyConfigLoading = $state(false);
 
+	let updateBtnDiabled = $derived(!openclawConfigState.currentOcAgentId);
+
 	async function handleConfirmDialogOk() {
 		applyConfigLoading = true;
 		try {
-			// TODO: Unimplemented functions
+			openclawConfigState.updateAgentId(openclawConfigState.currentOcAgentId);
 			await openclawConfigState.updateBindings();
 		} catch (e) {
 			console.warn(e);
@@ -121,10 +123,19 @@
 			{@render feishu()}
 			{@render telegram()}
 			<div class="flex flex-col items-end">
-				<Button class="w-fit" onclick={() => (confirmDialogOpen = true)}>
+				<Button
+					disabled={updateBtnDiabled}
+					class="w-fit"
+					onclick={() => (confirmDialogOpen = true)}
+				>
 					<RefreshCw class="size-4" />
 					{m.open_claw_update_config()}
 				</Button>
+				{#if updateBtnDiabled}
+					<p class="text-xs text-muted-foreground mt-1">
+						{m.open_claw_update_config_hint()}
+					</p>
+				{/if}
 			</div>
 		</AccordionContent>
 	</AccordionItem>

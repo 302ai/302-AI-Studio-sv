@@ -795,6 +795,7 @@
 	"open_claw_feishu_get_id_and_secret": "点击此处获取ID和密钥",
 	"open_claw_feishu_view_deployment_tutorial": "查看部署教程",
 	"open_claw_update_config": "更新配置",
+	"open_claw_update_config_hint": "Agent 成功创建后才可更新配置，只需要你在 OC 模式下进行一次对话",
 	"open_claw_update": "更新",
 	"open_claw_update_config_dialog_description": "注意：更新渠道配置需要重启 OpenClaw 网关，当前正在执行的任务会被中断，请确认是否继续。",
 	"agent_framework_claude_code_label": "Claude Code",

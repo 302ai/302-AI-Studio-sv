@@ -794,6 +794,7 @@
 	"open_claw_feishu_get_id_and_secret": "Get App ID and Secret",
 	"open_claw_feishu_view_deployment_tutorial": "View setup guide",
 	"open_claw_update_config": "Update Config",
+	"open_claw_update_config_hint": "The configuration can be updated only after the Agent is successfully created. You only need to have a conversation in OC mode.",
 	"open_claw_update": "Update",
 	"open_claw_update_config_dialog_description": "Note: Updating channel settings requires restarting the OpenClaw gateway. Any running tasks will be interrupted. Do you want to continue?",
 	"agent_framework_claude_code_label": "Claude Code",
