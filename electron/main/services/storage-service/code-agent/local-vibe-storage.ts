@@ -10,13 +10,28 @@ const DEFAULT_DATA: LocalVibeStorageData = {
 	// Linux runs Podman in rootless mode with no VM, so machine config does not apply
 	needUpdateVmConfig: !PLATFORM.IS_LINUX,
 	needUpdateWslConf: PLATFORM.IS_WINDOWS,
-	openclawJsonTemplateVersion: 1,
+	openclawJsonTemplateVersion: 0,
 };
 
 class LocalVibeStorage extends StorageService<LocalVibeStorageData> {
 	constructor() {
 		super();
 		this.storage = prefixStorage(this.storage, "LocalVibeStorage");
+	}
+
+	async initData() {
+		const { data: current, isOK } = await this.getData();
+		if (isOK) {
+			// update version
+			console.log("update leessmin");
+			if (current.openclawJsonTemplateVersion != DEFAULT_DATA.openclawJsonTemplateVersion) {
+				this.setData({
+					openclawJsonTemplateVersion: DEFAULT_DATA.openclawJsonTemplateVersion,
+				});
+			}
+		}
+		// init
+		this.setData(current);
 	}
 
 	async getData(): Promise<{ isOK: boolean; data: LocalVibeStorageData }> {
@@ -43,3 +58,5 @@ class LocalVibeStorage extends StorageService<LocalVibeStorageData> {
 }
 
 export const localVibeStorage = new LocalVibeStorage();
+
+localVibeStorage.initData();

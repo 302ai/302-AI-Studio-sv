@@ -1,5 +1,5 @@
 import { getLocalSandboxHealthStatus } from "@electron/main/apis/code-agent";
-import { PLATFORM } from "@electron/main/constants/index";
+import { isLinux, PLATFORM } from "@electron/main/constants/index";
 import { OPENCLAW_DEFAULT_CONFIG } from "@electron/main/datas/openclaw-template";
 import { broadcastService } from "@electron/main/services/broadcast-service";
 import { generalSettingsService } from "@electron/main/services/settings-service/general-settings-service";
@@ -424,6 +424,7 @@ export class LocalVibeService {
 		try {
 			// Always start with template as base
 			const templateConfig = cloneDeep(OPENCLAW_DEFAULT_CONFIG) as Record<string, unknown>;
+			delete templateConfig["_version"];
 
 			// Set API keys in template for all providers
 			if (apiKey) {
@@ -455,6 +456,24 @@ export class LocalVibeService {
 
 				// API keys and skills keys must always sync from template (force override)
 				const overridePaths = this._getApiKeyOverridePaths(templateConfig);
+
+				// NOTE: openclaw version update
+				const { data: vibeData } = await localVibeStorage.getData();
+				if (vibeData.openclawJsonTemplateVersion < OPENCLAW_DEFAULT_CONFIG._version) {
+					// version update
+					if (isLinux) {
+						await this.runLinuxPrivilegedCommandWithBroadcast(
+							"chmod",
+							["777", path.join(this.getRuntimeComposeDir(), ".openclaw", "openclaw.json")],
+							"chown_openclawjson",
+						);
+					}
+					// version 0 -> 1
+					overridePaths.push("plugins.entries.channels.enabled");
+					await localVibeStorage.setData({
+						openclawJsonTemplateVersion: OPENCLAW_DEFAULT_CONFIG._version,
+					});
+				}
 
 				finalConfig = this._mergeTemplateConfig(existingConfig, templateConfig, overridePaths);
 				console.log("[Local Vibe] Merged template updates into existing openclaw.json");
@@ -2725,7 +2744,6 @@ export class LocalVibeService {
 				await new Promise((resolve) => setTimeout(resolve, 3000));
 				await this.startLocalSandboxHealthCheck();
 
-				console.log("xxx", this.getRuntimeComposeDir());
 				await this.runLinuxPrivilegedCommandWithBroadcast(
 					"chmod",
 					["-R", "o+rx", path.join(this.getRuntimeComposeDir())],
