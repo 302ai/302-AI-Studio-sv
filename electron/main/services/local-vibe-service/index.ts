@@ -1870,6 +1870,16 @@ export class LocalVibeService {
 		// Initialize Podman Machine with retry logic
 		const machineInit = await this._initPodmanMachineWithRetry(3);
 
+		// If machine was successfully initialized (created), reset the config flags so that
+		// subsequent code will re-apply VM config and WSL conf. This handles the case where
+		// a user manually deleted the machine - we need to ensure config is applied after re-creation.
+		if (machineInit.isOk) {
+			await localVibeStorage.setData({
+				needUpdateVmConfig: !PLATFORM.IS_LINUX,
+				needUpdateWslConf: PLATFORM.IS_WINDOWS,
+			});
+		}
+
 		return machineInit;
 	}
 
@@ -2767,17 +2777,16 @@ export class LocalVibeService {
 
 			// Apply VM resource config if flagged (machine must be stopped at this point)
 			// - Existing machine: run `podman machine set` to update CPU/memory to required values
-			// - Newly initialized machine: `init` already applied correct values, just clear the flag
+			// - Newly created machine: also run `podman machine set` to ensure config is applied
+			//   (init may have set the values, but this ensures consistency)
 			const { data: localVibeData } = await localVibeStorage.getData();
 			if (localVibeData.needUpdateVmConfig) {
-				if (machineCheck.exists) {
-					console.log("[Local Vibe] Applying VM config update (--cpus 4 --memory 4096)...");
-					await this.runCommandWithBroadcast(
-						"podman",
-						["machine", "set", "ai302-machine", "--cpus", "4", "--memory", "4096"],
-						"podman-machine-set",
-					);
-				}
+				console.log("[Local Vibe] Applying VM config update (--cpus 4 --memory 4096)...");
+				await this.runCommandWithBroadcast(
+					"podman",
+					["machine", "set", "ai302-machine", "--cpus", "4", "--memory", "4096"],
+					"podman-machine-set",
+				);
 				await localVibeStorage.setData({ needUpdateVmConfig: false });
 			}
 
