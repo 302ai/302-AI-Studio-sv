@@ -301,7 +301,9 @@
 			t.push({ id: TAB_TERMINAL, label: m.label_tab_terminal() });
 			if (!isLocalMode) t.push({ id: TAB_SKILLS, label: "Skills" });
 			t.push({ id: TAB_TASKBOARD, label: m.label_tab_taskboard() });
-			t.push({ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() });
+			if (codeAgentState.type === "local") {
+				t.push({ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() });
+			}
 		}
 		return t;
 	});
