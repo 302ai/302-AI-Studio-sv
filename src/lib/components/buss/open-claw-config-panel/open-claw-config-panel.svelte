@@ -326,12 +326,13 @@
 						class="[&>label]:text-label-fg"
 					/>
 					<!-- bind:value={tempAppSecret} -->
+					<!-- TONE: Allow From is disable -->
 					<SettingInputField
 						label="Allow From"
 						placeholder="请输入allowFrom,使用','分割"
 						type="password"
 						bind:value={telegramAllowFrom.value}
-						class="[&>label]:text-label-fg"
+						class="[&>label]:text-label-fg hidden"
 					/>
 					<div class="flex items-center justify-between">
 						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
