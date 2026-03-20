@@ -1,3 +1,5 @@
+import { isWin } from "../constants";
+
 export const OPENCLAW_DEFAULT_CONFIG = {
 	_version: 1,
 	update: {
@@ -72,40 +74,59 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 		restart: true,
 		ownerDisplay: "raw",
 	},
-	channels: {
-		feishu: {
-			enabled: true,
-			appId: "",
-			appSecret: "",
-			domain: "feishu",
-			dmPolicy: "open",
-			allowFrom: ["*"],
-			groupPolicy: "open",
-		},
-		telegram: {
-			enabled: true,
-			dmPolicy: "open",
-			botToken: "",
-			allowFrom: ["*"],
-			groupPolicy: "open",
-		},
-		dingtalk: {
-			clientId: "",
-			clientSecret: "",
-			enableAICard: true,
-			enabled: true,
-		},
-		qqbot: {
-			enabled: true,
-			appId: "",
-			clientSecret: "",
-		},
-		wecom: {
-			enabled: true,
-			botId: "",
-			secret: "",
-		},
-	},
+	channels: isWin
+		? {
+				feishu: {
+					enabled: true,
+					appId: "",
+					appSecret: "",
+					domain: "feishu",
+					dmPolicy: "open",
+					allowFrom: ["*"],
+					groupPolicy: "open",
+				},
+				telegram: {
+					enabled: true,
+					dmPolicy: "open",
+					botToken: "",
+					allowFrom: ["*"],
+					groupPolicy: "open",
+				},
+			}
+		: {
+				feishu: {
+					enabled: true,
+					appId: "",
+					appSecret: "",
+					domain: "feishu",
+					dmPolicy: "open",
+					allowFrom: ["*"],
+					groupPolicy: "open",
+				},
+				telegram: {
+					enabled: true,
+					dmPolicy: "open",
+					botToken: "",
+					allowFrom: ["*"],
+					groupPolicy: "open",
+				},
+				dingtalk: {
+					clientId: "",
+					clientSecret: "",
+					enableAICard: true,
+					enabled: true,
+				},
+				qqbot: {
+					enabled: true,
+					appId: "",
+					clientSecret: "",
+				},
+				wecom: {
+					enabled: true,
+					botId: "",
+					secret: "",
+				},
+			},
 	gateway: {
 		port: 18789,
 		mode: "local",
@@ -123,13 +144,13 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 	},
 	plugins: {
 		enabled: true,
-		allow: ["feishu", "channels", "telegram"],
+		allow: isWin ? ["feishu", "telegram"] : ["feishu", "channels", "telegram"],
 		entries: {
 			feishu: {
 				enabled: true,
 			},
 			channels: {
-				enabled: false,
+				enabled: !isWin,
 			},
 		},
 		installs: {

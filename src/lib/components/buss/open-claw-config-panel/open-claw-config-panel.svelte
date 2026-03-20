@@ -10,6 +10,7 @@
 	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import SettingInputField from "../settings/setting-input-field.svelte";
+	import { isWindows } from "$lib/utils/platform";
 
 	let confirmDialogOpen = $state(false);
 	let applyConfigLoading = $state(false);
@@ -361,8 +362,8 @@
 		</AccordionTrigger>
 		<AccordionContent class="pb-1 pt-0 space-y-2">
 			{@render feishu()}
-			<!-- TODO: hidden channel -->
-			{#if false}
+			<!-- NOTE: windows hidden channel -->
+			{#if !isWindows}
 				{@render dingtalk()}
 				{@render qqbot()}
 				{@render wecom()}

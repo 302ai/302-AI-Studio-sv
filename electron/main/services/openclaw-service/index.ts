@@ -1,4 +1,5 @@
-import { SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
+import { isWin } from "@electron/main/constants";
+import { SUPPORTED_CHANNELS, WIN_SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
 import { type IpcMainInvokeEvent } from "electron";
 import { get, isUndefined, merge, pick, set } from "es-toolkit/compat";
 import fs from "fs/promises";
@@ -88,7 +89,7 @@ export class OpenClawService {
 			this.getOpenClawConfig("channels"),
 		]);
 
-		const filteredData = pick(configs.data, SUPPORTED_CHANNELS);
+		const filteredData = pick(configs.data, isWin ? WIN_SUPPORTED_CHANNELS : SUPPORTED_CHANNELS);
 
 		await this.setOpenClawConfig("channels", merge(channels, filteredData));
 	}

@@ -469,7 +469,7 @@ export class LocalVibeService {
 						);
 					}
 					// version 0 -> 1
-					overridePaths.push("plugins.entries.channels.enabled");
+					overridePaths.push("plugins", "channels");
 					await localVibeStorage.setData({
 						openclawJsonTemplateVersion: OPENCLAW_DEFAULT_CONFIG._version,
 					});

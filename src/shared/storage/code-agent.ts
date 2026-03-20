@@ -127,6 +127,7 @@ export const codeAgentGlobalConfigs = type({
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
 
 export const SUPPORTED_CHANNELS = ["feishu", "dingtalk", "qqbot", "wecom", "telegram"] as const;
+export const WIN_SUPPORTED_CHANNELS = ["feishu", "telegram"] as const;
 export type SupportedChannel = (typeof SUPPORTED_CHANNELS)[number];
 
 export const taskSchema = type({
