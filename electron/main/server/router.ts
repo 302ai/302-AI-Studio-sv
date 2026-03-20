@@ -1597,7 +1597,7 @@ app.post("/chat/302ai-code-agent", async (c) => {
 	// Persist lastAgentId when it changes
 	const currentAgentId = codeAgentConfig.currentAgentId as CodingAgentClass;
 	if (globalConfigs.lastAgentId !== currentAgentId) {
-		await codeAgentGlobalConfigsStorage.setLastAgentId(currentAgentId);
+		// await codeAgentGlobalConfigsStorage.setLastAgentId(currentAgentId);
 		console.log("[302ai-code-agent] Updated lastAgentId to:", currentAgentId);
 	}
 

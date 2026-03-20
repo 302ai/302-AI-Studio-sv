@@ -72,9 +72,9 @@
 		}
 
 		codeAgentState.updateType(codeAgentGlobalConfigsState.lastVibeMode);
-		if (isVibe && codeAgentState.type === "local") {
-			codeAgentState.updateCurrentAgentId(codeAgentGlobalConfigsState.lastAgentId);
-		}
+		// if (isVibe && codeAgentState.type === "local") {
+		// 	codeAgentState.updateCurrentAgentId(codeAgentGlobalConfigsState.lastAgentId);
+		// }
 	}
 
 	function handleSettingsClick() {

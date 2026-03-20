@@ -40,9 +40,9 @@ class CodeAgentGlobalConfigsState {
 		persistedCodeAgentGlobalConfigsState.current?.notificationsEnabled ?? false,
 	);
 	lastVibeMode = $derived(persistedCodeAgentGlobalConfigsState.current?.lastVibeMode ?? "remote");
-	lastAgentId = $derived(
-		persistedCodeAgentGlobalConfigsState.current?.lastAgentId ?? "claude-code",
-	);
+	// lastAgentId = $derived(
+	// 	persistedCodeAgentGlobalConfigsState.current?.lastAgentId ?? "claude-code",
+	// );
 	isHydrated = $derived(persistedCodeAgentGlobalConfigsState.isHydrated);
 	feishu = $derived(
 		persistedCodeAgentGlobalConfigsState.current.feishu ?? { appId: "", appSecret: "" },
@@ -91,9 +91,9 @@ class CodeAgentGlobalConfigsState {
 		this.#updateState({ apiKey });
 	}
 
-	updateLastAgentId(agentId: CodingAgentClass): void {
-		this.#updateState({ lastAgentId: agentId });
-	}
+	// updateLastAgentId(agentId: CodingAgentClass): void {
+	// 	this.#updateState({ lastAgentId: agentId });
+	// }
 
 	resetApiKey() {
 		this.#updateState({ apiKey: this.getDefaultApiKey() });

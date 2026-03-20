@@ -89,17 +89,17 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 		}
 	}
 
-	async setLastAgentId(agentId: CodingAgentClass): Promise<{ isOK: boolean }> {
-		try {
-			const { data: currentData } = await this.getGlobalConfigs();
-			const updatedData = { ...currentData, lastAgentId: agentId };
-			await this.setItemInternal("code-agent-global-configs", updatedData);
-			return { isOK: true };
-		} catch (error) {
-			console.error("Error setting lastAgentId:", error);
-			return { isOK: false };
-		}
-	}
+	// async setLastAgentId(agentId: CodingAgentClass): Promise<{ isOK: boolean }> {
+	// 	try {
+	// 		const { data: currentData } = await this.getGlobalConfigs();
+	// 		const updatedData = { ...currentData, lastAgentId: agentId };
+	// 		await this.setItemInternal("code-agent-global-configs", updatedData);
+	// 		return { isOK: true };
+	// 	} catch (error) {
+	// 		console.error("Error setting lastAgentId:", error);
+	// 		return { isOK: false };
+	// 	}
+	// }
 }
 
 export const codeAgentGlobalConfigsStorage = new CodeAgentGlobalConfigsStorage();
