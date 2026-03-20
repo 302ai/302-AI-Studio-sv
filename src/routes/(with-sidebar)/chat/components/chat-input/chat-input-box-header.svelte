@@ -30,7 +30,12 @@
 		["open-claw", "Open Claw"],
 	]);
 	const description = $derived.by(() => {
-		const agentIdLabe = agentIdLabelMap.get(codeAgentState.currentAgentId);
+		// TODO: 支持远程 Open Claw 之后，移除由于当前远程仅支持 claude-code 的硬编码逻辑，恢复使用下面注释掉的获取逻辑
+		const agentIdLabe =
+			codeAgentState.type === "local"
+				? agentIdLabelMap.get(codeAgentState.currentAgentId)
+				: agentIdLabelMap.get("claude-code");
+		// const agentIdLabe = agentIdLabelMap.get(codeAgentState.currentAgentId);
 
 		return selectedMode === "chat"
 			? m.title_chat_mode_description()
