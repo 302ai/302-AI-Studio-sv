@@ -501,10 +501,26 @@ class ClaudeCodeAgentState {
 
 		if (isInit) {
 			const skillsPineline = (skills: ListSkillsResponse) => {
+				// In local mode (claude-code / open-claw), auto-enable all skills by default
+				if (codeAgentState.type === "local") {
+					const { builtin_skills, user_skills } = skills;
+					return [...builtin_skills, ...user_skills];
+				}
 				const { builtin_skills } = skills;
 				return [...builtin_skills];
 			};
 			this.updateSkills(skillsPineline(listSkillsResponse));
+		} else if (codeAgentState.type === "local") {
+			// In local mode, auto-use any new skills that aren't already in the used list.
+			// This ensures newly added skills default to "used" without re-adding
+			// skills that the user explicitly removed.
+			const { builtin_skills, user_skills } = listSkillsResponse;
+			const allAvailable = [...builtin_skills, ...user_skills];
+			const currentSkillNames = new Set(this.skills.map((s) => s.name));
+			const newSkills = allAvailable.filter((s) => !currentSkillNames.has(s.name));
+			if (newSkills.length > 0) {
+				this.handleSkillUse(newSkills);
+			}
 		}
 
 		return listSkillsResponse;

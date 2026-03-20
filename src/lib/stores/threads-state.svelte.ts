@@ -73,6 +73,8 @@ class ThreadsState {
 				}
 				// 主动从本地状态中移除该 thread，确保 UI 立即更新
 				this.threads = this.threads.filter((t) => t.threadId !== threadId);
+				// 广播给其他窗口，让它们也刷新线程列表
+				await broadcastService.broadcastExcludeSource("thread-list-updated", {});
 			}
 			return success;
 		} catch (error) {

@@ -271,17 +271,18 @@
 	}
 
 	async function performThreadDeletion(threadId: string) {
-		// Get ALL tabs across all windows, not just current window
-		const allTabs = await tabBarState.getAllTabs();
-		const existingTab = allTabs?.find((tab) => tab.threadId === threadId);
-
-		if (existingTab) {
-			await tabBarState.handleTabClose(existingTab.id);
-		}
-
+		// Delete thread first (before closing tab, which broadcasts "thread-list-updated")
 		const success = await threadsState.deleteThread(threadId);
 		if (!success) {
 			console.error("Failed to delete thread:", threadId);
+			return;
+		}
+
+		// Now close the tab — its broadcast will reload threads, but the deleted one is already gone
+		const allTabs = await tabBarState.getAllTabs();
+		const existingTab = allTabs?.find((tab) => tab.threadId === threadId);
+		if (existingTab) {
+			await tabBarState.handleTabClose(existingTab.id);
 		}
 	}
 
