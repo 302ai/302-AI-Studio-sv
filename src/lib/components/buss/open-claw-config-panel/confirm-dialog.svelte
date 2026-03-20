@@ -12,15 +12,12 @@
 		handleConfirmDialogOk: () => void;
 	} = $props();
 
-	let open = $derived(confirmDialogOpen);
-	let loading = $derived(applyConfigLoading);
-
 	const handleDialogOk = () => {
 		handleConfirmDialogOk();
 	};
 </script>
 
-<AlertDialog.Root bind:open>
+<AlertDialog.Root bind:open={confirmDialogOpen}>
 	<AlertDialog.Content>
 		<AlertDialog.Header>
 			<AlertDialog.Title>{m.open_claw_update_config()}</AlertDialog.Title>
@@ -31,8 +28,8 @@
 
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
-			<AlertDialog.Action onclick={handleDialogOk} disabled={loading}>
-				{#if loading}
+			<AlertDialog.Action onclick={handleDialogOk} disabled={applyConfigLoading}>
+				{#if applyConfigLoading}
 					<LoaderCircle class="h-4 w-4 animate-spin" />
 				{/if}
 				{m.open_claw_update()}
