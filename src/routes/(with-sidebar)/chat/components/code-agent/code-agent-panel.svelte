@@ -66,7 +66,7 @@
 		const currentSandbox = persistedClaudeCodeSandboxState.current.find(
 			(s) => s.sandboxId === sandboxId,
 		);
-		return currentSandbox?.sandboxRemark ?? "";
+		return currentSandbox?.sandboxRemark || currentSandbox?.sandboxId || sandboxId || "";
 	});
 
 	let currentSessionRemark = $derived.by(() => {
@@ -104,7 +104,6 @@
 			tempSessionRemark = currentSessionRemark;
 		}
 	});
-
 	async function handleSelect(key: string) {
 		codeAgentState.updateType(key as CodeAgentType);
 	}
