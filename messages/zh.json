@@ -1299,6 +1299,7 @@
 	"skills_github_url_required": "请输入 GitHub 仓库地址",
 	"skills_import_from_link": "检测到来自链接的 Skill 导入请求，请确认后点击确认按钮完成导入",
 	"create_skill_prompt": "请参考用户当前历史聊天记录，依据 skill-creator 提供的流程创建一个新的SKILL，此外还务必额外遵循如下规则：1. 创建的SKILL必须位于当前工作目录中的./.claude/skills目录中，而非其他任意位置。",
+	"create_skill_prompt_local": "请参考用户当前历史聊天记录，依据 skill-creator 提供的流程创建一个新的SKILL，此外还务必额外遵循如下规则：1. 创建的SKILL必须放在 /home/user/.claude/skills 目录中，而非其他任意位置。",
 	"file_tree_new_file": "新建文件",
 	"file_tree_new_folder": "新建文件夹",
 	"file_tree_rename": "重命名",

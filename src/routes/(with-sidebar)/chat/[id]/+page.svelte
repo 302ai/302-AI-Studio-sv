@@ -169,7 +169,10 @@
 				// Only process if this is the target thread
 				if (threadId === chatState.id) {
 					chatState.isCreateSkillMode = true;
-					chatState.inputValue = `${m.create_skill_prompt()}`;
+					chatState.inputValue =
+						codeAgentState.type === "local"
+							? `${m.create_skill_prompt_local()}`
+							: `${m.create_skill_prompt()}`;
 					await chatState.sendMessage();
 					chatState.isCreateSkillMode = false;
 				}

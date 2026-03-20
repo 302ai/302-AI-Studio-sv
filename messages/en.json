@@ -1298,6 +1298,7 @@
 	"skills_github_url_required": "Please enter GitHub repository URL",
 	"skills_import_from_link": "Skill import request detected from link. Please confirm and click the confirm button to complete the import",
 	"create_skill_prompt": "Please refer to the user's current historical chat records and create a new SKILL according to the process provided by skill-creator. In addition, be sure to follow the following additional rules: 1. The created SKILL must be located in the ./.claude/skills directory in the current working directory, not anywhere else.",
+	"create_skill_prompt_local": "Please refer to the user's current historical chat records and create a new SKILL according to the process provided by skill-creator. In addition, be sure to follow the following additional rules: 1. The created SKILL must be placed in the /home/user/.claude/skills directory, not anywhere else.",
 	"file_tree_new_file": "New File",
 	"file_tree_new_folder": "New Folder",
 	"file_tree_rename": "Rename",
