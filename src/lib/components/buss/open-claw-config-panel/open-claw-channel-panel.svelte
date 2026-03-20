@@ -64,7 +64,10 @@
 					/>
 					<div class="flex items-center justify-between text-muted-foreground text-xs">
 						<button
-							onclick={() => handleNewSettingsTab("/settings/agent-settings/local")}
+							onclick={() =>
+								window.electronAPI.externalLinkService.openExternalLink(
+									"https://open.feishu.cn/app",
+								)}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_config_feishu()}</button
 						>
@@ -81,7 +84,7 @@
 {/snippet}
 
 {#snippet telegram()}
-	<Accordion type="single" class="w-full rounded-settings-item">
+	<Accordion type="single" class="w-full hidden rounded-settings-item">
 		<AccordionItem value="fei-shu" class="border-b-0">
 			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
 				<Label class=" font-normal no-underline cursor-pointer"

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
@@ -6,7 +7,8 @@
 		localEnvState,
 		type SandboxHealthStatus,
 	} from "$lib/stores/code-agent/local-env-state.svelte";
-	import { LoaderCircle } from "@lucide/svelte";
+	import { cn } from "$lib/utils";
+	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import LogDialog from "./log-dialog.svelte";
 	import PlatformServiceCard from "./platform-service-card.svelte";
@@ -16,6 +18,7 @@
 
 	// Local UI state for log dialog
 	let isSandboxLogOpen = $state(false);
+	let isRestarting = $state(false);
 
 	// Sandbox Logic - use derived state from localEnvState
 	let sandboxRunning = $derived(localEnvState.sandboxRunning);
@@ -63,6 +66,15 @@
 
 	function handleOpenLogs() {
 		isSandboxLogOpen = true;
+	}
+
+	async function handleRestartGateway() {
+		isRestarting = true;
+		try {
+			await window.electronAPI.localVibeService.restartPodmanMachine();
+		} finally {
+			isRestarting = false;
+		}
 	}
 
 	async function handleOpenDirectory() {
@@ -114,6 +126,16 @@
 					showWarning={openClawHealthStatus === "unhealthy"}
 					warningTooltip={m.local_platform_try_restart()}
 				/>
+				{#if openClawHealthStatus === "unhealthy" || isRestarting}
+					<ButtonWithTooltip
+						tooltip={m.local_platform_restart_gateway()}
+						class="hover:!bg-icon-btn-hover size-8"
+						onclick={handleRestartGateway}
+						disabled={isRestarting}
+					>
+						<RefreshCw class={cn("h-4 w-4", isRestarting && "animate-spin")} />
+					</ButtonWithTooltip>
+				{/if}
 			</div>
 			<!-- File Directory -->
 			<div class="flex items-baseline gap-3">

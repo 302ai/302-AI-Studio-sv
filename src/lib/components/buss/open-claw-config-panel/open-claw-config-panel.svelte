@@ -339,7 +339,7 @@
 		</AccordionTrigger>
 		<AccordionContent class="pb-1 pt-0 space-y-2">
 			{@render feishu()}
-			<!-- NOTE: windows hidden channel -->
+			<!-- TODO: hidden channel -->
 			{#if !isWindows}
 				{@render dingtalk()}
 				{@render qqbot()}
