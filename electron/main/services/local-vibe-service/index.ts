@@ -2953,7 +2953,6 @@ export class LocalVibeService {
 	}
 
 	async restartPodmanMachine(_event: IpcMainInvokeEvent) {
-		const execAsync = promisify(exec);
 		await execAsync("podman restart local-cc-api");
 	}
 

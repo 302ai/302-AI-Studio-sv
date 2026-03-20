@@ -5,6 +5,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
+	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { openclawConfigState } from "$lib/stores/code-agent/openclaw/openclaw-config-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
 	import SettingInputField from "../settings/setting-input-field.svelte";
@@ -18,7 +19,10 @@
 	async function handleConfirmDialogOk() {
 		applyConfigLoading = true;
 		try {
-			openclawConfigState.updateAgentId(openclawConfigState.currentOcAgentId);
+			await window.electronAPI.openClawService.applyOpenClawChannelConfig();
+			if (localEnvState.openClawHealthStatus !== "unknown") {
+				await window.electronAPI.localVibeService.restartPodmanMachine();
+			}
 			await openclawConfigState.updateBindings();
 		} catch (e) {
 			console.warn(e);
