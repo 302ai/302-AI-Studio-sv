@@ -268,6 +268,7 @@
 
 	// Skills-only mode: only show skills tab when no sandbox
 	const isSkillsOnlyMode = $derived(agentPreviewState.isSkillsOnlyMode);
+	const isLocalMode = $derived(codeAgentState.type === "local");
 
 	// Tabs definition
 	let tabs: PreviewTab[] = $derived.by(() => {
@@ -276,7 +277,7 @@
 				{ id: TAB_PREVIEW, label: m.label_tab_preview() },
 				{ id: TAB_CODE, label: m.label_tab_file() },
 				{ id: TAB_TERMINAL, label: m.label_tab_terminal() },
-				{ id: TAB_SKILLS, label: "Skills" },
+				...(!isLocalMode ? [{ id: TAB_SKILLS, label: "Skills" }] : []),
 				{ id: TAB_TASKBOARD, label: m.label_tab_taskboard() },
 				{ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() },
 			];
@@ -287,7 +288,7 @@
 		// Skills-only mode OR no sandbox: show skills and taskboard tabs
 		if (isSkillsOnlyMode || !currentSandboxId) {
 			return [
-				{ id: TAB_SKILLS, label: "Skills" },
+				...(!isLocalMode ? [{ id: TAB_SKILLS, label: "Skills" }] : []),
 				{ id: TAB_TASKBOARD, label: m.label_tab_taskboard() },
 			];
 		}
@@ -298,7 +299,7 @@
 		];
 		if (isAgentMode) {
 			t.push({ id: TAB_TERMINAL, label: m.label_tab_terminal() });
-			t.push({ id: TAB_SKILLS, label: "Skills" });
+			if (!isLocalMode) t.push({ id: TAB_SKILLS, label: "Skills" });
 			t.push({ id: TAB_TASKBOARD, label: m.label_tab_taskboard() });
 			t.push({ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() });
 		}
@@ -1377,7 +1378,7 @@
 						{:else if activeTab === TAB_TASKBOARD && isAgentMode}
 							<!-- Taskboard Tab Content -->
 							<TaskboardPanel />
-						{:else if activeTab === TAB_SKILLS && (isAgentMode || isSkillsOnlyMode || !currentSandboxId)}
+						{:else if activeTab === TAB_SKILLS && !isLocalMode && (isAgentMode || isSkillsOnlyMode || !currentSandboxId)}
 							<!-- Skills Tab Content -->
 							<div class="flex h-full flex-col min-h-0 overflow-hidden">
 								<!-- Skills Panel Header -->
