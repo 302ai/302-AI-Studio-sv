@@ -461,13 +461,6 @@ export class LocalVibeService {
 				const { data: vibeData } = await localVibeStorage.getData();
 				if (vibeData.openclawJsonTemplateVersion < OPENCLAW_DEFAULT_CONFIG._version) {
 					// version update
-					if (isLinux) {
-						await this.runLinuxPrivilegedCommandWithBroadcast(
-							"chmod",
-							["777", path.join(this.getRuntimeComposeDir(), ".openclaw", "openclaw.json")],
-							"chown_openclawjson",
-						);
-					}
 					// version 0 -> 1
 					overridePaths.push("plugins", "channels");
 					await localVibeStorage.setData({
@@ -512,6 +505,14 @@ export class LocalVibeService {
 			`OPENCLAW_PORT=${openClawPort}`,
 		].join("\n");
 		fs.writeFileSync(envFilePath, envContent, "utf-8");
+
+		if (isLinux) {
+			await this.runLinuxPrivilegedCommandWithBroadcast(
+				"chmod",
+				["777", path.join(this.getRuntimeComposeDir(), ".openclaw", "openclaw.json")],
+				"chown_openclawjson",
+			);
+		}
 
 		console.log("[Local Vibe] Runtime compose prepared at:", runtimeDir);
 		console.log("[Local Vibe] Allocated host port:", hostPort);
