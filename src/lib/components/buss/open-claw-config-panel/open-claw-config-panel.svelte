@@ -360,9 +360,12 @@
 		</AccordionTrigger>
 		<AccordionContent class="pb-1 pt-0 space-y-2">
 			{@render feishu()}
-			{@render dingtalk()}
-			{@render qqbot()}
-			{@render wecom()}
+			<!-- TODO: hidden channel -->
+			{#if false}
+				{@render dingtalk()}
+				{@render qqbot()}
+				{@render wecom()}
+			{/if}
 			{@render telegram()}
 			<div class="flex flex-col items-end">
 				<Button class="w-fit" onclick={() => (confirmDialogOpen = true)}>
