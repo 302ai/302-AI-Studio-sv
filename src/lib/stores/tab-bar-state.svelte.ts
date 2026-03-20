@@ -236,6 +236,13 @@ class TabBarState {
 			if (currentTabs.length > 1) {
 				const newActiveTabId = await this.#handleTabRemovalWithActiveState(tabId, currentTabs);
 
+				// Ensure storage is written before the IPC call destroys the WebContentsView.
+				// In tab views, #safeUpdateWindowTabs fires an async storage write that may not
+				// complete before tabService.handleTabClose destroys the view.
+				if (!this.#isShellView) {
+					await persistedTabState.flush();
+				}
+
 				await tabService.handleTabClose(tabId, newActiveTabId);
 			} else {
 				// Clear tabs - the $effect fallback will create a new tab
