@@ -64,14 +64,17 @@ class OpenClawConfigState {
 				value[key] = v;
 				return obj;
 			},
-			apply: () => {
+			apply: async () => {
 				this.#updateState(value);
+				await persistedOpenclawConfigState.flush();
 			},
 		};
 		return obj;
 	}
 
 	async updateBindings() {
+		this.updateAgentId(this.currentOcAgentId);
+		await persistedOpenclawConfigState.flush();
 		await window.electronAPI.openClawService.applyOpenClawBindingsConfig(threadId);
 	}
 }

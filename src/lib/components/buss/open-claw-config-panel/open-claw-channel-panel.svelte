@@ -20,7 +20,7 @@
 
 	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
 		prepareAction: async () => {
-			openclawConfigState.batchUpdater().update("feishuSessionId", feishuSessionId).apply();
+			await openclawConfigState.batchUpdater().update("feishuSessionId", feishuSessionId).apply();
 		},
 		finishAction: async () => {
 			await openclawConfigState.updateBindings();

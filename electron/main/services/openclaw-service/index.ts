@@ -108,34 +108,48 @@ export class OpenClawService {
 
 	/**
 	 * Apply channel bindings configurations to OpenClaw
-	 * @returns void
+	 * @param _event Electron IPC event
+	 * @param threadId Thread ID to apply bindings for
+	 * @returns
 	 */
 	async applyOpenClawBindingsConfig(_event: IpcMainInvokeEvent, threadId: string) {
-		const bindings: Array<OpenClawBindingConfig> = (await this.getOpenClawConfig("bindings")) || [];
 		const config = await openClawConfigStorage.getOpenClawConfig(threadId);
 		if (!config.isOK) {
-			console.error("Error: call openClawConfigStorage.getOpenClawConfig call :");
+			console.error("[OpenClawService] Failed to get thread config:", threadId);
 			return;
 		}
-		const localBindings: OpenClawBindingConfig = {
-			agentId: config.data.agentId,
-			match: {
-				channel: "feishu",
-				peer: {
-					kind: "group",
-					id: config.data.feishuSessionId,
-				},
-			},
-		};
 
-		const index = bindings.findIndex((v) => v.agentId === localBindings.agentId);
-		if (index !== -1) {
-			bindings[index] = localBindings;
-		} else {
-			bindings.push(localBindings);
+		const { agentId, feishuSessionId } = config.data;
+		const desiredBindings: OpenClawBindingConfig[] = [];
+
+		if (feishuSessionId) {
+			desiredBindings.push({
+				agentId,
+				match: { channel: "feishu", peer: { kind: "group", id: feishuSessionId } },
+			});
 		}
 
-		await this.setOpenClawConfig("bindings", bindings);
+		const bindings: OpenClawBindingConfig[] = (await this.getOpenClawConfig("bindings")) ?? [];
+
+		const nextBindings = bindings.reduce<OpenClawBindingConfig[]>((acc, b) => {
+			// 1. Remove all old bindings for this agent
+			if (b.agentId === agentId) return acc;
+
+			// 2. Resolve conflicts: remove bindings from other agents occupying the exact same channel/peer
+			const isConflict = desiredBindings.some(
+				(d) => d.match.channel === b.match.channel && d.match.peer.id === b.match.peer.id,
+			);
+			if (isConflict) return acc;
+
+			// Keep other valid bindings
+			acc.push(b);
+			return acc;
+		}, []);
+
+		// 3. Append the new desired bindings
+		nextBindings.push(...desiredBindings);
+
+		await this.setOpenClawConfig("bindings", nextBindings);
 	}
 
 	async handleOpenClawWebUiReloadIpc(_event: IpcMainInvokeEvent, tabId: string) {

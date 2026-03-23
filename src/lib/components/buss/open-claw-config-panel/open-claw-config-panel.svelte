@@ -43,7 +43,7 @@
 
 	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
 		prepareAction: async () => {
-			codeAgentGlobalConfigsState
+			await codeAgentGlobalConfigsState
 				.batchUpdater()
 				.update("feishu", localFeishu)
 				.update("dingtalk", localDingtalk)
@@ -51,6 +51,7 @@
 				.update("wecom", localWecom)
 				.update("telegram", localTelegram)
 				.apply();
+			await window.electronAPI.openClawService.applyOpenClawChannelConfig();
 		},
 		open: (v) => (confirmDialogOpen = v),
 		loading: (v) => (applyConfigLoading = v),

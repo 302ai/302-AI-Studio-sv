@@ -23,7 +23,6 @@ export function ApplyOpenClawChannelConfigConfirm({
 		loading(true);
 		try {
 			await prepareAction?.();
-			await window.electronAPI.openClawService.applyOpenClawChannelConfig();
 			if (localEnvState.openClawHealthStatus !== "unknown") {
 				await window.electronAPI.localVibeService.restartPodmanMachine();
 			}

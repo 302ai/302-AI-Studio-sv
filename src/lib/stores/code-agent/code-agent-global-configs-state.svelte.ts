@@ -158,8 +158,9 @@ class CodeAgentGlobalConfigsState {
 				value[key] = v;
 				return obj;
 			},
-			apply: () => {
+			apply: async () => {
 				this.#updateState(value);
+				await persistedCodeAgentGlobalConfigsState.flush();
 			},
 		};
 		return obj;
