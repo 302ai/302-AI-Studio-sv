@@ -138,12 +138,10 @@ export class LocalVibeService {
 	 * In production: docker-compose.yml in app resources directory
 	 */
 	private getDockerComposePath(): string {
-		const dockercomposeFileName =
-			process.platform == "linux" ? "docker-compose.yml.linux" : "docker-compose.yml";
 		if (app.isPackaged) {
-			return path.join(process.resourcesPath, dockercomposeFileName);
+			return path.join(process.resourcesPath, "docker-compose.yml");
 		}
-		return path.join(process.cwd(), "static", dockercomposeFileName);
+		return path.join(process.cwd(), "static", "docker-compose.yml");
 	}
 
 	/**
@@ -387,7 +385,11 @@ export class LocalVibeService {
 		// Normalize known short-name image to a fully-qualified reference for Podman compatibility.
 		// Some environments disable unqualified-search registries in /etc/containers/registries.conf.
 		try {
-			const composeContent = fs.readFileSync(runtimeComposePath, "utf-8");
+			let composeContent = fs.readFileSync(runtimeComposePath, "utf-8");
+			// Linux remove user configuration, other platforms keep
+			if (process.platform === "linux") {
+				composeContent = composeContent.replace(/^\s*user:.*$/gm, "");
+			}
 			const normalizedContent = composeContent.replace(
 				/(\bimage:\s*)proxy302\/claude_code_local_api:dev\b/g,
 				"$1docker.io/proxy302/claude_code_local_api:dev",
