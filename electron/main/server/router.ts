@@ -5,7 +5,7 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { serve } from "@hono/node-server";
-import type { CodeAgentType } from "@shared/storage/code-agent";
+import type { CodeAgentType, CodingAgentClass } from "@shared/storage/code-agent";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { ChatMessage, McpServer, Skill, ThinkingBudgetType } from "@shared/types";
 import {
@@ -21,7 +21,7 @@ import {
 } from "ai";
 import getPort from "get-port";
 import { Hono, type Context } from "hono";
-import { getSkillContent, getSkillDetails } from "../apis/code-agent";
+// import { getSkillContent, getSkillDetails } from "../apis/code-agent";
 import { codeAgentService, ssoService, tabService } from "../services";
 import { chatParametersService } from "../services/chat-parameters-service";
 import { mcpService } from "../services/mcp-service";
@@ -35,9 +35,9 @@ import {
 	appendPromptToSystemMessage,
 	applyContextCompression,
 	convertAiSdkMessagesToOpenAiMessages,
-	createForcedSkillModelMessages,
+	// createForcedSkillModelMessages,
 	createUIMessageStreamFromGenerator,
-	injectForcedSkillModelMessages,
+	// injectForcedSkillModelMessages,
 	isStreamingSupported,
 	sendStreamError,
 	uploadAttachmentsFromMessages,
@@ -77,6 +77,7 @@ export type RouterRequestBody = {
 	workspacePath?: string;
 	thinkingBudget?: ThinkingBudgetType;
 	vibeMode?: CodeAgentType;
+	agentType?: number;
 	contextSummary?: string;
 	compressedMessageCount?: number;
 };
@@ -1579,6 +1580,7 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		workspacePath,
 		thinkingBudget,
 		vibeMode,
+		agentType,
 	} = await c.req.json<RouterRequestBody>();
 
 	// Persist lastVibeMode when it changes
@@ -1591,6 +1593,13 @@ app.post("/chat/302ai-code-agent", async (c) => {
 
 	const { data: codeAgentConfig } = await codeAgentService.getCodeAgentConfig(threadId);
 	const { sandboxId } = await codeAgentService.getClaudeCodeSandboxId(threadId);
+
+	// Persist lastAgentId when it changes
+	const currentAgentId = codeAgentConfig.currentAgentId as CodingAgentClass;
+	if (globalConfigs.lastAgentId !== currentAgentId) {
+		// await codeAgentGlobalConfigsStorage.setLastAgentId(currentAgentId);
+		console.log("[302ai-code-agent] Updated lastAgentId to:", currentAgentId);
+	}
 
 	// Notify the frontend that sandbox is ready (triggers preview panel to open)
 	tabService.notifySandboxCreated(threadId, sandboxId);
@@ -1611,6 +1620,7 @@ app.post("/chat/302ai-code-agent", async (c) => {
 			workspacePath,
 			thinkingBudget,
 			vibeMode,
+			agentType,
 		}),
 	);
 
@@ -1706,6 +1716,7 @@ CHECK BEFORE EVERY ACTION:
 		JSON.stringify(convertedMessages, null, 2),
 	);
 
+	/*
 	// Inject forced skill ModelMessages AFTER convertToModelMessages but BEFORE convertAiSdkMessagesToOpenAiMessages
 	// This creates a pair of messages: assistant (tool-call) + tool (tool-result)
 	// This simulates the model having already called and received skill content (OpenCode style)
@@ -1770,16 +1781,13 @@ CHECK BEFORE EVERY ACTION:
 		injectForcedSkillModelMessages(convertedMessages, skillModelMessages);
 		console.log("[302ai-code-agent] After injection:", JSON.stringify(convertedMessages, null, 2));
 	}
+	*/
 
 	// Convert messages to OpenAI format
-	// If we have forced skills, send all messages (including the injected skill messages)
-	// Otherwise, only send the last message (incremental update for 302.AI session)
-	const messagesToConvert =
-		forcedSkills.length > 0
-			? convertedMessages // Send all messages including skill messages
-			: convertedMessages.slice(-1); // Only last message for incremental updates
-
+	// Send the last message (incremental update for 302.AI session)
+	const messagesToConvert = convertedMessages.slice(-1);
 	const openAiMessages = convertAiSdkMessagesToOpenAiMessages(messagesToConvert);
+	const forceSkillNames = forcedSkills.map((s) => s.name);
 
 	const requestBody = {
 		model: codeAgentConfig.type === "remote" ? sandboxId : model,
@@ -1788,11 +1796,12 @@ CHECK BEFORE EVERY ACTION:
 		structured_output: true,
 		enable_pre_deploy_check: autoDeploy,
 		available_skills: isCreateSkillMode ? [] : availableSkills,
-		// Only include action when plan mode is ON or creating skill
+		...(forceSkillNames.length > 0 ? { force_skill: forceSkillNames } : {}),
 		...(isCreateSkillMode ? { action: "create_skill" } : {}),
 		...(inPlanMode && !isCreateSkillMode ? { action: "plan" } : {}),
 		...(inTaskOrchestrationMode ? { action: "sync_tasks_json" } : {}),
 		...(thinkingBudget ? { max_thinking_token: THINKING_BUDGET_MAP[thinkingBudget] } : {}),
+		...(agentType !== undefined ? { agent_type: agentType } : {}),
 	};
 
 	console.log("[302ai-code-agent] Messages:", JSON.stringify(requestBody.messages));

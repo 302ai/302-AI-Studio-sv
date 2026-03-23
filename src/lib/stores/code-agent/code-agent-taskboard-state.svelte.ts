@@ -16,10 +16,9 @@ import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
 import { match } from "ts-pattern";
 import { chat, chatState } from "../chat-state.svelte";
-import { shouldPauseAfterTaskRestore } from "./taskboard-auto-execution-policy";
 import { claudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
-import { claudeCodeAgentState } from "./claude-code-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
+import { shouldPauseAfterTaskRestore } from "./taskboard-auto-execution-policy";
 import { withLoadingState } from "./utils";
 
 export class CodeAgentTaskboardState {
@@ -46,7 +45,7 @@ export class CodeAgentTaskboardState {
 	#taskResolve: ((success: boolean) => void) | null = null;
 
 	isInitialized = $derived(
-		codeAgentState.enabled && codeAgentState.isFreshTab && claudeCodeAgentState.agentMode === "new",
+		codeAgentState.enabled && codeAgentState.isFreshTab && codeAgentState.agentMode === "new",
 	);
 
 	inProgressTask = $derived<Task | null>(
@@ -453,7 +452,7 @@ export class CodeAgentTaskboardState {
 				// Emit event when all tasks are completed
 				emitter.emit(EventNames.TASKBOARD_ALL_TASKS_DONE, {
 					sandboxId: codeAgentState.sandboxId,
-					sessionId: claudeCodeAgentState.currentSessionId,
+					sessionId: codeAgentState.currentSessionId,
 					taskCount: this.tasklist.filter((t) => t.status === "done").length,
 				});
 
@@ -622,8 +621,15 @@ export class CodeAgentTaskboardState {
 
 		if (!this.#taskResolve) return;
 
-		const result = lastMessage.metadata?.result;
-		const success = !!result && result.is_error === false;
+		// 🔧 open-claw 模式下直接认为成功，claude-code 模式检查 metadata.result
+		let success: boolean;
+		if (codeAgentState.currentAgentId === "open-claw") {
+			console.log("[TaskBoard] Open-claw mode: treating chat completion as task success");
+			success = true;
+		} else {
+			const result = lastMessage.metadata?.result;
+			success = !!result && result.is_error === false;
+		}
 
 		console.log("[TaskBoard] Resolving task with success:", success);
 		this.#taskResolve(success);

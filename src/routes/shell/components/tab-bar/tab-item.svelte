@@ -19,6 +19,7 @@
 </script>
 
 <script lang="ts">
+	import OpenClawRaw from "$lib/assets/icons/code-agent/openclaw.svg?raw";
 	import { Button } from "$lib/components/ui/button";
 	import * as ContextMenu from "$lib/components/ui/context-menu/index.js";
 	import { m } from "$lib/paraglide/messages.js";
@@ -41,6 +42,7 @@
 	import { onDestroy } from "svelte";
 
 	const { handleAiApplicationReloadIpc } = window.electronAPI.aiApplicationService;
+	const { openExternalLink } = window.electronAPI.externalLinkService;
 
 	const {
 		tab,
@@ -103,6 +105,19 @@
 			});
 		}
 	};
+
+	const handleOpenInBrowser = async () => {
+		await openExternalLink(tab.href);
+	};
+
+	const handleRefresh = async () => {
+		if (tab.type === "openClawWebUi") {
+			await window.electronAPI.openClawService.handleOpenClawWebUiReloadIpc(tab.id);
+			return;
+		}
+
+		await handleAiApplicationReloadIpc(tab.id);
+	};
 </script>
 
 {#snippet tabIcon()}
@@ -127,6 +142,11 @@
 		<MessageCircleQuestionMark />
 	{:else if tabType === "skillsHub"}
 		<ShoppingBag />
+	{:else if tabType === "openClawWebUi"}
+		<span class="flex h-4 w-4 items-center justify-center [&>svg]:h-full [&>svg]:w-full">
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html OpenClawRaw}
+		</span>
 	{/if}
 {/snippet}
 
@@ -201,9 +221,12 @@
 			<ContextMenu.Separator />
 		{/if}
 
-		{#if tab.type === "aiApplications" || tab.type === "helpDocs" || tab.type === "skillsHub"}
-			<ContextMenu.Item onSelect={() => handleAiApplicationReloadIpc(tab.id)}>
+		{#if tab.type === "aiApplications" || tab.type === "helpDocs" || tab.type === "skillsHub" || tab.type === "openClawWebUi"}
+			<ContextMenu.Item onSelect={handleRefresh}>
 				{m.label_button_reload()}
+			</ContextMenu.Item>
+			<ContextMenu.Item onSelect={handleOpenInBrowser}>
+				{m.label_button_open_in_browser()}
 			</ContextMenu.Item>
 			<ContextMenu.Separator />
 		{/if}
@@ -245,12 +268,6 @@
 				{m.label_button_move_tab_into_new_window()}
 			</ContextMenu.Item>
 		{/if}
-
-		<!-- <ContextMenu.Separator />
-
-		<ContextMenu.Item onSelect={() => {}}>
-			{m.label_button_incognito_model()}
-		</ContextMenu.Item> -->
 
 		<ContextMenu.Separator />
 

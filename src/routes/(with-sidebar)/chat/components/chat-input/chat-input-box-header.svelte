@@ -12,27 +12,45 @@
 	import { MAX_ATTACHMENT_COUNT } from "$lib/utils/file-preview";
 	import { Settings } from "@lucide/svelte";
 	import CodeAgentPanel from "../code-agent/code-agent-panel.svelte";
+	import AgentClassToggle from "./agent-class-toggle.svelte";
 
+	let { onIsVibeChange } = $props<{
+		onIsVibeChange: (isVibe: boolean) => void;
+	}>();
 	let selectedMode = $derived(codeAgentState.enabled ? "vibe" : "chat");
 
 	const modeOptions = $derived([
 		{ key: "chat", label: m.title_chat_mode() },
 		{ key: "vibe", label: m.title_code_agent() },
 	]);
-	const description = $derived(
-		selectedMode === "chat"
+
+	const isVibeLocal = $derived(codeAgentState.enabled && codeAgentState.type === "local");
+	const agentIdLabelMap = new Map<"claude-code" | "open-claw", string>([
+		["claude-code", "Claude Code"],
+		["open-claw", "Open Claw"],
+	]);
+	const description = $derived.by(() => {
+		// TODO: 支持远程 Open Claw 之后，移除由于当前远程仅支持 claude-code 的硬编码逻辑，恢复使用下面注释掉的获取逻辑
+		const agentIdLabe =
+			codeAgentState.type === "local"
+				? agentIdLabelMap.get(codeAgentState.currentAgentId)
+				: agentIdLabelMap.get("claude-code");
+		// const agentIdLabe = agentIdLabelMap.get(codeAgentState.currentAgentId);
+
+		return selectedMode === "chat"
 			? m.title_chat_mode_description()
 			: codeAgentState.type === "local"
 				? m.title_local_mode_description({
-						type: `<span class="text-primary">${m.title_local()}</span>`,
+						type: `<span class="text-primary">${m.title_local()}${agentIdLabe}</span>`,
 					})
 				: m.title_code_agent_description({
-						type: `<span class="text-primary">${m.title_remote()}</span>`,
-					}),
-	);
+						type: `<span class="text-primary">${m.title_remote()}${agentIdLabe}</span>`,
+					});
+	});
 
 	function handleModeSelect(key: string) {
 		const isVibe = key === "vibe";
+		onIsVibeChange(isVibe);
 		codeAgentState.updateEnabled(isVibe);
 
 		// 切换到聊天模式时，自动删除超出限制的附件（保留最新的）
@@ -54,6 +72,9 @@
 		}
 
 		codeAgentState.updateType(codeAgentGlobalConfigsState.lastVibeMode);
+		// if (isVibe && codeAgentState.type === "local") {
+		// 	codeAgentState.updateCurrentAgentId(codeAgentGlobalConfigsState.lastAgentId);
+		// }
 	}
 
 	function handleSettingsClick() {
@@ -110,8 +131,13 @@
 		{/if}
 	</div>
 
-	{#if !chatState.hasMessages}
-		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-		<p class="text-xs text-muted-foreground">{@html description}</p>
-	{/if}
+	<div class="flex items-center gap-2">
+		{#if isVibeLocal && chatState.hasMessages}
+			<AgentClassToggle />
+		{/if}
+		{#if !chatState.hasMessages}
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			<p class="text-xs text-muted-foreground">{@html description}</p>
+		{/if}
+	</div>
 </div>

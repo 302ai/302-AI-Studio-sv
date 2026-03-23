@@ -80,6 +80,7 @@ interface ApiModelItem {
 	name?: string;
 	is_featured?: boolean;
 	is_custom_model?: boolean;
+	openai_compatible?: boolean;
 	[key: string]: unknown;
 }
 
@@ -131,6 +132,7 @@ function parseModelsResponse(
 			isFeatured: modelItem.is_featured ?? false,
 			isAddedByUser,
 			is_custom_model: modelItem.is_custom_model ?? false,
+			openai_compatible: modelItem.openai_compatible ?? true,
 		};
 	});
 }

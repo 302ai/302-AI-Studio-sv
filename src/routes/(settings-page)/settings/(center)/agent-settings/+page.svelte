@@ -6,6 +6,7 @@
 	import LocalPlatform from "./local-platform.svelte";
 	import RemotePlatform from "./remote-platform.svelte";
 
+	import OpenClawConfigPanel from "$lib/components/buss/open-claw-config-panel/open-claw-config-panel.svelte";
 	import DeployedWebsitesList from "./deployed-websites-list.svelte";
 
 	const platformOptions = [
@@ -35,6 +36,11 @@
 		onCheckedChange={() => codeAgentGlobalConfigsState.toggleAutoDeploy()}
 	/>
 	<SettingSwitchItem
+		label={m.auto_fix_deploy_failure()}
+		checked={codeAgentGlobalConfigsState.autoFixDeployFailure}
+		onCheckedChange={() => codeAgentGlobalConfigsState.toggleAutoFixDeployFailure()}
+	/>
+	<SettingSwitchItem
 		label={m.settings_notificationsEnabled()}
 		checked={codeAgentGlobalConfigsState.notificationsEnabled}
 		onCheckedChange={() => codeAgentGlobalConfigsState.toggleNotificationsEnabled()}
@@ -43,7 +49,7 @@
 
 	<!-- Platform Section -->
 	<div class="space-y-2">
-		<h2 class="text-sm font-medium text-muted-foreground">{m.title_agent_platform()}</h2>
+		<h2 class="text-sm text-label-fg">{m.title_agent_platform()}</h2>
 		<SegButton
 			options={platformOptions}
 			selectedKey={selectedPlatform}
@@ -56,6 +62,7 @@
 	{#if selectedPlatform === "remote"}
 		<RemotePlatform />
 	{:else if selectedPlatform === "local"}
+		<OpenClawConfigPanel />
 		<LocalPlatform />
 	{/if}
 </div>

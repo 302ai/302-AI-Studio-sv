@@ -27,6 +27,7 @@
 	<Label class="text-label-fg font-normal">{m.settings_titleGenerationModel()}</Label>
 
 	<ModelSelect
+		isVibe={false}
 		selectedModel={preferencesSettings.titleGenerationModel}
 		{trigger}
 		onModelSelect={handleModelSelect}

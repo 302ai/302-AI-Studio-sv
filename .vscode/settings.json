@@ -30,8 +30,5 @@
 		"**/node_modules/**": true,
 		"**/dist/**": true,
 		"**/out/**": true
-	},
-	"[json]": {
-		"editor.defaultFormatter": "vscode.json-language-features"
 	}
 }

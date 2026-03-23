@@ -107,7 +107,7 @@
 			toast.info(m.toast_stop_taskboard_first());
 			return;
 		}
-		codeAgentState.updatePlanMode(!codeAgentState.inPlanMode);
+		codeAgentState.updateInPlanMode(!codeAgentState.inPlanMode);
 	}
 
 	// For responsiveness
@@ -550,14 +550,23 @@
 					{@render actionEnableThinking(true)}
 				{/if}
 
-				{@render actionEnableMCP(true)}
+				{#if codeAgentState.currentAgentId !== "open-claw"}
+					{@render actionEnableMCP(true)}
+				{/if}
 
 				{#if codeAgentState.enabled}
-					{@render actionEnablePlanMode(true)}
-					{@render actionEnableSkills(true)}
-					{@render actionEnabledAgentThinking(true)}
 					{@render actionTaskOrchestration(true)}
-				{:else}
+				{/if}
+
+				{#if codeAgentState.enabled}
+					{#if codeAgentState.currentAgentId !== "open-claw"}
+						{@render actionEnablePlanMode(true)}
+					{/if}
+					{@render actionEnableSkills(true)}
+					{#if codeAgentState.currentAgentId !== "open-claw"}
+						{@render actionEnabledAgentThinking(true)}
+					{/if}
+				{:else if !codeAgentState.enabled}
 					{@render actionSetParameters(true)}
 				{/if}
 			</div>
@@ -571,7 +580,7 @@
 >
 	{@render actionUploadAttachment()}
 
-	{#if isCollapsed}
+	{#if isCollapsed && !(codeAgentState.enabled && codeAgentState.currentAgentId === "open-claw")}
 		{@render actionToolCase()}
 	{:else}
 		<div class="flex items-center gap-chat-bar-gap shrink-0">
@@ -584,14 +593,23 @@
 				{@render actionEnableThinking()}
 			{/if}
 
-			{@render actionEnableMCP()}
+			{#if codeAgentState.currentAgentId !== "open-claw"}
+				{@render actionEnableMCP()}
+			{/if}
 
 			{#if codeAgentState.enabled}
-				{@render actionEnablePlanMode()}
-				{@render actionEnableSkills()}
-				{@render actionEnabledAgentThinking()}
 				{@render actionTaskOrchestration()}
-			{:else}
+			{/if}
+
+			{#if codeAgentState.enabled}
+				{#if codeAgentState.currentAgentId !== "open-claw"}
+					{@render actionEnablePlanMode()}
+				{/if}
+				{@render actionEnableSkills()}
+				{#if codeAgentState.currentAgentId !== "open-claw"}
+					{@render actionEnabledAgentThinking()}
+				{/if}
+			{:else if !codeAgentState.enabled}
 				{@render actionSetParameters()}
 			{/if}
 		</div>

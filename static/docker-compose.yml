@@ -1,12 +1,12 @@
 services:
   local-cc-api:
     # Use a fully-qualified image reference for Podman (short names are often disabled).
-    image: ghcr.io/302ai/cc-local-api:dev
-    platform: linux/amd64
+    image: ghcr.io/302ai/cc-local-api:oc
     container_name: local-cc-api
     ports:
       # host port injected from .env file at runtime (with conflict detection)
       - "${HOST_PORT}:8000"
+      - "${OPENCLAW_PORT}:18789"
     user: "0"
     environment:
       # sqlite file path inside container

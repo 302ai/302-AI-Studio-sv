@@ -6,7 +6,6 @@
 	import { getLocale } from "$lib/paraglide/runtime";
 	import { agentPreviewState } from "$lib/stores/agent-preview-state.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { searchHighlightState } from "$lib/stores/search-highlight-state.svelte";
 	import { cn } from "$lib/utils";
@@ -41,9 +40,10 @@
 	// Check if agent preview button (with full tabs) should be shown
 	const showAgentPreviewButton = $derived(
 		codeAgentState.enabled &&
-			codeAgentState.currentAgentId === "claude-code" &&
-			claudeCodeAgentState.sandboxId !== "" &&
-			claudeCodeAgentState.currentSessionId !== "",
+			((codeAgentState.currentAgentId === "claude-code" &&
+				codeAgentState.sandboxId !== "" &&
+				codeAgentState.currentSessionId !== "") ||
+				(codeAgentState.currentAgentId === "open-claw" && codeAgentState.currentSessionId !== "")),
 	);
 
 	// Handle agent preview toggle (full mode with sandbox)
@@ -51,9 +51,13 @@
 		if (agentPreviewState.isVisible) {
 			agentPreviewState.closePreview();
 		} else {
-			const sandboxId = claudeCodeAgentState.sandboxId;
-			if (sandboxId) {
-				agentPreviewState.openPreview(sandboxId);
+			if (codeAgentState.currentAgentId === "open-claw") {
+				agentPreviewState.openPreview("local");
+			} else {
+				const sandboxId = codeAgentState.sandboxId;
+				if (sandboxId) {
+					agentPreviewState.openPreview(sandboxId);
+				}
 			}
 		}
 	}
@@ -403,7 +407,7 @@
 							{#if searchInputValue && totalMatches > 0}
 								{currentMatchIndex}/{totalMatches}
 							{:else}
-								没有结果
+								{m.search_no_results()}
 							{/if}
 						</span>
 						<button

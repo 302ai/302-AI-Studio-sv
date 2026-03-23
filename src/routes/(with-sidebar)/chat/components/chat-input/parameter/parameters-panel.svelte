@@ -19,7 +19,7 @@
 			onChange={chatState.handleTemperatureChange.bind(chatState)}
 		/>
 		<ParametersSlider
-			label="Top P"
+			label={m.text_label_top_p()}
 			tips={m.title_top_p_tips()}
 			min={0.1}
 			max={1.0}

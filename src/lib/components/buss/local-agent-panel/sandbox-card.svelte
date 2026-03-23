@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
@@ -6,7 +7,8 @@
 		localEnvState,
 		type SandboxHealthStatus,
 	} from "$lib/stores/code-agent/local-env-state.svelte";
-	import { LoaderCircle } from "@lucide/svelte";
+	import { cn } from "$lib/utils";
+	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import LogDialog from "./log-dialog.svelte";
 	import PlatformServiceCard from "./platform-service-card.svelte";
@@ -16,12 +18,14 @@
 
 	// Local UI state for log dialog
 	let isSandboxLogOpen = $state(false);
+	let isRestarting = $state(false);
 
 	// Sandbox Logic - use derived state from localEnvState
 	let sandboxRunning = $derived(localEnvState.sandboxRunning);
 	let isSandboxLoading = $derived(localEnvState.sandboxStarting);
 	let podmanInstalled = $derived(localEnvState.podmanInstalled);
 	let healthStatus = $derived(localEnvState.sandboxHealthStatus);
+	let openClawHealthStatus = $derived(localEnvState.openClawHealthStatus);
 	let sandboxLogs = $derived(localEnvState.sandboxLogs);
 	let sandboxFailed = $derived(localEnvState.sandboxFailed);
 	let fileDirectory = $state("");
@@ -46,6 +50,11 @@
 			? { status: "gray" as const, text: m.local_platform_unknown() }
 			: getHealthStatusProps(healthStatus),
 	);
+	let openClawHealthProps = $derived(
+		!sandboxRunning
+			? { status: "gray" as const, text: m.local_platform_unknown() }
+			: getHealthStatusProps(openClawHealthStatus),
+	);
 
 	async function handleStartSandbox() {
 		if (sandboxRunning) {
@@ -57,6 +66,15 @@
 
 	function handleOpenLogs() {
 		isSandboxLogOpen = true;
+	}
+
+	async function handleRestartGateway() {
+		isRestarting = true;
+		try {
+			await window.electronAPI.localVibeService.restartPodmanMachine();
+		} finally {
+			isRestarting = false;
+		}
 	}
 
 	async function handleOpenDirectory() {
@@ -97,6 +115,27 @@
 					showWarning={healthStatus === "unhealthy"}
 					warningTooltip={m.local_platform_try_restart()}
 				/>
+			</div>
+			<div class="flex items-center gap-3">
+				<Label class="text-muted-foreground min-w-16 font-normal"
+					>{m.local_platform_open_claw()}</Label
+				>
+				<StatusIndicator
+					status={openClawHealthProps.status}
+					text={openClawHealthProps.text}
+					showWarning={openClawHealthStatus === "unhealthy"}
+					warningTooltip={m.local_platform_try_restart()}
+				/>
+				{#if openClawHealthStatus === "unhealthy" || isRestarting}
+					<ButtonWithTooltip
+						tooltip={m.local_platform_restart_gateway()}
+						class="hover:!bg-icon-btn-hover size-8"
+						onclick={handleRestartGateway}
+						disabled={isRestarting}
+					>
+						<RefreshCw class={cn("h-4 w-4", isRestarting && "animate-spin")} />
+					</ButtonWithTooltip>
+				{/if}
 			</div>
 			<!-- File Directory -->
 			<div class="flex items-baseline gap-3">

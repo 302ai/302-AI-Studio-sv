@@ -3,7 +3,6 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { agentPreviewState } from "$lib/stores/agent-preview-state.svelte";
 	import { chat, chatState } from "$lib/stores/chat-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { codeAgentTaskboardState } from "$lib/stores/code-agent/code-agent-taskboard-state.svelte";
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
@@ -170,7 +169,10 @@
 				// Only process if this is the target thread
 				if (threadId === chatState.id) {
 					chatState.isCreateSkillMode = true;
-					chatState.inputValue = `${m.create_skill_prompt()}`;
+					chatState.inputValue =
+						codeAgentState.type === "local"
+							? `${m.create_skill_prompt_local()}`
+							: `${m.create_skill_prompt()}`;
 					await chatState.sendMessage();
 					chatState.isCreateSkillMode = false;
 				}
@@ -259,14 +261,16 @@
 		}
 	});
 
-	// Track previous sandboxId for edge detection
+	// Auto-open preview panel once on page load when sandbox already exists (tab restoration).
+	// Subsequent sandbox creation is handled by the onSandboxCreated IPC event above.
+	let hasAutoOpened = false;
 
-	// Auto-open preview panel when sandbox is first created (edge trigger)
 	$effect(() => {
-		const sandboxId = claudeCodeAgentState.sandboxId;
-		const currentSessionId = claudeCodeAgentState.currentSessionId;
-		// Only open when sandboxId changes from empty to non-empty
-		if (codeAgentState.inCodeAgentMode && sandboxId && currentSessionId) {
+		const sandboxId = codeAgentState.sandboxId;
+		const currentSessionId = codeAgentState.currentSessionId;
+
+		if (!hasAutoOpened && codeAgentState.inCodeAgentMode && sandboxId && currentSessionId) {
+			hasAutoOpened = true;
 			agentPreviewState.openPreview(sandboxId);
 		}
 	});
@@ -406,7 +410,7 @@
 			>
 				<button
 					type="button"
-					aria-label="Resize panel"
+					aria-label={m.title_resize_panel()}
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>
@@ -450,7 +454,7 @@
 			>
 				<button
 					type="button"
-					aria-label="Resize panel"
+					aria-label={m.title_resize_panel()}
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>
@@ -494,7 +498,7 @@
 			>
 				<button
 					type="button"
-					aria-label="Resize panel"
+					aria-label={m.title_resize_panel()}
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from "$lib/paraglide/messages";
 	import type { ChatMessage } from "$lib/types/chat";
 	import { cn } from "$lib/utils";
 	import { onMount } from "svelte";
@@ -510,7 +511,7 @@
 	onclick={handleMinimapClick}
 	onkeydown={handleMinimapKeydown}
 	role="scrollbar"
-	aria-label="Chat minimap"
+	aria-label={m.title_chat_minimap()}
 	aria-controls={viewport?.id || "chat-viewport"}
 	aria-valuenow={getScrollPercentage()}
 	tabindex="0"
@@ -544,7 +545,7 @@
 					)}
 					style="height: {Math.max(height, 2)}px; top: {getMinimapY(metric.top, scaleFactor) +
 						PADDING_Y}px;"
-					title={metric.role === "user" ? "User Message" : "Assistant Message"}
+					title={metric.role === "user" ? m.title_user_message() : m.title_assistant_message()}
 				></div>
 			{/each}
 		</div>
@@ -563,7 +564,7 @@
 		onmousedown={handleDragStart}
 		onkeydown={handleSliderKeydown}
 		role="slider"
-		aria-label="Scroll position indicator"
+		aria-label={m.title_scroll_position_indicator()}
 		aria-valuenow={getScrollPercentage()}
 		aria-valuemin="0"
 		aria-valuemax="100"

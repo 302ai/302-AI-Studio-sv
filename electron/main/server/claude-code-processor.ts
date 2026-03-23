@@ -292,6 +292,22 @@ class ClaudeCodeProcessor {
 			return null;
 		}
 
+		// Open Claw Compatible with Cloud Code mode
+		if (data.model === "openclaw") {
+			try {
+				if (data.choices) {
+					const choice = data.choices![0];
+					const tmpDataStr = JSON.parse(choice.delta.content || "") as string;
+					const tmpData = JSON.parse(tmpDataStr) as ClaudeCodeEvent;
+					if (tmpData.type == "pre_deploy_check") {
+						data = tmpData;
+					}
+				}
+			} catch (_) {
+				// is not json
+			}
+		}
+
 		// Handle pre_deploy_check event
 		if (data.type === "pre_deploy_check") {
 			return this.handlePreDeployCheck(data);

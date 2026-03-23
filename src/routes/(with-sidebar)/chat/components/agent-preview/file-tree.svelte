@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { SandboxFileInfo } from "$lib/api/sandbox-file";
+	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { Button } from "$lib/components/ui/button";
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu";
 	import { Input } from "$lib/components/ui/input";
 	import { m } from "$lib/paraglide/messages";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import {
 		ArrowDownToLine,
@@ -269,7 +269,7 @@
 
 	// Combined effect to handle sandboxId/sessionId changes and loading
 	$effect(() => {
-		const currentSessionId = claudeCodeAgentState.currentSessionId;
+		const currentSessionId = codeAgentState.currentSessionId;
 		const sandboxChanged = sandboxId !== previousSandboxId;
 		const sessionChanged = currentSessionId !== previousSessionId;
 
@@ -442,20 +442,7 @@
 			: false}
 
 		<ContextMenu.Content>
-			<!-- {#if isDir}
-			<ContextMenu.Item
-				onSelect={() => handleCreateFile(isDir ? node.path : undefined)}
-				disabled={isOperating || isModificationDisabled}
-			>
-				{#if isOperating}
-					<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-				{:else}{/if}
-				<span>{m.label_file_tree_create_file()}</span>
-			</ContextMenu.Item>
-		{/if} -->
 			{#if isFile}
-				<!-- Create File -->
-
 				<!-- Rename -->
 				<ContextMenu.Item
 					onSelect={() => handleRename(node)}
@@ -714,51 +701,48 @@
 		<!-- Wide layout: show all buttons -->
 		<div class="[@container(min-width:135px)]:flex hidden items-center gap-1">
 			<!-- Create File -->
-			<button
-				type="button"
+			<ButtonWithTooltip
+				tooltip={m.title_button_create_file()}
 				onclick={() => handleCreateFile()}
-				class="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+				class="h-7 w-7 hover:!bg-chat-action-hover"
 				disabled={isModificationDisabled}
-				title={m.title_button_create_file()}
 			>
 				<FilePlus class="h-4 w-4" strokeWidth={1.25} />
-			</button>
+			</ButtonWithTooltip>
 
 			<!-- Create Folder -->
-			<button
-				type="button"
+			<ButtonWithTooltip
+				tooltip={m.title_button_new_folder()}
 				onclick={() => handleCreateFolder()}
-				class="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+				class="h-7 w-7 hover:!bg-chat-action-hover"
 				disabled={isModificationDisabled}
-				title={m.title_button_new_folder()}
 			>
 				<FolderPlus class="h-4 w-4" strokeWidth={1.25} />
-			</button>
+			</ButtonWithTooltip>
 
 			<!-- Upload File -->
-			<button
-				type="button"
+			<ButtonWithTooltip
+				tooltip={m.label_file_tree_upload_file()}
 				onclick={() => triggerFileUpload()}
-				class="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+				class="h-7 w-7 hover:!bg-chat-action-hover"
 				disabled={isModificationDisabled}
-				title={m.label_file_tree_upload_file()}
 			>
 				<FileUp class="h-4 w-4" strokeWidth={1.25} />
-			</button>
+			</ButtonWithTooltip>
 
 			<!-- Upload Folder -->
-			<button
-				type="button"
+			<ButtonWithTooltip
+				tooltip={m.label_file_tree_upload_folder()}
 				onclick={() => handleFolderUpload()}
-				class="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+				class="h-7 w-7 hover:!bg-chat-action-hover"
 				disabled={isModificationDisabled}
-				title={m.label_file_tree_upload_folder()}
 			>
 				<FolderUp class="h-4 w-4" strokeWidth={1.25} />
-			</button>
+			</ButtonWithTooltip>
 
-			<button
-				type="button"
+			<!-- Download All -->
+			<ButtonWithTooltip
+				tooltip={m.label_file_tree_download_all()}
 				onclick={() => {
 					fileTreeState.downloadFile({
 						path: fileTreeState.rootPath,
@@ -766,24 +750,21 @@
 						type: "dir",
 					});
 				}}
-				class="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+				class="h-7 w-7 hover:!bg-chat-action-hover"
 				disabled={fileTreeState.loading}
-				title={m.label_file_tree_download_all()}
 			>
 				<ArrowDownToLine class="h-4 w-4" strokeWidth={1.25} />
-			</button>
+			</ButtonWithTooltip>
 		</div>
 
 		<!-- Narrow layout: show dropdown menu -->
 		<div class="[@container(min-width:135px)]:hidden flex">
 			<DropdownMenu.Root>
 				<DropdownMenu.Trigger>
-					<button
-						type="button"
-						class="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 flex items-center gap-1 cursor-pointer"
+					<ButtonWithTooltip
+						tooltip={m.common_actions()}
+						class="h-7 w-7 hover:!bg-chat-action-hover"
 						disabled={isModificationDisabled}
-						title={m.common_actions()}
-						aria-label={m.common_actions()}
 					>
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -800,7 +781,7 @@
 							<circle cx="12" cy="5" r="1" />
 							<circle cx="12" cy="19" r="1" />
 						</svg>
-					</button>
+					</ButtonWithTooltip>
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content align="start">
 					<!-- Create File -->
@@ -851,18 +832,17 @@
 		<input bind:this={fileInput} type="file" class="hidden" onchange={handleFileUpload} />
 
 		<!-- Refresh Button (always visible) -->
-		<button
-			type="button"
+		<ButtonWithTooltip
+			tooltip={m.label_file_tree_refresh()}
 			onclick={() => fileTreeState.refreshFileTree()}
-			class="rounded p-1 disabled:cursor-not-allowed disabled:opacity-50 transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer"
-			disabled={fileTreeState.loading || fileTreeState.isStreaming}
-			title={m.label_file_tree_refresh()}
+			class="h-7 w-7 hover:!bg-chat-action-hover"
+			disabled={fileTreeState.loading}
 		>
 			<RefreshCw
 				strokeWidth={1.25}
 				class={`h-4 w-4 ${fileTreeState.loading ? "animate-spin" : ""}`}
 			/>
-		</button>
+		</ButtonWithTooltip>
 	</div>
 
 	<!-- File List -->

@@ -16,8 +16,8 @@ export default defineConfig({
 	},
 	server: {
 		watch: {
-			// 忽略本地 sandbox workspace，避免 tsconfig 变更触发全量 reload
-			ignored: ["**/ai302/workspace/**"],
+			// 忽略整个 ai302 目录，避免 tsconfig 变更触发全量 reload
+			ignored: ["**/ai302/**"],
 		},
 	},
 	plugins: [

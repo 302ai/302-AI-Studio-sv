@@ -14,6 +14,7 @@
 		children?: Snippet;
 		onOpenChange?: (open: boolean) => void;
 		delayDuration?: number;
+		tooltipClass?: string;
 	}
 </script>
 
@@ -39,6 +40,7 @@
 		children,
 		onOpenChange,
 		delayDuration = 500,
+		tooltipClass,
 	}: ButtonWithTooltipProps = $props();
 
 	const buttonClass = $derived(cn(buttonVariants({ variant, size }), className));
@@ -51,7 +53,10 @@
 		</TooltipTrigger>
 		<TooltipContent
 			side={tooltipSide}
-			class="bg-overlay text-overlay-foreground rounded-[10px] border px-2.5 py-1.5 text-sm/6"
+			class={cn(
+				"bg-overlay text-overlay-foreground rounded-[10px] border px-2.5 py-1.5 text-sm/6",
+				tooltipClass,
+			)}
 			arrowClasses="hidden"
 			sideOffset={5}
 		>

@@ -42,6 +42,7 @@
 	const isLocalSandboxStarting = $derived(
 		codeAgentState.type === "local" && localEnvState.sandboxStarting,
 	);
+	let isVibe = $state(false);
 
 	const { onShortcutAction } = window.electronAPI.shortcut;
 
@@ -421,11 +422,21 @@
 		textareaRef?.focus();
 	}
 
+	function handleIsVibeChange(b: boolean) {
+		isVibe = b;
+	}
+
 	onMount(() => {
 		const unsub = onShortcutAction((action) => {
 			if (action.action === "sendMessage" && textareaRef === document.activeElement) {
 				if (isMac && isInCompositionCooldown()) return;
-				if (codeAgentState.enabled && codeAgentSendMessageButtonState.isChecking) return;
+				if (
+					codeAgentState.enabled &&
+					(codeAgentSendMessageButtonState.isChecking ||
+						codeAgentSendMessageButtonState.isOpenClawSendDisabled)
+				) {
+					return;
+				}
 				handleSendMessage();
 			}
 		});
@@ -461,7 +472,7 @@
 		)}
 		data-layoutid="chat-input-box"
 	>
-		<ChatInputBoxHeader />
+		<ChatInputBoxHeader onIsVibeChange={handleIsVibeChange} />
 		<div class="flex flex-col flex-1 min-h-0 p-chat-pad pb-1.5">
 			<div class="min-h-0 flex-1 overflow-auto">
 				<Textarea
@@ -521,6 +532,7 @@
 				<div class="flex-none flex items-center gap-2 min-w-0">
 					<div class="shrink-0 min-w-0">
 						<ModelSelect
+							{isVibe}
 							selectedModel={chatState.selectedModel}
 							onModelSelect={(model) => handleModelSelect(model)}
 						>
@@ -580,7 +592,8 @@
 							<button
 								disabled={!chatState.sendMessageEnabled ||
 									isLocalSandboxStarting ||
-									codeAgentSendMessageButtonState.isChecking}
+									codeAgentSendMessageButtonState.isChecking ||
+									codeAgentSendMessageButtonState.isOpenClawSendDisabled}
 								class={cn(
 									"shrink-0 flex size-9 items-center cursor-pointer justify-center rounded-[10px] bg-chat-send-message-button text-foreground hover:!bg-chat-send-message-button/80",
 

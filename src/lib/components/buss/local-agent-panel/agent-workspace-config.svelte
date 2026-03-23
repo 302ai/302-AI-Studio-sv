@@ -1,34 +1,63 @@
 <script lang="ts">
-	import { SettingSelect } from "$lib/components/buss/settings";
+	import { SegButton, SettingSelect } from "$lib/components/buss/settings";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
+	import { codeAgentState } from "$lib/stores/code-agent";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { cn } from "$lib/utils";
 	import { RefreshCcw } from "@lucide/svelte";
+	import { agentClass } from "@shared/storage/code-agent";
 	import { onMount } from "svelte";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
+	import OpenClawChannelPanel from "../open-claw-config-panel/open-claw-channel-panel.svelte";
+	import OpenClawConfigPanel from "../open-claw-config-panel/open-claw-config-panel.svelte";
 
-	let { mode = "settings" }: { mode?: "settings" | "chat" } = $props();
-	void mode; // Mark as intentionally unused for future use
-
-	// Local state for agent framework (currently only claude-code)
-	let agentFramework = $state("claude-code");
-
-	const frameworkOptions = [{ value: "claude-code", label: "claude code" }];
+	const frameworkOptions = [
+		{
+			key: "claude-code",
+			label: m.agent_framework_claude_code_label(),
+			description: m.agent_framework_claude_code_description(),
+		},
+		{
+			key: "open-claw",
+			label: m.agent_framework_open_claw_label(),
+			description: m.agent_framework_open_claw_description(),
+		},
+	];
 
 	async function handleRefresh() {
 		await localClaudeCodeSandboxState.refreshSessions();
 	}
 
-	onMount(async () => await localClaudeCodeSandboxState.refreshSessions());
+	function handleCodeAgentSelected(codeAgentId: string) {
+		if (agentClass.allows(codeAgentId)) {
+			codeAgentState.updateCurrentAgentId(codeAgentId);
+		}
+	}
+
+	onMount(async () => {
+		await localClaudeCodeSandboxState.refreshSessions();
+	});
 </script>
 
 <div class="space-y-4">
 	<!-- Agent Framework -->
 	<div class="space-y-2">
-		<Label class="text-label-fg font-normal">{m.local_platform_agent_framework()}</Label>
-		<SettingSelect name="Agent Framework" bind:value={agentFramework} options={frameworkOptions} />
+		<Label class="text-label-fg font-normal">{m.title_agent()}</Label>
+		<SegButton
+			class="!h-[52px]"
+			thumbClass="!h-[40px]"
+			options={frameworkOptions}
+			selectedKey={codeAgentState.currentAgentId}
+			onSelect={handleCodeAgentSelected}
+		/>
 	</div>
+
+	{#if codeAgentState.currentAgentId == "open-claw"}
+		<!-- NOTE: Hidden channel configuration -->
+		<OpenClawConfigPanel className="hidden" />
+		<OpenClawChannelPanel />
+	{/if}
 
 	<!-- Select Session -->
 	<div class="space-y-2">

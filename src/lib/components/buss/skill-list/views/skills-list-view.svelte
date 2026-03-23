@@ -7,13 +7,13 @@
 	import Input from "$lib/components/ui/input/input.svelte";
 	import ScrollArea from "$lib/components/ui/scroll-area/scroll-area.svelte";
 	import { m } from "$lib/paraglide/messages";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import {
 		skillsCategoryState,
 		UNCATEGORIZED_SLUG,
 	} from "$lib/stores/skills-category-state.svelte";
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
+	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import { cn } from "$lib/utils";
 	import {
 		ChevronRight,
@@ -56,8 +56,9 @@
 	}: Props = $props();
 
 	const usedSkills = $derived(codeAgentState.skills);
-	const currentSandboxId = $derived(claudeCodeAgentState.sandboxId);
-	const currentSessionId = $derived(claudeCodeAgentState.currentSessionId);
+	const currentSandboxId = $derived(codeAgentState.sandboxId);
+	const currentSessionId = $derived(codeAgentState.currentSessionId);
+	const currentAgentId = $derived(codeAgentState.currentAgentId);
 
 	let searchQuery = $state("");
 	let deleteDialogOpen = $state(false);
@@ -77,7 +78,11 @@
 	let viewMode = $state<"flat" | "grouped">("flat");
 
 	// Combine skills: user skills first, then builtin skills
-	const allSkills = $derived<Skill[]>([...userSkills, ...builtinSkills]);
+	const allSkills = $derived<Skill[]>(
+		[...userSkills, ...builtinSkills].filter(
+			(skill) => !(currentAgentId === "claude-code" && isOpenClawBundledSkill(skill)),
+		),
+	);
 
 	// Filter by search query
 	const searchFilteredSkills = $derived(
@@ -89,7 +94,7 @@
 	);
 
 	// Filter by selected category
-	const filteredSkills = $derived(() => {
+	const filteredSkills = $derived.by(() => {
 		if (!selectedCategorySlug) {
 			return searchFilteredSkills;
 		}
@@ -103,7 +108,7 @@
 	});
 
 	// Group skills by category for grouped view
-	const groupedSkills = $derived(() => {
+	const groupedSkills = $derived.by(() => {
 		if (viewMode !== "grouped" || selectedCategorySlug) {
 			return null;
 		}
@@ -118,7 +123,7 @@
 	});
 
 	// Calculate local skill counts for each category based on searchFilteredSkills
-	const categoryLocalCounts = $derived(() => {
+	const categoryLocalCounts = $derived.by(() => {
 		const counts = new SvelteMap<string, number>();
 		let uncategorizedCount = 0;
 
@@ -168,12 +173,17 @@
 	// Multi-selection state (must be after filteredSkills)
 	let selectedSkills = new SvelteSet<string>();
 	const isSelectionMode = $derived(selectedSkills.size > 0);
-	const selectedSkillsList = $derived(filteredSkills().filter((s) => selectedSkills.has(s.name)));
+	const selectableSkills = $derived(
+		filteredSkills.filter((skill) => !isOpenClawBundledSkill(skill)),
+	);
+	const selectedSkillsList = $derived(selectableSkills.filter((s) => selectedSkills.has(s.name)));
 	const isAllSelected = $derived(
-		filteredSkills().length > 0 && selectedSkills.size === filteredSkills().length,
+		selectableSkills.length > 0 && selectedSkills.size === selectableSkills.length,
 	);
 	// Check if any selected skill can be deleted (non-builtin)
-	const canDeleteSelected = $derived(selectedSkillsList.some((s) => !s.isBuiltin));
+	const canDeleteSelected = $derived(
+		selectedSkillsList.some((s) => !s.isBuiltin && !isOpenClawBundledSkill(s)),
+	);
 	// Check selected skills usage status
 	const allSelectedUsed = $derived(
 		selectedSkillsList.length > 0 &&
@@ -208,6 +218,10 @@
 	}
 
 	function handleEdit(skill: Skill) {
+		if (isOpenClawBundledSkill(skill)) {
+			return;
+		}
+
 		skillsPanelState.goToEdit(skill.name);
 	}
 
@@ -239,6 +253,10 @@
 	}
 
 	function handleDelete(skill: Skill) {
+		if (isOpenClawBundledSkill(skill)) {
+			return;
+		}
+
 		deletingSkill = skill;
 		deleteDialogOpen = true;
 	}
@@ -281,6 +299,10 @@
 
 	// Multi-selection handlers
 	function handleSelectionChange(skill: Skill, isSelected: boolean) {
+		if (isOpenClawBundledSkill(skill)) {
+			return;
+		}
+
 		if (isSelected) {
 			selectedSkills.add(skill.name);
 		} else {
@@ -293,7 +315,7 @@
 	}
 
 	function selectAll() {
-		for (const skill of filteredSkills()) {
+		for (const skill of selectableSkills) {
 			selectedSkills.add(skill.name);
 		}
 	}
@@ -308,7 +330,7 @@
 
 	function handleBatchUse() {
 		const skillsToUse = selectedSkillsList.filter(
-			(s) => !usedSkills.some((u) => u.name === s.name),
+			(s) => !usedSkills.some((u) => u.name === s.name) && !isOpenClawBundledSkill(s),
 		);
 		if (skillsToUse.length > 0) {
 			codeAgentState.handleSkillsUse(skillsToUse);
@@ -317,8 +339,8 @@
 	}
 
 	function handleBatchRemove() {
-		const skillsToRemove = selectedSkillsList.filter((s) =>
-			usedSkills.some((u) => u.name === s.name),
+		const skillsToRemove = selectedSkillsList.filter(
+			(s) => usedSkills.some((u) => u.name === s.name) && !isOpenClawBundledSkill(s),
 		);
 		if (skillsToRemove.length > 0) {
 			codeAgentState.handleSkillsRemove(skillsToRemove);
@@ -327,7 +349,9 @@
 	}
 
 	async function handleBatchDelete() {
-		const skillsToDelete = selectedSkillsList.filter((s) => !s.isBuiltin);
+		const skillsToDelete = selectedSkillsList.filter(
+			(s) => !s.isBuiltin && !isOpenClawBundledSkill(s),
+		);
 		if (skillsToDelete.length === 0) return;
 
 		isDeleting = true;
@@ -353,6 +377,9 @@
 	function handleBatchForceUse(forceUse: boolean) {
 		// Only apply to skills that need to change
 		const skillsToUpdate = selectedUsedSkills.filter((s) => {
+			if (isOpenClawBundledSkill(s)) {
+				return false;
+			}
 			const used = usedSkills.find((u) => u.name === s.name);
 			return forceUse ? used?.forceUse !== true : used?.forceUse === true;
 		});
@@ -488,7 +515,7 @@
 					</button>
 					<!-- Category buttons -->
 					{#each categories as category (category.id)}
-						{@const localCount = categoryLocalCounts().counts.get(category.slug) ?? 0}
+						{@const localCount = categoryLocalCounts.counts.get(category.slug) ?? 0}
 						<button
 							type="button"
 							class={cn(
@@ -515,8 +542,7 @@
 						onclick={() => handleCategorySelect(UNCATEGORIZED_SLUG)}
 					>
 						{m.skills_category_uncategorized()}
-						<span class="ml-1 text-xs opacity-70">({categoryLocalCounts().uncategorizedCount})</span
-						>
+						<span class="ml-1 text-xs opacity-70">({categoryLocalCounts.uncategorizedCount})</span>
 					</button>
 				</div>
 			</ScrollArea>
@@ -529,9 +555,9 @@
 			<div class="flex h-48 items-center justify-center text-primary">
 				<LdrsLoader type="dot-pulse" size={40} />
 			</div>
-		{:else if viewMode === "grouped" && groupedSkills()}
+		{:else if viewMode === "grouped" && groupedSkills}
 			<!-- Grouped view -->
-			{@const groups = groupedSkills()}
+			{@const groups = groupedSkills}
 			{#if groups && groups.length > 0}
 				<div class="space-y-6">
 					{#each groups as [slug, group] (slug)}
@@ -563,15 +589,15 @@
 										skill={usedSkill ?? item}
 										isBuiltin={!!item.isBuiltin}
 										isUsed={!!usedSkill}
-										selectable={true}
+										selectable={!isOpenClawBundledSkill(item)}
 										selected={selectedSkills.has(item.name)}
 										onSelect={handleSelectSkill}
 										onSelectionChange={handleSelectionChange}
 										onUse={showUseButton ? handleUse : undefined}
 										onRemove={showUseButton ? handleRemove : undefined}
-										onEdit={handleEdit}
+										onEdit={isOpenClawBundledSkill(item) ? undefined : handleEdit}
 										onDownload={handleDownload}
-										onDelete={handleDelete}
+										onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 										downloading={downloadingSkills.has(item.name)}
 										onForceUseToggle={showUseButton ? handleForceUseToggle : undefined}
 									/>
@@ -590,7 +616,7 @@
 			{/if}
 		{:else}
 			<!-- Flat view -->
-			{@const skills = filteredSkills()}
+			{@const skills = filteredSkills}
 			<div
 				class="grid gap-4 {singleColumn
 					? 'grid-cols-1'
@@ -602,15 +628,15 @@
 						skill={usedSkill ?? item}
 						isBuiltin={!!item.isBuiltin}
 						isUsed={!!usedSkill}
-						selectable={true}
+						selectable={!isOpenClawBundledSkill(item)}
 						selected={selectedSkills.has(item.name)}
 						onSelect={handleSelectSkill}
 						onSelectionChange={handleSelectionChange}
 						onUse={showUseButton ? handleUse : undefined}
 						onRemove={showUseButton ? handleRemove : undefined}
-						onEdit={handleEdit}
+						onEdit={isOpenClawBundledSkill(item) ? undefined : handleEdit}
 						onDownload={handleDownload}
-						onDelete={handleDelete}
+						onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 						downloading={downloadingSkills.has(item.name)}
 						onForceUseToggle={showUseButton ? handleForceUseToggle : undefined}
 					/>
@@ -656,7 +682,7 @@
 					{/if}
 				</div>
 				<span class="text-sm font-semibold tabular-nums"
-					>{selectedSkills.size}/{filteredSkills().length}</span
+					>{selectedSkills.size}/{selectableSkills.length}</span
 				>
 			</button>
 

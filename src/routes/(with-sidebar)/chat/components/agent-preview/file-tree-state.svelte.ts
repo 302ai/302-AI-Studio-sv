@@ -14,7 +14,7 @@ import {
 	type AgentPreviewSyncEnvelope,
 } from "$lib/stores/agent-preview-state.svelte";
 import { chatState } from "$lib/stores/chat-state.svelte";
-import { claudeCodeAgentState, codeAgentState } from "$lib/stores/code-agent";
+import { codeAgentState } from "$lib/stores/code-agent";
 import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 import { toast } from "svelte-sonner";
 import { SvelteDate, SvelteMap, SvelteSet } from "svelte/reactivity";
@@ -186,6 +186,21 @@ export class FileTreeState {
 	}
 
 	/**
+	 * Get user-friendly error message from error object
+	 * Translates common browser error messages to localized versions
+	 */
+	private getErrorMessage(error: unknown): string {
+		if (!(error instanceof Error)) {
+			return m.toast_file_operation_load_failed();
+		}
+		// Handle common browser network errors
+		if (error.message === "Failed to fetch") {
+			return m.toast_file_operation_network_error();
+		}
+		return error.message;
+	}
+
+	/**
 	 * Build tree structure with flat directory view
 	 * Shows only direct children of currentDirectory with depth 0 and empty children arrays
 	 * Prepends ".." parent entry when not at root
@@ -280,7 +295,7 @@ export class FileTreeState {
 		updates?: Partial<{ selectedFilePath: string | null }>,
 		shouldBroadcast: boolean = false,
 	): Promise<void> {
-		const sessionId = claudeCodeAgentState.currentSessionId;
+		const sessionId = codeAgentState.currentSessionId;
 		if (!sessionId) {
 			return;
 		}
@@ -320,7 +335,7 @@ export class FileTreeState {
 			return;
 		}
 
-		const sessionId = claudeCodeAgentState.currentSessionId;
+		const sessionId = codeAgentState.currentSessionId;
 		if (!sessionId) {
 			return;
 		}
@@ -452,7 +467,7 @@ export class FileTreeState {
 				}
 			}
 		} catch (e) {
-			this.error = e instanceof Error ? e.message : m.toast_file_operation_load_failed();
+			this.error = this.getErrorMessage(e);
 			handleError(e, "Load sandbox files", false);
 			if (!merge) {
 				this.files = [];

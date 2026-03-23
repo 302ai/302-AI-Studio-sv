@@ -2,20 +2,26 @@ import { type } from "arktype";
 
 export const codeAgentType = type("'local' | 'remote'");
 export type CodeAgentType = typeof codeAgentType.infer;
-export const CodeAgentConfigMetadata = type({
+export const agentClass = type("'claude-code' | 'open-claw'");
+export type AgentClass = typeof agentClass.infer;
+export const codingAgentClass = type("'claude-code' | 'open-claw'");
+export type CodingAgentClass = typeof codingAgentClass.infer;
+export const codeAgentConfigMetadata = type({
 	enabled: "boolean",
 	threadId: "string",
 	type: codeAgentType,
-	currentAgentId: "string",
+	currentAgentId: agentClass,
+	codingAgentId: codingAgentClass,
 	isDeleted: "boolean",
-	inPlanMode: "boolean?",
 });
-export type CodeAgentConfigMetadata = typeof CodeAgentConfigMetadata.infer;
+export type CodeAgentConfigMetadata = typeof codeAgentConfigMetadata.infer;
 export const skill = type({
 	name: "string",
 	description: "string",
 	description_zh: "string",
 	isBuiltin: "boolean?",
+	source: "string?",
+	bundled: "boolean?",
 	content: "string?",
 	/** Whether this skill should be forcefully included in prompts when enabled */
 	forceUse: "boolean?",
@@ -49,6 +55,7 @@ export const codeAgentMetadata = type({
 	 * If true, auto-generated titles will not overwrite the note.
 	 */
 	isManualNote: "boolean",
+	inPlanMode: "boolean",
 });
 export type CodeAgentMetadata = typeof codeAgentMetadata.infer;
 
@@ -107,10 +114,21 @@ export type CreateClaudeCodeSandboxResponse = typeof createClaudeCodeSandboxResp
 export const codeAgentGlobalConfigs = type({
 	apiKey: "string",
 	autoDeploy: "boolean",
+	autoFixDeployFailure: "boolean",
 	notificationsEnabled: "boolean",
-	lastVibeMode: "'local' | 'remote'",
+	lastVibeMode: codeAgentType,
+	lastAgentId: agentClass,
+	feishu: type({ appId: "string", appSecret: "string" }),
+	dingtalk: type({ clientId: "string", clientSecret: "string" }),
+	qqbot: type({ appId: "string", clientSecret: "string" }),
+	wecom: type({ botId: "string", secret: "string" }),
+	telegram: type({ botToken: "string", allowFrom: "string[]" }),
 });
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
+
+export const SUPPORTED_CHANNELS = ["feishu", "dingtalk", "qqbot", "wecom", "telegram"] as const;
+export const WIN_SUPPORTED_CHANNELS = ["feishu", "telegram"] as const;
+export type SupportedChannel = (typeof SUPPORTED_CHANNELS)[number];
 
 export const taskSchema = type({
 	id: "string",
@@ -127,6 +145,7 @@ export const localSessionInfoSchema = type({
 	workspace_path: "string",
 	note: "string | null",
 	used_at: "string",
+	oc_agent_id: "string",
 });
 export type LocalSessionInfo = typeof localSessionInfoSchema.infer;
 export const listLocalClaudeCodeSessionsResponse = type({
@@ -134,3 +153,12 @@ export const listLocalClaudeCodeSessionsResponse = type({
 	session_list: localSessionInfoSchema.array(),
 });
 export type ListLocalClaudeCodeSessionsResponse = typeof listLocalClaudeCodeSessionsResponse.infer;
+
+export const localVibeStorageData = type({
+	/** Whether the VM configuration needs to be updated */
+	needUpdateVmConfig: "boolean",
+	/** Whether wsl.conf needs to be updated */
+	needUpdateWslConf: "boolean",
+	openclawJsonTemplateVersion: "number",
+});
+export type LocalVibeStorageData = typeof localVibeStorageData.infer;

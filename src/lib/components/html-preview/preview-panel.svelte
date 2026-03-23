@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from "$lib/paraglide/messages";
 	import { onDestroy } from "svelte";
 
 	interface Props {
@@ -60,7 +61,7 @@
 				: ''}"
 			sandbox="allow-same-origin allow-scripts allow-downloads"
 			referrerpolicy="no-referrer"
-			title="HTML Preview"
+			title={m.title_html_preview()}
 		></iframe>
 	</div>
 </div>

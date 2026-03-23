@@ -3,17 +3,50 @@
 	import { Input } from "$lib/components/ui/input";
 	import { m } from "$lib/paraglide/messages";
 	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
+	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { ChevronDown, Search } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import { SvelteSet } from "svelte/reactivity";
 
-	// Get grouped sessions from the actual store
-	const groupedSessions = $derived(claudeCodeSandboxState.groupedSessions);
+	interface HistorySessionItem {
+		key: string;
+		label: string;
+		value: string;
+		extra?: string;
+	}
+
+	interface HistorySessionGroup {
+		groupKey: string;
+		groupLabel: string;
+		sandboxId: string;
+		sandboxLabel: string;
+		items: HistorySessionItem[];
+	}
+
+	interface HistorySessionData {
+		groups: HistorySessionGroup[];
+	}
+
+	const groupedSessions = $derived.by<HistorySessionData>(() => {
+		if (codeAgentState.type === "local") {
+			return { groups: [] };
+		}
+
+		return {
+			groups: claudeCodeSandboxState.groupedSessions.groups.map((group) => ({
+				groupKey: group.groupKey,
+				groupLabel: group.groupLabel,
+				sandboxId: group.groupKey,
+				sandboxLabel: group.groupLabel,
+				items: group.items,
+			})),
+		};
+	});
 
 	let selectedId = $state<string | null>(null);
 	let expandedSandboxes = $state<Set<string>>(new Set());
 	let searchQuery = $state("");
-	let hasInitialized = false;
+	let groupSignature = $state("");
 
 	// Filter groups based on search query
 	const filteredGroups = $derived.by(() => {
@@ -35,9 +68,20 @@
 
 	// Initialize expanded state - default to all expanded
 	$effect(() => {
-		if (!hasInitialized && groupedSessions.groups.length > 0) {
-			hasInitialized = true;
+		const nextSignature = groupedSessions.groups.map((group) => group.groupKey).join("|");
+		if (nextSignature !== groupSignature) {
+			groupSignature = nextSignature;
 			expandedSandboxes = new SvelteSet(groupedSessions.groups.map((g) => g.groupKey));
+		}
+	});
+
+	$effect(() => {
+		if (!selectedId) return;
+		const exists = groupedSessions.groups.some((group) =>
+			group.items.some((session) => session.value === selectedId),
+		);
+		if (!exists) {
+			selectedId = null;
 		}
 	});
 
@@ -66,8 +110,8 @@
 				return {
 					sessionId: session.value,
 					title: session.label,
-					sandboxId: group.groupKey,
-					sandboxLabel: group.groupLabel,
+					sandboxId: group.sandboxId,
+					sandboxLabel: group.sandboxLabel,
 					extra: session.extra,
 				};
 			}

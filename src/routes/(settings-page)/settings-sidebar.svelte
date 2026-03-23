@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
 	import { m } from "$lib/paraglide/messages.js";
 	import { cn } from "$lib/utils";
@@ -110,7 +111,7 @@
 			bind:this={containerElement}
 			class="relative flex w-full flex-col gap-y-1 border-none"
 			role="tablist"
-			aria-label="Settings Navigation"
+			aria-label={m.title_settings_navigation()}
 		>
 			{#if indicatorStyle.top && selectedIndex !== -1}
 				<div
@@ -135,6 +136,10 @@
 					role="tab"
 					aria-selected={isSelected}
 					tabindex={isSelected ? 0 : -1}
+					onclick={(e) => {
+						e.preventDefault();
+						goto(item.path);
+					}}
 				>
 					<span class="w-full text-right">{item.labelKey}</span>
 				</a>

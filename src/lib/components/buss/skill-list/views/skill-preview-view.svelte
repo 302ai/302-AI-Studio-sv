@@ -4,6 +4,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import { m } from "$lib/paraglide/messages";
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
+	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
 	import SkillFileExplorer from "../skill-file-tree/skill-file-explorer.svelte";
@@ -19,6 +20,7 @@
 	let skillRootDir = $state("");
 
 	const isBuiltin = $derived(skill?.isBuiltin ?? false);
+	const isOpenClawBundled = $derived(isOpenClawBundledSkill(skill));
 
 	const { scanDirectory } = window.electronAPI.appService;
 
@@ -100,7 +102,7 @@
 			{/if}
 		</div>
 
-		{#if !isBuiltin}
+		{#if !isBuiltin && !isOpenClawBundled}
 			<!-- Footer - only show edit button for non-builtin skills -->
 			<div class="flex gap-3 border-t px-6 py-4">
 				<Button class="flex-1 bg-violet-500 hover:bg-violet-600" onclick={handleEdit}>

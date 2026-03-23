@@ -31,7 +31,6 @@
 	} from "$lib/stores/agent-preview-state.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 
@@ -47,6 +46,7 @@
 		DEVICE_MODE_DESKTOP,
 		DEVICE_MODE_MOBILE,
 		TAB_CODE,
+		TAB_OPENCLAW_WEBUI,
 		TAB_PREVIEW,
 		TAB_SKILLS,
 		TAB_TASKBOARD,
@@ -55,6 +55,7 @@
 		type TabType,
 	} from "./constants";
 	import FileTree from "./file-tree.svelte";
+	import OpenClawWebUI from "./openclaw-webui.svelte";
 	import SessionDeleted from "./session-deleted.svelte";
 	import Terminal from "./terminal.svelte";
 	import { handleError, isFileStillSelected } from "./utils";
@@ -166,6 +167,19 @@
 		return LANGUAGE_MAP[ext || ""] || "text";
 	}
 
+	function resolvePreviewActiveTab(
+		availableTabs: ReadonlyArray<PreviewTab>,
+		currentTab: TabType,
+	): TabType | null {
+		if (availableTabs.length === 0) {
+			return null;
+		}
+
+		return availableTabs.some((tab) => tab.id === currentTab)
+			? currentTab
+			: (availableTabs[0].id as TabType);
+	}
+
 	// --- State ---
 	// Sync activeTab with agentPreviewState
 	let activeTab = $derived(agentPreviewState.activeTab as TabType);
@@ -232,20 +246,20 @@
 
 	// --- Derived ---
 	const isAgentMode = $derived(codeAgentState.enabled);
-	const currentSandboxId = $derived(claudeCodeAgentState.sandboxId);
+	const currentSandboxId = $derived(codeAgentState.sandboxId);
 	const currentSessionId = $derived.by(() => {
 		// If currentSessionId matches one of the known valid sessionIds, use it
 		if (
-			claudeCodeAgentState.currentSessionId
+			codeAgentState.currentSessionId
 			// &&
-			// claudeCodeAgentState.sessionIds.some(
-			// 	(s) => getId(s) === claudeCodeAgentState.currentSessionId,
+			// codeAgentState.sessionIds.some(
+			// 	(s) => getId(s) === codeAgentState.currentSessionId,
 			// )
 		) {
-			return claudeCodeAgentState.currentSessionId;
+			return codeAgentState.currentSessionId;
 		}
 		// Otherwise fallback to the first available session ID (assuming single active session in most cases)
-		// const firstValidSession = claudeCodeAgentState.sessionIds.find((s) => getId(s));
+		// const firstValidSession = codeAgentState.sessionIds.find((s) => getId(s));
 		// if (firstValidSession) {
 		// 	return getId(firstValidSession);
 		// }
@@ -254,13 +268,27 @@
 
 	// Skills-only mode: only show skills tab when no sandbox
 	const isSkillsOnlyMode = $derived(agentPreviewState.isSkillsOnlyMode);
+	const isLocalMode = $derived(codeAgentState.type === "local");
 
 	// Tabs definition
 	let tabs: PreviewTab[] = $derived.by(() => {
+		if (codeAgentState.currentAgentId === "open-claw") {
+			const openClawTabs: PreviewTab[] = [
+				{ id: TAB_PREVIEW, label: m.label_tab_preview() },
+				{ id: TAB_CODE, label: m.label_tab_file() },
+				{ id: TAB_TERMINAL, label: m.label_tab_terminal() },
+				...(!isLocalMode ? [{ id: TAB_SKILLS, label: "Skills" }] : []),
+				{ id: TAB_TASKBOARD, label: m.label_tab_taskboard() },
+				{ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() },
+			];
+
+			return openClawTabs;
+		}
+
 		// Skills-only mode OR no sandbox: show skills and taskboard tabs
 		if (isSkillsOnlyMode || !currentSandboxId) {
 			return [
-				{ id: TAB_SKILLS, label: "Skills" },
+				...(!isLocalMode ? [{ id: TAB_SKILLS, label: "Skills" }] : []),
 				{ id: TAB_TASKBOARD, label: m.label_tab_taskboard() },
 			];
 		}
@@ -271,19 +299,22 @@
 		];
 		if (isAgentMode) {
 			t.push({ id: TAB_TERMINAL, label: m.label_tab_terminal() });
-			t.push({ id: TAB_SKILLS, label: "Skills" });
+			if (!isLocalMode) t.push({ id: TAB_SKILLS, label: "Skills" });
 			t.push({ id: TAB_TASKBOARD, label: m.label_tab_taskboard() });
+			if (codeAgentState.type === "local") {
+				t.push({ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() });
+			}
 		}
 		return t;
 	});
 
 	// --- Effects & Logic ---
 
-	// 0. Auto-switch to valid tab when no sandbox (skills or taskboard are valid)
+	// 0. 保证当前 tab 始终落在当前模式可用的范围内
 	$effect(() => {
-		// When there's no sandbox, ensure we're on a valid tab (skills or taskboard)
-		if (!currentSandboxId && activeTab !== TAB_SKILLS && activeTab !== TAB_TASKBOARD) {
-			agentPreviewState.setActiveTab(TAB_SKILLS);
+		const normalizedTab = resolvePreviewActiveTab(tabs, activeTab);
+		if (normalizedTab && normalizedTab !== activeTab) {
+			agentPreviewState.setActiveTab(normalizedTab);
 		}
 	});
 
@@ -817,6 +848,21 @@
 	};
 
 	const handleOpenInNewTab = async () => {
+		if (activeTab === TAB_OPENCLAW_WEBUI) {
+			try {
+				const url = await window.electronAPI.openClawService.getOpenClawWebUiUrl();
+				if (url) {
+					await tabBarState.handleNewTab("OpenClaw", "openClawWebUi", true, url);
+				} else {
+					toast.error(m.openclaw_webui_failed_to_load());
+				}
+			} catch (error) {
+				console.error("[OpenClaw WebUI] Failed to open internal tab:", error);
+				toast.error(m.openclaw_webui_failed_to_load());
+			}
+			return;
+		}
+
 		// In agent mode, if we have a deployment URL, create a new tab with iframe
 		if (isAgentMode && deployment.url && currentSandboxId && currentSessionId) {
 			// Create HTML content with iframe pointing to deployment URL
@@ -825,7 +871,7 @@
 			// Generate unique previewId based on sandboxId and sessionId
 			const previewId = `agent-preview-${currentSandboxId}-${currentSessionId}`;
 
-			await tabBarState.handleNewTab(
+			tabBarState.handleNewTab(
 				m.title_html_preview(),
 				"htmlPreview",
 				true,
@@ -841,7 +887,7 @@
 			? `${htmlPreviewState.context.messageId}-${htmlPreviewState.context.messagePartIndex}-${htmlPreviewState.context.blockId}`
 			: undefined;
 
-		await tabBarState.handleNewTab(
+		tabBarState.handleNewTab(
 			m.title_html_preview(),
 			"htmlPreview",
 			true,
@@ -1117,7 +1163,7 @@
 														: ''}"
 													sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
 													referrerpolicy="no-referrer"
-													title="Sandbox Preview"
+													title={m.title_sandbox_preview()}
 													src={deployment.url}
 												></iframe>
 											{/key}
@@ -1334,7 +1380,7 @@
 						{:else if activeTab === TAB_TASKBOARD && isAgentMode}
 							<!-- Taskboard Tab Content -->
 							<TaskboardPanel />
-						{:else if activeTab === TAB_SKILLS && (isAgentMode || isSkillsOnlyMode || !currentSandboxId)}
+						{:else if activeTab === TAB_SKILLS && !isLocalMode && (isAgentMode || isSkillsOnlyMode || !currentSandboxId)}
 							<!-- Skills Tab Content -->
 							<div class="flex h-full flex-col min-h-0 overflow-hidden">
 								<!-- Skills Panel Header -->
@@ -1391,6 +1437,10 @@
 										<SkillCreateHistoryView />
 									{/if}
 								</div>
+							</div>
+						{:else if activeTab === TAB_OPENCLAW_WEBUI && isAgentMode}
+							<div class="flex h-full flex-col min-h-0 overflow-hidden">
+								<OpenClawWebUI />
 							</div>
 						{/if}
 					</div>

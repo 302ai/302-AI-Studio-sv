@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "26.11.0",
+	"version": "26.12.1-beta.1",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -144,7 +144,7 @@
 		"@lexical/rich-text": "0.33.1",
 		"@lexical/selection": "0.33.1",
 		"@lexical/utils": "0.33.1",
-		"@lobehub/icons-static-svg": "^1.66.0",
+		"@lobehub/icons-static-svg": "^1.82.0",
 		"@modelcontextprotocol/sdk": "^1.20.0",
 		"@opendocsg/pdf2md": "^0.2.2",
 		"@sveltejs/adapter-static": "^3.0.9",

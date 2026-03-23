@@ -23,6 +23,7 @@
 </script>
 
 <script lang="ts">
+	import { m } from "$lib/paraglide/messages";
 	import { cn } from "$lib/utils";
 	import { onDestroy } from "svelte";
 	import { dndzone, TRIGGERS } from "svelte-dnd-action";
@@ -101,7 +102,11 @@
 	});
 </script>
 
-<div class={cn("flex w-full flex-col", className)} role="list" aria-label="Model providers">
+<div
+	class={cn("flex w-full flex-col", className)}
+	role="list"
+	aria-label={m.title_model_providers()}
+>
 	<div
 		class="gap-provider-list-gap flex h-full w-full flex-col"
 		use:dndzone={{
