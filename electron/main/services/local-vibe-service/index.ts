@@ -394,9 +394,7 @@ export class LocalVibeService {
 				/(\bimage:\s*)proxy302\/claude_code_local_api:dev\b/g,
 				"$1docker.io/proxy302/claude_code_local_api:dev",
 			);
-			if (normalizedContent !== composeContent) {
-				fs.writeFileSync(runtimeComposePath, normalizedContent, "utf-8");
-			}
+			fs.writeFileSync(runtimeComposePath, normalizedContent, "utf-8");
 		} catch (error) {
 			console.warn("[Local Vibe] Failed to normalize runtime compose image reference:", error);
 		}
