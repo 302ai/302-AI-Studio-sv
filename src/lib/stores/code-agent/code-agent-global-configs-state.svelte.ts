@@ -151,6 +151,20 @@ class CodeAgentGlobalConfigsState {
 		this.#updateState({ telegram: { ...this.telegram, allowFrom } });
 	}
 
+	batchUpdater() {
+		const value: Partial<CodeAgentGlobalConfigs> = {};
+		const obj = {
+			update: <T extends keyof CodeAgentGlobalConfigs>(key: T, v: CodeAgentGlobalConfigs[T]) => {
+				value[key] = v;
+				return obj;
+			},
+			apply: () => {
+				this.#updateState(value);
+			},
+		};
+		return obj;
+	}
+
 	async toggleNotificationsEnabled() {
 		const newState = !this.notificationsEnabled;
 		this.#updateState({ notificationsEnabled: newState });

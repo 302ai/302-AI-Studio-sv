@@ -57,6 +57,20 @@ class OpenClawConfigState {
 		this.#updateState({ agentId });
 	}
 
+	batchUpdater() {
+		const value: Partial<OpenClawConfig> = {};
+		const obj = {
+			update: <T extends keyof OpenClawConfig>(key: T, v: OpenClawConfig[T]) => {
+				value[key] = v;
+				return obj;
+			},
+			apply: () => {
+				this.#updateState(value);
+			},
+		};
+		return obj;
+	}
+
 	async updateBindings() {
 		await window.electronAPI.openClawService.applyOpenClawBindingsConfig(threadId);
 	}

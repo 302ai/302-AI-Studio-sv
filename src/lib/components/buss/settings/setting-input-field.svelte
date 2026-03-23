@@ -4,6 +4,7 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 	import { cn } from "$lib/utils";
 	import { Eye, EyeOff } from "@lucide/svelte";
+	import type { FormEventHandler } from "svelte/elements";
 
 	interface Props {
 		label: string;
@@ -15,6 +16,7 @@
 		class?: string;
 		inputClass?: string;
 		disabled?: boolean;
+		oninput?: FormEventHandler<HTMLInputElement>;
 	}
 
 	let {
@@ -27,6 +29,7 @@
 		class: className,
 		inputClass,
 		disabled,
+		oninput,
 	}: Props = $props();
 
 	let showPassword = $state(false);
@@ -47,6 +50,7 @@
 			{placeholder}
 			{disabled}
 			bind:value
+			{...oninput ? { oninput } : {}}
 			class={cn(
 				"!bg-settings-item-bg dark:!bg-settings-item-bg rounded-settings-item hover:ring-ring hover:ring-1",
 				type === "password" && "pr-10",

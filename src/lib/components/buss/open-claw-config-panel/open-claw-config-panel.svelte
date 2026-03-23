@@ -11,108 +11,52 @@
 	import { Label } from "$lib/components/ui/field";
 	import { m } from "$lib/paraglide/messages";
 	import { codeAgentGlobalConfigsState } from "$lib/stores/code-agent";
-	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { isWindows } from "$lib/utils/platform";
 	import { RefreshCw } from "@lucide/svelte";
-	import { toast } from "svelte-sonner";
 	import SettingInputField from "../settings/setting-input-field.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
+	import { ApplyOpenClawChannelConfigConfirm } from "./hooks";
 
 	let confirmDialogOpen = $state(false);
 	let applyConfigLoading = $state(false);
 
-	const { className }: Props = $props();
-
-	const bind = <T,>(get: () => T, set: (v: T) => void) => ({
-		get value() {
-			return get();
-		},
-		set value(v: T) {
-			set(v);
-		},
+	let localFeishu = $state({
+		appId: codeAgentGlobalConfigsState.feishu.appId,
+		appSecret: codeAgentGlobalConfigsState.feishu.appSecret,
+	});
+	let localDingtalk = $state({
+		clientId: codeAgentGlobalConfigsState.dingtalk.clientId,
+		clientSecret: codeAgentGlobalConfigsState.dingtalk.clientSecret,
+	});
+	let localQqbot = $state({
+		appId: codeAgentGlobalConfigsState.qqbot.appId,
+		clientSecret: codeAgentGlobalConfigsState.qqbot.clientSecret,
+	});
+	let localWecom = $state({
+		botId: codeAgentGlobalConfigsState.wecom.botId,
+		secret: codeAgentGlobalConfigsState.wecom.secret,
+	});
+	let localTelegram = $state({
+		botToken: codeAgentGlobalConfigsState.telegram.botToken,
+		allowFrom: [...codeAgentGlobalConfigsState.telegram.allowFrom],
 	});
 
-	const feishuAppId = bind(
-		() => codeAgentGlobalConfigsState.feishu.appId,
-		codeAgentGlobalConfigsState.updateFeishuAppId.bind(codeAgentGlobalConfigsState),
-	);
+	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
+		prepareAction: async () => {
+			codeAgentGlobalConfigsState
+				.batchUpdater()
+				.update("feishu", localFeishu)
+				.update("dingtalk", localDingtalk)
+				.update("qqbot", localQqbot)
+				.update("wecom", localWecom)
+				.update("telegram", localTelegram)
+				.apply();
+		},
+		open: (v) => (confirmDialogOpen = v),
+		loading: (v) => (applyConfigLoading = v),
+	});
 
-	const feishuAppSecret = bind(
-		() => codeAgentGlobalConfigsState.feishu.appSecret,
-		codeAgentGlobalConfigsState.updateFeishuAppSecret.bind(codeAgentGlobalConfigsState),
-	);
-
-	const dingtalkClientId = bind(
-		() => codeAgentGlobalConfigsState.dingtalk.clientId,
-		codeAgentGlobalConfigsState.updateDingtalkClientId.bind(codeAgentGlobalConfigsState),
-	);
-
-	const dingtalkClientSecret = bind(
-		() => codeAgentGlobalConfigsState.dingtalk.clientSecret,
-		codeAgentGlobalConfigsState.updateDingtalkClientSecret.bind(codeAgentGlobalConfigsState),
-	);
-
-	const qqbotAppId = bind(
-		() => codeAgentGlobalConfigsState.qqbot.appId,
-		codeAgentGlobalConfigsState.updateQqbotAppId.bind(codeAgentGlobalConfigsState),
-	);
-
-	const qqbotClientSecret = bind(
-		() => codeAgentGlobalConfigsState.qqbot.clientSecret,
-		codeAgentGlobalConfigsState.updateQqbotClientSecret.bind(codeAgentGlobalConfigsState),
-	);
-
-	const wecomBotId = bind(
-		() => codeAgentGlobalConfigsState.wecom.botId,
-		codeAgentGlobalConfigsState.updateWecomBotId.bind(codeAgentGlobalConfigsState),
-	);
-
-	const wecomSecret = bind(
-		() => codeAgentGlobalConfigsState.wecom.secret,
-		codeAgentGlobalConfigsState.updateWecomSecret.bind(codeAgentGlobalConfigsState),
-	);
-
-	const telegramBotToken = bind(
-		() => codeAgentGlobalConfigsState.telegram.botToken,
-		codeAgentGlobalConfigsState.updateTelegramBotToken.bind(codeAgentGlobalConfigsState),
-	);
-
-	const telegramAllowFrom = bind(
-		() => codeAgentGlobalConfigsState.telegram.allowFrom.join(","),
-		(v: string) => codeAgentGlobalConfigsState.updateTelegramAllowFrom(v.split(",")),
-	);
-
-	async function handleConfirmDialogOk() {
-		applyConfigLoading = true;
-		try {
-			await window.electronAPI.openClawService.applyOpenClawChannelConfig();
-			if (localEnvState.openClawHealthStatus !== "unknown") {
-				await window.electronAPI.localVibeService.restartPodmanMachine();
-			}
-		} catch (e) {
-			const error = e as NodeJS.ErrnoException;
-			if (error.code === "ENOENT") {
-				const toastId = "local-code-agent-connection-error";
-				const isAlreadyVisible = toast.getActiveToasts().some((t) => t.id === toastId);
-
-				if (!localEnvState.sandboxStarting && !isAlreadyVisible) {
-					toast.error(m.code_agent_local_container_not_started(), {
-						id: toastId,
-						action: {
-							label: m.toast_button_start_sandbox(),
-							onClick: async () => {
-								await localEnvState.startSandbox();
-							},
-						},
-					});
-				}
-			}
-			console.warn(e);
-		} finally {
-			confirmDialogOpen = false;
-			applyConfigLoading = false;
-		}
-	}
+	const { className }: Props = $props();
 </script>
 
 {#snippet feishu()}
@@ -132,7 +76,7 @@
 					<SettingInputField
 						label={m.open_claw_appid()}
 						placeholder={m.open_claw_placeholder_appid()}
-						bind:value={feishuAppId.value}
+						bind:value={localFeishu.appId}
 						class="[&>label]:text-label-fg"
 					/>
 					<!-- bind:value={tempAppSecret} -->
@@ -140,7 +84,7 @@
 						label={m.open_claw_app_secret()}
 						placeholder={m.open_claw_placeholder_app_secret()}
 						type="password"
-						bind:value={feishuAppSecret.value}
+						bind:value={localFeishu.appSecret}
 						class="[&>label]:text-label-fg"
 					/>
 					<div class="flex items-center justify-between">
@@ -175,7 +119,7 @@
 					<SettingInputField
 						label={m.open_claw_dingtalk_client_id()}
 						placeholder={m.open_claw_dingtalk_placeholder_client_id()}
-						bind:value={dingtalkClientId.value}
+						bind:value={localDingtalk.clientId}
 						class="[&>label]:text-label-fg"
 					/>
 					<!-- bind:value={tempAppSecret} -->
@@ -183,7 +127,7 @@
 						label={m.open_claw_dingtalk_client_secret()}
 						placeholder={m.open_claw_dingtalk_placeholder_client_secret()}
 						type="password"
-						bind:value={dingtalkClientSecret.value}
+						bind:value={localDingtalk.clientSecret}
 						class="[&>label]:text-label-fg"
 					/>
 					<div class="flex items-center justify-between">
@@ -217,7 +161,7 @@
 					<SettingInputField
 						label={m.open_claw_qqbot_app_id()}
 						placeholder={m.open_claw_qqbot_placeholder_app_id()}
-						bind:value={qqbotAppId.value}
+						bind:value={localQqbot.appId}
 						class="[&>label]:text-label-fg"
 					/>
 					<!-- bind:value={tempAppSecret} -->
@@ -225,7 +169,7 @@
 						label={m.open_claw_qqbot_app_secret()}
 						placeholder={m.open_claw_qqbot_placeholder_app_secret()}
 						type="password"
-						bind:value={qqbotClientSecret.value}
+						bind:value={localQqbot.clientSecret}
 						class="[&>label]:text-label-fg"
 					/>
 					<div class="flex items-center justify-between">
@@ -259,7 +203,7 @@
 					<SettingInputField
 						label={m.open_claw_wecom_bot_id()}
 						placeholder={m.open_claw_wecom_placeholder_bot_id()}
-						bind:value={wecomBotId.value}
+						bind:value={localWecom.botId}
 						class="[&>label]:text-label-fg"
 					/>
 					<!-- bind:value={tempAppSecret} -->
@@ -267,7 +211,7 @@
 						label={m.open_claw_wecom_secret()}
 						placeholder={m.open_claw_wecom_placeholder_secret()}
 						type="password"
-						bind:value={wecomSecret.value}
+						bind:value={localWecom.secret}
 						class="[&>label]:text-label-fg"
 					/>
 					<div class="flex items-center justify-between">
@@ -300,16 +244,17 @@
 					<SettingInputField
 						label="Bot Token"
 						placeholder="请输入Bot Token"
-						bind:value={telegramBotToken.value}
+						bind:value={localTelegram.botToken}
 						class="[&>label]:text-label-fg"
 					/>
-					<!-- bind:value={tempAppSecret} -->
 					<!-- TONE: Allow From is disable -->
 					<SettingInputField
 						label="Allow From"
 						placeholder="请输入allowFrom,使用','分割"
 						type="password"
-						bind:value={telegramAllowFrom.value}
+						value={localTelegram.allowFrom.join(",")}
+						oninput={(e) =>
+							(localTelegram.allowFrom = (e.target as HTMLInputElement).value.split(","))}
 						class="[&>label]:text-label-fg hidden"
 					/>
 					<div class="flex items-center justify-between">
