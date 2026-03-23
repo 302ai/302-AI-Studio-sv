@@ -277,7 +277,7 @@
 				{ id: TAB_PREVIEW, label: m.label_tab_preview() },
 				{ id: TAB_CODE, label: m.label_tab_file() },
 				{ id: TAB_TERMINAL, label: m.label_tab_terminal() },
-				...(!isLocalMode ? [{ id: TAB_SKILLS, label: "Skills" }] : []),
+				{ id: TAB_SKILLS, label: "Skills" },
 				{ id: TAB_TASKBOARD, label: m.label_tab_taskboard() },
 				{ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() },
 			];
@@ -299,7 +299,7 @@
 		];
 		if (isAgentMode) {
 			t.push({ id: TAB_TERMINAL, label: m.label_tab_terminal() });
-			if (!isLocalMode) t.push({ id: TAB_SKILLS, label: "Skills" });
+			t.push({ id: TAB_SKILLS, label: "Skills" });
 			t.push({ id: TAB_TASKBOARD, label: m.label_tab_taskboard() });
 			if (codeAgentState.type === "local") {
 				t.push({ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() });
@@ -1380,7 +1380,7 @@
 						{:else if activeTab === TAB_TASKBOARD && isAgentMode}
 							<!-- Taskboard Tab Content -->
 							<TaskboardPanel />
-						{:else if activeTab === TAB_SKILLS && !isLocalMode && (isAgentMode || isSkillsOnlyMode || !currentSandboxId)}
+						{:else if activeTab === TAB_SKILLS && (isAgentMode || isSkillsOnlyMode || !currentSandboxId)}
 							<!-- Skills Tab Content -->
 							<div class="flex h-full flex-col min-h-0 overflow-hidden">
 								<!-- Skills Panel Header -->
