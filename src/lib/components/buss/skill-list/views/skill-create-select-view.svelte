@@ -3,7 +3,6 @@
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
 	import { FileEdit, Link, MessageSquareText, Package } from "@lucide/svelte";
 	import type { Component } from "svelte";
-	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 
 	interface CreateOption {
 		id: "manual" | "upload" | "github" | "history";
@@ -39,10 +38,6 @@
 		},
 	];
 
-	const visibleOptions = $derived(
-		createOptions.filter((opt) => opt.id !== "history" || codeAgentState.type !== "local"),
-	);
-
 	function handleSelectOption(optionId: CreateOption["id"]) {
 		skillsPanelState.goToCreateMethod(optionId);
 	}
@@ -52,7 +47,7 @@
 	<p class="text-muted-foreground mb-4 text-sm">{m.skills_create_select_method()}</p>
 
 	<div class="grid grid-cols-2 gap-4">
-		{#each visibleOptions as option (option.id)}
+		{#each createOptions as option (option.id)}
 			<button
 				type="button"
 				class="flex flex-col items-center gap-2 rounded-xl border bg-transparent p-6 transition-colors hover:border-[#8B5CF6] hover:bg-[#F5F3FF] dark:hover:bg-violet-950/50"
