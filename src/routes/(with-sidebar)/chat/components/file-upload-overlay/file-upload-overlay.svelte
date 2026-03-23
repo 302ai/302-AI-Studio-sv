@@ -2,6 +2,8 @@
 	import FileUploadIcon from "$lib/assets/icons/ai-application/File-Upload.svg";
 	import { m } from "$lib/paraglide/messages.js";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
+	import XIcon from "@lucide/svelte/icons/x";
+	import { Button } from "$lib/components/ui/button";
 	import {
 		MAX_ATTACHMENT_COUNT,
 		MAX_FILE_SIZE_BYTES,
@@ -111,16 +113,30 @@
 			}
 		};
 
+		const handleGlobalDragEnd = () => {
+			showOverlay = false;
+		};
+
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (event.key === "Escape" && showOverlay) {
+				showOverlay = false;
+			}
+		};
+
 		window.addEventListener("dragenter", handleGlobalDragEnter);
 		window.addEventListener("dragover", handleGlobalDragOver);
 		window.addEventListener("drop", handleGlobalDrop);
 		window.addEventListener("dragleave", handleGlobalDragLeave);
+		window.addEventListener("dragend", handleGlobalDragEnd);
+		window.addEventListener("keydown", handleKeyDown);
 
 		return () => {
 			window.removeEventListener("dragenter", handleGlobalDragEnter);
 			window.removeEventListener("dragover", handleGlobalDragOver);
 			window.removeEventListener("drop", handleGlobalDrop);
 			window.removeEventListener("dragleave", handleGlobalDragLeave);
+			window.removeEventListener("dragend", handleGlobalDragEnd);
+			window.removeEventListener("keydown", handleKeyDown);
 		};
 	});
 
@@ -179,7 +195,7 @@
 		role="presentation"
 	>
 		<div
-			class="flex flex-col items-center justify-center gap-6 rounded-3xl bg-background shadow-2xl"
+			class="flex flex-col items-center justify-center gap-6 rounded-3xl bg-background shadow-2xl relative"
 			style="width: 560px; height: 284px;"
 			ondragover={handleDialogDragOver}
 			ondrop={handleDialogDrop}
@@ -187,6 +203,17 @@
 			role="button"
 			tabindex="0"
 		>
+			<Button
+				variant="ghost"
+				size="icon"
+				class="absolute end-4 top-4 opacity-70 hover:opacity-100"
+				onclick={() => {
+					showOverlay = false;
+				}}
+			>
+				<XIcon class="size-4" />
+				<span class="sr-only">Close</span>
+			</Button>
 			<div
 				class="w-20 h-20 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center shadow-lg"
 			>
