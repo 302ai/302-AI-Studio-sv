@@ -5,6 +5,7 @@ import { type ListSkillsResponse } from "$lib/api/skills/base-apis";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
 import type { ChatMessage } from "$lib/types/chat";
+import { clone } from "$lib/utils/clone";
 import {
 	type CodeAgentMetadata,
 	type CodeAgentType,
@@ -53,6 +54,9 @@ const threadId =
 		: "shell";
 
 function getInitialData() {
+	if (window.claudeCodeAgentState) {
+		return clone(window.claudeCodeAgentState as CodeAgentMetadata);
+	}
 	const initialData: CodeAgentMetadata = {
 		model: "claude-sonnet-4-5-20250929",
 		currentWorkspacePath: "",
@@ -61,9 +65,10 @@ function getInitialData() {
 		currentSessionId: "",
 		sandboxId: "",
 		sandboxRemark: "",
-		skills: BUILTIN_SKILLS,
+		skills: [...BUILTIN_SKILLS],
 		thinkingBudget: "off",
 		isManualNote: false,
+		inPlanMode: false,
 	};
 	return initialData;
 }
@@ -98,6 +103,7 @@ class ClaudeCodeAgentState {
 	currentWorkspacePath = $derived(
 		persistedClaudeCodeAgentState.current?.currentWorkspacePath ?? "",
 	);
+	inPlanMode = $derived(persistedClaudeCodeAgentState.current?.inPlanMode ?? false);
 
 	agentMode = $derived.by<"new" | "existing">(() => {
 		return this.selectedSessionId === "new" ? "new" : "existing";
@@ -370,6 +376,10 @@ class ClaudeCodeAgentState {
 		this.updateState({ thinkingBudget });
 	}
 
+	updateInPlanMode(inPlanMode: boolean): void {
+		this.updateState({ inPlanMode });
+	}
+
 	async handleAgentModeExecute(): Promise<{
 		isOK: boolean;
 		sandboxInfo?: ClaudeCodeSandboxInfo;
@@ -491,10 +501,26 @@ class ClaudeCodeAgentState {
 
 		if (isInit) {
 			const skillsPineline = (skills: ListSkillsResponse) => {
+				// In local mode (claude-code / open-claw), auto-enable all skills by default
+				if (codeAgentState.type === "local") {
+					const { builtin_skills, user_skills } = skills;
+					return [...builtin_skills, ...user_skills];
+				}
 				const { builtin_skills } = skills;
 				return [...builtin_skills];
 			};
 			this.updateSkills(skillsPineline(listSkillsResponse));
+		} else if (codeAgentState.type === "local") {
+			// In local mode, auto-use any new skills that aren't already in the used list.
+			// This ensures newly added skills default to "used" without re-adding
+			// skills that the user explicitly removed.
+			const { builtin_skills, user_skills } = listSkillsResponse;
+			const allAvailable = [...builtin_skills, ...user_skills];
+			const currentSkillNames = new Set(this.skills.map((s) => s.name));
+			const newSkills = allAvailable.filter((s) => !currentSkillNames.has(s.name));
+			if (newSkills.length > 0) {
+				this.handleSkillUse(newSkills);
+			}
 		}
 
 		return listSkillsResponse;

@@ -3,6 +3,7 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { m } from "$lib/paraglide/messages";
 	import { generalSettings } from "$lib/stores/general-settings.state.svelte";
+	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import { ChevronLeft, Loader2, X, Zap } from "@lucide/svelte";
 	import type { Skill } from "@shared/types";
 
@@ -45,6 +46,7 @@
 	}
 
 	const showFooter = $derived(!!onUse || !!onEdit || !!onDownload);
+	const isOpenClawBundled = $derived(isOpenClawBundledSkill(skill));
 	const description = $derived(
 		skill
 			? generalSettings.language === "zh" && skill.description_zh
@@ -103,7 +105,7 @@
 		<!-- Footer -->
 		{#if showFooter}
 			<div class="flex gap-3 border-t px-6 py-4">
-				{#if onDownload}
+				{#if onDownload && !isOpenClawBundled}
 					<Button
 						variant="secondary"
 						class="flex-1"
@@ -116,7 +118,7 @@
 						{m.skills_download()}
 					</Button>
 				{/if}
-				{#if onEdit}
+				{#if onEdit && !isOpenClawBundled}
 					<Button class="flex-1" onclick={handleEdit}>
 						{m.text_button_edit()}
 					</Button>

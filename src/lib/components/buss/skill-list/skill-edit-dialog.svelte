@@ -3,6 +3,7 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { m } from "$lib/paraglide/messages";
+	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import { Loader2, X } from "@lucide/svelte";
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
@@ -247,6 +248,8 @@
 
 	// 内置 skill 不能保存
 	const isBuiltin = $derived(skill?.isBuiltin ?? false);
+	const isOpenClawBundled = $derived(isOpenClawBundledSkill(skill));
+	const isReadOnly = $derived(isBuiltin || isOpenClawBundled);
 
 	// 监听 formData.content 变化，同步更新 changedFiles（默认视图 → 文件树联动）
 	let prevFormContent = $state("");
@@ -286,7 +289,7 @@
 				bind:formData
 				bind:this={manualFormRef}
 				rootPath={treeRootPath}
-				readOnly={isBuiltin}
+				readOnly={isReadOnly}
 				{changedFiles}
 				onFileChange={handleFileChange}
 				onRootPathChange={handleRootPathChange}
@@ -302,7 +305,7 @@
 			<Button
 				class="flex-1 bg-violet-500 hover:bg-violet-600"
 				onclick={handleSave}
-				disabled={isLoading || isSaving || isBuiltin}
+				disabled={isLoading || isSaving || isReadOnly}
 			>
 				{#if isSaving}
 					<Loader2 class="mr-2 h-4 w-4 animate-spin" />

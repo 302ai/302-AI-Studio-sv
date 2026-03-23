@@ -3,7 +3,7 @@ import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 import type { CodeAgentType } from "@shared/storage/code-agent";
 import { SvelteDate, SvelteSet } from "svelte/reactivity";
-import { claudeCodeAgentState } from "./code-agent";
+import { codeAgentState } from "./code-agent";
 
 /**
  * Get threadId from window.tab or default to "shell"
@@ -237,7 +237,13 @@ class SyncBus {
 	}
 }
 
-export type AgentPreviewTab = "preview" | "code" | "terminal" | "skills" | "taskboard";
+export type AgentPreviewTab =
+	| "preview"
+	| "code"
+	| "terminal"
+	| "skills"
+	| "taskboard"
+	| "openclaw-webui";
 
 export class AgentPreviewState {
 	isVisible = $state(false);
@@ -793,14 +799,20 @@ export class AgentPreviewState {
 	}
 
 	openPreview(sandBoxId: string) {
-		// this.context = {
-		// 	messageId: payload.messageId,
-		// 	messagePartIndex: payload.messagePartIndex,
-		// 	blockId: payload.blockId,
-		// 	meta: payload.meta,
-		// };
 		this.sandBoxId = sandBoxId;
 		this.mode = "preview";
+		this.isSkillsOnlyMode = false;
+		// if (codeAgentState.currentAgentId === "open-claw") {
+		// 	const validTabs: AgentPreviewTab[] =
+		// 		codeAgentState.type === "local"
+		// 			? ["preview", "code", "terminal", "openclaw-webui"]
+		// 			: ["code", "terminal", "openclaw-webui"];
+		// 	this.activeTab = validTabs.includes(this.activeTab)
+		// 		? this.activeTab
+		// 		: codeAgentState.type === "local"
+		// 			? "preview"
+		// 			: "code";
+		// }
 		this.isVisible = true;
 	}
 
@@ -818,8 +830,7 @@ export class AgentPreviewState {
 	openSkillsTab() {
 		this.activeTab = "skills";
 		this.isVisible = true;
-		this.isSkillsOnlyMode =
-			!claudeCodeAgentState.currentSessionId || !claudeCodeAgentState.sandboxId;
+		this.isSkillsOnlyMode = !codeAgentState.currentSessionId || !codeAgentState.sandboxId;
 	}
 
 	/**
@@ -835,8 +846,7 @@ export class AgentPreviewState {
 	openTaskboardTab() {
 		this.activeTab = "taskboard";
 		this.isVisible = true;
-		this.isSkillsOnlyMode =
-			!claudeCodeAgentState.currentSessionId || !claudeCodeAgentState.sandboxId;
+		this.isSkillsOnlyMode = !codeAgentState.currentSessionId || !codeAgentState.sandboxId;
 	}
 
 	setMode(mode: HtmlPreviewMode) {

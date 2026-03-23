@@ -1,5 +1,5 @@
-import type { ChatMessage, Tab, TabType, ThreadParmas } from "@shared/types";
 import { MAX_TABS_PER_WINDOW } from "@shared/constants/tab";
+import type { ChatMessage, Tab, TabType, ThreadParmas } from "@shared/types";
 import { BrowserWindow, ipcMain, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import { isNull, isUndefined } from "es-toolkit";
 import { nanoid } from "nanoid";
@@ -38,6 +38,7 @@ const TAB_CONFIGS: Record<TabType, TabConfig> = {
 	htmlPreview: { title: "HTML Preview", getHref: (id) => `/html-preview/${id}` },
 	helpDocs: { title: "Help Docs", getHref: () => "https://studio.302.ai/zh/docs" },
 	skillsHub: { title: "302 Skills Hub", getHref: () => "https://skills.302.ai" },
+	openClawWebUi: { title: "OpenClaw WebUI", getHref: () => "about:blank" },
 } as const;
 
 const getTabConfig = (type: TabType) => TAB_CONFIGS[type] || TAB_CONFIGS.chat;
@@ -413,19 +414,39 @@ export class TabService {
 	private async newWebContentsView(windowId: number, tab: Tab): Promise<WebContentsView> {
 		let view: WebContentsView;
 
-		if (tab.type === "aiApplications" || tab.type === "helpDocs" || tab.type === "skillsHub") {
+		if (
+			tab.type === "aiApplications" ||
+			tab.type === "helpDocs" ||
+			tab.type === "skillsHub" ||
+			tab.type === "openClawWebUi"
+		) {
 			view = WebContentsFactory.createAiApplicationView({
 				windowId,
 				type: "aiApplication",
 			});
 		} else {
-			const [thread, messages] = await Promise.all([
-				storageService.getItemInternal("app-thread:" + tab.threadId),
-				storageService.getItemInternal("app-chat-messages:" + tab.threadId),
-			]);
+			const [thread, messages, codeAgentConfig, claudeCodeAgentState, openclawConfig] =
+				await Promise.all([
+					storageService.getItemInternal("app-thread:" + tab.threadId),
+					storageService.getItemInternal("app-chat-messages:" + tab.threadId),
+					storageService.getItemInternal(
+						`CodeAgentStorage:code-agent-config-state-${tab.threadId}`,
+					),
+					storageService.getItemInternal(
+						`CodeAgentStorage:claude-code-agent-state-${tab.threadId}`,
+					),
+					storageService.getItemInternal(`OpenClawStorage:openclaw-config-state-${tab.threadId}`),
+				]);
 
 			const threadFilePath = TempStorage.writeData(thread, "thread");
 			const messagesFilePath = TempStorage.writeData(messages, "messages");
+			const codeAgentConfigFilePath = TempStorage.writeData(codeAgentConfig, "code-agent-config");
+			const claudeCodeAgentStateFilePath = TempStorage.writeData(
+				claudeCodeAgentState,
+				"claude-code-agent-state",
+			);
+
+			const openclawConfigFilePath = TempStorage.writeData(openclawConfig, "openclaw-config");
 
 			// Create view using factory
 			view = WebContentsFactory.createTabView({
@@ -434,6 +455,9 @@ export class TabService {
 				tab,
 				threadFilePath,
 				messagesFilePath,
+				codeAgentConfigFilePath,
+				claudeCodeAgentStateFilePath,
+				openclawConfigFilePath,
 			});
 		}
 
@@ -441,7 +465,10 @@ export class TabService {
 		withDevToolsShortcuts(view);
 		withLoadHandlers(view, {
 			baseUrl:
-				tab.type === "aiApplications" || tab.type === "helpDocs" || tab.type === "skillsHub"
+				tab.type === "aiApplications" ||
+				tab.type === "helpDocs" ||
+				tab.type === "skillsHub" ||
+				tab.type === "openClawWebUi"
 					? tab.href
 					: MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost",
 			// autoOpenDevTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
@@ -462,6 +489,15 @@ export class TabService {
 		const capturedTab = tab;
 		withLifecycleHandlers(view, {
 			onDestroyed: async () => {
+				// Prevent old view from deleting data when a new view was created by wakeTab
+				const activeView = this.tabViewMap.get(capturedTabId);
+				if (activeView && activeView !== view) {
+					console.log(
+						`[TabService] Tab ${capturedTabId} old webContents destroyed, but a new view is already active. Skipping cleanup.`,
+					);
+					return;
+				}
+
 				const currentTab = this.tabMap.get(capturedTabId);
 				if (currentTab?.isSleeping) {
 					console.log(
@@ -472,24 +508,9 @@ export class TabService {
 				}
 
 				console.log(`Tab ${capturedTabId} webContents destroyed, cleaning up all mappings`);
-				// === Business cleanup: handle private chat and empty thread data ===
-				if (capturedTab.threadId) {
-					// Parallel query for thread and messages
-					const [thread, messages] = await Promise.all([
-						storageService.getItemInternal(
-							`app-thread:${capturedTab.threadId}`,
-						) as Promise<ThreadParmas | null>,
-						storageService.getItemInternal(`app-chat-messages:${capturedTab.threadId}`) as Promise<
-							ChatMessage[] | null
-						>,
-					]);
 
-					if (thread?.isPrivateChatActive || messages?.length === 0) {
-						// Use unified cleanup method from ThreadStorage
-						await threadStorage.cleanupThreadData(capturedTab.threadId);
-					}
-				}
-				// === Business cleanup ended ===
+				// === Business cleanup: handle private chat and empty thread data ===
+				await this.performTabBusinessCleanup(capturedTab);
 
 				// === Technical cleanup: remove mappings ===
 				this.tabViewMap.delete(capturedTabId);
@@ -517,6 +538,29 @@ export class TabService {
 		});
 
 		return view;
+	}
+
+	/**
+	 * Perform business cleanup for a tab (e.g. deleting private chat data or empty threads)
+	 */
+	private async performTabBusinessCleanup(tab: Tab) {
+		if (tab.threadId) {
+			// Parallel query for thread and messages
+			const [thread, messages] = await Promise.all([
+				storageService.getItemInternal(
+					`app-thread:${tab.threadId}`,
+				) as Promise<ThreadParmas | null>,
+				storageService.getItemInternal(`app-chat-messages:${tab.threadId}`) as Promise<
+					ChatMessage[] | null
+				>,
+			]);
+
+			if (thread?.isPrivateChatActive || messages?.length === 0) {
+				console.log(`[TabService] Cleaning up business data for thread ${tab.threadId}`);
+				// Use unified cleanup method from ThreadStorage
+				await threadStorage.cleanupThreadData(tab.threadId);
+			}
+		}
 	}
 
 	private attachViewToWindow(window: BrowserWindow, view: WebContentsView) {
@@ -632,9 +676,9 @@ export class TabService {
 		const window = BrowserWindow.fromId(windowId);
 		if (isNull(window)) return;
 
-		// Remove all tabs - business cleanup (private chat data) handled automatically in onDestroyed
+		// Remove all tabs - business cleanup (private chat data) handled automatically in onDestroyed or explicitly if sleeping
 		for (const tab of windowTabs) {
-			this.removeTab(window, tab.id);
+			await this.removeTab(window, tab.id);
 		}
 
 		const shellView = this.windowShellView.get(windowId);
@@ -647,10 +691,6 @@ export class TabService {
 		this.windowActiveTabId.delete(windowId);
 	}
 
-	/**
-	 * Cleanup private chat data for all tabs in a window without removing the tabs themselves.
-	 * Used when closing the last window to ensure private data is deleted.
-	 */
 	async cleanupPrivateChatData(windowId: number) {
 		const windowTabs = await tabStorage.getTabsByWindowId(windowId.toString());
 		if (isNull(windowTabs)) return;
@@ -760,7 +800,7 @@ export class TabService {
 		});
 	}
 
-	removeTab(window: BrowserWindow, tabId: string) {
+	async removeTab(window: BrowserWindow, tabId: string) {
 		console.log("Removing Tab --->", tabId);
 
 		// Check if busy
@@ -783,6 +823,13 @@ export class TabService {
 			window.contentView.removeChildView(view);
 			view.webContents.close({ waitForBeforeUnload: true });
 		} else {
+			if (tab) {
+				// Tab exists but has no view (e.g. is sleeping)
+				// We must perform business cleanup manually since no webContents destroyed event will fire
+				await this.performTabBusinessCleanup(tab);
+				this.cleanupTabTempFiles(tab.id);
+			}
+
 			this.tabViewMap.delete(tabId);
 			this.tabMap.delete(tabId);
 			this.tabWindowMap.delete(tabId);
@@ -1403,14 +1450,21 @@ export class TabService {
 		if (isNull(window)) return;
 
 		const view = this.tabViewMap.get(tabId);
-		if (isUndefined(view)) return;
+		if (isUndefined(view)) {
+			// Tab might be sleeping, still need to remove it from maps and potentially cleanup
+			const tab = this.tabMap.get(tabId);
+			if (tab) {
+				await this.removeTab(window, tabId);
+			}
+			return;
+		}
 
 		if (newActiveTabId && this.windowActiveTabId.get(window.id) === tabId) {
 			await this.switchActiveTab(window, newActiveTabId);
 		}
 
-		// Business cleanup (private chat data) handled automatically in onDestroyed
-		this.removeTab(window, tabId);
+		// Business cleanup (private chat data) handled automatically in onDestroyed or explicitly if sleeping
+		await this.removeTab(window, tabId);
 	}
 
 	async handleTabCloseOthers(event: IpcMainInvokeEvent, tabId: string, tabIdsToClose: string[]) {
@@ -1419,9 +1473,9 @@ export class TabService {
 
 		await this.switchActiveTab(window, tabId);
 
-		// Business cleanup (private chat data) handled automatically in onDestroyed
+		// Business cleanup (private chat data) handled automatically in onDestroyed or explicitly if sleeping
 		for (const tabIdToClose of tabIdsToClose) {
-			this.removeTab(window, tabIdToClose);
+			await this.removeTab(window, tabIdToClose);
 		}
 	}
 
@@ -1439,27 +1493,11 @@ export class TabService {
 			await this.switchActiveTab(window, tabId);
 		}
 
-		// Business cleanup (private chat data) handled automatically in onDestroyed
+		// Business cleanup (private chat data) handled automatically in onDestroyed or explicitly if sleeping
 		for (const tabIdToClose of tabIdsToClose) {
-			this.removeTab(window, tabIdToClose);
+			await this.removeTab(window, tabIdToClose);
 		}
 	}
-
-	// async handleTabCloseAll(event: IpcMainInvokeEvent) {
-	// 	const window = BrowserWindow.fromWebContents(event.sender);
-	// 	if (isNull(window)) return;
-
-	// 	this.windowActiveTabId.delete(window.id);
-
-	// 	const windowViews = this.windowTabView.get(window.id);
-	// 	if (!isUndefined(windowViews)) {
-	// 		windowViews.forEach((view) => {
-	// 			window.contentView.removeChildView(view);
-	// 			view.webContents.close();
-	// 		});
-	// 	}
-	// 	this.windowTabView.delete(window.id);
-	// }
 
 	async handleShellViewLevel(event: IpcMainInvokeEvent, up: boolean) {
 		const window = BrowserWindow.fromWebContents(event.sender);

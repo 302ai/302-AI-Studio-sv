@@ -26,6 +26,7 @@
 	<Label class="text-label-fg font-normal">{m.settings_newSessionModel()}</Label>
 
 	<ModelSelect
+		isVibe={false}
 		selectedModel={preferencesSettings.newSessionModel}
 		{trigger}
 		onModelSelect={handleModelSelect}
@@ -34,6 +35,7 @@
 	<Label class="text-label-fg font-normal mt-4">{m.settings_vibeNewSessionModel()}</Label>
 
 	<ModelSelect
+		isVibe={false}
 		selectedModel={preferencesSettings.vibeNewSessionModel}
 		onModelSelect={(model) => preferencesSettings.setVibeNewSessionModel(model)}
 	>

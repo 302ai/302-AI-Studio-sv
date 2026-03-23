@@ -4,7 +4,6 @@ import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
 import { chatState } from "../chat-state.svelte";
 import { mcpState } from "../mcp-state.svelte";
-import { claudeCodeAgentState } from "./claude-code-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
 import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
 import { localClaudeCodeSandboxState } from "./local-claude-code-sandbox-state.svelte";
@@ -18,6 +17,12 @@ class CodeAgentSendMessageButtonState {
 
 	showLackOfDiskDialog = $state(false);
 	isChecking = $state(false);
+	isOpenClawSendDisabled = $derived.by(
+		() =>
+			codeAgentState.type === "local" &&
+			codeAgentState.currentAgentId === "open-claw" &&
+			localEnvState.openClawHealthStatus === "unhealthy",
+	);
 
 	/**
 	 * Ensures the local sandbox is ready for use in local mode
@@ -26,15 +31,21 @@ class CodeAgentSendMessageButtonState {
 	 * - Shows toast notifications for starting/started states
 	 * - Uses localEnvState.sandboxStarting for shared loading state
 	 * - Updates codeAgentState.localBaseUrl on success
-	 * @returns { isOk: boolean; error?: string }
 	 */
 	async ensureLocalSandboxReady(): Promise<{ isOk: boolean; error?: string }> {
-		// Only check for local mode
 		if (codeAgentState.type !== "local") {
 			return { isOk: true };
 		}
 
-		this.isChecking = true;
+		if (this.isOpenClawSendDisabled) {
+			return { isOk: false };
+		}
+
+		const startedChecking = !this.isChecking;
+		if (startedChecking) {
+			this.isChecking = true;
+		}
+
 		try {
 			const result = await localEnvState.ensureSandboxRunning();
 
@@ -59,7 +70,9 @@ class CodeAgentSendMessageButtonState {
 			console.error("[CodeAgent] Failed to ensure local sandbox ready:", errorMessage);
 			return { isOk: false, error: errorMessage };
 		} finally {
-			this.isChecking = false;
+			if (startedChecking) {
+				this.isChecking = false;
+			}
 		}
 	}
 
@@ -148,7 +161,6 @@ class CodeAgentSendMessageButtonState {
 			const localSandboxResult = await this.ensureLocalSandboxReady();
 			if (!localSandboxResult.isOk) {
 				toast.error(m.code_agent_local_sandbox_start_failed());
-				this.isChecking = false;
 				return;
 			}
 
@@ -158,7 +170,6 @@ class CodeAgentSendMessageButtonState {
 
 			const { isOK, sandboxInfo } = await codeAgentState.executeCodeAgentMode();
 			if (!isOK) {
-				this.isChecking = false;
 				return;
 			}
 
@@ -168,27 +179,55 @@ class CodeAgentSendMessageButtonState {
 				if (codeAgentTaskboardState.isInitialized) {
 					const isSessionIdEmpty = codeAgentState.sessionId === "";
 					const sessionId: string = isSessionIdEmpty ? nanoid() : codeAgentState.sessionId;
+					const shouldSkipInitProject = codeAgentState.type === "local" && !isSessionIdEmpty;
 
-					const { workspace_path } = await initProject({
-						sandboxId: sandboxInfo.sandboxId,
-						sessionId,
-						workspacePath: codeAgentState.currentWorkspacePath,
-					});
+					if (shouldSkipInitProject) {
+						workspacePath = codeAgentState.currentWorkspacePath;
 
-					workspacePath = workspace_path;
+						if (!workspacePath) {
+							workspacePath = localClaudeCodeSandboxState.sessions.find(
+								(session) => session.session_id === sessionId,
+							)?.workspace_path;
+						}
 
-					// Update currentWorkspacePath with the actual path from server
-					if (workspace_path) {
-						claudeCodeAgentState.updateCurrentWorkspacePath(workspace_path);
+						if (!workspacePath) {
+							await localClaudeCodeSandboxState.refreshSessions();
+							workspacePath = localClaudeCodeSandboxState.sessions.find(
+								(session) => session.session_id === sessionId,
+							)?.workspace_path;
+						}
+					} else {
+						const { workspace_path } = await initProject({
+							sandboxId: sandboxInfo.sandboxId,
+							sessionId,
+							workspacePath: codeAgentState.currentWorkspacePath,
+						});
+
+						workspacePath = workspace_path;
+
+						// Update currentWorkspacePath with the actual path from server
+						if (workspace_path) {
+							codeAgentState.updateCurrentWorkspacePath(workspace_path);
+						}
+
+						// Refresh sessions to sync the new workspace_path to local storage
+						if (codeAgentState.type === "local") {
+							await localClaudeCodeSandboxState.refreshSessions();
+						} else {
+							await window.electronAPI.codeAgentService.updateClaudeCodeSessions(
+								sandboxInfo.sandboxId,
+							);
+						}
 					}
 
-					// Refresh sessions to sync the new workspace_path to local storage
-					if (codeAgentState.type === "local") {
-						await localClaudeCodeSandboxState.refreshSessions();
-					} else {
-						await window.electronAPI.codeAgentService.updateClaudeCodeSessions(
-							sandboxInfo.sandboxId,
-						);
+					if (!workspacePath) {
+						console.error("[CodeAgent] Missing workspace path for taskboard:", {
+							type: codeAgentState.type,
+							sessionId,
+							currentWorkspacePath: codeAgentState.currentWorkspacePath,
+						});
+						toast.error(m.taskboard_error_sandbox_not_initialized());
+						return;
 					}
 
 					// Collect all files to upload in a single batch request
@@ -277,7 +316,6 @@ class CodeAgentSendMessageButtonState {
 						if (!response.success || faileds.length > 0) {
 							console.error("Failed to upload files:", faileds.map((r) => r.error).join(", "));
 							toast.error(m.taskboard_error_attachment_upload_failed());
-							this.isChecking = false;
 							return;
 						}
 					}
@@ -291,7 +329,7 @@ class CodeAgentSendMessageButtonState {
 					await codeAgentState.handleCodeAgentModelChange(chatState.selectedModel);
 				}
 
-				// 在 sandbox 确定后，添加用户选择的 MCP 服务器
+				// 在 sandbox 确认后，添加用户选择的 MCP 服务器
 				if (chatState.mcpServerIds.length > 0) {
 					const infos = mcpState.getMCPInfosByIds(chatState.mcpServerIds);
 					if (infos.length > 0) {
@@ -308,7 +346,6 @@ class CodeAgentSendMessageButtonState {
 					const shouldContinue: boolean = yield "wait_user_choice";
 					if (!shouldContinue) {
 						codeAgentState.isCodeAgentPanelOpen = true;
-						this.isChecking = false;
 						return;
 					}
 				}

@@ -105,7 +105,7 @@ export class ShortcutActionsHandler {
 
 	private async handleCreateBranch(): Promise<void> {
 		if (chatState.messages.length === 0) {
-			toast.error("No messages to branch from");
+			toast.error(m.toast_no_messages_to_branch());
 			return;
 		}
 
@@ -128,7 +128,7 @@ export class ShortcutActionsHandler {
 
 	private async handleBranchAndSend(): Promise<void> {
 		if (chatState.messages.length === 0) {
-			toast.error("No messages to branch from");
+			toast.error(m.toast_no_messages_to_branch());
 			return;
 		}
 
@@ -231,15 +231,16 @@ export class ShortcutActionsHandler {
 			return;
 		}
 
-		// Close the tab if it's open
-		if (activeTab) {
-			await tabBarState.handleTabClose(activeTab.id);
-		}
-
-		// Delete the thread
+		// Delete thread first (before closing tab, which broadcasts "thread-list-updated")
 		const success = await threadsState.deleteThread(threadId);
 		if (!success) {
 			console.error("Failed to delete thread:", threadId);
+			return;
+		}
+
+		// Now close the tab — its broadcast will reload threads, but the deleted one is already gone
+		if (activeTab) {
+			await tabBarState.handleTabClose(activeTab.id);
 		}
 	}
 
@@ -266,7 +267,7 @@ export class ShortcutActionsHandler {
 			`[RendererActionsHandler] handleTogglePlanMode. Enabled: ${codeAgentState.enabled}, InPlanMode: ${codeAgentState.inPlanMode}`,
 		);
 		if (!codeAgentState.enabled) return;
-		codeAgentState.updatePlanMode(!codeAgentState.inPlanMode);
+		codeAgentState.updateInPlanMode(!codeAgentState.inPlanMode);
 	}
 }
 

@@ -1,5 +1,6 @@
 import type { ChatMessage } from "$lib/stores/chat-state.svelte";
 import type { ElectronAPI } from "@electron-toolkit/preload";
+import type { CodeAgentConfigMetadata, CodeAgentMetadata } from "@shared/storage/code-agent";
 import type {
 	BroadcastEventData,
 	ShellWindowFullscreenChange,
@@ -115,6 +116,7 @@ declare global {
 				callback: (data: {
 					isOk: boolean;
 					isHealth: boolean;
+					isOcHealth: boolean;
 					error?: string;
 					timestamp: number;
 				}) => void,
@@ -132,6 +134,9 @@ declare global {
 		tabs: Tab[];
 		thread: ThreadParmas;
 		messages: ChatMessage[];
+		codeAgentConfig: CodeAgentConfigMetadata;
+		claudeCodeAgentState: CodeAgentMetadata;
+		openclawConfig: OpenClawConfig;
 		app: {
 			platform: string;
 			isDev: boolean;

@@ -3,17 +3,107 @@
 	import { Input } from "$lib/components/ui/input";
 	import { m } from "$lib/paraglide/messages";
 	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
+	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
+	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { ChevronDown, Search } from "@lucide/svelte";
+	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { SvelteSet } from "svelte/reactivity";
+	import { SvelteMap, SvelteSet } from "svelte/reactivity";
 
-	// Get grouped sessions from the actual store
-	const groupedSessions = $derived(claudeCodeSandboxState.groupedSessions);
+	interface HistorySessionItem {
+		key: string;
+		label: string;
+		value: string;
+		extra?: string;
+	}
+
+	interface HistorySessionGroup {
+		groupKey: string;
+		groupLabel: string;
+		sandboxId: string;
+		sandboxLabel: string;
+		items: HistorySessionItem[];
+	}
+
+	interface HistorySessionData {
+		groups: HistorySessionGroup[];
+	}
+
+	const groupedSessions = $derived.by<HistorySessionData>(() => {
+		if (codeAgentState.type === "local") {
+			const groupedByWorkspace = new SvelteMap<
+				string,
+				{
+					groupLabel: string;
+					latestUsedAt: number;
+					items: HistorySessionItem[];
+				}
+			>();
+
+			for (const session of localClaudeCodeSandboxState.sessions) {
+				const workspacePath = session.workspace_path || m.local_platform_new_work_directory();
+				const groupKey = `local:${workspacePath}`;
+				const usedAt = new Date(session.used_at).getTime();
+
+				if (!groupedByWorkspace.has(groupKey)) {
+					groupedByWorkspace.set(groupKey, {
+						groupLabel: workspacePath,
+						latestUsedAt: isNaN(usedAt) ? 0 : usedAt,
+						items: [],
+					});
+				}
+
+				const group = groupedByWorkspace.get(groupKey)!;
+				if (!isNaN(usedAt) && usedAt > group.latestUsedAt) {
+					group.latestUsedAt = usedAt;
+				}
+
+				group.items.push({
+					key: session.session_id,
+					label: session.note || session.session_id,
+					value: session.session_id,
+					extra: session.used_at,
+				});
+			}
+
+			const groups = Array.from(groupedByWorkspace.entries())
+				.map(([groupKey, group]) => ({
+					groupKey,
+					groupLabel: group.groupLabel,
+					sandboxId: "local",
+					sandboxLabel: group.groupLabel,
+					latestUsedAt: group.latestUsedAt,
+					items: group.items.sort(
+						(a, b) => new Date(b.extra ?? 0).getTime() - new Date(a.extra ?? 0).getTime(),
+					),
+				}))
+				.sort((a, b) => b.latestUsedAt - a.latestUsedAt)
+				.map(({ latestUsedAt: _latestUsedAt, ...group }) => group);
+
+			return { groups };
+		}
+
+		return {
+			groups: claudeCodeSandboxState.groupedSessions.groups.map((group) => ({
+				groupKey: group.groupKey,
+				groupLabel: group.groupLabel,
+				sandboxId: group.groupKey,
+				sandboxLabel: group.groupLabel,
+				items: group.items,
+			})),
+		};
+	});
 
 	let selectedId = $state<string | null>(null);
 	let expandedSandboxes = $state<Set<string>>(new Set());
 	let searchQuery = $state("");
-	let hasInitialized = false;
+	let groupSignature = $state("");
+
+	onMount(async () => {
+		if (codeAgentState.type === "local" && localClaudeCodeSandboxState.sessions.length === 0) {
+			await localClaudeCodeSandboxState.refreshSessions();
+		}
+	});
 
 	// Filter groups based on search query
 	const filteredGroups = $derived.by(() => {
@@ -35,9 +125,20 @@
 
 	// Initialize expanded state - default to all expanded
 	$effect(() => {
-		if (!hasInitialized && groupedSessions.groups.length > 0) {
-			hasInitialized = true;
+		const nextSignature = groupedSessions.groups.map((group) => group.groupKey).join("|");
+		if (nextSignature !== groupSignature) {
+			groupSignature = nextSignature;
 			expandedSandboxes = new SvelteSet(groupedSessions.groups.map((g) => g.groupKey));
+		}
+	});
+
+	$effect(() => {
+		if (!selectedId) return;
+		const exists = groupedSessions.groups.some((group) =>
+			group.items.some((session) => session.value === selectedId),
+		);
+		if (!exists) {
+			selectedId = null;
 		}
 	});
 
@@ -66,8 +167,8 @@
 				return {
 					sessionId: session.value,
 					title: session.label,
-					sandboxId: group.groupKey,
-					sandboxLabel: group.groupLabel,
+					sandboxId: group.sandboxId,
+					sandboxLabel: group.sandboxLabel,
 					extra: session.extra,
 				};
 			}

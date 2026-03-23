@@ -58,6 +58,7 @@ class LocalEnvState {
 
 	// Sandbox health status
 	sandboxHealthStatus = $state<SandboxHealthStatus>("unknown");
+	openClawHealthStatus = $state<SandboxHealthStatus>("unknown");
 
 	// Installation logs
 	installLogs = $state<InstallLogEntry[]>([]);
@@ -65,6 +66,10 @@ class LocalEnvState {
 	// Sandbox startup logs
 	sandboxLogs = $state<string[]>([]);
 	sandboxFailed = $state(false);
+
+	// OpenClaw startup grace period
+	private ocStartupGraceUntil: number = 0;
+	private readonly OC_STARTUP_GRACE_PERIOD_MS = 60000;
 
 	// WSL restart required notification
 	wslRestartRequired = $state<{
@@ -234,6 +239,10 @@ class LocalEnvState {
 	 * Calls localVibeService.startPodmanMachine() and prints output with [Local Vibe] prefix
 	 */
 	async startSandbox(): Promise<boolean> {
+		// Ensure broadcast listeners are active before any state changes,
+		// so waitForHealthCheck() can receive health check results.
+		this.startSandboxListening();
+
 		toast.info(m.code_agent_local_sandbox_starting());
 		if (!this.podmanInstalled) {
 			console.error("[LocalEnvState] Cannot start sandbox: Podman not installed");
@@ -245,6 +254,7 @@ class LocalEnvState {
 		this.sandboxLogs = [];
 		this.broadcastSandboxState({ starting: true });
 		this.sandboxHealthStatus = "unknown";
+		this.openClawHealthStatus = "unknown";
 		try {
 			const result = await window.electronAPI.localVibeService.startPodmanMachine();
 
@@ -277,6 +287,10 @@ class LocalEnvState {
 				this.sandboxRunning = true;
 				this.broadcastSandboxState({ running: true });
 				this.sandboxHealthStatus = "unknown";
+				this.openClawHealthStatus = "unknown";
+
+				// Container started, internal services need time. Start grace period.
+				this.ocStartupGraceUntil = Date.now() + this.OC_STARTUP_GRACE_PERIOD_MS;
 
 				// Wait for the first health check result
 				await this.waitForHealthCheck(100);
@@ -317,6 +331,8 @@ class LocalEnvState {
 				this.sandboxRunning = false;
 				this.broadcastSandboxState({ running: false });
 				this.sandboxHealthStatus = "unknown";
+				this.openClawHealthStatus = "unknown";
+				this.ocStartupGraceUntil = 0;
 			}
 
 			return result.isOk;
@@ -454,10 +470,14 @@ class LocalEnvState {
 			const status = (await window.electronAPI.localVibeService.getSandboxStatus()) as {
 				isRunning: boolean;
 				isOperating: boolean;
+				isOcHealth: boolean;
 			};
 			if (status.isRunning) {
 				this.sandboxRunning = true;
 				this.sandboxHealthStatus = "healthy";
+				if (status.isOcHealth) {
+					this.openClawHealthStatus = "healthy";
+				}
 			}
 			if (status.isOperating) {
 				this.sandboxStarting = true;
@@ -489,11 +509,12 @@ class LocalEnvState {
 	}
 
 	/**
-	 * Start listening to Sandbox-related broadcast channels
+	 * Start listening to Sandbox-related broadcast channels.
+	 * Returns the syncInitialState() promise so callers can await it if needed.
 	 */
-	startSandboxListening(): void {
+	startSandboxListening(): Promise<void> {
 		// Sync initial state first
-		this.syncInitialState();
+		const syncPromise = this.syncInitialState();
 
 		// Subscribe to install-log channel for sandbox-related logs
 		// This ensures real-time log updates while sandbox is starting/stopping
@@ -514,7 +535,13 @@ class LocalEnvState {
 		// Subscribe to local-sandbox-health-check channel
 		if (!this.unsubscribeSandboxHealth) {
 			this.unsubscribeSandboxHealth = window.electronAPI.onLocalSandboxHealthCheck(
-				(data: { isOk: boolean; isHealth: boolean; error?: string; timestamp: number }) => {
+				(data: {
+					isOk: boolean;
+					isHealth: boolean;
+					isOcHealth: boolean;
+					error?: string;
+					timestamp: number;
+				}) => {
 					if (data.isOk) {
 						if (data.isHealth) {
 							this.sandboxHealthStatus = "healthy";
@@ -528,12 +555,27 @@ class LocalEnvState {
 						} else {
 							this.sandboxHealthStatus = "unhealthy";
 						}
+
+						if (data.isOcHealth) {
+							this.openClawHealthStatus = "healthy";
+							this.ocStartupGraceUntil = 0;
+						} else {
+							// If during startup or within grace period, treat as unknown instead of unhealthy
+							if (this.sandboxStarting || Date.now() < this.ocStartupGraceUntil) {
+								this.openClawHealthStatus = "unknown";
+							} else {
+								this.openClawHealthStatus = "unhealthy";
+							}
+						}
 					} else {
 						this.sandboxHealthStatus = "unknown";
+						this.openClawHealthStatus = "unknown";
+						this.ocStartupGraceUntil = 0;
 					}
 					console.log(
 						"[LocalEnvState] Sandbox health check:",
 						this.sandboxHealthStatus,
+						this.openClawHealthStatus,
 						data.error ?? "no error",
 					);
 				},
@@ -545,16 +587,25 @@ class LocalEnvState {
 			this.unsubscribeSandboxState = window.electronAPI.onLocalSandboxStateChanged(
 				(data: { starting?: boolean; running?: boolean }) => {
 					if (data.starting !== undefined) {
+						// If another tab reports starting changed from true to false, start grace period
+						if (this.sandboxStarting && !data.starting) {
+							this.ocStartupGraceUntil = Date.now() + this.OC_STARTUP_GRACE_PERIOD_MS;
+						}
 						this.sandboxStarting = data.starting;
 						console.log("[LocalEnvState] Sandbox starting state changed:", data.starting);
 					}
 					if (data.running !== undefined) {
 						this.sandboxRunning = data.running;
+						if (!data.running) {
+							this.ocStartupGraceUntil = 0;
+						}
 						console.log("[LocalEnvState] Sandbox running state changed:", data.running);
 					}
 				},
 			);
 		}
+
+		return syncPromise;
 	}
 
 	/**
@@ -604,6 +655,10 @@ class LocalEnvState {
 		error?: string;
 		wasAlreadyRunning: boolean;
 	}> {
+		// Ensure broadcast listeners are active so health check updates are received,
+		// even when called from non-UI contexts (chat-state, send-message-button-state, etc.)
+		this.startSandboxListening();
+
 		// If already starting, wait for completion (prevent concurrent starts)
 		if (this.sandboxStarting) {
 			// Wait for the current start operation to complete

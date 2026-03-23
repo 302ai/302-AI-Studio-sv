@@ -1,14 +1,16 @@
 <script lang="ts">
 	import { cn } from "$lib/utils";
-	import { type Icon as IconType } from "@lucide/svelte";
-	import { onMount } from "svelte";
+	import { onMount, type Component, type Snippet } from "svelte";
 
-	interface SegmentedOption {
+	export interface SegmentedOption {
 		key: string;
-		icon?: typeof IconType;
+		icon?: Component;
+		iconSnippet?: Snippet;
 		label: string;
 		description?: string;
 		iconSize?: number;
+		disabled?: boolean;
+		tooltip?: string;
 	}
 
 	interface Props {
@@ -71,6 +73,10 @@
 	});
 
 	function handleSelect(key: string) {
+		const option = options.find((o) => o.key === key);
+		if (option?.disabled) {
+			return;
+		}
 		onSelect(key);
 	}
 </script>
@@ -99,25 +105,27 @@
 			<button
 				bind:this={itemElements[index]}
 				class={cn(
-					"h-seg-thumb relative z-2 flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-md text-sm",
+					"h-seg-thumb relative z-2 flex flex-1  items-center justify-center gap-1 rounded-md text-sm",
+					option.disabled || disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
 					isActive
 						? activeThumbClass || "text-accent-foreground"
 						: "text-secondary-foreground hover:bg-tab-hover z-1",
 					thumbClass,
-					disabled && "cursor-not-allowed opacity-50",
 				)}
 				type="button"
-				{disabled}
 				onmousedown={() => handleSelect(option.key)}
 				aria-pressed={isActive}
 			>
 				<div class="flex flex-col items-center justify-center">
 					<div class="flex items-center justify-center gap-1">
-						{#if option.icon}
-							<!-- {@html option.icon} -->
+						{#if option.iconSnippet}
+							{@render option.iconSnippet()}
+						{:else if option.icon}
 							<option.icon size={option.iconSize} />
 						{/if}
-						<span>{option.label}</span>
+						{#if option.label}
+							<span>{option.label}</span>
+						{/if}
 					</div>
 					{#if option.description}
 						<span class="text-[10px] opacity-60 leading-tight">{option.description}</span>

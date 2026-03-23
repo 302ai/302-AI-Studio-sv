@@ -10,6 +10,7 @@ import { GhostWindowService, ghostWindowService } from "./ghost-window-service";
 import { localVibeService, LocalVibeService } from "./local-vibe-service";
 import { McpService, mcpService } from "./mcp-service";
 import { NotificationService, notificationService } from "./notification-service";
+import { OpenClawService, openClawService } from "./openclaw-service";
 import { PluginService, pluginService } from "./plugin-service";
 import { providerService, ProviderService } from "./provider-service";
 import { RegistryService, registryService } from "./registry-service";
@@ -40,6 +41,7 @@ export {
 	LocalVibeService,
 	McpService,
 	NotificationService,
+	OpenClawService,
 	PluginService,
 	ProviderService,
 	RegistryService,
@@ -70,6 +72,7 @@ export {
 	localVibeService,
 	mcpService,
 	notificationService,
+	openClawService,
 	pluginService,
 	providerService,
 	registryService,

@@ -8,6 +8,7 @@
 </script>
 
 <script lang="ts">
+	import openclawIconRaw from "$lib/assets/icons/code-agent/openclaw-color.svg?raw";
 	import { cn } from "$lib/utils";
 	import adobeIcon from "@lobehub/icons-static-svg/icons/adobe-color.svg";
 	import ai302Icon from "@lobehub/icons-static-svg/icons/ai302-color.svg";
@@ -171,12 +172,17 @@
 	function getIconFromModelName(modelName: string): {
 		iconUrl: string;
 		isColorIcon: boolean;
+		rawSvg?: string;
 	} {
 		if (!modelName || typeof modelName !== "string") {
 			return { iconUrl: iconMap.default, isColorIcon: true };
 		}
 
 		const modelNameLower = modelName.toLowerCase();
+
+		if (modelNameLower === "openclaw") {
+			return { iconUrl: "", isColorIcon: true, rawSvg: openclawIconRaw };
+		}
 
 		if (iconMap[modelNameLower]) {
 			return {
@@ -203,7 +209,7 @@
 		return { iconUrl: iconMap.default, isColorIcon: true };
 	}
 
-	const { iconUrl, isColorIcon } = $derived(getIconFromModelName(modelName));
+	const { iconUrl, isColorIcon, rawSvg } = $derived(getIconFromModelName(modelName));
 
 	function handleError(event: Event) {
 		const target = event.target as HTMLImageElement;
@@ -213,13 +219,27 @@
 	}
 </script>
 
-<img
-	src={iconUrl}
-	class={cn(
-		"h-4 w-4 rounded-full",
-		!forceDark && !isColorIcon && "dark:brightness-0 dark:invert dark:filter",
-		(forceApplyClassName || iconUrl !== ai302Icon) && className,
-	)}
-	alt={modelName || "Model Icon"}
-	onerror={handleError}
-/>
+{#if rawSvg}
+	<div
+		class={cn(
+			"h-4 w-4 text-foreground",
+			"[&>svg]:h-full [&>svg]:w-full",
+			"[&>svg]:fill-current",
+			className,
+		)}
+	>
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+		{@html rawSvg}
+	</div>
+{:else}
+	<img
+		src={iconUrl}
+		class={cn(
+			"h-4 w-4 rounded-full",
+			!forceDark && !isColorIcon && "dark:brightness-0 dark:invert dark:filter",
+			(forceApplyClassName || iconUrl !== ai302Icon) && className,
+		)}
+		alt={modelName || "Model Icon"}
+		onerror={handleError}
+	/>
+{/if}

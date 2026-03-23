@@ -20,6 +20,7 @@ import {
 	externalLinkService,
 	mcpService,
 	notificationService,
+	openClawService,
 	providerService,
 	threadService,
 	updaterService,
@@ -236,6 +237,12 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("localVibeService:startPodmanMachine", (event) =>
 		localVibeService.startPodmanMachine(event),
+	);
+	ipcMain.handle("localVibeService:restartPodmanMachine", (event) =>
+		localVibeService.restartPodmanMachine(event),
+	);
+	ipcMain.handle("localVibeService:updateOpenclawModels", (event) =>
+		localVibeService.updateOpenclawModels(event),
 	);
 
 	// codeAgentService service registration
@@ -508,6 +515,20 @@ export function registerIpcHandlers() {
 		notificationService.requestPermission(event),
 	);
 
+	// openClawService service registration
+	ipcMain.handle("openClawService:getOpenClawWebUiUrl", (event) =>
+		openClawService.getOpenClawWebUiUrl(event),
+	);
+	ipcMain.handle("openClawService:applyOpenClawChannelConfig", (event) =>
+		openClawService.applyOpenClawChannelConfig(event),
+	);
+	ipcMain.handle("openClawService:applyOpenClawBindingsConfig", (event, threadId) =>
+		openClawService.applyOpenClawBindingsConfig(event, threadId),
+	);
+	ipcMain.handle("openClawService:handleOpenClawWebUiReloadIpc", (event, tabId) =>
+		openClawService.handleOpenClawWebUiReloadIpc(event, tabId),
+	);
+
 	// providerService service registration
 	ipcMain.handle("providerService:handle302AIProviderChange", (event, apiKey) =>
 		providerService.handle302AIProviderChange(event, apiKey),
@@ -639,6 +660,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("localVibeService:stopLocalSandboxByIpc");
 	ipcMain.removeHandler("localVibeService:ensureLocalSandboxRunning");
 	ipcMain.removeHandler("localVibeService:startPodmanMachine");
+	ipcMain.removeHandler("localVibeService:restartPodmanMachine");
+	ipcMain.removeHandler("localVibeService:updateOpenclawModels");
 	ipcMain.removeHandler("codeAgentService:updateClaudeCodeSandboxModel");
 	ipcMain.removeHandler("codeAgentService:checkClaudeCodeSandbox");
 	ipcMain.removeHandler("codeAgentService:updateClaudeCodeSandboxesByIpc");
@@ -715,6 +738,10 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("mcpService:closeServer");
 	ipcMain.removeHandler("notificationService:notifyTaskCompleted");
 	ipcMain.removeHandler("notificationService:requestPermission");
+	ipcMain.removeHandler("openClawService:getOpenClawWebUiUrl");
+	ipcMain.removeHandler("openClawService:applyOpenClawChannelConfig");
+	ipcMain.removeHandler("openClawService:applyOpenClawBindingsConfig");
+	ipcMain.removeHandler("openClawService:handleOpenClawWebUiReloadIpc");
 	ipcMain.removeHandler("providerService:handle302AIProviderChange");
 	ipcMain.removeHandler("providerService:get302AIApiKey");
 	ipcMain.removeHandler("threadService:addThread");

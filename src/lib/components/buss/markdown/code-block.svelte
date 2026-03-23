@@ -3,6 +3,7 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { CopyButton } from "$lib/components/buss/copy-button";
 	import * as m from "$lib/paraglide/messages.js";
+	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
@@ -74,6 +75,11 @@
 	let mermaidSvg = $state("");
 	let mermaidError = $state<string | null>(null);
 	const isStreaming = $derived(props.isStreaming ?? false);
+	const isVibeMode = $derived(
+		codeAgentState.enabled &&
+			(codeAgentState.currentAgentId === "claude-code" ||
+				codeAgentState.currentAgentId === "open-claw"),
+	);
 
 	const FONT_STYLE = {
 		Italic: 1,
@@ -757,7 +763,7 @@
 						<ExternalLink class="" />
 					</ButtonWithTooltip>
 				{/if}
-				{#if isHtmlCode && props.messageId !== undefined && props.messagePartIndex !== undefined}
+				{#if !isVibeMode && isHtmlCode && props.messageId !== undefined && props.messagePartIndex !== undefined}
 					<ButtonWithTooltip
 						class="text-muted-foreground hover:!bg-chat-action-hover"
 						tooltip={htmlPreviewState.isVisible ? "Close preview" : "Preview HTML"}

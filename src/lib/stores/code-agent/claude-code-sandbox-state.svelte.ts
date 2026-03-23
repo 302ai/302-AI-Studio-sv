@@ -399,7 +399,7 @@ class ClaudeCodeSandboxState {
 	async deleteSession(sandboxId: string, sessionId: string): Promise<boolean> {
 		const providerResult = validate302Provider(persistedProviderState.current);
 		if (!providerResult.valid || !providerResult.provider) {
-			toast.error("No 302.AI provider available");
+			toast.error(m.toast_no_302_provider_available());
 			return false;
 		}
 

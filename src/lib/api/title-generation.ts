@@ -56,9 +56,14 @@ async function generateTitleRequest(
 	}
 
 	const data: GenerateTitleResponse = await response.json();
+	let embeddedSummary = "";
+	if (!data.summary) {
+		embeddedSummary = extractEmbeddedSummary(data.title);
+	}
+
 	return {
-		title: sanitizeGeneratedTitle(data.title),
-		summary: data.summary || "",
+		title: sanitizeGeneratedTitle(embeddedSummary || data.title),
+		summary: data.summary || embeddedSummary || "",
 	};
 }
 
@@ -108,4 +113,19 @@ function sanitizeGeneratedTitle(rawTitle: string): string {
 	sanitized = sanitized.replace(unclosedReasoningPattern, "");
 
 	return sanitized.trim();
+}
+
+function extractEmbeddedSummary(rawTitle: string): string {
+	const sanitized = sanitizeGeneratedTitle(rawTitle);
+	if (!sanitized.startsWith("{") || !/["']?summary["']?\s*:/i.test(sanitized)) {
+		return "";
+	}
+
+	try {
+		const parsed = JSON.parse(sanitized) as Partial<GenerateTitleResult>;
+		return typeof parsed.summary === "string" ? parsed.summary.trim() : "";
+	} catch {
+		const match = sanitized.match(/["']?summary["']?\s*:\s*(?:"([^"]*)"|'([^']*)'|([^,{}]+))/i);
+		return (match?.[1] || match?.[2] || match?.[3] || "").trim();
+	}
 }

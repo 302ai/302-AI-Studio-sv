@@ -7,6 +7,7 @@
 <script lang="ts">
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { LdrsLoader } from "$lib/components/buss/ldrs-loader";
+	import { SegButton } from "$lib/components/buss/settings";
 	import { onMount } from "svelte";
 
 	import SettingSelect from "$lib/components/buss/settings/setting-select.svelte";
@@ -20,7 +21,6 @@
 	import { m } from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { mcpState } from "$lib/stores/mcp-state.svelte";
 	import { cn } from "$lib/utils";
@@ -32,7 +32,7 @@
 	let { onClose }: Props = $props();
 
 	onMount(() => {
-		claudeCodeAgentState.init();
+		codeAgentState.init();
 	});
 
 	let disabled = $derived(!codeAgentState.isFreshTab);
@@ -40,6 +40,21 @@
 	let isRefreshing = $state(false);
 	let isCreateSandboxDialogOpen = $state(false);
 	let isCreatingSandbox = $state(false);
+
+	// TODO: 完成远程 Open Claw 功能后移除 disabled 标记
+	const agentFrameworkOptions = [
+		{
+			key: "claude-code",
+			label: m.agent_framework_claude_code_label(),
+			description: m.agent_framework_claude_code_description(),
+		},
+		{
+			key: "open-claw",
+			label: m.agent_framework_open_claw_label(),
+			description: m.agent_framework_open_claw_remote_developing(),
+			disabled: true, // TODO: 完成远程 Open Claw 功能后移除此行
+		},
+	];
 
 	async function handleRefresh() {
 		isRefreshing = true;
@@ -49,7 +64,7 @@
 
 	async function handleCreateSandbox() {
 		isCreatingSandbox = true;
-		const isOK = await claudeCodeAgentState.handleCreateNewSandbox();
+		const isOK = await codeAgentState.handleCreateNewSandbox();
 		if (isOK) {
 			isCreateSandboxDialogOpen = false;
 		}
@@ -81,9 +96,14 @@
 			}
 		}
 
-		claudeCodeAgentState.handleEnabled();
+		codeAgentState.handleEnabled();
 
 		handleOverlayAction("enabled");
+	}
+
+	function handleAgentFrameworkSelect(_: string) {
+		// 远程模式下只支持 claude-code，open-claw 已被禁用
+		// 此函数为空实现，仅满足 SegButton 的 onSelect 要求
 	}
 </script>
 
@@ -102,7 +122,7 @@
 		</div>
 		<SettingSelect
 			name="session"
-			value={claudeCodeAgentState.selectedSessionId}
+			value={codeAgentState.selectedSessionId}
 			groupedOptions={claudeCodeSandboxState.groupedSessions}
 			placeholder={m.select_session_placeholder()}
 			{disabled}
@@ -133,7 +153,7 @@
 					<Label class="text-label-fg">{m.title_sandbox_id()}</Label>
 					<Input
 						class="!bg-settings-item-bg dark:!bg-settings-item-bg h-10 rounded-[10px]"
-						bind:value={claudeCodeAgentState.customSandboxName}
+						bind:value={codeAgentState.customSandboxName}
 						placeholder={m.placeholder_input_sandbox_remark()}
 					/>
 
@@ -155,7 +175,7 @@
 		</div>
 		<SettingSelect
 			name="sandbox"
-			value={claudeCodeAgentState.selectedSandboxId}
+			value={codeAgentState.selectedSandboxId}
 			options={claudeCodeSandboxState.sandboxes}
 			placeholder={m.select_sandbox_placeholder()}
 			onValueChange={(v) => claudeCodeSandboxState.handleSelectSandbox(v)}
@@ -171,7 +191,7 @@
 		<Label class="text-label-fg text-xs">{m.local_platform_work_directory()}</Label>
 		<SettingSelect
 			name="workspacePath"
-			value={claudeCodeAgentState.selectedWorkspacePath}
+			value={codeAgentState.selectedWorkspacePath}
 			groupedOptions={claudeCodeSandboxState.workspacePathOptions}
 			placeholder={m.local_platform_new_work_directory_placeholder()}
 			onValueChange={(v) => claudeCodeSandboxState.handleWorkspaceSelected(v)}
@@ -229,6 +249,18 @@
 		</Button>
 	</div>
 {/snippet}
+
+<!-- Agent Framework Selection -->
+<div class="space-y-2">
+	<Label class="text-label-fg font-normal">{m.title_agent()}</Label>
+	<SegButton
+		class="!h-[52px]"
+		thumbClass="!h-[40px]"
+		options={agentFrameworkOptions}
+		selectedKey="claude-code"
+		onSelect={handleAgentFrameworkSelect}
+	/>
+</div>
 
 {@render selectSession()}
 {@render advancedSettings()}

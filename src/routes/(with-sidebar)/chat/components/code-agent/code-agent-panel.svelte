@@ -14,9 +14,14 @@
 	export const options: SelectOption[] = [
 		{
 			key: "claude-code",
-			label: "Claude Code",
+			label: m.agent_framework_claude_code_label(),
 			value: "claude-code",
 		},
+		// {
+		// 	key: "open-claw",
+		// 	label: m.agent_framework_open_claw_label(),
+		// 	value: "open-claw",
+		// },
 	];
 
 	export interface Props {
@@ -30,21 +35,21 @@
 	import SandboxCard from "$lib/components/buss/local-agent-panel/sandbox-card.svelte";
 	import SegButton from "$lib/components/buss/settings/seg-button.svelte";
 	import type { SelectOption } from "$lib/components/buss/settings/setting-select.svelte";
-	import SettingSelect from "$lib/components/buss/settings/setting-select.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import { persistedClaudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import {
 		codeAgentState,
 		persistedCodeAgentConfigState,
 	} from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
-	import type { CodeAgentType } from "@shared/storage/code-agent";
+	import { type CodeAgentType } from "@shared/storage/code-agent";
 
+	import OpenClawChannelPanel from "$lib/components/buss/open-claw-config-panel/open-claw-channel-panel.svelte";
+	import OpenClawConfigPanel from "$lib/components/buss/open-claw-config-panel/open-claw-config-panel.svelte";
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
 	import ClaudeCodePanel from "./claude-code-panel.svelte";
@@ -58,18 +63,18 @@
 	let tempSessionRemark = $state("");
 
 	let currentSandboxRemark = $derived.by(() => {
-		const sandboxId = claudeCodeAgentState.sandboxId;
+		const sandboxId = codeAgentState.sandboxId;
 		const currentSandbox = persistedClaudeCodeSandboxState.current.find(
 			(s) => s.sandboxId === sandboxId,
 		);
-		return currentSandbox?.sandboxRemark ?? "";
+		return currentSandbox?.sandboxRemark || currentSandbox?.sandboxId || sandboxId || "";
 	});
 
 	let currentSessionRemark = $derived.by(() => {
 		return match(codeAgentState.type)
 			.with("remote", () => {
-				const sandboxId = claudeCodeAgentState.sandboxId;
-				const sessionId = claudeCodeAgentState.currentSessionId;
+				const sandboxId = codeAgentState.sandboxId;
+				const sessionId = codeAgentState.currentSessionId;
 				const currentSandbox = persistedClaudeCodeSandboxState.current.find(
 					(s) => s.sandboxId === sandboxId,
 				);
@@ -77,7 +82,7 @@
 				return currentSession?.note ?? currentSession?.sessionId ?? m.title_new_chat();
 			})
 			.with("local", () => {
-				const sessionId = claudeCodeAgentState.currentSessionId;
+				const sessionId = codeAgentState.currentSessionId;
 				const currentSession = localClaudeCodeSandboxState.sessions.find(
 					(s) => s.session_id === sessionId,
 				);
@@ -90,19 +95,18 @@
 	let isSessionRemarkChanged = $derived(tempSessionRemark !== currentSessionRemark);
 
 	$effect(() => {
-		if (codeAgentState.inCodeAgentMode && codeAgentState.currentAgentId === "claude-code") {
+		if (
+			codeAgentState.inCodeAgentMode &&
+			(codeAgentState.currentAgentId === "claude-code" ||
+				codeAgentState.currentAgentId === "open-claw")
+		) {
 			tempSandboxRemark = currentSandboxRemark;
 
 			tempSessionRemark = currentSessionRemark;
 		}
 	});
-
 	async function handleSelect(key: string) {
 		codeAgentState.updateType(key as CodeAgentType);
-	}
-
-	function handleCodeAgentSelected(codeAgentId: string) {
-		codeAgentState.updateCurrentAgentId(codeAgentId);
 	}
 
 	async function handleUpdateSandboxRemark() {
@@ -136,7 +140,7 @@
 </script>
 
 {#snippet initializePanel()}
-	<div class="w-[600px]">
+	<div class="w-[600px] max-h-[500px] overflow-y-auto">
 		<div class="flex flex-col gap-y-4 rounded-[10px] bg-background p-4">
 			<div class="gap-settings-gap flex flex-col">
 				<Label class="mb-2 text-label-fg">{m.title_code_agent_type()}</Label>
@@ -151,22 +155,11 @@
 			</div>
 
 			{#if displayType === "remote"}
-				<Label class="text-label-fg">{m.title_agent()}</Label>
-				<SettingSelect
-					name="agent"
-					value={codeAgentState.currentAgentId}
-					{options}
-					{disabled}
-					placeholder={m.select_agent()}
-					onValueChange={(codeAgentId) => handleCodeAgentSelected(codeAgentId)}
-				/>
-
-				{#if codeAgentState.currentAgentId === "claude-code"}
-					<ClaudeCodePanel {onClose} />
-				{/if}
+				<ClaudeCodePanel {onClose} />
 			{/if}
 			{#if displayType === "local"}
-				<div class="max-h-[500px] overflow-y-auto pr-2">
+				<!-- max-h-[500px] overflow-y-auto -->
+				<div class="pr-2">
 					<LocalModePanel {onClose} />
 				</div>
 			{/if}
@@ -176,7 +169,9 @@
 
 {#snippet configurationPanel()}
 	<div class="w-[500px]">
-		<div class="flex flex-col gap-y-4 rounded-[10px] bg-background p-4">
+		<div
+			class="flex flex-col gap-y-4 rounded-[10px] bg-background p-4 max-h-[500px] overflow-y-auto"
+		>
 			{#if codeAgentState.type === "local"}
 				<div class="rounded-lg border p-4 space-y-4">
 					<PodmanCard isOpen={false} onInstall={handleInstall} />
@@ -230,6 +225,12 @@
 						{/if}
 					</Button>
 				</div>
+
+				{#if codeAgentState.currentAgentId == "open-claw"}
+					<!-- NOTE: Hidden channel configuration -->
+					<OpenClawConfigPanel className="hidden" />
+					<OpenClawChannelPanel />
+				{/if}
 			</div>
 
 			{#if codeAgentState.type === "local" && !codeAgentState.isFreshTab}

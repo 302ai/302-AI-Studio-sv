@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { m } from "$lib/paraglide/messages";
 	import { Pagination as PaginationPrimitive } from "bits-ui";
 	import ChevronLeftIcon from "@lucide/svelte/icons/chevron-left";
 	import { buttonVariants } from "$lib/components/ui/button/index.js";
@@ -14,12 +15,12 @@
 
 {#snippet Fallback()}
 	<ChevronLeftIcon class="size-4" />
-	<span>Previous</span>
+	<span>{m.title_previous_page()}</span>
 {/snippet}
 
 <PaginationPrimitive.PrevButton
 	bind:ref
-	aria-label="Go to previous page"
+	aria-label={m.title_previous_page()}
 	class={cn(
 		buttonVariants({
 			size: "default",

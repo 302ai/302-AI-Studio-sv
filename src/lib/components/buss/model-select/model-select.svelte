@@ -9,6 +9,7 @@
 		trigger?: Snippet<[TriggerProps]>;
 		selectedModel: Model | null;
 		onModelSelect: (model: Model) => void;
+		isVibe: boolean;
 	}
 </script>
 
@@ -18,6 +19,7 @@
 	import * as Command from "$lib/components/ui/command";
 	import * as ScrollArea from "$lib/components/ui/scroll-area";
 	import { m } from "$lib/paraglide/messages";
+	import { codeAgentState } from "$lib/stores/code-agent";
 	import {
 		persistedModelState,
 		persistedProviderState,
@@ -32,7 +34,7 @@
 
 	const { onShortcutAction } = window.electronAPI.shortcut;
 
-	const { trigger, selectedModel, onModelSelect }: ModelSelectProps = $props();
+	const { trigger, selectedModel, onModelSelect, isVibe }: ModelSelectProps = $props();
 
 	let isOpen = $state(false);
 	let searchValue = $state("");
@@ -52,9 +54,10 @@
 	const transformedModels = $derived.by(() => {
 		const providers = persistedProviderState.current;
 		const models = persistedModelState.current;
-
+		const codeAgentId = codeAgentState.currentAgentId;
 		// 使用统一的过滤方法：只显示已启用且（isFeatured === true 或 isAddedByUser === true）的模型
-		const filteredModels = getFilteredModels(models, true);
+		// judge is Open Claw, Open Claw only supports viewing some models
+		const filteredModels = getFilteredModels(models, true, isVibe && codeAgentId == "open-claw");
 
 		return filteredModels
 			.map((model): Model | null => {

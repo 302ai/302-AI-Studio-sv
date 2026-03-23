@@ -95,14 +95,16 @@
 
 		<!-- 右侧：按钮组 -->
 		<div class="flex items-center gap-1 shrink-0">
-			<ButtonWithTooltip
-				tooltip={m.label_button_open_in_new_tab()}
-				class="hover:!bg-icon-btn-hover size-8"
-				tooltipSide="bottom"
-				onclick={onOpenInNewTab}
-			>
-				<SquareArrowOutUpRight class="size-4" />
-			</ButtonWithTooltip>
+			{#if activeTab === "preview" || activeTab === "openclaw-webui"}
+				<ButtonWithTooltip
+					tooltip={m.label_button_open_in_new_tab()}
+					class="hover:!bg-icon-btn-hover size-8"
+					tooltipSide="bottom"
+					onclick={onOpenInNewTab}
+				>
+					<SquareArrowOutUpRight class="size-4" />
+				</ButtonWithTooltip>
+			{/if}
 			<ButtonWithTooltip
 				tooltip={isPinned ? m.tooltip_unpin_panel() : m.tooltip_pin_panel()}
 				class="hover:!bg-icon-btn-hover size-8"

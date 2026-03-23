@@ -5,7 +5,6 @@
 	import * as Dialog from "$lib/components/ui/dialog/index.js";
 	import { m } from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { codeAgentSendMessageButtonState } from "$lib/stores/code-agent/code-agent-send-message-button-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { cn } from "$lib/utils";
@@ -21,7 +20,8 @@
 	let disabled = $derived(
 		!chatState.sendMessageEnabled ||
 			codeAgentState.isDeleted ||
-			codeAgentSendMessageButtonState.isChecking,
+			codeAgentSendMessageButtonState.isChecking ||
+			codeAgentSendMessageButtonState.isOpenClawSendDisabled,
 	);
 </script>
 
@@ -48,11 +48,11 @@
 
 		<Dialog.Description>
 			<p>
-				{m.description_lack_of_disk()}: {claudeCodeAgentState.selectedSandboxRemark === ""
+				{m.description_lack_of_disk()}: {codeAgentState.selectedSandboxRemark === ""
 					? m.no_remark()
-					: claudeCodeAgentState.selectedSandboxRemark}
+					: codeAgentState.selectedSandboxRemark}
 			</p>
-			<p>{m.description_lack_of_disk_2()}: {claudeCodeAgentState.selectedSandboxId}</p>
+			<p>{m.description_lack_of_disk_2()}: {codeAgentState.selectedSandboxId}</p>
 		</Dialog.Description>
 
 		<Dialog.Description>

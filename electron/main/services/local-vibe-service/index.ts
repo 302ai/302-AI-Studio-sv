@@ -1,13 +1,18 @@
 import { getLocalSandboxHealthStatus } from "@electron/main/apis/code-agent";
-import { PLATFORM } from "@electron/main/constants/index";
+import { isLinux, PLATFORM } from "@electron/main/constants/index";
+import { OPENCLAW_DEFAULT_CONFIG } from "@electron/main/datas/openclaw-template";
 import { broadcastService } from "@electron/main/services/broadcast-service";
 import { generalSettingsService } from "@electron/main/services/settings-service/general-settings-service";
+import { storageService } from "@electron/main/services/storage-service";
+import { localVibeStorage } from "@electron/main/services/storage-service/code-agent/local-vibe-storage";
 import { providerStorage } from "@electron/main/services/storage-service/provider-storage";
 import { isCommandNotFound } from "@electron/main/utils/cmd";
+import { deepMergeWithOverride, omitByPrefix } from "@electron/main/utils/object-utils";
 import { exec, spawn, type SpawnOptions } from "child_process";
 import { app, shell, type IpcMainInvokeEvent } from "electron";
+import { cloneDeep, get, set } from "es-toolkit/compat";
 import { isNull } from "es-toolkit/predicate";
-import fs from "fs";
+import fs, { readFileSync } from "fs";
 import { cp, readdir } from "fs/promises";
 import getPort from "get-port";
 import path from "path";
@@ -19,10 +24,13 @@ const execAsync = promisify(exec);
 
 /** Default port for local sandbox API */
 export const DEFAULT_SANDBOX_PORT = 8123;
+export const DEFAULT_OPENCLAW_PORT = 18123;
 
 export class LocalVibeService {
 	/** Default port for local sandbox API */
 	private runtimePort: number | null = null;
+	/** Default port for openclaw API */
+	private runtimeOpenClawPort: number | null = null;
 	private isOperating = false;
 
 	constructor() {
@@ -41,16 +49,6 @@ export class LocalVibeService {
 	 */
 	async copyToWorkspaceByIpc(
 		_event: IpcMainInvokeEvent,
-		sourcePath: string,
-		containerPath: string,
-	): Promise<{ success: boolean; error?: string }> {
-		return this._copyToWorkspace(sourcePath, containerPath);
-	}
-
-	/**
-	 * Copy a file or directory from host system to workspace (Internal use)
-	 */
-	async copyToWorkspace(
 		sourcePath: string,
 		containerPath: string,
 	): Promise<{ success: boolean; error?: string }> {
@@ -107,59 +105,6 @@ export class LocalVibeService {
 		}
 	}
 
-	/**
-	 * Write content directly to workspace file (Internal use)
-	 */
-	async writeToWorkspace(
-		content: Buffer | string,
-		containerPath: string,
-	): Promise<{ success: boolean; error?: string }> {
-		return this._writeToWorkspace(content, containerPath);
-	}
-
-	/**
-	 * Core logic for writing to workspace
-	 */
-	private async _writeToWorkspace(
-		content: Buffer | string,
-		containerPath: string,
-	): Promise<{ success: boolean; error?: string }> {
-		try {
-			const composeDir = this.getRuntimeComposeDir();
-			const CONTAINER_ROOT = "/home/user";
-			let targetPath: string;
-
-			const normalizedContainerPath = containerPath.replace(/\\/g, "/");
-
-			if (normalizedContainerPath.startsWith(CONTAINER_ROOT)) {
-				const relativePath = normalizedContainerPath.substring(CONTAINER_ROOT.length);
-				const safeRelativePath = relativePath.replace(/\.\./g, "");
-				targetPath = path.join(composeDir, safeRelativePath);
-			} else if (path.isAbsolute(containerPath)) {
-				targetPath = containerPath;
-			} else {
-				const workspaceDir = path.join(composeDir, "workspace");
-				const safeSubPath = normalizedContainerPath.replace(/\.\./g, "");
-				const cleanSubPath = safeSubPath.startsWith("/") ? safeSubPath.substring(1) : safeSubPath;
-				targetPath = path.join(workspaceDir, cleanSubPath);
-			}
-
-			const targetDir = path.dirname(targetPath);
-			if (!fs.existsSync(targetDir)) {
-				fs.mkdirSync(targetDir, { recursive: true });
-			}
-
-			console.log(`[LocalVibeService] Writing content to ${targetPath}`);
-			fs.writeFileSync(targetPath, content);
-
-			return { success: true };
-		} catch (error) {
-			console.error("[LocalVibeService] Write to workspace failed:", error);
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			return { success: false, error: errorMessage };
-		}
-	}
-
 	// Localization helper method
 	private async t(zh: string, en: string): Promise<string> {
 		const language = await generalSettingsService.getLanguage();
@@ -171,6 +116,20 @@ export class LocalVibeService {
 	 */
 	public getRuntimePort(): number | null {
 		return this.runtimePort;
+	}
+
+	/**
+	 * Get the runtime openclaw port
+	 */
+	public getRuntimeOpenClawPort(): number | null {
+		return this.runtimeOpenClawPort;
+	}
+
+	/**
+	 * Get the path to openclaw.json
+	 */
+	public getOpenClawConfigPath(): string {
+		return path.join(this.getRuntimeComposeDir(), ".openclaw", "openclaw.json");
 	}
 
 	/**
@@ -366,10 +325,15 @@ export class LocalVibeService {
 	async getSandboxStatus(_event: IpcMainInvokeEvent): Promise<{
 		isRunning: boolean;
 		isOperating: boolean;
+		isOcHealth: boolean;
 	}> {
 		// sandboxStatus === 'running': verify with an actual health check
 		const result = await this.checkLocalSandboxHealth();
-		return { isRunning: result.isHealth, isOperating: this.isOperating };
+		return {
+			isRunning: result.isHealth,
+			isOperating: this.isOperating,
+			isOcHealth: result.isOcHealth,
+		};
 	}
 
 	/**
@@ -411,7 +375,9 @@ export class LocalVibeService {
 		const envFilePath = path.join(runtimeDir, ".env");
 		const dbDir = path.join(runtimeDir, "db");
 		const workspaceDir = path.join(runtimeDir, "workspace");
+		const openclawDir = path.join(runtimeDir, ".openclaw");
 		const dbFilePath = path.join(dbDir, "app.db");
+		const openclawFilePath = path.join(openclawDir, "openclaw.json");
 
 		// Copy template compose to runtime directory
 		fs.copyFileSync(templatePath, runtimeComposePath);
@@ -419,7 +385,11 @@ export class LocalVibeService {
 		// Normalize known short-name image to a fully-qualified reference for Podman compatibility.
 		// Some environments disable unqualified-search registries in /etc/containers/registries.conf.
 		try {
-			const composeContent = fs.readFileSync(runtimeComposePath, "utf-8");
+			let composeContent = fs.readFileSync(runtimeComposePath, "utf-8");
+			// Linux remove user configuration, other platforms keep
+			if (process.platform === "linux") {
+				composeContent = composeContent.replace(/^\s*user:.*$/gm, "");
+			}
 			const normalizedContent = composeContent.replace(
 				/(\bimage:\s*)proxy302\/claude_code_local_api:dev\b/g,
 				"$1docker.io/proxy302/claude_code_local_api:dev",
@@ -433,7 +403,7 @@ export class LocalVibeService {
 
 		// Ensure bind-mounted directories are writable by the container user.
 		// Rootless Podman containers often run with a different uid/gid than the host user.
-		for (const dir of [runtimeDir, dbDir, workspaceDir]) {
+		for (const dir of [runtimeDir, dbDir, workspaceDir, openclawDir]) {
 			if (!fs.existsSync(dir)) {
 				fs.mkdirSync(dir, { recursive: true });
 			}
@@ -453,23 +423,102 @@ export class LocalVibeService {
 			console.warn("[Local Vibe] Failed to prepare runtime sqlite file:", error);
 		}
 
-		// Find available port (starting from default, will find next available if occupied)
+		try {
+			// Always start with template as base
+			const templateConfig = cloneDeep(OPENCLAW_DEFAULT_CONFIG) as Record<string, unknown>;
+			delete templateConfig["_version"];
+
+			// Set API keys in template for all providers
+			if (apiKey) {
+				const templateProviders = get(templateConfig, "models.providers") as
+					| Record<string, Record<string, unknown>>
+					| undefined;
+				if (templateProviders) {
+					for (const providerName of Object.keys(templateProviders)) {
+						set(templateConfig, `models.providers.${providerName}.apiKey`, apiKey);
+					}
+				}
+				// Set API key for skills
+				set(templateConfig, "skills.entries.302ai-search.apiKey", apiKey);
+			}
+
+			// Merge app-models into template config
+			await this._mergeModelsConfig(templateConfig);
+
+			let finalConfig: Record<string, unknown>;
+
+			if (!fs.existsSync(openclawFilePath)) {
+				// New file: use template directly
+				finalConfig = templateConfig;
+				console.log("[Local Vibe] Creating new openclaw.json");
+			} else {
+				// Existing file: merge template into existing config with forced API key override
+				const existingContent = fs.readFileSync(openclawFilePath, "utf-8");
+				const existingConfig = JSON.parse(existingContent) as Record<string, unknown>;
+
+				// API keys and skills keys must always sync from template (force override)
+				const overridePaths = this._getApiKeyOverridePaths(templateConfig);
+
+				// NOTE: openclaw version update
+				const { data: vibeData } = await localVibeStorage.getData();
+				if (vibeData.openclawJsonTemplateVersion < OPENCLAW_DEFAULT_CONFIG._version) {
+					// version update
+					// version 0 -> 1
+					overridePaths.push("plugins", "channels");
+					await localVibeStorage.setData({
+						openclawJsonTemplateVersion: OPENCLAW_DEFAULT_CONFIG._version,
+					});
+				}
+
+				finalConfig = this._mergeTemplateConfig(existingConfig, templateConfig, overridePaths);
+				console.log("[Local Vibe] Merged template updates into existing openclaw.json");
+			}
+
+			const presetContent = JSON.stringify(finalConfig, null, 2);
+			fs.writeFileSync(openclawFilePath, presetContent, "utf-8");
+			fs.chmodSync(openclawFilePath, 0o666);
+		} catch (error) {
+			console.warn("[Local Vibe] Failed to prepare openclaw.json file:", error);
+		}
+
+		// Find available port for Sandbox (starting from default, will find next available if occupied)
 		const preferredPort = isNull(this.runtimePort) ? DEFAULT_SANDBOX_PORT : this.runtimePort + 1;
 		const hostPort = await getPort({ port: preferredPort });
 
 		// Store the allocated port
 		this.runtimePort = hostPort;
 
+		// Find available port for OpenClaw
+		const preferredOpenClawPort = isNull(this.runtimeOpenClawPort)
+			? DEFAULT_OPENCLAW_PORT
+			: this.runtimeOpenClawPort + 1;
+		const openClawPort = await getPort({
+			port: [preferredOpenClawPort, DEFAULT_OPENCLAW_PORT],
+		});
+
+		// Store the allocated port
+		this.runtimeOpenClawPort = openClawPort;
+
 		// Write .env file with runtime values
 		const envContent = [
 			`AI302_API_KEY=${apiKey}`,
 			`HOST_DATA_PATH=${runtimeDir}`,
 			`HOST_PORT=${hostPort}`,
+			`OPENCLAW_PORT=${openClawPort}`,
 		].join("\n");
 		fs.writeFileSync(envFilePath, envContent, "utf-8");
 
+		if (isLinux) {
+			await this.runLinuxPrivilegedCommandWithBroadcast(
+				"chmod",
+				["777", path.join(this.getRuntimeComposeDir(), ".openclaw", "openclaw.json")],
+				"chown_openclawjson",
+			);
+		}
+
 		console.log("[Local Vibe] Runtime compose prepared at:", runtimeDir);
 		console.log("[Local Vibe] Allocated host port:", hostPort);
+		console.log("[Local Vibe] Allocated OpenClaw port:", openClawPort);
 
 		return hostPort;
 	}
@@ -483,6 +532,7 @@ export class LocalVibeService {
 	private async runPodmanComposeUp(): Promise<{
 		isOk: boolean;
 		port?: number;
+		openClawPort?: number;
 		output?: string;
 		error?: string;
 	}> {
@@ -495,12 +545,13 @@ export class LocalVibeService {
 
 			// Prepare runtime compose with .env file (includes port detection)
 			const hostPort = await this.prepareRuntimeCompose(apiKey);
+			const openClawPort = this.getRuntimeOpenClawPort() ?? DEFAULT_OPENCLAW_PORT;
 
 			const composePath = this.getRuntimeComposePath();
 			const runtimeDir = this.getRuntimeComposeDir();
 
 			// Auto-pull latest images before starting
-			// This ensures we have the correct platform (linux/amd64) and latest version
+			// This ensures we have the latest version for the current platform
 			const pullResult = await this.runPodmanComposePull();
 			if (!pullResult.isOk) {
 				console.warn("[Local Vibe] Auto-pull failed, trying to start anyway:", pullResult.error);
@@ -534,7 +585,7 @@ export class LocalVibeService {
 			}
 
 			console.log("[Local Vibe] podman-compose up -d:", result.output);
-			return { isOk: true, port: hostPort, output: result.output };
+			return { isOk: true, port: hostPort, openClawPort, output: result.output };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			console.error("[Local Vibe] podman-compose up -d error:", errorMessage);
@@ -561,10 +612,10 @@ export class LocalVibeService {
 				return { isOk: false, error: "Runtime compose file not found." };
 			}
 
-			// Execute: podman-compose -f <path> --podman-pull-args "--platform linux/amd64" pull
+			// Execute: podman-compose -f <path> pull
 			const result = await this.runCommandWithBroadcast(
 				"podman-compose",
-				["-f", `"${composePath}"`, "--podman-pull-args", '"--platform linux/amd64"', "pull"],
+				["-f", `"${composePath}"`, "pull"],
 				"podman-compose-pull",
 			);
 
@@ -935,30 +986,6 @@ export class LocalVibeService {
 	}
 
 	/**
-	 * Checks if WSL has any Linux distributions installed
-	 * @returns { isOk: boolean; hasDistributions: boolean } - isOk: operation success, hasDistributions: whether WSL has any distros installed
-	 */
-	private async checkWSLDistributions(): Promise<{
-		isOk: boolean;
-		hasDistributions: boolean;
-	}> {
-		try {
-			const { stdout } = await execAsync("wsl --list --verbose");
-			// Check if output indicates no distributions
-			// Chinese: "适用于 Linux 的 Windows 子系统没有已安装的分发。"
-			// English: "Windows Subsystem for Linux has no installed distributions."
-			const hasDistro =
-				!stdout.includes("没有已安装的分发") &&
-				!stdout.toLowerCase().includes("has no installed distributions") &&
-				stdout.trim().length > 0;
-			return { isOk: true, hasDistributions: hasDistro };
-		} catch (_error) {
-			// If command fails, assume no distributions
-			return { isOk: true, hasDistributions: false };
-		}
-	}
-
-	/**
 	 * Checks the Windows feature state of WSL using DISM
 	 * @returns { isOk: boolean; state: 'disabled' | 'enabled' | 'enabled-pending-reboot'; error?: string }
 	 */
@@ -1031,143 +1058,11 @@ export class LocalVibeService {
 		}
 	}
 
-	/**
-	 * Enables WSL feature using DISM with administrator privileges
-	 * @returns { isOk: boolean; needsReboot?: boolean; wasCancelled?: boolean; error?: string }
-	 */
-	private async enableWSLFeature(): Promise<{
-		isOk: boolean;
-		needsReboot?: boolean;
-		wasCancelled?: boolean;
-		error?: string;
-	}> {
-		if (process.platform !== "win32") {
-			return { isOk: true, needsReboot: false };
-		}
-
-		try {
-			broadcastService.broadcastChannelToAll("install-log", {
-				step: "enable-wsl",
-				type: "start",
-				data: await this.t("正在启用 WSL 功能...", "Enabling WSL feature..."),
-			});
-
-			// Use wsl --install which automatically enables WSL feature
-			// --no-distribution: don't install a Linux distribution, just enable WSL
-			const result = await this.runCommandWithBroadcast(
-				"wsl",
-				["--install", "--no-distribution"],
-				"enable-wsl",
-			);
-
-			if (!result.isOk) {
-				// Check if user needs to run as administrator
-				const errorMsg = result.output || "";
-				if (
-					errorMsg.toLowerCase().includes("administrator") ||
-					errorMsg.toLowerCase().includes("管理员")
-				) {
-					broadcastService.broadcastChannelToAll("install-log", {
-						step: "enable-wsl",
-						type: "error",
-						data: await this.t(
-							"需要管理员权限来启用 WSL。请以管理员身份运行应用。",
-							"Administrator privileges required to enable WSL. Please run the application as administrator.",
-						),
-					});
-					return { isOk: false, error: errorMsg };
-				}
-
-				return { isOk: false, error: errorMsg };
-			}
-
-			// wsl --install succeeded, need reboot
-			broadcastService.broadcastChannelToAll("install-log", {
-				step: "enable-wsl",
-				type: "complete",
-				data: await this.t(
-					"WSL 功能已启用，需要重启系统",
-					"WSL feature enabled successfully, system restart required",
-				),
-			});
-			return { isOk: true, needsReboot: true };
-		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[LocalVibeService] Failed to enable WSL feature:", errorMessage);
-
-			broadcastService.broadcastChannelToAll("install-log", {
-				step: "enable-wsl",
-				type: "error",
-				data: errorMessage,
-			});
-
-			return { isOk: false, error: errorMessage };
-		}
-	}
-
-	/**
-	 * Comprehensive WSL status check combining feature state and operational state
-	 * @returns { isOk: boolean; featureState: string; isOperational: boolean; requiresRestart: boolean; error?: string }
-	 */
-	private async checkWSLStatus(): Promise<{
-		isOk: boolean;
-		featureState: "disabled" | "enabled" | "enabled-pending-reboot";
-		isOperational: boolean;
-		requiresRestart: boolean;
-		error?: string;
-	}> {
-		const featureCheck = await this.checkWSLFeatureState();
-
-		if (!featureCheck.isOk) {
-			return {
-				isOk: false,
-				featureState: "disabled",
-				isOperational: false,
-				requiresRestart: false,
-				error: featureCheck.error,
-			};
-		}
-
-		if (featureCheck.state === "enabled-pending-reboot") {
-			return {
-				isOk: true,
-				featureState: "enabled-pending-reboot",
-				isOperational: false,
-				requiresRestart: true,
-			};
-		}
-
-		if (featureCheck.state === "disabled") {
-			return {
-				isOk: true,
-				featureState: "disabled",
-				isOperational: false,
-				requiresRestart: false,
-			};
-		}
-
-		const operationalCheck = await this.checkWSL();
-
-		return {
-			isOk: true,
-			featureState: "enabled",
-			isOperational: operationalCheck.isValid,
-			requiresRestart: false,
-		};
-	}
-
 	private async checkHomebrew(): Promise<{
 		isOk: boolean;
 		isValid: boolean;
 	}> {
 		return this.checkCommand("brew --version");
-	}
-
-	private async checkAptGet(): Promise<{
-		isOk: boolean;
-		isValid: boolean;
-	}> {
-		return this.checkCommand("apt-get --version");
 	}
 
 	/**
@@ -1341,11 +1236,16 @@ export class LocalVibeService {
 	private async checkLocalSandboxHealth(): Promise<{
 		isOk: boolean;
 		isHealth: boolean;
+		isOcHealth: boolean;
 		error?: string;
 	}> {
 		try {
-			await getLocalSandboxHealthStatus();
-			return { isOk: true, isHealth: true };
+			const response = await getLocalSandboxHealthStatus();
+			return {
+				isOk: true,
+				isHealth: response.status === "ok",
+				isOcHealth: response.oc_status === "ok",
+			};
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			// Suppress error logging if operating (starting/stopping) or if it's a connection error
@@ -1353,7 +1253,7 @@ export class LocalVibeService {
 			if (!this.isOperating && !this.isExpectedSandboxHealthConnectionError(errorMessage)) {
 				console.error("[LocalVibeService] Local sandbox health check failed:", errorMessage);
 			}
-			return { isOk: true, isHealth: false, error: errorMessage };
+			return { isOk: true, isHealth: false, isOcHealth: false, error: errorMessage };
 		}
 	}
 
@@ -1382,33 +1282,6 @@ export class LocalVibeService {
 				return { isOk: true, exists: false };
 			}
 			return { isOk: false, exists: false };
-		}
-	}
-
-	/**
-	 * Checks if the ai302-machine is currently running
-	 * @returns { isOk: boolean; isRunning: boolean } - isOk: operation success, isRunning: whether machine is running
-	 */
-	private async checkPodmanMachineRunning(): Promise<{ isOk: boolean; isRunning: boolean }> {
-		try {
-			const { stdout } = await execAsync("podman machine list --format json");
-			const machines = JSON.parse(stdout) as Array<{
-				Name: string;
-				Running?: boolean;
-				State?: string;
-			}>;
-			const machine = machines.find((m) => m.Name === "ai302-machine");
-			if (!machine) {
-				return { isOk: true, isRunning: false };
-			}
-			// Check both Running field and State field
-			const isRunning = machine.Running === true || machine.State === "running";
-			return { isOk: true, isRunning };
-		} catch (error) {
-			if (isCommandNotFound(error)) {
-				return { isOk: true, isRunning: false };
-			}
-			return { isOk: false, isRunning: false };
 		}
 	}
 
@@ -1719,7 +1592,7 @@ export class LocalVibeService {
 	 * Platform-specific installation:
 	 * - Windows: pip install podman-compose
 	 * - macOS: brew install podman-compose
-	 * - Linux: pip3 install podman-compose or apt-get install podman-compose
+	 * - Linux: pip3 install podman-compose or apt-get / dnf / pacman install podman-compose
 	 *
 	 * Broadcasts log events via "install-log" channel with step: "install-podman-compose"
 	 *
@@ -1765,6 +1638,7 @@ export class LocalVibeService {
 			);
 		} else if (platform === "linux") {
 			// Linux: Try pip first, fallback to apt-get
+			this._getLinuxDistro();
 			const pipResult = await this.runCommandWithBroadcast(
 				"pip3",
 				["install", "podman-compose"],
@@ -1773,12 +1647,56 @@ export class LocalVibeService {
 			if (pipResult.isOk) {
 				return pipResult;
 			}
-			// Fallback to apt-get
-			return this.runLinuxPrivilegedCommandWithBroadcast(
-				"apt-get",
-				["install", "-y", "podman-compose"],
-				"install-podman-compose",
-			);
+
+			const distributionInstallFn = new Map([
+				/* debian */
+				[
+					"debian",
+					() =>
+						this.runLinuxPrivilegedCommandWithBroadcast(
+							"apt-get",
+							["install", "-y", "podman-compose"],
+							"install-podman-compose",
+						),
+				],
+				/* arch linux */
+				[
+					"arch",
+					() =>
+						this.runLinuxPrivilegedCommandWithBroadcast(
+							"pacman",
+							["-S", "--noconfirm", "podman-compose"],
+							"install-podman-compose",
+						),
+				],
+				/* rhel */
+				[
+					"rhel",
+					() =>
+						this.runLinuxPrivilegedCommandWithBroadcast(
+							"dnf",
+							["install", "-y", "podman-compose"],
+							"install-podman-compose",
+						),
+				],
+				/* unknown */
+				[
+					"unknown",
+					() =>
+						this.runLinuxPrivilegedCommandWithBroadcast(
+							"apt-get",
+							["install", "-y", "podman-compose"],
+							"install-podman-compose",
+						),
+				],
+			]);
+
+			const id = this._normalizeLinuxDistro(this._getLinuxDistro());
+			if (!distributionInstallFn.has(id)) {
+				return distributionInstallFn.get("unknown")!.call(this);
+			}
+			console.log(id);
+			return distributionInstallFn.get(id)!.call(this);
 		}
 
 		return { isOk: false };
@@ -1882,9 +1800,16 @@ export class LocalVibeService {
 				await new Promise((resolve) => setTimeout(resolve, delayMs));
 			}
 
-			const initArgs = PLATFORM.IS_WINDOWS
-				? ["machine", "init", "--rootful", "ai302-machine"]
-				: ["machine", "init", "ai302-machine"];
+			const initArgs = [
+				"machine",
+				"init",
+				"--cpus",
+				"4",
+				"--memory",
+				"4096",
+				...(PLATFORM.IS_WINDOWS ? ["--rootful"] : []),
+				"ai302-machine",
+			];
 			const result = await this.runCommandWithBroadcast("podman", initArgs, "init-podman");
 
 			if (result.isOk) {
@@ -1953,26 +1878,8 @@ export class LocalVibeService {
 		// Clean up stale machine and system connections before init
 		// This handles the case where a previous install left orphaned state
 		try {
-			try {
-				await execAsync("podman machine stop ai302-machine");
-			} catch {
-				// Machine not running or doesn't exist, fine
-			}
-			try {
-				await execAsync("podman machine rm -f ai302-machine");
-			} catch {
-				// Machine doesn't exist, fine
-			}
-			try {
-				await execAsync("podman system connection rm ai302-machine");
-			} catch {
-				// Connection doesn't exist, fine
-			}
-			try {
-				await execAsync("podman system connection rm ai302-machine-root");
-			} catch {
-				// Connection doesn't exist, fine
-			}
+			await execAsync("podman machine stop ai302-machine");
+
 			console.log("[LocalVibeService] Cleaned up stale machine/connections for 'ai302-machine'");
 			broadcastService.broadcastChannelToAll("install-log", {
 				step: "init-podman",
@@ -1986,7 +1893,186 @@ export class LocalVibeService {
 		// Initialize Podman Machine with retry logic
 		const machineInit = await this._initPodmanMachineWithRetry(3);
 
+		// If machine was successfully initialized (created), reset the config flags so that
+		// subsequent code will re-apply VM config and WSL conf. This handles the case where
+		// a user manually deleted the machine - we need to ensure config is applied after re-creation.
+		if (machineInit.isOk) {
+			await localVibeStorage.setData({
+				needUpdateVmConfig: !PLATFORM.IS_LINUX,
+				needUpdateWslConf: PLATFORM.IS_WINDOWS,
+			});
+		}
+
 		return machineInit;
+	}
+
+	/**
+	 * Configures WSL automount options in /etc/wsl.conf inside the ai302-machine VM.
+	 * This fixes file permission issues on Windows by enabling metadata and setting proper
+	 * uid/gid/umask values for mounted Windows drives.
+	 *
+	 * Only runs on Windows. Uses `podman machine ssh` to write wsl.conf and then
+	 * runs `wsl --shutdown` to apply changes on next start.
+	 *
+	 * @returns { isOk: boolean } - isOk: operation success
+	 */
+	private async _configureWslConf(): Promise<{ isOk: boolean }> {
+		// Only run on Windows - WSL is Windows-specific
+		if (!PLATFORM.IS_WINDOWS) {
+			return { isOk: true };
+		}
+
+		console.log("[Local Vibe] Configuring WSL automount options in /etc/wsl.conf...");
+		broadcastService.broadcastChannelToAll("install-log", {
+			step: "wsl-conf-configure",
+			type: "stdout",
+			data: "Configuring WSL automount options...",
+		});
+
+		// Use podman machine ssh with root user to write wsl.conf
+		// -u root avoids needing sudo (which may be disabled on Windows 11)
+		// tee -a appends to the file instead of overwriting
+		const wslConfContent = [
+			`[automount]`,
+			`options = "metadata,uid=1000,gid=1000,umask=022,fmask=011"`,
+		];
+
+		const sshCommand =
+			`echo '${wslConfContent[0]}' >> /etc/wsl.conf && ` +
+			`echo '${wslConfContent[1]}' >> /etc/wsl.conf`;
+
+		const result = await this.runCommandWithBroadcast(
+			"podman",
+			["machine", "ssh", "--username", "root", "ai302-machine", sshCommand],
+			"wsl-conf-configure",
+			false,
+		);
+
+		if (!result.isOk) {
+			console.error("[Local Vibe] Failed to configure wsl.conf:", result.output);
+			return { isOk: false };
+		}
+
+		console.log(
+			"[Local Vibe] wsl.conf written successfully, shutting down WSL to apply changes...",
+		);
+
+		// Shutdown WSL so the new wsl.conf is picked up on next start
+		await this.runCommandWithBroadcast("wsl", ["--shutdown"], "wsl-shutdown");
+
+		// Stop the Podman machine cleanly before restarting
+		// wsl --shutdown terminates WSL but the Podman machine process may still be running
+		await this.runCommandWithBroadcast(
+			"podman",
+			["machine", "stop", "ai302-machine"],
+			"podman-machine-stop-after-wsl-config",
+		);
+
+		await this.runCommandWithBroadcast(
+			"podman",
+			["machine", "set", "ai302-machine", "--rootful=false"],
+			"podman-machine-set-after-wsl-config",
+		);
+
+		// Restart the Podman machine so the new wsl.conf takes effect
+		console.log("[Local Vibe] Restarting machine after WSL config...");
+		const restartResult = await this.runCommandWithBroadcast(
+			"podman",
+			["machine", "start", "ai302-machine"],
+			"podman-machine-restart-after-wsl-config",
+		);
+
+		if (!restartResult.isOk && !restartResult.output.includes("already running")) {
+			console.error(
+				"[Local Vibe] Failed to restart machine after WSL config:",
+				restartResult.output,
+			);
+			return { isOk: false };
+		}
+
+		// Wait for machine to be ready again
+		const ready = await this.waitForPodmanReady(60_000);
+		if (!ready) {
+			console.error("[Local Vibe] Machine timed out after WSL config restart");
+			return { isOk: false };
+		}
+
+		return { isOk: true };
+	}
+
+	/**
+	 * Detects the current Linux distribution by reading `/etc/os-release`.
+	 *
+	 * This function parses the `ID` field in `/etc/os-release` to determine the
+	 * Linux distribution type (e.g., "debian", "ubuntu", "arch", "manjaro").
+	 *
+	 * Only runs on Linux. If the file cannot be read or parsed, returns "unknown".
+	 *
+	 * @returns {string} - The Linux distribution ID, or "unknown" if detection fails.
+	 *
+	 * Example return values:
+	 * - "debian" for Debian
+	 * - "ubuntu" for Ubuntu
+	 * - "arch" for Arch Linux
+	 * - "manjaro" for Manjaro
+	 */
+	private _getLinuxDistro(): string {
+		try {
+			const osRelease = readFileSync("/etc/os-release", "utf-8");
+			const lines = osRelease.split("\n");
+			const info: Record<string, string> = {};
+			lines.forEach((line) => {
+				const match = line.match(/^(\w+)=(.*)$/);
+				if (match) {
+					const [, key, value] = match;
+					info[key] = value.replace(/"/g, "");
+				}
+			});
+			return info["ID"] || "unknown"; // example: 'debian', 'ubuntu', 'arch', 'manjaro'
+		} catch (err) {
+			console.error("read failed /etc/os-release:", err);
+			return "unknown";
+		}
+	}
+
+	/**
+	 * Normalizes a Linux distribution ID or ID_LIKE string into one of the main families:
+	 * 'debian', 'arch', 'rhel', or 'unknown'.
+	 *
+	 * @param id {string} - ID from /etc/os-release
+	 * @returns {'debian' | 'arch' | 'rhel' | 'unknown'}
+	 */
+	_normalizeLinuxDistro(id: string): "debian" | "arch" | "rhel" | "unknown" {
+		const debianDistros = [
+			"debian",
+			"ubuntu",
+			"linuxmint",
+			"pop",
+			"mx",
+			"elementary",
+			"deepin",
+			"kali",
+			"steamos",
+			"kde-neon",
+		];
+
+		const archDistros = ["arch", "manjaro", "endeavouros", "arco", "rebornos", "artix"];
+
+		const rhelDistros = ["rhel", "centos", "almalinux", "rocky", "fedora", "ol"];
+
+		id = id.toLowerCase();
+
+		if (debianDistros.includes(id)) {
+			return "debian";
+		}
+		if (archDistros.includes(id)) {
+			return "arch";
+		}
+		if (rhelDistros.includes(id)) {
+			return "rhel";
+		}
+
+		return "unknown";
 	}
 
 	/**
@@ -2011,7 +2097,25 @@ export class LocalVibeService {
 		const result = await match(platform)
 			.with("win32", () => this._installPodmanWindows())
 			.with("darwin", () => this._installPodmanMacOS())
-			.with("linux", () => this._installPodmanLinux())
+			.with("linux", () => {
+				const distributionInstallFn = new Map([
+					/* debian */
+					["debian", this._installPodmanDebianLinux],
+					/* arch linux */
+					["arch", this._installPodmanArchLinux],
+					/* rhel */
+					["rhel", this._installPodmanRedHatLinux],
+					/* unknown */
+					["unknown", this._installPodmanDebianLinux],
+				]);
+
+				const id = this._normalizeLinuxDistro(this._getLinuxDistro());
+				if (!distributionInstallFn.has(id)) {
+					return this._installPodmanDebianLinux();
+				}
+				console.log(id);
+				return distributionInstallFn.get(id)!.call(this);
+			})
 			.otherwise(() => {
 				console.error(`[LocalVibeService] Unsupported platform: ${platform}`);
 				return { isOk: false };
@@ -2268,7 +2372,7 @@ export class LocalVibeService {
 	 * 1. Install Podman via apt-get (if not already installed)
 	 * 2. Install podman-compose (if not already installed)
 	 */
-	private async _installPodmanLinux(): Promise<{ isOk: boolean }> {
+	private async _installPodmanDebianLinux(): Promise<{ isOk: boolean }> {
 		// Check if Podman is already installed
 		const podmanCheck = await this.checkCommand("podman --version");
 		const composeCheck = await this.checkPodmanCompose();
@@ -2287,6 +2391,106 @@ export class LocalVibeService {
 			const podmanInstall = await this.runLinuxPrivilegedCommandWithBroadcast(
 				"apt-get",
 				["-y", "install", "podman"],
+				"install-podman",
+			);
+			if (!podmanInstall.isOk) return { isOk: false };
+		} else {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman",
+				type: "stdout",
+				data: "Podman already installed, skipping installation",
+			});
+		}
+
+		// 2. Install podman-compose (only if not already installed)
+		if (!composeCheck.isValid) {
+			const composeInstall = await this.installPodmanCompose();
+			if (!composeInstall.isOk) return { isOk: false };
+		} else {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman-compose",
+				type: "stdout",
+				data: "podman-compose already installed, skipping installation",
+			});
+		}
+
+		return { isOk: true };
+	}
+
+	/**
+	 * Linux installation flow (Arch linux: https://archlinux.org/):
+	 * 1. Install Podman via pacman (if not already installed)
+	 * 2. Install podman-compose (if not already installed)
+	 */
+	private async _installPodmanArchLinux(): Promise<{ isOk: boolean }> {
+		// Check if Podman is already installed
+		const podmanCheck = await this.checkCommand("podman --version");
+		const composeCheck = await this.checkPodmanCompose();
+
+		if (podmanCheck.isValid && composeCheck.isValid) {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman",
+				type: "stdout",
+				data: "Podman and podman-compose already installed, skipping installation",
+			});
+			return { isOk: true };
+		}
+
+		// 1. Install Podman (only if not already installed)
+		if (!podmanCheck.isValid) {
+			const podmanInstall = await this.runLinuxPrivilegedCommandWithBroadcast(
+				"pacman",
+				["-Sy", "--noconfirm", "podman", "python-pip"],
+				"install-podman",
+			);
+			if (!podmanInstall.isOk) return { isOk: false };
+		} else {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman",
+				type: "stdout",
+				data: "Podman already installed, skipping installation",
+			});
+		}
+
+		// 2. Install podman-compose (only if not already installed)
+		if (!composeCheck.isValid) {
+			const composeInstall = await this.installPodmanCompose();
+			if (!composeInstall.isOk) return { isOk: false };
+		} else {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman-compose",
+				type: "stdout",
+				data: "podman-compose already installed, skipping installation",
+			});
+		}
+
+		return { isOk: true };
+	}
+
+	/**
+	 * Linux installation flow (Red Hat):
+	 * 1. Install Podman via dnf (if not already installed)
+	 * 2. Install podman-compose (if not already installed)
+	 */
+	private async _installPodmanRedHatLinux(): Promise<{ isOk: boolean }> {
+		// Check if Podman is already installed
+		const podmanCheck = await this.checkCommand("podman --version");
+		const composeCheck = await this.checkPodmanCompose();
+
+		if (podmanCheck.isValid && composeCheck.isValid) {
+			broadcastService.broadcastChannelToAll("install-log", {
+				step: "install-podman",
+				type: "stdout",
+				data: "Podman and podman-compose already installed, skipping installation",
+			});
+			return { isOk: true };
+		}
+
+		// 1. Install Podman (only if not already installed)
+		if (!podmanCheck.isValid) {
+			const podmanInstall = await this.runLinuxPrivilegedCommandWithBroadcast(
+				"dnf",
+				["install", "-y", "podman"],
 				"install-podman",
 			);
 			if (!podmanInstall.isOk) return { isOk: false };
@@ -2456,11 +2660,12 @@ export class LocalVibeService {
 	 * Ensures the local sandbox is running, starting it if necessary
 	 * This is an idempotent operation - safe to call multiple times
 	 * @param _event The IPC main invoke event
-	 * @returns { isOk: boolean; port?: number; error?: string; wasAlreadyRunning: boolean }
+	 * @returns { isOk: boolean; port?: number; openClawPort?: number; error?: string; wasAlreadyRunning: boolean }
 	 */
 	async ensureLocalSandboxRunning(_event: IpcMainInvokeEvent): Promise<{
 		isOk: boolean;
 		port?: number;
+		openClawPort?: number;
 		error?: string;
 		wasAlreadyRunning: boolean;
 	}> {
@@ -2471,8 +2676,9 @@ export class LocalVibeService {
 			if (healthCheck.isHealth) {
 				// Sandbox is already running
 				const port = this.getRuntimePort() ?? DEFAULT_SANDBOX_PORT;
+				const openClawPort = this.getRuntimeOpenClawPort() ?? DEFAULT_OPENCLAW_PORT;
 				console.log("[Local Vibe] Local sandbox already running on port:", port);
-				return { isOk: true, port, wasAlreadyRunning: true };
+				return { isOk: true, port, openClawPort, wasAlreadyRunning: true };
 			}
 
 			// Sandbox is not running, start it
@@ -2490,6 +2696,7 @@ export class LocalVibeService {
 			return {
 				isOk: true,
 				port: startResult.port,
+				openClawPort: startResult.openClawPort,
 				wasAlreadyRunning: startResult.alreadyStarted ?? false,
 			};
 		} catch (error) {
@@ -2506,12 +2713,13 @@ export class LocalVibeService {
 	 * Checks output for success message or already started state
 	 * After successful start, automatically runs podman compose up -d
 	 * @param _event The IPC main invoke event
-	 * @returns { isOk: boolean; alreadyStarted?: boolean; port?: number; output?: string; error?: string; composeOutput?: string; composeError?: string } - isOk: operation success, alreadyStarted: machine was already running, port: allocated host port, output: command output, error: error message if failed, composeOutput: podman compose output, composeError: podman compose error
+	 * @returns { isOk: boolean; alreadyStarted?: boolean; port?: number; openClawPort?: number; output?: string; error?: string; composeOutput?: string; composeError?: string } - isOk: operation success, alreadyStarted: machine was already running, port: allocated host port, output: command output, error: error message if failed, composeOutput: podman compose output, composeError: podman compose error
 	 */
 	async startPodmanMachine(_event: IpcMainInvokeEvent): Promise<{
 		isOk: boolean;
 		alreadyStarted?: boolean;
 		port?: number;
+		openClawPort?: number;
 		output?: string;
 		error?: string;
 		composeOutput?: string;
@@ -2539,10 +2747,17 @@ export class LocalVibeService {
 				await new Promise((resolve) => setTimeout(resolve, 3000));
 				await this.startLocalSandboxHealthCheck();
 
+				await this.runLinuxPrivilegedCommandWithBroadcast(
+					"chmod",
+					["-R", "o+rx", path.join(this.getRuntimeComposeDir())],
+					"fix-openclaw-channels-perm",
+				);
+
 				return {
 					isOk: true,
 					alreadyStarted: false,
 					port: composeResult.port,
+					openClawPort: composeResult.openClawPort,
 					output: "Linux rootless mode - no machine needed",
 					composeOutput: composeResult.output,
 					composeError: composeResult.error,
@@ -2580,6 +2795,21 @@ export class LocalVibeService {
 					);
 					return { isOk: false, error: initErrorMsg };
 				}
+			}
+
+			// Apply VM resource config if flagged (machine must be stopped at this point)
+			// - Existing machine: run `podman machine set` to update CPU/memory to required values
+			// - Newly created machine: also run `podman machine set` to ensure config is applied
+			//   (init may have set the values, but this ensures consistency)
+			const { data: localVibeData } = await localVibeStorage.getData();
+			if (localVibeData.needUpdateVmConfig) {
+				console.log("[Local Vibe] Applying VM config update (--cpus 4 --memory 4096)...");
+				await this.runCommandWithBroadcast(
+					"podman",
+					["machine", "set", "ai302-machine", "--cpus", "4", "--memory", "4096"],
+					"podman-machine-set",
+				);
+				await localVibeStorage.setData({ needUpdateVmConfig: false });
 			}
 
 			// Start the Podman machine
@@ -2692,6 +2922,17 @@ export class LocalVibeService {
 				}
 			}
 
+			// Configure WSL automount options for Windows (fixes file permission issues)
+			// This must happen AFTER machine is running (SSH requires running VM)
+			// _configureWslConf handles: write wsl.conf → wsl --shutdown → restart machine
+			if (localVibeData.needUpdateWslConf && PLATFORM.IS_WINDOWS) {
+				const wslResult = await this._configureWslConf();
+				if (wslResult.isOk) {
+					await localVibeStorage.setData({ needUpdateWslConf: false });
+				}
+				// On failure, flag remains true for next attempt
+			}
+
 			// Execute podman compose up -d after successful start (or if already running)
 			const composeResult = await this.runPodmanComposeUp();
 
@@ -2703,12 +2944,196 @@ export class LocalVibeService {
 				isOk: true,
 				alreadyStarted,
 				port: composeResult?.port,
+				openClawPort: composeResult?.openClawPort,
 				output,
 				composeOutput: composeResult?.output,
 				composeError: composeResult?.error,
 			};
 		} finally {
 			this.isOperating = false;
+		}
+	}
+
+	async restartPodmanMachine(_event: IpcMainInvokeEvent) {
+		await execAsync("podman restart local-cc-api");
+	}
+
+	/**
+	 * Get paths for all API keys that need to be force-overridden during merge.
+	 * Dynamically collects paths from the template config so new providers/skills
+	 * are automatically included without hardcoding.
+	 */
+	private _getApiKeyOverridePaths(templateConfig: Record<string, unknown>): string[] {
+		const overridePaths: string[] = [];
+
+		const providers = get(templateConfig, "models.providers") as
+			| Record<string, unknown>
+			| undefined;
+		if (providers) {
+			for (const providerName of Object.keys(providers)) {
+				overridePaths.push(`models.providers.${providerName}.apiKey`);
+			}
+		}
+
+		const skillEntries = get(templateConfig, "skills.entries") as
+			| Record<string, unknown>
+			| undefined;
+		if (skillEntries) {
+			for (const skillName of Object.keys(skillEntries)) {
+				overridePaths.push(`skills.entries.${skillName}.apiKey`);
+			}
+		}
+
+		return overridePaths;
+	}
+
+	/**
+	 * Merges template config into existing config with selective field override support.
+	 *
+	 * Default behaviour: user configuration wins (existing values preserved).
+	 * Override behaviour: paths listed in `overridePaths` are replaced from template.
+	 *
+	 * @param existingConfig User's existing configuration
+	 * @param templateConfig Template with new fields and default values
+	 * @param overridePaths Dot-paths that should be force-overridden (e.g., API keys)
+	 * @returns Merged configuration (new object — inputs are not mutated)
+	 */
+	private _mergeTemplateConfig(
+		existingConfig: Record<string, unknown>,
+		templateConfig: Record<string, unknown>,
+		overridePaths: string[] = [],
+	): Record<string, unknown> {
+		const merged = cloneDeep(existingConfig);
+		deepMergeWithOverride(merged, templateConfig, overridePaths);
+		return merged;
+	}
+
+	/**
+	 * Classify app-models from storage into normal and coding categories.
+	 * Single-pass classification for performance.
+	 */
+	private _classifyModels(appModels: Array<Record<string, unknown>>): {
+		normalModels: Array<Record<string, unknown>>;
+		codingModels: Array<Record<string, unknown>>;
+	} {
+		const normalModels: Record<string, unknown>[] = [];
+		const codingModels: Record<string, unknown>[] = [];
+
+		for (const m of appModels) {
+			if (m.providerId !== "302AI") continue;
+
+			const id = m.id as string;
+
+			// cc-* models → coding
+			if (id.startsWith("cc-")) {
+				codingModels.push(m);
+				continue;
+			}
+
+			const isFeatured = m.isFeatured === true;
+			const isCompatible = m.openai_compatible === true;
+
+			// *-for-coding + featured + compatible → coding
+			if (id.endsWith("-for-coding") && isFeatured && isCompatible) {
+				codingModels.push(m);
+				continue;
+			}
+
+			// Regular ai302 models (featured + compatible)
+			if (isFeatured && isCompatible) {
+				normalModels.push(m);
+			}
+		}
+
+		return { normalModels, codingModels };
+	}
+
+	/**
+	 * Build the `agents.defaults.models` object from classified models.
+	 * Preserves non-ai302 keys from existing config while rebuilding ai302 entries.
+	 */
+	private _buildModelConfig(
+		existingModels: Record<string, unknown>,
+		classified: {
+			normalModels: Array<Record<string, unknown>>;
+			codingModels: Array<Record<string, unknown>>;
+		},
+	): Record<string, unknown> {
+		// Keep models that don't belong to ai302 or ai302-coding providers
+		const preservedModels = omitByPrefix(existingModels, ["ai302/", "ai302-coding/"]);
+		const newModels: Record<string, unknown> = { ...preservedModels };
+
+		for (const m of classified.normalModels) {
+			newModels[`ai302/${m.id}`] = {};
+		}
+		for (const m of classified.codingModels) {
+			newModels[`ai302-coding/${m.id}`] = {};
+		}
+
+		return newModels;
+	}
+
+	/**
+	 * Fetch app-models from storage and merge them into the given OpenClaw configuration.
+	 * Replaces all ai302/* and ai302-coding/* model entries with fresh data.
+	 */
+	private async _mergeModelsConfig(config: Record<string, unknown>): Promise<void> {
+		try {
+			const appModels = (await storageService.getItemInternal("app-models")) as
+				| Array<Record<string, unknown>>
+				| undefined;
+
+			if (!Array.isArray(appModels) || appModels.length === 0) {
+				return;
+			}
+
+			const classified = this._classifyModels(appModels);
+
+			if (classified.normalModels.length === 0 && classified.codingModels.length === 0) {
+				return;
+			}
+
+			if (!get(config, "agents.defaults.models")) {
+				set(config, "agents.defaults.models", {});
+			}
+
+			const existingModels = get(config, "agents.defaults.models") as Record<string, unknown>;
+			const newModels = this._buildModelConfig(existingModels, classified);
+			set(config, "agents.defaults.models", newModels);
+		} catch (error) {
+			console.warn(
+				"[Local Vibe] Failed to fetch and parse app-models for openclaw configuration",
+				error,
+			);
+		}
+	}
+
+	/**
+	 * Updates the agents.defaults.models inside openclaw.json based on current app-models.
+	 * Called via IPC from the renderer process.
+	 */
+	async updateOpenclawModels(
+		_event: IpcMainInvokeEvent,
+	): Promise<{ success: boolean; error?: string }> {
+		try {
+			const runtimeDir = this.getRuntimeComposeDir();
+			const openclawFilePath = path.join(runtimeDir, ".openclaw", "openclaw.json");
+
+			if (!fs.existsSync(openclawFilePath)) {
+				return { success: false, error: "openclaw.json does not exist" };
+			}
+
+			const content = fs.readFileSync(openclawFilePath, "utf-8");
+			const config = JSON.parse(content);
+
+			await this._mergeModelsConfig(config);
+
+			fs.writeFileSync(openclawFilePath, JSON.stringify(config, null, 2), "utf-8");
+			return { success: true };
+		} catch (error) {
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			console.error("[Local Vibe] Failed to update openclaw.json models:", errorMessage);
+			return { success: false, error: errorMessage };
 		}
 	}
 }

@@ -148,28 +148,6 @@ class TabBarState {
 			console.log(`Window ID changed from ${this.#windowId} to ${newWindowId}`);
 			this.#windowId = newWindowId;
 		});
-
-		// Listen for window ID changes when tab is moved between windows
-		// Tab views need this to update window.windowId, but should NOT update TabBarState's #windowId
-		// window.addEventListener("windowIdChanged", (event: Event) => {
-		// 	const customEvent = event as CustomEvent<{ newWindowId: string }>;
-		// 	const { newWindowId } = customEvent.detail;
-
-		// 	if (this.#isShellView) {
-		// 		// Shell views should never be migrated, log warning if this happens
-		// 		console.warn(
-		// 			`[TabBarState] Unexpected windowId change in shell view from ${this.#windowId} to ${newWindowId}`,
-		// 		);
-		// 	} else {
-		// 		// Tab views are migrated between windows
-		// 		// Do NOT update #windowId to prevent this tab view's TabBarState from interfering
-		// 		console.log(
-		// 			`[TabBarState] Tab view migrated to window ${newWindowId}, keeping TabBarState disabled`,
-		// 		);
-		// 	}
-		// 	// CRITICAL: Do NOT update #windowId
-		// 	// This prevents migrated tab views from reading/writing other windows' tab state
-		// });
 	}
 
 	// ******************************* Private Methods ******************************* //
@@ -185,6 +163,10 @@ class TabBarState {
 			...t,
 			active: t.id === activeTabId,
 		}));
+	}
+
+	get activeTab() {
+		return persistedTabState.current[this.#windowId]?.tabs.find((t) => t.active);
 	}
 
 	async #handleTabRemovalWithActiveState(
@@ -253,6 +235,13 @@ class TabBarState {
 
 			if (currentTabs.length > 1) {
 				const newActiveTabId = await this.#handleTabRemovalWithActiveState(tabId, currentTabs);
+
+				// Ensure storage is written before the IPC call destroys the WebContentsView.
+				// In tab views, #safeUpdateWindowTabs fires an async storage write that may not
+				// complete before tabService.handleTabClose destroys the view.
+				if (!this.#isShellView) {
+					await persistedTabState.flush();
+				}
 
 				await tabService.handleTabClose(tabId, newActiveTabId);
 			} else {
@@ -383,6 +372,16 @@ class TabBarState {
 			.with("chat", () => true)
 			.with("aiApplications", () => true)
 			.with("codeAgent", () => true)
+			.with("openClawWebUi", async () => {
+				const existingOpenClawTab = currentTabs?.find(
+					(tab) => tab.type === "openClawWebUi" && (!href || tab.href === href),
+				);
+				if (existingOpenClawTab) {
+					await tabService.handleActivateTab(existingOpenClawTab.id);
+					return false;
+				}
+				return true;
+			})
 			.with("htmlPreview", async () => {
 				// Check if a tab with the same previewId already exists
 				if (previewId) {

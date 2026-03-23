@@ -102,7 +102,10 @@ if (!gotTheLock) {
 
 			// Stop local sandbox before quitting (for Windows/Linux)
 			console.log("[Main] All windows closed, stopping local sandbox...");
-			await localVibeService.stopLocalSandbox();
+			if (app.isPackaged) {
+				// The program is running in the production environment.
+				await localVibeService.stopLocalSandbox();
+			}
 			console.log("[Main] Local sandbox stopped, quitting app...");
 			app.quit();
 		}

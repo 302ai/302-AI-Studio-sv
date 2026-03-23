@@ -71,7 +71,7 @@
 	<Collapsible
 		open={isExpanded}
 		onOpenChange={handleOpenChange}
-		class="mb-4 rounded-lg border bg-muted/30 p-3"
+		class="mb-4 w-full max-w-[65ch] rounded-lg border bg-muted/30 p-3"
 	>
 		<CollapsibleTrigger
 			class="flex w-full items-center justify-between text-left transition-colors hover:bg-muted/20 rounded-md p-2"
