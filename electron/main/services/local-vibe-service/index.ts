@@ -382,21 +382,15 @@ export class LocalVibeService {
 		// Copy template compose to runtime directory
 		fs.copyFileSync(templatePath, runtimeComposePath);
 
-		// Normalize known short-name image to a fully-qualified reference for Podman compatibility.
-		// Some environments disable unqualified-search registries in /etc/containers/registries.conf.
 		try {
 			let composeContent = fs.readFileSync(runtimeComposePath, "utf-8");
 			// Linux remove user configuration, other platforms keep
 			if (process.platform === "linux") {
 				composeContent = composeContent.replace(/^\s*user:.*$/gm, "");
+				fs.writeFileSync(runtimeComposePath, composeContent, "utf-8");
 			}
-			const normalizedContent = composeContent.replace(
-				/(\bimage:\s*)proxy302\/claude_code_local_api:dev\b/g,
-				"$1docker.io/proxy302/claude_code_local_api:dev",
-			);
-			fs.writeFileSync(runtimeComposePath, normalizedContent, "utf-8");
 		} catch (error) {
-			console.warn("[Local Vibe] Failed to normalize runtime compose image reference:", error);
+			console.warn("[Local Vibe] Failed to normalize runtime compose:", error);
 		}
 
 		// Ensure bind-mounted directories are writable by the container user.
@@ -497,12 +491,16 @@ export class LocalVibeService {
 		// Store the allocated port
 		this.runtimeOpenClawPort = openClawPort;
 
+		const imageTag = app.isPackaged ? "main" : "dev";
+		const ccApiImage = `ghcr.io/302ai/cc-local-api:${imageTag}`;
+
 		// Write .env file with runtime values
 		const envContent = [
 			`AI302_API_KEY=${apiKey}`,
 			`HOST_DATA_PATH=${runtimeDir}`,
 			`HOST_PORT=${hostPort}`,
 			`OPENCLAW_PORT=${openClawPort}`,
+			`CC_API_IMAGE=${ccApiImage}`,
 		].join("\n");
 		fs.writeFileSync(envFilePath, envContent, "utf-8");
 
