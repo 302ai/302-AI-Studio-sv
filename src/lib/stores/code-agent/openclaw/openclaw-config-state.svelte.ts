@@ -21,6 +21,7 @@ function getInitialData() {
 	}
 	const initialData: OpenClawConfig = {
 		feishuSessionId: "",
+		telegramSessionId: "",
 		agentId: "",
 	};
 	return initialData;
@@ -33,6 +34,7 @@ export const persistedOpenclawConfigState = new PersistedState<OpenClawConfig>(
 
 class OpenClawConfigState {
 	feishuSessionId = $derived(persistedOpenclawConfigState.current?.feishuSessionId ?? "");
+	telegramSessionId = $derived(persistedOpenclawConfigState.current?.telegramSessionId ?? "");
 	agentId = $derived(persistedOpenclawConfigState.current?.agentId ?? "");
 
 	currentOcAgentId = $derived.by(() => {

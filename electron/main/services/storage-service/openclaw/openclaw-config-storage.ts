@@ -13,11 +13,12 @@ class OpenClawConfigStorage extends StorageService<OpenClawConfig> {
 	async getOpenClawConfig(threadId: string): Promise<{ isOK: boolean; data: OpenClawConfig }> {
 		try {
 			const data = await this.getItemInternal(this.prefix + "-" + threadId);
-			if (!data) return { isOK: false, data: { feishuSessionId: "", agentId: "" } };
+			if (!data)
+				return { isOK: false, data: { feishuSessionId: "", agentId: "", telegramSessionId: "" } };
 			return { isOK: true, data };
 		} catch (error) {
 			console.error("Error getting openclaw config:", error);
-			return { isOK: false, data: { feishuSessionId: "", agentId: "" } };
+			return { isOK: false, data: { feishuSessionId: "", agentId: "", telegramSessionId: "" } };
 		}
 	}
 }

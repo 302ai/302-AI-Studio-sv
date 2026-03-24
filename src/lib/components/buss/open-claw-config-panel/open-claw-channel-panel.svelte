@@ -17,10 +17,15 @@
 	let updateBtnDiabled = $derived(!openclawConfigState.currentOcAgentId);
 
 	let feishuSessionId = $state(openclawConfigState.feishuSessionId);
+	let telegramSessionId = $state(openclawConfigState.telegramSessionId);
 
 	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
 		prepareAction: async () => {
-			await openclawConfigState.batchUpdater().update("feishuSessionId", feishuSessionId).apply();
+			await openclawConfigState
+				.batchUpdater()
+				.update("feishuSessionId", feishuSessionId)
+				.update("telegramSessionId", telegramSessionId)
+				.apply();
 		},
 		finishAction: async () => {
 			await openclawConfigState.updateBindings();
@@ -71,7 +76,7 @@
 {/snippet}
 
 {#snippet telegram()}
-	<Accordion type="single" class="w-full hidden rounded-settings-item">
+	<Accordion type="single" class="w-full rounded-settings-item">
 		<AccordionItem value="fei-shu" class="border-b-0">
 			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
 				<Label class=" font-normal no-underline cursor-pointer"
@@ -84,6 +89,7 @@
 						label={`${m.open_claw_channel_session_id()}`}
 						placeholder={m.placeholder_input_session_id()}
 						class="[&>label]:text-label-fg"
+						bind:value={telegramSessionId}
 					/>
 					<div class="flex items-center justify-between text-muted-foreground text-xs">
 						<button

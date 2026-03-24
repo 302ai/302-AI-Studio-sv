@@ -119,13 +119,25 @@ export class OpenClawService {
 			return;
 		}
 
-		const { agentId, feishuSessionId } = config.data;
+		const { agentId, feishuSessionId, telegramSessionId } = config.data;
 		const desiredBindings: OpenClawBindingConfig[] = [];
+
+		const createBindings = (channel: string, kind: string, id: string) => ({
+			channel,
+			peer: { kind, id },
+		});
 
 		if (feishuSessionId) {
 			desiredBindings.push({
 				agentId,
-				match: { channel: "feishu", peer: { kind: "group", id: feishuSessionId } },
+				match: createBindings("feishu", "group", feishuSessionId),
+			});
+		}
+
+		if (telegramSessionId) {
+			desiredBindings.push({
+				agentId,
+				match: createBindings("telegram", "dm", telegramSessionId),
 			});
 		}
 
