@@ -314,7 +314,7 @@ export class LocalVibeService {
 	 */
 	async getLocalBaseUrl(_event: IpcMainInvokeEvent): Promise<string | null> {
 		const port = this.getRuntimePort();
-		if (!port) return null;
+		if (isNull(port)) return `http://localhost:${DEFAULT_SANDBOX_PORT}`;
 		return `http://localhost:${port}`;
 	}
 

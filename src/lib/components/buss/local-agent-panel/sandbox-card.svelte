@@ -8,8 +8,10 @@
 		type SandboxHealthStatus,
 	} from "$lib/stores/code-agent/local-env-state.svelte";
 	import { cn } from "$lib/utils";
+	import { createDevSequenceDetector } from "$lib/utils/dev-konami-code";
 	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
 	import { onMount } from "svelte";
+	import DevSandboxPanel from "./dev-sandbox-panel.svelte";
 	import LogDialog from "./log-dialog.svelte";
 	import PlatformServiceCard from "./platform-service-card.svelte";
 	import StatusIndicator from "./status-indicator.svelte";
@@ -32,6 +34,17 @@
 
 	// Show log button when there are logs, or sandbox is starting/failed
 	let showLogButton = $derived(sandboxLogs.length > 0 || isSandboxLoading || sandboxFailed);
+
+	// Dev sandbox Konami code ("302aidev" toggle)
+	// Only listen when the collapsible panel is expanded (isOpen === true)
+	let showDevPanel = $state(false);
+	$effect(() => {
+		if (!isOpen) return;
+		const cleanup = createDevSequenceDetector("302aidev", () => {
+			showDevPanel = !showDevPanel;
+		});
+		return cleanup;
+	});
 
 	// Helper to get status indicator props
 	function getHealthStatusProps(status: SandboxHealthStatus) {
@@ -173,6 +186,8 @@
 		</div>
 	</div>
 </PlatformServiceCard>
+
+<DevSandboxPanel visible={showDevPanel} />
 
 <!-- Log Dialog -->
 <LogDialog

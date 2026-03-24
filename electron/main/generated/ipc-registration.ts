@@ -17,6 +17,7 @@ import {
 	aiApplicationService,
 	appService,
 	dataService,
+	devLauncherService,
 	externalLinkService,
 	mcpService,
 	notificationService,
@@ -494,6 +495,14 @@ export function registerIpcHandlers() {
 			dataService.exportChatToFile(event, content, extension, filterName, defaultFileName),
 	);
 
+	// devLauncherService service registration
+	ipcMain.handle("devLauncherService:launchDevSandbox", (event, imageAddress, engine) =>
+		devLauncherService.launchDevSandbox(event, imageAddress, engine),
+	);
+	ipcMain.handle("devLauncherService:stopDevSandbox", (event) =>
+		devLauncherService.stopDevSandbox(event),
+	);
+
 	// externalLinkService service registration
 	ipcMain.handle("externalLinkService:openExternalLink", (event, url) =>
 		externalLinkService.openExternalLink(event, url),
@@ -733,6 +742,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("dataService:zipFolderForUpload");
 	ipcMain.removeHandler("dataService:selectFolderForUpload");
 	ipcMain.removeHandler("dataService:exportChatToFile");
+	ipcMain.removeHandler("devLauncherService:launchDevSandbox");
+	ipcMain.removeHandler("devLauncherService:stopDevSandbox");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
 	ipcMain.removeHandler("mcpService:getToolsFromServer");
 	ipcMain.removeHandler("mcpService:closeServer");
