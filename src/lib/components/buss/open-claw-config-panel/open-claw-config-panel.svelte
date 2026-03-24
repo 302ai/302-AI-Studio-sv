@@ -37,7 +37,7 @@
 		secret: codeAgentGlobalConfigsState.wecom.secret,
 	});
 	let localTelegram = $state({
-		botToken: codeAgentGlobalConfigsState.telegram.botToken,
+		botToken: codeAgentGlobalConfigsState.telegram.accounts.default.botToken,
 		allowFrom: [...codeAgentGlobalConfigsState.telegram.allowFrom],
 	});
 
@@ -49,7 +49,12 @@
 				.update("dingtalk", localDingtalk)
 				.update("qqbot", localQqbot)
 				.update("wecom", localWecom)
-				.update("telegram", localTelegram)
+				.update("telegram", {
+					accounts: {
+						default: { botToken: localTelegram.botToken },
+					},
+					allowFrom: localTelegram.allowFrom,
+				})
 				.apply();
 			await window.electronAPI.openClawService.applyOpenClawChannelConfig();
 		},

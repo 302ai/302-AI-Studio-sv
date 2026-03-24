@@ -17,14 +17,14 @@
 	let updateBtnDiabled = $derived(!openclawConfigState.currentOcAgentId);
 
 	let feishuSessionId = $state(openclawConfigState.feishuSessionId);
-	let telegramSessionId = $state(openclawConfigState.telegramSessionId);
+	let telegramBotId = $state(openclawConfigState.telegramBotId);
 
 	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
 		prepareAction: async () => {
 			await openclawConfigState
 				.batchUpdater()
 				.update("feishuSessionId", feishuSessionId)
-				.update("telegramSessionId", telegramSessionId)
+				.update("telegramBotId", telegramBotId)
 				.apply();
 		},
 		finishAction: async () => {
@@ -89,7 +89,7 @@
 						label={`${m.open_claw_channel_session_id()}`}
 						placeholder={m.placeholder_input_session_id()}
 						class="[&>label]:text-label-fg"
-						bind:value={telegramSessionId}
+						bind:value={telegramBotId}
 					/>
 					<div class="flex items-center justify-between text-muted-foreground text-xs">
 						<button

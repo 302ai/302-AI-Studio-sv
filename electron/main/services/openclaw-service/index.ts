@@ -12,11 +12,19 @@ type OpenClawBindingConfig = {
 	agentId: string;
 	match: {
 		channel: string;
-		peer: {
+		accountId?: string;
+		peer?: {
 			kind: string;
 			id: string;
 		};
 	};
+};
+
+type OpenClawAccountsConfig = {
+	enabled: boolean;
+	dmPolicy: string;
+	botToken: string;
+	groupPolicy: string;
 };
 
 export class OpenClawService {
@@ -119,26 +127,56 @@ export class OpenClawService {
 			return;
 		}
 
-		const { agentId, feishuSessionId, telegramSessionId } = config.data;
+		const { agentId, feishuSessionId, telegramBotId } = config.data;
 		const desiredBindings: OpenClawBindingConfig[] = [];
-
-		const createBindings = (channel: string, kind: string, id: string) => ({
-			channel,
-			peer: { kind, id },
-		});
 
 		if (feishuSessionId) {
 			desiredBindings.push({
 				agentId,
-				match: createBindings("feishu", "group", feishuSessionId),
+				match: {
+					channel: "feishu",
+					peer: {
+						kind: "group",
+						id: feishuSessionId,
+					},
+				},
 			});
 		}
 
-		if (telegramSessionId) {
+		if (telegramBotId) {
+			await this.getOpenClawConfig("bindings");
+			const accountId = `${agentId}_302ai`;
 			desiredBindings.push({
 				agentId,
-				match: createBindings("telegram", "dm", telegramSessionId),
+				match: {
+					channel: "telegram",
+					accountId: accountId,
+				},
 			});
+
+			// Deal channels.telegram.accounts.`any`
+			{
+				const tmpAccount = {
+					enabled: true,
+					dmPolicy: "open",
+					botToken: telegramBotId,
+					groupPolicy: "open",
+				};
+				const tgAccounts: {
+					default: OpenClawAccountsConfig;
+					[key: string]: OpenClawAccountsConfig;
+				} = (await this.getOpenClawConfig("channels.telegram.accounts")) || {
+					default: tmpAccount,
+				};
+				for (const key in tgAccounts) {
+					// key == "default" You can't delete it !!!!!!!!!!!!!!
+					if (key != accountId && tgAccounts[key].botToken == telegramBotId && key != "default") {
+						delete tgAccounts[key];
+					}
+				}
+				tgAccounts[accountId] = tmpAccount;
+				await this.setOpenClawConfig("channels.telegram.accounts", tgAccounts);
+			}
 		}
 
 		const bindings: OpenClawBindingConfig[] = (await this.getOpenClawConfig("bindings")) ?? [];
@@ -149,7 +187,7 @@ export class OpenClawService {
 
 			// 2. Resolve conflicts: remove bindings from other agents occupying the exact same channel/peer
 			const isConflict = desiredBindings.some(
-				(d) => d.match.channel === b.match.channel && d.match.peer.id === b.match.peer.id,
+				(d) => d.match.channel === b.match.channel && d.match.peer?.id === b.match.peer?.id,
 			);
 			if (isConflict) return acc;
 

@@ -20,7 +20,7 @@ function getInitialData() {
 		dingtalk: { clientId: "", clientSecret: "" },
 		qqbot: { appId: "", clientSecret: "" },
 		wecom: { botId: "", secret: "" },
-		telegram: { botToken: "", allowFrom: [] },
+		telegram: { allowFrom: [], accounts: { default: { botToken: "" } } },
 	};
 	return initialData;
 }
@@ -55,7 +55,14 @@ class CodeAgentGlobalConfigsState {
 	);
 	wecom = $derived(persistedCodeAgentGlobalConfigsState.current.wecom ?? { botId: "", secret: "" });
 	telegram = $derived(
-		persistedCodeAgentGlobalConfigsState.current.telegram ?? { botToken: "", allowFrom: [] },
+		persistedCodeAgentGlobalConfigsState.current.telegram ?? {
+			accounts: {
+				default: {
+					botToken: "",
+				},
+			},
+			allowFrom: [],
+		},
 	);
 
 	constructor() {
@@ -144,7 +151,7 @@ class CodeAgentGlobalConfigsState {
 	}
 
 	updateTelegramBotToken(botToken: string) {
-		this.#updateState({ telegram: { ...this.telegram, botToken } });
+		this.#updateState({ telegram: { ...this.telegram, accounts: { default: { botToken } } } });
 	}
 
 	updateTelegramAllowFrom(allowFrom: string[]) {

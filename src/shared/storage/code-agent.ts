@@ -111,6 +111,10 @@ export const createClaudeCodeSandboxResponse = type({
 });
 export type CreateClaudeCodeSandboxResponse = typeof createClaudeCodeSandboxResponse.infer;
 
+export const Accounts = type({
+	botToken: "string",
+});
+
 export const codeAgentGlobalConfigs = type({
 	apiKey: "string",
 	autoDeploy: "boolean",
@@ -122,7 +126,12 @@ export const codeAgentGlobalConfigs = type({
 	dingtalk: type({ clientId: "string", clientSecret: "string" }),
 	qqbot: type({ appId: "string", clientSecret: "string" }),
 	wecom: type({ botId: "string", secret: "string" }),
-	telegram: type({ botToken: "string", allowFrom: "string[]" }),
+	telegram: type({
+		allowFrom: "string[]",
+		accounts: type({
+			default: Accounts,
+		}),
+	}),
 });
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
 

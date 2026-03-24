@@ -63,8 +63,12 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 				secret: "",
 			},
 			telegram: {
-				botToken: "",
 				allowFrom: [],
+				accounts: {
+					default: {
+						botToken: "",
+					},
+				},
 			},
 		};
 		try {
