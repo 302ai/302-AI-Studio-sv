@@ -160,9 +160,18 @@ services:
 
 			const devComposePath = await this.generateDevCompose(imageAddress);
 
+			if (engine === "podman") {
+				try {
+					console.log("[DevLauncherService] Pulling latest image with podman-compose...");
+					await execAsync(`podman-compose -f "${devComposePath}" pull`);
+				} catch (pullError) {
+					console.warn("[DevLauncherService] podman-compose pull warning:", pullError);
+				}
+			}
+
 			const cmd =
 				engine === "podman"
-					? `podman-compose -f "${devComposePath}" up -d --force-recreate --pull always`
+					? `podman-compose -f "${devComposePath}" up -d --force-recreate`
 					: `docker compose -f "${devComposePath}" up -d --force-recreate --pull always`;
 
 			await execAsync(cmd, { cwd: this.getComposeDir() });
