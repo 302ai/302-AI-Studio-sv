@@ -583,6 +583,13 @@ export class LocalVibeService {
 			}
 
 			console.log("[Local Vibe] podman-compose up -d:", result.output);
+
+			// Background cleanup: Remove dangling images older than 24 hours
+			// This frees up disk space while providing a buffer period for newly pulled images
+			execAsync('podman image prune -f --filter "until=24h"').catch((err) => {
+				console.warn("[Local Vibe] Background image prune failed:", err);
+			});
+
 			return { isOk: true, port: hostPort, openClawPort, output: result.output };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
