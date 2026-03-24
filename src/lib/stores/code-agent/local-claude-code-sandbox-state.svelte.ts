@@ -222,9 +222,7 @@ class LocalClaudeCodeSandboxState {
 	 */
 	handleWorkspaceSelected(workspacePath: string): void {
 		this.selectedWorkspacePath = workspacePath;
-		if (workspacePath !== "new") {
-			this.selectedSessionId = "new";
-		}
+		this.selectedSessionId = "new";
 	}
 
 	reset(): void {

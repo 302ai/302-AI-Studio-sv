@@ -183,19 +183,6 @@ class CodeAgentSendMessageButtonState {
 
 					if (shouldSkipInitProject) {
 						workspacePath = codeAgentState.currentWorkspacePath;
-
-						if (!workspacePath) {
-							workspacePath = localClaudeCodeSandboxState.sessions.find(
-								(session) => session.session_id === sessionId,
-							)?.workspace_path;
-						}
-
-						if (!workspacePath) {
-							await localClaudeCodeSandboxState.refreshSessions();
-							workspacePath = localClaudeCodeSandboxState.sessions.find(
-								(session) => session.session_id === sessionId,
-							)?.workspace_path;
-						}
 					} else {
 						const { workspace_path } = await initProject({
 							sandboxId: sandboxInfo.sandboxId,
