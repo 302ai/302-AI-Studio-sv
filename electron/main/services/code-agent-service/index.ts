@@ -443,15 +443,18 @@ export class CodeAgentService {
 		sandboxRemark: string,
 		llmModel: string,
 		sessionNote?: string,
+		workspacePath?: string,
 	): Promise<{ isOK: boolean }> {
 		try {
+			const effectiveWorkspacePath = workspacePath || "";
+			const effectiveNote = sessionNote;
+
 			// First check if thread data already exists
 			const existingThread = await storageService.getItemInternal("app-thread:" + threadId);
 
 			// If thread data doesn't exist, create it
 			if (!existingThread) {
-				// Use sessionNote for title, fall back to sandboxRemark or default
-				const threadTitle = sessionNote || sandboxRemark || "Code Agent";
+				const threadTitle = effectiveNote || sandboxRemark || "Code Agent";
 				const newThread = {
 					id: threadId,
 					title: threadTitle,
@@ -471,7 +474,7 @@ export class CodeAgentService {
 					selectedModel: {
 						id: llmModel,
 						name: llmModel,
-						providerId: "302AI", // Must match the registered provider ID
+						providerId: "302AI",
 						type: "chat",
 					},
 					isPrivateChatActive: false,
@@ -479,8 +482,6 @@ export class CodeAgentService {
 				};
 				await storageService.setItemInternal("app-thread:" + threadId, newThread);
 
-				// Add an initial message to prevent "New Chat" state which causes session init conflicts
-				// Content is empty as requested by user
 				const initialMessage = {
 					id: crypto.randomUUID(),
 					role: "system",
@@ -490,25 +491,21 @@ export class CodeAgentService {
 				};
 				await storageService.setItemInternal("app-chat-messages:" + threadId, [initialMessage]);
 
-				// Add thread to the sidebar thread list
 				const { threadStorage } = await import("../storage-service/thread-storage");
 				await threadStorage.addThread(threadId);
 
 				console.log("[createThreadForSession] Created thread data for:", threadId);
 			}
 
-			// Create the claude code agent state (sandbox/session link)
 			const stateKey = `claude-code-agent-state-${threadId}`;
-			// Include all required CodeAgentMetadata properties
 			const state = {
 				sandboxId,
 				sandboxRemark,
 				currentSessionId: sessionId,
 				model: llmModel,
 				isManualNote: false,
-				// Local agent properties (empty for remote sessions)
-				currentWorkspacePath: "",
-				workspacePaths: [],
+				currentWorkspacePath: effectiveWorkspacePath,
+				workspacePaths: effectiveWorkspacePath ? [effectiveWorkspacePath] : [],
 				variables: [],
 				skills: [],
 				thinkingBudget: "medium" as const,

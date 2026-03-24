@@ -293,7 +293,7 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle(
 		"codeAgentService:createThreadForSession",
-		(event, threadId, sandboxId, sessionId, sandboxRemark, llmModel, sessionNote) =>
+		(event, threadId, sandboxId, sessionId, sandboxRemark, llmModel, sessionNote, workspacePath) =>
 			codeAgentService.createThreadForSession(
 				event,
 				threadId,
@@ -302,6 +302,7 @@ export function registerIpcHandlers() {
 				sandboxRemark,
 				llmModel,
 				sessionNote,
+				workspacePath,
 			),
 	);
 	ipcMain.handle("codeAgentService:getThreadIdBySessionId", (event, sandboxId, sessionId) =>
