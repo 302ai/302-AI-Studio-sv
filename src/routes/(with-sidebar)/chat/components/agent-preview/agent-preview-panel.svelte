@@ -268,7 +268,6 @@
 
 	// Skills-only mode: only show skills tab when no sandbox
 	const isSkillsOnlyMode = $derived(agentPreviewState.isSkillsOnlyMode);
-	const isLocalMode = $derived(codeAgentState.type === "local");
 
 	// Tabs definition
 	let tabs: PreviewTab[] = $derived.by(() => {
@@ -288,7 +287,7 @@
 		// Skills-only mode OR no sandbox: show skills and taskboard tabs
 		if (isSkillsOnlyMode || !currentSandboxId) {
 			return [
-				...(!isLocalMode ? [{ id: TAB_SKILLS, label: "Skills" }] : []),
+				{ id: TAB_SKILLS, label: "Skills" },
 				{ id: TAB_TASKBOARD, label: m.label_tab_taskboard() },
 			];
 		}

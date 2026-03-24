@@ -250,7 +250,17 @@ class CodeAgentState {
 	}
 
 	updateType(type: CodeAgentType): void {
-		this.updateState({ type });
+		const updates: Partial<CodeAgentConfigMetadata> = { type };
+
+		// 切换到远程模式时，重置 currentAgentId 为 claude-code
+		// 因为远程模式目前只支持 claude-code
+		if (type === "remote") {
+			updates.currentAgentId = "claude-code";
+			updates.codingAgentId = "claude-code";
+		}
+
+		this.updateState(updates);
+
 		// 切换模式时重置 session 和 sandbox ID，避免配置混乱和竞态问题
 		claudeCodeAgentState.resetSessionAndSandbox(type);
 		// 重置 local session 选择
