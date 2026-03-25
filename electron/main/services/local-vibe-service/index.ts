@@ -1,5 +1,5 @@
 import { getLocalSandboxHealthStatus } from "@electron/main/apis/code-agent";
-import { isLinux, PLATFORM } from "@electron/main/constants/index";
+import { isLinux, isWin, PLATFORM } from "@electron/main/constants/index";
 import { OPENCLAW_DEFAULT_CONFIG } from "@electron/main/datas/openclaw-template";
 import { broadcastService } from "@electron/main/services/broadcast-service";
 import { generalSettingsService } from "@electron/main/services/settings-service/general-settings-service";
@@ -320,12 +320,34 @@ export class LocalVibeService {
 				// API keys and skills keys must always sync from template (force override)
 				const overridePaths = this._getApiKeyOverridePaths(templateConfig);
 
-				// NOTE: openclaw version update
+				// TODO: A better synchronization method is needed
 				const { data: vibeData } = await localVibeStorage.getData();
 				if (vibeData.openclawJsonTemplateVersion < OPENCLAW_DEFAULT_CONFIG._version) {
-					// version update
 					// version 0 -> 1
-					overridePaths.push("plugins", "channels");
+					// overridePaths.push("plugins", "channels");
+
+					// version 1 -> 2
+					overridePaths.push(
+						...(isWin
+							? [
+									"plugins.allow",
+									"plugins.channels",
+									"channels.dingtalk",
+									"channels.qqbot",
+									"channels.wecom",
+								]
+							: []),
+						"skills.load",
+					);
+
+					console.log(
+						"[LocalVibeService] Updating openclaw.json template version from",
+						vibeData.openclawJsonTemplateVersion,
+						"to",
+						OPENCLAW_DEFAULT_CONFIG._version,
+					);
+					console.log("[LocalVibeService] Override paths:", overridePaths);
+
 					await localVibeStorage.setData({
 						openclawJsonTemplateVersion: OPENCLAW_DEFAULT_CONFIG._version,
 					});
