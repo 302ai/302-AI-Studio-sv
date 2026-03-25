@@ -11,7 +11,6 @@
 	import { Label } from "$lib/components/ui/field";
 	import { m } from "$lib/paraglide/messages";
 	import { codeAgentGlobalConfigsState } from "$lib/stores/code-agent";
-	import { isWindows } from "$lib/utils/platform";
 	import { RefreshCw } from "@lucide/svelte";
 	import SettingInputField from "../settings/setting-input-field.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
@@ -241,13 +240,15 @@
 	<Accordion type="single" class="w-full rounded-settings-item">
 		<AccordionItem value="telegram" class="border-b-0">
 			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-				<Label class=" font-normal no-underline cursor-pointer">Telegram</Label>
+				<Label class=" font-normal no-underline cursor-pointer"
+					>{m.open_claw_channel_telegram()}</Label
+				>
 			</AccordionTrigger>
 			<AccordionContent class="pb-0 pt-2 space-y-2">
 				<div class="rounded-lg border p-4 space-y-4">
 					<SettingInputField
-						label="Bot Token"
-						placeholder="请输入Bot Token"
+						label={m.open_claw_telegram_bot_token()}
+						placeholder={m.open_claw_telegram_placeholder_bot_token()}
 						bind:value={localTelegram.botToken}
 						class="[&>label]:text-label-fg"
 					/>
@@ -278,12 +279,9 @@
 		</AccordionTrigger>
 		<AccordionContent class="pb-1 pt-0 space-y-2">
 			{@render feishu()}
-			<!-- TODO: hidden channel -->
-			{#if !isWindows}
-				{@render dingtalk()}
-				{@render qqbot()}
-				{@render wecom()}
-			{/if}
+			{@render dingtalk()}
+			{@render qqbot()}
+			{@render wecom()}
 			{@render telegram()}
 			<div class="flex flex-col items-end">
 				<Button class="w-fit" onclick={() => (confirmDialogOpen = true)}>
