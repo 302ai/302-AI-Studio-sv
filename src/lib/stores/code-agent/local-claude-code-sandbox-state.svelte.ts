@@ -250,7 +250,7 @@ class LocalClaudeCodeSandboxState {
 				const subPath = segments[segments.length - 1];
 				if (subPath) {
 					try {
-						await window.electronAPI.localVibeService.deleteWorkspaceDirectory(subPath);
+						await window.electronAPI.codeAgentService.deleteWorkspaceDirectory(subPath);
 					} catch (error) {
 						console.error(
 							"[LocalClaudeCodeSandboxState] Failed to delete workspace directory:",

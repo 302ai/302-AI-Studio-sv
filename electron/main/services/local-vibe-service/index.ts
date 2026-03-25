@@ -13,7 +13,7 @@ import { shell, type IpcMainInvokeEvent } from "electron";
 import { cloneDeep, get, set } from "es-toolkit/compat";
 import { isNull } from "es-toolkit/predicate";
 import fs, { readFileSync } from "fs";
-import { cp, readdir } from "fs/promises";
+import { cp } from "fs/promises";
 import getPort from "get-port";
 import path from "path";
 import { match } from "ts-pattern";
@@ -175,103 +175,6 @@ export class LocalVibeService {
 		} catch (error) {
 			console.error("[LocalVibeService] Failed to open workspace directory:", error);
 			return false;
-		}
-	}
-
-	/**
-	 * Delete a specific workspace directory via IPC
-	 * @param subPath - subdirectory name under workspace (e.g. "icr6cz4lnm")
-	 */
-	async deleteWorkspaceDirectory(
-		_event: IpcMainInvokeEvent,
-		subPath: string,
-	): Promise<{ success: boolean; error?: string }> {
-		const composeDir = getRuntimeComposeDir();
-		const workspaceDir = path.join(composeDir, "workspace");
-
-		// Prevent directory traversal
-		const safeSubPath = subPath.replace(/\.\./g, "");
-		const targetDir = path.join(workspaceDir, safeSubPath);
-
-		// Safety: ensure targetDir is actually inside workspaceDir
-		if (!targetDir.startsWith(workspaceDir)) {
-			console.error("[LocalVibeService] Path traversal attempt blocked:", subPath);
-			return { success: false, error: "Invalid path" };
-		}
-
-		try {
-			if (fs.existsSync(targetDir)) {
-				fs.rmSync(targetDir, { recursive: true, force: true });
-				console.log("[LocalVibeService] Deleted workspace directory:", targetDir);
-			}
-			return { success: true };
-		} catch (error) {
-			console.error("[LocalVibeService] Failed to delete workspace directory:", error);
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			return { success: false, error: errorMessage };
-		}
-	}
-
-	/**
-	 * Rename a workspace directory via IPC
-	 * @param oldSubPath - old subdirectory path relative to workspace (e.g. "projects/myFolder")
-	 * @param newSubPath - new subdirectory path relative to workspace (e.g. "projects/newFolder")
-	 */
-	async renameWorkspaceDirectory(
-		_event: IpcMainInvokeEvent,
-		oldSubPath: string,
-		newSubPath: string,
-	): Promise<{ success: boolean; error?: string }> {
-		const composeDir = getRuntimeComposeDir();
-		const workspaceDir = path.join(composeDir, "workspace");
-
-		// Prevent directory traversal
-		const safeOldPath = oldSubPath.replace(/\.\./g, "");
-		const safeNewPath = newSubPath.replace(/\.\./g, "");
-		const oldDir = path.join(workspaceDir, safeOldPath);
-		const newDir = path.join(workspaceDir, safeNewPath);
-
-		// Safety: ensure both paths are inside workspaceDir
-		if (!oldDir.startsWith(workspaceDir) || !newDir.startsWith(workspaceDir)) {
-			console.error("[LocalVibeService] Path traversal attempt blocked:", oldSubPath, newSubPath);
-			return { success: false, error: "Invalid path" };
-		}
-
-		try {
-			if (!fs.existsSync(oldDir)) {
-				return { success: false, error: "Source path not found" };
-			}
-			fs.renameSync(oldDir, newDir);
-			console.log("[LocalVibeService] Renamed workspace directory:", oldDir, "->", newDir);
-			return { success: true };
-		} catch (error) {
-			console.error("[LocalVibeService] Failed to rename workspace directory:", error);
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			return { success: false, error: errorMessage };
-		}
-	}
-
-	/**
-	 * List existing work directories in ai302/workspace
-	 * Returns array of directory names (not full paths)
-	 */
-	async listWorkspaceDirectories(_event: IpcMainInvokeEvent): Promise<string[]> {
-		const composeDir = getRuntimeComposeDir();
-		const workspaceDir = path.join(composeDir, "workspace");
-
-		try {
-			// Use readdir with withFileTypes to filter directories
-			const entries = await readdir(workspaceDir, { withFileTypes: true });
-
-			// Filter and return only directory names, sorted alphabetically
-			return entries
-				.filter((entry) => entry.isDirectory())
-				.map((entry) => entry.name)
-				.sort();
-		} catch (error) {
-			// If workspace doesn't exist or no permissions, return empty array
-			console.log("[EnvService] Failed to list workspace directories:", error);
-			return [];
 		}
 	}
 

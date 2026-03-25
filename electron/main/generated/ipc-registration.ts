@@ -197,15 +197,6 @@ export function registerIpcHandlers() {
 	ipcMain.handle("localVibeService:openWorkspaceDirectory", (event, subPath) =>
 		localVibeService.openWorkspaceDirectory(event, subPath),
 	);
-	ipcMain.handle("localVibeService:deleteWorkspaceDirectory", (event, subPath) =>
-		localVibeService.deleteWorkspaceDirectory(event, subPath),
-	);
-	ipcMain.handle("localVibeService:renameWorkspaceDirectory", (event, oldSubPath, newSubPath) =>
-		localVibeService.renameWorkspaceDirectory(event, oldSubPath, newSubPath),
-	);
-	ipcMain.handle("localVibeService:listWorkspaceDirectories", (event) =>
-		localVibeService.listWorkspaceDirectories(event),
-	);
 	ipcMain.handle("localVibeService:getLocalBaseUrl", (event) =>
 		localVibeService.getLocalBaseUrl(event),
 	);
@@ -312,6 +303,15 @@ export function registerIpcHandlers() {
 		"codeAgentService:setIsManualNoteBySession",
 		(event, sandboxId, sessionId, isManualNote) =>
 			codeAgentService.setIsManualNoteBySession(event, sandboxId, sessionId, isManualNote),
+	);
+	ipcMain.handle("codeAgentService:deleteWorkspaceDirectory", (event, subPath) =>
+		codeAgentService.deleteWorkspaceDirectory(event, subPath),
+	);
+	ipcMain.handle("codeAgentService:renameWorkspaceDirectory", (event, oldSubPath, newSubPath) =>
+		codeAgentService.renameWorkspaceDirectory(event, oldSubPath, newSubPath),
+	);
+	ipcMain.handle("codeAgentService:listWorkspaceDirectories", (event) =>
+		codeAgentService.listWorkspaceDirectories(event),
 	);
 
 	// windowService service registration
@@ -654,9 +654,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("localVibeService:getComposeDirectory");
 	ipcMain.removeHandler("localVibeService:openComposeDirectory");
 	ipcMain.removeHandler("localVibeService:openWorkspaceDirectory");
-	ipcMain.removeHandler("localVibeService:deleteWorkspaceDirectory");
-	ipcMain.removeHandler("localVibeService:renameWorkspaceDirectory");
-	ipcMain.removeHandler("localVibeService:listWorkspaceDirectories");
 	ipcMain.removeHandler("localVibeService:getLocalBaseUrl");
 	ipcMain.removeHandler("localVibeService:getSandboxStatus");
 	ipcMain.removeHandler("localVibeService:triggerSystemRestart");
@@ -687,6 +684,9 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("codeAgentService:createThreadForSession");
 	ipcMain.removeHandler("codeAgentService:getThreadIdBySessionId");
 	ipcMain.removeHandler("codeAgentService:setIsManualNoteBySession");
+	ipcMain.removeHandler("codeAgentService:deleteWorkspaceDirectory");
+	ipcMain.removeHandler("codeAgentService:renameWorkspaceDirectory");
+	ipcMain.removeHandler("codeAgentService:listWorkspaceDirectories");
 	ipcMain.removeHandler("windowService:handleOpenSettingsWindow");
 	ipcMain.removeHandler("windowService:handleNavigateToUrl");
 	ipcMain.removeHandler("windowService:focusWindow");

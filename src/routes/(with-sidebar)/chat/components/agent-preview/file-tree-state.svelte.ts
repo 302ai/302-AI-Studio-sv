@@ -707,7 +707,7 @@ export class FileTreeState {
 						: p;
 					return rel.startsWith("/") ? rel.slice(1) : rel;
 				};
-				const result = await window.electronAPI.localVibeService.renameWorkspaceDirectory(
+				const result = await window.electronAPI.codeAgentService.renameWorkspaceDirectory(
 					stripWorkspace(oldPath),
 					stripWorkspace(newPath),
 				);
