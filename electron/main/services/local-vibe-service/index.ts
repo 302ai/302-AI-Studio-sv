@@ -9,7 +9,7 @@ import { providerStorage } from "@electron/main/services/storage-service/provide
 import { isCommandNotFound } from "@electron/main/utils/cmd";
 import { deepMergeWithOverride, omitByPrefix } from "@electron/main/utils/object-utils";
 import { exec, spawn, type SpawnOptions } from "child_process";
-import { app, shell, type IpcMainInvokeEvent } from "electron";
+import { shell, type IpcMainInvokeEvent } from "electron";
 import { cloneDeep, get, set } from "es-toolkit/compat";
 import { isNull } from "es-toolkit/predicate";
 import fs, { readFileSync } from "fs";
@@ -18,6 +18,14 @@ import getPort from "get-port";
 import path from "path";
 import { match } from "ts-pattern";
 import { promisify } from "util";
+import {
+	classifyNetworkError,
+	getCcApiImage,
+	getDockerComposePath,
+	getRuntimeComposeDir,
+	getRuntimeComposePath,
+	normalizeLinuxDistro,
+} from "../../utils/local-vibe-utils";
 import { CRON_EXPRESSION, schedulerService } from "../scheduler-service";
 
 const execAsync = promisify(exec);
@@ -35,7 +43,7 @@ export class LocalVibeService {
 
 	constructor() {
 		try {
-			const dir = this.getRuntimeComposeDir();
+			const dir = getRuntimeComposeDir();
 			if (!fs.existsSync(dir)) {
 				fs.mkdirSync(dir, { recursive: true });
 			}
@@ -63,7 +71,7 @@ export class LocalVibeService {
 		containerPath: string,
 	): Promise<{ success: boolean; error?: string }> {
 		try {
-			const composeDir = this.getRuntimeComposeDir();
+			const composeDir = getRuntimeComposeDir();
 			// The container maps ${HOST_DATA_PATH} (composeDir) to /home/user
 			const CONTAINER_ROOT = "/home/user";
 
@@ -126,59 +134,17 @@ export class LocalVibeService {
 	}
 
 	/**
-	 * Get the path to openclaw.json
-	 */
-	public getOpenClawConfigPath(): string {
-		return path.join(this.getRuntimeComposeDir(), ".openclaw", "openclaw.json");
-	}
-
-	/**
-	 * Get the path to docker-compose.yml
-	 * In development: static/docker-compose.yml in project root
-	 * In production: docker-compose.yml in app resources directory
-	 */
-	private getDockerComposePath(): string {
-		if (app.isPackaged) {
-			return path.join(process.resourcesPath, "docker-compose.yml");
-		}
-		return path.join(process.cwd(), "static", "docker-compose.yml");
-	}
-
-	/**
-	 * Get the runtime compose directory
-	 * In development: <project-root>/ai302
-	 * In production (macOS): <documents>/ai302
-	 * In production (others): <home>/ai302 (e.g. C:\Users\{username}\ai302 on Windows)
-	 */
-	private getRuntimeComposeDir(): string {
-		return match(app.isPackaged)
-			.with(true, () =>
-				match(PLATFORM.IS_MAC)
-					.with(true, () => path.join(app.getPath("documents"), "ai302"))
-					.otherwise(() => path.join(app.getPath("home"), "ai302")),
-			)
-			.otherwise(() => path.join(process.cwd(), "ai302"));
-	}
-
-	/**
-	 * Get the runtime compose file path
-	 */
-	private getRuntimeComposePath(): string {
-		return path.join(this.getRuntimeComposeDir(), "docker-compose.yml");
-	}
-
-	/**
 	 * Get the runtime compose directory path via IPC
 	 */
 	async getComposeDirectory(_event: IpcMainInvokeEvent): Promise<string> {
-		return this.getRuntimeComposeDir();
+		return getRuntimeComposeDir();
 	}
 
 	/**
 	 * Open the runtime compose directory in system explorer via IPC
 	 */
 	async openComposeDirectory(_event: IpcMainInvokeEvent): Promise<boolean> {
-		const dir = this.getRuntimeComposeDir();
+		const dir = getRuntimeComposeDir();
 		try {
 			const error = await shell.openPath(dir);
 			return error === "";
@@ -192,7 +158,7 @@ export class LocalVibeService {
 	 * Open a specific workspace directory in system explorer via IPC
 	 */
 	async openWorkspaceDirectory(_event: IpcMainInvokeEvent, subPath: string): Promise<boolean> {
-		const composeDir = this.getRuntimeComposeDir();
+		const composeDir = getRuntimeComposeDir();
 		const workspaceDir = path.join(composeDir, "workspace");
 
 		// Prevent directory traversal
@@ -220,7 +186,7 @@ export class LocalVibeService {
 		_event: IpcMainInvokeEvent,
 		subPath: string,
 	): Promise<{ success: boolean; error?: string }> {
-		const composeDir = this.getRuntimeComposeDir();
+		const composeDir = getRuntimeComposeDir();
 		const workspaceDir = path.join(composeDir, "workspace");
 
 		// Prevent directory traversal
@@ -256,7 +222,7 @@ export class LocalVibeService {
 		oldSubPath: string,
 		newSubPath: string,
 	): Promise<{ success: boolean; error?: string }> {
-		const composeDir = this.getRuntimeComposeDir();
+		const composeDir = getRuntimeComposeDir();
 		const workspaceDir = path.join(composeDir, "workspace");
 
 		// Prevent directory traversal
@@ -290,7 +256,7 @@ export class LocalVibeService {
 	 * Returns array of directory names (not full paths)
 	 */
 	async listWorkspaceDirectories(_event: IpcMainInvokeEvent): Promise<string[]> {
-		const composeDir = this.getRuntimeComposeDir();
+		const composeDir = getRuntimeComposeDir();
 		const workspaceDir = path.join(composeDir, "workspace");
 
 		try {
@@ -369,9 +335,9 @@ export class LocalVibeService {
 	 * @returns The allocated host port
 	 */
 	private async prepareRuntimeCompose(apiKey: string): Promise<number> {
-		const templatePath = this.getDockerComposePath();
-		const runtimeDir = this.getRuntimeComposeDir();
-		const runtimeComposePath = this.getRuntimeComposePath();
+		const templatePath = getDockerComposePath();
+		const runtimeDir = getRuntimeComposeDir();
+		const runtimeComposePath = getRuntimeComposePath(getRuntimeComposeDir());
 		const envFilePath = path.join(runtimeDir, ".env");
 		const dbDir = path.join(runtimeDir, "db");
 		const workspaceDir = path.join(runtimeDir, "workspace");
@@ -491,8 +457,7 @@ export class LocalVibeService {
 		// Store the allocated port
 		this.runtimeOpenClawPort = openClawPort;
 
-		const imageTag = app.isPackaged ? "main" : "dev";
-		const ccApiImage = `ghcr.io/302ai/cc-local-api:${imageTag}`;
+		const ccApiImage = getCcApiImage();
 
 		// Write .env file with runtime values
 		const envContent = [
@@ -507,7 +472,7 @@ export class LocalVibeService {
 		if (isLinux) {
 			await this.runLinuxPrivilegedCommandWithBroadcast(
 				"chmod",
-				["777", path.join(this.getRuntimeComposeDir(), ".openclaw", "openclaw.json")],
+				["777", path.join(getRuntimeComposeDir(), ".openclaw", "openclaw.json")],
 				"chown_openclawjson",
 			);
 		}
@@ -543,8 +508,8 @@ export class LocalVibeService {
 			const hostPort = await this.prepareRuntimeCompose(apiKey);
 			const openClawPort = this.getRuntimeOpenClawPort() ?? DEFAULT_OPENCLAW_PORT;
 
-			const composePath = this.getRuntimeComposePath();
-			const runtimeDir = this.getRuntimeComposeDir();
+			const composePath = getRuntimeComposePath(getRuntimeComposeDir());
+			const runtimeDir = getRuntimeComposeDir();
 
 			// Auto-pull latest images before starting
 			// This ensures we have the latest version for the current platform
@@ -607,7 +572,7 @@ export class LocalVibeService {
 		error?: string;
 	}> {
 		try {
-			const composePath = this.getRuntimeComposePath();
+			const composePath = getRuntimeComposePath(getRuntimeComposeDir());
 
 			// If file doesn't exist, we can't pull.
 			// Usually this is called after prepareRuntimeCompose, so it should exist.
@@ -649,8 +614,8 @@ export class LocalVibeService {
 	}> {
 		try {
 			// Use runtime compose if exists, otherwise fall back to template
-			const runtimePath = this.getRuntimeComposePath();
-			const composePath = fs.existsSync(runtimePath) ? runtimePath : this.getDockerComposePath();
+			const runtimePath = getRuntimeComposePath(getRuntimeComposeDir());
+			const composePath = fs.existsSync(runtimePath) ? runtimePath : getDockerComposePath();
 
 			// Execute: podman-compose -f <path> stop
 			// Set cwd to runtimeDir so podman-compose can read the .env file
@@ -1614,7 +1579,7 @@ export class LocalVibeService {
 				],
 			]);
 
-			const id = this._normalizeLinuxDistro(this._getLinuxDistro());
+			const id = normalizeLinuxDistro(this._getLinuxDistro());
 			if (!distributionInstallFn.has(id)) {
 				return distributionInstallFn.get("unknown")!.call(this);
 			}
@@ -1623,78 +1588,6 @@ export class LocalVibeService {
 		}
 
 		return { isOk: false };
-	}
-
-	/**
-	 * Checks if an error is network-related
-	 * @param errorMessage The error message to check
-	 * @returns Object indicating error type and user-friendly messages
-	 */
-	private classifyNetworkError(errorMessage: string): {
-		isNetworkError: boolean;
-		errorType: "dns" | "timeout" | "connection_refused" | "proxy" | "unknown";
-		zhMessage: string;
-		enMessage: string;
-	} {
-		const lowerMsg = errorMessage.toLowerCase();
-
-		// DNS resolution errors
-		if (
-			lowerMsg.includes("no such host") ||
-			lowerMsg.includes("lookup") ||
-			lowerMsg.includes("resolve") ||
-			lowerMsg.includes("nxdomain")
-		) {
-			return {
-				isNetworkError: true,
-				errorType: "dns",
-				zhMessage: "无法解析容器镜像仓库地址，请检查网络连接和 DNS 设置",
-				enMessage:
-					"Cannot resolve container registry address. Please check your network connection and DNS settings.",
-			};
-		}
-
-		// Connection timeout
-		if (
-			lowerMsg.includes("timeout") ||
-			lowerMsg.includes("timed out") ||
-			lowerMsg.includes("deadline exceeded")
-		) {
-			return {
-				isNetworkError: true,
-				errorType: "timeout",
-				zhMessage: "连接容器镜像仓库超时，请检查网络连接或稍后重试",
-				enMessage:
-					"Connection to container registry timed out. Please check your network or try again later.",
-			};
-		}
-
-		// Connection refused
-		if (lowerMsg.includes("connection refused") || lowerMsg.includes("refused")) {
-			return {
-				isNetworkError: true,
-				errorType: "connection_refused",
-				zhMessage: "连接被拒绝，可能是防火墙或代理设置问题",
-				enMessage: "Connection refused. This may be due to firewall or proxy settings.",
-			};
-		}
-
-		// Proxy errors
-		if (lowerMsg.includes("proxy") || lowerMsg.includes("tunnel")) {
-			return {
-				isNetworkError: true,
-				errorType: "proxy",
-				zhMessage: "代理服务器错误，请检查代理设置",
-				enMessage: "Proxy server error. Please check your proxy settings.",
-			};
-		}
-
-		return {
-			isNetworkError: false,
-			errorType: "unknown",
-			zhMessage: "",
-			enMessage: "",
-		};
 	}
 
 	/**
@@ -1742,7 +1635,7 @@ export class LocalVibeService {
 			lastError = result.output || "";
 
 			// Check if this is a network error
-			const networkError = this.classifyNetworkError(lastError);
+			const networkError = classifyNetworkError(lastError);
 
 			if (networkError.isNetworkError) {
 				// Log the specific network error
@@ -1959,46 +1852,6 @@ export class LocalVibeService {
 	}
 
 	/**
-	 * Normalizes a Linux distribution ID or ID_LIKE string into one of the main families:
-	 * 'debian', 'arch', 'rhel', or 'unknown'.
-	 *
-	 * @param id {string} - ID from /etc/os-release
-	 * @returns {'debian' | 'arch' | 'rhel' | 'unknown'}
-	 */
-	_normalizeLinuxDistro(id: string): "debian" | "arch" | "rhel" | "unknown" {
-		const debianDistros = [
-			"debian",
-			"ubuntu",
-			"linuxmint",
-			"pop",
-			"mx",
-			"elementary",
-			"deepin",
-			"kali",
-			"steamos",
-			"kde-neon",
-		];
-
-		const archDistros = ["arch", "manjaro", "endeavouros", "arco", "rebornos", "artix"];
-
-		const rhelDistros = ["rhel", "centos", "almalinux", "rocky", "fedora", "ol"];
-
-		id = id.toLowerCase();
-
-		if (debianDistros.includes(id)) {
-			return "debian";
-		}
-		if (archDistros.includes(id)) {
-			return "arch";
-		}
-		if (rhelDistros.includes(id)) {
-			return "rhel";
-		}
-
-		return "unknown";
-	}
-
-	/**
 	 * Installs Podman with platform-specific logic
 	 *
 	 * Platform flows:
@@ -2032,7 +1885,7 @@ export class LocalVibeService {
 					["unknown", this._installPodmanDebianLinux],
 				]);
 
-				const id = this._normalizeLinuxDistro(this._getLinuxDistro());
+				const id = normalizeLinuxDistro(this._getLinuxDistro());
 				if (!distributionInstallFn.has(id)) {
 					return this._installPodmanDebianLinux();
 				}
@@ -2562,8 +2415,8 @@ export class LocalVibeService {
 	async forceStopPodman(): Promise<void> {
 		// 1. Stop compose services
 		try {
-			const runtimePath = this.getRuntimeComposePath();
-			const composePath = fs.existsSync(runtimePath) ? runtimePath : this.getDockerComposePath();
+			const runtimePath = getRuntimeComposePath(getRuntimeComposeDir());
+			const composePath = fs.existsSync(runtimePath) ? runtimePath : getDockerComposePath();
 			await execAsync(`podman-compose -f "${composePath}" stop`);
 		} catch (e) {
 			console.error("[Local Vibe] forceStopPodman compose stop error:", e);
@@ -2672,7 +2525,7 @@ export class LocalVibeService {
 
 				await this.runLinuxPrivilegedCommandWithBroadcast(
 					"chmod",
-					["-R", "o+rx", path.join(this.getRuntimeComposeDir())],
+					["-R", "o+rx", path.join(getRuntimeComposeDir())],
 					"fix-openclaw-channels-perm",
 				);
 
@@ -3039,7 +2892,7 @@ export class LocalVibeService {
 		_event: IpcMainInvokeEvent,
 	): Promise<{ success: boolean; error?: string }> {
 		try {
-			const runtimeDir = this.getRuntimeComposeDir();
+			const runtimeDir = getRuntimeComposeDir();
 			const openclawFilePath = path.join(runtimeDir, ".openclaw", "openclaw.json");
 
 			if (!fs.existsSync(openclawFilePath)) {

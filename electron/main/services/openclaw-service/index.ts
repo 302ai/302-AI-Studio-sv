@@ -3,6 +3,7 @@ import { SUPPORTED_CHANNELS, WIN_SUPPORTED_CHANNELS } from "@shared/storage/code
 import { type IpcMainInvokeEvent } from "electron";
 import { get, isUndefined, merge, pick, set } from "es-toolkit/compat";
 import fs from "fs/promises";
+import { getOpenClawConfigPath, getRuntimeComposeDir } from "../../utils/local-vibe-utils";
 import { localVibeService } from "../local-vibe-service";
 import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
 import { openClawConfigStorage } from "../storage-service/openclaw/openclaw-config-storage";
@@ -53,7 +54,7 @@ export class OpenClawService {
 	 * const models = await this.getOpenClawConfig("models.providers.ai302.models");
 	 */
 	private async getOpenClawConfig<T = unknown>(path?: string): Promise<T | null> {
-		const configPath = localVibeService.getOpenClawConfigPath();
+		const configPath = getOpenClawConfigPath(getRuntimeComposeDir());
 
 		try {
 			const configContent = await fs.readFile(configPath, "utf-8");
@@ -77,7 +78,7 @@ export class OpenClawService {
 	 * @returns True if successful, false otherwise
 	 */
 	private async setOpenClawConfig<T>(path: string, value: T): Promise<boolean> {
-		const configPath = localVibeService.getOpenClawConfigPath();
+		const configPath = getOpenClawConfigPath(getRuntimeComposeDir());
 
 		try {
 			const config = await this.getOpenClawConfig<Record<string, unknown>>();
