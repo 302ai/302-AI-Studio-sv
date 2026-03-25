@@ -64,6 +64,7 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 	constructor() {
 		super(globalConfigsMigrationConfig);
 		this.storage = prefixStorage(this.storage, "CodeAgentStorage");
+		this.migrationKey = "code-agent-global-configs";
 	}
 
 	async getGlobalConfigs(): Promise<{ isOK: boolean; data: CodeAgentGlobalConfigs }> {
@@ -131,13 +132,6 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 	// 		return { isOK: false };
 	// 	}
 	// }
-
-	/**
-	 * Run migration on app startup to ensure existing data is migrated
-	 */
-	async ensureMigrated(): Promise<void> {
-		await this.getGlobalConfigs();
-	}
 }
 
 export const codeAgentGlobalConfigsStorage = new CodeAgentGlobalConfigsStorage();

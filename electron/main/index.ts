@@ -20,8 +20,7 @@ import {
 	trayService,
 	windowService,
 } from "./services";
-import { preferencesStorage } from "./services/storage-service/preferences-storage";
-import { codeAgentGlobalConfigsStorage } from "./services/storage-service/code-agent/code-agent-storage";
+import { StorageService } from "./services/storage-service";
 import { UpdaterService } from "./services/updater-service";
 import { setupNetworkInterceptor } from "./utils/network-interceptor";
 
@@ -164,8 +163,7 @@ async function init() {
 	await appService.initFromStorage();
 
 	// Run storage migrations
-	await preferencesStorage.ensureMigrated();
-	await codeAgentGlobalConfigsStorage.ensureMigrated();
+	await StorageService.runAllMigrations();
 
 	// Initialize plugin system
 	try {

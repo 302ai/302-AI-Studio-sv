@@ -32,6 +32,7 @@ export class ThemeStorage extends StorageService<ThemeState> {
 	constructor() {
 		super(migrationConfig);
 		this.storage = prefixStorage(this.storage, "ThemeStorage");
+		this.migrationKey = "state";
 	}
 
 	async getThemeState() {

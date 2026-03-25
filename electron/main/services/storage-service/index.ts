@@ -13,6 +13,11 @@ export class StorageService<T extends StorageValue> {
 	protected watches = new Map<string, () => void>();
 	protected migrationConfig?: MigrationConfig<T>;
 	protected lastUpdateSource = new Map<string, number>();
+	/** Storage key to eagerly migrate at startup. Set by subclasses with migrations. */
+	protected migrationKey?: string;
+
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	private static migratableInstances: StorageService<any>[] = [];
 
 	constructor(migrationConfig?: MigrationConfig<T>) {
 		const storagePath = isDev
@@ -24,6 +29,22 @@ export class StorageService<T extends StorageValue> {
 			}),
 		});
 		this.migrationConfig = migrationConfig;
+
+		if (migrationConfig) {
+			StorageService.migratableInstances.push(this);
+		}
+	}
+
+	/**
+	 * Run all pending migrations for every registered storage service.
+	 * Call once at app startup to replace individual ensureMigrated() calls.
+	 */
+	static async runAllMigrations(): Promise<void> {
+		for (const instance of StorageService.migratableInstances) {
+			if (instance.migrationKey) {
+				await instance.getItemInternal(instance.migrationKey);
+			}
+		}
 	}
 
 	protected ensureJsonExtension(key: string): string {
