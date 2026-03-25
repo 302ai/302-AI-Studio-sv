@@ -1411,5 +1411,12 @@
 	"openclaw_webui_failed_to_load": "无法加载 OpenClaw 管理页面",
 	"openclaw_webui_ensure_running": "请确保 OpenClaw 服务正在运行",
 	"auto_fix_deploy_failure": "自动修复部署失败",
-	"skills_openclaw_bundled": "OC内置"
+	"skills_openclaw_bundled": "OC内置",
+	"open_claw_wechat_add_success": "微信添加成功",
+	"open_claw_channel_wechat": "微信",
+	"open_claw_wechat_scan_qrcode_hint": "使用微信扫描二维码",
+	"open_claw_wechat_loading_hint": "精彩即将呈现～",
+	"open_claw_channel_telegram": "Telegram",
+	"open_claw_telegram_bot_token": "Bot Token",
+	"open_claw_telegram_placeholder_bot_token": "请输入Bot Token"
 }
