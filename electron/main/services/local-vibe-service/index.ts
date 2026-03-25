@@ -331,7 +331,7 @@ export class LocalVibeService {
 						...(isWin
 							? [
 									"plugins.allow",
-									"plugins.channels",
+									"plugins.entries.channels",
 									"channels.dingtalk",
 									"channels.qqbot",
 									"channels.wecom",
