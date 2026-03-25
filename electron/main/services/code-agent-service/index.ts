@@ -14,7 +14,6 @@ import type {
 import type { ThreadParmas } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
 import fs from "fs";
-import { readdir } from "fs/promises";
 import path from "path";
 import { emitter } from "../broadcast-service";
 import { getRuntimeComposeDir } from "../../utils/local-vibe-utils";
@@ -660,25 +659,6 @@ export class CodeAgentService {
 			console.error("[CodeAgentService] Failed to rename workspace directory:", error);
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			return { success: false, error: errorMessage };
-		}
-	}
-
-	/**
-	 * List existing work directories in ai302/workspace
-	 * Returns array of directory names (not full paths)
-	 */
-	async listWorkspaceDirectories(_event: IpcMainInvokeEvent): Promise<string[]> {
-		const workspaceDir = path.join(getRuntimeComposeDir(), "workspace");
-
-		try {
-			const entries = await readdir(workspaceDir, { withFileTypes: true });
-			return entries
-				.filter((entry) => entry.isDirectory())
-				.map((entry) => entry.name)
-				.sort();
-		} catch (error) {
-			console.log("[CodeAgentService] Failed to list workspace directories:", error);
-			return [];
 		}
 	}
 }

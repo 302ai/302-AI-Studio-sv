@@ -310,9 +310,6 @@ export function registerIpcHandlers() {
 	ipcMain.handle("codeAgentService:renameWorkspaceDirectory", (event, oldSubPath, newSubPath) =>
 		codeAgentService.renameWorkspaceDirectory(event, oldSubPath, newSubPath),
 	);
-	ipcMain.handle("codeAgentService:listWorkspaceDirectories", (event) =>
-		codeAgentService.listWorkspaceDirectories(event),
-	);
 
 	// windowService service registration
 	ipcMain.handle("windowService:handleOpenSettingsWindow", (event, route) =>
@@ -686,7 +683,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("codeAgentService:setIsManualNoteBySession");
 	ipcMain.removeHandler("codeAgentService:deleteWorkspaceDirectory");
 	ipcMain.removeHandler("codeAgentService:renameWorkspaceDirectory");
-	ipcMain.removeHandler("codeAgentService:listWorkspaceDirectories");
 	ipcMain.removeHandler("windowService:handleOpenSettingsWindow");
 	ipcMain.removeHandler("windowService:handleNavigateToUrl");
 	ipcMain.removeHandler("windowService:focusWindow");
