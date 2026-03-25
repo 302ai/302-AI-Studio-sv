@@ -272,6 +272,15 @@
 	// Tabs definition
 	let tabs: PreviewTab[] = $derived.by(() => {
 		if (codeAgentState.currentAgentId === "open-claw") {
+			// No active session yet: only show Skills/Taskboard/Manage tabs (no sandbox required)
+			if (!codeAgentState.inCodeAgentMode) {
+				return [
+					{ id: TAB_SKILLS, label: "Skills" },
+					{ id: TAB_TASKBOARD, label: m.label_tab_taskboard() },
+					{ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() },
+				];
+			}
+
 			const openClawTabs: PreviewTab[] = [
 				{ id: TAB_PREVIEW, label: m.label_tab_preview() },
 				{ id: TAB_CODE, label: m.label_tab_file() },
@@ -1437,7 +1446,7 @@
 									{/if}
 								</div>
 							</div>
-						{:else if activeTab === TAB_OPENCLAW_WEBUI && isAgentMode}
+						{:else if activeTab === TAB_OPENCLAW_WEBUI && codeAgentState.currentAgentId === "open-claw"}
 							<div class="flex h-full flex-col min-h-0 overflow-hidden">
 								<OpenClawWebUI />
 							</div>

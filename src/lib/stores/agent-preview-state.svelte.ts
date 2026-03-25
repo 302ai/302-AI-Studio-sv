@@ -849,6 +849,12 @@ export class AgentPreviewState {
 		this.isSkillsOnlyMode = !codeAgentState.currentSessionId || !codeAgentState.sandboxId;
 	}
 
+	openOpenClawWebUiTab() {
+		this.activeTab = "openclaw-webui";
+		this.isVisible = true;
+		this.isSkillsOnlyMode = false;
+	}
+
 	setMode(mode: HtmlPreviewMode) {
 		this.mode = mode;
 	}
