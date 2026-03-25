@@ -38,7 +38,6 @@
 	});
 	let localTelegram = $state({
 		botToken: codeAgentGlobalConfigsState.telegram.accounts.default.botToken,
-		allowFrom: [...codeAgentGlobalConfigsState.telegram.allowFrom],
 	});
 
 	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
@@ -53,7 +52,6 @@
 					accounts: {
 						default: { botToken: localTelegram.botToken },
 					},
-					allowFrom: localTelegram.allowFrom,
 				})
 				.apply();
 			await window.electronAPI.openClawService.applyOpenClawChannelConfig();
@@ -252,16 +250,6 @@
 						placeholder="请输入Bot Token"
 						bind:value={localTelegram.botToken}
 						class="[&>label]:text-label-fg"
-					/>
-					<!-- TONE: Allow From is disable -->
-					<SettingInputField
-						label="Allow From"
-						placeholder="请输入allowFrom,使用','分割"
-						type="password"
-						value={localTelegram.allowFrom.join(",")}
-						oninput={(e) =>
-							(localTelegram.allowFrom = (e.target as HTMLInputElement).value.split(","))}
-						class="[&>label]:text-label-fg hidden"
 					/>
 					<div class="flex items-center justify-between">
 						<div class=" text-muted-foreground flex items-center gap-2 text-xs">

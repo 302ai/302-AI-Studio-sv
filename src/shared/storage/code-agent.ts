@@ -127,11 +127,11 @@ export const codeAgentGlobalConfigs = type({
 	qqbot: type({ appId: "string", clientSecret: "string" }),
 	wecom: type({ botId: "string", secret: "string" }),
 	telegram: type({
-		allowFrom: "string[]",
 		accounts: type({
 			default: Accounts,
 		}),
 	}),
+	_version: "number?",
 });
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
 

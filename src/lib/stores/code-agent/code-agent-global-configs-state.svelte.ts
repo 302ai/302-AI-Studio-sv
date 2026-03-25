@@ -20,7 +20,7 @@ function getInitialData() {
 		dingtalk: { clientId: "", clientSecret: "" },
 		qqbot: { appId: "", clientSecret: "" },
 		wecom: { botId: "", secret: "" },
-		telegram: { allowFrom: [], accounts: { default: { botToken: "" } } },
+		telegram: { accounts: { default: { botToken: "" } } },
 	};
 	return initialData;
 }
@@ -152,10 +152,6 @@ class CodeAgentGlobalConfigsState {
 
 	updateTelegramBotToken(botToken: string) {
 		this.#updateState({ telegram: { ...this.telegram, accounts: { default: { botToken } } } });
-	}
-
-	updateTelegramAllowFrom(allowFrom: string[]) {
-		this.#updateState({ telegram: { ...this.telegram, allowFrom } });
 	}
 
 	batchUpdater() {

@@ -21,6 +21,7 @@ import {
 	windowService,
 } from "./services";
 import { preferencesStorage } from "./services/storage-service/preferences-storage";
+import { codeAgentGlobalConfigsStorage } from "./services/storage-service/code-agent/code-agent-storage";
 import { UpdaterService } from "./services/updater-service";
 import { setupNetworkInterceptor } from "./utils/network-interceptor";
 
@@ -164,6 +165,7 @@ async function init() {
 
 	// Run storage migrations
 	await preferencesStorage.ensureMigrated();
+	await codeAgentGlobalConfigsStorage.ensureMigrated();
 
 	// Initialize plugin system
 	try {
