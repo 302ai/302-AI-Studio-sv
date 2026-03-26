@@ -107,7 +107,11 @@
 			/>
 		{:else}
 			<Badge variant="secondary" class="bg-primary/20 text-primary font-light">
-				{selectedMode === "vibe" ? m.title_code_agent() : m.title_chat_mode()}
+				{selectedMode === "vibe"
+					? m.title_code_agent()
+					: m.title_chat_mode()}-{codeAgentState.type === "local"
+					? m.title_local()
+					: m.title_remote()}
 			</Badge>
 		{/if}
 

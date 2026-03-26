@@ -142,8 +142,11 @@
 		</div>
 		<!-- Info Section -->
 		<div class="flex min-w-0 flex-1 flex-col gap-1">
-			<div class="flex items-start justify-between gap-2">
-				<h3 class="truncate font-semibold leading-tight text-foreground" title={skill.name}>
+			<div class="flex items-center justify-between gap-2 sm:items-start">
+				<h3
+					class="min-w-0 flex-1 truncate font-semibold leading-tight text-foreground"
+					title={skill.name}
+				>
 					{skill.name}
 				</h3>
 				{#if showActionArea}
