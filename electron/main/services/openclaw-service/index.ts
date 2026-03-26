@@ -1,18 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { isWin } from "@electron/main/constants";
 import { SUPPORTED_CHANNELS, WIN_SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
-import type { OpenClawWeixinLoginMsg } from "@shared/types";
-import { spawn, type ChildProcessWithoutNullStreams } from "child_process";
 import { type IpcMainInvokeEvent } from "electron";
 import { get, isUndefined, merge, pick, set } from "es-toolkit/compat";
 import fs from "fs/promises";
-import * as readline from "node:readline";
 import { getOpenClawConfigPath, getRuntimeComposeDir } from "../../utils/local-vibe-utils";
-import { broadcastService } from "../broadcast-service";
 import { localVibeService } from "../local-vibe-service";
 import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
 import { openClawConfigStorage } from "../storage-service/openclaw/openclaw-config-storage";
 import { tabService } from "../tab-service";
+import WeChatChannel from "./wechat";
 
 type OpenClawBindingConfig = {
 	agentId: string;
@@ -217,113 +213,10 @@ export class OpenClawService {
 		tabView.webContents.loadURL(url);
 	}
 
-	commandProcess: ChildProcessWithoutNullStreams | null = null;
-
-	private executeCommand = async (
-		command: string,
-		stdoutFn: (d: any) => void,
-		closeFn?: () => void,
-	) => {
-		if (this.commandProcess) {
-			const old = this.commandProcess;
-			await new Promise((resolve) => {
-				old.once("close", resolve);
-				try {
-					process.kill(-old.pid!, "SIGINT");
-				} catch {
-					resolve(null);
-				}
-			});
-		}
-
-		const proc = spawn("podman", ["exec", "-i", "local-cc-api", "bash", "-c", command], {
-			detached: true,
-		});
-		this.commandProcess = proc;
-
-		const rl = readline.createInterface({
-			input: proc.stdout,
-			crlfDelay: Infinity,
-		});
-
-		rl.on("line", stdoutFn);
-		proc.on("close", (code) => {
-			console.log(`openclaw: Child process exited with code ${code}`);
-			proc.stdout.removeAllListeners();
-			proc.stderr.removeAllListeners();
-			if (this.commandProcess === proc) {
-				closeFn?.();
-				this.commandProcess = null;
-			}
-		});
-	};
-
-	private _hasOpenClawChannel = async (channelName: string) => {
-		const command = () => {
-			return new Promise<string>((resolve, _) => {
-				let res = "";
-				this.executeCommand(
-					"openclaw channels list",
-					(line) => {
-						res += line;
-					},
-					() => {
-						resolve(res);
-					},
-				);
-			});
-		};
-
-		const stdout = await command();
-		return stdout.includes(channelName);
-	};
+	wechatChannel = new WeChatChannel();
 
 	async connectWechat(_event: IpcMainInvokeEvent) {
-		// "openclaw channels login --channel openclaw-weixin"
-		// "openclaw channels list"
-		// npx -y @tencent-weixin/openclaw-weixin-cli install
-
-		const has = await this._hasOpenClawChannel("openclaw-weixin");
-		let command = "openclaw channels login --channel openclaw-weixin";
-		if (!has) {
-			command = "npx -y @tencent-weixin/openclaw-weixin-cli install";
-		}
-
-		this.executeCommand(
-			command,
-			(line: any) => {
-				const val: string = line.toString();
-				console.log("openclaw-weixin:login:", val);
-				let data: OpenClawWeixinLoginMsg = {
-					type: "unknown",
-					data: val,
-				};
-				if (val.includes("https://liteapp.weixin.qq.com")) {
-					data = {
-						type: "url",
-						data: val,
-					};
-				} else if (val.includes("微信连接成功")) {
-					data = {
-						type: "ok",
-						data: val,
-					};
-				} else if (val.includes("插件安装失败，请手动执行")) {
-					data = {
-						type: "error",
-						data: val,
-					};
-				}
-
-				broadcastService.broadcastChannelToAll("openclaw-weixin:login", data);
-			},
-			() => {
-				broadcastService.broadcastChannelToAll("openclaw-weixin:login", {
-					type: "close",
-					data: "",
-				});
-			},
-		);
+		this.wechatChannel.connect();
 	}
 }
 

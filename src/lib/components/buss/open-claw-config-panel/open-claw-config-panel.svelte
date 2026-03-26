@@ -65,7 +65,6 @@
 	});
 
 	const { className }: Props = $props();
-
 	let wechartElm = $state<HTMLDivElement | null>(null);
 	const qrCode = new QRCodeStyling();
 	onMount(() => {
@@ -73,7 +72,10 @@
 			qrCode.append(wechartElm);
 		}
 	});
-	let wechartLoading = $state(false);
+	let wechartLoading = $state({
+		state: false,
+		text: "",
+	});
 	let wechartQrUrl = $state("");
 	const wechatQRListener = new Map([
 		[
@@ -99,7 +101,7 @@
 						type: "rounded",
 					},
 				});
-				wechartLoading = false;
+				wechartLoading.state = false;
 				{
 					await tick();
 					if (!wechartElm) return;
@@ -122,6 +124,12 @@
 				window.electronAPI.openClawService.connectWechat();
 			},
 		],
+		[
+			"install",
+			(_: OpenClawWeixinLoginMsg) => {
+				wechartLoading.text = m.plugins_install_installing();
+			},
+		],
 	]);
 
 	$effect(() => {
@@ -140,7 +148,8 @@
 	});
 
 	const handleWechartTrigger = (signal: string) => {
-		wechartLoading = signal.length > 0 && wechartQrUrl.length === 0;
+		if (signal.length <= 0) return;
+		wechartLoading.state = signal.length > 0 && wechartQrUrl.length === 0;
 		window.electronAPI.openClawService.connectWechat();
 	};
 </script>
@@ -175,7 +184,7 @@
 					/>
 					<div class="flex items-center justify-between">
 						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-							<a href="https://open.feishu.cn/app?lang=zh-CN" class="text-primary hover:underline"
+							<a href="https://open.feishu.cn/app?lang=zh-CN" class="text-primary hover:underline">
 								>{m.open_claw_feishu_get_id_and_secret()}</a
 							>
 							<div class="text-muted-foreground/50">|</div>
@@ -340,14 +349,14 @@
 					<div
 						class="w-36 h-36 mt-1 relative flex flex-col items-center justify-center bg-muted rounded-md"
 					>
-						{#if wechartLoading}
+						{#if wechartLoading.state}
 							<!-- <LoaderCircle class="h-8 w-8 animate-spin text-muted-foreground" /> -->
 							<LdrsLoader type="line-spinner" />
-							<span class="text-label-fg mt-1 text-xs">{m.open_claw_wechat_loading_hint()}</span>
+							<span class="text-label-fg mt-1 text-xs">{wechartLoading.text}</span>
 						{/if}
 						<div
 							bind:this={wechartElm}
-							class={`w-full h-full ${wechartLoading ? "hidden" : ""}`}
+							class={`w-full h-full ${wechartLoading.state ? "hidden" : ""}`}
 						></div>
 					</div>
 					<div class="flex items-center justify-between">
