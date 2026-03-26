@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ButtonWithTooltip from "$lib/components/buss/button-with-tooltip/button-with-tooltip.svelte";
 	import Badge from "$lib/components/ui/badge/badge.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import Checkbox from "$lib/components/ui/checkbox/checkbox.svelte";
@@ -8,14 +9,16 @@
 	import { generalSettings } from "$lib/stores/general-settings.state.svelte";
 	import { cn } from "$lib/utils";
 	import { isOpenClawBundledSkill } from "$lib/utils/skill";
-	import { Ellipsis, Loader2, Zap } from "@lucide/svelte";
+	import { Ellipsis, Loader2, Star, Zap } from "@lucide/svelte";
 	import type { Skill } from "@shared/types";
 
 	interface Props {
 		skill: Skill;
 		isBuiltin: boolean;
+		is_favorite?: boolean;
 		isUsed?: boolean;
 		downloading?: boolean;
+		favoriteLoading?: boolean;
 		selectable?: boolean;
 		selected?: boolean;
 		onSelect?: (skill: Skill) => void;
@@ -25,14 +28,17 @@
 		onEdit?: (skill: Skill) => void;
 		onDownload?: (skill: Skill) => void;
 		onDelete?: (skill: Skill) => void;
+		onFavoriteToggle?: (skill: Skill) => void;
 		onForceUseToggle?: (skill: Skill, forceUse: boolean) => void;
 	}
 
 	const {
 		skill,
 		isBuiltin,
+		is_favorite = false,
 		isUsed = false,
 		downloading = false,
+		favoriteLoading = false,
 		selectable = false,
 		selected = false,
 		onSelect,
@@ -42,6 +48,7 @@
 		onEdit,
 		onDownload,
 		onDelete,
+		onFavoriteToggle,
 		onForceUseToggle,
 	}: Props = $props();
 
@@ -50,7 +57,9 @@
 	const canDownload = $derived(!isOpenClawBundled && !!onDownload);
 	const canEdit = $derived(!isBuiltin && !isOpenClawBundled && !!onEdit);
 	const canDelete = $derived(!isBuiltin && !isOpenClawBundled && !!onDelete);
+	const showFavoriteButton = $derived(!!onFavoriteToggle);
 	const showMenu = $derived(canEdit || canDownload || canDelete);
+	let isHovered = $state(false);
 
 	const description = $derived(
 		generalSettings.language === "zh" && skill.description_zh
@@ -60,11 +69,16 @@
 
 	const skillTags = $derived.by(() => {
 		const tags: string[] = [];
+		if (isBuiltin) {
+			tags.push(m.plugins_badge_builtin());
+		}
 		if (isOpenClawBundled) {
 			tags.push(m.skills_openclaw_bundled());
 		}
 		return tags;
 	});
+
+	const shouldShowFavoriteButton = $derived(is_favorite || isHovered);
 
 	function handleCardClick() {
 		// Always go to detail page when clicking the card
@@ -85,6 +99,11 @@
 		onRemove?.(skill);
 	}
 
+	function handleFavoriteClick(e: MouseEvent) {
+		e.stopPropagation();
+		onFavoriteToggle?.(skill);
+	}
+
 	function handleForceUseChange(checked: boolean) {
 		onForceUseToggle?.(skill, checked);
 	}
@@ -97,9 +116,11 @@
 		selected ? "border-primary bg-primary/5" : "border-border hover:border-primary/50",
 	)}
 	onclick={handleCardClick}
+	onmouseenter={() => (isHovered = true)}
+	onmouseleave={() => (isHovered = false)}
 >
 	<!-- Selection Checkbox -->
-	{#if selectable && !isOpenClawBundled}
+	{#if selectable}
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
@@ -120,52 +141,77 @@
 		</div>
 		<!-- Info Section -->
 		<div class="flex min-w-0 flex-1 flex-col gap-1">
-			<div class="flex items-center justify-between gap-2">
+			<div class="flex items-start justify-between gap-2">
 				<h3 class="truncate font-semibold leading-tight text-foreground" title={skill.name}>
 					{skill.name}
 				</h3>
-				<!-- Menu Button -->
-				{#if showMenu}
-					<!-- svelte-ignore a11y_click_events_have_key_events -->
-					<!-- svelte-ignore a11y_no_static_element_interactions -->
-					<div class="shrink-0" onclick={(e) => e.stopPropagation()}>
-						<DropdownMenu.Root>
-							<DropdownMenu.Trigger>
-								<Button
-									variant="ghost"
-									size="icon-sm"
-									class="h-7 w-7 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
-								>
-									<Ellipsis class="h-4 w-4" />
-								</Button>
-							</DropdownMenu.Trigger>
-							<DropdownMenu.Content align="end" class="w-32">
-								{#if canEdit}
-									<DropdownMenu.Item onclick={() => onEdit?.(skill)}>
-										{m.text_button_edit()}
-									</DropdownMenu.Item>
-								{/if}
-								{#if canDownload}
-									<DropdownMenu.Item
-										disabled={downloading}
-										onclick={() => onDownload?.(skill)}
-										class={downloading ? "opacity-50" : ""}
+				<div class="flex shrink-0 items-center gap-1">
+					{#if showFavoriteButton}
+						<ButtonWithTooltip
+							tooltip={is_favorite ? m.title_button_unstar() : m.title_button_star()}
+							variant="ghost"
+							size="icon"
+							disabled={favoriteLoading}
+							class={cn(
+								"size-7 transition-opacity hover:!bg-transparent",
+								shouldShowFavoriteButton ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+							)}
+							onclick={handleFavoriteClick}
+						>
+							{#if favoriteLoading}
+								<Loader2 class="h-4 w-4 animate-spin text-muted-foreground" />
+							{:else}
+								<Star
+									class={cn(
+										"h-4 w-4",
+										is_favorite
+											? "fill-star-favorite text-star-favorite"
+											: "fill-star-unfavorite-inactive text-star-unfavorite-inactive",
+									)}
+								/>
+							{/if}
+						</ButtonWithTooltip>
+					{/if}
+					{#if showMenu}
+						<div class="shrink-0">
+							<DropdownMenu.Root>
+								<DropdownMenu.Trigger>
+									<Button
+										variant="ghost"
+										size="icon-sm"
+										class="h-7 w-7 text-muted-foreground opacity-0 transition-opacity hover:text-foreground group-hover:opacity-100"
 									>
-										{#if downloading}
-											<Loader2 class="mr-2 h-4 w-4 animate-spin" />
-										{/if}
-										{m.skills_download()}
-									</DropdownMenu.Item>
-								{/if}
-								{#if canDelete}
-									<DropdownMenu.Item class="text-destructive" onclick={() => onDelete?.(skill)}>
-										{m.text_button_delete()}
-									</DropdownMenu.Item>
-								{/if}
-							</DropdownMenu.Content>
-						</DropdownMenu.Root>
-					</div>
-				{/if}
+										<Ellipsis class="h-4 w-4" />
+									</Button>
+								</DropdownMenu.Trigger>
+								<DropdownMenu.Content align="end" class="w-32">
+									{#if canEdit}
+										<DropdownMenu.Item onclick={() => onEdit?.(skill)}>
+											{m.text_button_edit()}
+										</DropdownMenu.Item>
+									{/if}
+									{#if canDownload}
+										<DropdownMenu.Item
+											disabled={downloading}
+											onclick={() => onDownload?.(skill)}
+											class={downloading ? "opacity-50" : ""}
+										>
+											{#if downloading}
+												<Loader2 class="mr-2 h-4 w-4 animate-spin" />
+											{/if}
+											{m.skills_download()}
+										</DropdownMenu.Item>
+									{/if}
+									{#if canDelete}
+										<DropdownMenu.Item class="text-destructive" onclick={() => onDelete?.(skill)}>
+											{m.text_button_delete()}
+										</DropdownMenu.Item>
+									{/if}
+								</DropdownMenu.Content>
+							</DropdownMenu.Root>
+						</div>
+					{/if}
+				</div>
 			</div>
 			{#if skillTags.length > 0}
 				<div class="flex flex-wrap items-center gap-1.5">
