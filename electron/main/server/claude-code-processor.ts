@@ -32,6 +32,8 @@
  * The stream continues naturally after tool-input-available and tool-output-available.
  */
 
+import { isJSON } from "es-toolkit";
+
 interface ClaudeCodeEvent {
 	type: string;
 	subtype?: string;
@@ -294,18 +296,7 @@ class ClaudeCodeProcessor {
 
 		// Open Claw Compatible with Cloud Code mode
 		if (data.model === "openclaw") {
-			try {
-				if (data.choices) {
-					const choice = data.choices![0];
-					const tmpDataStr = JSON.parse(choice.delta.content || "") as string;
-					const tmpData = JSON.parse(tmpDataStr) as ClaudeCodeEvent;
-					if (tmpData.type == "pre_deploy_check") {
-						data = tmpData;
-					}
-				}
-			} catch (_) {
-				// is not json
-			}
+			data = this.handleOpenClawModelEvent(data) ?? data;
 		}
 
 		// Handle pre_deploy_check event
@@ -367,6 +358,21 @@ class ClaudeCodeProcessor {
 			JSON.stringify(data).slice(0, 200),
 		);
 		return null;
+	}
+
+	private handleOpenClawModelEvent(data: ClaudeCodeEvent): ClaudeCodeEvent | null {
+		const choices = data.choices;
+		if (!choices) return null;
+
+		const contentJson = choices[0].delta.content ?? "";
+		if (!isJSON(contentJson)) return null;
+
+		const contentObj = JSON.parse(contentJson);
+		if (contentObj.type === "result" || contentObj.type === "pre_deploy_check") {
+			data = contentObj;
+		}
+
+		return data;
 	}
 
 	/**
@@ -481,14 +487,16 @@ class ClaudeCodeProcessor {
 	}
 
 	private handleResultEvent(data: ClaudeCodeEvent): string | null {
-		const contentStr = data.choices?.[0]?.delta?.content ?? data.result ?? "";
+		const contentStr = data.choices?.[0]?.delta?.content ?? data.result ?? data.content ?? "";
 
 		// Extract result files from content
-		// Matches both plain and backtick-wrapped paths:
-		//   - /home/user/workspace/file.html
-		//   - `/home/user/workspace/file.html` — description
+		// Matches various markers: -, *, +, or just the path at the start of a line
 		const resultFiles: string[] = [];
-		const fileRegex = /^- `?(\/[^\s`]+)`?/gm;
+		// Improved regex:
+		// 1. ^\s*[-*+•]?\s* : Matches optional list markers with optional indentation
+		// 2. `? : Matches optional leading backtick
+		// 3. (\/[^\s`（():]+) : Captures the path, stopping at whitespace, backticks, or common delimiters (including Chinese brackets and colons)
+		const fileRegex = /^\s*[-*+•]?\s*`?(\/[^\s`（():]+)`?/gm;
 		let match;
 		while ((match = fileRegex.exec(contentStr)) !== null) {
 			resultFiles.push(match[1]);
@@ -551,44 +559,6 @@ class ClaudeCodeProcessor {
 		}
 
 		return metadataStr;
-	}
-
-	/**
-	 * Handle pre-formatted message-metadata events from remote 302.AI API.
-	 * Remote mode sends events already in AI SDK UIMessageStream format.
-	 * We need to extract result_files from content and store result metadata
-	 * for later merging with pre_deploy_check events.
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	private handlePreFormattedMetadata(data: any): string | null {
-		const metadata = data.metadata;
-		if (!metadata) {
-			return `data: ${JSON.stringify(data)}`;
-		}
-
-		// If this is a result metadata, extract result_files from content
-		if (metadata.type === "result" && metadata.content) {
-			const resultFiles: string[] = [];
-			const fileRegex = /^- `?(\/[^\s`]+)`?/gm;
-			let match;
-			while ((match = fileRegex.exec(metadata.content)) !== null) {
-				resultFiles.push(match[1]);
-			}
-			if (resultFiles.length > 0 && !metadata.result_files) {
-				metadata.result_files = resultFiles;
-			}
-
-			// Check if this metadata includes preDeploy info
-			if (metadata.preDeploy) {
-				// Merge result_files into the metadata and store
-				this.resultMetadata = { ...metadata };
-			} else {
-				// Store for later merging with pre_deploy_check
-				this.resultMetadata = { ...metadata };
-			}
-		}
-
-		return `data: ${JSON.stringify(data)}`;
 	}
 
 	/**
