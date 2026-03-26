@@ -233,6 +233,61 @@ export async function deleteSkill(request: DeleteSkillRequest): Promise<DeleteSk
 	}
 }
 
+export const skillFavoriteRequestSchema = type({
+	skill_list: "string[]",
+});
+export type SkillFavoriteRequest = typeof skillFavoriteRequestSchema.infer;
+export const skillFavoriteResponseSchema = type({
+	success: "boolean",
+});
+export type SkillFavoriteResponse = typeof skillFavoriteResponseSchema.infer;
+
+export async function addSkillFavorite(
+	request: SkillFavoriteRequest,
+): Promise<SkillFavoriteResponse> {
+	try {
+		const kyInstance = await getCodeAgentKy();
+		const response = await kyInstance
+			.post("302/claude-code/skills/favorite/add", {
+				json: request,
+			})
+			.json();
+
+		const validated = skillFavoriteResponseSchema(response);
+		if (validated instanceof type.errors) {
+			console.error("Failed to validate add skill favorite response:", validated.summary);
+			throw new Error("Invalid response format from add skill favorite API");
+		}
+		return validated;
+	} catch (error) {
+		console.error("Failed to add skill favorite:", error);
+		throw error;
+	}
+}
+
+export async function cancelSkillFavorite(
+	request: SkillFavoriteRequest,
+): Promise<SkillFavoriteResponse> {
+	try {
+		const kyInstance = await getCodeAgentKy();
+		const response = await kyInstance
+			.post("302/claude-code/skills/favorite/cancel", {
+				json: request,
+			})
+			.json();
+
+		const validated = skillFavoriteResponseSchema(response);
+		if (validated instanceof type.errors) {
+			console.error("Failed to validate cancel skill favorite response:", validated.summary);
+			throw new Error("Invalid response format from cancel skill favorite API");
+		}
+		return validated;
+	} catch (error) {
+		console.error("Failed to cancel skill favorite:", error);
+		throw error;
+	}
+}
+
 // Sync Skills API
 export const syncSkillsRequestSchema = type({
 	sandbox_id: "string",

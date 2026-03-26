@@ -535,6 +535,7 @@ export function registerIpcHandlers() {
 	ipcMain.handle("openClawService:handleOpenClawWebUiReloadIpc", (event, tabId) =>
 		openClawService.handleOpenClawWebUiReloadIpc(event, tabId),
 	);
+	ipcMain.handle("openClawService:connectWechat", (event) => openClawService.connectWechat(event));
 
 	// providerService service registration
 	ipcMain.handle("providerService:handle302AIProviderChange", (event, apiKey) =>
@@ -750,6 +751,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("openClawService:applyOpenClawChannelConfig");
 	ipcMain.removeHandler("openClawService:applyOpenClawBindingsConfig");
 	ipcMain.removeHandler("openClawService:handleOpenClawWebUiReloadIpc");
+	ipcMain.removeHandler("openClawService:connectWechat");
 	ipcMain.removeHandler("providerService:handle302AIProviderChange");
 	ipcMain.removeHandler("providerService:get302AIApiKey");
 	ipcMain.removeHandler("threadService:addThread");

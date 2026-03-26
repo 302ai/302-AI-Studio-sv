@@ -1,0 +1,15 @@
+{
+	"version": 1,
+	"skills": {
+		"electron": {
+			"source": "teachingai/full-stack-skills",
+			"sourceType": "github",
+			"computedHash": "50f22debeb01a02b8bc073e0a1bfb9ab215f724148db0df8668b8ae90544dd31"
+		},
+		"sveltekit-svelte5-tailwind-skill": {
+			"source": "claude-skills/sveltekit-svelte5-tailwind-skill",
+			"sourceType": "github",
+			"computedHash": "bb72a52a2c415aa8743bf3146dd615f9084e17a8a05e2198f8c3ba23a8053b8b"
+		}
+	}
+}

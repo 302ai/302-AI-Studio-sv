@@ -8,6 +8,7 @@ import { localVibeService } from "../local-vibe-service";
 import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
 import { openClawConfigStorage } from "../storage-service/openclaw/openclaw-config-storage";
 import { tabService } from "../tab-service";
+import WeChatChannel from "./wechat";
 
 type OpenClawBindingConfig = {
 	agentId: string;
@@ -210,6 +211,12 @@ export class OpenClawService {
 		console.log("[OpenClawService] Reloading OpenClaw Web UI with URL:", url);
 		if (!url) return;
 		tabView.webContents.loadURL(url);
+	}
+
+	wechatChannel = new WeChatChannel();
+
+	async connectWechat(_event: IpcMainInvokeEvent) {
+		this.wechatChannel.connect();
 	}
 }
 

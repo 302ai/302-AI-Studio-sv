@@ -20,6 +20,7 @@ export const skill = type({
 	description: "string",
 	description_zh: "string",
 	isBuiltin: "boolean?",
+	is_favorite: "boolean?",
 	source: "string?",
 	bundled: "boolean?",
 	content: "string?",

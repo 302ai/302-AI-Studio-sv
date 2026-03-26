@@ -198,6 +198,17 @@
 		);
 	}
 
+	function updateSkillFavoriteState(skillName: string, is_favorite: boolean) {
+		const updateSkills = (skills: Skill[]) =>
+			skills.map((skill) => (skill.name === skillName ? { ...skill, is_favorite } : skill));
+
+		skillsData = {
+			...skillsData,
+			user_skills: updateSkills(skillsData.user_skills),
+			builtin_skills: updateSkills(skillsData.builtin_skills),
+		};
+	}
+
 	async function loadSkills() {
 		const data = await codeAgentState.getSkillList(false);
 		skillsData = data;
@@ -1416,6 +1427,7 @@
 											builtinSkills={skillsData.builtin_skills}
 											loading={codeAgentState.isLoadingSkills}
 											onRefresh={loadSkills}
+											onFavoriteChange={updateSkillFavoriteState}
 										/>
 									{:else if skillsPanelState.currentView.type === "detail"}
 										<SkillDetailView

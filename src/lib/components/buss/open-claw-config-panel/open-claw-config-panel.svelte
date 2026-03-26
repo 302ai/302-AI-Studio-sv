@@ -12,6 +12,11 @@
 	import { m } from "$lib/paraglide/messages";
 	import { codeAgentGlobalConfigsState } from "$lib/stores/code-agent";
 	import { RefreshCw } from "@lucide/svelte";
+	import type { OpenClawWeixinLoginMsg } from "@shared/types";
+	import QRCodeStyling from "qr-code-styling";
+	import { onMount, tick } from "svelte";
+	import { toast } from "svelte-sonner";
+	import { LdrsLoader } from "../ldrs-loader";
 	import SettingInputField from "../settings/setting-input-field.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
 	import { ApplyOpenClawChannelConfigConfirm } from "./hooks";
@@ -60,6 +65,97 @@
 	});
 
 	const { className }: Props = $props();
+	let wechartElm = $state<HTMLDivElement | null>(null);
+	const qrCode = new QRCodeStyling();
+	onMount(() => {
+		if (wechartElm) {
+			qrCode.append(wechartElm);
+		}
+	});
+	let wechartLoading = $state({
+		state: false,
+		text: "",
+	});
+	let wechartQrUrl = $state("");
+	const wechatQRListener = new Map([
+		[
+			"ok",
+			(_: OpenClawWeixinLoginMsg) => {
+				toast.success(m.open_claw_wechat_add_success());
+			},
+		],
+		["error", (_: OpenClawWeixinLoginMsg) => {}],
+		[
+			"url",
+			async (event: OpenClawWeixinLoginMsg) => {
+				wechartQrUrl = event.data;
+				qrCode.update({
+					width: 200,
+					height: 200,
+					type: "canvas",
+					data: event.data,
+					image: "/icon.png",
+					margin: 0,
+					dotsOptions: {
+						color: "#000",
+						type: "rounded",
+					},
+				});
+				wechartLoading.state = false;
+				{
+					await tick();
+					if (!wechartElm) return;
+					const canvas = wechartElm.querySelector("canvas");
+					if (canvas) {
+						canvas.className = "w-full h-full";
+					}
+				}
+			},
+		],
+		[
+			"unknown",
+			(event: OpenClawWeixinLoginMsg) => {
+				console.log("unknown", event);
+			},
+		],
+		[
+			"close",
+			(event: OpenClawWeixinLoginMsg) => {
+				if (event.data != "manual") {
+					window.electronAPI.openClawService.connectWechat();
+				}
+			},
+		],
+		[
+			"install",
+			(_: OpenClawWeixinLoginMsg) => {
+				wechartLoading.text = m.plugins_install_installing();
+			},
+		],
+	]);
+
+	$effect(() => {
+		const unsubscribe = window.electronAPI.openClaw.onWeiXinLoginInformation((event) => {
+			const typ = event.type;
+
+			const fn = wechatQRListener.has(typ)
+				? wechatQRListener.get(typ)
+				: wechatQRListener.get("unknown");
+			fn?.(event);
+		});
+
+		return () => {
+			unsubscribe();
+		};
+	});
+
+	let wechartTriggerSignal = 0;
+	const handleWechartTrigger = (signal: string) => {
+		if (signal.length <= 0 || wechartTriggerSignal >= 1) return;
+		wechartLoading.state = signal.length > 0 && wechartQrUrl.length === 0;
+		window.electronAPI.openClawService.connectWechat();
+		wechartTriggerSignal++;
+	};
 </script>
 
 {#snippet feishu()}
@@ -92,7 +188,7 @@
 					/>
 					<div class="flex items-center justify-between">
 						<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-							<a href="https://open.feishu.cn/app?lang=zh-CN" class="text-primary hover:underline"
+							<a href="https://open.feishu.cn/app?lang=zh-CN" class="text-primary hover:underline">
 								>{m.open_claw_feishu_get_id_and_secret()}</a
 							>
 							<div class="text-muted-foreground/50">|</div>
@@ -236,6 +332,52 @@
 	</Accordion>
 {/snippet}
 
+{#snippet wechart()}
+	<Accordion
+		type="single"
+		class="w-full rounded-settings-item"
+		onValueChange={handleWechartTrigger}
+	>
+		<AccordionItem value="wechart" class="border-b-0">
+			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+				<Label class=" font-normal no-underline cursor-pointer"
+					>{m.open_claw_channel_wechat()}</Label
+				>
+			</AccordionTrigger>
+			<AccordionContent class="pb-0 pt-2 space-y-2">
+				<div class="rounded-lg border p-4 space-y-4">
+					<!-- svelte-ignore a11y_label_has_associated_control -->
+					<label class="text-sm text-label-fg font-medium"
+						>{m.open_claw_wechat_scan_qrcode_hint()}</label
+					>
+					<div
+						class="w-36 h-36 mt-1 relative flex flex-col items-center justify-center bg-muted rounded-md"
+					>
+						{#if wechartLoading.state}
+							<!-- <LoaderCircle class="h-8 w-8 animate-spin text-muted-foreground" /> -->
+							<LdrsLoader type="line-spinner" />
+							<span class="text-label-fg mt-1 text-xs">{wechartLoading.text}</span>
+						{/if}
+						<div
+							bind:this={wechartElm}
+							class={`w-full h-full ${wechartLoading.state ? "hidden" : ""}`}
+						></div>
+					</div>
+					<div class="flex items-center justify-between">
+						<div class="text-muted-foreground flex items-center gap-2 text-xs">
+							<a
+								href="https://studio.302.ai/zh/docs/advanced/open-claw/wecom"
+								class="text-primary hover:underline"
+								>{m.open_claw_feishu_view_deployment_tutorial()}</a
+							>
+						</div>
+					</div>
+				</div>
+			</AccordionContent>
+		</AccordionItem>
+	</Accordion>
+{/snippet}
+
 {#snippet telegram()}
 	<Accordion type="single" class="w-full rounded-settings-item">
 		<AccordionItem value="telegram" class="border-b-0">
@@ -282,6 +424,7 @@
 			{@render dingtalk()}
 			{@render qqbot()}
 			{@render wecom()}
+			{@render wechart()}
 			{@render telegram()}
 			<div class="flex flex-col items-end">
 				<Button class="w-fit" onclick={() => (confirmDialogOpen = true)}>

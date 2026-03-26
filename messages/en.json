@@ -1411,5 +1411,12 @@
 	"openclaw_webui_failed_to_load": "Unable to load OpenClaw admin page",
 	"openclaw_webui_ensure_running": "Please make sure the OpenClaw service is running",
 	"auto_fix_deploy_failure": "Automatic Repair Deployment Failure",
-	"skills_openclaw_bundled": "OC Built-in"
+	"skills_openclaw_bundled": "OC Built-in",
+	"open_claw_wechat_add_success": "WeChat added successfully",
+	"open_claw_channel_wechat": "WeChat",
+	"open_claw_wechat_scan_qrcode_hint": "Scan the QR code with WeChat",
+	"open_claw_wechat_loading_hint": "Coming soon...",
+	"open_claw_channel_telegram": "Telegram",
+	"open_claw_telegram_bot_token": "Bot Token",
+	"open_claw_telegram_placeholder_bot_token": "Enter Bot Token"
 }

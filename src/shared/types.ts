@@ -226,3 +226,8 @@ export interface FileNode {
 	type: "file" | "directory";
 	children?: FileNode[];
 }
+
+export type OpenClawWeixinLoginMsg = {
+	type: string;
+	data: string;
+};
