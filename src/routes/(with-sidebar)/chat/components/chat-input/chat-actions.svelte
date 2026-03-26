@@ -531,29 +531,17 @@
 		{@render menuButton({
 			icon: MonitorCog,
 			label: m.label_tab_manage(),
-			active: agentPreviewState.isVisible && agentPreviewState.activeTab === "openclaw-webui",
 			disabled: disabled,
 			onclick: handleOpenClawWebUiToggle,
 		})}
 	{:else}
 		<ButtonWithTooltip
-			class={cn(
-				"hover:!bg-chat-action-hover",
-				agentPreviewState.isVisible &&
-					agentPreviewState.activeTab === "openclaw-webui" &&
-					"!bg-chat-action-active hover:!bg-chat-action-active",
-			)}
+			class="hover:!bg-chat-action-hover"
 			tooltip={m.label_tab_manage()}
 			onclick={handleOpenClawWebUiToggle}
 			{disabled}
 		>
-			<MonitorCog
-				class={cn(
-					agentPreviewState.isVisible &&
-						agentPreviewState.activeTab === "openclaw-webui" &&
-						"!text-chat-action-active-fg",
-				)}
-			/>
+			<MonitorCog />
 		</ButtonWithTooltip>
 	{/if}
 {/snippet}
