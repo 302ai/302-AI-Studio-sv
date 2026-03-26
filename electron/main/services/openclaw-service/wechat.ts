@@ -17,6 +17,29 @@ class WeChatChannel {
 	private isConnecting = false;
 	private isManual = false;
 
+	private isMissingProcessError = (error: unknown): error is NodeJS.ErrnoException => {
+		return error instanceof Error && "code" in error && error.code === "ESRCH";
+	};
+
+	private stopCommandProcess = async (proc: ChildProcessWithoutNullStreams) => {
+		if (proc.killed || proc.pid == null) return;
+
+		if (process.platform === "win32") {
+			proc.kill("SIGTERM");
+			await once(proc, "close");
+			return;
+		}
+
+		try {
+			process.kill(-proc.pid, "SIGTERM");
+			await once(proc, "close");
+		} catch (error) {
+			if (!this.isMissingProcessError(error)) {
+				throw error;
+			}
+		}
+	};
+
 	private executeCommand = async (
 		command: string,
 		stdoutFn: (d: string) => void,
@@ -26,15 +49,14 @@ class WeChatChannel {
 			if (this.commandProcess) {
 				const old = this.commandProcess;
 				if (!old.killed) {
-					process.kill(-old.pid!, "SIGTERM");
-					await once(old, "close");
+					await this.stopCommandProcess(old);
 					this.commandProcess = null;
 					this.isManual = true;
 				}
 			}
 
 			const proc = spawn("podman", ["exec", "-i", "local-cc-api", "bash", "-c", command], {
-				detached: true,
+				detached: process.platform !== "win32",
 			});
 			this.commandProcess = proc;
 
