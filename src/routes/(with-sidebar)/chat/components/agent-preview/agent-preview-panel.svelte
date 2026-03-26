@@ -1141,7 +1141,7 @@
 					>
 						<FileTree
 							sandboxId={currentSandboxId}
-							workspacePath={claudeCodeSandboxState.currentSessionWorkspacePath}
+							workspacePath={codeAgentState.currentWorkspacePath}
 							onFileSelect={handleFileSelect}
 							{refreshTrigger}
 							onFileDelete={handleFileDelete}

@@ -1,8 +1,8 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
-import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
-import type { OpenClawConfig } from "@shared/storage/openclaw";
+import { type OpenClawConfig } from "@shared/storage/openclaw";
 import { clone } from "es-toolkit/compat";
+import { codeAgentState } from "../code-agent-state.svelte";
 
 const tab = window.tab ?? null;
 const threadId =
@@ -35,14 +35,17 @@ export const persistedOpenclawConfigState = new PersistedState<OpenClawConfig>(
 class OpenClawConfigState {
 	feishuSessionId = $derived(persistedOpenclawConfigState.current?.feishuSessionId ?? "");
 	telegramBotId = $derived(persistedOpenclawConfigState.current?.telegramBotId ?? "");
-	agentId = $derived(persistedOpenclawConfigState.current?.agentId ?? "");
 
 	currentOcAgentId = $derived.by(() => {
-		const sessionId = claudeCodeAgentState.currentSessionId;
+		return persistedOpenclawConfigState.current?.agentId ?? this.#resolveOCAgentIdFromSessionId();
+	});
+
+	#resolveOCAgentIdFromSessionId(): string {
+		const sessionId = codeAgentState.currentSessionId;
 		if (!sessionId) return "";
 		const session = localClaudeCodeSandboxState.sessions.find((s) => s.session_id === sessionId);
 		return session?.oc_agent_id ?? "";
-	});
+	}
 
 	#updateState(partial: Partial<OpenClawConfig>): void {
 		persistedOpenclawConfigState.current = {
@@ -55,7 +58,7 @@ class OpenClawConfigState {
 		this.#updateState({ feishuSessionId: sessionId });
 	}
 
-	updateAgentId(agentId: string) {
+	updateOCAgentId(agentId: string) {
 		this.#updateState({ agentId });
 	}
 
@@ -74,8 +77,11 @@ class OpenClawConfigState {
 		return obj;
 	}
 
-	async updateBindings() {
-		this.updateAgentId(this.currentOcAgentId);
+	async updateOCBindings(ocAgentId: string) {
+		if (ocAgentId === "") return;
+
+		this.updateOCAgentId(ocAgentId);
+
 		await persistedOpenclawConfigState.flush();
 		await window.electronAPI.openClawService.applyOpenClawBindingsConfig(threadId);
 	}

@@ -1,4 +1,4 @@
-import { batchUploadFile, initProject } from "$lib/api/taskboard/base-apis";
+import { batchUploadFile, initProject } from "$lib/api/vibe-mode/base-apis";
 import { m } from "$lib/paraglide/messages";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
@@ -8,7 +8,8 @@ import { codeAgentState } from "./code-agent-state.svelte";
 import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
 import { localClaudeCodeSandboxState } from "./local-claude-code-sandbox-state.svelte";
 import { localEnvState } from "./local-env-state.svelte";
-import { fileToBase64 } from "./utils";
+import { openclawConfigState } from "./openclaw/openclaw-config-state.svelte";
+import { extractAgentIdFromWorkspacePath, fileToBase64 } from "./utils";
 
 const { addClaudeCodeSandboxMCP } = window.electronAPI.codeAgentService;
 
@@ -174,16 +175,14 @@ class CodeAgentSendMessageButtonState {
 			}
 
 			if (sandboxInfo) {
-				let workspacePath: string | undefined;
+				let workspacePath = codeAgentState.currentWorkspacePath;
 
-				if (codeAgentTaskboardState.isInitialized) {
+				if (codeAgentState.isPristineSession) {
 					const isSessionIdEmpty = codeAgentState.sessionId === "";
 					const sessionId: string = isSessionIdEmpty ? nanoid() : codeAgentState.sessionId;
 					const shouldSkipInitProject = codeAgentState.type === "local" && !isSessionIdEmpty;
 
-					if (shouldSkipInitProject) {
-						workspacePath = codeAgentState.currentWorkspacePath;
-					} else {
+					if (!shouldSkipInitProject) {
 						const { workspace_path } = await initProject({
 							sandboxId: sandboxInfo.sandboxId,
 							sessionId,
@@ -193,9 +192,7 @@ class CodeAgentSendMessageButtonState {
 						workspacePath = workspace_path;
 
 						// Update currentWorkspacePath with the actual path from server
-						if (workspace_path) {
-							codeAgentState.updateCurrentWorkspacePath(workspace_path);
-						}
+						codeAgentState.updateCurrentWorkspacePath(workspace_path);
 
 						// Refresh sessions to sync the new workspace_path to local storage
 						if (codeAgentState.type === "local") {
@@ -205,16 +202,6 @@ class CodeAgentSendMessageButtonState {
 								sandboxInfo.sandboxId,
 							);
 						}
-					}
-
-					if (!workspacePath) {
-						console.error("[CodeAgent] Missing workspace path for taskboard:", {
-							type: codeAgentState.type,
-							sessionId,
-							currentWorkspacePath: codeAgentState.currentWorkspacePath,
-						});
-						toast.error(m.taskboard_error_sandbox_not_initialized());
-						return;
 					}
 
 					// Collect all files to upload in a single batch request
@@ -311,6 +298,8 @@ class CodeAgentSendMessageButtonState {
 						codeAgentState.updateCurrentSessionId(sessionId);
 					}
 				}
+
+				await openclawConfigState.updateOCBindings(extractAgentIdFromWorkspacePath(workspacePath));
 
 				if (chatState.selectedModel && chatState.selectedModel.id !== sandboxInfo.llmModel) {
 					await codeAgentState.handleCodeAgentModelChange(chatState.selectedModel);

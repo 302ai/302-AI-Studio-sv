@@ -31,7 +31,7 @@ import {
 import { chatParameters } from "$lib/stores/chat-paramters/chat-parameters.svelte";
 
 import { resolvePrompt } from "@shared/utils/chat-parameters";
-import { claudeCodeSandboxState, codeAgentGlobalConfigsState, codeAgentState } from "./code-agent";
+import { codeAgentGlobalConfigsState, codeAgentState } from "./code-agent";
 import { codeAgentTaskboardState } from "./code-agent/code-agent-taskboard-state.svelte";
 import { localEnvState } from "./code-agent/local-env-state.svelte";
 import { generalSettings } from "./general-settings.state.svelte";
@@ -829,7 +829,7 @@ class ChatState {
 				const codeAgentEnabled = codeAgentState.enabled;
 
 				if (codeAgentEnabled) {
-					const workspacePath = claudeCodeSandboxState.currentSessionWorkspacePath;
+					const workspacePath = codeAgentState.currentWorkspacePath;
 					if (currentAttachments.length > 0 && !workspacePath) {
 						toast.error(m.taskboard_error_attachment_upload_failed());
 						return;
@@ -1761,7 +1761,7 @@ export const chat = new Chat({
 
 				inTaskOrchestrationMode:
 					codeAgentEnabled && codeAgentTaskboardState.taskboardStatus === "running",
-				workspacePath: codeAgentEnabled && claudeCodeSandboxState.currentSessionWorkspacePath,
+				workspacePath: codeAgentEnabled && codeAgentState.currentWorkspacePath,
 				vibeMode: codeAgentEnabled && codeAgentState.type,
 				// Context compression (only sent when compression is active)
 				...(chatState.shouldApplyCompression &&

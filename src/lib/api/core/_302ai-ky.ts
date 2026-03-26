@@ -1,3 +1,4 @@
+import { attemptAsync } from "es-toolkit";
 import ky from "ky";
 
 const { getUserAgentFragment } = window.electronAPI.appService;
@@ -17,12 +18,13 @@ export const _302AIKy = ky.create({
 				const userAgent = await getUserAgentFragment();
 				request.headers.set("User-Agent", userAgent);
 
-				try {
-					const apiKey = await get302AIApiKey();
-					request.headers.set("Authorization", `Bearer ${apiKey}`);
-				} catch {
+				const [error, apiKey] = await attemptAsync(get302AIApiKey);
+
+				if (error) {
 					throw new Error("302.ai API key validation failed");
 				}
+
+				request.headers.set("Authorization", `Bearer ${apiKey}`);
 			},
 		],
 	},

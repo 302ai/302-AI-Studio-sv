@@ -3,6 +3,7 @@ import { emitter, EventNames } from "$lib/event/emitter";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import * as m from "$lib/paraglide/messages";
 import { chatState } from "$lib/stores/chat-state.svelte";
+import { mcpState } from "$lib/stores/mcp-state.svelte";
 import { persistedTabState } from "$lib/stores/tab-bar-state.svelte";
 import type { ChatMessage } from "$lib/types/chat";
 import { clone } from "$lib/utils/clone";
@@ -16,6 +17,7 @@ import {
 	type Skill,
 	type ThinkingBudgetType,
 } from "@shared/storage/code-agent";
+import { toast } from "svelte-sonner";
 import { match } from "ts-pattern";
 import { claudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
 import { claudeCodeAgentState, type ClaudeCodeSandboxInfo } from "./claude-code-state.svelte";
@@ -91,6 +93,12 @@ class CodeAgentState {
 	isFreshTab = $derived(!chatState.hasMessages);
 	inCodeAgentMode = $derived(!this.isFreshTab && this.enabled);
 	isChecking = $derived(codeAgentSendMessageButtonState.isChecking);
+
+	/**
+	 * Represents a fresh, unsynced Agent session that hasn't been initialized on the backend yet.
+	 * True when the mode is enabled, the tab is fresh (no messages), and the user chose to start a "new" session.
+	 */
+	isPristineSession = $derived(this.enabled && this.isFreshTab && this.agentMode === "new");
 
 	async refreshLocalBaseUrl() {
 		try {
@@ -480,6 +488,9 @@ class CodeAgentState {
 	init(): void {
 		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.init();
+			if (this.type === "local") {
+				localClaudeCodeSandboxState.init(this.currentSessionId, this.currentWorkspacePath);
+			}
 		}
 	}
 
@@ -493,6 +504,32 @@ class CodeAgentState {
 		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.handleLocalEnabled(sessionId, workspacePath);
 		}
+	}
+
+	handleConfirmEnabled(): void {
+		this.getSkillList(true);
+
+		// Filter incompatible MCP servers
+		if (chatState.mcpServerIds.length > 0) {
+			const { compatibleIds, filteredNames } = mcpState.filterStreamableHTTPServers(
+				chatState.mcpServerIds,
+			);
+
+			if (filteredNames.length > 0) {
+				toast.warning(m.mcp_filtered_warning({ names: filteredNames.join(", ") }));
+				chatState.handleMCPServerChange(compatibleIds);
+			}
+		}
+
+		if (this.type === "local") {
+			const sessionId = localClaudeCodeSandboxState.selectedSessionId;
+			const workspacePath = localClaudeCodeSandboxState.selectedWorkspacePath;
+			this.handleLocalEnabled(sessionId, workspacePath);
+		} else {
+			this.handleEnabled();
+		}
+
+		this.updateEnabled(true, false);
 	}
 
 	async handleCreateNewSandbox(): Promise<boolean> {

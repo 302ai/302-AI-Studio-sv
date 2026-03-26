@@ -13,22 +13,18 @@
 
 	let confirmDialogOpen = $state(false);
 	let applyConfigLoading = $state(false);
-
-	let updateBtnDiabled = $derived(!openclawConfigState.currentOcAgentId);
-
 	let feishuSessionId = $state(openclawConfigState.feishuSessionId);
 	let telegramBotId = $state(openclawConfigState.telegramBotId);
 
-	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
+	const { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
 		prepareAction: async () => {
 			await openclawConfigState
 				.batchUpdater()
 				.update("feishuSessionId", feishuSessionId)
 				.update("telegramBotId", telegramBotId)
 				.apply();
-		},
-		finishAction: async () => {
-			await openclawConfigState.updateBindings();
+
+			await openclawConfigState.updateOCBindings(openclawConfigState.currentOcAgentId);
 		},
 		open: (v) => (confirmDialogOpen = v),
 		loading: (v) => (applyConfigLoading = v),
@@ -119,19 +115,15 @@
 			{@render feishu()}
 			{@render telegram()}
 			<div class="flex flex-col items-end">
-				<Button
-					disabled={updateBtnDiabled}
-					class="w-fit"
-					onclick={() => (confirmDialogOpen = true)}
-				>
+				<Button class="w-fit" onclick={() => (confirmDialogOpen = true)}>
 					<RefreshCw class="size-4" />
 					{m.open_claw_update_config()}
 				</Button>
-				{#if updateBtnDiabled}
+				<!-- {#if updateBtnDiabled}
 					<p class="text-xs text-muted-foreground mt-1">
 						{m.open_claw_update_config_hint()}
 					</p>
-				{/if}
+				{/if} -->
 			</div>
 		</AccordionContent>
 	</AccordionItem>

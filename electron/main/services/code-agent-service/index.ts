@@ -15,8 +15,8 @@ import type { ThreadParmas } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
 import fs from "fs";
 import path from "path";
-import { emitter } from "../broadcast-service";
 import { getRuntimeComposeDir } from "../../utils/local-vibe-utils";
+import { emitter } from "../broadcast-service";
 import { storageService } from "../storage-service";
 import {
 	claudeCodeSandboxStorage,
@@ -508,7 +508,6 @@ export class CodeAgentService {
 				model: llmModel,
 				isManualNote: false,
 				currentWorkspacePath: effectiveWorkspacePath,
-				workspacePaths: effectiveWorkspacePath ? [effectiveWorkspacePath] : [],
 				variables: [],
 				skills: [],
 				thinkingBudget: "medium" as const,

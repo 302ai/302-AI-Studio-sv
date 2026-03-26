@@ -60,7 +60,6 @@ function getInitialData() {
 	const initialData: CodeAgentMetadata = {
 		model: "claude-sonnet-4-5-20250929",
 		currentWorkspacePath: "",
-		workspacePaths: [],
 		variables: [],
 		currentSessionId: "",
 		sandboxId: "",
@@ -100,13 +99,20 @@ class ClaudeCodeAgentState {
 	skills = $derived(persistedClaudeCodeAgentState.current?.skills ?? []);
 	thinkingBudget = $derived(persistedClaudeCodeAgentState.current?.thinkingBudget ?? "off");
 	isManualNote = $derived(persistedClaudeCodeAgentState.current?.isManualNote ?? false);
-	currentWorkspacePath = $derived(
-		persistedClaudeCodeAgentState.current?.currentWorkspacePath ?? "",
-	);
 	inPlanMode = $derived(persistedClaudeCodeAgentState.current?.inPlanMode ?? false);
 
+	/**
+	 * Determines the agent mode based on the selected session ID.
+	 * Returns "new" if the session ID is "new", otherwise returns "existing".
+	 */
 	agentMode = $derived.by<"new" | "existing">(() => {
 		return this.selectedSessionId === "new" ? "new" : "existing";
+	});
+	currentWorkspacePath = $derived.by<string>(() => {
+		return (
+			persistedClaudeCodeAgentState.current?.currentWorkspacePath ??
+			this.#resolveWorkspacePathFromSession()
+		);
 	});
 
 	async handleChatFinished({
@@ -321,6 +327,28 @@ class ClaudeCodeAgentState {
 		return true;
 	}
 
+	/**
+	 * Fallback: resolve workspace path from session lists for historical threads
+	 * where currentWorkspacePath was not persisted.
+	 */
+	#resolveWorkspacePathFromSession(): string {
+		const sessionId = this.currentSessionId;
+		if (!sessionId) return "";
+
+		if (codeAgentState.type === "local") {
+			return (
+				persistedLocalClaudeCodeSessionsState.current.find((s) => s.session_id === sessionId)
+					?.workspace_path ?? ""
+			);
+		}
+
+		return (
+			persistedClaudeCodeSandboxState.current
+				.find((s) => s.sandboxId === this.sandboxId)
+				?.sessionInfos.find((s) => s.sessionId === sessionId)?.workspacePath ?? ""
+		);
+	}
+
 	private updateState(partial: Partial<CodeAgentMetadata>): void {
 		persistedClaudeCodeAgentState.current = {
 			...(persistedClaudeCodeAgentState.current ?? getInitialData()),
@@ -334,15 +362,6 @@ class ClaudeCodeAgentState {
 
 	updateCurrentWorkspacePath(workspacePath: string): void {
 		this.updateState({ currentWorkspacePath: workspacePath });
-	}
-
-	updateLocalModeState(sessionId: string, workspacePath: string): void {
-		this.updateState({
-			currentSessionId: sessionId === "new" ? "" : sessionId,
-			currentWorkspacePath: workspacePath === "new" ? "" : workspacePath,
-			sandboxId: "",
-			isManualNote: false,
-		});
 	}
 
 	updateSandboxId(sandboxId: string): void {
@@ -556,6 +575,7 @@ class ClaudeCodeAgentState {
 		];
 
 		// Extract actual path from composite key format "sandboxId:path"
+		// When "new", keep the pre-generated workspace path from getInitialData()
 		const actualWorkspacePath = (() => {
 			if (workspacePath === "new") return "";
 			const idx = workspacePath.indexOf(":");
