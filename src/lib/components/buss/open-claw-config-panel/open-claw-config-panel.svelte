@@ -120,8 +120,10 @@
 		],
 		[
 			"close",
-			(_: OpenClawWeixinLoginMsg) => {
-				window.electronAPI.openClawService.connectWechat();
+			(event: OpenClawWeixinLoginMsg) => {
+				if (event.data != "manual") {
+					window.electronAPI.openClawService.connectWechat();
+				}
 			},
 		],
 		[
@@ -147,10 +149,12 @@
 		};
 	});
 
+	let wechartTriggerSignal = 0;
 	const handleWechartTrigger = (signal: string) => {
-		if (signal.length <= 0) return;
+		if (signal.length <= 0 || wechartTriggerSignal >= 1) return;
 		wechartLoading.state = signal.length > 0 && wechartQrUrl.length === 0;
 		window.electronAPI.openClawService.connectWechat();
+		wechartTriggerSignal++;
 	};
 </script>
 

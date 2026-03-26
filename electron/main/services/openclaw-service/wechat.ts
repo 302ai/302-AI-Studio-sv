@@ -1,3 +1,9 @@
+/**
+ *Description: wechat channel login
+ *Author: Leessmin
+ *Date: 2026-03-26
+ **/
+
 import type { OpenClawWeixinLoginMsg } from "@shared/types";
 import { exec, spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { once } from "node:events";
@@ -7,21 +13,23 @@ import { broadcastService } from "../broadcast-service";
 class WeChatChannel {
 	execAsync = promisify(exec);
 
-	commandProcess: ChildProcessWithoutNullStreams | null = null;
+	private commandProcess: ChildProcessWithoutNullStreams | null = null;
 	private isConnecting = false;
+	private isManual = false;
 
 	private executeCommand = async (
 		command: string,
 		stdoutFn: (d: string) => void,
-		closeFn?: () => void,
+		closeFn?: (manual: boolean) => void,
 	) => {
 		try {
 			if (this.commandProcess) {
 				const old = this.commandProcess;
-				if (old.killed) {
+				if (!old.killed) {
 					process.kill(-old.pid!, "SIGTERM");
 					await once(old, "close");
 					this.commandProcess = null;
+					this.isManual = true;
 				}
 			}
 
@@ -42,9 +50,10 @@ class WeChatChannel {
 				proc.stdout.removeAllListeners();
 				proc.stderr.removeAllListeners();
 				if (this.commandProcess === proc) {
-					closeFn?.();
 					this.commandProcess = null;
+					closeFn?.(this.isManual);
 				}
+				this.isManual = false;
 			});
 		} catch (error) {
 			console.error("[OpenClawService] Failed to execute command:", error);
@@ -103,10 +112,10 @@ class WeChatChannel {
 
 					broadcastService.broadcastChannelToAll("openclaw-weixin:login", data);
 				},
-				() => {
+				(manual: boolean) => {
 					broadcastService.broadcastChannelToAll("openclaw-weixin:login", {
 						type: "close",
-						data: "",
+						data: manual ? "manual" : "",
 					});
 				},
 			);
