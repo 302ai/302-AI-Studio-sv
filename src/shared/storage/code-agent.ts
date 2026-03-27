@@ -21,6 +21,7 @@ export const skill = type({
 	description_zh: "string",
 	isBuiltin: "boolean?",
 	is_favorite: "boolean?",
+	manual_import_at: "string?",
 	source: "string?",
 	bundled: "boolean?",
 	content: "string?",
