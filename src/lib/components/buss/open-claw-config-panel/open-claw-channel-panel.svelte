@@ -124,7 +124,8 @@
 			<div class="flex items-start justify-between">
 				<button
 					onclick={() => handleNewSettingsTab("/settings/agent-settings?platform=local")}
-					class="text-primary hover:underline cursor-pointer">查看更多渠道设置</button
+					class="text-primary hover:underline cursor-pointer"
+					>{m.open_claw_channel_view_more_settings()}</button
 				>
 				<div class="flex flex-col items-end">
 					<Button
@@ -136,7 +137,7 @@
 						{m.open_claw_update_config()}
 					</Button>
 					{#if updateBtnDiabled}
-						<p class="text-xs text-muted-foreground mt-1">
+						<p class="text-xs text-muted-foreground mt-1 w-48 text-center">
 							{m.open_claw_update_config_hint()}
 						</p>
 					{/if}
