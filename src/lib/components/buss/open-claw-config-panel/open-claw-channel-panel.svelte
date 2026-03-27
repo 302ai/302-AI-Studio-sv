@@ -57,8 +57,8 @@
 					<div class="flex items-center justify-between text-muted-foreground text-xs">
 						<button
 							onclick={() =>
-								window.electronAPI.externalLinkService.openExternalLink(
-									"https://open.feishu.cn/app",
+								handleNewSettingsTab(
+									"/settings/agent-settings?platform=local&channel=feishu#feishu",
 								)}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_config_feishu()}</button
@@ -77,7 +77,7 @@
 
 {#snippet telegram()}
 	<Accordion type="single" class="w-full rounded-settings-item">
-		<AccordionItem value="fei-shu" class="border-b-0">
+		<AccordionItem value="telegram" class="border-b-0">
 			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
 				<Label class=" font-normal no-underline cursor-pointer"
 					>{m.open_claw_channel_telegram()}</Label
@@ -86,14 +86,17 @@
 			<AccordionContent class="pb-0 pt-2 space-y-2">
 				<div class="rounded-lg border p-4 space-y-4">
 					<SettingInputField
-						label={`${m.open_claw_channel_session_id()}`}
-						placeholder={m.placeholder_input_session_id()}
+						label={m.open_claw_telegram_bot_token()}
+						placeholder={m.open_claw_telegram_placeholder_bot_token()}
 						class="[&>label]:text-label-fg"
 						bind:value={telegramBotId}
 					/>
 					<div class="flex items-center justify-between text-muted-foreground text-xs">
 						<button
-							onclick={() => handleNewSettingsTab("/settings/agent-settings/local")}
+							onclick={() =>
+								handleNewSettingsTab(
+									"/settings/agent-settings?platform=local&channel=telegram#telegram",
+								)}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_config_telegram()}</button
 						>

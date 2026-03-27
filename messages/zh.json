@@ -792,6 +792,8 @@
 	"open_claw_wecom_placeholder_bot_id": "请输入BotId",
 	"open_claw_wecom_secret": "Secret",
 	"open_claw_wecom_placeholder_secret": "请输入Secret",
+	"open_claw_telegram_bot_id_optional": "机器人ID(选填)",
+	"open_claw_telegram_placeholder_bot_id": "请输入机器人ID",
 	"open_claw_telegram_bot_token": "Bot Token",
 	"open_claw_telegram_placeholder_bot_token": "请输入Bot Token",
 	"open_claw_feishu_get_id_and_secret": "点击此处获取ID和密钥",
