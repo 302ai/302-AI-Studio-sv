@@ -1,6 +1,12 @@
 import { MAX_TABS_PER_WINDOW } from "@shared/constants/tab";
 import type { ChatMessage, Tab, TabType, ThreadParmas } from "@shared/types";
-import { BrowserWindow, ipcMain, WebContentsView, type IpcMainInvokeEvent } from "electron";
+import {
+	BrowserWindow,
+	ipcMain,
+	webContents,
+	WebContentsView,
+	type IpcMainInvokeEvent,
+} from "electron";
 import { isNull, isUndefined } from "es-toolkit";
 import { nanoid } from "nanoid";
 import { stringify } from "superjson";
@@ -161,6 +167,43 @@ export class TabService {
 				await this.sleepTab(tabId);
 			}
 		}
+
+		// Periodically audit for orphaned webContents (safety net)
+		this.auditOrphanedWebContents();
+	}
+
+	/**
+	 * Safety net: detect and close orphaned webContents that are not tracked by any Map.
+	 * Runs on each MemoryManager tick cycle.
+	 */
+	private auditOrphanedWebContents() {
+		const allWC = webContents.getAllWebContents();
+		const trackedIds = new Set<number>();
+
+		// Collect all known webContents IDs from tab views
+		for (const view of this.tabViewMap.values()) {
+			if (!view.webContents.isDestroyed()) trackedIds.add(view.webContents.id);
+		}
+		// Shell views
+		for (const view of this.windowShellView.values()) {
+			if (!view.webContents.isDestroyed()) trackedIds.add(view.webContents.id);
+		}
+		// BrowserWindow own webContents
+		for (const win of BrowserWindow.getAllWindows()) {
+			if (!win.isDestroyed()) trackedIds.add(win.webContents.id);
+		}
+
+		for (const wc of allWC) {
+			if (wc.isDestroyed()) continue;
+			if (trackedIds.has(wc.id)) continue;
+			// Skip devtools, webview, and backgroundPage types
+			if (wc.getType() === "webview" || wc.getType() === "backgroundPage") continue;
+			const url = wc.getURL();
+			if (url.startsWith("devtools://") || url.startsWith("chrome-devtools://")) continue;
+
+			console.warn(`[TabService] Orphaned webContents detected: id=${wc.id}, url=${url}. Closing.`);
+			wc.close();
+		}
 	}
 
 	private checkPendingDestruction(threadId: string) {
@@ -210,6 +253,65 @@ export class TabService {
 			this.tabMap.delete(tabId);
 			this.tabWindowMap.delete(tabId);
 		}
+	}
+
+	/**
+	 * Schedule periodic checks for a pending-destroy tab.
+	 * - If thread is still legitimately busy AND view is alive → re-schedule (let it keep running)
+	 * - If thread is no longer busy → destroy immediately
+	 * - If view's webContents is already destroyed (crash) but maps not cleaned → cleanup
+	 * - If busy state appears stale (busy but view dead) → force destroy
+	 */
+	private schedulePendingDestroyCheck(tabId: string) {
+		// Clear any existing timer for this tab
+		const existingTimer = this.pendingDestroyTimers.get(tabId);
+		if (existingTimer) {
+			clearTimeout(existingTimer);
+		}
+
+		const CHECK_INTERVAL = 30_000; // 30 seconds
+
+		const timer = setTimeout(() => {
+			// Tab was resurrected or already destroyed
+			if (!this.pendingDestroyTabs.has(tabId)) {
+				this.pendingDestroyTimers.delete(tabId);
+				return;
+			}
+
+			const tab = this.tabMap.get(tabId);
+			const view = this.tabViewMap.get(tabId);
+			const isStillBusy = tab?.threadId ? threadStateService.isThreadBusy(tab.threadId) : false;
+			const isViewAlive = view && !view.webContents.isDestroyed();
+
+			if (!isStillBusy) {
+				// Thread is no longer busy — safe to destroy now
+				console.log(`[TabService] Pending tab ${tabId}: thread no longer busy, destroying`);
+				this.pendingDestroyTimers.delete(tabId);
+				this.forceDestroyTab(tabId);
+				return;
+			}
+
+			if (!isViewAlive) {
+				// Thread says busy but view is dead (renderer crashed) — stale state, cleanup
+				console.warn(
+					`[TabService] Pending tab ${tabId}: thread busy but view is dead (stale), cleaning up`,
+				);
+				this.pendingDestroyTabs.delete(tabId);
+				this.pendingDestroyTimers.delete(tabId);
+				this.tabViewMap.delete(tabId);
+				this.tabMap.delete(tabId);
+				this.tabWindowMap.delete(tabId);
+				return;
+			}
+
+			// Thread is still legitimately busy and view is alive — re-schedule
+			console.log(
+				`[TabService] Pending tab ${tabId}: still busy, re-scheduling check in ${CHECK_INTERVAL / 1000}s`,
+			);
+			this.schedulePendingDestroyCheck(tabId);
+		}, CHECK_INTERVAL);
+
+		this.pendingDestroyTimers.set(tabId, timer);
 	}
 
 	/**
@@ -377,7 +479,7 @@ export class TabService {
 		}
 
 		// 3. Destroy WebContents
-		view.webContents.close({ waitForBeforeUnload: true });
+		view.webContents.close({ waitForBeforeUnload: false });
 		this.tabViewMap.delete(tabId);
 		// Note: We keep tab in tabMap
 	}
@@ -812,9 +914,13 @@ export class TabService {
 			const view = this.tabViewMap.get(tabId);
 			if (view) {
 				window.contentView.removeChildView(view);
-				// view.setVisible(false); // Should be hidden by removeChildView
 			}
 			this.pendingDestroyTabs.add(tabId);
+
+			// Safety timeout: periodically check if thread is still legitimately busy.
+			// If busy state becomes stale (thread says busy but view is dead), force destroy.
+			this.schedulePendingDestroyCheck(tabId);
+
 			return;
 		}
 
@@ -1605,7 +1711,19 @@ export class TabService {
 
 			window.contentView.removeChildView(oldView);
 
-			oldView.webContents.close({ waitForBeforeUnload: false });
+			// Close with fallback: if close doesn't destroy within 5s, force close
+			if (!oldView.webContents.isDestroyed()) {
+				const fallbackTimer = setTimeout(() => {
+					if (!oldView.webContents.isDestroyed()) {
+						console.warn(
+							`[replaceTabContent] Old view for tab ${tabId} not destroyed after 5s, force closing`,
+						);
+						oldView.webContents.close({ waitForBeforeUnload: false });
+					}
+				}, 5000);
+				oldView.webContents.once("destroyed", () => clearTimeout(fallbackTimer));
+				oldView.webContents.close({ waitForBeforeUnload: false });
+			}
 
 			const newView = await this.newWebContentsView(window.id, updatedTab);
 

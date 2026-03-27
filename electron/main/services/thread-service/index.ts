@@ -169,7 +169,7 @@ export class ThreadService {
 					if (browserWindow && !browserWindow.isDestroyed()) {
 						for (const tab of tabsToClose) {
 							console.log(`[ThreadService] Removing tab view ${tab.id} from window ${windowId}`);
-							tabService.removeTab(browserWindow, tab.id);
+							await tabService.removeTab(browserWindow, tab.id);
 						}
 					}
 				}
@@ -188,7 +188,7 @@ export class ThreadService {
 						if (!Number.isNaN(numericWindowId)) {
 							const browserWindow = BrowserWindow.fromId(numericWindowId);
 							if (browserWindow && !browserWindow.isDestroyed()) {
-								tabService.focusTabInWindow(browserWindow, remainingTabs[0].id);
+								await tabService.focusTabInWindow(browserWindow, remainingTabs[0].id);
 							}
 						}
 					}
