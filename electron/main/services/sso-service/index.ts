@@ -27,7 +27,7 @@ export class SsoService {
 				redirecturl: redirectUrl,
 			});
 
-			const ssoUrl = `https://302.ai/sso?${params.toString()}`;
+			const ssoUrl = `https://302.ai/sso/login?${params.toString()}`;
 			console.log("[SSO] Opening SSO URL:", ssoUrl);
 			await shell.openExternal(ssoUrl);
 
