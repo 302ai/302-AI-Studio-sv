@@ -771,7 +771,6 @@
 	"open_claw_placeholder_appid": "请输入App ID",
 	"open_claw_placeholder_app_secret": "请输入App Secret",
 	"open_claw_channel_feishu": "飞书",
-	"open_claw_channel_telegram": "Telegram",
 	"open_claw_channel_session_id": "会话ID",
 	"open_claw_channel_session_id_optional": "会话ID（选填）",
 	"open_claw_channel_config_feishu": "点击此处配置飞书",
@@ -792,9 +791,9 @@
 	"open_claw_wecom_placeholder_bot_id": "请输入BotId",
 	"open_claw_wecom_secret": "Secret",
 	"open_claw_wecom_placeholder_secret": "请输入Secret",
+	"open_claw_telegram_bot_token": "Bot Token",
 	"open_claw_telegram_bot_id_optional": "机器人ID(选填)",
 	"open_claw_telegram_placeholder_bot_id": "请输入机器人ID",
-	"open_claw_telegram_bot_token": "Bot Token",
 	"open_claw_telegram_placeholder_bot_token": "请输入Bot Token",
 	"open_claw_feishu_get_id_and_secret": "点击此处获取ID和密钥",
 	"open_claw_feishu_view_deployment_tutorial": "查看部署教程",
@@ -1142,6 +1141,8 @@
 	"delete_session_success": "会话删除成功",
 	"delete_session_failed": "会话删除失败",
 	"title_lack_of_disk": "沙盘空间不足",
+	"title_busy_local_agent": "重启本地镜像",
+	"description_busy_local_agent": "OpenClaw绑定渠道需要重启本地镜像，将会打断正在工作中的本地模式会话，请确认是否继续。",
 	"description_lack_of_disk": "您当前选择的沙盒",
 	"description_lack_of_disk_2": "沙盒ID",
 	"description_lack_of_disk_3": "可用空间即将用尽，为保证您的使用体验和数据安全，",
@@ -1423,7 +1424,5 @@
 	"open_claw_wechat_install_failed_retry": "微信插件安装失败，请重试",
 	"open_claw_wechat_loading_hint": "精彩即将呈现～",
 	"open_claw_channel_telegram": "Telegram",
-	"open_claw_telegram_get_bot_token": "点击此处获取密钥",
-	"open_claw_telegram_bot_token": "Bot Token",
-	"open_claw_telegram_placeholder_bot_token": "请输入Bot Token"
+	"open_claw_telegram_get_bot_token": "点击此处获取密钥"
 }

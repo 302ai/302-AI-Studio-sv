@@ -348,6 +348,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("threadStateService:getBusyThreads", (event) =>
 		threadStateService.getBusyThreads(event),
 	);
+	ipcMain.handle("threadStateService:getBusyLocalAgentThreads", (event) =>
+		threadStateService.getBusyLocalAgentThreads(event),
+	);
 
 	// tabService service registration
 	ipcMain.handle(
@@ -698,6 +701,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("deepLinkService:simulateDeepLink");
 	ipcMain.removeHandler("threadStateService:updateBusyState");
 	ipcMain.removeHandler("threadStateService:getBusyThreads");
+	ipcMain.removeHandler("threadStateService:getBusyLocalAgentThreads");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");

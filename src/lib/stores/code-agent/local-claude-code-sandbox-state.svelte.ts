@@ -225,6 +225,14 @@ class LocalClaudeCodeSandboxState {
 		this.selectedSessionId = "new";
 	}
 
+	/**
+	 * Initialize selection state from currently active session/workspace.
+	 */
+	init(currentSessionId: string, currentWorkspacePath: string): void {
+		this.selectedSessionId = currentSessionId === "" ? "new" : currentSessionId;
+		this.selectedWorkspacePath = currentWorkspacePath === "" ? "new" : currentWorkspacePath;
+	}
+
 	reset(): void {
 		this.selectedSessionId = "new";
 		this.selectedWorkspacePath = "new";

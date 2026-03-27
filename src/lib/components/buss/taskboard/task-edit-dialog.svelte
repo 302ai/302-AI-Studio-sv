@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { uploadAttachments, type Attachment } from "$lib/api/taskboard";
+	import { uploadAttachments, type Attachment } from "$lib/api/vibe-mode";
 	import { ViewerPanel } from "$lib/components/buss/viewer/index.js";
 	import {
 		formatFileSize,
@@ -10,7 +10,6 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { Textarea } from "$lib/components/ui/textarea";
 	import * as m from "$lib/paraglide/messages";
-	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { codeAgentTaskboardState } from "$lib/stores/code-agent/code-agent-taskboard-state.svelte";
 	import { cn } from "$lib/utils.js";
@@ -81,7 +80,7 @@
 			// 如果有附件，处理上传
 			if (attachments.length > 0) {
 				const sandboxId = codeAgentState.sandboxId;
-				const cwd = claudeCodeSandboxState.currentSessionWorkspacePath;
+				const cwd = codeAgentState.currentWorkspacePath;
 
 				if (!sandboxId || !cwd) {
 					// 沙盒未初始化，将附件添加到待上传队列

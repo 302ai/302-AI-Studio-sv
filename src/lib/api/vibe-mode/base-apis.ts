@@ -120,7 +120,7 @@ export async function uploadFileToSandbox(
 export const initProjectRequestSchema = type({
 	sandboxId: "string",
 	sessionId: "string",
-	workspacePath: "string?",
+	workspacePath: "string",
 });
 export type InitProjectRequest = typeof initProjectRequestSchema.infer;
 export const initProjectResponseSchema = type({
@@ -133,21 +133,21 @@ export type InitProjectResponse = typeof initProjectResponseSchema.infer;
 
 export async function initProject(request: InitProjectRequest): Promise<InitProjectResponse> {
 	try {
-		const agentTypePayload = codeAgentState.currentAgentId === "open-claw" ? { agent_type: 1 } : {};
+		const isClawMode = codeAgentState.currentAgentId === "open-claw";
 
 		// Local mode only needs session_id + workspace_path, remote mode needs sandbox_id too
 		const requestBody =
 			codeAgentState.type === "local"
 				? {
 						session_id: request.sessionId,
-						workspace_path: request.workspacePath ?? "",
-						...agentTypePayload,
+						workspace_path: request.workspacePath,
+						agent_type: Number(isClawMode),
 					}
 				: {
 						sandbox_id: request.sandboxId,
 						session_id: request.sessionId,
-						workspace_path: request.workspacePath ?? "",
-						...agentTypePayload,
+						workspace_path: request.workspacePath,
+						agent_type: Number(isClawMode),
 					};
 
 		const kyInstance = await getCodeAgentKy();

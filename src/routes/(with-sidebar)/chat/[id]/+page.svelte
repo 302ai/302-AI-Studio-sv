@@ -1,9 +1,12 @@
 <script lang="ts">
 	import * as Resizable from "$lib/components/ui/resizable/index.js";
+	import { Button } from "$lib/components/ui/button";
+	import * as Dialog from "$lib/components/ui/dialog/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { agentPreviewState } from "$lib/stores/agent-preview-state.svelte";
 	import { chat, chatState } from "$lib/stores/chat-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
+	import { codeAgentSendMessageButtonState } from "$lib/stores/code-agent/code-agent-send-message-button-state.svelte";
 	import { codeAgentTaskboardState } from "$lib/stores/code-agent/code-agent-taskboard-state.svelte";
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
@@ -513,3 +516,26 @@
 	onFilesAdded={handleFilesAdded}
 	currentAttachmentCount={chatState.attachments.length}
 />
+
+<!-- Busy Local Agent Confirmation Dialog -->
+<Dialog.Root bind:open={codeAgentSendMessageButtonState.showBusyLocalAgentDialog}>
+	<Dialog.Content>
+		<Dialog.Header>
+			<Dialog.Title>{m.title_busy_local_agent()}</Dialog.Title>
+		</Dialog.Header>
+		<Dialog.Description>
+			{m.description_busy_local_agent()}
+		</Dialog.Description>
+		<Dialog.Footer class="flex flex-row items-center sm:justify-end gap-2">
+			<Button
+				variant="secondary"
+				onclick={() => codeAgentSendMessageButtonState.handleBusyDialogCancel()}
+			>
+				{m.text_button_cancel()}
+			</Button>
+			<Button onclick={() => codeAgentSendMessageButtonState.handleBusyDialogConfirm()}>
+				{m.text_button_confirm()}
+			</Button>
+		</Dialog.Footer>
+	</Dialog.Content>
+</Dialog.Root>

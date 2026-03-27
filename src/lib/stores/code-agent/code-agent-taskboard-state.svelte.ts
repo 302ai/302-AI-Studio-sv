@@ -3,7 +3,7 @@ import {
 	updateTasklist,
 	uploadAttachments,
 	type Attachment,
-} from "$lib/api/taskboard";
+} from "$lib/api/vibe-mode";
 import { emitter, EventNames } from "$lib/event/emitter";
 import { m } from "$lib/paraglide/messages";
 import type { ChatMessage } from "$lib/types/chat";
@@ -16,7 +16,6 @@ import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
 import { match } from "ts-pattern";
 import { chat, chatState } from "../chat-state.svelte";
-import { claudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
 import { shouldPauseAfterTaskRestore } from "./taskboard-auto-execution-policy";
 import { withLoadingState } from "./utils";
@@ -43,10 +42,6 @@ export class CodeAgentTaskboardState {
 	currentExecutingTaskId = $state<string | null>(null);
 
 	#taskResolve: ((success: boolean) => void) | null = null;
-
-	isInitialized = $derived(
-		codeAgentState.enabled && codeAgentState.isFreshTab && codeAgentState.agentMode === "new",
-	);
 
 	inProgressTask = $derived<Task | null>(
 		this.tasklist.find((task) => task.status === "in_progress") ?? null,
@@ -308,13 +303,14 @@ export class CodeAgentTaskboardState {
 		await withLoadingState(
 			(loading) => (this.isLoading = loading),
 			async () => {
-				await match(this.isInitialized)
+				await match(codeAgentState.isPristineSession)
 					.with(true, () => this.tasklist)
 					.otherwise(async () => {
 						const [sandboxId, path] = [
 							codeAgentState.sandboxId,
-							claudeCodeSandboxState.currentSessionWorkspacePath,
+							codeAgentState.currentWorkspacePath,
 						];
+
 						if (path) {
 							const hadLocalTasksBeforeSync = this.tasklist.length > 0;
 							const { isOk, tasks } = await _getTasklist(sandboxId, path);
@@ -365,16 +361,13 @@ export class CodeAgentTaskboardState {
 	async updateTasklist(tasklist: Task[]): Promise<void> {
 		const sortedTasklist = this.#sortTasks(tasklist);
 
-		match(this.isInitialized)
+		match(codeAgentState.isPristineSession)
 			.with(true, () => {
 				this.tasklist = sortedTasklist;
 			})
 			.otherwise(async () => {
 				this.tasklist = sortedTasklist;
-				const [sandboxId, path] = [
-					codeAgentState.sandboxId,
-					claudeCodeSandboxState.currentSessionWorkspacePath,
-				];
+				const [sandboxId, path] = [codeAgentState.sandboxId, codeAgentState.currentWorkspacePath];
 				console.log("Updating tasklist", path);
 
 				const result = await updateTasklist(sandboxId, path, sortedTasklist);
@@ -522,10 +515,7 @@ export class CodeAgentTaskboardState {
 				const success = await waitPromise;
 
 				if (success) {
-					const [sandboxId, path] = [
-						codeAgentState.sandboxId,
-						claudeCodeSandboxState.currentSessionWorkspacePath,
-					];
+					const [sandboxId, path] = [codeAgentState.sandboxId, codeAgentState.currentWorkspacePath];
 
 					let currentTaskList = this.tasklist;
 					const { isOk, tasks } = await _getTasklist(sandboxId, path);

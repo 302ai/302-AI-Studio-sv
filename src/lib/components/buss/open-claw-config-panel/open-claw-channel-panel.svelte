@@ -5,30 +5,30 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
+	import { codeAgentState } from "$lib/stores/code-agent";
 	import { openclawConfigState } from "$lib/stores/code-agent/openclaw/openclaw-config-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
+	import { trim } from "es-toolkit/string";
 	import SettingInputField from "../settings/setting-input-field.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
 	import { ApplyOpenClawChannelConfigConfirm } from "./hooks";
 
 	let confirmDialogOpen = $state(false);
 	let applyConfigLoading = $state(false);
-
-	let updateBtnDiabled = $derived(!openclawConfigState.currentOcAgentId);
-
 	let feishuSessionId = $state(openclawConfigState.feishuSessionId);
 	let telegramBotId = $state(openclawConfigState.telegramBotId);
+	let updateBtnDiabled = $derived(!openclawConfigState.currentOcAgentId);
+	let hasConfigs = $derived(trim(feishuSessionId) !== "" || trim(telegramBotId) !== "");
 
-	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
+	const { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
 		prepareAction: async () => {
 			await openclawConfigState
 				.batchUpdater()
 				.update("feishuSessionId", feishuSessionId)
 				.update("telegramBotId", telegramBotId)
 				.apply();
-		},
-		finishAction: async () => {
-			await openclawConfigState.updateBindings();
+
+			await openclawConfigState.updateOCBindings(openclawConfigState.currentOcAgentId);
 		},
 		open: (v) => (confirmDialogOpen = v),
 		loading: (v) => (applyConfigLoading = v),
@@ -129,9 +129,16 @@
 				>
 				<div class="flex flex-col items-end">
 					<Button
-						disabled={updateBtnDiabled}
 						class="w-fit"
-						onclick={() => (confirmDialogOpen = true)}
+						onclick={() => {
+							if (codeAgentState.isPristineSession) {
+								handleConfirmDialogOk();
+								return;
+							}
+
+							confirmDialogOpen = true;
+						}}
+						disabled={codeAgentState.isPristineSession && !hasConfigs}
 					>
 						<RefreshCw class="size-4" />
 						{m.open_claw_update_config()}

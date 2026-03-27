@@ -40,7 +40,6 @@ export const codeAgentMetadata = type({
 	 * local agent only
 	 */
 	currentWorkspacePath: "string",
-	workspacePaths: "string[]",
 	variables: "string[]",
 	/**
 	 * remote agent only
