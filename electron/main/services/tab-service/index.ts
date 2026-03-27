@@ -188,9 +188,23 @@ export class TabService {
 		for (const view of this.windowShellView.values()) {
 			if (!view.webContents.isDestroyed()) trackedIds.add(view.webContents.id);
 		}
-		// BrowserWindow own webContents
+		// BrowserWindow own webContents + all child views (e.g. settingsView, plugin windows)
 		for (const win of BrowserWindow.getAllWindows()) {
-			if (!win.isDestroyed()) trackedIds.add(win.webContents.id);
+			if (win.isDestroyed()) continue;
+			trackedIds.add(win.webContents.id);
+			// Recursively collect child view webContents (covers settingsView etc.)
+			const collectChildViews = (parent: Electron.View) => {
+				for (const child of parent.children) {
+					if ("webContents" in child) {
+						const wcv = child as WebContentsView;
+						if (!wcv.webContents.isDestroyed()) {
+							trackedIds.add(wcv.webContents.id);
+						}
+					}
+					collectChildViews(child);
+				}
+			};
+			collectChildViews(win.contentView);
 		}
 
 		for (const wc of allWC) {
