@@ -18,7 +18,6 @@ import path from "path";
 import { emitter } from "../broadcast-service";
 import { getRuntimeComposeDir } from "../../utils/local-vibe-utils";
 import { storageService } from "../storage-service";
-import { tabService } from "../tab-service";
 import {
 	claudeCodeSandboxStorage,
 	claudeCodeStorage,
@@ -133,9 +132,6 @@ export class CodeAgentService {
 			const { sandbox_id: sandboxId, sandbox_name: sandboxRemark } = response.data;
 
 			await claudeCodeStorage.setClaudeCodeSandboxInfo(threadId, sandboxId, sandboxRemark);
-
-			// Notify frontend to open preview panel when sandbox is first created
-			tabService.notifySandboxCreated(threadId, sandboxId);
 
 			return { createdResult: "success", sandboxId };
 		}
