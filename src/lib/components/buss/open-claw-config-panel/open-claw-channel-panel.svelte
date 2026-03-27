@@ -5,8 +5,10 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
+	import { codeAgentState } from "$lib/stores/code-agent";
 	import { openclawConfigState } from "$lib/stores/code-agent/openclaw/openclaw-config-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
+	import { trim } from "es-toolkit/string";
 	import SettingInputField from "../settings/setting-input-field.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
 	import { ApplyOpenClawChannelConfigConfirm } from "./hooks";
@@ -15,6 +17,8 @@
 	let applyConfigLoading = $state(false);
 	let feishuSessionId = $state(openclawConfigState.feishuSessionId);
 	let telegramBotId = $state(openclawConfigState.telegramBotId);
+
+	let hasConfigs = $derived(trim(feishuSessionId) !== "" || trim(telegramBotId) !== "");
 
 	const { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
 		prepareAction: async () => {
@@ -115,15 +119,21 @@
 			{@render feishu()}
 			{@render telegram()}
 			<div class="flex flex-col items-end">
-				<Button class="w-fit" onclick={() => (confirmDialogOpen = true)}>
+				<Button
+					class="w-fit"
+					onclick={() => {
+						if (codeAgentState.isPristineSession) {
+							handleConfirmDialogOk();
+							return;
+						}
+
+						confirmDialogOpen = true;
+					}}
+					disabled={codeAgentState.isPristineSession && !hasConfigs}
+				>
 					<RefreshCw class="size-4" />
 					{m.open_claw_update_config()}
 				</Button>
-				<!-- {#if updateBtnDiabled}
-					<p class="text-xs text-muted-foreground mt-1">
-						{m.open_claw_update_config_hint()}
-					</p>
-				{/if} -->
 			</div>
 		</AccordionContent>
 	</AccordionItem>

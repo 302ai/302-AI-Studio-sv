@@ -1,7 +1,9 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
-import { type OpenClawConfig } from "@shared/storage/openclaw";
+import { type OpenClawConfig, openclawBindingKeys } from "@shared/storage/openclaw";
 import { clone } from "es-toolkit/compat";
+import { withTimeout } from "es-toolkit/promise";
+import { trim } from "es-toolkit/string";
 import { codeAgentState } from "../code-agent-state.svelte";
 
 const tab = window.tab ?? null;
@@ -35,6 +37,12 @@ export const persistedOpenclawConfigState = new PersistedState<OpenClawConfig>(
 class OpenClawConfigState {
 	feishuSessionId = $derived(persistedOpenclawConfigState.current?.feishuSessionId ?? "");
 	telegramBotId = $derived(persistedOpenclawConfigState.current?.telegramBotId ?? "");
+
+	hasConfigs = $derived(
+		openclawBindingKeys.some(
+			(key) => trim(persistedOpenclawConfigState.current?.[key] ?? "") !== "",
+		),
+	);
 
 	currentOcAgentId = $derived.by(() => {
 		return persistedOpenclawConfigState.current?.agentId ?? this.#resolveOCAgentIdFromSessionId();
@@ -84,6 +92,46 @@ class OpenClawConfigState {
 
 		await persistedOpenclawConfigState.flush();
 		await window.electronAPI.openClawService.applyOpenClawBindingsConfig(threadId);
+	}
+
+	async bindingAndRestart(ocAgentId: string) {
+		await this.updateOCBindings(ocAgentId);
+
+		if (!this.hasConfigs) return;
+
+		await window.electronAPI.localVibeService.restartPodmanMachine();
+
+		let cleanup: (() => void) | undefined;
+
+		return withTimeout(async () => {
+			try {
+				return await new Promise<void>((resolve, reject) => {
+					cleanup = window.electronAPI.onLocalSandboxHealthCheck(
+						(data: {
+							isOk: boolean;
+							isHealth: boolean;
+							isOcHealth: boolean;
+							error?: string;
+							timestamp: number;
+						}) => {
+							if (!data.isOk) {
+								cleanup?.();
+								reject(new Error(data.error || "Health check failed (isOk is false)"));
+								return;
+							}
+
+							if (data.isHealth && data.isOcHealth) {
+								cleanup?.();
+								resolve();
+							}
+						},
+					);
+				});
+			} catch (error) {
+				cleanup?.();
+				throw error;
+			}
+		}, 60000);
 	}
 }
 

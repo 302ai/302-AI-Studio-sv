@@ -15,9 +15,12 @@ const { addClaudeCodeSandboxMCP } = window.electronAPI.codeAgentService;
 
 class CodeAgentSendMessageButtonState {
 	executionIterator: AsyncGenerator<string, void, boolean> | null = null;
+	#busyDialogResolver: ((value: boolean) => void) | null = null;
 
 	showLackOfDiskDialog = $state(false);
+	showBusyLocalAgentDialog = $state(false);
 	isChecking = $state(false);
+
 	isOpenClawSendDisabled = $derived.by(
 		() =>
 			codeAgentState.type === "local" &&
@@ -299,8 +302,6 @@ class CodeAgentSendMessageButtonState {
 					}
 				}
 
-				await openclawConfigState.updateOCBindings(extractAgentIdFromWorkspacePath(workspacePath));
-
 				if (chatState.selectedModel && chatState.selectedModel.id !== sandboxInfo.llmModel) {
 					await codeAgentState.handleCodeAgentModelChange(chatState.selectedModel);
 				}
@@ -316,6 +317,8 @@ class CodeAgentSendMessageButtonState {
 						}
 					}
 				}
+
+				await openclawConfigState.bindingAndRestart(extractAgentIdFromWorkspacePath(workspacePath));
 
 				if (sandboxInfo.diskUsage === "insufficient") {
 					this.showLackOfDiskDialog = true;
@@ -335,6 +338,29 @@ class CodeAgentSendMessageButtonState {
 		}
 	}
 
+	async guardBusyLocalAgents(): Promise<boolean> {
+		if (!openclawConfigState.hasConfigs) return true;
+		const busy = await window.electronAPI.threadStateService.getBusyLocalAgentThreads();
+		if (busy.length === 0) return true;
+
+		this.showBusyLocalAgentDialog = true;
+		return new Promise<boolean>((resolve) => {
+			this.#busyDialogResolver = resolve;
+		});
+	}
+
+	handleBusyDialogConfirm() {
+		this.showBusyLocalAgentDialog = false;
+		this.#busyDialogResolver?.(true);
+		this.#busyDialogResolver = null;
+	}
+
+	handleBusyDialogCancel() {
+		this.showBusyLocalAgentDialog = false;
+		this.#busyDialogResolver?.(false);
+		this.#busyDialogResolver = null;
+	}
+
 	async handleContinueAnyway() {
 		this.showLackOfDiskDialog = false;
 		if (this.executionIterator) {
@@ -352,6 +378,9 @@ class CodeAgentSendMessageButtonState {
 	}
 
 	async handleCodeAgentFlow(fn: () => void) {
+		const allowed = await this.guardBusyLocalAgents();
+		if (!allowed) return;
+
 		this.executionIterator = this.enableCodeAgentFlow(fn);
 		await this.executionIterator.next();
 	}

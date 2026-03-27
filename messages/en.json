@@ -1139,6 +1139,8 @@
 	"delete_session_success": "Session deleted successfully",
 	"delete_session_failed": "Failed to delete session",
 	"title_lack_of_disk": "Not enough space in the sandbox",
+	"title_busy_local_agent": "Restart Local Image",
+	"description_busy_local_agent": "Binding OpenClaw channel requires restarting the local image, which will interrupt ongoing local mode sessions. Do you want to continue?",
 	"description_lack_of_disk": "Your currently selected sandbox",
 	"description_lack_of_disk_2": "Sandbox ID",
 	"description_lack_of_disk_3": "The available space is about to be exhausted. To ensure your experience and data security,",
@@ -1415,8 +1417,5 @@
 	"open_claw_wechat_add_success": "WeChat added successfully",
 	"open_claw_channel_wechat": "WeChat",
 	"open_claw_wechat_scan_qrcode_hint": "Scan the QR code with WeChat",
-	"open_claw_wechat_loading_hint": "Coming soon...",
-	"open_claw_channel_telegram": "Telegram",
-	"open_claw_telegram_bot_token": "Bot Token",
-	"open_claw_telegram_placeholder_bot_token": "Enter Bot Token"
+	"open_claw_wechat_loading_hint": "Coming soon..."
 }
