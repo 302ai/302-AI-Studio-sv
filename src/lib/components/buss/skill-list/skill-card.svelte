@@ -142,15 +142,17 @@
 		</div>
 		<!-- Info Section -->
 		<div class="flex min-w-0 flex-1 flex-col gap-1">
-			<div class="flex items-center justify-between gap-2 sm:items-start">
-				<h3
-					class="min-w-0 flex-1 truncate font-semibold leading-tight text-foreground"
-					title={skill.name}
-				>
-					{skill.name}
-				</h3>
+			<div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2">
+				<div class="flex min-w-0 min-h-7 items-center">
+					<h3
+						class="min-w-0 truncate font-semibold leading-tight text-foreground"
+						title={skill.name}
+					>
+						{skill.name}
+					</h3>
+				</div>
 				{#if showActionArea}
-					<div class="grid shrink-0 grid-cols-[1.75rem_1.75rem] items-center gap-1">
+					<div class="grid h-7 shrink-0 grid-cols-[1.75rem_1.75rem] items-center gap-1">
 						{#if showFavoriteButton}
 							<ButtonWithTooltip
 								tooltip={is_favorite ? m.title_button_unstar() : m.title_button_star()}

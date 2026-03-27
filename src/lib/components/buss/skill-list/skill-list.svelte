@@ -11,11 +11,12 @@
 	import { Plus, Search, ShoppingBag } from "@lucide/svelte";
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
-	import { SvelteSet } from "svelte/reactivity";
+	import { SvelteMap, SvelteSet } from "svelte/reactivity";
 	import SkillCard from "./skill-card.svelte";
 	import SkillCreateDialog from "./skill-create-dialog.svelte";
 	import SkillDetailDialog from "./skill-detail-dialog.svelte";
 	import SkillEditDialog from "./skill-edit-dialog.svelte";
+	import { getOrderedSkillsByFavorite } from "./skill-favorite-order";
 
 	interface Props {
 		userSkills: Skill[];
@@ -58,6 +59,7 @@
 	let favoritingSkills = new SvelteSet<string>();
 	let localUserSkills = $state<Skill[]>([]);
 	let localBuiltinSkills = $state<Skill[]>([]);
+	let optimisticFavoriteStates = new SvelteMap<string, boolean>();
 
 	const currentAgentId = $derived(codeAgentState.currentAgentId);
 	const isLocalMode = $derived(codeAgentState.type === "local");
@@ -67,11 +69,33 @@
 		localBuiltinSkills = builtinSkills;
 	});
 
+	$effect(() => {
+		const persistedFavoriteStates = new Map(
+			[...localBuiltinSkills, ...localUserSkills].map((skill) => [
+				skill.name,
+				skill.is_favorite ?? false,
+			]),
+		);
+
+		for (const [skillName, optimisticFavorite] of Array.from(optimisticFavoriteStates.entries())) {
+			if (
+				!persistedFavoriteStates.has(skillName) ||
+				persistedFavoriteStates.get(skillName) === optimisticFavorite
+			) {
+				optimisticFavoriteStates.delete(skillName);
+			}
+		}
+	});
+
 	// Combine skills with source flag
-	const allSkills = $derived<Skill[]>(
+	const baseSkills = $derived<Skill[]>(
 		[...localBuiltinSkills, ...localUserSkills].filter(
 			(skill) => !(currentAgentId === "claude-code" && isOpenClawBundledSkill(skill)),
 		),
+	);
+
+	const allSkills = $derived.by(() =>
+		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates),
 	);
 
 	const filteredSkills = $derived(
@@ -172,7 +196,10 @@
 	async function handleFavoriteToggle(skill: Skill) {
 		if (favoritingSkills.has(skill.name)) return;
 
-		const nextFavoriteState = !(skill.is_favorite ?? false);
+		const previousFavoriteState = skill.is_favorite ?? false;
+		const nextFavoriteState = !previousFavoriteState;
+
+		optimisticFavoriteStates.set(skill.name, nextFavoriteState);
 		favoritingSkills.add(skill.name);
 
 		try {
@@ -184,6 +211,7 @@
 
 			updateSkillFavoriteState(skill.name, nextFavoriteState);
 		} catch (e) {
+			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
 			console.error("Failed to toggle skill favorite:", e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {

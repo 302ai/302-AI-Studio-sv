@@ -33,6 +33,7 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
+	import { getOrderedSkillsByFavorite } from "../skill-favorite-order";
 	import SkillCard from "../skill-card.svelte";
 
 	interface Props {
@@ -70,6 +71,7 @@
 	let isSyncing = $state(false);
 	let downloadingSkills = new SvelteSet<string>();
 	let favoritingSkills = new SvelteSet<string>();
+	let optimisticFavoriteStates = new SvelteMap<string, boolean>();
 
 	// Category states
 	const categories = $derived(skillsCategoryState.categories);
@@ -82,10 +84,14 @@
 	let viewMode = $state<"flat" | "grouped">("flat");
 
 	// Combine skills: user skills first, then builtin skills
-	const allSkills = $derived<Skill[]>(
+	const baseSkills = $derived<Skill[]>(
 		[...userSkills, ...builtinSkills].filter(
 			(skill) => !(currentAgentId === "claude-code" && isOpenClawBundledSkill(skill)),
 		),
+	);
+
+	const allSkills = $derived.by(() =>
+		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates),
 	);
 
 	// Filter by search query
@@ -150,15 +156,30 @@
 
 	// Reload when skills change
 	$effect(() => {
-		if (allSkills.length > 0) {
-			skillsCategoryState.fetchSkillCategories(allSkills);
+		if (baseSkills.length > 0) {
+			skillsCategoryState.fetchSkillCategories(baseSkills);
+		}
+	});
+
+	$effect(() => {
+		const persistedFavoriteStates = new Map(
+			[...userSkills, ...builtinSkills].map((skill) => [skill.name, skill.is_favorite ?? false]),
+		);
+
+		for (const [skillName, optimisticFavorite] of Array.from(optimisticFavoriteStates.entries())) {
+			if (
+				!persistedFavoriteStates.has(skillName) ||
+				persistedFavoriteStates.get(skillName) === optimisticFavorite
+			) {
+				optimisticFavoriteStates.delete(skillName);
+			}
 		}
 	});
 
 	async function loadCategoryData() {
 		await Promise.all([
 			skillsCategoryState.fetchCategories(),
-			skillsCategoryState.fetchSkillCategories(allSkills),
+			skillsCategoryState.fetchSkillCategories(baseSkills),
 		]);
 	}
 
@@ -305,7 +326,10 @@
 	async function handleFavoriteToggle(skill: Skill) {
 		if (favoritingSkills.has(skill.name)) return;
 
-		const nextFavoriteState = !(skill.is_favorite ?? false);
+		const previousFavoriteState = skill.is_favorite ?? false;
+		const nextFavoriteState = !previousFavoriteState;
+
+		optimisticFavoriteStates.set(skill.name, nextFavoriteState);
 		favoritingSkills.add(skill.name);
 
 		try {
@@ -317,6 +341,7 @@
 
 			onFavoriteChange?.(skill.name, nextFavoriteState);
 		} catch (e) {
+			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
 			console.error("Failed to toggle skill favorite:", e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
@@ -419,6 +444,15 @@
 		}
 
 		batchFavoriteAction = action;
+		const previousStates = targetSkills.map((skill) => ({
+			name: skill.name,
+			isFavorite: skill.is_favorite ?? false,
+		}));
+
+		for (const skill of targetSkills) {
+			optimisticFavoriteStates.set(skill.name, action === "add");
+		}
+
 		try {
 			if (action === "add") {
 				await addSkillFavorite({ skill_list: targetSkills.map((skill) => skill.name) });
@@ -431,6 +465,10 @@
 			}
 			clearSelection();
 		} catch (e) {
+			for (const previousState of previousStates) {
+				optimisticFavoriteStates.set(previousState.name, previousState.isFavorite);
+			}
+
 			console.error(`Failed to batch ${action} skill favorite:`, e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {

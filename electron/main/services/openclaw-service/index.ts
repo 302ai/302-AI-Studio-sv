@@ -1,6 +1,7 @@
 import { isWin } from "@electron/main/constants";
 import { SUPPORTED_CHANNELS, WIN_SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
 import { type IpcMainInvokeEvent } from "electron";
+import { isNil } from "es-toolkit";
 import { get, isUndefined, merge, pick, set } from "es-toolkit/compat";
 import fs from "fs/promises";
 import { getOpenClawConfigPath, getRuntimeComposeDir } from "../../utils/local-vibe-utils";
@@ -215,8 +216,18 @@ export class OpenClawService {
 
 	wechatChannel = new WeChatChannel();
 
+	async wechatInsalled(_event: IpcMainInvokeEvent) {
+		const config = await this.getOpenClawConfig("plugins.installs.openclaw-weixin");
+		return !isNil(config);
+	}
+
 	async connectWechat(_event: IpcMainInvokeEvent) {
-		this.wechatChannel.connect();
+		const installed = await this.wechatInsalled(_event);
+		await this.wechatChannel.startWeixinLoginFlow(installed);
+	}
+
+	async disposeWechat(_event: IpcMainInvokeEvent) {
+		await this.wechatChannel.dispose();
 	}
 }
 
