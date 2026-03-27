@@ -60,6 +60,7 @@
 	let localUserSkills = $state<Skill[]>([]);
 	let localBuiltinSkills = $state<Skill[]>([]);
 	let optimisticFavoriteStates = new SvelteMap<string, boolean>();
+	let optimisticFavoriteAts = new SvelteMap<string, string | null>();
 
 	const currentAgentId = $derived(codeAgentState.currentAgentId);
 	const isLocalMode = $derived(codeAgentState.type === "local");
@@ -76,13 +77,34 @@
 				skill.is_favorite ?? false,
 			]),
 		);
+		const persistedFavoriteAts = new Map(
+			[...localBuiltinSkills, ...localUserSkills].map((skill) => [
+				skill.name,
+				skill.favorite_at ?? null,
+			]),
+		);
 
 		for (const [skillName, optimisticFavorite] of Array.from(optimisticFavoriteStates.entries())) {
-			if (
-				!persistedFavoriteStates.has(skillName) ||
-				persistedFavoriteStates.get(skillName) === optimisticFavorite
-			) {
+			if (!persistedFavoriteStates.has(skillName)) {
 				optimisticFavoriteStates.delete(skillName);
+				optimisticFavoriteAts.delete(skillName);
+				continue;
+			}
+
+			if (persistedFavoriteStates.get(skillName) === optimisticFavorite) {
+				optimisticFavoriteStates.delete(skillName);
+			}
+		}
+
+		for (const [skillName, optimisticFavoriteAt] of Array.from(optimisticFavoriteAts.entries())) {
+			if (!persistedFavoriteAts.has(skillName)) {
+				optimisticFavoriteAts.delete(skillName);
+				optimisticFavoriteStates.delete(skillName);
+				continue;
+			}
+
+			if (persistedFavoriteAts.get(skillName) === optimisticFavoriteAt) {
+				optimisticFavoriteAts.delete(skillName);
 			}
 		}
 	});
@@ -95,7 +117,9 @@
 	);
 
 	const allSkills = $derived.by(() =>
-		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates),
+		isLocalMode
+			? getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts)
+			: baseSkills,
 	);
 
 	const filteredSkills = $derived(
@@ -185,9 +209,15 @@
 		}
 	}
 
-	function updateSkillFavoriteState(skillName: string, is_favorite: boolean) {
+	function updateSkillFavoriteState(
+		skillName: string,
+		is_favorite: boolean,
+		favorite_at: string | null,
+	) {
 		const updateSkills = (skills: Skill[]) =>
-			skills.map((skill) => (skill.name === skillName ? { ...skill, is_favorite } : skill));
+			skills.map((skill) =>
+				skill.name === skillName ? { ...skill, is_favorite, favorite_at } : skill,
+			);
 
 		localUserSkills = updateSkills(localUserSkills);
 		localBuiltinSkills = updateSkills(localBuiltinSkills);
@@ -197,9 +227,12 @@
 		if (favoritingSkills.has(skill.name)) return;
 
 		const previousFavoriteState = skill.is_favorite ?? false;
+		const previousFavoriteAt = skill.favorite_at ?? null;
 		const nextFavoriteState = !previousFavoriteState;
+		const nextFavoriteAt = nextFavoriteState ? new Date().toISOString() : null;
 
 		optimisticFavoriteStates.set(skill.name, nextFavoriteState);
+		optimisticFavoriteAts.set(skill.name, nextFavoriteAt);
 		favoritingSkills.add(skill.name);
 
 		try {
@@ -209,9 +242,10 @@
 				await cancelSkillFavorite({ skill_list: [skill.name] });
 			}
 
-			updateSkillFavoriteState(skill.name, nextFavoriteState);
+			updateSkillFavoriteState(skill.name, nextFavoriteState, nextFavoriteAt);
 		} catch (e) {
 			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
+			optimisticFavoriteAts.set(skill.name, previousFavoriteAt);
 			console.error("Failed to toggle skill favorite:", e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {

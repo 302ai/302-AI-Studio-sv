@@ -791,6 +791,10 @@
 	"open_claw_wecom_placeholder_bot_id": "请输入BotId",
 	"open_claw_wecom_secret": "Secret",
 	"open_claw_wecom_placeholder_secret": "请输入Secret",
+	"open_claw_telegram_bot_token": "Bot Token",
+	"open_claw_telegram_bot_id_optional": "机器人ID(选填)",
+	"open_claw_telegram_placeholder_bot_id": "请输入机器人ID",
+	"open_claw_telegram_placeholder_bot_token": "请输入Bot Token",
 	"open_claw_feishu_get_id_and_secret": "点击此处获取ID和密钥",
 	"open_claw_feishu_view_deployment_tutorial": "查看部署教程",
 	"open_claw_update_config": "更新配置",
@@ -1420,7 +1424,5 @@
 	"open_claw_wechat_install_failed_retry": "微信插件安装失败，请重试",
 	"open_claw_wechat_loading_hint": "精彩即将呈现～",
 	"open_claw_channel_telegram": "Telegram",
-	"open_claw_telegram_get_bot_token": "点击此处获取密钥",
-	"open_claw_telegram_bot_token": "Bot Token",
-	"open_claw_telegram_placeholder_bot_token": "请输入Bot Token"
+	"open_claw_telegram_get_bot_token": "点击此处获取密钥"
 }

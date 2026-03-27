@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { AccordionContent, AccordionItem, AccordionTrigger } from "$lib/components/ui/accordion";
-	import Accordion from "$lib/components/ui/accordion/accordion.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
@@ -115,11 +114,11 @@
 	});
 
 	let wechatTriggerSignal = 0;
-	const handleWechartTrigger = async (signal: string) => {
+	const handleWechartTrigger = async () => {
 		wechatState.installed = await window.electronAPI.openClawService.wechatInsalled();
 		if (!wechatState.installed) return;
 
-		if (signal.length <= 0 || wechatTriggerSignal >= 1) return;
+		if (wechatTriggerSignal >= 1) return;
 		handleWechatConnectOrInstall();
 		wechatTriggerSignal++;
 	};
@@ -136,68 +135,66 @@
 	};
 </script>
 
-<Accordion type="single" class="w-full rounded-settings-item" onValueChange={handleWechartTrigger}>
-	<AccordionItem value="wechat" class="border-b-0">
-		<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-			<Label class=" font-normal no-underline cursor-pointer">{m.open_claw_channel_wechat()}</Label>
-		</AccordionTrigger>
-		<AccordionContent class="pb-0 pt-2 space-y-2">
-			<div class="rounded-lg border p-4 space-y-4">
-				<div class="flex justify-between">
-					<!-- svelte-ignore a11y_label_has_associated_control -->
-					<div>
-						<div class={`${!wechatState.installed && "hidden"}`}>
-							<label class="text-sm text-label-fg font-medium"
-								>{m.open_claw_wechat_scan_qrcode_hint()}</label
-							>
+<AccordionItem id="wechat" value="wechat" class="border-b-0 my-1" onclick={handleWechartTrigger}>
+	<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+		<Label class=" font-normal no-underline cursor-pointer">{m.open_claw_channel_wechat()}</Label>
+	</AccordionTrigger>
+	<AccordionContent class="pb-0 pt-2 space-y-2">
+		<div class="rounded-lg border p-4 space-y-4">
+			<div class="flex justify-between">
+				<!-- svelte-ignore a11y_label_has_associated_control -->
+				<div>
+					<div class={`${!wechatState.installed && "hidden"}`}>
+						<label class="text-sm text-label-fg font-medium"
+							>{m.open_claw_wechat_scan_qrcode_hint()}</label
+						>
+						<div
+							class="w-36 h-36 mt-1 relative flex flex-col items-center justify-center bg-muted rounded-md"
+						>
+							{#if wechatState.loading}
+								<!-- <LoaderCircle class="h-8 w-8 animate-spin text-muted-foreground" /> -->
+								<LdrsLoader type="line-spinner" />
+								<span class="text-label-fg mt-1 text-xs">{wechatState.text}</span>
+							{/if}
 							<div
-								class="w-36 h-36 mt-1 relative flex flex-col items-center justify-center bg-muted rounded-md"
-							>
-								{#if wechatState.loading}
-									<!-- <LoaderCircle class="h-8 w-8 animate-spin text-muted-foreground" /> -->
-									<LdrsLoader type="line-spinner" />
-									<span class="text-label-fg mt-1 text-xs">{wechatState.text}</span>
-								{/if}
-								<div
-									bind:this={wechatElm}
-									class={`size-full ${wechatState.loading || !wechatState.installed ? "hidden" : ""}`}
-								></div>
-							</div>
-						</div>
-						<div class="flex items-center justify-between">
-							<div class="text-muted-foreground flex items-center gap-2 text-xs">
-								<a href={getWechatTutorialUrl()} class="text-primary hover:underline"
-									>{m.open_claw_feishu_view_deployment_tutorial()}</a
-								>
-							</div>
+								bind:this={wechatElm}
+								class={`size-full ${wechatState.loading || !wechatState.installed ? "hidden" : ""}`}
+							></div>
 						</div>
 					</div>
-					<!-- weChartInstalled -->
-					{#if !wechatState.installed}
-						<div class="flex flex-col items-end">
-							<Button
-								class="w-fit"
-								disabled={wechatState.loading || wechatState.installed}
-								onclick={handleWechatConnectOrInstall}
+					<div class="flex items-center justify-between">
+						<div class="text-muted-foreground flex items-center gap-2 text-xs">
+							<a href={getWechatTutorialUrl()} class="text-primary hover:underline"
+								>{m.open_claw_feishu_view_deployment_tutorial()}</a
 							>
-								{#if wechatState.loading}
-									<LdrsLoader type="dot-pulse" size={10} />
-								{:else}
-									<ArrowDownToLine class="size-4" />
-								{/if}
-								{m.open_claw_wechat_install_plugin()}
-							</Button>
-							<div class="flex items-center mt-1 text-red-500 text-xs">
-								<CircleAlert class="size-4" />
-								<span>{m.open_claw_wechat_install_restart_gateway()}</span>
-							</div>
-							<p class="text-red-500 text-xs">
-								{wechatState.error ? m.open_claw_wechat_install_failed_retry() : ""}
-							</p>
 						</div>
-					{/if}
+					</div>
 				</div>
+				<!-- weChartInstalled -->
+				{#if !wechatState.installed}
+					<div class="flex flex-col items-end">
+						<Button
+							class="w-fit"
+							disabled={wechatState.loading || wechatState.installed}
+							onclick={handleWechatConnectOrInstall}
+						>
+							{#if wechatState.loading}
+								<LdrsLoader type="dot-pulse" size={10} />
+							{:else}
+								<ArrowDownToLine class="size-4" />
+							{/if}
+							{m.open_claw_wechat_install_plugin()}
+						</Button>
+						<div class="flex items-center mt-1 text-red-500 text-xs">
+							<CircleAlert class="size-4" />
+							<span>{m.open_claw_wechat_install_restart_gateway()}</span>
+						</div>
+						<p class="text-red-500 text-xs">
+							{wechatState.error ? m.open_claw_wechat_install_failed_retry() : ""}
+						</p>
+					</div>
+				{/if}
 			</div>
-		</AccordionContent>
-	</AccordionItem>
-</Accordion>
+		</div>
+	</AccordionContent>
+</AccordionItem>

@@ -790,6 +790,8 @@
 	"open_claw_wecom_placeholder_bot_id": "Enter BotId",
 	"open_claw_wecom_secret": "Secret",
 	"open_claw_wecom_placeholder_secret": "Enter Secret",
+	"open_claw_telegram_bot_id_optional": "Bot ID (Optional)",
+	"open_claw_telegram_placeholder_bot_id": "Enter Bot ID",
 	"open_claw_feishu_get_id_and_secret": "Get App ID and Secret",
 	"open_claw_feishu_view_deployment_tutorial": "View setup guide",
 	"open_claw_update_config": "Update Config",

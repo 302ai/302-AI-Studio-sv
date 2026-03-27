@@ -45,9 +45,15 @@
 		);
 	}
 
-	function updateSkillFavoriteState(skillName: string, is_favorite: boolean) {
+	function updateSkillFavoriteState(
+		skillName: string,
+		is_favorite: boolean,
+		favorite_at: string | null,
+	) {
 		const updateSkills = (skills: Skill[]) =>
-			skills.map((skill) => (skill.name === skillName ? { ...skill, is_favorite } : skill));
+			skills.map((skill) =>
+				skill.name === skillName ? { ...skill, is_favorite, favorite_at } : skill,
+			);
 
 		skillsData = {
 			...skillsData,

@@ -21,10 +21,14 @@
 			description: m.title_local_platform_description(),
 		},
 	];
+	type PlatformKey = (typeof platformOptions)[number]["key"];
 
-	let selectedPlatform = $state("remote");
+	const url = new URL(window.location.href);
+	const queryPlatform = url.searchParams.get("platform") as PlatformKey | null;
 
-	function handlePlatformSelect(key: string) {
+	let selectedPlatform = $state<PlatformKey>(queryPlatform || "remote");
+
+	function handlePlatformSelect(key: PlatformKey) {
 		selectedPlatform = key;
 	}
 </script>
