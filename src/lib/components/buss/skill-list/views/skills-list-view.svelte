@@ -44,7 +44,11 @@
 		singleColumn?: boolean;
 		showBorder?: boolean;
 		onRefresh?: () => void | Promise<void>;
-		onFavoriteChange?: (skillName: string, is_favorite: boolean) => void;
+		onFavoriteChange?: (
+			skillName: string,
+			is_favorite: boolean,
+			favorite_at: string | null,
+		) => void;
 	}
 
 	let {
@@ -72,6 +76,7 @@
 	let downloadingSkills = new SvelteSet<string>();
 	let favoritingSkills = new SvelteSet<string>();
 	let optimisticFavoriteStates = new SvelteMap<string, boolean>();
+	let optimisticFavoriteAts = new SvelteMap<string, string | null>();
 
 	// Category states
 	const categories = $derived(skillsCategoryState.categories);
@@ -91,7 +96,9 @@
 	);
 
 	const allSkills = $derived.by(() =>
-		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates),
+		isLocalMode
+			? getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts)
+			: baseSkills,
 	);
 
 	// Filter by search query
@@ -165,13 +172,31 @@
 		const persistedFavoriteStates = new Map(
 			[...userSkills, ...builtinSkills].map((skill) => [skill.name, skill.is_favorite ?? false]),
 		);
+		const persistedFavoriteAts = new Map(
+			[...userSkills, ...builtinSkills].map((skill) => [skill.name, skill.favorite_at ?? null]),
+		);
 
 		for (const [skillName, optimisticFavorite] of Array.from(optimisticFavoriteStates.entries())) {
-			if (
-				!persistedFavoriteStates.has(skillName) ||
-				persistedFavoriteStates.get(skillName) === optimisticFavorite
-			) {
+			if (!persistedFavoriteStates.has(skillName)) {
 				optimisticFavoriteStates.delete(skillName);
+				optimisticFavoriteAts.delete(skillName);
+				continue;
+			}
+
+			if (persistedFavoriteStates.get(skillName) === optimisticFavorite) {
+				optimisticFavoriteStates.delete(skillName);
+			}
+		}
+
+		for (const [skillName, optimisticFavoriteAt] of Array.from(optimisticFavoriteAts.entries())) {
+			if (!persistedFavoriteAts.has(skillName)) {
+				optimisticFavoriteAts.delete(skillName);
+				optimisticFavoriteStates.delete(skillName);
+				continue;
+			}
+
+			if (persistedFavoriteAts.get(skillName) === optimisticFavoriteAt) {
+				optimisticFavoriteAts.delete(skillName);
 			}
 		}
 	});
@@ -327,9 +352,12 @@
 		if (favoritingSkills.has(skill.name)) return;
 
 		const previousFavoriteState = skill.is_favorite ?? false;
+		const previousFavoriteAt = skill.favorite_at ?? null;
 		const nextFavoriteState = !previousFavoriteState;
+		const nextFavoriteAt = nextFavoriteState ? new Date().toISOString() : null;
 
 		optimisticFavoriteStates.set(skill.name, nextFavoriteState);
+		optimisticFavoriteAts.set(skill.name, nextFavoriteAt);
 		favoritingSkills.add(skill.name);
 
 		try {
@@ -339,9 +367,10 @@
 				await cancelSkillFavorite({ skill_list: [skill.name] });
 			}
 
-			onFavoriteChange?.(skill.name, nextFavoriteState);
+			onFavoriteChange?.(skill.name, nextFavoriteState, nextFavoriteAt);
 		} catch (e) {
 			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
+			optimisticFavoriteAts.set(skill.name, previousFavoriteAt);
 			console.error("Failed to toggle skill favorite:", e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
@@ -447,10 +476,18 @@
 		const previousStates = targetSkills.map((skill) => ({
 			name: skill.name,
 			isFavorite: skill.is_favorite ?? false,
+			favoriteAt: skill.favorite_at ?? null,
 		}));
+		const batchBaseTimestamp = Date.now();
 
-		for (const skill of targetSkills) {
+		for (const [index, skill] of targetSkills.entries()) {
 			optimisticFavoriteStates.set(skill.name, action === "add");
+			optimisticFavoriteAts.set(
+				skill.name,
+				action === "add"
+					? new Date(batchBaseTimestamp + targetSkills.length - index).toISOString()
+					: null,
+			);
 		}
 
 		try {
@@ -461,12 +498,17 @@
 			}
 
 			for (const skill of targetSkills) {
-				onFavoriteChange?.(skill.name, action === "add");
+				onFavoriteChange?.(
+					skill.name,
+					action === "add",
+					optimisticFavoriteAts.get(skill.name) ?? null,
+				);
 			}
 			clearSelection();
 		} catch (e) {
 			for (const previousState of previousStates) {
 				optimisticFavoriteStates.set(previousState.name, previousState.isFavorite);
+				optimisticFavoriteAts.set(previousState.name, previousState.favoriteAt);
 			}
 
 			console.error(`Failed to batch ${action} skill favorite:`, e);
