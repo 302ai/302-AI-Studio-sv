@@ -1252,7 +1252,7 @@
 	"skills_create_manual_desc": "创建 .md 文件",
 	"skills_create_upload": "上传 ZIP",
 	"skills_create_upload_desc": "导入 skills 文件夹",
-	"skills_upload_dropzone": "拖放 ZIP 文件到此处或点击选择",
+	"skills_upload_dropzone": "上传 ZIP 文件",
 	"skills_upload_extracting": "解压中...",
 	"skills_upload_no_skill_found": "ZIP 文件中未找到 SKILL.md",
 	"skills_upload_multiple_skills_found": "发现多个 SKILL.md 文件，请上传只包含一个技能的 ZIP 文件",

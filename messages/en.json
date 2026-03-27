@@ -1251,7 +1251,7 @@
 	"skills_create_manual_desc": "Create .md file",
 	"skills_create_upload": "Upload ZIP",
 	"skills_create_upload_desc": "Import skills folder",
-	"skills_upload_dropzone": "Drop ZIP file here or click to select",
+	"skills_upload_dropzone": "Upload ZIP file",
 	"skills_upload_extracting": "Extracting...",
 	"skills_upload_no_skill_found": "No SKILL.md found in ZIP file",
 	"skills_upload_multiple_skills_found": "Multiple SKILL.md files found. Please upload a ZIP with only one skill.",
