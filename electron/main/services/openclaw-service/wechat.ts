@@ -11,7 +11,7 @@ import * as readline from "node:readline";
 import { promisify } from "node:util";
 import { broadcastService } from "../broadcast-service";
 class WeChatChannel {
-	execAsync = promisify(exec);
+	private execAsync = promisify(exec);
 
 	private commandProcess: ChildProcessWithoutNullStreams | null = null;
 	private isConnecting = false;
@@ -40,20 +40,25 @@ class WeChatChannel {
 		}
 	};
 
+	private async clearCommand() {
+		if (this.commandProcess) {
+			const old = this.commandProcess;
+			if (!old.killed) {
+				await this.stopCommandProcess(old);
+				this.commandProcess = null;
+				this.isManual = true;
+			}
+		}
+	}
+
 	private executeCommand = async (
 		command: string,
 		stdoutFn: (d: string) => void,
+		stderrFn: (d: string) => void,
 		closeFn?: (manual: boolean) => void,
 	) => {
 		try {
-			if (this.commandProcess) {
-				const old = this.commandProcess;
-				if (!old.killed) {
-					await this.stopCommandProcess(old);
-					this.commandProcess = null;
-					this.isManual = true;
-				}
-			}
+			await this.clearCommand();
 
 			const proc = spawn("podman", ["exec", "-i", "local-cc-api", "bash", "-c", command], {
 				detached: process.platform !== "win32",
@@ -71,9 +76,14 @@ class WeChatChannel {
 				rl.close();
 				proc.stdout.removeAllListeners();
 				proc.stderr.removeAllListeners();
-				if (this.commandProcess === proc) {
-					this.commandProcess = null;
-					closeFn?.(this.isManual);
+				if (code != 0) {
+					if (this.isManual) return;
+					stderrFn(`Error: ${code}`);
+				} else {
+					if (this.commandProcess === proc) {
+						this.commandProcess = null;
+						closeFn?.(this.isManual);
+					}
 				}
 				this.isManual = false;
 			});
@@ -82,24 +92,24 @@ class WeChatChannel {
 		}
 	};
 
-	private _hasOpenClawChannel = async (channelName: string) => {
-		const { stdout } = await this.execAsync(
-			'podman exec -i local-cc-api bash -c "openclaw channels list"',
-		);
+	async dispose() {
+		await this.clearCommand();
+	}
 
-		return stdout.includes(channelName);
-	};
-
-	async connect() {
+	/**
+	 * start weixin login flow
+	 * @param installed -  whether the channel is installed
+	 * @returns void
+	 */
+	async startWeixinLoginFlow(installed: boolean = false) {
 		// "openclaw channels login --channel openclaw-weixin"
 		// "openclaw channels list"
 		// npx -y @tencent-weixin/openclaw-weixin-cli install
 		if (this.isConnecting) return;
 		this.isConnecting = true;
 		try {
-			const has = await this._hasOpenClawChannel("openclaw-weixin");
 			let command = "openclaw channels login --channel openclaw-weixin";
-			if (!has) {
+			if (!installed) {
 				command = "npx -y @tencent-weixin/openclaw-weixin-cli install";
 				broadcastService.broadcastChannelToAll("openclaw-weixin:login", {
 					type: "install",
@@ -120,6 +130,14 @@ class WeChatChannel {
 							type: "url",
 							data: line,
 						};
+
+						if (!installed) {
+							// installed successfully
+							broadcastService.broadcastChannelToAll("openclaw-weixin:login", {
+								type: "installed",
+								data: "",
+							});
+						}
 					} else if (line.includes("微信连接成功")) {
 						data = {
 							type: "ok",
@@ -133,6 +151,13 @@ class WeChatChannel {
 					}
 
 					broadcastService.broadcastChannelToAll("openclaw-weixin:login", data);
+				},
+				(err: string) => {
+					console.error("openclaw-weixin:login:error", err);
+					broadcastService.broadcastChannelToAll("openclaw-weixin:login", {
+						type: "error",
+						data: err,
+					});
 				},
 				(manual: boolean) => {
 					broadcastService.broadcastChannelToAll("openclaw-weixin:login", {
