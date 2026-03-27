@@ -121,20 +121,26 @@
 		<AccordionContent class="pb-1 pt-0 space-y-2">
 			{@render feishu()}
 			{@render telegram()}
-			<div class="flex flex-col items-end">
-				<Button
-					disabled={updateBtnDiabled}
-					class="w-fit"
-					onclick={() => (confirmDialogOpen = true)}
+			<div class="flex items-start justify-between">
+				<button
+					onclick={() => handleNewSettingsTab("/settings/agent-settings?platform=local")}
+					class="text-primary hover:underline cursor-pointer">查看更多渠道设置</button
 				>
-					<RefreshCw class="size-4" />
-					{m.open_claw_update_config()}
-				</Button>
-				{#if updateBtnDiabled}
-					<p class="text-xs text-muted-foreground mt-1">
-						{m.open_claw_update_config_hint()}
-					</p>
-				{/if}
+				<div class="flex flex-col items-end">
+					<Button
+						disabled={updateBtnDiabled}
+						class="w-fit"
+						onclick={() => (confirmDialogOpen = true)}
+					>
+						<RefreshCw class="size-4" />
+						{m.open_claw_update_config()}
+					</Button>
+					{#if updateBtnDiabled}
+						<p class="text-xs text-muted-foreground mt-1">
+							{m.open_claw_update_config_hint()}
+						</p>
+					{/if}
+				</div>
 			</div>
 		</AccordionContent>
 	</AccordionItem>
