@@ -112,56 +112,64 @@
 	</div>
 
 	<!-- Sandbox List -->
-	{#if filteredSandboxes.length === 0}
-		<Empty.Root>
-			<Empty.Content class="h-[200px] flex flex-col items-center justify-start pt-8">
-				<Empty.Description>
-					{searchQuery ? m.no_search_results() : m.no_sandboxes()}
-				</Empty.Description>
-			</Empty.Content>
-		</Empty.Root>
-	{:else}
-		<div class="flex flex-col gap-2">
-			{#each filteredSandboxes as sandbox (sandbox.sandboxId)}
-				<!-- svelte-ignore a11y_click_events_have_key_events -->
-				<!-- svelte-ignore a11y_no_static_element_interactions -->
-				<ContextMenu.Root>
-					<ContextMenu.Trigger>
+	<div class={cn("p-2", filteredSandboxes.length > 0 && "rounded-lg border bg-muted/20")}>
+		{#if filteredSandboxes.length === 0}
+			<Empty.Root>
+				<Empty.Content class="h-[200px] flex flex-col items-center justify-start pt-8">
+					<Empty.Description>
+						{searchQuery ? m.no_search_results() : m.no_sandboxes()}
+					</Empty.Description>
+				</Empty.Content>
+			</Empty.Root>
+		{:else}
+			<div class="max-h-[360px] overflow-y-auto pr-1">
+				<div class="flex flex-col gap-2">
+					{#each filteredSandboxes as sandbox (sandbox.sandboxId)}
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
 						<!-- svelte-ignore a11y_no_static_element_interactions -->
-						<div
-							class="flex items-center justify-between rounded-lg bg-muted/50 p-4 hover:bg-muted/70 transition-colors cursor-pointer"
-							onclick={() => handleSandboxClick(sandbox)}
-						>
-							<div class="flex flex-col gap-1">
-								<span class="font-medium text-sm">
-									{sandbox.sandboxRemark || sandbox.sandboxId}
-								</span>
-								<span class="text-xs text-muted-foreground">{sandbox.sandboxId}</span>
-							</div>
-							<div class="flex flex-col items-end gap-1">
-								<span class="text-xs text-muted-foreground">
-									{m.label_agent_sandbox_count({ count: String(sandbox.sessionInfos.length) })}
-								</span>
-								<span class="text-xs text-muted-foreground">{formatTime(sandbox.updatedAt)}</span>
-							</div>
-						</div>
-					</ContextMenu.Trigger>
-					<ContextMenu.Content>
-						<ContextMenu.Item onclick={() => handleModifyRemark(sandbox)}>
-							{m.text_button_edit ? m.text_button_edit() : "Edit"}
-						</ContextMenu.Item>
-						<ContextMenu.Item
-							class="text-destructive focus:text-destructive"
-							onclick={() => handleDeleteClick(sandbox)}
-						>
-							{m.text_button_delete ? m.text_button_delete() : "Delete"}
-						</ContextMenu.Item>
-					</ContextMenu.Content>
-				</ContextMenu.Root>
-			{/each}
-		</div>
-	{/if}
+						<ContextMenu.Root>
+							<ContextMenu.Trigger>
+								<!-- svelte-ignore a11y_click_events_have_key_events -->
+								<!-- svelte-ignore a11y_no_static_element_interactions -->
+								<div
+									class="flex cursor-pointer items-center justify-between rounded-lg bg-muted/50 p-4 transition-colors hover:bg-muted/70"
+									onclick={() => handleSandboxClick(sandbox)}
+								>
+									<div class="flex flex-col gap-1">
+										<span class="font-medium text-sm">
+											{sandbox.sandboxRemark || sandbox.sandboxId}
+										</span>
+										<span class="text-xs text-muted-foreground">{sandbox.sandboxId}</span>
+									</div>
+									<div class="flex flex-col items-end gap-1">
+										<span class="text-xs text-muted-foreground">
+											{m.label_agent_sandbox_count({
+												count: String(sandbox.sessionInfos.length),
+											})}
+										</span>
+										<span class="text-xs text-muted-foreground">
+											{formatTime(sandbox.updatedAt)}
+										</span>
+									</div>
+								</div>
+							</ContextMenu.Trigger>
+							<ContextMenu.Content>
+								<ContextMenu.Item onclick={() => handleModifyRemark(sandbox)}>
+									{m.text_button_edit ? m.text_button_edit() : "Edit"}
+								</ContextMenu.Item>
+								<ContextMenu.Item
+									class="text-destructive focus:text-destructive"
+									onclick={() => handleDeleteClick(sandbox)}
+								>
+									{m.text_button_delete ? m.text_button_delete() : "Delete"}
+								</ContextMenu.Item>
+							</ContextMenu.Content>
+						</ContextMenu.Root>
+					{/each}
+				</div>
+			</div>
+		{/if}
+	</div>
 
 	<SandboxDialog
 		bind:open={isDialogOpen}

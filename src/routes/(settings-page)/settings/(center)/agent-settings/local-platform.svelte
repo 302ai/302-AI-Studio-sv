@@ -100,47 +100,53 @@
 		</div>
 
 		<!-- Session List -->
-		{#if filteredSessions.length === 0}
-			<Empty.Root>
-				<Empty.Content class="h-[200px] flex flex-col items-center justify-start pt-8">
-					<Empty.Description>
-						{searchQuery ? m.no_search_results() : m.no_sessions()}
-					</Empty.Description>
-				</Empty.Content>
-			</Empty.Root>
-		{:else}
-			<div class="flex flex-col gap-2">
-				{#each filteredSessions as session (session.session_id)}
-					<ContextMenu.Root>
-						<ContextMenu.Trigger>
-							<div
-								class="flex items-center justify-between rounded-lg bg-muted/50 p-4 hover:bg-muted/70 transition-colors cursor-pointer"
-							>
-								<div class="flex flex-col gap-1">
-									<span class="font-medium text-sm">
-										{session.note || session.session_id}
-									</span>
-									<span class="text-xs text-muted-foreground">{session.session_id}</span>
-								</div>
-								{#if session.workspace_path}
-									<div class="flex flex-col items-end gap-1">
-										<span class="text-xs text-muted-foreground">{session.workspace_path}</span>
+		<div class={cn("p-2", filteredSessions.length > 0 && "rounded-lg border bg-muted/20")}>
+			{#if filteredSessions.length === 0}
+				<Empty.Root>
+					<Empty.Content class="h-[200px] flex flex-col items-center justify-start pt-8">
+						<Empty.Description>
+							{searchQuery ? m.no_search_results() : m.no_sessions()}
+						</Empty.Description>
+					</Empty.Content>
+				</Empty.Root>
+			{:else}
+				<div class="max-h-[360px] overflow-y-auto pr-1">
+					<div class="flex flex-col gap-2">
+						{#each filteredSessions as session (session.session_id)}
+							<ContextMenu.Root>
+								<ContextMenu.Trigger>
+									<div
+										class="flex cursor-pointer items-center justify-between rounded-lg bg-muted/50 p-4 transition-colors hover:bg-muted/70"
+									>
+										<div class="flex flex-col gap-1">
+											<span class="font-medium text-sm">
+												{session.note || session.session_id}
+											</span>
+											<span class="text-xs text-muted-foreground">{session.session_id}</span>
+										</div>
+										{#if session.workspace_path}
+											<div class="flex flex-col items-end gap-1">
+												<span class="text-xs text-muted-foreground">
+													{session.workspace_path}
+												</span>
+											</div>
+										{/if}
 									</div>
-								{/if}
-							</div>
-						</ContextMenu.Trigger>
-						<ContextMenu.Content>
-							<ContextMenu.Item
-								class="text-destructive focus:text-destructive"
-								onclick={() => handleDeleteClick(session)}
-							>
-								{m.text_button_delete ? m.text_button_delete() : "Delete"}
-							</ContextMenu.Item>
-						</ContextMenu.Content>
-					</ContextMenu.Root>
-				{/each}
-			</div>
-		{/if}
+								</ContextMenu.Trigger>
+								<ContextMenu.Content>
+									<ContextMenu.Item
+										class="text-destructive focus:text-destructive"
+										onclick={() => handleDeleteClick(session)}
+									>
+										{m.text_button_delete ? m.text_button_delete() : "Delete"}
+									</ContextMenu.Item>
+								</ContextMenu.Content>
+							</ContextMenu.Root>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		</div>
 	</section>
 
 	<SandboxDeleteConfirmDialog bind:open={isDeleteDialogOpen} mode="local" session={targetSession} />
