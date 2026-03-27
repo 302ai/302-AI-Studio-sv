@@ -1421,6 +1421,7 @@
 	"open_claw_wechat_install_failed_retry": "WeChat plugin installation failed, please try again",
 	"open_claw_wechat_loading_hint": "Coming soon...",
 	"open_claw_channel_telegram": "Telegram",
+	"open_claw_telegram_get_bot_token": "Click here to get Bot Token",
 	"open_claw_telegram_bot_token": "Bot Token",
 	"open_claw_telegram_placeholder_bot_token": "Enter Bot Token"
 }

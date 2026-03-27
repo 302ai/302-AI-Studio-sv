@@ -1421,6 +1421,7 @@
 	"open_claw_wechat_install_failed_retry": "微信插件安装失败，请重试",
 	"open_claw_wechat_loading_hint": "精彩即将呈现～",
 	"open_claw_channel_telegram": "Telegram",
+	"open_claw_telegram_get_bot_token": "点击此处获取密钥",
 	"open_claw_telegram_bot_token": "Bot Token",
 	"open_claw_telegram_placeholder_bot_token": "请输入Bot Token"
 }
