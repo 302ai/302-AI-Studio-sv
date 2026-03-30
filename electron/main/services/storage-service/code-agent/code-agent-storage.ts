@@ -98,6 +98,9 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 					},
 				},
 			},
+			discord: {
+				token: "",
+			},
 		};
 		try {
 			const data = await this.getItemInternal("code-agent-global-configs");

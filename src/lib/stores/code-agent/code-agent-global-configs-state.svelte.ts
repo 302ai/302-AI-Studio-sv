@@ -21,6 +21,7 @@ function getInitialData() {
 		qqbot: { appId: "", clientSecret: "" },
 		wecom: { botId: "", secret: "" },
 		telegram: { accounts: { default: { botToken: "" } } },
+		discord: { token: "" },
 	};
 	return initialData;
 }
@@ -64,6 +65,7 @@ class CodeAgentGlobalConfigsState {
 			allowFrom: [],
 		},
 	);
+	discord = $derived(persistedCodeAgentGlobalConfigsState.current.discord ?? { token: "" });
 
 	constructor() {
 		$effect.root(() => {
