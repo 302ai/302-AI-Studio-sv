@@ -15,9 +15,18 @@
 	let { files }: Props = $props();
 
 	let isDownloading = $state<Record<string, boolean>>({});
+	const getFileName = (filePath: string) => filePath.split(/[/\\]/).filter(Boolean).pop() ?? "";
+	const hasFileExtension = (filePath: string) => {
+		const fileName = getFileName(filePath);
+		const lastDotIndex = fileName.lastIndexOf(".");
+
+		return lastDotIndex > 0 && lastDotIndex < fileName.length - 1;
+	};
+	let visibleFiles = $derived(files.filter(hasFileExtension));
 	let fileItems = $derived(
-		files.map((file) => ({
+		visibleFiles.map((file) => ({
 			file,
+			fileName: getFileName(file),
 			downloading: Boolean(isDownloading[file]),
 		})),
 	);
@@ -54,7 +63,7 @@
 			}
 
 			// Extract filename from path
-			const filename = filePath.split("/").pop() || "download";
+			const filename = getFileName(filePath) || "download";
 
 			// Create download link
 			const url = URL.createObjectURL(blob);
@@ -79,7 +88,7 @@
 	}
 </script>
 
-{#if files && files.length > 0}
+{#if fileItems.length > 0}
 	<div class="mt-2 mb-3">
 		<h4 class="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
 			<FileIcon class="h-3 w-3" />
@@ -90,9 +99,7 @@
 				<div
 					class="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-muted/30 hover:bg-muted/50 transition-colors"
 				>
-					<span class="text-xs truncate max-w-[200px]" title={item.file}
-						>{item.file.split("/").pop()}</span
-					>
+					<span class="text-xs truncate max-w-[200px]" title={item.file}>{item.fileName}</span>
 					{#if item.downloading}
 						<ButtonWithTooltip
 							tooltipSide="top"

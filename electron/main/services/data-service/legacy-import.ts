@@ -422,6 +422,7 @@ async function importThreads(
 	legacyModels: any[],
 	stats: ImportStats,
 ): Promise<void> {
+	const BATCH_SIZE = 10;
 	try {
 		const existingMetadata = ((await storageService.getItemInternal(
 			"ThreadStorage:thread-metadata",
@@ -431,10 +432,8 @@ async function importThreads(
 		};
 		const existingThreadIds = new Set(existingMetadata.threadIds);
 
-		// Load the imported models from storage
 		const importedModels = ((await storageService.getItemInternal("app-models")) as any[]) || [];
 
-		// Create a map from legacy model ID to model name
 		const legacyModelIdToName = new Map<string, string>();
 		for (const legacyModel of legacyModels) {
 			legacyModelIdToName.set(legacyModel.id, legacyModel.name);
@@ -443,7 +442,6 @@ async function importThreads(
 		const newThreadIds = [];
 		const newFavorites = [];
 
-		// Create a map of messageId -> attachments for quick lookup
 		const attachmentsByMessageId = new Map<string, any[]>();
 		for (const attachment of legacyAttachments) {
 			if (!attachmentsByMessageId.has(attachment.messageId)) {
@@ -452,98 +450,102 @@ async function importThreads(
 			attachmentsByMessageId.get(attachment.messageId)!.push(attachment);
 		}
 
-		for (const legacy of legacyThreads) {
-			if (existingThreadIds.has(legacy.id)) {
-				stats.threads.skipped++;
-				continue;
+		for (let i = 0; i < legacyThreads.length; i += BATCH_SIZE) {
+			const batch = legacyThreads.slice(i, i + BATCH_SIZE);
+			const batchOps = [];
+
+			for (const legacy of batch) {
+				if (existingThreadIds.has(legacy.id)) {
+					stats.threads.skipped++;
+					continue;
+				}
+
+				const mcpServerIds = threadMcpServers
+					.filter((tms) => tms.threadId === legacy.id && tms.enabled)
+					.sort((a, b) => a.order - b.order)
+					.map((tms) => tms.mcpServerId);
+
+				let selectedModel = null;
+				if (legacy.modelId && legacyModelIdToName.has(legacy.modelId)) {
+					const modelName = legacyModelIdToName.get(legacy.modelId);
+					selectedModel = importedModels.find((m) => m.name === modelName) || null;
+				}
+
+				const threadData = {
+					id: legacy.id,
+					title: legacy.title,
+					temperature: null,
+					topP: null,
+					frequencyPenalty: null,
+					presencePenalty: null,
+					maxTokens: null,
+					inputValue: "",
+					attachments: [],
+					mcpServers: [],
+					mcpServerIds: mcpServerIds,
+					isThinkingActive: false,
+					isOnlineSearchActive: false,
+					isMCPActive: mcpServerIds.length > 0,
+					selectedModel: selectedModel,
+					isPrivateChatActive: legacy.isPrivate,
+					updatedAt: new Date(legacy.updatedAt),
+				};
+
+				batchOps.push(storageService.setItemInternal(`app-thread:${legacy.id}`, threadData));
+
+				const threadMessages = legacyMessages.filter((m) => m.threadId === legacy.id);
+				if (threadMessages.length > 0) {
+					threadMessages.sort((a, b) => a.orderSeq - b.orderSeq);
+
+					const convertedMessages = threadMessages.map((msg) => {
+						const metadata = msg.metadata || {};
+						if (msg.createdAt && !metadata.createdAt) {
+							metadata.createdAt = new Date(msg.createdAt);
+						} else if (metadata.createdAt && typeof metadata.createdAt === "string") {
+							metadata.createdAt = new Date(metadata.createdAt);
+						}
+
+						if (msg.modelName && !metadata.model) {
+							metadata.model = msg.modelName;
+						}
+
+						const messageAttachments = attachmentsByMessageId.get(msg.id) || [];
+						if (messageAttachments.length > 0) {
+							metadata.attachments = messageAttachments.map((att) => ({
+								id: att.id,
+								name: att.name,
+								type: att.type,
+								size: att.size,
+								filePath: att.filePath,
+								preview: att.preview || undefined,
+								textContent: att.fileContent || att.textContent || undefined,
+							}));
+						}
+
+						const parts = msg.parts || parseContentToParts(msg.content || "");
+
+						return {
+							...msg,
+							parts: parts,
+							metadata: metadata,
+							createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
+						};
+					});
+
+					batchOps.push(
+						storageService.setItemInternal(`app-chat-messages:${legacy.id}`, convertedMessages),
+					);
+					stats.messages.added += threadMessages.length;
+				}
+
+				newThreadIds.push(legacy.id);
+				if (legacy.collected) {
+					newFavorites.push(legacy.id);
+				}
+				stats.threads.added++;
 			}
 
-			const mcpServerIds = threadMcpServers
-				.filter((tms) => tms.threadId === legacy.id && tms.enabled)
-				.sort((a, b) => a.order - b.order)
-				.map((tms) => tms.mcpServerId);
-
-			// Find the selected model by converting legacy modelId to model name
-			let selectedModel = null;
-			if (legacy.modelId && legacyModelIdToName.has(legacy.modelId)) {
-				const modelName = legacyModelIdToName.get(legacy.modelId);
-				// Find the model in imported models by name (new system uses name as ID)
-				selectedModel = importedModels.find((m) => m.name === modelName) || null;
-			}
-
-			const threadData = {
-				id: legacy.id,
-				title: legacy.title,
-				temperature: null,
-				topP: null,
-				frequencyPenalty: null,
-				presencePenalty: null,
-				maxTokens: null,
-				inputValue: "",
-				attachments: [],
-				mcpServers: [],
-				mcpServerIds: mcpServerIds,
-				isThinkingActive: false,
-				isOnlineSearchActive: false,
-				isMCPActive: mcpServerIds.length > 0,
-				selectedModel: selectedModel,
-				isPrivateChatActive: legacy.isPrivate,
-				updatedAt: new Date(legacy.updatedAt),
-			};
-
-			await storageService.setItemInternal(`app-thread:${legacy.id}`, threadData);
-
-			const threadMessages = legacyMessages.filter((m) => m.threadId === legacy.id);
-			if (threadMessages.length > 0) {
-				threadMessages.sort((a, b) => a.orderSeq - b.orderSeq);
-
-				const convertedMessages = threadMessages.map((msg) => {
-					const metadata = msg.metadata || {};
-					if (msg.createdAt && !metadata.createdAt) {
-						metadata.createdAt = new Date(msg.createdAt);
-					} else if (metadata.createdAt && typeof metadata.createdAt === "string") {
-						metadata.createdAt = new Date(metadata.createdAt);
-					}
-
-					// Import model name
-					if (msg.modelName && !metadata.model) {
-						metadata.model = msg.modelName;
-					}
-
-					// Import attachments for this message
-					const messageAttachments = attachmentsByMessageId.get(msg.id) || [];
-					if (messageAttachments.length > 0) {
-						metadata.attachments = messageAttachments.map((att) => ({
-							id: att.id,
-							name: att.name,
-							type: att.type,
-							size: att.size,
-							filePath: att.filePath,
-							preview: att.preview || undefined,
-							textContent: att.fileContent || att.textContent || undefined,
-						}));
-					}
-
-					// Parse content to extract reasoning blocks
-					const parts = msg.parts || parseContentToParts(msg.content || "");
-
-					return {
-						...msg,
-						parts: parts,
-						metadata: metadata,
-						createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
-					};
-				});
-
-				await storageService.setItemInternal(`app-chat-messages:${legacy.id}`, convertedMessages);
-				stats.messages.added += threadMessages.length;
-			}
-
-			newThreadIds.push(legacy.id);
-			if (legacy.collected) {
-				newFavorites.push(legacy.id);
-			}
-			stats.threads.added++;
+			await Promise.all(batchOps);
 		}
 
 		if (newThreadIds.length > 0) {
