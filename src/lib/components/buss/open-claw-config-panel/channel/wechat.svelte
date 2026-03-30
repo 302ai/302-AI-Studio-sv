@@ -37,6 +37,7 @@
 				toast.error(m.open_claw_wechat_qrcode_fetch_failed());
 				wechatState.error = true;
 				wechatState.loading = false;
+				handleWechatConnectOrInstall();
 			},
 		],
 		[
