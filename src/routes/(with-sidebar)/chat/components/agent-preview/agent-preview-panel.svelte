@@ -260,6 +260,7 @@
 	let abortController: AbortController | null = null;
 	let isRestoringState = $state(false); // Track loading state for UI
 	let previousStreamingState = false; // 用于追踪流式状态边缘
+	let deploymentIframeRef: HTMLIFrameElement | null = $state(null);
 
 	// --- Derived ---
 	const isAgentMode = $derived(codeAgentState.enabled);
@@ -376,6 +377,10 @@
 			if (message.type === "deploymentUpdated") {
 				deployment.url = message.url;
 				deployment.deploymentId = message.deploymentId;
+				// Clean up old iframe before refresh
+				if (deploymentIframeRef) {
+					deploymentIframeRef.src = "about:blank";
+				}
 				iframeRefreshKey++;
 				return;
 			}
@@ -585,6 +590,11 @@
 		}
 		if (copyTimeoutId) {
 			clearTimeout(copyTimeoutId);
+		}
+		// Clean up deployment iframe to prevent zombie renderer
+		if (deploymentIframeRef) {
+			deploymentIframeRef.src = "about:blank";
+			deploymentIframeRef = null;
 		}
 	});
 
@@ -827,6 +837,10 @@
 			// Update local state
 			if (result.data.url) {
 				deployment.url = result.data.url;
+				// Clean up old iframe before refresh
+				if (deploymentIframeRef) {
+					deploymentIframeRef.src = "about:blank";
+				}
 				iframeRefreshKey++;
 				if (result.data.id) deployment.deploymentId = result.data.id;
 
@@ -931,6 +945,10 @@
 
 	const handleRefreshPreview = () => {
 		if (!isAgentMode || !deployment.url) return;
+		// Clean up old iframe before refresh
+		if (deploymentIframeRef) {
+			deploymentIframeRef.src = "about:blank";
+		}
 		iframeRefreshKey++;
 	};
 
@@ -1180,6 +1198,7 @@
 										>
 											{#key iframeRefreshKey}
 												<iframe
+													bind:this={deploymentIframeRef}
 													class="w-full h-full border-0 {deviceMode === DEVICE_MODE_MOBILE
 														? 'shadow-lg border-x border-border'
 														: ''}"

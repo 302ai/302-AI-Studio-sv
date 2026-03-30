@@ -270,8 +270,8 @@ class PluginState {
 	 */
 	async setPluginConfig(pluginId: string, config: Record<string, unknown>): Promise<void> {
 		try {
-			// Serialize config to remove Svelte Proxy objects
-			const serializedConfig = JSON.parse(JSON.stringify(config));
+			// Performance: Use $state.snapshot() instead of JSON.parse(JSON.stringify())
+			const serializedConfig = $state.snapshot(config);
 
 			console.log("[PluginState] Setting plugin config:", pluginId, serializedConfig);
 			await pluginService.setPluginConfig(pluginId, serializedConfig);
@@ -299,9 +299,9 @@ class PluginState {
 	 */
 	async setPluginConfigValue(pluginId: string, key: string, value: unknown): Promise<void> {
 		try {
-			// Serialize value to remove Svelte Proxy objects if it's an object
+			// Performance: Use $state.snapshot() instead of JSON.parse(JSON.stringify())
 			const serializedValue =
-				typeof value === "object" && value !== null ? JSON.parse(JSON.stringify(value)) : value;
+				typeof value === "object" && value !== null ? $state.snapshot(value) : value;
 
 			console.log("[PluginState] Setting plugin config value:", pluginId, key, serializedValue);
 			await pluginService.setPluginConfigValue(pluginId, key, serializedValue);
