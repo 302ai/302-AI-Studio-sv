@@ -9,6 +9,7 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { persistedThemeState } from "$lib/stores/theme.state.svelte";
 	import {
+		TriangleAlert,
 		ChevronDown,
 		CodeXml,
 		Download,
@@ -226,6 +227,9 @@
 			return;
 		}
 
+		// Generate unique ID for this render — declared outside try so catch can clean up
+		const id = `mermaid-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+
 		try {
 			mermaidError = null;
 			// Initialize mermaid with theme based on current app theme
@@ -236,14 +240,17 @@
 				securityLevel: "strict",
 			});
 
-			// Generate unique ID for this render
-			const id = `mermaid-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 			const { svg } = await mermaid.render(id, code);
 			mermaidSvg = svg;
 		} catch (error) {
 			console.error("Mermaid render error:", error);
 			mermaidError = error instanceof Error ? error.message : "Failed to render diagram";
 			mermaidSvg = "";
+			// Mermaid inserts an error SVG element into the DOM on failure — clean it up
+			const errorEl = document.getElementById("d" + id);
+			if (errorEl) {
+				errorEl.remove();
+			}
 		}
 	};
 
@@ -792,9 +799,20 @@
 		{:else if showMermaidPreview && isMermaidCode}
 			<div class="p-4 bg-background flex items-center justify-center min-h-[200px] overflow-auto">
 				{#if mermaidError}
-					<div class="text-destructive text-sm">
-						<p class="font-medium">Failed to render diagram:</p>
-						<p>{mermaidError}</p>
+					<div class="flex flex-col items-center gap-3 text-center max-w-md mx-auto py-2">
+						<div class="flex items-center gap-2 text-muted-foreground">
+							<TriangleAlert class="size-5 text-yellow-500 shrink-0" />
+							<span class="text-sm font-medium">{m.mermaid_syntax_error()}</span>
+						</div>
+						<details class="w-full text-left">
+							<summary
+								class="text-xs text-muted-foreground/60 cursor-pointer hover:text-muted-foreground transition-colors select-none"
+							>
+								{m.mermaid_view_error_details()}
+							</summary>
+							<pre
+								class="mt-2 p-3 rounded-lg bg-muted text-xs text-muted-foreground overflow-x-auto whitespace-pre-wrap break-words">{mermaidError}</pre>
+						</details>
 					</div>
 				{:else if isStreaming}
 					<div class="text-muted-foreground">Waiting for output to finish...</div>

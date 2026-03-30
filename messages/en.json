@@ -874,6 +874,8 @@
 	"title_mermaid_preview": "Mermaid Diagram",
 	"tooltip_show_code": "Show code",
 	"tooltip_preview_diagram": "Preview diagram",
+	"mermaid_syntax_error": "Mermaid syntax error, unable to render diagram",
+	"mermaid_view_error_details": "View error details",
 	"tooltip_open_in_new_tab": "Open in new tab",
 	"empty_agent_preview_title": "Project not deployed",
 	"button_click_to_deploy": "Click to Deploy",
