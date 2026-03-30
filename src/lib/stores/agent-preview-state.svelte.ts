@@ -113,7 +113,8 @@ function cloneForChannel<T>(data: T): T {
 		// fall through
 	}
 	try {
-		return JSON.parse(JSON.stringify(data)) as T;
+		// Performance: Use $state.snapshot() instead of JSON.parse(JSON.stringify())
+		return $state.snapshot(data) as T;
 	} catch (_e) {
 		return data;
 	}

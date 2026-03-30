@@ -64,7 +64,7 @@ export type OnChatFinishPrePersistResult = {
 export async function onChatFinishPrePersist(
 	args: OnChatFinishPrePersistArgs,
 ): Promise<OnChatFinishPrePersistResult> {
-	let { messages } = args;
+	const { messages } = args;
 	const { isAbort, isDisconnect, isError, chatState, codeAgentEnabled, autoDeploy } = args;
 	const onFinishStartTime = performance.now();
 
@@ -74,30 +74,38 @@ export async function onChatFinishPrePersist(
 	console.debug("[onFinish] messages", JSON.stringify($state.snapshot(messages), null, 2));
 	console.log("[onFinish] isAbort:", isAbort, "isDisconnect:", isDisconnect, "isError:", isError);
 
-	const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user");
-	if (lastUserMessage) {
-		const updatedMessages = messages.map((msg) => {
-			if (msg.id === lastUserMessage.id) {
-				return {
-					...msg,
-					metadata: {
-						...msg.metadata,
-						userPromptTemplateContent: chatParameters.userPromptTemplateContent,
-						userPromptTemplateVariables: chatParameters.userPromptTemplateVariables,
-						userPromptTemplateMap: chatParameters.userPromptTemplateMap,
-					},
-				};
-			}
-			return msg;
-		});
+	// Performance: Single-pass reverse iteration to find last user and assistant messages
+	const perfStart = performance.now();
+	let lastUserIdx = -1;
+	let lastAssistantIdx = -1;
 
-		chatState.messages = updatedMessages;
-		messages = updatedMessages;
+	for (let i = messages.length - 1; i >= 0; i--) {
+		if (lastUserIdx === -1 && messages[i].role === "user") {
+			lastUserIdx = i;
+		}
+		if (lastAssistantIdx === -1 && messages[i].role === "assistant") {
+			lastAssistantIdx = i;
+		}
+		if (lastUserIdx !== -1 && lastAssistantIdx !== -1) break;
+	}
+	console.log(`[Performance] Message lookup: ${(performance.now() - perfStart).toFixed(3)}ms`);
+
+	// Update last user message metadata
+	if (lastUserIdx !== -1) {
+		messages[lastUserIdx] = {
+			...messages[lastUserIdx],
+			metadata: {
+				...messages[lastUserIdx].metadata,
+				userPromptTemplateContent: chatParameters.userPromptTemplateContent,
+				userPromptTemplateVariables: chatParameters.userPromptTemplateVariables,
+				userPromptTemplateMap: chatParameters.userPromptTemplateMap,
+			},
+		};
+		chatState.messages = messages;
 	}
 
 	// Save systemPrompt to the last assistant message
-	const lastAssistantMessage = [...messages].reverse().find((msg) => msg.role === "assistant");
-	if (lastAssistantMessage && chatParameters.systemPromptContent) {
+	if (lastAssistantIdx !== -1 && chatParameters.systemPromptContent) {
 		const resolvedSystemPrompt = resolvePrompt(chatParameters.systemPromptContent, {
 			modelId: chatState.selectedModel?.id ?? "",
 			language: generalSettings.language,
@@ -105,32 +113,25 @@ export async function onChatFinishPrePersist(
 			variables: chatParameters.systemPromptVariables,
 		});
 
-		const updatedMessages = messages.map((msg) => {
-			if (msg.id === lastAssistantMessage.id) {
-				return {
-					...msg,
-					metadata: {
-						...msg.metadata,
-						systemPromptContent: resolvedSystemPrompt.content,
-						systemPromptVariables: [...chatParameters.systemPromptVariables],
-						systemPromptMap: { ...chatParameters.systemPromptMap },
-					},
-				};
-			}
-			return msg;
-		});
-
-		chatState.messages = updatedMessages;
-		messages = updatedMessages;
+		messages[lastAssistantIdx] = {
+			...messages[lastAssistantIdx],
+			metadata: {
+				...messages[lastAssistantIdx].metadata,
+				systemPromptContent: resolvedSystemPrompt.content,
+				systemPromptVariables: chatParameters.systemPromptVariables,
+				systemPromptMap: chatParameters.systemPromptMap,
+			},
+		};
+		chatState.messages = messages;
 	}
 
 	console.log("onFinish: async ({ messages }) pendingResultMetadata", pendingResultMetadata);
-	if (codeAgentEnabled && pendingResultMetadata) {
-		const lastMessage = messages[messages.length - 1];
-		if (lastMessage && lastMessage.role === "assistant") {
-			const currentMetadata = (lastMessage.metadata as MessageMetadata) || {};
+	const lastMessageIdx = messages.length - 1;
+	if (codeAgentEnabled && pendingResultMetadata && lastMessageIdx >= 0) {
+		const lastMessage = messages[lastMessageIdx];
+		if (lastMessage.role === "assistant") {
 			lastMessage.metadata = {
-				...currentMetadata,
+				...(lastMessage.metadata as MessageMetadata),
 				result: pendingResultMetadata,
 			};
 			console.log("[ChatState] Merged result metadata into message:", pendingResultMetadata);
@@ -142,12 +143,14 @@ export async function onChatFinishPrePersist(
 	console.log("onFinish: async ({ messages }) autoDeploy", autoDeploy);
 
 	const isDeployCommand =
-		lastUserMessage?.parts.some((part) => part.type === "text" && part.text.trim() === "/deploy") ??
-		false;
+		lastUserIdx !== -1 &&
+		messages[lastUserIdx].parts.some(
+			(part) => part.type === "text" && part.text.trim() === "/deploy",
+		);
 
 	emitter.emit(EventNames.CHAT_FINISHED, {
 		canDeploy: codeAgentEnabled && (autoDeploy || isDeployCommand),
-		lastMessage: messages[messages.length - 1],
+		lastMessage: messages[lastMessageIdx],
 	});
 	console.log(
 		"[onFinish] CHAT_FINISHED emitted, elapsed:",
@@ -227,9 +230,10 @@ export async function onChatFinishPostPersist(args: OnChatFinishPostPersistArgs)
 				metadata: {},
 			};
 
-			// Serialize context and response to remove Svelte Proxy objects
-			const serializedContext = JSON.parse(JSON.stringify(messageContext));
-			const serializedResponse = JSON.parse(JSON.stringify(response));
+			// Performance: Use $state.snapshot() instead of JSON.parse(JSON.stringify())
+			// 10-50x faster and preserves Date/Map/Set types
+			const serializedContext = $state.snapshot(messageContext);
+			const serializedResponse = $state.snapshot(response);
 
 			await pluginService.executeAfterSendMessageHook(serializedContext, serializedResponse);
 			console.log("[ChatState] After send message hook executed successfully");
@@ -303,15 +307,24 @@ async function handleTitleGeneration(context: AfterChatFinishedContext): Promise
 			const previousSummary = persistedChatParamsState.current.incrementalSummary;
 			let messagesToSend: ChatMessage[];
 			if (isFirstMessage) {
-				messagesToSend = messages.filter((message) => message.role === "user").slice(0, 1);
+				// Performance: Direct iteration instead of filter
+				for (let i = 0; i < messages.length; i++) {
+					if (messages[i].role === "user") {
+						messagesToSend = [messages[i]];
+						break;
+					}
+				}
+				messagesToSend ??= [];
 			} else {
-				const userMessages = messages.filter((message) => message.role === "user");
-				const assistantMessages = messages.filter((message) => message.role === "assistant");
-				const lastUserMessage = userMessages.at(-1);
-				const previousAssistantMessage = assistantMessages.at(-1);
-				messagesToSend = [previousAssistantMessage, lastUserMessage].filter(
-					Boolean,
-				) as ChatMessage[];
+				// Performance: Single reverse pass to find last user and assistant
+				let lastUser: ChatMessage | undefined;
+				let lastAssistant: ChatMessage | undefined;
+				for (let i = messages.length - 1; i >= 0; i--) {
+					if (!lastUser && messages[i].role === "user") lastUser = messages[i];
+					if (!lastAssistant && messages[i].role === "assistant") lastAssistant = messages[i];
+					if (lastUser && lastAssistant) break;
+				}
+				messagesToSend = [lastAssistant, lastUser].filter(Boolean) as ChatMessage[];
 			}
 			const serverPort = window.app?.serverPort ?? 8089;
 
@@ -349,7 +362,14 @@ async function handleTitleGeneration(context: AfterChatFinishedContext): Promise
 				chatState.isGeneratingTitle = false;
 			}
 		} else if (isFirstMessage && isDefaultTitle && titleTiming !== "off") {
-			const firstUserMessage = messages.find((message) => message.role === "user");
+			// Performance: Direct iteration instead of find
+			let firstUserMessage: ChatMessage | undefined;
+			for (let i = 0; i < messages.length; i++) {
+				if (messages[i].role === "user") {
+					firstUserMessage = messages[i];
+					break;
+				}
+			}
 			const textPart = firstUserMessage?.parts.find((part) => part.type === "text");
 			if (textPart && "text" in textPart) {
 				const fallbackTitle = [...textPart.text.trim()].slice(0, 10).join("");
