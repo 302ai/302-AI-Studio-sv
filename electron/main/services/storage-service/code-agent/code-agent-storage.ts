@@ -4,9 +4,11 @@ import {
 	type CodeAgentType,
 	type CodingAgentClass,
 } from "@shared/storage/code-agent";
+import type { MigrationConfig } from "@shared/types";
 import { prefixStorage } from "@shared/types";
 import { isNull } from "es-toolkit";
 import { StorageService } from "..";
+import { createMigrate } from "../migration-utils";
 
 class CodeAgentStorage extends StorageService<CodeAgentConfigMetadata> {
 	constructor() {
@@ -32,10 +34,37 @@ class CodeAgentStorage extends StorageService<CodeAgentConfigMetadata> {
 
 export const codeAgentStorage = new CodeAgentStorage();
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const migrations = {
+	0: (state: any): CodeAgentGlobalConfigs => {
+		// Migration from version 0 to 1:
+		// Migrate telegram from { botToken, allowFrom } to { accounts: { default: { botToken } } }
+		const oldTelegram = state?.telegram;
+		const botToken = oldTelegram?.botToken ?? "";
+		return {
+			...state,
+			telegram: {
+				accounts: {
+					default: {
+						botToken,
+					},
+				},
+			},
+		};
+	},
+};
+
+const globalConfigsMigrationConfig: MigrationConfig<CodeAgentGlobalConfigs> = {
+	version: 1,
+	migrate: createMigrate(migrations, { debug: true }),
+	debug: true,
+};
+
 class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfigs> {
 	constructor() {
-		super();
+		super(globalConfigsMigrationConfig);
 		this.storage = prefixStorage(this.storage, "CodeAgentStorage");
+		this.migrationKey = "code-agent-global-configs";
 	}
 
 	async getGlobalConfigs(): Promise<{ isOK: boolean; data: CodeAgentGlobalConfigs }> {
@@ -63,8 +92,11 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 				secret: "",
 			},
 			telegram: {
-				botToken: "",
-				allowFrom: [],
+				accounts: {
+					default: {
+						botToken: "",
+					},
+				},
 			},
 		};
 		try {

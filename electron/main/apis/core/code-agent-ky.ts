@@ -15,11 +15,7 @@ export const localCodeAgentKy = ky.create({
 	hooks: {
 		beforeRequest: [
 			async (request) => {
-				const runtimePort = localVibeService.getRuntimePort();
-
-				if (!runtimePort) {
-					return;
-				}
+				const runtimePort = localVibeService.getRuntimePort() ?? DEFAULT_SANDBOX_PORT;
 
 				const url = new URL(request.url);
 				if (parseInt(url.port) !== runtimePort) {

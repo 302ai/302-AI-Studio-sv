@@ -3,7 +3,7 @@
 	"productName": "302 AI Studio",
 	"description": "302 AI Studio",
 	"private": true,
-	"version": "26.12.1",
+	"version": "26.13.0",
 	"type": "module",
 	"main": ".vite/build/main/index.js",
 	"author": {
@@ -175,6 +175,7 @@
 		"mode-watcher": "^1.1.0",
 		"modern-screenshot": "^4.6.7",
 		"nanoid": "^5.1.5",
+		"qr-code-styling": "^1.9.2",
 		"runed": "^0.31.1",
 		"shiki": "^3.13.0",
 		"shiki-stream": "^0.1.2",

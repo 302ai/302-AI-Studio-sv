@@ -341,97 +341,99 @@
 		</ButtonWithTooltip> -->
 
 		<div class="relative">
-			<ButtonWithTooltip
-				class={cn(
-					"hover:!bg-icon-btn-hover",
-					chatState.isSearchInput && "!bg-icon-btn-active hover:!bg-icon-btn-active",
-				)}
-				tooltipSide="bottom"
-				tooltip={m.tooltip_search_content()}
-				onclick={() => chatState.handleSearchInputStateChange(!chatState.isSearchInput)}
-			>
-				<ScanSearch class={cn("size-5", chatState.isSearchInput && "!text-icon-btn-active-fg")} />
-			</ButtonWithTooltip>
-
-			{#if chatState.isSearchInput}
-				<div
-					class="absolute right-0 top-full mt-1 flex h-9 items-center gap-1 rounded-md border border-input bg-background px-2 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200"
+			{#if chatState.hasMessages}
+				<ButtonWithTooltip
+					class={cn(
+						"hover:!bg-icon-btn-hover",
+						chatState.isSearchInput && "!bg-icon-btn-active hover:!bg-icon-btn-active",
+					)}
+					tooltipSide="bottom"
+					tooltip={m.tooltip_search_content()}
+					onclick={() => chatState.handleSearchInputStateChange(!chatState.isSearchInput)}
 				>
-					<Search class="text-foreground/70 size-4 shrink-0" />
-					<input
-						bind:this={searchInputRef}
-						bind:value={searchInputValue}
-						type="text"
-						placeholder={m.tooltip_search_content()}
-						class="h-7 w-32 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-						onkeydown={handleSearchInputKeydown}
-					/>
-					<button
-						class={cn(
-							"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
-							caseSensitive
-								? "text-foreground bg-icon-btn-active"
-								: "text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover",
-						)}
-						title={m.search_case_sensitive()}
-						onclick={toggleCaseSensitive}
+					<ScanSearch class={cn("size-5", chatState.isSearchInput && "!text-icon-btn-active-fg")} />
+				</ButtonWithTooltip>
+
+				{#if chatState.isSearchInput}
+					<div
+						class="absolute right-0 top-full mt-1 flex h-9 items-center gap-1 rounded-md border border-input bg-background px-2 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200"
 					>
-						<CaseSensitive class="size-3.5" />
-					</button>
-					<button
-						class={cn(
-							"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
-							wholeWord
-								? "text-foreground bg-icon-btn-active"
-								: "text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover",
-						)}
-						title={m.search_whole_word()}
-						onclick={toggleWholeWord}
-					>
-						<WholeWord class="size-3.5" />
-					</button>
-					<button
-						class={cn(
-							"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
-							useRegex
-								? "text-foreground bg-icon-btn-active"
-								: "text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover",
-						)}
-						title={m.search_regex()}
-						onclick={toggleRegex}
-					>
-						<Code class="size-3.5" />
-					</button>
-					<span class="flex items-center gap-0.5 text-xs text-foreground tabular-nums">
-						<span class="min-w-[2.5rem] text-center w-14">
-							{#if searchInputValue && totalMatches > 0}
-								{currentMatchIndex}/{totalMatches}
-							{:else}
-								{m.search_no_results()}
-							{/if}
+						<Search class="text-foreground/70 size-4 shrink-0" />
+						<input
+							bind:this={searchInputRef}
+							bind:value={searchInputValue}
+							type="text"
+							placeholder={m.tooltip_search_content()}
+							class="h-7 w-32 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+							onkeydown={handleSearchInputKeydown}
+						/>
+						<button
+							class={cn(
+								"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
+								caseSensitive
+									? "text-foreground bg-icon-btn-active"
+									: "text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover",
+							)}
+							title={m.search_case_sensitive()}
+							onclick={toggleCaseSensitive}
+						>
+							<CaseSensitive class="size-3.5" />
+						</button>
+						<button
+							class={cn(
+								"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
+								wholeWord
+									? "text-foreground bg-icon-btn-active"
+									: "text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover",
+							)}
+							title={m.search_whole_word()}
+							onclick={toggleWholeWord}
+						>
+							<WholeWord class="size-3.5" />
+						</button>
+						<button
+							class={cn(
+								"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
+								useRegex
+									? "text-foreground bg-icon-btn-active"
+									: "text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover",
+							)}
+							title={m.search_regex()}
+							onclick={toggleRegex}
+						>
+							<Code class="size-3.5" />
+						</button>
+						<span class="flex items-center gap-0.5 text-xs text-foreground tabular-nums">
+							<span class="min-w-[2.5rem] text-center w-14">
+								{#if searchInputValue && totalMatches > 0}
+									{currentMatchIndex}/{totalMatches}
+								{:else}
+									{m.search_no_results()}
+								{/if}
+							</span>
+							<button
+								class="cursor-pointer text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
+								onclick={handlePrevMatch}
+								disabled={totalMatches === 0}
+							>
+								<ChevronUp class="size-3.5" />
+							</button>
+							<button
+								class="cursor-pointer text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
+								onclick={handleNextMatch}
+								disabled={totalMatches === 0}
+							>
+								<ChevronDown class="size-3.5" />
+							</button>
 						</span>
 						<button
-							class="cursor-pointer text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
-							onclick={handlePrevMatch}
-							disabled={totalMatches === 0}
+							class="cursor-pointer text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover flex size-5 items-center justify-center rounded transition-colors"
+							onclick={handleClearSearch}
 						>
-							<ChevronUp class="size-3.5" />
+							<X class="size-3" />
 						</button>
-						<button
-							class="cursor-pointer text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
-							onclick={handleNextMatch}
-							disabled={totalMatches === 0}
-						>
-							<ChevronDown class="size-3.5" />
-						</button>
-					</span>
-					<button
-						class="cursor-pointer text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover flex size-5 items-center justify-center rounded transition-colors"
-						onclick={handleClearSearch}
-					>
-						<X class="size-3" />
-					</button>
-				</div>
+					</div>
+				{/if}
 			{/if}
 		</div>
 

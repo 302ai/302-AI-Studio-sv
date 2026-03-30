@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { downloadSkill } from "$lib/api/skills";
+	import { addSkillFavorite, cancelSkillFavorite, downloadSkill } from "$lib/api/skills";
 	import { deleteSkill, syncSkills } from "$lib/api/skills/base-apis";
 	import { LdrsLoader } from "$lib/components/buss/ldrs-loader";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -33,6 +33,7 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
+	import { getOrderedSkillsByFavorite } from "../skill-favorite-order";
 	import SkillCard from "../skill-card.svelte";
 
 	interface Props {
@@ -42,7 +43,12 @@
 		showUseButton?: boolean;
 		singleColumn?: boolean;
 		showBorder?: boolean;
-		onRefresh?: () => void;
+		onRefresh?: () => void | Promise<void>;
+		onFavoriteChange?: (
+			skillName: string,
+			is_favorite: boolean,
+			favorite_at: string | null,
+		) => void;
 	}
 
 	let {
@@ -53,12 +59,14 @@
 		singleColumn = false,
 		showBorder = true,
 		onRefresh,
+		onFavoriteChange,
 	}: Props = $props();
 
 	const usedSkills = $derived(codeAgentState.skills);
 	const currentSandboxId = $derived(codeAgentState.sandboxId);
 	const currentSessionId = $derived(codeAgentState.currentSessionId);
 	const currentAgentId = $derived(codeAgentState.currentAgentId);
+	const isLocalMode = $derived(codeAgentState.type === "local");
 
 	let searchQuery = $state("");
 	let deleteDialogOpen = $state(false);
@@ -66,6 +74,9 @@
 	let isDeleting = $state(false);
 	let isSyncing = $state(false);
 	let downloadingSkills = new SvelteSet<string>();
+	let favoritingSkills = new SvelteSet<string>();
+	let optimisticFavoriteStates = new SvelteMap<string, boolean>();
+	let optimisticFavoriteAts = new SvelteMap<string, string | null>();
 
 	// Category states
 	const categories = $derived(skillsCategoryState.categories);
@@ -78,10 +89,16 @@
 	let viewMode = $state<"flat" | "grouped">("flat");
 
 	// Combine skills: user skills first, then builtin skills
-	const allSkills = $derived<Skill[]>(
+	const baseSkills = $derived<Skill[]>(
 		[...userSkills, ...builtinSkills].filter(
 			(skill) => !(currentAgentId === "claude-code" && isOpenClawBundledSkill(skill)),
 		),
+	);
+
+	const allSkills = $derived.by(() =>
+		isLocalMode
+			? getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts)
+			: baseSkills,
 	);
 
 	// Filter by search query
@@ -146,15 +163,48 @@
 
 	// Reload when skills change
 	$effect(() => {
-		if (allSkills.length > 0) {
-			skillsCategoryState.fetchSkillCategories(allSkills);
+		if (baseSkills.length > 0) {
+			skillsCategoryState.fetchSkillCategories(baseSkills);
+		}
+	});
+
+	$effect(() => {
+		const persistedFavoriteStates = new Map(
+			[...userSkills, ...builtinSkills].map((skill) => [skill.name, skill.is_favorite ?? false]),
+		);
+		const persistedFavoriteAts = new Map(
+			[...userSkills, ...builtinSkills].map((skill) => [skill.name, skill.favorite_at ?? null]),
+		);
+
+		for (const [skillName, optimisticFavorite] of Array.from(optimisticFavoriteStates.entries())) {
+			if (!persistedFavoriteStates.has(skillName)) {
+				optimisticFavoriteStates.delete(skillName);
+				optimisticFavoriteAts.delete(skillName);
+				continue;
+			}
+
+			if (persistedFavoriteStates.get(skillName) === optimisticFavorite) {
+				optimisticFavoriteStates.delete(skillName);
+			}
+		}
+
+		for (const [skillName, optimisticFavoriteAt] of Array.from(optimisticFavoriteAts.entries())) {
+			if (!persistedFavoriteAts.has(skillName)) {
+				optimisticFavoriteAts.delete(skillName);
+				optimisticFavoriteStates.delete(skillName);
+				continue;
+			}
+
+			if (persistedFavoriteAts.get(skillName) === optimisticFavoriteAt) {
+				optimisticFavoriteAts.delete(skillName);
+			}
 		}
 	});
 
 	async function loadCategoryData() {
 		await Promise.all([
 			skillsCategoryState.fetchCategories(),
-			skillsCategoryState.fetchSkillCategories(allSkills),
+			skillsCategoryState.fetchSkillCategories(baseSkills),
 		]);
 	}
 
@@ -173,9 +223,7 @@
 	// Multi-selection state (must be after filteredSkills)
 	let selectedSkills = new SvelteSet<string>();
 	const isSelectionMode = $derived(selectedSkills.size > 0);
-	const selectableSkills = $derived(
-		filteredSkills.filter((skill) => !isOpenClawBundledSkill(skill)),
-	);
+	const selectableSkills = $derived(filteredSkills);
 	const selectedSkillsList = $derived(selectableSkills.filter((s) => selectedSkills.has(s.name)));
 	const isAllSelected = $derived(
 		selectableSkills.length > 0 && selectedSkills.size === selectableSkills.length,
@@ -208,6 +256,9 @@
 			return used?.forceUse !== true;
 		}),
 	);
+	const anySelectedFavorite = $derived(selectedSkillsList.some((s) => s.is_favorite));
+	const anySelectedNotFavorite = $derived(selectedSkillsList.some((s) => !s.is_favorite));
+	let batchFavoriteAction = $state<"add" | "cancel" | null>(null);
 
 	function handleSelectSkill(skill: Skill) {
 		skillsPanelState.goToDetail(skill.name);
@@ -297,12 +348,38 @@
 		codeAgentState.handleSkillForceUseToggle(skill.name, forceUse);
 	}
 
+	async function handleFavoriteToggle(skill: Skill) {
+		if (favoritingSkills.has(skill.name)) return;
+
+		const previousFavoriteState = skill.is_favorite ?? false;
+		const previousFavoriteAt = skill.favorite_at ?? null;
+		const nextFavoriteState = !previousFavoriteState;
+		const nextFavoriteAt = nextFavoriteState ? new Date().toISOString() : null;
+
+		optimisticFavoriteStates.set(skill.name, nextFavoriteState);
+		optimisticFavoriteAts.set(skill.name, nextFavoriteAt);
+		favoritingSkills.add(skill.name);
+
+		try {
+			if (nextFavoriteState) {
+				await addSkillFavorite({ skill_list: [skill.name] });
+			} else {
+				await cancelSkillFavorite({ skill_list: [skill.name] });
+			}
+
+			onFavoriteChange?.(skill.name, nextFavoriteState, nextFavoriteAt);
+		} catch (e) {
+			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
+			optimisticFavoriteAts.set(skill.name, previousFavoriteAt);
+			console.error("Failed to toggle skill favorite:", e);
+			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
+		} finally {
+			favoritingSkills.delete(skill.name);
+		}
+	}
+
 	// Multi-selection handlers
 	function handleSelectionChange(skill: Skill, isSelected: boolean) {
-		if (isOpenClawBundledSkill(skill)) {
-			return;
-		}
-
 		if (isSelected) {
 			selectedSkills.add(skill.name);
 		} else {
@@ -330,7 +407,7 @@
 
 	function handleBatchUse() {
 		const skillsToUse = selectedSkillsList.filter(
-			(s) => !usedSkills.some((u) => u.name === s.name) && !isOpenClawBundledSkill(s),
+			(s) => !usedSkills.some((u) => u.name === s.name),
 		);
 		if (skillsToUse.length > 0) {
 			codeAgentState.handleSkillsUse(skillsToUse);
@@ -339,8 +416,8 @@
 	}
 
 	function handleBatchRemove() {
-		const skillsToRemove = selectedSkillsList.filter(
-			(s) => usedSkills.some((u) => u.name === s.name) && !isOpenClawBundledSkill(s),
+		const skillsToRemove = selectedSkillsList.filter((s) =>
+			usedSkills.some((u) => u.name === s.name),
 		);
 		if (skillsToRemove.length > 0) {
 			codeAgentState.handleSkillsRemove(skillsToRemove);
@@ -377,9 +454,6 @@
 	function handleBatchForceUse(forceUse: boolean) {
 		// Only apply to skills that need to change
 		const skillsToUpdate = selectedUsedSkills.filter((s) => {
-			if (isOpenClawBundledSkill(s)) {
-				return false;
-			}
 			const used = usedSkills.find((u) => u.name === s.name);
 			return forceUse ? used?.forceUse !== true : used?.forceUse === true;
 		});
@@ -387,6 +461,61 @@
 			codeAgentState.handleSkillForceUseToggle(skill.name, forceUse);
 		}
 		clearSelection();
+	}
+
+	async function handleBatchFavorite(action: "add" | "cancel") {
+		const targetSkills = selectedSkillsList.filter((skill) =>
+			action === "add" ? !skill.is_favorite : skill.is_favorite,
+		);
+
+		if (targetSkills.length === 0) {
+			return;
+		}
+
+		batchFavoriteAction = action;
+		const previousStates = targetSkills.map((skill) => ({
+			name: skill.name,
+			isFavorite: skill.is_favorite ?? false,
+			favoriteAt: skill.favorite_at ?? null,
+		}));
+		const batchBaseTimestamp = Date.now();
+
+		for (const [index, skill] of targetSkills.entries()) {
+			optimisticFavoriteStates.set(skill.name, action === "add");
+			optimisticFavoriteAts.set(
+				skill.name,
+				action === "add"
+					? new Date(batchBaseTimestamp + targetSkills.length - index).toISOString()
+					: null,
+			);
+		}
+
+		try {
+			if (action === "add") {
+				await addSkillFavorite({ skill_list: targetSkills.map((skill) => skill.name) });
+			} else {
+				await cancelSkillFavorite({ skill_list: targetSkills.map((skill) => skill.name) });
+			}
+
+			for (const skill of targetSkills) {
+				onFavoriteChange?.(
+					skill.name,
+					action === "add",
+					optimisticFavoriteAts.get(skill.name) ?? null,
+				);
+			}
+			clearSelection();
+		} catch (e) {
+			for (const previousState of previousStates) {
+				optimisticFavoriteStates.set(previousState.name, previousState.isFavorite);
+				optimisticFavoriteAts.set(previousState.name, previousState.favoriteAt);
+			}
+
+			console.error(`Failed to batch ${action} skill favorite:`, e);
+			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
+		} finally {
+			batchFavoriteAction = null;
+		}
 	}
 
 	async function handleSync() {
@@ -585,11 +714,15 @@
 							>
 								{#each group.skills as item, index (`${item.name}-${item.isBuiltin ? "builtin" : "user"}-${index}`)}
 									{@const usedSkill = usedSkills.find((s) => s.name === item.name)}
+									{@const displaySkill = usedSkill
+										? { ...item, ...usedSkill, is_favorite: item.is_favorite ?? false }
+										: item}
 									<SkillCard
-										skill={usedSkill ?? item}
+										skill={displaySkill}
 										isBuiltin={!!item.isBuiltin}
+										is_favorite={item.is_favorite ?? false}
 										isUsed={!!usedSkill}
-										selectable={!isOpenClawBundledSkill(item)}
+										selectable={true}
 										selected={selectedSkills.has(item.name)}
 										onSelect={handleSelectSkill}
 										onSelectionChange={handleSelectionChange}
@@ -599,6 +732,8 @@
 										onDownload={handleDownload}
 										onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 										downloading={downloadingSkills.has(item.name)}
+										favoriteLoading={favoritingSkills.has(item.name)}
+										onFavoriteToggle={isLocalMode ? handleFavoriteToggle : undefined}
 										onForceUseToggle={showUseButton ? handleForceUseToggle : undefined}
 									/>
 								{/each}
@@ -624,11 +759,15 @@
 			>
 				{#each skills as item, index (`${item.name}-${item.isBuiltin ? "builtin" : "user"}-${index}`)}
 					{@const usedSkill = usedSkills.find((s) => s.name === item.name)}
+					{@const displaySkill = usedSkill
+						? { ...item, ...usedSkill, is_favorite: item.is_favorite ?? false }
+						: item}
 					<SkillCard
-						skill={usedSkill ?? item}
+						skill={displaySkill}
 						isBuiltin={!!item.isBuiltin}
+						is_favorite={item.is_favorite ?? false}
 						isUsed={!!usedSkill}
-						selectable={!isOpenClawBundledSkill(item)}
+						selectable={true}
 						selected={selectedSkills.has(item.name)}
 						onSelect={handleSelectSkill}
 						onSelectionChange={handleSelectionChange}
@@ -638,6 +777,8 @@
 						onDownload={handleDownload}
 						onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 						downloading={downloadingSkills.has(item.name)}
+						favoriteLoading={favoritingSkills.has(item.name)}
+						onFavoriteToggle={isLocalMode ? handleFavoriteToggle : undefined}
 						onForceUseToggle={showUseButton ? handleForceUseToggle : undefined}
 					/>
 				{/each}
@@ -717,7 +858,7 @@
 								class="gap-1.5 h-7 px-2.5 text-xs font-medium rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
 								onclick={() => handleBatchForceUse(true)}
 							>
-								<Star class="h-3.5 w-3.5" />
+								<Zap class="h-3.5 w-3.5" />
 								{m.skills_force_use()}
 							</Button>
 						{/if}
@@ -728,13 +869,37 @@
 								class="gap-1.5 h-7 px-2.5 text-xs font-medium rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
 								onclick={() => handleBatchForceUse(false)}
 							>
-								<Star class="h-3.5 w-3.5 fill-current" />
+								<Zap class="h-3.5 w-3.5" />
 								{m.skills_unforce_use()}
 							</Button>
 						{/if}
 					{/if}
 				{/if}
 
+				{#if isLocalMode && anySelectedNotFavorite}
+					<Button
+						variant="ghost"
+						size="sm"
+						class="gap-1.5 h-7 px-2.5 text-xs font-medium rounded-lg text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/10"
+						onclick={() => handleBatchFavorite("add")}
+						disabled={batchFavoriteAction !== null}
+					>
+						<Star class="h-3.5 w-3.5" />
+						{m.title_button_star()}
+					</Button>
+				{/if}
+				{#if isLocalMode && anySelectedFavorite}
+					<Button
+						variant="ghost"
+						size="sm"
+						class="gap-1.5 h-7 px-2.5 text-xs font-medium rounded-lg text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/10"
+						onclick={() => handleBatchFavorite("cancel")}
+						disabled={batchFavoriteAction !== null}
+					>
+						<Star class="h-3.5 w-3.5 fill-current" />
+						{m.title_button_unstar()}
+					</Button>
+				{/if}
 				{#if canDeleteSelected}
 					<Button
 						variant="ghost"

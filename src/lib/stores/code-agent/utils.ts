@@ -1,3 +1,5 @@
+export const WORKSPACE_PATH_PREFIX = "/home/user/workspace/";
+
 /**
  * Functional utility to wrap an async operation with a loading state.
  * @param setLoading A setter function to update the loading state.
@@ -20,10 +22,13 @@ export function fileToBase64(file: File): Promise<string> {
 		const reader = new FileReader();
 		reader.onload = () => {
 			const result = reader.result as string;
-			// 保留完整的 data:xxx;base64,xxx 格式
 			resolve(result);
 		};
 		reader.onerror = reject;
 		reader.readAsDataURL(file);
 	});
+}
+
+export function extractAgentIdFromWorkspacePath(workspacePath: string): string {
+	return workspacePath.replace(WORKSPACE_PATH_PREFIX, "");
 }

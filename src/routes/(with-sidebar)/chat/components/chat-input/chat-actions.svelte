@@ -29,6 +29,7 @@
 		Globe,
 		Lightbulb,
 		ListTodo,
+		MonitorCog,
 		Settings2,
 		Sparkles,
 		ToolCase,
@@ -100,6 +101,10 @@
 		if (agentPreviewState.activeTab !== "taskboard") {
 			agentPreviewState.openTaskboardTab();
 		}
+	}
+
+	function handleOpenClawWebUiToggle() {
+		agentPreviewState.openOpenClawWebUiTab();
 	}
 
 	function handlePlanModeToggle() {
@@ -521,6 +526,26 @@
 	{/if}
 {/snippet}
 
+{#snippet actionOpenClawWebUi(isMenu = false)}
+	{#if isMenu}
+		{@render menuButton({
+			icon: MonitorCog,
+			label: m.label_tab_manage(),
+			disabled: disabled,
+			onclick: handleOpenClawWebUiToggle,
+		})}
+	{:else}
+		<ButtonWithTooltip
+			class="hover:!bg-chat-action-hover"
+			tooltip={m.label_tab_manage()}
+			onclick={handleOpenClawWebUiToggle}
+			{disabled}
+		>
+			<MonitorCog />
+		</ButtonWithTooltip>
+	{/if}
+{/snippet}
+
 {#snippet actionToolCase()}
 	<Popover.Root>
 		<Popover.Trigger class="shrink-0">
@@ -569,6 +594,10 @@
 				{:else if !codeAgentState.enabled}
 					{@render actionSetParameters(true)}
 				{/if}
+
+				{#if codeAgentState.currentAgentId === "open-claw"}
+					{@render actionOpenClawWebUi(true)}
+				{/if}
 			</div>
 		</Popover.Content>
 	</Popover.Root>
@@ -580,7 +609,7 @@
 >
 	{@render actionUploadAttachment()}
 
-	{#if isCollapsed && !(codeAgentState.enabled && codeAgentState.currentAgentId === "open-claw")}
+	{#if isCollapsed}
 		{@render actionToolCase()}
 	{:else}
 		<div class="flex items-center gap-chat-bar-gap shrink-0">
@@ -611,6 +640,10 @@
 				{/if}
 			{:else if !codeAgentState.enabled}
 				{@render actionSetParameters()}
+			{/if}
+
+			{#if codeAgentState.currentAgentId === "open-claw"}
+				{@render actionOpenClawWebUi()}
 			{/if}
 		</div>
 	{/if}

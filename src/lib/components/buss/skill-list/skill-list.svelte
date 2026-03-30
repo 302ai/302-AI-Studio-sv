@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { downloadSkill } from "$lib/api/skills";
+	import { addSkillFavorite, cancelSkillFavorite, downloadSkill } from "$lib/api/skills";
 	import { deleteSkill } from "$lib/api/skills/base-apis";
 	import { LdrsLoader } from "$lib/components/buss/ldrs-loader";
 	import Button from "$lib/components/ui/button/button.svelte";
@@ -11,11 +11,12 @@
 	import { Plus, Search, ShoppingBag } from "@lucide/svelte";
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
-	import { SvelteSet } from "svelte/reactivity";
+	import { SvelteMap, SvelteSet } from "svelte/reactivity";
 	import SkillCard from "./skill-card.svelte";
 	import SkillCreateDialog from "./skill-create-dialog.svelte";
 	import SkillDetailDialog from "./skill-detail-dialog.svelte";
 	import SkillEditDialog from "./skill-edit-dialog.svelte";
+	import { getOrderedSkillsByFavorite } from "./skill-favorite-order";
 
 	interface Props {
 		userSkills: Skill[];
@@ -27,7 +28,7 @@
 		showNewButton?: boolean;
 		onUse?: (skill: Skill) => void;
 		onRemove?: (skill: Skill) => void;
-		onRefresh?: () => void;
+		onRefresh?: () => void | Promise<void>;
 		onForceUseToggle?: (skill: Skill, forceUse: boolean) => void;
 	}
 
@@ -55,14 +56,70 @@
 	let deletingSkill = $state<Skill | null>(null);
 	let isDeleting = $state(false);
 	let downloadingSkills = new SvelteSet<string>();
+	let favoritingSkills = new SvelteSet<string>();
+	let localUserSkills = $state<Skill[]>([]);
+	let localBuiltinSkills = $state<Skill[]>([]);
+	let optimisticFavoriteStates = new SvelteMap<string, boolean>();
+	let optimisticFavoriteAts = new SvelteMap<string, string | null>();
 
 	const currentAgentId = $derived(codeAgentState.currentAgentId);
+	const isLocalMode = $derived(codeAgentState.type === "local");
+
+	$effect(() => {
+		localUserSkills = userSkills;
+		localBuiltinSkills = builtinSkills;
+	});
+
+	$effect(() => {
+		const persistedFavoriteStates = new Map(
+			[...localBuiltinSkills, ...localUserSkills].map((skill) => [
+				skill.name,
+				skill.is_favorite ?? false,
+			]),
+		);
+		const persistedFavoriteAts = new Map(
+			[...localBuiltinSkills, ...localUserSkills].map((skill) => [
+				skill.name,
+				skill.favorite_at ?? null,
+			]),
+		);
+
+		for (const [skillName, optimisticFavorite] of Array.from(optimisticFavoriteStates.entries())) {
+			if (!persistedFavoriteStates.has(skillName)) {
+				optimisticFavoriteStates.delete(skillName);
+				optimisticFavoriteAts.delete(skillName);
+				continue;
+			}
+
+			if (persistedFavoriteStates.get(skillName) === optimisticFavorite) {
+				optimisticFavoriteStates.delete(skillName);
+			}
+		}
+
+		for (const [skillName, optimisticFavoriteAt] of Array.from(optimisticFavoriteAts.entries())) {
+			if (!persistedFavoriteAts.has(skillName)) {
+				optimisticFavoriteAts.delete(skillName);
+				optimisticFavoriteStates.delete(skillName);
+				continue;
+			}
+
+			if (persistedFavoriteAts.get(skillName) === optimisticFavoriteAt) {
+				optimisticFavoriteAts.delete(skillName);
+			}
+		}
+	});
 
 	// Combine skills with source flag
-	const allSkills = $derived<Skill[]>(
-		[...builtinSkills, ...userSkills].filter(
+	const baseSkills = $derived<Skill[]>(
+		[...localBuiltinSkills, ...localUserSkills].filter(
 			(skill) => !(currentAgentId === "claude-code" && isOpenClawBundledSkill(skill)),
 		),
+	);
+
+	const allSkills = $derived.by(() =>
+		isLocalMode
+			? getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts)
+			: baseSkills,
 	);
 
 	const filteredSkills = $derived(
@@ -151,6 +208,50 @@
 			isDeleting = false;
 		}
 	}
+
+	function updateSkillFavoriteState(
+		skillName: string,
+		is_favorite: boolean,
+		favorite_at: string | null,
+	) {
+		const updateSkills = (skills: Skill[]) =>
+			skills.map((skill) =>
+				skill.name === skillName ? { ...skill, is_favorite, favorite_at } : skill,
+			);
+
+		localUserSkills = updateSkills(localUserSkills);
+		localBuiltinSkills = updateSkills(localBuiltinSkills);
+	}
+
+	async function handleFavoriteToggle(skill: Skill) {
+		if (favoritingSkills.has(skill.name)) return;
+
+		const previousFavoriteState = skill.is_favorite ?? false;
+		const previousFavoriteAt = skill.favorite_at ?? null;
+		const nextFavoriteState = !previousFavoriteState;
+		const nextFavoriteAt = nextFavoriteState ? new Date().toISOString() : null;
+
+		optimisticFavoriteStates.set(skill.name, nextFavoriteState);
+		optimisticFavoriteAts.set(skill.name, nextFavoriteAt);
+		favoritingSkills.add(skill.name);
+
+		try {
+			if (nextFavoriteState) {
+				await addSkillFavorite({ skill_list: [skill.name] });
+			} else {
+				await cancelSkillFavorite({ skill_list: [skill.name] });
+			}
+
+			updateSkillFavoriteState(skill.name, nextFavoriteState, nextFavoriteAt);
+		} catch (e) {
+			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
+			optimisticFavoriteAts.set(skill.name, previousFavoriteAt);
+			console.error("Failed to toggle skill favorite:", e);
+			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
+		} finally {
+			favoritingSkills.delete(skill.name);
+		}
+	}
 </script>
 
 <div class="flex flex-col gap-6">
@@ -217,9 +318,13 @@
 		<div class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(320px,1fr))]">
 			{#each filteredSkills as item, index (`${item.name}-${item.isBuiltin ? "builtin" : "user"}-${index}`)}
 				{@const usedSkill = usedSkills.find((s) => s.name === item.name)}
+				{@const displaySkill = usedSkill
+					? { ...item, ...usedSkill, is_favorite: item.is_favorite ?? false }
+					: item}
 				<SkillCard
-					skill={usedSkill ?? item}
+					skill={displaySkill}
 					isBuiltin={!!item.isBuiltin}
+					is_favorite={item.is_favorite ?? false}
 					isUsed={!!usedSkill}
 					onSelect={handleSelectSkill}
 					{onUse}
@@ -228,6 +333,8 @@
 					onDownload={handleDownload}
 					onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 					downloading={downloadingSkills.has(item.name)}
+					favoriteLoading={favoritingSkills.has(item.name)}
+					onFavoriteToggle={isLocalMode ? handleFavoriteToggle : undefined}
 					{onForceUseToggle}
 				/>
 			{/each}

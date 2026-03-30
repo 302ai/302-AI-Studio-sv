@@ -1,7 +1,7 @@
 services:
   local-cc-api:
     # Use a fully-qualified image reference for Podman (short names are often disabled).
-    image: ghcr.io/302ai/cc-local-api:oc
+    image: ${CC_API_IMAGE:-ghcr.io/302ai/cc-local-api:main}
     container_name: local-cc-api
     ports:
       # host port injected from .env file at runtime (with conflict detection)

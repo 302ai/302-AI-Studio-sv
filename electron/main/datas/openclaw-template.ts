@@ -1,7 +1,5 @@
-import { isWin } from "../constants";
-
 export const OPENCLAW_DEFAULT_CONFIG = {
-	_version: 1,
+	_version: 2,
 	update: {
 		checkOnStart: false,
 	},
@@ -74,59 +72,40 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 		restart: true,
 		ownerDisplay: "raw",
 	},
-	channels: isWin
-		? {
-				feishu: {
-					enabled: true,
-					appId: "",
-					appSecret: "",
-					domain: "feishu",
-					dmPolicy: "open",
-					allowFrom: ["*"],
-					groupPolicy: "open",
-				},
-				telegram: {
-					enabled: true,
-					dmPolicy: "open",
-					botToken: "",
-					allowFrom: ["*"],
-					groupPolicy: "open",
-				},
-			}
-		: {
-				feishu: {
-					enabled: true,
-					appId: "",
-					appSecret: "",
-					domain: "feishu",
-					dmPolicy: "open",
-					allowFrom: ["*"],
-					groupPolicy: "open",
-				},
-				telegram: {
-					enabled: true,
-					dmPolicy: "open",
-					botToken: "",
-					allowFrom: ["*"],
-					groupPolicy: "open",
-				},
-				dingtalk: {
-					clientId: "",
-					clientSecret: "",
-					enableAICard: true,
-					enabled: true,
-				},
-				qqbot: {
-					enabled: true,
-					appId: "",
-					clientSecret: "",
-				},
-				wecom: {
-					enabled: true,
-					botId: "",
-					secret: "",
-				},
-			},
+	channels: {
+		feishu: {
+			enabled: true,
+			appId: "",
+			appSecret: "",
+			domain: "feishu",
+			dmPolicy: "open",
+			allowFrom: ["*"],
+			groupPolicy: "open",
+		},
+		telegram: {
+			enabled: true,
+			dmPolicy: "open",
+			botToken: "",
+			allowFrom: ["*"],
+			groupPolicy: "open",
+		},
+		dingtalk: {
+			clientId: "",
+			clientSecret: "",
+			enableAICard: true,
+			enabled: true,
+		},
+		qqbot: {
+			enabled: true,
+			appId: "",
+			clientSecret: "",
+		},
+		wecom: {
+			enabled: true,
+			botId: "",
+			secret: "",
+		},
+	},
 	gateway: {
 		port: 18789,
 		mode: "local",
@@ -144,13 +123,13 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 	},
 	plugins: {
 		enabled: true,
-		allow: isWin ? ["feishu", "telegram"] : ["feishu", "channels", "telegram"],
+		allow: ["feishu", "channels", "telegram"],
 		entries: {
 			feishu: {
 				enabled: true,
 			},
 			channels: {
-				enabled: !isWin,
+				enabled: true,
 			},
 		},
 		installs: {
@@ -168,7 +147,7 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 	},
 	skills: {
 		load: {
-			extraDirs: ["/home/user/skills", "/home/user/.claude/skills"],
+			extraDirs: ["/home/user/.claude/skills"],
 			watch: true,
 			watchDebounceMs: 250,
 		},

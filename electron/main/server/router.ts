@@ -22,7 +22,7 @@ import {
 import getPort from "get-port";
 import { Hono, type Context } from "hono";
 // import { getSkillContent, getSkillDetails } from "../apis/code-agent";
-import { codeAgentService, ssoService, tabService } from "../services";
+import { codeAgentService, ssoService } from "../services";
 import { chatParametersService } from "../services/chat-parameters-service";
 import { mcpService } from "../services/mcp-service";
 import { storageService } from "../services/storage-service";
@@ -1600,9 +1600,6 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		// await codeAgentGlobalConfigsStorage.setLastAgentId(currentAgentId);
 		console.log("[302ai-code-agent] Updated lastAgentId to:", currentAgentId);
 	}
-
-	// Notify the frontend that sandbox is ready (triggers preview panel to open)
-	tabService.notifySandboxCreated(threadId, sandboxId);
 
 	console.log(
 		"[302ai-code-agent] Received request",

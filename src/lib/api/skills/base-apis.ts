@@ -3,6 +3,48 @@ import { skill } from "@shared/types";
 import { type } from "arktype";
 import { getCodeAgentKy } from "../utils";
 
+function normalizeSkillRecord(value: unknown) {
+	if (!value || typeof value !== "object") {
+		return value;
+	}
+
+	const skillRecord = value as Record<string, unknown>;
+
+	return {
+		...skillRecord,
+		description: typeof skillRecord.description === "string" ? skillRecord.description : "",
+		description_zh:
+			typeof skillRecord.description_zh === "string" ? skillRecord.description_zh : "",
+		favorite_at:
+			typeof skillRecord.favorite_at === "string" || skillRecord.favorite_at === null
+				? skillRecord.favorite_at
+				: null,
+		manual_import_at:
+			typeof skillRecord.manual_import_at === "string" || skillRecord.manual_import_at === null
+				? skillRecord.manual_import_at
+				: null,
+	};
+}
+
+function normalizeSkillList(value: unknown) {
+	return Array.isArray(value) ? value.map(normalizeSkillRecord) : value;
+}
+
+function normalizeListSkillsResponse(value: unknown) {
+	if (!value || typeof value !== "object") {
+		return value;
+	}
+
+	const response = value as Record<string, unknown>;
+
+	return {
+		...response,
+		user_skills: normalizeSkillList(response.user_skills),
+		builtin_skills: normalizeSkillList(response.builtin_skills),
+		project_skills: normalizeSkillList(response.project_skills),
+	};
+}
+
 export const listSkillsRequestSchema = type({
 	sandboxId: "string?",
 	sessionId: "string?",
@@ -41,7 +83,7 @@ export async function _listSkills(request: ListSkillsRequest): Promise<ListSkill
 			})
 			.json();
 
-		const validated = listSkillsResponseSchema(response);
+		const validated = listSkillsResponseSchema(normalizeListSkillsResponse(response));
 		if (validated instanceof type.errors) {
 			console.error("Failed to validate list skills response:", validated.summary);
 			throw new Error("Invalid response format from list skills API");
@@ -80,7 +122,10 @@ export async function checkSkillDetails(
 			})
 			.json();
 
-		const validated = checkSkillDetailsResponseSchema(response);
+		const validated = checkSkillDetailsResponseSchema({
+			...((response as Record<string, unknown>) ?? {}),
+			skill: normalizeSkillRecord((response as Record<string, unknown>)?.skill),
+		});
 		if (validated instanceof type.errors) {
 			console.error("Failed to validate check skill details response:", validated.summary);
 			throw new Error("Invalid response format from check skill details API");
@@ -229,6 +274,61 @@ export async function deleteSkill(request: DeleteSkillRequest): Promise<DeleteSk
 		return validated;
 	} catch (error) {
 		console.error("Failed to delete skill:", error);
+		throw error;
+	}
+}
+
+export const skillFavoriteRequestSchema = type({
+	skill_list: "string[]",
+});
+export type SkillFavoriteRequest = typeof skillFavoriteRequestSchema.infer;
+export const skillFavoriteResponseSchema = type({
+	success: "boolean",
+});
+export type SkillFavoriteResponse = typeof skillFavoriteResponseSchema.infer;
+
+export async function addSkillFavorite(
+	request: SkillFavoriteRequest,
+): Promise<SkillFavoriteResponse> {
+	try {
+		const kyInstance = await getCodeAgentKy();
+		const response = await kyInstance
+			.post("302/claude-code/skills/favorite/add", {
+				json: request,
+			})
+			.json();
+
+		const validated = skillFavoriteResponseSchema(response);
+		if (validated instanceof type.errors) {
+			console.error("Failed to validate add skill favorite response:", validated.summary);
+			throw new Error("Invalid response format from add skill favorite API");
+		}
+		return validated;
+	} catch (error) {
+		console.error("Failed to add skill favorite:", error);
+		throw error;
+	}
+}
+
+export async function cancelSkillFavorite(
+	request: SkillFavoriteRequest,
+): Promise<SkillFavoriteResponse> {
+	try {
+		const kyInstance = await getCodeAgentKy();
+		const response = await kyInstance
+			.post("302/claude-code/skills/favorite/cancel", {
+				json: request,
+			})
+			.json();
+
+		const validated = skillFavoriteResponseSchema(response);
+		if (validated instanceof type.errors) {
+			console.error("Failed to validate cancel skill favorite response:", validated.summary);
+			throw new Error("Invalid response format from cancel skill favorite API");
+		}
+		return validated;
+	} catch (error) {
+		console.error("Failed to cancel skill favorite:", error);
 		throw error;
 	}
 }

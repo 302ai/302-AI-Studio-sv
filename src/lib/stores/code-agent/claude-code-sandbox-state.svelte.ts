@@ -9,8 +9,6 @@ import type { ClaudeCodeSandboxInfo } from "@shared/storage/code-agent";
 import { toast } from "svelte-sonner";
 import { SvelteMap, SvelteSet } from "svelte/reactivity";
 import { claudeCodeAgentState } from "./claude-code-state.svelte";
-import { codeAgentState } from "./code-agent-state.svelte";
-import { persistedLocalClaudeCodeSessionsState } from "./local-claude-code-sandbox-state.svelte";
 
 export const persistedClaudeCodeSandboxState = new PersistedState<ClaudeCodeSandboxInfo[]>(
 	"CodeAgentStorage:claude-code-sandbox-state",
@@ -227,56 +225,6 @@ class ClaudeCodeSandboxState {
 			standalone: [{ key: "new", label: m.local_platform_new_work_directory(), value: "new" }],
 			groups: groups,
 		};
-	});
-	/**
-	 * Get the workspace path for the current session
-	 * Returns the session's workspacePath if available, empty string otherwise
-	 * Supports both Local and Remote modes
-	 */
-	currentSessionWorkspacePath = $derived.by(() => {
-		// Local 模式：从 local sessions 存储中获取
-		if (codeAgentState.type === "local") {
-			const sessionId = claudeCodeAgentState.currentSessionId;
-			if (!sessionId) return "";
-
-			const localSessions = persistedLocalClaudeCodeSessionsState.current;
-			const session = localSessions.find((s) => s.session_id === sessionId);
-			return session?.workspace_path || "";
-		}
-
-		// Remote 模式：原有的逻辑（从 sandbox state 获取）
-		const sandboxId = claudeCodeAgentState.sandboxId;
-		const sessionId = claudeCodeAgentState.currentSessionId;
-
-		console.log("[ClaudeCodeSandboxState] Computing currentSessionWorkspacePath:", {
-			sandboxId,
-			sessionId,
-			sandboxCount: persistedClaudeCodeSandboxState.current.length,
-		});
-
-		const sandbox = persistedClaudeCodeSandboxState.current.find(
-			(sandbox) => sandbox.sandboxId === sandboxId,
-		);
-		if (!sandbox) {
-			console.log("[ClaudeCodeSandboxState] Sandbox not found for ID:", sandboxId);
-			return "";
-		}
-
-		console.log(
-			"[ClaudeCodeSandboxState] Found sandbox, sessionInfos count:",
-			sandbox.sessionInfos.length,
-		);
-
-		const session = sandbox.sessionInfos.find((s) => s.sessionId === sessionId);
-		const workspacePath = session?.workspacePath || "";
-
-		console.log("[ClaudeCodeSandboxState] Session workspace path:", {
-			sessionId,
-			foundSession: !!session,
-			workspacePath,
-		});
-
-		return workspacePath;
 	});
 
 	async refreshSandboxes(): Promise<boolean> {

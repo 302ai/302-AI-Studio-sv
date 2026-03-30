@@ -49,7 +49,6 @@
 	import { type CodeAgentType } from "@shared/storage/code-agent";
 
 	import OpenClawChannelPanel from "$lib/components/buss/open-claw-config-panel/open-claw-channel-panel.svelte";
-	import OpenClawConfigPanel from "$lib/components/buss/open-claw-config-panel/open-claw-config-panel.svelte";
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
 	import ClaudeCodePanel from "./claude-code-panel.svelte";
@@ -228,7 +227,7 @@
 
 				{#if codeAgentState.currentAgentId == "open-claw"}
 					<!-- NOTE: Hidden channel configuration -->
-					<OpenClawConfigPanel className="hidden" />
+					<!-- <OpenClawConfigPanel className="hidden" /> -->
 					<OpenClawChannelPanel />
 				{/if}
 			</div>

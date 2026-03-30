@@ -13,6 +13,9 @@ import type {
 } from "@shared/storage/code-agent";
 import type { ThreadParmas } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
+import fs from "fs";
+import path from "path";
+import { getRuntimeComposeDir } from "../../utils/local-vibe-utils";
 import { emitter } from "../broadcast-service";
 import { storageService } from "../storage-service";
 import {
@@ -443,15 +446,18 @@ export class CodeAgentService {
 		sandboxRemark: string,
 		llmModel: string,
 		sessionNote?: string,
+		workspacePath?: string,
 	): Promise<{ isOK: boolean }> {
 		try {
+			const effectiveWorkspacePath = workspacePath || "";
+			const effectiveNote = sessionNote;
+
 			// First check if thread data already exists
 			const existingThread = await storageService.getItemInternal("app-thread:" + threadId);
 
 			// If thread data doesn't exist, create it
 			if (!existingThread) {
-				// Use sessionNote for title, fall back to sandboxRemark or default
-				const threadTitle = sessionNote || sandboxRemark || "Code Agent";
+				const threadTitle = effectiveNote || sandboxRemark || "Code Agent";
 				const newThread = {
 					id: threadId,
 					title: threadTitle,
@@ -471,7 +477,7 @@ export class CodeAgentService {
 					selectedModel: {
 						id: llmModel,
 						name: llmModel,
-						providerId: "302AI", // Must match the registered provider ID
+						providerId: "302AI",
 						type: "chat",
 					},
 					isPrivateChatActive: false,
@@ -479,8 +485,6 @@ export class CodeAgentService {
 				};
 				await storageService.setItemInternal("app-thread:" + threadId, newThread);
 
-				// Add an initial message to prevent "New Chat" state which causes session init conflicts
-				// Content is empty as requested by user
 				const initialMessage = {
 					id: crypto.randomUUID(),
 					role: "system",
@@ -490,25 +494,20 @@ export class CodeAgentService {
 				};
 				await storageService.setItemInternal("app-chat-messages:" + threadId, [initialMessage]);
 
-				// Add thread to the sidebar thread list
 				const { threadStorage } = await import("../storage-service/thread-storage");
 				await threadStorage.addThread(threadId);
 
 				console.log("[createThreadForSession] Created thread data for:", threadId);
 			}
 
-			// Create the claude code agent state (sandbox/session link)
 			const stateKey = `claude-code-agent-state-${threadId}`;
-			// Include all required CodeAgentMetadata properties
 			const state = {
 				sandboxId,
 				sandboxRemark,
 				currentSessionId: sessionId,
 				model: llmModel,
 				isManualNote: false,
-				// Local agent properties (empty for remote sessions)
-				currentWorkspacePath: "",
-				workspacePaths: [],
+				currentWorkspacePath: effectiveWorkspacePath,
 				variables: [],
 				skills: [],
 				thinkingBudget: "medium" as const,
@@ -588,6 +587,77 @@ export class CodeAgentService {
 		} catch (error) {
 			console.error("Error setting isManualNote by session:", error);
 			return { isOK: false, updatedCount: 0 };
+		}
+	}
+
+	/**
+	 * Delete a specific workspace directory via IPC
+	 * @param subPath - subdirectory name under workspace (e.g. "icr6cz4lnm")
+	 */
+	async deleteWorkspaceDirectory(
+		_event: IpcMainInvokeEvent,
+		subPath: string,
+	): Promise<{ success: boolean; error?: string }> {
+		const workspaceDir = path.join(getRuntimeComposeDir(), "workspace");
+
+		// Prevent directory traversal
+		const safeSubPath = subPath.replace(/\.\./g, "");
+		const targetDir = path.join(workspaceDir, safeSubPath);
+
+		// Safety: ensure targetDir is actually inside workspaceDir
+		if (!targetDir.startsWith(workspaceDir)) {
+			console.error("[CodeAgentService] Path traversal attempt blocked:", subPath);
+			return { success: false, error: "Invalid path" };
+		}
+
+		try {
+			if (fs.existsSync(targetDir)) {
+				fs.rmSync(targetDir, { recursive: true, force: true });
+				console.log("[CodeAgentService] Deleted workspace directory:", targetDir);
+			}
+			return { success: true };
+		} catch (error) {
+			console.error("[CodeAgentService] Failed to delete workspace directory:", error);
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			return { success: false, error: errorMessage };
+		}
+	}
+
+	/**
+	 * Rename a workspace directory via IPC
+	 * @param oldSubPath - old subdirectory path relative to workspace (e.g. "projects/myFolder")
+	 * @param newSubPath - new subdirectory path relative to workspace (e.g. "projects/newFolder")
+	 */
+	async renameWorkspaceDirectory(
+		_event: IpcMainInvokeEvent,
+		oldSubPath: string,
+		newSubPath: string,
+	): Promise<{ success: boolean; error?: string }> {
+		const workspaceDir = path.join(getRuntimeComposeDir(), "workspace");
+
+		// Prevent directory traversal
+		const safeOldPath = oldSubPath.replace(/\.\./g, "");
+		const safeNewPath = newSubPath.replace(/\.\./g, "");
+		const oldDir = path.join(workspaceDir, safeOldPath);
+		const newDir = path.join(workspaceDir, safeNewPath);
+
+		// Safety: ensure both paths are inside workspaceDir
+		if (!oldDir.startsWith(workspaceDir) || !newDir.startsWith(workspaceDir)) {
+			console.error("[CodeAgentService] Path traversal attempt blocked:", oldSubPath, newSubPath);
+			return { success: false, error: "Invalid path" };
+		}
+
+		try {
+			if (!fs.existsSync(oldDir)) {
+				return { success: false, error: "Source path not found" };
+			}
+			fs.renameSync(oldDir, newDir);
+			console.log("[CodeAgentService] Renamed workspace directory:", oldDir, "->", newDir);
+			return { success: true };
+		} catch (error) {
+			console.error("[CodeAgentService] Failed to rename workspace directory:", error);
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			return { success: false, error: errorMessage };
 		}
 	}
 }

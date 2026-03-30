@@ -45,6 +45,24 @@
 		);
 	}
 
+	function updateSkillFavoriteState(
+		skillName: string,
+		is_favorite: boolean,
+		favorite_at: string | null,
+	) {
+		const updateSkills = (skills: Skill[]) =>
+			skills.map((skill) =>
+				skill.name === skillName ? { ...skill, is_favorite, favorite_at } : skill,
+			);
+
+		skillsData = {
+			...skillsData,
+			user_skills: updateSkills(skillsData.user_skills),
+			builtin_skills: updateSkills(skillsData.builtin_skills),
+			project_skills: updateSkills(skillsData.project_skills),
+		};
+	}
+
 	onMount(() => {
 		// Reset to list view when mounting
 		skillsPanelState.reset();
@@ -94,6 +112,7 @@
 				showUseButton={false}
 				showBorder={false}
 				onRefresh={loadSkills}
+				onFavoriteChange={updateSkillFavoriteState}
 			/>
 		{:else if skillsPanelState.currentView.type === "detail"}
 			<SkillDetailView

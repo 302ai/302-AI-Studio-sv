@@ -5,6 +5,7 @@ import { BroadcastService, broadcastService } from "./broadcast-service";
 import { CodeAgentService, codeAgentService } from "./code-agent-service";
 import { DataService, dataService } from "./data-service";
 import { DeepLinkService, deepLinkService } from "./deep-link-service";
+import { DevLauncherService, devLauncherService } from "./dev-launcher-service";
 import { ExternalLinkService, externalLinkService } from "./external-link-service";
 import { GhostWindowService, ghostWindowService } from "./ghost-window-service";
 import { localVibeService, LocalVibeService } from "./local-vibe-service";
@@ -35,6 +36,7 @@ export {
 	CodeAgentService,
 	DataService,
 	DeepLinkService,
+	DevLauncherService,
 	ExternalLinkService,
 	GeneralSettingsService,
 	GhostWindowService,
@@ -66,6 +68,7 @@ export {
 	codeAgentService,
 	dataService,
 	deepLinkService,
+	devLauncherService,
 	externalLinkService,
 	generalSettingsService,
 	ghostWindowService,

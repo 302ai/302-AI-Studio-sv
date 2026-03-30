@@ -17,6 +17,7 @@ import {
 	aiApplicationService,
 	appService,
 	dataService,
+	devLauncherService,
 	externalLinkService,
 	mcpService,
 	notificationService,
@@ -196,15 +197,6 @@ export function registerIpcHandlers() {
 	ipcMain.handle("localVibeService:openWorkspaceDirectory", (event, subPath) =>
 		localVibeService.openWorkspaceDirectory(event, subPath),
 	);
-	ipcMain.handle("localVibeService:deleteWorkspaceDirectory", (event, subPath) =>
-		localVibeService.deleteWorkspaceDirectory(event, subPath),
-	);
-	ipcMain.handle("localVibeService:renameWorkspaceDirectory", (event, oldSubPath, newSubPath) =>
-		localVibeService.renameWorkspaceDirectory(event, oldSubPath, newSubPath),
-	);
-	ipcMain.handle("localVibeService:listWorkspaceDirectories", (event) =>
-		localVibeService.listWorkspaceDirectories(event),
-	);
 	ipcMain.handle("localVibeService:getLocalBaseUrl", (event) =>
 		localVibeService.getLocalBaseUrl(event),
 	);
@@ -292,7 +284,7 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle(
 		"codeAgentService:createThreadForSession",
-		(event, threadId, sandboxId, sessionId, sandboxRemark, llmModel, sessionNote) =>
+		(event, threadId, sandboxId, sessionId, sandboxRemark, llmModel, sessionNote, workspacePath) =>
 			codeAgentService.createThreadForSession(
 				event,
 				threadId,
@@ -301,6 +293,7 @@ export function registerIpcHandlers() {
 				sandboxRemark,
 				llmModel,
 				sessionNote,
+				workspacePath,
 			),
 	);
 	ipcMain.handle("codeAgentService:getThreadIdBySessionId", (event, sandboxId, sessionId) =>
@@ -310,6 +303,12 @@ export function registerIpcHandlers() {
 		"codeAgentService:setIsManualNoteBySession",
 		(event, sandboxId, sessionId, isManualNote) =>
 			codeAgentService.setIsManualNoteBySession(event, sandboxId, sessionId, isManualNote),
+	);
+	ipcMain.handle("codeAgentService:deleteWorkspaceDirectory", (event, subPath) =>
+		codeAgentService.deleteWorkspaceDirectory(event, subPath),
+	);
+	ipcMain.handle("codeAgentService:renameWorkspaceDirectory", (event, oldSubPath, newSubPath) =>
+		codeAgentService.renameWorkspaceDirectory(event, oldSubPath, newSubPath),
 	);
 
 	// windowService service registration
@@ -348,6 +347,9 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("threadStateService:getBusyThreads", (event) =>
 		threadStateService.getBusyThreads(event),
+	);
+	ipcMain.handle("threadStateService:getBusyLocalAgentThreads", (event) =>
+		threadStateService.getBusyLocalAgentThreads(event),
 	);
 
 	// tabService service registration
@@ -494,6 +496,14 @@ export function registerIpcHandlers() {
 			dataService.exportChatToFile(event, content, extension, filterName, defaultFileName),
 	);
 
+	// devLauncherService service registration
+	ipcMain.handle("devLauncherService:launchDevSandbox", (event, imageAddress, engine) =>
+		devLauncherService.launchDevSandbox(event, imageAddress, engine),
+	);
+	ipcMain.handle("devLauncherService:stopDevSandbox", (event) =>
+		devLauncherService.stopDevSandbox(event),
+	);
+
 	// externalLinkService service registration
 	ipcMain.handle("externalLinkService:openExternalLink", (event, url) =>
 		externalLinkService.openExternalLink(event, url),
@@ -528,6 +538,11 @@ export function registerIpcHandlers() {
 	ipcMain.handle("openClawService:handleOpenClawWebUiReloadIpc", (event, tabId) =>
 		openClawService.handleOpenClawWebUiReloadIpc(event, tabId),
 	);
+	ipcMain.handle("openClawService:wechatInsalled", (event) =>
+		openClawService.wechatInsalled(event),
+	);
+	ipcMain.handle("openClawService:connectWechat", (event) => openClawService.connectWechat(event));
+	ipcMain.handle("openClawService:disposeWechat", (event) => openClawService.disposeWechat(event));
 
 	// providerService service registration
 	ipcMain.handle("providerService:handle302AIProviderChange", (event, apiKey) =>
@@ -644,9 +659,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("localVibeService:getComposeDirectory");
 	ipcMain.removeHandler("localVibeService:openComposeDirectory");
 	ipcMain.removeHandler("localVibeService:openWorkspaceDirectory");
-	ipcMain.removeHandler("localVibeService:deleteWorkspaceDirectory");
-	ipcMain.removeHandler("localVibeService:renameWorkspaceDirectory");
-	ipcMain.removeHandler("localVibeService:listWorkspaceDirectories");
 	ipcMain.removeHandler("localVibeService:getLocalBaseUrl");
 	ipcMain.removeHandler("localVibeService:getSandboxStatus");
 	ipcMain.removeHandler("localVibeService:triggerSystemRestart");
@@ -677,6 +689,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("codeAgentService:createThreadForSession");
 	ipcMain.removeHandler("codeAgentService:getThreadIdBySessionId");
 	ipcMain.removeHandler("codeAgentService:setIsManualNoteBySession");
+	ipcMain.removeHandler("codeAgentService:deleteWorkspaceDirectory");
+	ipcMain.removeHandler("codeAgentService:renameWorkspaceDirectory");
 	ipcMain.removeHandler("windowService:handleOpenSettingsWindow");
 	ipcMain.removeHandler("windowService:handleNavigateToUrl");
 	ipcMain.removeHandler("windowService:focusWindow");
@@ -687,6 +701,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("deepLinkService:simulateDeepLink");
 	ipcMain.removeHandler("threadStateService:updateBusyState");
 	ipcMain.removeHandler("threadStateService:getBusyThreads");
+	ipcMain.removeHandler("threadStateService:getBusyLocalAgentThreads");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");
@@ -733,6 +748,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("dataService:zipFolderForUpload");
 	ipcMain.removeHandler("dataService:selectFolderForUpload");
 	ipcMain.removeHandler("dataService:exportChatToFile");
+	ipcMain.removeHandler("devLauncherService:launchDevSandbox");
+	ipcMain.removeHandler("devLauncherService:stopDevSandbox");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
 	ipcMain.removeHandler("mcpService:getToolsFromServer");
 	ipcMain.removeHandler("mcpService:closeServer");
@@ -742,6 +759,9 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("openClawService:applyOpenClawChannelConfig");
 	ipcMain.removeHandler("openClawService:applyOpenClawBindingsConfig");
 	ipcMain.removeHandler("openClawService:handleOpenClawWebUiReloadIpc");
+	ipcMain.removeHandler("openClawService:wechatInsalled");
+	ipcMain.removeHandler("openClawService:connectWechat");
+	ipcMain.removeHandler("openClawService:disposeWechat");
 	ipcMain.removeHandler("providerService:handle302AIProviderChange");
 	ipcMain.removeHandler("providerService:get302AIApiKey");
 	ipcMain.removeHandler("threadService:addThread");
