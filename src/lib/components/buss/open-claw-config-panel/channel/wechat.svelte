@@ -9,6 +9,7 @@
 	import { onMount, tick } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { LdrsLoader } from "../../ldrs-loader";
+	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 
 	let wechatElm = $state<HTMLDivElement | null>(null);
 	const qrCode = new QRCodeStyling();
@@ -115,6 +116,10 @@
 
 	let wechatTriggerSignal = 0;
 	const handleWechartTrigger = async () => {
+		if (!localEnvState.sandboxRunning) {
+			toast.error(m.code_agent_local_container_not_started());
+			return;
+		}
 		wechatState.installed = await window.electronAPI.openClawService.wechatInsalled();
 		if (!wechatState.installed) return;
 
