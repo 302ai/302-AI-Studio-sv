@@ -83,6 +83,22 @@
 	let caseSensitive = $state(false);
 	let wholeWord = $state(false);
 	let useRegex = $state(false);
+	let searchPanelRightOffset = $state(0);
+	let searchPanelRef: HTMLDivElement | null = $state(null);
+
+	function updateSearchPanelPosition() {
+		if (!chatState.isSearchInput || typeof window === "undefined" || !searchPanelRef) {
+			searchPanelRightOffset = 0;
+			return;
+		}
+
+		const sidebar = document.querySelector('[data-sidebar="sidebar"]') as HTMLElement | null;
+		const sidebarRight = sidebar?.getBoundingClientRect().right ?? 0;
+		const safeGap = 12;
+		const panelRect = searchPanelRef.getBoundingClientRect();
+		const overflowLeft = sidebarRight + safeGap - panelRect.left;
+		searchPanelRightOffset = overflowLeft > 0 ? -overflowLeft : 0;
+	}
 
 	function toggleCaseSensitive() {
 		caseSensitive = !caseSensitive;
@@ -111,6 +127,7 @@
 	$effect(() => {
 		if (chatState.isSearchInput && searchInputRef) {
 			searchInputRef.focus();
+			requestAnimationFrame(updateSearchPanelPosition);
 		}
 	});
 
@@ -275,8 +292,16 @@
 			searchInputValue = data.query;
 		});
 
+		const handleResize = () => updateSearchPanelPosition();
+		const sidebar = document.querySelector('[data-sidebar="sidebar"]') as HTMLElement | null;
+		const sidebarResizeObserver = sidebar ? new ResizeObserver(handleResize) : null;
+		if (sidebar) sidebarResizeObserver?.observe(sidebar);
+		window.addEventListener("resize", handleResize);
+
 		return () => {
 			cleanupSearchNavigate?.();
+			sidebarResizeObserver?.disconnect();
+			window.removeEventListener("resize", handleResize);
 		};
 	});
 </script>
@@ -344,8 +369,9 @@
 			{#if chatState.hasMessages}
 				<ButtonWithTooltip
 					class={cn(
-						"hover:!bg-icon-btn-hover",
-						chatState.isSearchInput && "!bg-icon-btn-active hover:!bg-icon-btn-active",
+						"hover:!bg-accent hover:!text-accent-foreground",
+						chatState.isSearchInput &&
+							"!bg-accent !text-accent-foreground hover:!bg-accent hover:!text-accent-foreground",
 					)}
 					tooltipSide="bottom"
 					tooltip={m.tooltip_search_content()}
@@ -356,7 +382,9 @@
 
 				{#if chatState.isSearchInput}
 					<div
-						class="absolute right-0 top-full mt-1 flex h-9 items-center gap-1 rounded-md border border-input bg-background px-2 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200"
+						bind:this={searchPanelRef}
+						class="absolute top-full mt-1 flex h-9 items-center gap-1 rounded-md border border-input bg-background px-2 shadow-sm animate-in fade-in slide-in-from-top-2 duration-200"
+						style={`right: ${searchPanelRightOffset}px;`}
 					>
 						<Search class="text-foreground/70 size-4 shrink-0" />
 						<input
@@ -371,8 +399,8 @@
 							class={cn(
 								"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
 								caseSensitive
-									? "text-foreground bg-icon-btn-active"
-									: "text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover",
+									? "bg-accent text-accent-foreground"
+									: "text-foreground/70 hover:bg-accent hover:text-accent-foreground",
 							)}
 							title={m.search_case_sensitive()}
 							onclick={toggleCaseSensitive}
@@ -383,8 +411,8 @@
 							class={cn(
 								"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
 								wholeWord
-									? "text-foreground bg-icon-btn-active"
-									: "text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover",
+									? "bg-accent text-accent-foreground"
+									: "text-foreground/70 hover:bg-accent hover:text-accent-foreground",
 							)}
 							title={m.search_whole_word()}
 							onclick={toggleWholeWord}
@@ -395,8 +423,8 @@
 							class={cn(
 								"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
 								useRegex
-									? "text-foreground bg-icon-btn-active"
-									: "text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover",
+									? "bg-accent text-accent-foreground"
+									: "text-foreground/70 hover:bg-accent hover:text-accent-foreground",
 							)}
 							title={m.search_regex()}
 							onclick={toggleRegex}
@@ -404,7 +432,9 @@
 							<Code class="size-3.5" />
 						</button>
 						<span class="flex items-center gap-0.5 text-xs text-foreground tabular-nums">
-							<span class="min-w-[2.5rem] text-center w-14">
+							<span
+								class="min-w-[2.5rem] text-center w-14 py-0 px-[2px] whitespace-nowrap box-content"
+							>
 								{#if searchInputValue && totalMatches > 0}
 									{currentMatchIndex}/{totalMatches}
 								{:else}
@@ -412,14 +442,14 @@
 								{/if}
 							</span>
 							<button
-								class="cursor-pointer text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
+								class="cursor-pointer text-foreground/70 hover:bg-accent hover:text-accent-foreground flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
 								onclick={handlePrevMatch}
 								disabled={totalMatches === 0}
 							>
 								<ChevronUp class="size-3.5" />
 							</button>
 							<button
-								class="cursor-pointer text-foreground/70 hover:text-foreground hover:bg-icon-btn-hover flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
+								class="cursor-pointer text-foreground/70 hover:bg-accent hover:text-accent-foreground flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
 								onclick={handleNextMatch}
 								disabled={totalMatches === 0}
 							>
