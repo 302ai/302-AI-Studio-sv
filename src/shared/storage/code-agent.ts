@@ -133,11 +133,19 @@ export const codeAgentGlobalConfigs = type({
 			default: Accounts,
 		}),
 	}),
+	discord: type({ token: "string" }),
 	_version: "number?",
 });
 export type CodeAgentGlobalConfigs = typeof codeAgentGlobalConfigs.infer;
 
-export const SUPPORTED_CHANNELS = ["feishu", "dingtalk", "qqbot", "wecom", "telegram"] as const;
+export const SUPPORTED_CHANNELS = [
+	"feishu",
+	"dingtalk",
+	"qqbot",
+	"wecom",
+	"telegram",
+	"discord",
+] as const;
 export const WIN_SUPPORTED_CHANNELS = ["feishu", "telegram"] as const;
 export type SupportedChannel = (typeof SUPPORTED_CHANNELS)[number];
 
