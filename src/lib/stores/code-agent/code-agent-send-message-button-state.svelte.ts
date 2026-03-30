@@ -1,4 +1,4 @@
-import { batchUploadFile, initProject } from "$lib/api/taskboard/base-apis";
+import { batchUploadFile, initProject } from "$lib/api/vibe-mode/base-apis";
 import { m } from "$lib/paraglide/messages";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
@@ -8,15 +8,19 @@ import { codeAgentState } from "./code-agent-state.svelte";
 import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
 import { localClaudeCodeSandboxState } from "./local-claude-code-sandbox-state.svelte";
 import { localEnvState } from "./local-env-state.svelte";
-import { fileToBase64 } from "./utils";
+import { openclawConfigState } from "./openclaw/openclaw-config-state.svelte";
+import { extractAgentIdFromWorkspacePath, fileToBase64 } from "./utils";
 
 const { addClaudeCodeSandboxMCP } = window.electronAPI.codeAgentService;
 
 class CodeAgentSendMessageButtonState {
 	executionIterator: AsyncGenerator<string, void, boolean> | null = null;
+	#busyDialogResolver: ((value: boolean) => void) | null = null;
 
 	showLackOfDiskDialog = $state(false);
+	showBusyLocalAgentDialog = $state(false);
 	isChecking = $state(false);
+
 	isOpenClawSendDisabled = $derived.by(
 		() =>
 			codeAgentState.type === "local" &&
@@ -174,29 +178,14 @@ class CodeAgentSendMessageButtonState {
 			}
 
 			if (sandboxInfo) {
-				let workspacePath: string | undefined;
+				let workspacePath = codeAgentState.currentWorkspacePath;
 
-				if (codeAgentTaskboardState.isInitialized) {
+				if (codeAgentState.isPristineSession) {
 					const isSessionIdEmpty = codeAgentState.sessionId === "";
 					const sessionId: string = isSessionIdEmpty ? nanoid() : codeAgentState.sessionId;
 					const shouldSkipInitProject = codeAgentState.type === "local" && !isSessionIdEmpty;
 
-					if (shouldSkipInitProject) {
-						workspacePath = codeAgentState.currentWorkspacePath;
-
-						if (!workspacePath) {
-							workspacePath = localClaudeCodeSandboxState.sessions.find(
-								(session) => session.session_id === sessionId,
-							)?.workspace_path;
-						}
-
-						if (!workspacePath) {
-							await localClaudeCodeSandboxState.refreshSessions();
-							workspacePath = localClaudeCodeSandboxState.sessions.find(
-								(session) => session.session_id === sessionId,
-							)?.workspace_path;
-						}
-					} else {
+					if (!shouldSkipInitProject) {
 						const { workspace_path } = await initProject({
 							sandboxId: sandboxInfo.sandboxId,
 							sessionId,
@@ -206,9 +195,7 @@ class CodeAgentSendMessageButtonState {
 						workspacePath = workspace_path;
 
 						// Update currentWorkspacePath with the actual path from server
-						if (workspace_path) {
-							codeAgentState.updateCurrentWorkspacePath(workspace_path);
-						}
+						codeAgentState.updateCurrentWorkspacePath(workspace_path);
 
 						// Refresh sessions to sync the new workspace_path to local storage
 						if (codeAgentState.type === "local") {
@@ -218,16 +205,6 @@ class CodeAgentSendMessageButtonState {
 								sandboxInfo.sandboxId,
 							);
 						}
-					}
-
-					if (!workspacePath) {
-						console.error("[CodeAgent] Missing workspace path for taskboard:", {
-							type: codeAgentState.type,
-							sessionId,
-							currentWorkspacePath: codeAgentState.currentWorkspacePath,
-						});
-						toast.error(m.taskboard_error_sandbox_not_initialized());
-						return;
 					}
 
 					// Collect all files to upload in a single batch request
@@ -341,6 +318,8 @@ class CodeAgentSendMessageButtonState {
 					}
 				}
 
+				await openclawConfigState.bindingAndRestart(extractAgentIdFromWorkspacePath(workspacePath));
+
 				if (sandboxInfo.diskUsage === "insufficient") {
 					this.showLackOfDiskDialog = true;
 					const shouldContinue: boolean = yield "wait_user_choice";
@@ -357,6 +336,29 @@ class CodeAgentSendMessageButtonState {
 		} finally {
 			this.isChecking = false;
 		}
+	}
+
+	async guardBusyLocalAgents(): Promise<boolean> {
+		if (!openclawConfigState.hasConfigs) return true;
+		const busy = await window.electronAPI.threadStateService.getBusyLocalAgentThreads();
+		if (busy.length === 0) return true;
+
+		this.showBusyLocalAgentDialog = true;
+		return new Promise<boolean>((resolve) => {
+			this.#busyDialogResolver = resolve;
+		});
+	}
+
+	handleBusyDialogConfirm() {
+		this.showBusyLocalAgentDialog = false;
+		this.#busyDialogResolver?.(true);
+		this.#busyDialogResolver = null;
+	}
+
+	handleBusyDialogCancel() {
+		this.showBusyLocalAgentDialog = false;
+		this.#busyDialogResolver?.(false);
+		this.#busyDialogResolver = null;
 	}
 
 	async handleContinueAnyway() {
@@ -376,6 +378,9 @@ class CodeAgentSendMessageButtonState {
 	}
 
 	async handleCodeAgentFlow(fn: () => void) {
+		const allowed = await this.guardBusyLocalAgents();
+		if (!allowed) return;
+
 		this.executionIterator = this.enableCodeAgentFlow(fn);
 		await this.executionIterator.next();
 	}

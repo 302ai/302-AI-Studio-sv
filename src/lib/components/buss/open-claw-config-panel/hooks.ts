@@ -4,6 +4,7 @@
  *Date: 2026-03-23
  **/
 import { m } from "$lib/paraglide/messages";
+import { codeAgentState } from "$lib/stores/code-agent";
 import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 import { toast } from "svelte-sonner";
 
@@ -23,7 +24,7 @@ export function ApplyOpenClawChannelConfigConfirm({
 		loading(true);
 		try {
 			await prepareAction?.();
-			if (localEnvState.openClawHealthStatus !== "unknown") {
+			if (!codeAgentState.isPristineSession && localEnvState.openClawHealthStatus !== "unknown") {
 				await window.electronAPI.localVibeService.restartPodmanMachine();
 			}
 		} catch (e) {

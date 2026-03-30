@@ -10,7 +10,6 @@
 	import { onMount } from "svelte";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 	import OpenClawChannelPanel from "../open-claw-config-panel/open-claw-channel-panel.svelte";
-	import OpenClawConfigPanel from "../open-claw-config-panel/open-claw-config-panel.svelte";
 
 	const frameworkOptions = [
 		{
@@ -55,7 +54,7 @@
 
 	{#if codeAgentState.currentAgentId == "open-claw"}
 		<!-- NOTE: Hidden channel configuration -->
-		<OpenClawConfigPanel className="hidden" />
+		<!-- <OpenClawConfigPanel className="hidden" /> -->
 		<OpenClawChannelPanel />
 	{/if}
 

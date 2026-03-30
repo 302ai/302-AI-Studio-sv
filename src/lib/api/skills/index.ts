@@ -6,6 +6,8 @@ import type {
 	SkillDetailsRequest,
 } from "./base-apis";
 import {
+	addSkillFavorite,
+	cancelSkillFavorite,
 	_createSkill,
 	_createSkillFromGitHub,
 	_editSkillDetails,
@@ -31,9 +33,21 @@ export async function listSkills(request: ListSkillsRequest): Promise<ListSkills
 		const { success, user_skills, builtin_skills, project_skills } = response;
 		return {
 			success,
-			user_skills: user_skills.map((skill) => ({ ...skill, isBuiltin: false })),
-			builtin_skills: builtin_skills.map((skill) => ({ ...skill, isBuiltin: true })),
-			project_skills: project_skills.map((skill) => ({ ...skill, isBuiltin: false })),
+			user_skills: user_skills.map((skill) => ({
+				...skill,
+				isBuiltin: false,
+				is_favorite: skill.is_favorite ?? false,
+			})),
+			builtin_skills: builtin_skills.map((skill) => ({
+				...skill,
+				isBuiltin: true,
+				is_favorite: skill.is_favorite ?? false,
+			})),
+			project_skills: project_skills.map((skill) => ({
+				...skill,
+				isBuiltin: false,
+				is_favorite: skill.is_favorite ?? false,
+			})),
 		};
 	};
 
@@ -91,5 +105,6 @@ export async function createSkillFromGitHub(githubUrl: string) {
 	return _createSkillFromGitHub(githubUrl);
 }
 
+export { addSkillFavorite, cancelSkillFavorite };
 export type { DeleteSkillRequest };
 export { deleteSkill };

@@ -30,7 +30,6 @@
 	});
 	let manualFormRef = $state<SkillManualForm | undefined>();
 	let fileInputRef = $state<HTMLInputElement | undefined>();
-	let isDragOver = $state(false);
 
 	const { extractZipBlob, scanDirectory, readFile, writeFile } = window.electronAPI.appService;
 
@@ -191,23 +190,6 @@
 		skillRootDir = newRootPath;
 	}
 
-	// Drag and drop handlers
-	function handleDragOver(event: DragEvent) {
-		event.preventDefault();
-		isDragOver = true;
-	}
-
-	function handleDragLeave(event: DragEvent) {
-		event.preventDefault();
-		isDragOver = false;
-	}
-
-	function handleDrop(event: DragEvent) {
-		event.preventDefault();
-		isDragOver = false;
-		handleFiles(event.dataTransfer?.files ?? null);
-	}
-
 	function handleClick() {
 		fileInputRef?.click();
 	}
@@ -262,27 +244,19 @@
 		changedFiles = new Map();
 		formData = { name: "", description: "", content: "" };
 		prevFormContent = "";
-		isDragOver = false;
 	}
 </script>
 
 {#if uploadState === "idle" || uploadState === "error"}
-	<!-- Drop zone UI -->
+	<!-- 上传区域 -->
 	<div class="px-6 py-6">
 		<button
 			type="button"
-			class="flex w-full flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12 transition-colors {isDragOver
-				? 'border-violet-500 bg-violet-50 dark:bg-violet-950/30'
-				: 'border-muted-foreground/30 hover:border-violet-500 hover:bg-violet-50/50 dark:hover:bg-violet-950/20'}"
-			ondragover={handleDragOver}
-			ondragleave={handleDragLeave}
-			ondrop={handleDrop}
+			class="flex w-full flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed border-muted-foreground/30 p-12 transition-colors hover:border-primary hover:bg-primary/5"
 			onclick={handleClick}
 		>
 			<div
-				class="flex h-16 w-16 items-center justify-center rounded-2xl {isDragOver
-					? 'bg-violet-500 text-white'
-					: 'bg-primary/10 text-primary'}"
+				class="bg-primary/10 text-primary flex h-16 w-16 items-center justify-center rounded-2xl"
 			>
 				<Upload class="h-8 w-8" />
 			</div>

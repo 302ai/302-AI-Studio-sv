@@ -3,6 +3,7 @@ import type { ElectronAPI } from "@electron-toolkit/preload";
 import type { CodeAgentConfigMetadata, CodeAgentMetadata } from "@shared/storage/code-agent";
 import type {
 	BroadcastEventData,
+	OpenClawWeixinLoginMsg,
 	ShellWindowFullscreenChange,
 	Tab,
 	TabDragGhostClear,
@@ -128,6 +129,9 @@ declare global {
 				callback: (data: { reason: string; message: string }) => void,
 			) => () => void;
 			onTabRequestSnapshot: (callback: () => Promise<TabUIState> | TabUIState) => () => void;
+			openClaw: {
+				onWeiXinLoginInformation: (callback: (event: OpenClawWeixinLoginMsg) => void) => () => void;
+			};
 		};
 		windowId: string;
 		tab: Tab;

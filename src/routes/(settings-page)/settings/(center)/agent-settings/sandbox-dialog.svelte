@@ -186,7 +186,8 @@
 				session.sessionId,
 				sandbox.sandboxRemark || "",
 				sandbox.llmModel || "claude-sonnet-4-5-20250929",
-				session.note || "", // Pass session note as thread title
+				session.note || "",
+				session.workspacePath || "",
 			);
 			console.log("[handleOpenSession] createThreadForSession result:", setupResult);
 

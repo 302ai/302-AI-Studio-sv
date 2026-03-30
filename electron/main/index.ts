@@ -20,7 +20,7 @@ import {
 	trayService,
 	windowService,
 } from "./services";
-import { preferencesStorage } from "./services/storage-service/preferences-storage";
+import { StorageService } from "./services/storage-service";
 import { UpdaterService } from "./services/updater-service";
 import { setupNetworkInterceptor } from "./utils/network-interceptor";
 
@@ -163,7 +163,7 @@ async function init() {
 	await appService.initFromStorage();
 
 	// Run storage migrations
-	await preferencesStorage.ensureMigrated();
+	await StorageService.runAllMigrations();
 
 	// Initialize plugin system
 	try {

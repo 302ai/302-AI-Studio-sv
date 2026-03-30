@@ -198,6 +198,23 @@
 		);
 	}
 
+	function updateSkillFavoriteState(
+		skillName: string,
+		is_favorite: boolean,
+		favorite_at: string | null,
+	) {
+		const updateSkills = (skills: Skill[]) =>
+			skills.map((skill) =>
+				skill.name === skillName ? { ...skill, is_favorite, favorite_at } : skill,
+			);
+
+		skillsData = {
+			...skillsData,
+			user_skills: updateSkills(skillsData.user_skills),
+			builtin_skills: updateSkills(skillsData.builtin_skills),
+		};
+	}
+
 	async function loadSkills() {
 		const data = await codeAgentState.getSkillList(false);
 		skillsData = data;
@@ -268,11 +285,19 @@
 
 	// Skills-only mode: only show skills tab when no sandbox
 	const isSkillsOnlyMode = $derived(agentPreviewState.isSkillsOnlyMode);
-	const isLocalMode = $derived(codeAgentState.type === "local");
 
 	// Tabs definition
 	let tabs: PreviewTab[] = $derived.by(() => {
 		if (codeAgentState.currentAgentId === "open-claw") {
+			// No active session yet: only show Skills/Taskboard/Manage tabs (no sandbox required)
+			if (!codeAgentState.inCodeAgentMode) {
+				return [
+					{ id: TAB_SKILLS, label: "Skills" },
+					{ id: TAB_TASKBOARD, label: m.label_tab_taskboard() },
+					{ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() },
+				];
+			}
+
 			const openClawTabs: PreviewTab[] = [
 				{ id: TAB_PREVIEW, label: m.label_tab_preview() },
 				{ id: TAB_CODE, label: m.label_tab_file() },
@@ -288,7 +313,7 @@
 		// Skills-only mode OR no sandbox: show skills and taskboard tabs
 		if (isSkillsOnlyMode || !currentSandboxId) {
 			return [
-				...(!isLocalMode ? [{ id: TAB_SKILLS, label: "Skills" }] : []),
+				{ id: TAB_SKILLS, label: "Skills" },
 				{ id: TAB_TASKBOARD, label: m.label_tab_taskboard() },
 			];
 		}
@@ -301,9 +326,6 @@
 			t.push({ id: TAB_TERMINAL, label: m.label_tab_terminal() });
 			t.push({ id: TAB_SKILLS, label: "Skills" });
 			t.push({ id: TAB_TASKBOARD, label: m.label_tab_taskboard() });
-			if (codeAgentState.type === "local") {
-				t.push({ id: TAB_OPENCLAW_WEBUI, label: m.label_tab_manage() });
-			}
 		}
 		return t;
 	});
@@ -1133,7 +1155,7 @@
 					>
 						<FileTree
 							sandboxId={currentSandboxId}
-							workspacePath={claudeCodeSandboxState.currentSessionWorkspacePath}
+							workspacePath={codeAgentState.currentWorkspacePath}
 							onFileSelect={handleFileSelect}
 							{refreshTrigger}
 							onFileDelete={handleFileDelete}
@@ -1408,6 +1430,7 @@
 											builtinSkills={skillsData.builtin_skills}
 											loading={codeAgentState.isLoadingSkills}
 											onRefresh={loadSkills}
+											onFavoriteChange={updateSkillFavoriteState}
 										/>
 									{:else if skillsPanelState.currentView.type === "detail"}
 										<SkillDetailView
@@ -1438,7 +1461,7 @@
 									{/if}
 								</div>
 							</div>
-						{:else if activeTab === TAB_OPENCLAW_WEBUI && isAgentMode}
+						{:else if activeTab === TAB_OPENCLAW_WEBUI && codeAgentState.currentAgentId === "open-claw"}
 							<div class="flex h-full flex-col min-h-0 overflow-hidden">
 								<OpenClawWebUI />
 							</div>

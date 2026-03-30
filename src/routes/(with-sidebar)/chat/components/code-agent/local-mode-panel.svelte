@@ -11,43 +11,22 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
-	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
-	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
-	import { mcpState } from "$lib/stores/mcp-state.svelte";
-	import { toast } from "svelte-sonner";
+	import { onMount } from "svelte";
 
 	let { onClose }: Props = $props();
+
+	onMount(() => {
+		codeAgentState.init();
+	});
 
 	async function handleInstall() {
 		await localEnvState.installPodman();
 	}
 
 	function handleLocalModeConfirm() {
-		const sessionId = localClaudeCodeSandboxState.selectedSessionId;
-		const workspacePath = localClaudeCodeSandboxState.selectedWorkspacePath;
-
-		// Get skills (same as remote mode)
-		codeAgentState.getSkillList(true);
-
-		// Filter incompatible MCP servers (same as remote mode)
-		if (chatState.mcpServerIds.length > 0) {
-			const { compatibleIds, filteredNames } = mcpState.filterStreamableHTTPServers(
-				chatState.mcpServerIds,
-			);
-
-			if (filteredNames.length > 0) {
-				toast.warning(m.mcp_filtered_warning({ names: filteredNames.join(", ") }));
-				chatState.handleMCPServerChange(compatibleIds);
-			}
-		}
-
-		// Call handleLocalEnabled to update persisted state
-		codeAgentState.handleLocalEnabled(sessionId, workspacePath);
-
-		// Set enabled and close panel
-		codeAgentState.updateEnabled(true, false);
+		codeAgentState.handleConfirmEnabled();
 		onClose?.();
 	}
 </script>

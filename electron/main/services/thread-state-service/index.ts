@@ -1,5 +1,6 @@
 import type { IpcMainInvokeEvent } from "electron";
 import { broadcastService, emitter } from "../broadcast-service";
+import { codeAgentStorage } from "../storage-service/code-agent/code-agent-storage";
 
 export class ThreadStateService {
 	private busyThreads = new Map<string, { isBusy: boolean; reason?: string }>();
@@ -32,6 +33,22 @@ export class ThreadStateService {
 		_event: IpcMainInvokeEvent,
 	): Promise<Record<string, { isBusy: boolean; reason?: string }>> {
 		return Object.fromEntries(this.busyThreads);
+	}
+
+	/**
+	 * Get all busy threads where code-agent config type is 'local'
+	 */
+	async getBusyLocalAgentThreads(_event: IpcMainInvokeEvent): Promise<string[]> {
+		const threadIds = [...this.busyThreads.keys()];
+		const configs = await Promise.all(
+			threadIds.map(async (threadId) => ({
+				threadId,
+				...(await codeAgentStorage.getCodeAgentConfig(threadId)),
+			})),
+		);
+		return configs
+			.filter(({ isOK, data }) => isOK && data.type === "local")
+			.map(({ threadId }) => threadId);
 	}
 
 	isThreadBusy(threadId: string): boolean {

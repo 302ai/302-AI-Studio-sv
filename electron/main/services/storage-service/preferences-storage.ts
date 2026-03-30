@@ -49,6 +49,7 @@ export class PreferencesStorage extends StorageService<PreferencesSettingsState>
 
 	constructor() {
 		super(migrationConfig);
+		this.migrationKey = PreferencesStorage.STORAGE_KEY;
 	}
 
 	async getState(): Promise<PreferencesSettingsState | null> {
@@ -57,13 +58,6 @@ export class PreferencesStorage extends StorageService<PreferencesSettingsState>
 
 	async setState(state: PreferencesSettingsState): Promise<void> {
 		return this.setItemInternal(PreferencesStorage.STORAGE_KEY, state);
-	}
-
-	/**
-	 * Run migration on app startup to ensure existing data is migrated
-	 */
-	async ensureMigrated(): Promise<void> {
-		await this.getState();
 	}
 }
 

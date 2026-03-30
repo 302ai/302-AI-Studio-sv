@@ -1,6 +1,7 @@
 import { electronAPI as electrontToolkitAPI } from "@electron-toolkit/preload";
 import type {
 	BroadcastEventData,
+	OpenClawWeixinLoginMsg,
 	ShellWindowFullscreenChange,
 	ShortcutActionEvent,
 	ShortcutKeyPressEvent,
@@ -389,6 +390,13 @@ if (process.contextIsolated) {
 				};
 				ipcRenderer.on("tab:request-snapshot", listener);
 				return () => ipcRenderer.removeListener("tab:request-snapshot", listener);
+			},
+			openClaw: {
+				onWeiXinLoginInformation: (callback: (event: OpenClawWeixinLoginMsg) => void) => {
+					const listener = (_: unknown, event: OpenClawWeixinLoginMsg) => callback(event);
+					ipcRenderer.on("openclaw-weixin:login", listener);
+					return () => ipcRenderer.removeListener("openclaw-weixin:login", listener);
+				},
 			},
 		});
 

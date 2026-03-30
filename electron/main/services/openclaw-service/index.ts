@@ -1,22 +1,33 @@
 import { isWin } from "@electron/main/constants";
 import { SUPPORTED_CHANNELS, WIN_SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
 import { type IpcMainInvokeEvent } from "electron";
+import { isNil } from "es-toolkit";
 import { get, isUndefined, merge, pick, set } from "es-toolkit/compat";
 import fs from "fs/promises";
+import { getOpenClawConfigPath, getRuntimeComposeDir } from "../../utils/local-vibe-utils";
 import { localVibeService } from "../local-vibe-service";
 import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
 import { openClawConfigStorage } from "../storage-service/openclaw/openclaw-config-storage";
 import { tabService } from "../tab-service";
+import WeChatChannel from "./wechat";
 
 type OpenClawBindingConfig = {
 	agentId: string;
 	match: {
 		channel: string;
-		peer: {
+		accountId?: string;
+		peer?: {
 			kind: string;
 			id: string;
 		};
 	};
+};
+
+type OpenClawAccountsConfig = {
+	enabled: boolean;
+	dmPolicy: string;
+	botToken: string;
+	groupPolicy: string;
 };
 
 export class OpenClawService {
@@ -45,7 +56,7 @@ export class OpenClawService {
 	 * const models = await this.getOpenClawConfig("models.providers.ai302.models");
 	 */
 	private async getOpenClawConfig<T = unknown>(path?: string): Promise<T | null> {
-		const configPath = localVibeService.getOpenClawConfigPath();
+		const configPath = getOpenClawConfigPath(getRuntimeComposeDir());
 
 		try {
 			const configContent = await fs.readFile(configPath, "utf-8");
@@ -69,7 +80,7 @@ export class OpenClawService {
 	 * @returns True if successful, false otherwise
 	 */
 	private async setOpenClawConfig<T>(path: string, value: T): Promise<boolean> {
-		const configPath = localVibeService.getOpenClawConfigPath();
+		const configPath = getOpenClawConfigPath(getRuntimeComposeDir());
 
 		try {
 			const config = await this.getOpenClawConfig<Record<string, unknown>>();
@@ -119,14 +130,56 @@ export class OpenClawService {
 			return;
 		}
 
-		const { agentId, feishuSessionId } = config.data;
+		const { agentId, feishuSessionId, telegramBotId } = config.data;
 		const desiredBindings: OpenClawBindingConfig[] = [];
 
 		if (feishuSessionId) {
 			desiredBindings.push({
 				agentId,
-				match: { channel: "feishu", peer: { kind: "group", id: feishuSessionId } },
+				match: {
+					channel: "feishu",
+					peer: {
+						kind: "group",
+						id: feishuSessionId,
+					},
+				},
 			});
+		}
+
+		if (telegramBotId) {
+			await this.getOpenClawConfig("bindings");
+			const accountId = `${agentId}_302ai`;
+			desiredBindings.push({
+				agentId,
+				match: {
+					channel: "telegram",
+					accountId: accountId,
+				},
+			});
+
+			// Deal channels.telegram.accounts.`any`
+			{
+				const tmpAccount = {
+					enabled: true,
+					dmPolicy: "open",
+					botToken: telegramBotId,
+					groupPolicy: "open",
+				};
+				const tgAccounts: {
+					default: OpenClawAccountsConfig;
+					[key: string]: OpenClawAccountsConfig;
+				} = (await this.getOpenClawConfig("channels.telegram.accounts")) || {
+					default: tmpAccount,
+				};
+				for (const key in tgAccounts) {
+					// key == "default" You can't delete it !!!!!!!!!!!!!!
+					if (key != accountId && tgAccounts[key].botToken == telegramBotId && key != "default") {
+						delete tgAccounts[key];
+					}
+				}
+				tgAccounts[accountId] = tmpAccount;
+				await this.setOpenClawConfig("channels.telegram.accounts", tgAccounts);
+			}
 		}
 
 		const bindings: OpenClawBindingConfig[] = (await this.getOpenClawConfig("bindings")) ?? [];
@@ -137,7 +190,7 @@ export class OpenClawService {
 
 			// 2. Resolve conflicts: remove bindings from other agents occupying the exact same channel/peer
 			const isConflict = desiredBindings.some(
-				(d) => d.match.channel === b.match.channel && d.match.peer.id === b.match.peer.id,
+				(d) => d.match.channel === b.match.channel && d.match.peer?.id === b.match.peer?.id,
 			);
 			if (isConflict) return acc;
 
@@ -159,6 +212,22 @@ export class OpenClawService {
 		console.log("[OpenClawService] Reloading OpenClaw Web UI with URL:", url);
 		if (!url) return;
 		tabView.webContents.loadURL(url);
+	}
+
+	wechatChannel = new WeChatChannel();
+
+	async wechatInsalled(_event: IpcMainInvokeEvent) {
+		const config = await this.getOpenClawConfig("plugins.installs.openclaw-weixin");
+		return !isNil(config);
+	}
+
+	async connectWechat(_event: IpcMainInvokeEvent) {
+		const installed = await this.wechatInsalled(_event);
+		await this.wechatChannel.startWeixinLoginFlow(installed);
+	}
+
+	async disposeWechat(_event: IpcMainInvokeEvent) {
+		await this.wechatChannel.dispose();
 	}
 }
 

@@ -142,6 +142,9 @@
 			return;
 		}
 
+		const allowed = await codeAgentSendMessageButtonState.guardBusyLocalAgents();
+		if (!allowed) return;
+
 		await codeAgentTaskboardState.startAutoExecution(runTask);
 	}
 
