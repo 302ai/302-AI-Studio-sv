@@ -160,7 +160,7 @@
 					<div class="flex items-center justify-between">
 						<div class="text-muted-foreground flex items-center gap-2 text-xs">
 							<a
-								href="https://studio.302.ai/zh/docs/advanced/open-claw/wecom"
+								href="https://studio.302.ai/zh/docs/advanced/open-claw/wechat"
 								class="text-primary hover:underline"
 								>{m.open_claw_feishu_view_deployment_tutorial()}</a
 							>
