@@ -51,7 +51,9 @@
 	function handleModeSelect(key: string) {
 		const isVibe = key === "vibe";
 		onIsVibeChange(isVibe);
-		codeAgentState.updateEnabled(isVibe);
+
+		codeAgentState.updateEnabled(isVibe, false);
+		codeAgentState.updateType(codeAgentGlobalConfigsState.lastVibeMode);
 
 		// 切换到聊天模式时，自动删除超出限制的附件（保留最新的）
 		if (!isVibe && chatState.attachments.length > MAX_ATTACHMENT_COUNT) {
@@ -70,11 +72,6 @@
 				}
 			}
 		}
-
-		codeAgentState.updateType(codeAgentGlobalConfigsState.lastVibeMode);
-		// if (isVibe && codeAgentState.type === "local") {
-		// 	codeAgentState.updateCurrentAgentId(codeAgentGlobalConfigsState.lastAgentId);
-		// }
 	}
 
 	function handleSettingsClick() {

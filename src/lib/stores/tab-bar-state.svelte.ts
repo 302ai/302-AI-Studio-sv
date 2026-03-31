@@ -49,8 +49,6 @@ class TabBarState {
 		// Guard against null state during cross-window sync
 		if (!current) return [];
 
-		console.log("_persistedTabState_persistedTabState", current);
-
 		const _persistedTabState = current[this.#windowId];
 		return _persistedTabState?.tabs ?? [];
 	});

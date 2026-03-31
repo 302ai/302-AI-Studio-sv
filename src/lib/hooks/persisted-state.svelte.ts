@@ -2,18 +2,32 @@ import type { StorageValue } from "@302ai/unstorage";
 import { isEqual } from "es-toolkit";
 import superjson from "superjson";
 import { createSubscriber } from "svelte/reactivity";
+import { batcher } from "./persisted-state-batcher";
 
 const { onPersistedStateSync } = window.electronAPI;
 
 class ElectronStorageAdapter<T extends StorageValue> {
 	private storageService = window.electronAPI.storageService;
+	private useBatching: boolean;
+
+	constructor(useBatching: boolean = true) {
+		this.useBatching = useBatching;
+	}
 
 	async getItemAsync(key: string): Promise<T | null> {
 		return (await this.storageService.getItem(key)) as T;
 	}
 
 	async setItemAsync(key: string, value: T | null): Promise<void> {
-		// Convert proxies to plain objects for serialization
+		const serializedValue = value ? (superjson.parse(superjson.stringify(value)) as T) : value;
+		if (this.useBatching) {
+			batcher.scheduleWrite(key, serializedValue);
+		} else {
+			await this.storageService.setItem(key, serializedValue);
+		}
+	}
+
+	async setItemDirectAsync(key: string, value: T | null): Promise<void> {
 		const serializedValue = value ? (superjson.parse(superjson.stringify(value)) as T) : value;
 		await this.storageService.setItem(key, serializedValue);
 	}
@@ -77,10 +91,16 @@ export class PersistedState<T extends StorageValue> {
 	#storeDebounceMs: number;
 	#debounce: boolean;
 
-	constructor(key: string, initialValue: T, debounce: boolean = false, debounceMs: number = 300) {
+	constructor(
+		key: string,
+		initialValue: T,
+		debounce: boolean = false,
+		debounceMs: number = 300,
+		useBatching: boolean = true,
+	) {
 		this.#current = initialValue;
 		this.#key = key;
-		this.#storage = new ElectronStorageAdapter<T>();
+		this.#storage = new ElectronStorageAdapter<T>(useBatching);
 		this.#storeDebounceMs = debounceMs;
 		this.#debounce = debounce;
 
@@ -89,12 +109,10 @@ export class PersistedState<T extends StorageValue> {
 		this.#subscribe = createSubscriber((update) => {
 			this.#update = update;
 
-			console.log("watching key:", key);
 			this.#storage?.watch(key);
 
 			const unsubscribe = onPersistedStateSync<T>(key, (newValue) => {
 				if (isEqual(newValue, this.#current)) return;
-				console.log("Synced key:", key, "Synced value:", newValue);
 				this.#current = newValue;
 				this.#update?.();
 			});
@@ -197,8 +215,9 @@ export class PersistedState<T extends StorageValue> {
 			clearTimeout(this.#storeTimeoutId);
 			this.#storeTimeoutId = null;
 		}
+		await batcher.flush();
 		try {
-			await this.#storage?.setItemAsync(this.#key, this.#current ?? null);
+			await this.#storage?.setItemDirectAsync(this.#key, this.#current ?? null);
 		} catch (error) {
 			console.error(
 				`Error when flushing persisted store "${this.#key}" to Electron storage`,
