@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import chalk from "chalk";
-import dayjs from "dayjs";
+import { format } from "date-fns";
 
 /**
  * Log level enumeration defines different log levels
@@ -28,7 +28,7 @@ export class Logger {
 	}
 
 	protected log(level: LogLevelType, ...msg: any[]) {
-		const now = dayjs().format("HH:mm:ss.SSS");
+		const now = format(new Date(), "HH:mm:ss.SSS");
 		console.log(`${now}`, this.formatLevel(level), this.formatModule(), `: ${msg}`);
 	}
 
