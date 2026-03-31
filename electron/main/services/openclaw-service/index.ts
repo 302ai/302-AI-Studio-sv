@@ -235,7 +235,13 @@ export class OpenClawService {
 
 	async installWechat(_event: IpcMainInvokeEvent): Promise<boolean> {
 		try {
-			return await this.wechatChannel.wechatInstall();
+			const res = await this.wechatChannel.wechatInstall();
+			if (res) {
+				// restart local vibe to make openclaw re-detect the channel plugin
+				this.logger.info("Restarting LocalVibe to apply WeChat channel installation...");
+				await localVibeService.restartPodmanMachine(_event);
+			}
+			return res;
 		} catch (e) {
 			this.logger.error("Failed to install WeChat channel:", e);
 			return false;

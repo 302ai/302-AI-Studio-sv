@@ -181,7 +181,7 @@ class WeChatChannel {
 						if (line.includes("https://liteapp.weixin.qq.com")) {
 							// install command is actually running, not just checking
 							resolve(true);
-						} else if (line.includes("插件就绪")) {
+						} else if (line.includes("[openclaw-weixin] 插件就绪")) {
 							resolve(true);
 						} else if (line.includes("插件安装失败，请手动执行")) {
 							reject("插件安装失败，请手动执行");

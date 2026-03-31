@@ -121,6 +121,10 @@
 	};
 
 	const handleInstallWechatBtn = async () => {
+		if (!localEnvState.sandboxRunning) {
+			toast.error(m.code_agent_local_container_not_started());
+			return;
+		}
 		weixinChannelState.install().then((i) => {
 			wechatLoginState.installed = i;
 			if (wechatLoginState.installed) {
@@ -130,8 +134,8 @@
 	};
 </script>
 
-<AccordionItem id="wechat" value="wechat" class="border-b-0 my-1" onclick={handleWechartTrigger}>
-	<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+<AccordionItem id="wechat" value="wechat" class="border-b-0 my-1">
+	<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline" onclick={handleWechartTrigger}>
 		<Label class=" font-normal no-underline cursor-pointer">{m.open_claw_channel_wechat()}</Label>
 	</AccordionTrigger>
 	<AccordionContent class="pb-0 pt-2 space-y-2">
