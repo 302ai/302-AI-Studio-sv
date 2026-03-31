@@ -12,6 +12,7 @@
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
+	import { canFavoriteSkill } from "./skill-favorite-availability";
 	import SkillCard from "./skill-card.svelte";
 	import SkillCreateDialog from "./skill-create-dialog.svelte";
 	import SkillDetailDialog from "./skill-detail-dialog.svelte";
@@ -63,7 +64,7 @@
 	let optimisticFavoriteAts = new SvelteMap<string, string | null>();
 
 	const currentAgentId = $derived(codeAgentState.currentAgentId);
-	const isLocalMode = $derived(codeAgentState.type === "local");
+	const currentCodeAgentType = $derived(codeAgentState.type);
 
 	$effect(() => {
 		localUserSkills = userSkills;
@@ -117,9 +118,7 @@
 	);
 
 	const allSkills = $derived.by(() =>
-		isLocalMode
-			? getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts)
-			: baseSkills,
+		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts),
 	);
 
 	const filteredSkills = $derived(
@@ -224,6 +223,10 @@
 	}
 
 	async function handleFavoriteToggle(skill: Skill) {
+		if (!canFavoriteSkill(currentCodeAgentType, skill.isBuiltin ?? false)) {
+			return;
+		}
+
 		if (favoritingSkills.has(skill.name)) return;
 
 		const previousFavoriteState = skill.is_favorite ?? false;
@@ -334,7 +337,9 @@
 					onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 					downloading={downloadingSkills.has(item.name)}
 					favoriteLoading={favoritingSkills.has(item.name)}
-					onFavoriteToggle={isLocalMode ? handleFavoriteToggle : undefined}
+					onFavoriteToggle={canFavoriteSkill(currentCodeAgentType, item.isBuiltin ?? false)
+						? handleFavoriteToggle
+						: undefined}
 					{onForceUseToggle}
 				/>
 			{/each}
