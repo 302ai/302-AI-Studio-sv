@@ -3,13 +3,14 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
+	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
+	import weixinChannelState from "$lib/stores/code-agent/openclaw/channel/weixin-channel-state.svelte";
 	import { ArrowDownToLine, CircleAlert } from "@lucide/svelte";
 	import type { OpenClawWeixinLoginMsg } from "@shared/types";
 	import QRCodeStyling from "qr-code-styling";
 	import { onMount, tick } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { LdrsLoader } from "../../ldrs-loader";
-	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 
 	let wechatElm = $state<HTMLDivElement | null>(null);
 	const qrCode = new QRCodeStyling();
@@ -18,27 +19,26 @@
 			qrCode.append(wechatElm);
 		}
 	});
-	let wechatState = $state({
+	let wechatLoginState = $state({
 		loading: false,
-		text: "",
 		installed: false,
-		error: false,
+	});
+	onMount(async () => {
+		wechatLoginState.installed = await weixinChannelState.isInstalled();
 	});
 	const wechatQRListener = new Map([
 		[
 			"ok",
 			(_: OpenClawWeixinLoginMsg) => {
 				toast.success(m.open_claw_wechat_add_success());
-				wechatState.error = false;
 			},
 		],
 		[
 			"error",
 			(_: OpenClawWeixinLoginMsg) => {
 				toast.error(m.open_claw_wechat_qrcode_fetch_failed());
-				wechatState.error = true;
-				wechatState.loading = false;
-				handleWechatConnectOrInstall();
+				wechatLoginState.loading = false;
+				handleWechatConnect();
 			},
 		],
 		[
@@ -56,8 +56,7 @@
 						type: "rounded",
 					},
 				});
-				wechatState.loading = false;
-				wechatState.error = false;
+				wechatLoginState.loading = false;
 				{
 					await tick();
 					if (!wechatElm) return;
@@ -77,27 +76,14 @@
 		[
 			"close",
 			(event: OpenClawWeixinLoginMsg) => {
-				if (!wechatState.installed) return;
-
-				if (event.data != "manual") {
-					handleWechatConnectOrInstall();
+				if (event.data == "normal") {
+					handleWechatConnect();
 				}
-			},
-		],
-		[
-			"install",
-			(_: OpenClawWeixinLoginMsg) => {
-				wechatState.text = m.plugins_install_installing();
-			},
-		],
-		[
-			"installed",
-			(_: OpenClawWeixinLoginMsg) => {
-				wechatState.installed = true;
 			},
 		],
 	]);
 
+	let wechatTriggerSignal = 0;
 	$effect(() => {
 		const unsubscribe = window.electronAPI.openClaw.onWeiXinLoginInformation((event) => {
 			const typ = event.type;
@@ -110,28 +96,37 @@
 
 		return () => {
 			unsubscribe();
-			window.electronAPI.openClawService.disposeWechat();
+			if (wechatTriggerSignal >= 1 && !weixinChannelState.loading) {
+				window.electronAPI.openClawService.disposeWechat();
+			}
 		};
 	});
 
-	let wechatTriggerSignal = 0;
 	const handleWechartTrigger = async () => {
 		if (!localEnvState.sandboxRunning) {
 			toast.error(m.code_agent_local_container_not_started());
 			return;
 		}
-		wechatState.installed = await window.electronAPI.openClawService.wechatInsalled();
-		if (!wechatState.installed) return;
+		console.log("handleWechartTrigger", !wechatLoginState.installed);
+		if (!wechatLoginState.installed) return;
 
 		if (wechatTriggerSignal >= 1) return;
-		handleWechatConnectOrInstall();
+		handleWechatConnect();
 		wechatTriggerSignal++;
 	};
 
-	const handleWechatConnectOrInstall = async () => {
-		wechatState.loading = true;
-		wechatState.error = false;
+	const handleWechatConnect = async () => {
+		wechatLoginState.loading = true;
 		await window.electronAPI.openClawService.connectWechat();
+	};
+
+	const handleInstallWechatBtn = async () => {
+		weixinChannelState.install().then((i) => {
+			wechatLoginState.installed = i;
+			if (wechatLoginState.installed) {
+				handleWechatConnect();
+			}
+		});
 	};
 </script>
 
@@ -144,21 +139,21 @@
 			<div class="flex justify-between">
 				<!-- svelte-ignore a11y_label_has_associated_control -->
 				<div>
-					<div class={`${!wechatState.installed && "hidden"}`}>
+					<div class={`${!wechatLoginState.installed && "hidden"}`}>
 						<label class="text-sm text-label-fg font-medium"
 							>{m.open_claw_wechat_scan_qrcode_hint()}</label
 						>
 						<div
 							class="w-36 h-36 mt-1 relative flex flex-col items-center justify-center bg-muted rounded-md"
 						>
-							{#if wechatState.loading}
+							{#if wechatLoginState.loading}
 								<!-- <LoaderCircle class="h-8 w-8 animate-spin text-muted-foreground" /> -->
 								<LdrsLoader type="line-spinner" />
-								<span class="text-label-fg mt-1 text-xs">{wechatState.text}</span>
+								<span class="text-label-fg mt-1 text-xs">{m.changelog_loading()}</span>
 							{/if}
 							<div
 								bind:this={wechatElm}
-								class={`size-full ${wechatState.loading || !wechatState.installed ? "hidden" : ""}`}
+								class={`size-full ${wechatLoginState.loading || !wechatLoginState.installed ? "hidden" : ""}`}
 							></div>
 						</div>
 					</div>
@@ -173,14 +168,14 @@
 					</div>
 				</div>
 				<!-- weChartInstalled -->
-				{#if !wechatState.installed}
+				{#if !wechatLoginState.installed}
 					<div class="flex flex-col items-end">
 						<Button
 							class="w-fit"
-							disabled={wechatState.loading || wechatState.installed}
-							onclick={handleWechatConnectOrInstall}
+							disabled={weixinChannelState.loading}
+							onclick={handleInstallWechatBtn}
 						>
-							{#if wechatState.loading}
+							{#if weixinChannelState.loading}
 								<LdrsLoader type="dot-pulse" size={10} />
 							{:else}
 								<ArrowDownToLine class="size-4" />
@@ -191,9 +186,11 @@
 							<CircleAlert class="size-4" />
 							<span>{m.open_claw_wechat_install_restart_gateway()}</span>
 						</div>
-						<p class="text-red-500 text-xs">
-							{wechatState.error ? m.open_claw_wechat_install_failed_retry() : ""}
-						</p>
+						{#if weixinChannelState.error}
+							<p class="text-red-500 text-xs">
+								{m.open_claw_wechat_install_failed_retry()}
+							</p>
+						{/if}
 					</div>
 				{/if}
 			</div>

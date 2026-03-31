@@ -73,6 +73,7 @@
 			toast.error(m.code_agent_local_container_not_started());
 			return;
 		}
+		confirmDialogOpen = true;
 	};
 </script>
 

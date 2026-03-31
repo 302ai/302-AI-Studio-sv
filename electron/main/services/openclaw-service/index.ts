@@ -1,4 +1,5 @@
 import { isWin } from "@electron/main/constants";
+import { createLogger } from "@electron/main/utils/logger";
 import { SUPPORTED_CHANNELS, WIN_SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
 import { type IpcMainInvokeEvent } from "electron";
 import { isNil } from "es-toolkit";
@@ -31,6 +32,8 @@ type OpenClawAccountsConfig = {
 };
 
 export class OpenClawService {
+	private logger = createLogger(this);
+
 	private async _getOpenClawWebUiUrl(): Promise<string | null> {
 		const port = localVibeService.getRuntimeOpenClawPort();
 		if (!port) return null;
@@ -216,14 +219,27 @@ export class OpenClawService {
 
 	wechatChannel = new WeChatChannel();
 
-	async wechatInsalled(_event: IpcMainInvokeEvent) {
+	async wechatInsalled(_event: IpcMainInvokeEvent): Promise<boolean> {
 		const config = await this.getOpenClawConfig("plugins.installs.openclaw-weixin");
 		return !isNil(config);
 	}
 
 	async connectWechat(_event: IpcMainInvokeEvent) {
 		const installed = await this.wechatInsalled(_event);
-		await this.wechatChannel.startWeixinLoginFlow(installed);
+		if (!installed) {
+			this.logger.warn("WeChat channel is not installed. Please install it first.");
+			return;
+		}
+		await this.wechatChannel.startWeixinLogin();
+	}
+
+	async installWechat(_event: IpcMainInvokeEvent): Promise<boolean> {
+		try {
+			return await this.wechatChannel.wechatInstall();
+		} catch (e) {
+			this.logger.error("Failed to install WeChat channel:", e);
+			return false;
+		}
 	}
 
 	async disposeWechat(_event: IpcMainInvokeEvent) {
