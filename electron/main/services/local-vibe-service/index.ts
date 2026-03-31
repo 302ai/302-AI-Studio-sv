@@ -2448,12 +2448,6 @@ export class LocalVibeService {
 				await new Promise((resolve) => setTimeout(resolve, 3000));
 				await this.startLocalSandboxHealthCheck();
 
-				await this.runLinuxPrivilegedCommandWithBroadcast(
-					"chmod",
-					["-R", "o+rx", path.join(getRuntimeComposeDir())],
-					"fix-openclaw-channels-perm",
-				);
-
 				return {
 					isOk: true,
 					alreadyStarted: false,
