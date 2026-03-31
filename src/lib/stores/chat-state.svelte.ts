@@ -803,8 +803,8 @@ class ChatState {
 						},
 					};
 
-					// Serialize context to remove Svelte Proxy objects
-					const serializedContext = JSON.parse(JSON.stringify(messageContext));
+					// Performance: Use $state.snapshot() instead of JSON.parse(JSON.stringify())
+					const serializedContext = $state.snapshot(messageContext);
 
 					const modifiedContext =
 						await pluginService.executeBeforeSendMessageHook(serializedContext);

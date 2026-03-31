@@ -3,7 +3,6 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
-	import { getLocale } from "$lib/paraglide/runtime";
 	import { ArrowDownToLine, CircleAlert } from "@lucide/svelte";
 	import type { OpenClawWeixinLoginMsg } from "@shared/types";
 	import QRCodeStyling from "qr-code-styling";
@@ -38,6 +37,7 @@
 				toast.error(m.open_claw_wechat_qrcode_fetch_failed());
 				wechatState.error = true;
 				wechatState.loading = false;
+				handleWechatConnectOrInstall();
 			},
 		],
 		[
@@ -79,7 +79,7 @@
 				if (!wechatState.installed) return;
 
 				if (event.data != "manual") {
-					window.electronAPI.openClawService.connectWechat();
+					handleWechatConnectOrInstall();
 				}
 			},
 		],
@@ -128,11 +128,6 @@
 		wechatState.error = false;
 		await window.electronAPI.openClawService.connectWechat();
 	};
-
-	const getWechatTutorialUrl = () => {
-		const lang = getLocale() === "en" ? "en" : "zh";
-		return `https://studio.302.ai/${lang}/docs/advanced/open-claw/wecom`;
-	};
 </script>
 
 <AccordionItem id="wechat" value="wechat" class="border-b-0 my-1" onclick={handleWechartTrigger}>
@@ -164,7 +159,9 @@
 					</div>
 					<div class="flex items-center justify-between">
 						<div class="text-muted-foreground flex items-center gap-2 text-xs">
-							<a href={getWechatTutorialUrl()} class="text-primary hover:underline"
+							<a
+								href="https://studio.302.ai/zh/docs/advanced/open-claw/wechat"
+								class="text-primary hover:underline"
 								>{m.open_claw_feishu_view_deployment_tutorial()}</a
 							>
 						</div>

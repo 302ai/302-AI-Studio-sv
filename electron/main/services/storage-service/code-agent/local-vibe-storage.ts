@@ -20,25 +20,17 @@ class LocalVibeStorage extends StorageService<LocalVibeStorageData> {
 	}
 
 	async initData() {
-		const { data: current, isOK } = await this.getData();
-		if (isOK) {
-			// update version
-			console.log("update leessmin");
-			if (current.openclawJsonTemplateVersion != DEFAULT_DATA.openclawJsonTemplateVersion) {
-				this.setData({
-					openclawJsonTemplateVersion: DEFAULT_DATA.openclawJsonTemplateVersion,
-				});
-			}
+		const { isOK } = await this.getData();
+		if (!isOK) {
+			this.setData(DEFAULT_DATA);
 		}
-		// init
-		this.setData(current);
 	}
 
 	async getData(): Promise<{ isOK: boolean; data: LocalVibeStorageData }> {
 		try {
 			const data = await this.getItemInternal(STORAGE_KEY);
 			if (isNull(data)) return { isOK: false, data: DEFAULT_DATA };
-			return { isOK: true, data };
+			return { isOK: true, data: { ...DEFAULT_DATA, ...data } };
 		} catch (error) {
 			console.error("Error getting local vibe storage data:", error);
 			return { isOK: false, data: DEFAULT_DATA };

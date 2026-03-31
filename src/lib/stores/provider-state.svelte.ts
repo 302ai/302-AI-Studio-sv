@@ -430,9 +430,8 @@ class ProviderState {
 				// Broadcast to all chat tabs to apply the default model
 				// This handles the case where chat tabs are already open but don't have a model selected
 				try {
-					// Clone the model object to ensure it can be serialized for IPC
-					// The original object may be a Proxy from Svelte's reactivity system
-					const modelForBroadcast = JSON.parse(JSON.stringify(defaultModel));
+					// Performance: Use $state.snapshot() to remove Svelte Proxy for IPC
+					const modelForBroadcast = $state.snapshot(defaultModel);
 					await window.electronAPI.broadcastService.broadcastToAll("apply-default-model", {
 						model: modelForBroadcast,
 					});
