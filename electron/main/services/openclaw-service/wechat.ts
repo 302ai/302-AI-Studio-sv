@@ -5,14 +5,14 @@
  **/
 
 import type { OpenClawWeixinLoginMsg } from "@shared/types";
-import { exec, spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
+import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { once } from "node:events";
 import * as readline from "node:readline";
-import { promisify } from "node:util";
 import { broadcastService } from "../broadcast-service";
-class WeChatChannel {
-	private execAsync = promisify(exec);
+import { createLogger } from "../../utils/logger";
 
+class WeChatChannel {
+	private logger = createLogger(this);
 	private commandProcess: ChildProcessWithoutNullStreams | null = null;
 	private isConnecting = false;
 	private isManual = false;
@@ -23,7 +23,6 @@ class WeChatChannel {
 
 	private stopCommandProcess = async (proc: ChildProcessWithoutNullStreams) => {
 		if (proc.killed || proc.pid == null) return;
-
 		if (process.platform === "win32") {
 			proc.kill("SIGTERM");
 			await once(proc, "close");
@@ -65,6 +64,7 @@ class WeChatChannel {
 			});
 			this.commandProcess = proc;
 
+			this.logger.debug(`Started command "${command}" with PID ${proc.pid}`);
 			const rl = readline.createInterface({
 				input: proc.stdout,
 				crlfDelay: Infinity,
@@ -72,13 +72,13 @@ class WeChatChannel {
 
 			rl.on("line", stdoutFn);
 			proc.once("close", (code) => {
-				console.log(`openclaw: Child process exited with code ${code}`);
+				this.logger.info(`Child process exited with code ${code}`);
 				rl.close();
 				proc.stdout.removeAllListeners();
 				proc.stderr.removeAllListeners();
 				if (code != 0) {
 					if (this.isManual) return;
-					stderrFn(`Error: ${code}`);
+					this.logger.error(`Child process failed with code ${code}`);
 				} else {
 					if (this.commandProcess === proc) {
 						this.commandProcess = null;
@@ -87,8 +87,11 @@ class WeChatChannel {
 				}
 				this.isManual = false;
 			});
+			proc.stderr.on("data", (data) => {
+				stderrFn(data.toString());
+			});
 		} catch (error) {
-			console.error("[OpenClawService] Failed to execute command:", error);
+			this.logger.error(`Failed to execute command "${command}":`, error);
 		}
 	};
 
@@ -120,7 +123,7 @@ class WeChatChannel {
 			this.executeCommand(
 				command,
 				(line: string) => {
-					console.log("openclaw-weixin:login:", line);
+					this.logger.debug(`WeChat login output: ${line}`);
 					let data: OpenClawWeixinLoginMsg = {
 						type: "unknown",
 						data: line,
@@ -153,7 +156,7 @@ class WeChatChannel {
 					broadcastService.broadcastChannelToAll("openclaw-weixin:login", data);
 				},
 				(err: string) => {
-					console.error("openclaw-weixin:login:error", err);
+					this.logger.error(`WeChat login error: ${err}`);
 					broadcastService.broadcastChannelToAll("openclaw-weixin:login", {
 						type: "error",
 						data: err,
@@ -167,7 +170,7 @@ class WeChatChannel {
 				},
 			);
 		} catch (e) {
-			console.error("openclaw-weixin:login:error", e);
+			this.logger.error("Failed to start WeChat login flow:", e);
 		} finally {
 			this.isConnecting = false;
 		}
