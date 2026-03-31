@@ -61,13 +61,12 @@ export function getCcApiImageTag(): "dev" | "main" {
 /**
  * Get the full runtime cc-local-api image path
  */
-export function getCcApiImage(): string {
+export async function getCcApiImage(): Promise<string> {
 	const tag = getCcApiImageTag();
-	const image = isChineseLocale()
+	const image = (await isChineseLocale())
 		? `302-registry.cn-guangzhou.cr.aliyuncs.com/302ai/local_agent:${tag}`
 		: `ghcr.io/302ai/cc-local-api:${tag}`;
 
-	// return `ghcr.io/302ai/cc-local-api:${tag}`;
 	return image;
 }
 

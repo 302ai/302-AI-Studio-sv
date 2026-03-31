@@ -382,7 +382,7 @@ export class LocalVibeService {
 		// Store the allocated port
 		this.runtimeOpenClawPort = openClawPort;
 
-		const ccApiImage = getCcApiImage();
+		const ccApiImage = await getCcApiImage();
 
 		// Write .env file with runtime values
 		const envContent = [
