@@ -16,6 +16,7 @@ import {
 import { chatState } from "$lib/stores/chat-state.svelte";
 import { codeAgentState } from "$lib/stores/code-agent";
 import { persistedProviderState } from "$lib/stores/provider-state.svelte";
+import { getSandboxDownloadErrorMessage } from "$lib/utils/sandbox-download-error";
 import { toast } from "svelte-sonner";
 import { SvelteDate, SvelteMap, SvelteSet } from "svelte/reactivity";
 import { DEFAULT_WORKSPACE_PATH } from "./constants";
@@ -1254,7 +1255,7 @@ export class FileTreeState {
 				}
 			}
 		} catch (e) {
-			const errorMsg = e instanceof Error ? e.message : m.toast_download_failed();
+			const errorMsg = getSandboxDownloadErrorMessage(e);
 			toast.error(errorMsg, { id: downloadToastId });
 		} finally {
 			this.downloadingPaths = removeFromSet(this.downloadingPaths, file.path);
@@ -1396,7 +1397,7 @@ export class FileTreeState {
 				id: toastId,
 			});
 		} catch (e) {
-			const errorMsg = e instanceof Error ? e.message : m.toast_download_failed();
+			const errorMsg = getSandboxDownloadErrorMessage(e);
 			toast.error(errorMsg, { id: toastId });
 		}
 	}

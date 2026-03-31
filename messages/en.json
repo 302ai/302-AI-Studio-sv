@@ -1007,6 +1007,7 @@
 	"toast_downloading_file": "Downloading {fileName}...",
 	"toast_download_no_info": "No download information available",
 	"toast_download_failed": "Download failed",
+	"toast_download_file_missing": "File does not exist or has been deleted",
 	"toast_downloading_folder": "Downloading folder...",
 	"toast_download_folder_success_failed": " ({failCount} failed)",
 	"toast_download_folder_success": "Successfully downloaded {count} file{plural}{failedText}",

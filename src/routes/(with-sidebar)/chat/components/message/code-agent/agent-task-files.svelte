@@ -9,6 +9,7 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { m } from "$lib/paraglide/messages";
 	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
+	import { getSandboxDownloadErrorMessage } from "$lib/utils/sandbox-download-error";
 	import { Download, FileIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 
@@ -78,7 +79,7 @@
 			toast.success(m.toast_download_file_success({ fileName: filename }));
 		} catch (error) {
 			console.error("Failed to download file:", error);
-			toast.error(m.toast_download_failed());
+			toast.error(getSandboxDownloadErrorMessage(error));
 		} finally {
 			// Reset to undefined by removing key to keep state map clean.
 			const nextState = { ...isDownloading };

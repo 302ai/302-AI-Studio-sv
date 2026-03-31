@@ -1010,6 +1010,7 @@
 	"toast_downloading_file": "正在下载 {fileName}...",
 	"toast_download_no_info": "无下载信息",
 	"toast_download_failed": "下载失败",
+	"toast_download_file_missing": "文件不存在或已被删除",
 	"toast_downloading_folder": "正在下载文件夹...",
 	"toast_download_folder_success_failed": " ({failCount} 个失败)",
 	"toast_download_folder_success": "成功下载 {count} 个文件{plural}{failedText}",
