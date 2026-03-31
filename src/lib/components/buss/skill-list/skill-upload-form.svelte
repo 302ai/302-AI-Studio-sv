@@ -3,6 +3,7 @@
 	import { Loader2, Upload } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap } from "svelte/reactivity";
+	import { getFrontMatterText, parseSkillFrontMatter } from "./skill-frontmatter";
 	import SkillManualForm from "./skill-manual-form.svelte";
 
 	interface SkillUploadData {
@@ -54,26 +55,6 @@
 		return skillMdPath.replace(/[/\\]SKILL\.md$/i, "");
 	}
 
-	// Parse YAML front matter
-	function parseFrontMatter(content: string): { data: Record<string, string>; body: string } {
-		const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-		if (!match) return { data: {}, body: content };
-
-		const yamlStr = match[1];
-		const body = match[2];
-		const data: Record<string, string> = {};
-
-		for (const line of yamlStr.split(/\r?\n/)) {
-			const colonIdx = line.indexOf(":");
-			if (colonIdx > 0) {
-				const key = line.slice(0, colonIdx).trim();
-				const value = line.slice(colonIdx + 1).trim();
-				data[key] = value;
-			}
-		}
-		return { data, body };
-	}
-
 	// Handle file drop or select
 	async function handleFiles(files: FileList | null) {
 		if (!files || files.length === 0) return;
@@ -113,10 +94,10 @@
 
 			// Read and parse SKILL.md
 			const content = await readFile(skillMdPath);
-			const parsed = parseFrontMatter(content);
+			const parsed = parseSkillFrontMatter(content);
 			formData = {
-				name: parsed.data.name || "",
-				description: parsed.data.description || "",
+				name: getFrontMatterText(parsed.data, "name") || "",
+				description: getFrontMatterText(parsed.data, "description") || "",
 				content: content,
 			};
 

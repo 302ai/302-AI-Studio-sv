@@ -9,6 +9,7 @@
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap } from "svelte/reactivity";
+	import { getFrontMatterText, parseSkillFrontMatter } from "../skill-frontmatter";
 	import SkillManualForm from "../skill-manual-form.svelte";
 
 	interface Props {
@@ -59,25 +60,6 @@
 		return skillMdPath.replace(/[/\\]SKILL\.md$/i, "");
 	}
 
-	function parseFrontMatter(content: string): { data: Record<string, string>; body: string } {
-		const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/);
-		if (!match) return { data: {}, body: content };
-
-		const yamlStr = match[1];
-		const body = match[2];
-		const data: Record<string, string> = {};
-
-		for (const line of yamlStr.split(/\r?\n/)) {
-			const colonIdx = line.indexOf(":");
-			if (colonIdx > 0) {
-				const key = line.slice(0, colonIdx).trim();
-				const value = line.slice(colonIdx + 1).trim();
-				data[key] = value;
-			}
-		}
-		return { data, body };
-	}
-
 	async function loadSkillContent() {
 		if (!skill) return;
 
@@ -98,11 +80,11 @@
 			skillRootDir = getSkillRootDir(skillMdPath);
 			skillMdFilePath = skillMdPath;
 			const content = await readFile(skillMdPath);
-			const parsed = parseFrontMatter(content);
+			const parsed = parseSkillFrontMatter(content);
 
 			formData = {
-				name: parsed.data.name || skill.name,
-				description: parsed.data.description || skill.description,
+				name: getFrontMatterText(parsed.data, "name") || skill.name,
+				description: getFrontMatterText(parsed.data, "description") || skill.description,
 				content: content,
 			};
 		} catch (error) {
