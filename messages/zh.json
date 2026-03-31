@@ -877,6 +877,8 @@
 	"title_mermaid_preview": "Mermaid 图表",
 	"tooltip_show_code": "显示代码",
 	"tooltip_preview_diagram": "预览图表",
+	"mermaid_syntax_error": "Mermaid 语法有误，无法渲染图表",
+	"mermaid_view_error_details": "查看错误详情",
 	"tooltip_open_in_new_tab": "新标签页打开",
 	"empty_html_preview_title": "没有可预览的内容",
 	"empty_html_preview_description": "请检查控制台获取详细调试信息",

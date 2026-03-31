@@ -4,6 +4,7 @@ import path from "path";
 import process from "process";
 import semver from "semver";
 import { match } from "ts-pattern";
+import { isChineseLocale } from "./local";
 
 /**
  * Get the runtime compose directory
@@ -60,9 +61,13 @@ export function getCcApiImageTag(): "dev" | "main" {
 /**
  * Get the full runtime cc-local-api image path
  */
-export function getCcApiImage(): string {
+export async function getCcApiImage(): Promise<string> {
 	const tag = getCcApiImageTag();
-	return `ghcr.io/302ai/cc-local-api:${tag}`;
+	const image = (await isChineseLocale())
+		? `302-registry.cn-guangzhou.cr.aliyuncs.com/302ai/local_agent:${tag}`
+		: `ghcr.io/302ai/cc-local-api:${tag}`;
+
+	return image;
 }
 
 /**

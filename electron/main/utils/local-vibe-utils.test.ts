@@ -25,8 +25,11 @@ vi.mock("electron", () => {
 			getPath: vi.fn((name: string) => {
 				if (name === "documents") return "/user/docs";
 				if (name === "home") return "/user/home";
+				if (name === "appData") return "/user/appData";
+				if (name === "userData") return "/user/appData/com.302ai.302aistudio";
 				return "/user/unknown";
 			}),
+			setPath: vi.fn(),
 		},
 	};
 });
@@ -34,6 +37,12 @@ vi.mock("electron", () => {
 vi.mock("@electron/main/constants/index", () => ({
 	PLATFORM: {
 		IS_MAC: false,
+	},
+}));
+
+vi.mock("@electron/main/services/storage-service/general-settings-storage", () => ({
+	generalSettingsStorage: {
+		getLanguage: vi.fn().mockResolvedValue("zh"),
 	},
 }));
 
