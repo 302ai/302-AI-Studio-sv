@@ -118,7 +118,9 @@
 	);
 
 	const allSkills = $derived.by(() =>
-		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts),
+		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts, {
+			useOptimisticOrder: currentCodeAgentType === "local",
+		}),
 	);
 
 	const filteredSkills = $derived(
