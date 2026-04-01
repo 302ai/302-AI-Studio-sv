@@ -38,18 +38,11 @@
 	let isCreateSandboxDialogOpen = $state(false);
 	let isCreatingSandbox = $state(false);
 
-	// TODO: 完成远程 Open Claw 功能后移除 disabled 标记
 	const agentFrameworkOptions = [
 		{
 			key: "claude-code",
 			label: m.agent_framework_claude_code_label(),
 			description: m.agent_framework_claude_code_description(),
-		},
-		{
-			key: "open-claw",
-			label: m.agent_framework_open_claw_label(),
-			description: m.agent_framework_open_claw_remote_developing(),
-			disabled: true, // TODO: 完成远程 Open Claw 功能后移除此行
 		},
 	];
 

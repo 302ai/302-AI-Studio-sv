@@ -1445,5 +1445,11 @@
 	"settings_subscriptions": "订阅",
 	"settings_subscription_cloud_openclaw": "云端 OpenClaw",
 	"settings_subscription_effective_date": "生效日期",
-	"settings_subscription_expiry_date": "到期日期"
+	"settings_subscription_expiry_date": "到期日期",
+	"platform_remote_label": "云沙盒版",
+	"platform_remote_description": "按需付费，开箱即用",
+	"platform_cloud_label": "云主机版",
+	"platform_cloud_description": "按月付费，持续运行",
+	"platform_local_label": "本地版",
+	"platform_local_description": "本地运行，免费使用"
 }

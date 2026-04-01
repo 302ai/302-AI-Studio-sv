@@ -2,18 +2,18 @@
 	export const platformOptions = [
 		{
 			key: "remote",
-			label: m.title_remote(),
-			description: m.title_remote_platform_description(),
-		},
-		{
-			key: "local",
-			label: m.title_local(),
-			description: m.title_local_platform_description(),
+			label: m.platform_remote_label(),
+			description: m.platform_remote_description(),
 		},
 		{
 			key: "cloud",
-			label: m.cloud_mode_cloud(),
-			description: m.cloud_mode_cloud_description(),
+			label: m.platform_cloud_label(),
+			description: m.platform_cloud_description(),
+		},
+		{
+			key: "local",
+			label: m.platform_local_label(),
+			description: m.platform_local_description(),
 		},
 	];
 	export const options: SelectOption[] = [
@@ -57,8 +57,8 @@
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
 	import ClaudeCodePanel from "./claude-code-panel.svelte";
-	import LocalModePanel from "./local-mode-panel.svelte";
 	import CloudModePanel from "./cloud-mode-panel.svelte";
+	import LocalModePanel from "./local-mode-panel.svelte";
 
 	let { onClose }: Props = $props();
 

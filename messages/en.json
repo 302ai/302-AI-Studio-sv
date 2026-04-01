@@ -1445,5 +1445,11 @@
 	"settings_subscriptions": "Subscriptions",
 	"settings_subscription_cloud_openclaw": "Cloud OpenClaw",
 	"settings_subscription_effective_date": "Effective Date",
-	"settings_subscription_expiry_date": "Expiry Date"
+	"settings_subscription_expiry_date": "Expiry Date",
+	"platform_remote_label": "Cloud Sandbox",
+	"platform_remote_description": "Pay-as-you-go, ready to use",
+	"platform_cloud_label": "Cloud Host",
+	"platform_cloud_description": "Monthly subscription, always running",
+	"platform_local_label": "Local",
+	"platform_local_description": "Runs locally, free to use"
 }
