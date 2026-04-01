@@ -17,7 +17,6 @@
 	let applyConfigLoading = $state(false);
 	let feishuSessionId = $state(openclawConfigState.feishuSessionId);
 	let telegramBotId = $state(openclawConfigState.telegramBotId);
-	let updateBtnDiabled = $derived(!openclawConfigState.currentOcAgentId);
 	let hasConfigs = $derived(trim(feishuSessionId) !== "" || trim(telegramBotId) !== "");
 
 	const { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
@@ -143,11 +142,6 @@
 						<RefreshCw class="size-4" />
 						{m.open_claw_update_config()}
 					</Button>
-					{#if updateBtnDiabled}
-						<p class="text-xs text-muted-foreground mt-1 w-48 text-center">
-							{m.open_claw_update_config_hint()}
-						</p>
-					{/if}
 				</div>
 			</div>
 		</AccordionContent>

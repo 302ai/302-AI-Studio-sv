@@ -33,6 +33,7 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
+	import { canFavoriteSkill } from "../skill-favorite-availability";
 	import { getOrderedSkillsByFavorite } from "../skill-favorite-order";
 	import SkillCard from "../skill-card.svelte";
 
@@ -66,7 +67,7 @@
 	const currentSandboxId = $derived(codeAgentState.sandboxId);
 	const currentSessionId = $derived(codeAgentState.currentSessionId);
 	const currentAgentId = $derived(codeAgentState.currentAgentId);
-	const isLocalMode = $derived(codeAgentState.type === "local");
+	const currentCodeAgentType = $derived(codeAgentState.type);
 
 	let searchQuery = $state("");
 	let deleteDialogOpen = $state(false);
@@ -96,9 +97,9 @@
 	);
 
 	const allSkills = $derived.by(() =>
-		isLocalMode
-			? getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts)
-			: baseSkills,
+		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts, {
+			useOptimisticOrder: currentCodeAgentType === "local",
+		}),
 	);
 
 	// Filter by search query
@@ -244,6 +245,9 @@
 	const selectedUsedSkills = $derived(
 		selectedSkillsList.filter((s) => usedSkills.some((u) => u.name === s.name)),
 	);
+	const favoritableSelectedSkills = $derived(
+		selectedSkillsList.filter((s) => canFavoriteSkill(currentCodeAgentType, s.isBuiltin ?? false)),
+	);
 	const anySelectedForceUsed = $derived(
 		selectedUsedSkills.some((s) => {
 			const used = usedSkills.find((u) => u.name === s.name);
@@ -256,8 +260,8 @@
 			return used?.forceUse !== true;
 		}),
 	);
-	const anySelectedFavorite = $derived(selectedSkillsList.some((s) => s.is_favorite));
-	const anySelectedNotFavorite = $derived(selectedSkillsList.some((s) => !s.is_favorite));
+	const anySelectedFavorite = $derived(favoritableSelectedSkills.some((s) => s.is_favorite));
+	const anySelectedNotFavorite = $derived(favoritableSelectedSkills.some((s) => !s.is_favorite));
 	let batchFavoriteAction = $state<"add" | "cancel" | null>(null);
 
 	function handleSelectSkill(skill: Skill) {
@@ -349,6 +353,10 @@
 	}
 
 	async function handleFavoriteToggle(skill: Skill) {
+		if (!canFavoriteSkill(currentCodeAgentType, skill.isBuiltin ?? false)) {
+			return;
+		}
+
 		if (favoritingSkills.has(skill.name)) return;
 
 		const previousFavoriteState = skill.is_favorite ?? false;
@@ -464,7 +472,7 @@
 	}
 
 	async function handleBatchFavorite(action: "add" | "cancel") {
-		const targetSkills = selectedSkillsList.filter((skill) =>
+		const targetSkills = favoritableSelectedSkills.filter((skill) =>
 			action === "add" ? !skill.is_favorite : skill.is_favorite,
 		);
 
@@ -733,7 +741,12 @@
 										onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 										downloading={downloadingSkills.has(item.name)}
 										favoriteLoading={favoritingSkills.has(item.name)}
-										onFavoriteToggle={isLocalMode ? handleFavoriteToggle : undefined}
+										onFavoriteToggle={canFavoriteSkill(
+											currentCodeAgentType,
+											item.isBuiltin ?? false,
+										)
+											? handleFavoriteToggle
+											: undefined}
 										onForceUseToggle={showUseButton ? handleForceUseToggle : undefined}
 									/>
 								{/each}
@@ -778,7 +791,9 @@
 						onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 						downloading={downloadingSkills.has(item.name)}
 						favoriteLoading={favoritingSkills.has(item.name)}
-						onFavoriteToggle={isLocalMode ? handleFavoriteToggle : undefined}
+						onFavoriteToggle={canFavoriteSkill(currentCodeAgentType, item.isBuiltin ?? false)
+							? handleFavoriteToggle
+							: undefined}
 						onForceUseToggle={showUseButton ? handleForceUseToggle : undefined}
 					/>
 				{/each}
@@ -876,7 +891,7 @@
 					{/if}
 				{/if}
 
-				{#if isLocalMode && anySelectedNotFavorite}
+				{#if anySelectedNotFavorite}
 					<Button
 						variant="ghost"
 						size="sm"
@@ -888,7 +903,7 @@
 						{m.title_button_star()}
 					</Button>
 				{/if}
-				{#if isLocalMode && anySelectedFavorite}
+				{#if anySelectedFavorite}
 					<Button
 						variant="ghost"
 						size="sm"
