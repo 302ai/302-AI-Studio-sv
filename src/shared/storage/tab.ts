@@ -1,9 +1,12 @@
 import { type } from "arktype";
 
 export const TabType = type(
-	"'chat' | 'settings' | 'aiApplications' | 'codeAgent' | 'htmlPreview' | 'helpDocs' | 'skillsHub' | 'openClawWebUi'",
+	"'chat' | 'chat-vibe-claude' | 'chat-vibe-openclaw' | 'settings' | 'aiApplications' | 'codeAgent' | 'htmlPreview' | 'helpDocs' | 'skillsHub' | 'openClawWebUi'",
 );
 export type TabType = typeof TabType.infer;
+
+export const isChatTab = (type: TabType): boolean =>
+	type === "chat" || type === "chat-vibe-claude" || type === "chat-vibe-openclaw";
 
 export const TabUIState = type({
 	"scrollPosition?": "number",

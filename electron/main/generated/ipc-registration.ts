@@ -380,6 +380,9 @@ export function registerIpcHandlers() {
 	);
 
 	// tabService service registration
+	ipcMain.handle("tabService:handleUpdateTabType", (event, tabId, type) =>
+		tabService.handleUpdateTabType(event, tabId, type),
+	);
 	ipcMain.handle(
 		"tabService:handleNewTabWithThread",
 		(event, threadId, title, type, active, initialSearchQuery, initialSearchResultIds) =>
@@ -737,6 +740,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("threadStateService:updateBusyState");
 	ipcMain.removeHandler("threadStateService:getBusyThreads");
 	ipcMain.removeHandler("threadStateService:getBusyLocalAgentThreads");
+	ipcMain.removeHandler("tabService:handleUpdateTabType");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");

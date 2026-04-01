@@ -11,6 +11,7 @@
 	import { threadsState } from "$lib/stores/threads-state.svelte";
 	import { TIME_GROUP_ORDER, TimeGroup } from "$lib/types/time-group";
 	import { ChevronDown } from "@lucide/svelte";
+	import { isChatTab } from "@shared/storage/tab";
 	import type { CodeAgentConfigMetadata, CodeAgentMetadata } from "@shared/storage/code-agent";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
@@ -367,7 +368,7 @@
 		const currentTabs = await tabBarState.getCurrentWindowTabs();
 		const relatedTab = currentTabs?.find((tab) => tab.threadId === threadId);
 
-		if (relatedTab?.type === "chat" && relatedTab.threadId) {
+		if (relatedTab && isChatTab(relatedTab.type) && relatedTab.threadId) {
 			const { tabService } = window.electronAPI;
 			await tabService.handleGenerateTabTitle(relatedTab.id, relatedTab.threadId);
 		}
@@ -378,7 +379,7 @@
 		const currentTabs = await tabBarState.getCurrentWindowTabs();
 		const relatedTab = currentTabs?.find((tab) => tab.threadId === threadId);
 
-		if (relatedTab?.type === "chat" && relatedTab.threadId) {
+		if (relatedTab && isChatTab(relatedTab.type) && relatedTab.threadId) {
 			const { tabService } = window.electronAPI;
 			await tabService.handleClearTabMessages(relatedTab.id, relatedTab.threadId);
 		}

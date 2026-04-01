@@ -169,6 +169,20 @@ export class TabStorage extends StorageService<TabState> {
 		await this.setItemInternal("tab-bar-state", tabState);
 	}
 
+	async updateTabProperty(tabId: string, properties: Partial<Tab>) {
+		const state = await this.getItemInternal("tab-bar-state");
+		if (!state) return;
+
+		for (const windowId in state) {
+			const tab = state[windowId].tabs.find((t) => t.id === tabId);
+			if (tab) {
+				Object.assign(tab, properties);
+				await this.setItemInternal("tab-bar-state", state);
+				return;
+			}
+		}
+	}
+
 	async getPersistedTabState(): Promise<TabState | null> {
 		return this.getItemInternal("tab-bar-state");
 	}

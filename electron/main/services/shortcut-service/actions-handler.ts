@@ -1,3 +1,4 @@
+import { isChatTab } from "@shared/storage/tab";
 import type { ShortcutContext } from "@shared/types/shortcut";
 import { BrowserWindow } from "electron";
 import { isNull } from "es-toolkit";
@@ -380,7 +381,7 @@ export class ShortcutActionsHandler {
 		if (!activeTabId) return null;
 
 		const tab = tabService.getTabById(activeTabId);
-		if (!tab || tab.type !== "chat") return null;
+		if (!tab || !isChatTab(tab.type)) return null;
 
 		const view = tabService.getTabView(activeTabId);
 		if (!view || view.webContents.isDestroyed()) return null;

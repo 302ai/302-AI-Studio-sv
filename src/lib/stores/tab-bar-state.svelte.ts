@@ -371,6 +371,8 @@ class TabBarState {
 			.with("helpDocs", () => true)
 			.with("skillsHub", () => true)
 			.with("chat", () => true)
+			.with("chat-vibe-claude", () => true)
+			.with("chat-vibe-openclaw", () => true)
 			.with("aiApplications", () => true)
 			.with("codeAgent", () => true)
 			.with("openClawWebUi", async () => {
@@ -574,6 +576,10 @@ class TabBarState {
 		}
 
 		await this.#handleTabRemovalWithActiveState(tabId, this.tabs);
+	}
+
+	async updateTabType(tabId: string, type: TabType) {
+		await tabService.handleUpdateTabType(tabId, type);
 	}
 
 	async updateTabTitle(threadId: string, title: string) {

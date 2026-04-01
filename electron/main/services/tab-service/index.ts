@@ -1,5 +1,6 @@
 import { MAX_TABS_PER_WINDOW } from "@shared/constants/tab";
-import type { ChatMessage, Tab, TabType, ThreadParmas } from "@shared/types";
+import { isChatTab } from "@shared/storage/tab";
+import type { ChatMessage, Tab, TabState, TabType, ThreadParmas } from "@shared/types";
 import { BrowserWindow, ipcMain, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import { isNull, isUndefined } from "es-toolkit";
 import { nanoid } from "nanoid";
@@ -32,6 +33,8 @@ type TabConfig = {
 
 const TAB_CONFIGS: Record<TabType, TabConfig> = {
 	chat: { title: "New Chat", getHref: (id) => `/chat/${id}` },
+	"chat-vibe-claude": { title: "Claude Code", getHref: (id) => `/chat/${id}` },
+	"chat-vibe-openclaw": { title: "OpenClaw", getHref: (id) => `/chat/${id}` },
 	settings: { title: "Settings", getHref: () => "/settings/general-settings" },
 	aiApplications: { title: "AI Applications", getHref: () => "/ai-applications" },
 	codeAgent: { title: "Code Agent", getHref: () => "/code-agent" },
@@ -87,6 +90,38 @@ export class TabService {
 				}
 			},
 		);
+
+		// Sync in-memory tabMap with external storage changes (from renderer PersistedState)
+		emitter.on("persisted-state:sync", ({ sendKey, syncValue }) => {
+			if (sendKey === "TabStorage:tab-bar-state") {
+				const tabState = syncValue as TabState;
+				Object.values(tabState).forEach((windowTabs) => {
+					windowTabs.tabs.forEach((tab) => {
+						const existingTab = this.tabMap.get(tab.id);
+						if (existingTab && existingTab.type !== tab.type) {
+							existingTab.type = tab.type;
+						}
+					});
+				});
+			}
+		});
+	}
+
+	async handleUpdateTabType(
+		_event: IpcMainInvokeEvent,
+		tabId: string,
+		type: TabType,
+	): Promise<void> {
+		const tab = this.tabMap.get(tabId);
+		if (!tab) return;
+
+		// 1. Update in-memory state
+		tab.type = type;
+
+		// 2. Update storage (this will trigger broadcast to all renderers)
+		await tabStorage.updateTabProperty(tabId, { type });
+
+		console.log(`[TabService] Tab ${tabId} type explicitly updated to ${type}`);
 	}
 
 	async startMemoryManagerAfterInitialLoad(timeoutMs: number = 10_000) {
@@ -717,7 +752,7 @@ export class TabService {
 			const tab = windowTabs[i];
 			let isPrivateChat = false;
 
-			if (tab.type === "chat" && tab.threadId) {
+			if (isChatTab(tab.type) && tab.threadId) {
 				const thread = (await storageService.getItemInternal(
 					"app-thread:" + tab.threadId,
 				)) as ThreadParmas | null;
@@ -1259,7 +1294,7 @@ export class TabService {
 			...(previewId && { previewId }), // Add previewId if provided
 		};
 
-		if (type === "chat") {
+		if (isChatTab(type)) {
 			const [newSessionModel, latestUsedModel, apiKeyHash] = await Promise.all([
 				storageService.getItemInternal("PreferencesSettingsStorage:state"),
 				sessionStorage.getLatestUsedModel(),
