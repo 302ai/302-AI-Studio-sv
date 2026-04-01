@@ -1,30 +1,30 @@
 import { ipcMain } from "electron";
 import {
-	registryService,
-	broadcastService,
-	storageService,
-	pluginService,
-	generalSettingsService,
-	ssoService,
-	ghostWindowService,
-	shortcutService,
-	localVibeService,
-	codeAgentService,
-	windowService,
-	deepLinkService,
-	threadStateService,
-	tabService,
 	aiApplicationService,
 	appService,
+	broadcastService,
+	codeAgentService,
 	dataService,
+	deepLinkService,
 	devLauncherService,
 	externalLinkService,
+	generalSettingsService,
+	ghostWindowService,
+	localVibeService,
 	mcpService,
 	notificationService,
 	openClawService,
+	pluginService,
 	providerService,
+	registryService,
+	shortcutService,
+	ssoService,
+	storageService,
+	tabService,
 	threadService,
+	threadStateService,
 	updaterService,
+	windowService,
 } from "../services";
 
 /**
@@ -576,6 +576,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("openClawService:connectWechat", (event) =>
 		openClawService.connectWechat(event),
 	);
+	ipcMain.handle("openClawService:installWechat", (event) =>
+		openClawService.installWechat(event),
+	);
 	ipcMain.handle("openClawService:disposeWechat", (event) =>
 		openClawService.disposeWechat(event),
 	);
@@ -800,6 +803,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("openClawService:handleOpenClawWebUiReloadIpc");
 	ipcMain.removeHandler("openClawService:wechatInsalled");
 	ipcMain.removeHandler("openClawService:connectWechat");
+	ipcMain.removeHandler("openClawService:installWechat");
 	ipcMain.removeHandler("openClawService:disposeWechat");
 	ipcMain.removeHandler("providerService:handle302AIProviderChange");
 	ipcMain.removeHandler("providerService:get302AIApiKey");

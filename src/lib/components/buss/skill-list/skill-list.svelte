@@ -12,11 +12,11 @@
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
-	import { canFavoriteSkill } from "./skill-favorite-availability";
 	import SkillCard from "./skill-card.svelte";
 	import SkillCreateDialog from "./skill-create-dialog.svelte";
 	import SkillDetailDialog from "./skill-detail-dialog.svelte";
 	import SkillEditDialog from "./skill-edit-dialog.svelte";
+	import { canFavoriteSkill } from "./skill-favorite-availability";
 	import { getOrderedSkillsByFavorite } from "./skill-favorite-order";
 
 	interface Props {

@@ -13,8 +13,8 @@
 		UNCATEGORIZED_SLUG,
 	} from "$lib/stores/skills-category-state.svelte";
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
-	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import { cn } from "$lib/utils";
+	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import {
 		ChevronRight,
 		FolderOpen,
@@ -33,9 +33,9 @@
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
+	import SkillCard from "../skill-card.svelte";
 	import { canFavoriteSkill } from "../skill-favorite-availability";
 	import { getOrderedSkillsByFavorite } from "../skill-favorite-order";
-	import SkillCard from "../skill-card.svelte";
 
 	interface Props {
 		userSkills: Skill[];
