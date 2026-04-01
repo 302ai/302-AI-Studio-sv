@@ -14,9 +14,8 @@
 	import { cloudEnvState } from "$lib/stores/code-agent/cloud-env-state.svelte";
 
 	function handleActivate() {
-		// TODO: Navigate to settings-vibe-platform-cloud page when it's ready
-		console.log(
-			"[CloudRunningCard] navigate to settings-vibe-platform-cloud: not implemented yet",
+		window.electronAPI.windowService.handleOpenSettingsWindow(
+			"/settings/agent-settings/platform?platform=cloud",
 		);
 	}
 

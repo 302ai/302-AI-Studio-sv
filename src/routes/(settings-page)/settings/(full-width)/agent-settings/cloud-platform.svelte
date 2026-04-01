@@ -4,8 +4,7 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
-
-	let sandboxRunning = $state(false);
+	import { cloudEnvState } from "$lib/stores/code-agent/cloud-env-state.svelte";
 </script>
 
 <div class="space-y-2">
@@ -18,8 +17,8 @@
 						>{m.agent_settings_instance_status()}</Label
 					>
 					<StatusIndicator
-						status={sandboxRunning ? "green" : "gray"}
-						text={sandboxRunning
+						status={cloudEnvState.activated ? "green" : "gray"}
+						text={cloudEnvState.activated
 							? m.cloud_mode_running()
 							: m.agent_settings_not_activated()}
 					/>
@@ -29,18 +28,35 @@
 						>{m.cloud_mode_startup_status()}</Label
 					>
 					<StatusIndicator
-						status={sandboxRunning ? "green" : "gray"}
-						text={sandboxRunning ? m.settings_normal() : m.local_platform_unhealthy()}
+						status={cloudEnvState.running ? "green" : "gray"}
+						text={cloudEnvState.running
+							? m.settings_normal()
+							: m.local_platform_unhealthy()}
 					/>
 				</div>
 			</div>
-			<Button
-				size="sm"
-				variant={sandboxRunning ? "destructive" : "default"}
-				onclick={() => console.log("TODO: toggle cloud mode is Not implemented")}
-			>
-				{m.cloud_mode_activate_button()}
-			</Button>
+			{#if !cloudEnvState.activated}
+				<Button size="sm" onclick={() => cloudEnvState.startCloud()}>
+					{m.cloud_mode_activate_button()}
+				</Button>
+			{:else if cloudEnvState.running}
+				<Button
+					size="sm"
+					variant="destructive"
+					disabled={cloudEnvState.starting}
+					onclick={() => cloudEnvState.stopCloud()}
+				>
+					{m.cloud_mode_not_started()}
+				</Button>
+			{:else}
+				<Button
+					size="sm"
+					disabled={cloudEnvState.starting}
+					onclick={() => cloudEnvState.startCloud()}
+				>
+					{m.cloud_mode_started()}
+				</Button>
+			{/if}
 		</div>
 	</div>
 </div>
