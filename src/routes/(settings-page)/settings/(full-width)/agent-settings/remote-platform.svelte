@@ -86,29 +86,32 @@
 <!-- Agent Sandbox List Section -->
 <div class="space-y-3">
 	<div class="flex items-center justify-between">
-		<h2 class="text-base font-medium">{m.title_agent_sandbox_list()}</h2>
-		<div class="flex gap-1">
-			<ButtonWithTooltip
-				class="hover:!bg-chat-action-hover"
-				tooltip={m.label_button_reload()}
-				onclick={handleRefresh}
-				disabled={isLoading}
-			>
-				<RotateCw class={cn("h-4 w-4", isLoading ? "animate-spin" : "")} />
-			</ButtonWithTooltip>
+		<div class="flex items-center">
+			<h2 class="text-base font-medium">{m.title_agent_sandbox_list()}</h2>
+			<div class="flex gap-1">
+				<ButtonWithTooltip
+					class="hover:!bg-chat-action-hover"
+					tooltip={m.label_button_reload()}
+					onclick={handleRefresh}
+					disabled={isLoading}
+				>
+					<RotateCw class={cn("h-4 w-4", isLoading ? "animate-spin" : "")} />
+				</ButtonWithTooltip>
 
-			<!-- {@render remoteModeSettings()} -->
+				<!-- {@render remoteModeSettings()} -->
+			</div>
 		</div>
-	</div>
-
-	<!-- Search -->
-	<div class="relative">
-		<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-		<Input
-			placeholder={m.placeholder_search_agent()}
-			class="pl-9 bg-muted/50 border-transparent focus-visible:ring-0 focus-visible:bg-background"
-			bind:value={searchQuery}
-		/>
+		<!-- Search -->
+		<div class="relative">
+			<Search
+				class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+			/>
+			<Input
+				placeholder={m.placeholder_search_agent()}
+				class="pl-9 bg-muted/50 border-transparent focus-visible:ring-0 focus-visible:bg-background"
+				bind:value={searchQuery}
+			/>
+		</div>
 	</div>
 
 	<!-- Sandbox List -->

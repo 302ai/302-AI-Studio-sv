@@ -1451,5 +1451,11 @@
 	"platform_cloud_label": "Cloud Host",
 	"platform_cloud_description": "Monthly subscription, always running",
 	"platform_local_label": "Local",
-	"platform_local_description": "Runs locally, free to use"
+	"platform_local_description": "Runs locally, free to use",
+	"agent_settings_instance_status": "Instance Status",
+	"agent_settings_not_activated": "Not Activated",
+	"agent_settings_tab_platform": "Platform",
+	"agent_settings_tab_other": "Other",
+	"agent_settings_notifications_section": "Notifications",
+	"agent_settings_deploy_section": "Deploy"
 }

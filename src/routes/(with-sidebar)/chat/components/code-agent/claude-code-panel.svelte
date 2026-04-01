@@ -214,7 +214,9 @@
 						type="button"
 						class="text-primary hover:underline hover:underline-offset-2 cursor-pointer"
 						onclick={() => {
-							windowService.handleOpenSettingsWindow("/settings/agent-settings");
+							windowService.handleOpenSettingsWindow(
+								"/settings/agent-settings/platform",
+							);
 						}}
 						>{m.link_manage_sandbox()}
 					</button>

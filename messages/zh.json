@@ -1451,5 +1451,11 @@
 	"platform_cloud_label": "云主机版",
 	"platform_cloud_description": "按月付费，持续运行",
 	"platform_local_label": "本地版",
-	"platform_local_description": "本地运行，免费使用"
+	"platform_local_description": "本地运行，免费使用",
+	"agent_settings_instance_status": "实例状态",
+	"agent_settings_not_activated": "未激活",
+	"agent_settings_tab_platform": "平台",
+	"agent_settings_tab_other": "其他",
+	"agent_settings_notifications_section": "通知",
+	"agent_settings_deploy_section": "部署"
 }
