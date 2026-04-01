@@ -6,6 +6,10 @@ interface SkillDisplayMeta {
 	manualImportAt: number | null;
 }
 
+interface SkillFavoriteOrderOptions {
+	useOptimisticOrder?: boolean;
+}
+
 function getSkillTimestamp(value: string | null | undefined) {
 	if (!value) {
 		return null;
@@ -53,22 +57,32 @@ export function getOrderedSkillsByFavorite(
 	skills: Skill[],
 	favoriteOverrides: ReadonlyMap<string, boolean>,
 	favoriteAtOverrides: ReadonlyMap<string, string | null>,
+	options: SkillFavoriteOrderOptions = {},
 ): Skill[] {
+	const { useOptimisticOrder = true } = options;
+
 	return skills
 		.map((skill) => {
 			const overriddenFavorite = favoriteOverrides.get(skill.name);
 			const isFavorite = overriddenFavorite ?? skill.is_favorite ?? false;
 			const overriddenFavoriteAt = favoriteAtOverrides.get(skill.name);
-			const favoriteAt = isFavorite ? (overriddenFavoriteAt ?? skill.favorite_at ?? null) : null;
+			const displayFavoriteAt = isFavorite
+				? (overriddenFavoriteAt ?? skill.favorite_at ?? null)
+				: null;
+			const favoriteAtForOrder = useOptimisticOrder
+				? displayFavoriteAt
+				: (skill.is_favorite ?? false)
+					? (skill.favorite_at ?? null)
+					: null;
 			const hasFavoriteChanged = isFavorite !== (skill.is_favorite ?? false);
-			const hasFavoriteAtChanged = favoriteAt !== (skill.favorite_at ?? null);
+			const hasFavoriteAtChanged = displayFavoriteAt !== (skill.favorite_at ?? null);
 
 			return {
 				skill:
 					hasFavoriteChanged || hasFavoriteAtChanged
-						? { ...skill, is_favorite: isFavorite, favorite_at: favoriteAt }
+						? { ...skill, is_favorite: isFavorite, favorite_at: displayFavoriteAt }
 						: skill,
-				favoriteAt: getSkillTimestamp(favoriteAt),
+				favoriteAt: getSkillTimestamp(favoriteAtForOrder),
 				manualImportAt: getSkillTimestamp(skill.manual_import_at),
 			};
 		})
