@@ -11,8 +11,22 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
+	import { cloudEnvState } from "$lib/stores/code-agent/cloud-env-state.svelte";
 
-	let sandboxRunning = $state(false);
+	function handleActivate() {
+		// TODO: Navigate to settings-vibe-platform-cloud page when it's ready
+		console.log(
+			"[CloudRunningCard] navigate to settings-vibe-platform-cloud: not implemented yet",
+		);
+	}
+
+	async function handleStart() {
+		await cloudEnvState.startCloud();
+	}
+
+	async function handleStop() {
+		await cloudEnvState.stopCloud();
+	}
 </script>
 
 <div class="flex items-start justify-between gap-4">
@@ -22,8 +36,10 @@
 				>{m.cloud_mode_activation_status()}</Label
 			>
 			<StatusIndicator
-				status={sandboxRunning ? "green" : "gray"}
-				text={sandboxRunning ? m.cloud_mode_activated() : m.cloud_mode_not_activated()}
+				status={cloudEnvState.activated ? "green" : "gray"}
+				text={cloudEnvState.activated
+					? m.cloud_mode_activated()
+					: m.cloud_mode_not_activated()}
 			/>
 		</div>
 		<div class="flex items-center gap-3">
@@ -31,8 +47,8 @@
 				>{m.cloud_mode_startup_status()}</Label
 			>
 			<StatusIndicator
-				status={sandboxRunning ? "green" : "gray"}
-				text={sandboxRunning ? m.cloud_mode_started() : m.cloud_mode_not_started()}
+				status={cloudEnvState.running ? "green" : "gray"}
+				text={cloudEnvState.running ? m.cloud_mode_started() : m.cloud_mode_not_started()}
 			/>
 		</div>
 		<div class="flex items-center gap-3">
@@ -40,8 +56,10 @@
 				>{m.cloud_mode_health_status()}</Label
 			>
 			<StatusIndicator
-				status={sandboxRunning ? "green" : "gray"}
-				text={sandboxRunning ? m.cloud_mode_healthy() : m.cloud_mode_unknown()}
+				status={cloudEnvState.healthStatus === "healthy" ? "green" : "gray"}
+				text={cloudEnvState.healthStatus === "healthy"
+					? m.cloud_mode_healthy()
+					: m.cloud_mode_unknown()}
 			/>
 		</div>
 		<div class="flex items-center gap-3">
@@ -49,16 +67,29 @@
 				>{m.cloud_mode_openclaw_status()}</Label
 			>
 			<StatusIndicator
-				status={sandboxRunning ? "green" : "gray"}
-				text={sandboxRunning ? m.cloud_mode_running() : m.cloud_mode_unknown()}
+				status={cloudEnvState.openClawStatus === "healthy" ? "green" : "gray"}
+				text={cloudEnvState.openClawStatus === "healthy"
+					? m.cloud_mode_running()
+					: m.cloud_mode_unknown()}
 			/>
 		</div>
 	</div>
-	<Button
-		size="sm"
-		variant={sandboxRunning ? "destructive" : "default"}
-		onclick={() => console.log("TODO: toggle cloud mode is Not implemented")}
-	>
-		{m.cloud_mode_activate_button()}
-	</Button>
+	{#if !cloudEnvState.activated}
+		<Button size="sm" onclick={handleActivate}>
+			{m.cloud_mode_activate_button()}
+		</Button>
+	{:else if cloudEnvState.running}
+		<Button
+			size="sm"
+			variant="destructive"
+			disabled={cloudEnvState.starting}
+			onclick={handleStop}
+		>
+			{m.cloud_mode_not_started()}
+		</Button>
+	{:else}
+		<Button size="sm" disabled={cloudEnvState.starting} onclick={handleStart}>
+			{m.cloud_mode_started()}
+		</Button>
+	{/if}
 </div>
