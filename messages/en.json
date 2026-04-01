@@ -1441,5 +1441,9 @@
 	"open_claw_channel_telegram": "Telegram",
 	"open_claw_telegram_get_bot_token": "Click here to get Bot Token",
 	"open_claw_telegram_bot_token": "Bot Token",
-	"open_claw_telegram_placeholder_bot_token": "Enter Bot Token"
+	"open_claw_telegram_placeholder_bot_token": "Enter Bot Token",
+	"settings_subscriptions": "Subscriptions",
+	"settings_subscription_cloud_openclaw": "Cloud OpenClaw",
+	"settings_subscription_effective_date": "Effective Date",
+	"settings_subscription_expiry_date": "Expiry Date"
 }
