@@ -3,6 +3,9 @@
  */
 
 import type { SandboxFileInfo } from "$lib/api/sandbox-file";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 import { toast } from "svelte-sonner";
 
 /**
@@ -42,7 +45,7 @@ export function validatePath(path: string): boolean {
  */
 export function handleError(error: unknown, context: string, showToast = true): void {
 	const message = error instanceof Error ? error.message : String(error);
-	console.error(`[AgentPreview] ${context}:`, error);
+	logger.error(`[AgentPreview] ${context}:`, error);
 	if (showToast) {
 		toast.error(message);
 	}

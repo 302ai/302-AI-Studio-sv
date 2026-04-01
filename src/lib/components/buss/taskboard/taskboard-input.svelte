@@ -22,6 +22,9 @@
 	import ButtonWithTooltip from "../button-with-tooltip/button-with-tooltip.svelte";
 	import CompactNumberInput from "./compact-number-input.svelte";
 	import TaskDecomposeDialog from "./task-decompose-dialog.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	const { onShortcutAction } = window.electronAPI.shortcut;
 
@@ -100,7 +103,7 @@
 						return;
 					}
 				} catch (error) {
-					console.error("Failed to upload attachments:", error);
+					logger.error("Failed to upload attachments:", error);
 					toast.error(m.taskboard_error_attachment_upload_failed());
 					return;
 				} finally {

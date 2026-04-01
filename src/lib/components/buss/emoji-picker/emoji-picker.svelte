@@ -2,6 +2,9 @@
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as Popover from "$lib/components/ui/popover/index.js";
 	import type { Picker } from "emoji-picker-element";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		value?: string;
@@ -51,7 +54,7 @@
 			// eslint-disable-next-line svelte/no-dom-manipulating
 			pickerContainer.appendChild(picker);
 		} catch (error) {
-			console.error("Failed to load emoji picker:", error);
+			logger.error("Failed to load emoji picker:", error);
 		} finally {
 			isLoading = false;
 		}

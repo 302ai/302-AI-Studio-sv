@@ -7,11 +7,14 @@
 	import { toast } from "svelte-sonner";
 	import "../../app.css";
 	import TabBar from "./components/tab-bar/tab-bar.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	const { children } = $props();
 
 	onMount(() => {
-		console.log("ShortcutService: onShortcutAction");
+		logger.info("ShortcutService: onShortcutAction");
 		const shortcutCleanup = window.electronAPI?.shortcut?.onShortcutAction?.(
 			(event: ShortcutActionEvent) => {
 				handleShortcutAction(event.action);
@@ -84,7 +87,7 @@
 				handleOpenSettings();
 				break;
 			default:
-				console.error("ShortcutService: Unknown action", action);
+				logger.error("ShortcutService: Unknown action", action);
 				// Other actions handled by chat-specific or sidebar-specific handlers
 				break;
 		}

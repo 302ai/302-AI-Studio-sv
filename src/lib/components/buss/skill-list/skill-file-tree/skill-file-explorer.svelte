@@ -6,6 +6,9 @@
 	import { mode } from "mode-watcher";
 	import { onDestroy } from "svelte";
 	import SkillFileTree from "./skill-file-tree.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		rootPath: string;
@@ -68,7 +71,7 @@
 			const blob = new Blob([buffer], { type: mimeType });
 			documentUrl = URL.createObjectURL(blob);
 		} catch (error) {
-			console.error("Failed to load document:", error);
+			logger.error("Failed to load document:", error);
 			documentUrl = null;
 		}
 	}

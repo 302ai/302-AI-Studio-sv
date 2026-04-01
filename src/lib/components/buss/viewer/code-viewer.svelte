@@ -1,5 +1,8 @@
 <script lang="ts" module>
 	import type { AttachmentFile } from "@shared/types";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	export interface CodeViewerProps {
 		attachment: AttachmentFile;
@@ -20,7 +23,7 @@
 		try {
 			content = await loadTextContent(attachment);
 		} catch (error) {
-			console.error("Failed to load code content:", error);
+			logger.error("Failed to load code content:", error);
 			content = "Error loading code content";
 		}
 	}

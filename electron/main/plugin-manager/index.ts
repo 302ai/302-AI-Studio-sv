@@ -14,12 +14,15 @@ export * from "./sandbox";
 import { pluginLoader } from "./plugin-loader";
 import { pluginRegistry } from "./plugin-registry";
 import { hookManager } from "./hook-manager";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("plugin");
 
 /**
  * Initialize the plugin system
  */
 export async function initializePluginSystem(): Promise<void> {
-	console.log("[PluginManager] Initializing plugin system...");
+	logger.info("[PluginManager] Initializing plugin system...");
 
 	try {
 		// Load all plugins
@@ -28,12 +31,12 @@ export async function initializePluginSystem(): Promise<void> {
 		const loadedCount = pluginLoader.getLoadedPlugins().length;
 		const enabledCount = pluginRegistry.getEnabled().length;
 
-		console.log(
+		logger.info(
 			`[PluginManager] Plugin system initialized successfully. ` +
 				`Loaded: ${loadedCount}, Enabled: ${enabledCount}`,
 		);
 	} catch (error) {
-		console.error("[PluginManager] Failed to initialize plugin system:", error);
+		logger.error("[PluginManager] Failed to initialize plugin system:", error);
 		throw error;
 	}
 }
@@ -42,7 +45,7 @@ export async function initializePluginSystem(): Promise<void> {
  * Shutdown the plugin system
  */
 export async function shutdownPluginSystem(): Promise<void> {
-	console.log("[PluginManager] Shutting down plugin system...");
+	logger.info("[PluginManager] Shutting down plugin system...");
 
 	try {
 		// Unload all plugins
@@ -56,9 +59,9 @@ export async function shutdownPluginSystem(): Promise<void> {
 		// Clear registries
 		hookManager.clear();
 
-		console.log("[PluginManager] Plugin system shutdown complete");
+		logger.info("[PluginManager] Plugin system shutdown complete");
 	} catch (error) {
-		console.error("[PluginManager] Error during plugin system shutdown:", error);
+		logger.error("[PluginManager] Error during plugin system shutdown:", error);
 	}
 }
 

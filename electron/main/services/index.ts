@@ -9,6 +9,14 @@ import { DevLauncherService, devLauncherService } from "./dev-launcher-service";
 import { ExternalLinkService, externalLinkService } from "./external-link-service";
 import { GhostWindowService, ghostWindowService } from "./ghost-window-service";
 import { localVibeService, LocalVibeService } from "./local-vibe-service";
+import { LoggerService, loggerService } from "./logger-service";
+import { initMainProcessLogger } from "@shared/logger";
+
+// Wire up the shared logger factory so main-process code that calls
+// createLogger() routes through the real LoggerService.
+initMainProcessLogger((level, category, message, ...args) => {
+	loggerService.logMain(level, category, message, ...args);
+});
 import { McpService, mcpService } from "./mcp-service";
 import { NotificationService, notificationService } from "./notification-service";
 import { OpenClawService, openClawService } from "./openclaw-service";
@@ -41,6 +49,7 @@ export {
 	GeneralSettingsService,
 	GhostWindowService,
 	LocalVibeService,
+	LoggerService,
 	McpService,
 	NotificationService,
 	OpenClawService,
@@ -73,6 +82,7 @@ export {
 	generalSettingsService,
 	ghostWindowService,
 	localVibeService,
+	loggerService,
 	mcpService,
 	notificationService,
 	openClawService,

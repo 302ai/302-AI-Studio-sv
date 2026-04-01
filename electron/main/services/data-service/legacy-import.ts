@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ImportResult } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 import { dialog } from "electron";
 import { readFile } from "fs/promises";
 import { storageService } from "../storage-service";
@@ -199,7 +202,7 @@ export async function importLegacyJson(): Promise<ImportResult> {
 			importedFiles: totalAdded,
 		};
 	} catch (error) {
-		console.error("Failed to import legacy JSON:", error);
+		logger.error("Failed to import legacy JSON:", error);
 		return {
 			success: false,
 			message: error instanceof Error ? error.message : "Unknown error occurred",
@@ -294,7 +297,7 @@ async function importProviders(
 			await storageService.setItemInternal("app-providers", [...updatedProviders, ...newProviders]);
 		}
 	} catch (error) {
-		console.error("Failed to import providers:", error);
+		logger.error("Failed to import providers:", error);
 		stats.providers.failed++;
 	}
 
@@ -354,7 +357,7 @@ async function importModels(
 			await storageService.setItemInternal("app-models", [...updatedModels, ...newModels]);
 		}
 	} catch (error) {
-		console.error("Failed to import models:", error);
+		logger.error("Failed to import models:", error);
 		stats.models.failed++;
 	}
 }
@@ -409,7 +412,7 @@ async function importMcpServers(legacyServers: any[], stats: ImportStats): Promi
 			await storageService.setItemInternal("app-mcp-servers", [...updatedServers, ...newServers]);
 		}
 	} catch (error) {
-		console.error("Failed to import MCP servers:", error);
+		logger.error("Failed to import MCP servers:", error);
 		stats.mcpServers.failed++;
 	}
 }
@@ -555,7 +558,7 @@ async function importThreads(
 			});
 		}
 	} catch (error) {
-		console.error("Failed to import threads:", error);
+		logger.error("Failed to import threads:", error);
 		stats.threads.failed++;
 	}
 }
@@ -653,7 +656,7 @@ async function importSettings(
 
 		stats.settings.updated++;
 	} catch (error) {
-		console.error("Failed to import settings:", error);
+		logger.error("Failed to import settings:", error);
 	}
 }
 
@@ -750,7 +753,7 @@ async function importShortcuts(legacyShortcuts: any[], stats: ImportStats): Prom
 			shortcuts: updatedShortcuts,
 		});
 	} catch (error) {
-		console.error("Failed to import shortcuts:", error);
+		logger.error("Failed to import shortcuts:", error);
 		stats.shortcuts.failed++;
 	}
 }

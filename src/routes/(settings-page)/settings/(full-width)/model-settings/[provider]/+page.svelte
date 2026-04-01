@@ -15,6 +15,9 @@
 	import { Eye, EyeOff } from "@lucide/svelte";
 	import type { Model, ModelCreateInput, ModelProvider } from "@shared/types";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	const apiTypes = [
 		{ value: "302ai", label: "302.AI" },
@@ -239,7 +242,7 @@
 			newId = `${model.id}_copy_${counter}`;
 			counter++;
 		}
-		console.log(model.capabilities);
+		logger.info("Model capabilities:", model.capabilities);
 		await providerState.addModel({
 			id: newId,
 			name: `${model.name} (Copy)`,

@@ -4,6 +4,9 @@ import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parse, stringify } from "superjson";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 
 export class TempStorage {
 	private static readonly TEMP_DIR = join(tmpdir(), "302ai-studio-temp");
@@ -29,14 +32,14 @@ export class TempStorage {
 
 			return filePath;
 		} catch (error) {
-			console.error("TempStorage: Failed to write data", error);
+			logger.error("TempStorage: Failed to write data", error);
 			throw new Error(`Failed to write temporary file: ${error}`);
 		}
 	}
 
 	static readData<T = any>(filePath: string): T | null {
 		if (!existsSync(filePath)) {
-			console.warn("TempStorage: File does not exist", filePath);
+			logger.warn("TempStorage: File does not exist", filePath);
 			return null;
 		}
 
@@ -44,7 +47,7 @@ export class TempStorage {
 			const serializedData = readFileSync(filePath, "utf8");
 			return parse(serializedData) as T;
 		} catch (error) {
-			console.error("TempStorage: Failed to read data", error);
+			logger.error("TempStorage: Failed to read data", error);
 			return null;
 		}
 	}
@@ -55,7 +58,7 @@ export class TempStorage {
 			}
 			this.cleanupRegistry.delete(filePath);
 		} catch (error) {
-			console.warn("TempStorage: Failed to cleanup file", filePath, error);
+			logger.warn("TempStorage: Failed to cleanup file", filePath, error);
 		}
 	}
 

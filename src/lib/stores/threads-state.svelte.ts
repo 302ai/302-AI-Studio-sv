@@ -1,4 +1,7 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import type { ThreadData, ThreadMetadata } from "@shared/types";
 import { debounce } from "es-toolkit";
 
@@ -20,7 +23,7 @@ class ThreadsState {
 		this.#loadThreads();
 
 		onThreadListUpdate(() => {
-			console.log("Threads updated from broadcast, re-syncing");
+			logger.info("Threads updated from broadcast, re-syncing");
 			this.#loadThreads();
 		});
 	}
@@ -32,7 +35,7 @@ class ThreadsState {
 
 			this.threads = threadsData ?? currentThreads;
 		} catch (error) {
-			console.error("Failed to load threads:", error);
+			logger.error("Failed to load threads:", error);
 			this.threads = currentThreads;
 		}
 	}
@@ -78,7 +81,7 @@ class ThreadsState {
 			}
 			return success;
 		} catch (error) {
-			console.error("Failed to delete thread:", error);
+			logger.error("Failed to delete thread:", error);
 			return false;
 		}
 	}

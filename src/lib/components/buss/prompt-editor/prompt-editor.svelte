@@ -14,6 +14,9 @@
 	import OnChangePlugin from "./plugins/on-change-plugin.svelte";
 	import VariablePlugin from "./plugins/variable-plugin.svelte";
 	import { isLexicalEditorState, textJsonToEditorState } from "./utils";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		label: string;
@@ -65,7 +68,7 @@
 		// Don't set editorState here, we'll set it after editor is ready
 		// This ensures node types are fully registered before parsing JSON
 		onError: (error: Error) => {
-			console.error("Lexical error:", error);
+			logger.error("Lexical error:", error);
 		},
 	};
 
@@ -105,7 +108,7 @@
 								// Try to set editor state in try-catch, if it fails use fallback
 								editor.setEditorState(parsed);
 							} catch (error) {
-								console.error("Failed to set editor state, using fallback:", error);
+								logger.error("Failed to set editor state, using fallback:", error);
 								// Fallback to safe empty state
 								const safeJson = textJsonToEditorState("");
 								if (safeJson) {

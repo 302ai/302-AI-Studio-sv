@@ -24,7 +24,7 @@ const migrations = {
 
 const migrationConfig: MigrationConfig<ThemeState> = {
 	version: 1,
-	migrate: createMigrate(migrations, { debug: true }),
+	migrate: createMigrate(migrations),
 	debug: true,
 };
 

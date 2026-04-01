@@ -5,6 +5,9 @@
  **/
 
 import type { OpenClawWeixinLoginMsg } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 import { exec, spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { once } from "node:events";
 import * as readline from "node:readline";
@@ -72,7 +75,7 @@ class WeChatChannel {
 
 			rl.on("line", stdoutFn);
 			proc.once("close", (code) => {
-				console.log(`openclaw: Child process exited with code ${code}`);
+				logger.info(`openclaw: Child process exited with code ${code}`);
 				rl.close();
 				proc.stdout.removeAllListeners();
 				proc.stderr.removeAllListeners();
@@ -88,7 +91,7 @@ class WeChatChannel {
 				this.isManual = false;
 			});
 		} catch (error) {
-			console.error("[OpenClawService] Failed to execute command:", error);
+			logger.error("Failed to execute command:", error);
 		}
 	};
 
@@ -120,7 +123,7 @@ class WeChatChannel {
 			this.executeCommand(
 				command,
 				(line: string) => {
-					console.log("openclaw-weixin:login:", line);
+					logger.info("openclaw-weixin:login:", line);
 					let data: OpenClawWeixinLoginMsg = {
 						type: "unknown",
 						data: line,
@@ -153,7 +156,7 @@ class WeChatChannel {
 					broadcastService.broadcastChannelToAll("openclaw-weixin:login", data);
 				},
 				(err: string) => {
-					console.error("openclaw-weixin:login:error", err);
+					logger.error("openclaw-weixin:login:error", err);
 					broadcastService.broadcastChannelToAll("openclaw-weixin:login", {
 						type: "error",
 						data: err,
@@ -167,7 +170,7 @@ class WeChatChannel {
 				},
 			);
 		} catch (e) {
-			console.error("openclaw-weixin:login:error", e);
+			logger.error("openclaw-weixin:login:error", e);
 		} finally {
 			this.isConnecting = false;
 		}

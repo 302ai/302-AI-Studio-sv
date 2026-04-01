@@ -9,6 +9,9 @@
 	import { onMount, tick } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { LdrsLoader } from "../../ldrs-loader";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let wechatElm = $state<HTMLDivElement | null>(null);
 	const qrCode = new QRCodeStyling();
@@ -70,7 +73,7 @@
 		[
 			"unknown",
 			(event: OpenClawWeixinLoginMsg) => {
-				console.log("unknown", event);
+				logger.info("unknown", event);
 			},
 		],
 		[

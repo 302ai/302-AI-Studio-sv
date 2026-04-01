@@ -9,6 +9,9 @@ import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 import { threadsState } from "$lib/stores/threads-state.svelte";
 import type { ShortcutActionEvent } from "@shared/types/shortcut";
 import { toast } from "svelte-sonner";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export class ShortcutActionsHandler {
 	private isInitialized = false;
@@ -80,10 +83,10 @@ export class ShortcutActionsHandler {
 					break;
 
 				default:
-					console.warn(`Unhandled shortcut action: ${action}`);
+					logger.warn(`Unhandled shortcut action: ${action}`);
 			}
 		} catch (error) {
-			console.error(`Error handling shortcut action ${action}:`, error);
+			logger.error(`Error handling shortcut action ${action}:`, error);
 		}
 	}
 
@@ -121,7 +124,7 @@ export class ShortcutActionsHandler {
 				toast.error(m.toast_unknown_error());
 			}
 		} catch (error) {
-			console.error("Failed to create branch:", error);
+			logger.error("Failed to create branch:", error);
 			toast.error(m.toast_unknown_error());
 		}
 	}
@@ -165,7 +168,7 @@ export class ShortcutActionsHandler {
 				toast.error(m.toast_unknown_error());
 			}
 		} catch (error) {
-			console.error("Failed to branch and send:", error);
+			logger.error("Failed to branch and send:", error);
 			toast.error(m.toast_unknown_error());
 		}
 	}
@@ -234,7 +237,7 @@ export class ShortcutActionsHandler {
 		// Delete thread first (before closing tab, which broadcasts "thread-list-updated")
 		const success = await threadsState.deleteThread(threadId);
 		if (!success) {
-			console.error("Failed to delete thread:", threadId);
+			logger.error("Failed to delete thread:", threadId);
 			return;
 		}
 
@@ -263,7 +266,7 @@ export class ShortcutActionsHandler {
 	}
 
 	private handleTogglePlanMode(): void {
-		console.log(
+		logger.info(
 			`[RendererActionsHandler] handleTogglePlanMode. Enabled: ${codeAgentState.enabled}, InPlanMode: ${codeAgentState.inPlanMode}`,
 		);
 		if (!codeAgentState.enabled) return;

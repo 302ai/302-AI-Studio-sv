@@ -23,6 +23,9 @@ import type { IHookManager } from "./types";
 import { dialog, BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import { storageService } from "../services/storage-service";
 import { broadcastService } from "../services/broadcast-service";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("plugin");
 
 /**
  * Create a dummy IPC event for internal API calls
@@ -127,11 +130,11 @@ function createUIAPI(plugin: InstalledPlugin): PluginUIAPI {
 	return {
 		registerComponent(name: string, component: typeof import("svelte").SvelteComponent): void {
 			if (componentRegistry.has(name)) {
-				console.warn(`[PluginAPI] Component ${name} already registered, overwriting...`);
+				logger.warn(`[PluginAPI] Component ${name} already registered, overwriting...`);
 			}
 
 			componentRegistry.set(name, component);
-			console.log(`[PluginAPI] Registered component: ${name} for plugin ${plugin.metadata.id}`);
+			logger.info(`[PluginAPI] Registered component: ${name} for plugin ${plugin.metadata.id}`);
 		},
 
 		showNotification(
@@ -145,7 +148,7 @@ function createUIAPI(plugin: InstalledPlugin): PluginUIAPI {
 				message,
 				type,
 			});
-			console.log(`[PluginAPI] Notification from ${plugin.metadata.name}: [${type}] ${message}`);
+			logger.info(`[PluginAPI] Notification from ${plugin.metadata.name}: [${type}] ${message}`);
 		},
 
 		async showDialog(options: DialogOptions): Promise<DialogResult> {
@@ -190,19 +193,19 @@ function createLoggerAPI(plugin: InstalledPlugin): PluginLoggerAPI {
 
 	return {
 		debug(message: string, ...args: unknown[]): void {
-			console.debug(prefix, message, ...args);
+			logger.debug(prefix, message, ...args);
 		},
 
 		info(message: string, ...args: unknown[]): void {
-			console.log(prefix, message, ...args);
+			logger.info(prefix, message, ...args);
 		},
 
 		warn(message: string, ...args: unknown[]): void {
-			console.warn(prefix, message, ...args);
+			logger.warn(prefix, message, ...args);
 		},
 
 		error(message: string, ...args: unknown[]): void {
-			console.error(prefix, message, ...args);
+			logger.error(prefix, message, ...args);
 		},
 	};
 }

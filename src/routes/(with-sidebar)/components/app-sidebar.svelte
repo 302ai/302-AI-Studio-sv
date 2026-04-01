@@ -17,6 +17,9 @@
 	import RenameDialog from "./rename-dialog.svelte";
 	import ThreadDeleteDialog from "./thread-delete-dialog.svelte";
 	import ThreadItem from "./thread-item.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let searchInputElement: HTMLInputElement | null = $state(null);
 	let groupCollapsedState = $state<Record<TimeGroup, boolean>>({
@@ -137,7 +140,7 @@
 			);
 		});
 
-		console.log("Grouped threads:", groups);
+		logger.info("Grouped threads:", groups);
 
 		return groups;
 	});
@@ -202,18 +205,18 @@
 							};
 						}
 						// Session not found in sessionInfos
-						// console.error(
+						// logger.error(
 						// 	`Session ${currentSessionId} not found in sandbox ${sandboxId} sessionInfos`,
 						// );
 						return { isCodeAgent: false };
 					}
 					// Sandbox not found in local state
-					// console.error(`Sandbox ${sandboxId} not found in local state`);
+					// logger.error(`Sandbox ${sandboxId} not found in local state`);
 					return { isCodeAgent: false };
 				}
 			}
 		} catch (error) {
-			console.error("Error checking code agent status:", error);
+			logger.error("Error checking code agent status:", error);
 		}
 
 		return { isCodeAgent: false };
@@ -274,7 +277,7 @@
 		// Delete thread first (before closing tab, which broadcasts "thread-list-updated")
 		const success = await threadsState.deleteThread(threadId);
 		if (!success) {
-			console.error("Failed to delete thread:", threadId);
+			logger.error("Failed to delete thread:", threadId);
 			return;
 		}
 

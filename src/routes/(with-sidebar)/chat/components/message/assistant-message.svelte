@@ -57,6 +57,9 @@
 	import MessageContextMenu from "./message-context-menu.svelte";
 	import ToolCallModal from "./tool-call-modal.svelte";
 	import { formatTimeAgo, getAssistantMessageContent } from "./utils";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let { message }: Props = $props();
 
@@ -183,7 +186,7 @@
 				const voices = window.speechSynthesis.getVoices();
 				if (voices.length > 0) {
 					speechSynthesisAvailable = true;
-					console.log("[ReadAloud] Speech synthesis available with", voices.length, "voices");
+					logger.info("Speech synthesis available with", voices.length, "voices");
 				}
 			};
 
@@ -238,7 +241,7 @@
 				toast.error(m.toast_unknown_error());
 			}
 		} catch (error) {
-			console.error("Failed to create branch:", error);
+			logger.error("Failed to create branch:", error);
 			toast.error(m.toast_unknown_error());
 		}
 	}
@@ -255,7 +258,7 @@
 			await downloadImage(src);
 			toast.success(m.toast_download_file_success({ fileName: "image" }));
 		} catch (error) {
-			console.error("Failed to download image:", error);
+			logger.error("Failed to download image:", error);
 			toast.error(m.toast_download_failed());
 		}
 	}
@@ -265,7 +268,7 @@
 			await copyImageToClipboard(src);
 			toast.success(m.toast_copied_success());
 		} catch (error) {
-			console.error("Failed to copy image:", error);
+			logger.error("Failed to copy image:", error);
 			toast.error(m.toast_copied_failed());
 		}
 	}
@@ -300,11 +303,11 @@
 
 			// Get available voices - wait for them to load if necessary
 			let voices = window.speechSynthesis.getVoices();
-			console.log("[ReadAloud] Initial voices:", voices.length);
+			logger.info("Initial voices:", voices.length);
 
 			if (voices.length === 0) {
 				// Wait for voices to load
-				console.log("[ReadAloud] Waiting for voices to load...");
+				logger.info("Waiting for voices to load...");
 				voices = await new Promise<SpeechSynthesisVoice[]>((resolve) => {
 					let timeout: NodeJS.Timeout;
 
@@ -312,7 +315,7 @@
 						const loadedVoices = window.speechSynthesis.getVoices();
 						if (loadedVoices.length > 0) {
 							clearTimeout(timeout);
-							console.log("[ReadAloud] Voices loaded:", loadedVoices.length, loadedVoices);
+							logger.info("Voices loaded:", loadedVoices.length, loadedVoices);
 							resolve(loadedVoices);
 						}
 					};
@@ -324,7 +327,7 @@
 
 					// Timeout after 3 seconds
 					timeout = setTimeout(() => {
-						console.log("[ReadAloud] Timeout waiting for voices");
+						logger.info("Timeout waiting for voices");
 						resolve([]);
 					}, 3000);
 				});
@@ -343,7 +346,7 @@
 			// Fallback to any available voice
 			if (!selectedVoice) {
 				selectedVoice = voices[0];
-				console.log("[ReadAloud] Using fallback voice:", selectedVoice.name, selectedVoice.lang);
+				logger.info("Using fallback voice:", selectedVoice.name, selectedVoice.lang);
 			}
 
 			utterance.voice = selectedVoice;
@@ -354,17 +357,17 @@
 
 			utterance.onstart = () => {
 				isReading = true;
-				console.log("[ReadAloud] Started reading");
+				logger.info("Started reading");
 			};
 
 			utterance.onend = () => {
 				isReading = false;
 				_currentUtterance = null;
-				console.log("[ReadAloud] Finished reading");
+				logger.info("Finished reading");
 			};
 
 			utterance.onerror = (event) => {
-				console.error("[ReadAloud] Error:", event);
+				logger.error("Error:", event);
 				isReading = false;
 				_currentUtterance = null;
 				if (!_isUserCancelled) {
@@ -377,8 +380,8 @@
 
 			// Start speaking
 			window.speechSynthesis.speak(utterance);
-			console.log(
-				"[ReadAloud] Speech synthesis started with voice:",
+			logger.info(
+				"Speech synthesis started with voice:",
 				utterance.voice.name,
 				utterance.voice.lang,
 			);

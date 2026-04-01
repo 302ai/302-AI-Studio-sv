@@ -1,4 +1,7 @@
 import type { ListSkillsResponse } from "$lib/api/skills/base-apis";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import { emitter, EventNames } from "$lib/event/emitter";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import * as m from "$lib/paraglide/messages";
@@ -107,7 +110,7 @@ class CodeAgentState {
 				this.localBaseUrl = url + "/api/v1";
 			}
 		} catch (error) {
-			console.error("[CodeAgentState] Failed to refresh local base URL:", error);
+			logger.error("Failed to refresh local base URL:", error);
 		}
 	}
 

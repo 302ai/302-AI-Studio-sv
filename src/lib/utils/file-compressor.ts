@@ -4,6 +4,9 @@
  */
 
 import imageCompression from "browser-image-compression";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export const MAX_SIZE_BYTES = 20 * 1024 * 1024; // 1MB in bytes
 const MAX_SIZE_MB = 20; // 1MB
@@ -52,7 +55,7 @@ export async function compressImage(file: File, maxSizeMB: number = MAX_SIZE_MB)
 	}
 
 	try {
-		console.log(`[Compression] Original file: ${file.name}, size: ${formatBytes(file.size)}`);
+		logger.info(`[Compression] Original file: ${file.name}, size: ${formatBytes(file.size)}`);
 
 		// Configure compression options
 		const options = {
@@ -69,17 +72,17 @@ export async function compressImage(file: File, maxSizeMB: number = MAX_SIZE_MB)
 			preserveExif: false,
 			// Progress callback (optional)
 			onProgress: (progress: number) => {
-				console.log(`[Compression] Progress: ${progress}%`);
+				logger.info(`[Compression] Progress: ${progress}%`);
 			},
 		};
 
 		// Compress the image
 		const compressedFile = await imageCompression(file, options);
 
-		console.log(
+		logger.info(
 			`[Compression] Compressed file: ${compressedFile.name}, size: ${formatBytes(compressedFile.size)}`,
 		);
-		console.log(
+		logger.info(
 			`[Compression] Compression ratio: ${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`,
 		);
 
@@ -88,11 +91,11 @@ export async function compressImage(file: File, maxSizeMB: number = MAX_SIZE_MB)
 
 		// Check base64 size
 		const base64Size = getBase64Size(dataURL);
-		console.log(`[Compression] Base64 size: ${formatBytes(base64Size)}`);
+		logger.info(`[Compression] Base64 size: ${formatBytes(base64Size)}`);
 
 		// If still too large, try more aggressive compression
 		if (base64Size > maxSizeMB * 1024 * 1024) {
-			console.warn(
+			logger.warn(
 				`[Compression] Base64 size still exceeds ${maxSizeMB}MB, trying more aggressive compression...`,
 			);
 
@@ -110,14 +113,14 @@ export async function compressImage(file: File, maxSizeMB: number = MAX_SIZE_MB)
 			const recompressedDataURL = await fileToDataURL(recompressedFile);
 
 			const recompressedBase64Size = getBase64Size(recompressedDataURL);
-			console.log(`[Compression] Recompressed base64 size: ${formatBytes(recompressedBase64Size)}`);
+			logger.info(`[Compression] Recompressed base64 size: ${formatBytes(recompressedBase64Size)}`);
 
 			return recompressedDataURL;
 		}
 
 		return dataURL;
 	} catch (error) {
-		console.error("[Compression] Error compressing image:", error);
+		logger.error("[Compression] Error compressing image:", error);
 		throw error;
 	}
 }
@@ -143,7 +146,7 @@ export async function compressFile(file: File, maxSizeMB: number = MAX_SIZE_MB):
 	const size = getBase64Size(dataURL);
 
 	if (size <= maxSizeBytes) {
-		console.log(
+		logger.info(
 			`[Compression] File ${file.name} is within size limit: ${formatBytes(size)} / ${formatBytes(maxSizeBytes)}`,
 		);
 		return dataURL;
@@ -151,7 +154,7 @@ export async function compressFile(file: File, maxSizeMB: number = MAX_SIZE_MB):
 
 	// Non-image files that are too large cannot be compressed easily
 	const errorMessage = `File "${file.name}" is too large (${formatBytes(size)}) and cannot be compressed. Maximum size is ${formatBytes(maxSizeBytes)}.`;
-	console.error(`[Compression] ${errorMessage}`);
+	logger.error(`[Compression] ${errorMessage}`);
 	throw new Error(errorMessage);
 }
 

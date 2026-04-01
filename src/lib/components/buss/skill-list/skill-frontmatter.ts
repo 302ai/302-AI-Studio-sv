@@ -1,4 +1,7 @@
 import YAML from "yaml";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export type SkillFrontMatterData = Record<string, unknown>;
 
@@ -26,7 +29,7 @@ export function parseSkillFrontMatter(content: string): ParsedSkillFrontMatter {
 			};
 		}
 	} catch (error) {
-		console.warn("解析 skill frontmatter 失败", error);
+		logger.warn("解析 skill frontmatter 失败", error);
 	}
 
 	return { data: {}, body };

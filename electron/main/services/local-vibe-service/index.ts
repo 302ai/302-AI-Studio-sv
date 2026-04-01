@@ -1,4 +1,7 @@
 import { getLocalSandboxHealthStatus } from "@electron/main/apis/code-agent";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 import { isLinux, isWin, PLATFORM } from "@electron/main/constants/index";
 import { OPENCLAW_DEFAULT_CONFIG } from "@electron/main/datas/openclaw-template";
 import { broadcastService } from "@electron/main/services/broadcast-service";
@@ -48,7 +51,7 @@ export class LocalVibeService {
 				fs.mkdirSync(dir, { recursive: true });
 			}
 		} catch (error) {
-			console.error("[LocalVibeService] Failed to initialize runtime directory:", error);
+			logger.error("Failed to initialize runtime directory:", error);
 		}
 	}
 
@@ -102,12 +105,12 @@ export class LocalVibeService {
 				fs.mkdirSync(targetDir, { recursive: true });
 			}
 
-			console.log(`[LocalVibeService] Copying ${sourcePath} to ${targetPath}`);
+			logger.info(`[LocalVibeService] Copying ${sourcePath} to ${targetPath}`);
 			await cp(sourcePath, targetPath, { recursive: true });
 
 			return { success: true };
 		} catch (error) {
-			console.error("[LocalVibeService] Copy to workspace failed:", error);
+			logger.error("Copy to workspace failed:", error);
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			return { success: false, error: errorMessage };
 		}
@@ -149,7 +152,7 @@ export class LocalVibeService {
 			const error = await shell.openPath(dir);
 			return error === "";
 		} catch (error) {
-			console.error("[LocalVibeService] Failed to open compose directory:", error);
+			logger.error("Failed to open compose directory:", error);
 			return false;
 		}
 	}
@@ -168,12 +171,12 @@ export class LocalVibeService {
 		try {
 			const error = await shell.openPath(targetDir);
 			if (error) {
-				console.error("[LocalVibeService] Failed to open path:", targetDir, error);
+				logger.error("Failed to open path:", targetDir, error);
 				return false;
 			}
 			return true;
 		} catch (error) {
-			console.error("[LocalVibeService] Failed to open workspace directory:", error);
+			logger.error("Failed to open workspace directory:", error);
 			return false;
 		}
 	}
@@ -211,20 +214,20 @@ export class LocalVibeService {
 	 */
 	async triggerSystemRestart(_event: IpcMainInvokeEvent): Promise<{ isOk: boolean }> {
 		if (process.platform !== "win32") {
-			console.log("[LocalVibeService] System restart not supported on this platform");
+			logger.info("System restart not supported on this platform");
 			return { isOk: false };
 		}
 
 		try {
-			console.log("[LocalVibeService] Triggering system restart in 10 seconds...");
+			logger.info("Triggering system restart in 10 seconds...");
 			// Use shutdown command to restart after 10 seconds
 			// /r = restart, /t 10 = 10 second delay
 			await execAsync("shutdown /r /t 10");
-			console.log("[LocalVibeService] System restart scheduled");
+			logger.info("System restart scheduled");
 			return { isOk: true };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[LocalVibeService] Failed to trigger system restart:", errorMessage);
+			logger.error("Failed to trigger system restart:", errorMessage);
 			return { isOk: false };
 		}
 	}
@@ -259,7 +262,7 @@ export class LocalVibeService {
 				fs.writeFileSync(runtimeComposePath, composeContent, "utf-8");
 			}
 		} catch (error) {
-			console.warn("[Local Vibe] Failed to normalize runtime compose:", error);
+			logger.warn("Failed to normalize runtime compose:", error);
 		}
 
 		// Ensure bind-mounted directories are writable by the container user.
@@ -271,7 +274,7 @@ export class LocalVibeService {
 			try {
 				fs.chmodSync(dir, 0o777);
 			} catch (error) {
-				console.warn("[Local Vibe] Failed to set writable permissions for:", dir, error);
+				logger.warn("Failed to set writable permissions for:", dir, error);
 			}
 		}
 
@@ -281,7 +284,7 @@ export class LocalVibeService {
 			}
 			fs.chmodSync(dbFilePath, 0o666);
 		} catch (error) {
-			console.warn("[Local Vibe] Failed to prepare runtime sqlite file:", error);
+			logger.warn("Failed to prepare runtime sqlite file:", error);
 		}
 
 		try {
@@ -311,7 +314,7 @@ export class LocalVibeService {
 			if (!fs.existsSync(openclawFilePath)) {
 				// New file: use template directly
 				finalConfig = templateConfig;
-				console.log("[Local Vibe] Creating new openclaw.json");
+				logger.info("Creating new openclaw.json");
 			} else {
 				// Existing file: merge template into existing config with forced API key override
 				const existingContent = fs.readFileSync(openclawFilePath, "utf-8");
@@ -340,13 +343,13 @@ export class LocalVibeService {
 						"skills.load",
 					);
 
-					console.log(
-						"[LocalVibeService] Updating openclaw.json template version from",
+					logger.info(
+						"Updating openclaw.json template version from",
 						vibeData.openclawJsonTemplateVersion,
 						"to",
 						OPENCLAW_DEFAULT_CONFIG._version,
 					);
-					console.log("[LocalVibeService] Override paths:", overridePaths);
+					logger.info("Override paths:", overridePaths);
 
 					await localVibeStorage.setData({
 						openclawJsonTemplateVersion: OPENCLAW_DEFAULT_CONFIG._version,
@@ -354,14 +357,14 @@ export class LocalVibeService {
 				}
 
 				finalConfig = this._mergeTemplateConfig(existingConfig, templateConfig, overridePaths);
-				console.log("[Local Vibe] Merged template updates into existing openclaw.json");
+				logger.info("Merged template updates into existing openclaw.json");
 			}
 
 			const presetContent = JSON.stringify(finalConfig, null, 2);
 			fs.writeFileSync(openclawFilePath, presetContent, "utf-8");
 			fs.chmodSync(openclawFilePath, 0o666);
 		} catch (error) {
-			console.warn("[Local Vibe] Failed to prepare openclaw.json file:", error);
+			logger.warn("Failed to prepare openclaw.json file:", error);
 		}
 
 		// Find available port for Sandbox (starting from default, will find next available if occupied)
@@ -402,9 +405,9 @@ export class LocalVibeService {
 			);
 		}
 
-		console.log("[Local Vibe] Runtime compose prepared at:", runtimeDir);
-		console.log("[Local Vibe] Allocated host port:", hostPort);
-		console.log("[Local Vibe] Allocated OpenClaw port:", openClawPort);
+		logger.info("Runtime compose prepared at:", runtimeDir);
+		logger.info("Allocated host port:", hostPort);
+		logger.info("Allocated OpenClaw port:", openClawPort);
 
 		return hostPort;
 	}
@@ -426,7 +429,7 @@ export class LocalVibeService {
 			// Get API key from provider storage
 			const { valid, apiKey } = await providerStorage.validate302AIProvider();
 			if (!valid || !apiKey) {
-				console.warn("[Local Vibe] No valid 302AI API key found, proceeding without injection");
+				logger.warn("No valid 302AI API key found, proceeding without injection");
 			}
 
 			// Prepare runtime compose with .env file (includes port detection)
@@ -440,7 +443,7 @@ export class LocalVibeService {
 			// This ensures we have the latest version for the current platform
 			const pullResult = await this.runPodmanComposePull();
 			if (!pullResult.isOk) {
-				console.warn("[Local Vibe] Auto-pull failed, trying to start anyway:", pullResult.error);
+				logger.warn("Auto-pull failed, trying to start anyway:", pullResult.error);
 			}
 
 			// Execute: podman-compose -f <path> up -d --force-recreate
@@ -462,26 +465,26 @@ export class LocalVibeService {
 						"podman-compose 未安装。请先安装 podman-compose。",
 						"podman-compose is not installed. Please install podman-compose first.",
 					);
-					console.error("[Local Vibe] podman-compose up -d error:", notInstalledMsg);
+					logger.error("podman-compose up -d error:", notInstalledMsg);
 					return { isOk: false, error: notInstalledMsg };
 				}
 
-				console.error("[Local Vibe] podman-compose up -d error:", errorMessage);
+				logger.error("podman-compose up -d error:", errorMessage);
 				return { isOk: false, error: errorMessage };
 			}
 
-			console.log("[Local Vibe] podman-compose up -d:", result.output);
+			logger.info("podman-compose up -d:", result.output);
 
 			// Background cleanup: Remove dangling images older than 24 hours
 			// This frees up disk space while providing a buffer period for newly pulled images
 			execAsync('podman image prune -f --filter "until=24h"').catch((err) => {
-				console.warn("[Local Vibe] Background image prune failed:", err);
+				logger.warn("Background image prune failed:", err);
 			});
 
 			return { isOk: true, port: hostPort, openClawPort, output: result.output };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[Local Vibe] podman-compose up -d error:", errorMessage);
+			logger.error("podman-compose up -d error:", errorMessage);
 			return { isOk: false, error: errorMessage };
 		}
 	}
@@ -513,15 +516,15 @@ export class LocalVibeService {
 			);
 
 			if (!result.isOk) {
-				console.error("[Local Vibe] podman-compose pull error:", result.output);
+				logger.error("podman-compose pull error:", result.output);
 				return { isOk: false, error: result.output };
 			}
 
-			console.log("[Local Vibe] podman-compose pull:", result.output);
+			logger.info("podman-compose pull:", result.output);
 			return { isOk: true, output: result.output };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[Local Vibe] podman-compose pull error:", errorMessage);
+			logger.error("podman-compose pull error:", errorMessage);
 			return { isOk: false, error: errorMessage };
 		}
 	}
@@ -556,19 +559,19 @@ export class LocalVibeService {
 				const errorMessage = result.output;
 				// Check if podman-compose command is not found - treat as non-fatal for stop
 				if (isCommandNotFound(errorMessage)) {
-					console.warn("[Local Vibe] podman-compose stop: podman-compose not found (non-fatal)");
+					logger.warn("podman-compose stop: podman-compose not found (non-fatal)");
 					return { isOk: true, output: "podman-compose not installed, nothing to stop" };
 				}
 
-				console.error("[Local Vibe] podman-compose stop error:", errorMessage);
+				logger.error("podman-compose stop error:", errorMessage);
 				return { isOk: false, error: errorMessage };
 			}
 
-			console.log("[Local Vibe] podman-compose stop:", result.output);
+			logger.info("podman-compose stop:", result.output);
 			return { isOk: true, output: result.output };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[Local Vibe] podman-compose stop error:", errorMessage);
+			logger.error("podman-compose stop error:", errorMessage);
 			return { isOk: false, error: errorMessage };
 		}
 	}
@@ -693,21 +696,16 @@ export class LocalVibeService {
 				const match = output.match(pattern);
 				if (match && match[1]) {
 					const password = match[1].trim();
-					console.log("[LocalVibeService] Extracted password (length):", password.length);
+					logger.info("Extracted password (length):", password.length);
 					return { success: true, password };
 				}
 			}
 
-			console.error(
-				"[LocalVibeService] Failed to parse AppleScript output. stdout:",
-				stdout,
-				"stderr:",
-				stderr,
-			);
+			logger.error("Failed to parse AppleScript output. stdout:", stdout, "stderr:", stderr);
 			return { success: false, error: await this.t("无法获取密码", "Failed to get password") };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[LocalVibeService] AppleScript error:", errorMessage);
+			logger.error("AppleScript error:", errorMessage);
 
 			// User cancelled - check various possible error messages
 			if (
@@ -923,9 +921,9 @@ export class LocalVibeService {
 			}
 
 			process.env.PATH = combinedPath;
-			console.log("[LocalVibeService] Refreshed process PATH (in-memory)");
+			logger.info("Refreshed process PATH (in-memory)");
 		} catch (error) {
-			console.error("[LocalVibeService] Failed to refresh PATH:", error);
+			logger.error("Failed to refresh PATH:", error);
 		}
 	}
 
@@ -939,17 +937,17 @@ export class LocalVibeService {
 		const startTime = Date.now();
 		const pollInterval = 2000; // Check every 2 seconds
 
-		console.log("[Local Vibe] Starting Podman readiness check...");
+		logger.info("Starting Podman readiness check...");
 
 		while (Date.now() - startTime < timeoutMs) {
 			try {
 				await execAsync("podman ps");
-				console.log("[Local Vibe] Podman is ready");
+				logger.info("Podman is ready");
 				return true;
 			} catch (error) {
 				// Podman not ready yet, log error and wait
 				const errorMsg = error instanceof Error ? error.message : String(error);
-				console.log("[Local Vibe] Podman not ready yet:", errorMsg.substring(0, 100));
+				logger.info("Podman not ready yet:", errorMsg.substring(0, 100));
 
 				// Check for WSL connection issues (Windows only)
 				if (
@@ -957,13 +955,13 @@ export class LocalVibeService {
 					(errorMsg.includes("Cannot connect to Podman") ||
 						errorMsg.includes("verify your connection"))
 				) {
-					console.log("[Local Vibe] WSL connection issue detected, attempting to fix...");
+					logger.info("WSL connection issue detected, attempting to fix...");
 					// Try to set ai302-machine as default for this session
 					try {
 						await execAsync("podman system connection default ai302-machine");
-						console.log("[Local Vibe] Set ai302-machine as default connection");
+						logger.info("Set ai302-machine as default connection");
 					} catch (_error) {
-						console.log("[Local Vibe] Failed to set default connection，, will retry...");
+						logger.info("Failed to set default connection，, will retry...");
 					}
 				}
 
@@ -971,7 +969,7 @@ export class LocalVibeService {
 			}
 		}
 
-		console.error(`[Local Vibe] Podman readiness check timed out after ${timeoutMs}ms`);
+		logger.error(`[Local Vibe] Podman readiness check timed out after ${timeoutMs}ms`);
 		return false;
 	}
 
@@ -1064,7 +1062,7 @@ export class LocalVibeService {
 			// Suppress error logging if operating (starting/stopping) or if it's a connection error
 			// unexpected errors should still be logged
 			if (!this.isOperating && !this.isExpectedSandboxHealthConnectionError(errorMessage)) {
-				console.error("[LocalVibeService] Local sandbox health check failed:", errorMessage);
+				logger.error("Local sandbox health check failed:", errorMessage);
 			}
 			return { isOk: true, isHealth: false, isOcHealth: false, error: errorMessage };
 		}
@@ -1230,7 +1228,7 @@ export class LocalVibeService {
 
 			return { isOk: true };
 		} catch (error) {
-			console.error("[LocalVibeService] Failed to start Podman health check:", error);
+			logger.error("Failed to start Podman health check:", error);
 			return { isOk: false };
 		}
 	}
@@ -1274,7 +1272,7 @@ export class LocalVibeService {
 
 			return { isOk: true };
 		} catch (error) {
-			console.error("[LocalVibeService] Failed to start Local Sandbox health check:", error);
+			logger.error("Failed to start Local Sandbox health check:", error);
 			return { isOk: false };
 		}
 	}
@@ -1290,7 +1288,7 @@ export class LocalVibeService {
 			}
 			return { isOk: true };
 		} catch (error) {
-			console.error("[LocalVibeService] Failed to stop Local Sandbox health check:", error);
+			logger.error("Failed to stop Local Sandbox health check:", error);
 			return { isOk: false };
 		}
 	}
@@ -1395,7 +1393,7 @@ export class LocalVibeService {
 			`;
 			await execAsync(`powershell.exe -Command "${psCommand.replace(/\n/g, " ")}"`);
 		} catch (error) {
-			console.error("[LocalVibeService] Failed to persist path:", error);
+			logger.error("Failed to persist path:", error);
 		}
 	}
 
@@ -1437,7 +1435,7 @@ export class LocalVibeService {
 				const scriptsPath = await this.detectPythonScriptsPath();
 				if (scriptsPath) {
 					await this.persistPathToUserRegistry(scriptsPath);
-					console.log("[LocalVibeService] Persisted Python Scripts to registry after install");
+					logger.info("Persisted Python Scripts to registry after install");
 				}
 				await this.refreshWindowsPath();
 			}
@@ -1508,7 +1506,7 @@ export class LocalVibeService {
 			if (!distributionInstallFn.has(id)) {
 				return distributionInstallFn.get("unknown")!.call(this);
 			}
-			console.log(id);
+			logger.info(id);
 			return distributionInstallFn.get(id)!.call(this);
 		}
 
@@ -1621,7 +1619,7 @@ export class LocalVibeService {
 		try {
 			await execAsync("podman machine stop ai302-machine");
 
-			console.log("[LocalVibeService] Cleaned up stale machine/connections for 'ai302-machine'");
+			logger.info("Cleaned up stale machine/connections for 'ai302-machine'");
 			broadcastService.broadcastChannelToAll("install-log", {
 				step: "init-podman",
 				type: "stdout",
@@ -1663,7 +1661,7 @@ export class LocalVibeService {
 			return { isOk: true };
 		}
 
-		console.log("[Local Vibe] Configuring WSL automount options in /etc/wsl.conf...");
+		logger.info("Configuring WSL automount options in /etc/wsl.conf...");
 		broadcastService.broadcastChannelToAll("install-log", {
 			step: "wsl-conf-configure",
 			type: "stdout",
@@ -1690,13 +1688,11 @@ export class LocalVibeService {
 		);
 
 		if (!result.isOk) {
-			console.error("[Local Vibe] Failed to configure wsl.conf:", result.output);
+			logger.error("Failed to configure wsl.conf:", result.output);
 			return { isOk: false };
 		}
 
-		console.log(
-			"[Local Vibe] wsl.conf written successfully, shutting down WSL to apply changes...",
-		);
+		logger.info("wsl.conf written successfully, shutting down WSL to apply changes...");
 
 		// Shutdown WSL so the new wsl.conf is picked up on next start
 		await this.runCommandWithBroadcast("wsl", ["--shutdown"], "wsl-shutdown");
@@ -1716,7 +1712,7 @@ export class LocalVibeService {
 		);
 
 		// Restart the Podman machine so the new wsl.conf takes effect
-		console.log("[Local Vibe] Restarting machine after WSL config...");
+		logger.info("Restarting machine after WSL config...");
 		const restartResult = await this.runCommandWithBroadcast(
 			"podman",
 			["machine", "start", "ai302-machine"],
@@ -1724,17 +1720,14 @@ export class LocalVibeService {
 		);
 
 		if (!restartResult.isOk && !restartResult.output.includes("already running")) {
-			console.error(
-				"[Local Vibe] Failed to restart machine after WSL config:",
-				restartResult.output,
-			);
+			logger.error("Failed to restart machine after WSL config:", restartResult.output);
 			return { isOk: false };
 		}
 
 		// Wait for machine to be ready again
 		const ready = await this.waitForPodmanReady(60_000);
 		if (!ready) {
-			console.error("[Local Vibe] Machine timed out after WSL config restart");
+			logger.error("Machine timed out after WSL config restart");
 			return { isOk: false };
 		}
 
@@ -1771,7 +1764,7 @@ export class LocalVibeService {
 			});
 			return info["ID"] || "unknown"; // example: 'debian', 'ubuntu', 'arch', 'manjaro'
 		} catch (err) {
-			console.error("read failed /etc/os-release:", err);
+			logger.error("read failed /etc/os-release:", err);
 			return "unknown";
 		}
 	}
@@ -1814,11 +1807,11 @@ export class LocalVibeService {
 				if (!distributionInstallFn.has(id)) {
 					return this._installPodmanDebianLinux();
 				}
-				console.log(id);
+				logger.info(id);
 				return distributionInstallFn.get(id)!.call(this);
 			})
 			.otherwise(() => {
-				console.error(`[LocalVibeService] Unsupported platform: ${platform}`);
+				logger.error(`[LocalVibeService] Unsupported platform: ${platform}`);
 				return { isOk: false };
 			});
 
@@ -2232,7 +2225,7 @@ export class LocalVibeService {
 		// For stop operations, if it's already stopping or operating, we can treat it as success
 		// or at least avoid redundant/conflicting commands.
 		if (this.isOperating) {
-			console.log("[Local Vibe] Operation already in progress, skipping redundant stop request");
+			logger.info("Operation already in progress, skipping redundant stop request");
 			return { isOk: true, output: "Stop already in progress" };
 		}
 
@@ -2246,18 +2239,15 @@ export class LocalVibeService {
 			// First, stop podman compose services (keeps containers for fast restart)
 			const composeResult = await this.runPodmanComposeStop();
 			if (composeResult.output) {
-				console.log(
-					"[Local Vibe] podman compose stop before stopping machine:",
-					composeResult.output,
-				);
+				logger.info("podman compose stop before stopping machine:", composeResult.output);
 			}
 			if (composeResult.error) {
-				console.error("[Local Vibe] podman compose stop error (non-fatal):", composeResult.error);
+				logger.error("podman compose stop error (non-fatal):", composeResult.error);
 			}
 
 			// On Linux, Podman runs rootless without a VM - skip machine stop
 			if (platform === "linux") {
-				console.log("[Local Vibe] Linux detected, skipping machine stop (rootless mode)");
+				logger.info("Linux detected, skipping machine stop (rootless mode)");
 
 				// Broadcast non-healthy status
 				broadcastService.broadcastChannelToAll("podman-health", {
@@ -2344,7 +2334,7 @@ export class LocalVibeService {
 			const composePath = fs.existsSync(runtimePath) ? runtimePath : getDockerComposePath();
 			await execAsync(`podman-compose -f "${composePath}" stop`);
 		} catch (e) {
-			console.error("[Local Vibe] forceStopPodman compose stop error:", e);
+			logger.error("forceStopPodman compose stop error:", e);
 		}
 
 		// 2. Stop machine (Linux runs rootless — no VM to stop)
@@ -2352,7 +2342,7 @@ export class LocalVibeService {
 			try {
 				await execAsync("podman machine stop ai302-machine");
 			} catch (e) {
-				console.error("[Local Vibe] forceStopPodman machine stop error:", e);
+				logger.error("forceStopPodman machine stop error:", e);
 			}
 		}
 	}
@@ -2378,12 +2368,12 @@ export class LocalVibeService {
 				// Sandbox is already running
 				const port = this.getRuntimePort() ?? DEFAULT_SANDBOX_PORT;
 				const openClawPort = this.getRuntimeOpenClawPort() ?? DEFAULT_OPENCLAW_PORT;
-				console.log("[Local Vibe] Local sandbox already running on port:", port);
+				logger.info("Local sandbox already running on port:", port);
 				return { isOk: true, port, openClawPort, wasAlreadyRunning: true };
 			}
 
 			// Sandbox is not running, start it
-			console.log("[Local Vibe] Local sandbox not running, starting...");
+			logger.info("Local sandbox not running, starting...");
 			const startResult = await this.startPodmanMachine(_event);
 
 			if (!startResult.isOk) {
@@ -2402,7 +2392,7 @@ export class LocalVibeService {
 			};
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[Local Vibe] Failed to ensure local sandbox running:", errorMessage);
+			logger.error("Failed to ensure local sandbox running:", errorMessage);
 			return { isOk: false, error: errorMessage, wasAlreadyRunning: false };
 		}
 	}
@@ -2432,7 +2422,7 @@ export class LocalVibeService {
 		try {
 			// On Linux, Podman runs rootless without a VM - skip machine start
 			if (platform === "linux") {
-				console.log("[Local Vibe] Linux detected, skipping machine start (rootless mode)");
+				logger.info("Linux detected, skipping machine start (rootless mode)");
 
 				// Execute podman compose up -d directly
 				const composeResult = await this.runPodmanComposeUp();
@@ -2471,7 +2461,7 @@ export class LocalVibeService {
 
 			// Initialize machine if it doesn't exist
 			if (!machineCheck.exists) {
-				console.log("[Local Vibe] Machine 'ai302-machine' does not exist, initializing...");
+				logger.info("Machine 'ai302-machine' does not exist, initializing...");
 				const initMsg = await this.t(
 					"Podman 机器不存在，正在初始化...",
 					"Podman machine does not exist, initializing...",
@@ -2498,7 +2488,7 @@ export class LocalVibeService {
 			//   (init may have set the values, but this ensures consistency)
 			const { data: localVibeData } = await localVibeStorage.getData();
 			if (localVibeData.needUpdateVmConfig) {
-				console.log("[Local Vibe] Applying VM config update (--cpus 4 --memory 4096)...");
+				logger.info("Applying VM config update (--cpus 4 --memory 4096)...");
 				await this.runCommandWithBroadcast(
 					"podman",
 					["machine", "set", "ai302-machine", "--cpus", "4", "--memory", "4096"],
@@ -2524,15 +2514,13 @@ export class LocalVibeService {
 				// Based on actual Podman error: "Error: unable to start "ai302-machine": already running"
 				if (errorMessage.includes("already running")) {
 					alreadyStarted = true;
-					console.log(
-						"[Local Vibe] Machine reports 'already running', checking if it's actually ready...",
-					);
+					logger.info("Machine reports 'already running', checking if it's actually ready...");
 
 					// Wait for Podman to be ready even if machine is already running
 					const ready = await this.waitForPodmanReady(60_000); // 60 second timeout
 					if (!ready) {
-						console.log(
-							"[Local Vibe] Podman not responding despite machine being 'running', attempting recovery...",
+						logger.info(
+							"Podman not responding despite machine being 'running', attempting recovery...",
 						);
 
 						// Machine reports running but not responding - try to stop and restart
@@ -2796,10 +2784,7 @@ export class LocalVibeService {
 			const newModels = this._buildModelConfig(existingModels, classified);
 			set(config, "agents.defaults.models", newModels);
 		} catch (error) {
-			console.warn(
-				"[Local Vibe] Failed to fetch and parse app-models for openclaw configuration",
-				error,
-			);
+			logger.warn("Failed to fetch and parse app-models for openclaw configuration", error);
 		}
 	}
 
@@ -2827,7 +2812,7 @@ export class LocalVibeService {
 			return { success: true };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[Local Vibe] Failed to update openclaw.json models:", errorMessage);
+			logger.error("Failed to update openclaw.json models:", errorMessage);
 			return { success: false, error: errorMessage };
 		}
 	}

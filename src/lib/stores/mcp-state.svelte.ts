@@ -1,4 +1,7 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import type { McpServer } from "@shared/storage/mcp";
 
 const persistedMcpState = new PersistedState<McpServer[]>("app-mcp-servers", []);
@@ -46,7 +49,7 @@ class McpState {
 						...updatedServer,
 						associatedWithAccount: false,
 					};
-					console.log(
+					logger.info(
 						`[MCP] Server "${s.name}" unlinked from account due to critical field change`,
 					);
 				}
@@ -91,7 +94,7 @@ class McpState {
 			const existingServer = this.getServerByName(server.name);
 			if (existingServer) {
 				skipped++;
-				console.log(`[MCP] Skipped server "${server.name}" - already exists`);
+				logger.info(`[MCP] Skipped server "${server.name}" - already exists`);
 			} else {
 				serversToAdd.push(server);
 				added++;
@@ -100,7 +103,7 @@ class McpState {
 
 		if (serversToAdd.length > 0) {
 			persistedMcpState.current = [...persistedMcpState.current, ...serversToAdd];
-			console.log(`[MCP] Added ${added} new servers`);
+			logger.info(`[MCP] Added ${added} new servers`);
 		}
 
 		return { added, skipped };
@@ -124,7 +127,7 @@ class McpState {
 		);
 		const removed = before - persistedMcpState.current.length;
 		if (removed > 0) {
-			console.log(`[MCP] Removed ${removed} account-associated servers`);
+			logger.info(`[MCP] Removed ${removed} account-associated servers`);
 		}
 		return removed;
 	}

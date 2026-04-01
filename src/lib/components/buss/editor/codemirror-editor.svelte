@@ -15,6 +15,9 @@
 	import { basicSetup, EditorView } from "codemirror";
 	import { onDestroy, onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		value: string;
@@ -72,7 +75,7 @@
 				{ dark: isDark },
 			);
 		} catch (error) {
-			console.warn("Failed to create theme from Shiki:", error);
+			logger.warn("Failed to create theme from Shiki:", error);
 			return null;
 		}
 	};
@@ -390,7 +393,7 @@
 					)
 				: null;
 		} catch (error) {
-			console.warn("Failed to create highlight style from Shiki:", error);
+			logger.warn("Failed to create highlight style from Shiki:", error);
 			return null;
 		}
 	};

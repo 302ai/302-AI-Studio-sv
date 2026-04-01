@@ -1,6 +1,9 @@
 import { m } from "$lib/paraglide/messages.js";
 import { toast } from "svelte-sonner";
 import { compressFile } from "./file-compressor";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 /**
  * Maximum number of attachments allowed per message
@@ -46,7 +49,7 @@ export async function generateFilePreview(file: File): Promise<string | undefine
 			const compressedDataURL = await compressFile(file);
 			return compressedDataURL;
 		} catch (error) {
-			console.error("[File Preview] Failed to compress image:", error);
+			logger.error("[File Preview] Failed to compress image:", error);
 			// Fallback to original if compression fails
 			return new Promise((resolve) => {
 				const reader = new FileReader();

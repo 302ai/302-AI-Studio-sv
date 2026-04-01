@@ -1,4 +1,7 @@
 import { deploySandboxProject, type DeploySandboxResponse } from "$lib/api/sandbox-deploy";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import { updateSessionNote } from "$lib/api/sandbox-session";
 import { listSkills } from "$lib/api/skills";
 import { type ListSkillsResponse } from "$lib/api/skills/base-apis";
@@ -155,7 +158,7 @@ class ClaudeCodeAgentState {
 		const metadata = message.metadata as any;
 		if (!metadata?.result?.preDeploy?.success) return null;
 
-		console.log("[ClaudeCodeAgentState] Pre-deploy check passed, triggering deployment...");
+		logger.info("Pre-deploy check passed, triggering deployment...");
 
 		if (!this.sandboxId) return null;
 
@@ -167,19 +170,19 @@ class ClaudeCodeAgentState {
 			});
 
 			if (result.success) {
-				console.log("[ClaudeCodeAgentState] Deployment successful:", result);
+				logger.info("Deployment successful:", result);
 				return result;
 			} else {
 				const errorMsg =
 					result.error || `Deploy API returned success=false (status: ${result.status})`;
-				console.error("[ClaudeCodeAgentState] Deployment failed:", result);
+				logger.error("Deployment failed:", result);
 				toast.error(`${m.toast_deploy_failed()}`);
 				this.#lastDeployApiError = errorMsg;
 				return null;
 			}
 		} catch (error) {
 			const errorMsg = String(error);
-			console.error("[ClaudeCodeAgentState] Deployment error:", error);
+			logger.error("Deployment error:", error);
 			toast.error(`${m.toast_deploy_failed()}: ${errorMsg}`);
 			this.#lastDeployApiError = errorMsg;
 			return null;
@@ -211,7 +214,7 @@ class ClaudeCodeAgentState {
 				url: match[4],
 				cover: match[5],
 			};
-			console.log("[ClaudeCodeAgentState] Parsed deploy info:", info);
+			logger.info("Parsed deploy info:", info);
 			return info;
 		}
 
@@ -225,7 +228,7 @@ class ClaudeCodeAgentState {
 			deployInfo.url,
 			deployInfo.id,
 		);
-		console.log("[ClaudeCodeAgentState] Deploy detected:", { isDeploy: true, deployInfo });
+		logger.info("Deploy detected:", { isDeploy: true, deployInfo });
 	}
 
 	/**
@@ -258,7 +261,7 @@ class ClaudeCodeAgentState {
 		errorText: string,
 		sendRetryMessage: (content: string) => Promise<void>,
 	): Promise<void> {
-		console.log(`[ClaudeCodeAgentState] Sending deploy error to model: ${errorText.slice(0, 200)}`);
+		logger.info(`[ClaudeCodeAgentState] Sending deploy error to model: ${errorText.slice(0, 200)}`);
 
 		// Delay to let UI settle
 		await new Promise((resolve) => setTimeout(resolve, 1500));

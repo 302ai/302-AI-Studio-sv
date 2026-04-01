@@ -1,4 +1,7 @@
 import type { ChatVariable } from "@shared/storage/chat-parameters";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 import type { ChatMessage } from "@shared/types";
 import { resolvePrompt } from "@shared/utils/chat-parameters";
 import { chatMessagesService } from "../chat-messages-service";
@@ -25,7 +28,7 @@ class ChatParametersService {
 	): Promise<ChatMessage[]> {
 		const previousMessages = await chatMessagesService.getMessagesByThreadId(threadId);
 
-		console.log(
+		logger.info(
 			"Resolving user prompt template variables for thread - before:",
 			JSON.stringify(previousMessages, null, 2),
 		);
@@ -38,7 +41,7 @@ class ChatParametersService {
 			if (targetIndex !== -1) {
 				// If target message exists in storage (e.g. regeneration), truncate everything after it
 				messagesToTruncate = previousMessages.slice(0, targetIndex + 1);
-				console.log(
+				logger.info(
 					"Truncated messages to target user message at index",
 					targetIndex,
 					"new length:",
@@ -53,7 +56,7 @@ class ChatParametersService {
 			// If user message is not the last message, truncate to include only messages up to and including the last user message
 			if (lastUserMessageIndex !== -1 && lastUserMessageIndex < previousMessages.length - 1) {
 				messagesToTruncate = previousMessages.slice(0, lastUserMessageIndex + 1);
-				console.log(
+				logger.info(
 					"Truncated messages to last user message at index",
 					lastUserMessageIndex,
 					"new length:",

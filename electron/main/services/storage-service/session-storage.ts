@@ -1,4 +1,7 @@
 import type { Model } from "@302ai/studio-plugin-sdk";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("storage");
 import type { SessionMetadata } from "@shared/storage/session";
 import { prefixStorage } from "@shared/types";
 import { isNull } from "es-toolkit";
@@ -16,7 +19,7 @@ class SessionStorage extends StorageService<SessionMetadata> {
 			if (isNull(data)) return null;
 			return data.latestUsedModel;
 		} catch (error) {
-			console.error("Failed to get latest model ID:", error);
+			logger.error("Failed to get latest model ID:", error);
 			return null;
 		}
 	}

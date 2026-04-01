@@ -16,6 +16,7 @@ export * from "./types/shortcut";
 
 // Re-export plugin types from SDK
 export * from "@302ai/studio-plugin-sdk";
+export type { LogCategory, LogLevel } from "./logger/types";
 
 // Import specific types for use in this file
 import type { Model, ModelCapability, ModelType } from "@302ai/studio-plugin-sdk";

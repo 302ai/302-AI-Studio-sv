@@ -26,6 +26,7 @@ export default defineConfig([
 		},
 		rules: {
 			"no-undef": "off",
+			"no-console": "error",
 			"@typescript-eslint/no-unused-vars": [
 				"error",
 				{
@@ -34,6 +35,12 @@ export default defineConfig([
 					caughtErrorsIgnorePattern: "^_",
 				},
 			],
+		},
+	},
+	{
+		files: ["packages/**/*", "scripts/**/*", "vite-plugins/**/*", "forge.config.ts"],
+		rules: {
+			"no-console": "off",
 		},
 	},
 	{

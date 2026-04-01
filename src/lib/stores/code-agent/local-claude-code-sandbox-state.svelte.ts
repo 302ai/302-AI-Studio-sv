@@ -1,4 +1,7 @@
 import { deleteLocalSession, listLocalSessions } from "$lib/api/sandbox-session";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import type { GroupedSelectData } from "$lib/components/buss/settings/setting-select.svelte";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
@@ -198,7 +201,7 @@ class LocalClaudeCodeSandboxState {
 				persistedLocalClaudeCodeSessionsState.current = response.session_list;
 			}
 		} catch (error) {
-			console.error("[LocalClaudeCodeSandboxState] Failed to refresh sessions:", error);
+			logger.error("Failed to refresh sessions:", error);
 		} finally {
 			this.isLoading = false;
 		}
@@ -260,11 +263,7 @@ class LocalClaudeCodeSandboxState {
 					try {
 						await window.electronAPI.codeAgentService.deleteWorkspaceDirectory(subPath);
 					} catch (error) {
-						console.error(
-							"[LocalClaudeCodeSandboxState] Failed to delete workspace directory:",
-							subPath,
-							error,
-						);
+						logger.error("Failed to delete workspace directory:", subPath, error);
 					}
 				}
 			}

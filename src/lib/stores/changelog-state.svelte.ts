@@ -1,4 +1,7 @@
 import { appInfo } from "$lib/app-info";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import {
 	fetchChangelog,
 	fetchLatestChangelog,
@@ -89,7 +92,7 @@ class ChangelogState {
 			const latest = await fetchLatestChangelog();
 			this.latestVersion = latest;
 		} catch (err) {
-			console.error("Failed to fetch latest changelog:", err);
+			logger.error("Failed to fetch latest changelog:", err);
 			this.latestVersion = null;
 		} finally {
 			this.loadingLatest = false;

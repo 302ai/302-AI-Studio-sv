@@ -1,4 +1,7 @@
 import { Cron } from "croner";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 
 export const CRON_EXPRESSION = {
 	/**
@@ -38,15 +41,15 @@ export class SchedulerService {
 				try {
 					await callback();
 				} catch (error) {
-					console.error(`[Scheduler] Task "${name}" failed:`, error);
+					logger.error(`[Scheduler] Task "${name}" failed:`, error);
 				}
 			});
 
 			this.jobs.set(name, job);
-			console.log(`[Scheduler] Task "${name}" scheduled with expression: ${cronExpression}`);
+			logger.info(`[Scheduler] Task "${name}" scheduled with expression: ${cronExpression}`);
 			return true;
 		} catch (error) {
-			console.error(`[Scheduler] Invalid cron expression: ${cronExpression}`, error);
+			logger.error(`[Scheduler] Invalid cron expression: ${cronExpression}`, error);
 			return false;
 		}
 	}
@@ -59,7 +62,7 @@ export class SchedulerService {
 
 		job.stop();
 		this.jobs.delete(name);
-		console.log(`[Scheduler] Task "${name}" removed`);
+		logger.info(`[Scheduler] Task "${name}" removed`);
 		return true;
 	}
 
@@ -74,7 +77,7 @@ export class SchedulerService {
 	stopAll(): void {
 		for (const [name, job] of this.jobs) {
 			job.stop();
-			console.log(`[Scheduler] Task "${name}" stopped`);
+			logger.info(`[Scheduler] Task "${name}" stopped`);
 		}
 		this.jobs.clear();
 	}

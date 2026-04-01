@@ -1,6 +1,9 @@
 import type { ModelProvider } from "@shared/storage/provider";
 import type { Model } from "@shared/types";
 import ky from "ky";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export interface DecomposeTaskRequest {
 	requirement: string;
@@ -30,7 +33,7 @@ export async function decomposeTasks(
 ): Promise<string[]> {
 	const port = serverPort ?? 8089;
 
-	console.log("[TaskDecomposer] Starting task decomposition with model:", model.id);
+	logger.info("[TaskDecomposer] Starting task decomposition with model:", model.id);
 
 	try {
 		const data: DecomposeTaskResponse = await ky
@@ -49,20 +52,20 @@ export async function decomposeTasks(
 			})
 			.json();
 
-		console.log("[TaskDecomposer] Received response:", data);
+		logger.info("[TaskDecomposer] Received response:", data);
 
 		if (!data.tasks || !Array.isArray(data.tasks)) {
-			console.error("[TaskDecomposer] Invalid response format:", data);
+			logger.error("[TaskDecomposer] Invalid response format:", data);
 			return [];
 		}
 
 		// Extract task contents
 		const taskContents = data.tasks.map((task) => task.content);
-		console.log("[TaskDecomposer] Decomposed tasks:", taskContents);
+		logger.info("[TaskDecomposer] Decomposed tasks:", taskContents);
 
 		return taskContents;
 	} catch (error) {
-		console.error("[TaskDecomposer] Error during task decomposition:", error);
+		logger.error("[TaskDecomposer] Error during task decomposition:", error);
 		throw error;
 	}
 }

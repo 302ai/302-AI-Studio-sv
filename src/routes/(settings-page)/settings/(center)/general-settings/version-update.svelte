@@ -18,6 +18,9 @@
 	import type { UpdateChannel } from "@shared/storage/general-settings";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	const { updaterService } = window.electronAPI;
 	const {
@@ -75,7 +78,7 @@
 			const isDownloaded = await updaterService.isUpdateDownloaded();
 			updateDownloaded = isDownloaded;
 		} catch (error) {
-			console.error("Failed to check update status:", error);
+			logger.error("Failed to check update status:", error);
 		}
 
 		// Fetch the latest changelog

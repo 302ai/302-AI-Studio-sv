@@ -5,6 +5,9 @@
  */
 
 import type { IpcMainInvokeEvent } from "electron";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 import type { PluginMarketEntry } from "@shared/types";
 import ky from "ky";
 import path from "path";
@@ -84,7 +87,7 @@ export class RegistryService {
 			const metadataPath = this.getCacheMetadataPath();
 
 			if (!(await fs.pathExists(cachePath))) {
-				console.log("[RegistryService] No cache file found");
+				logger.info("No cache file found");
 				return;
 			}
 
@@ -104,12 +107,12 @@ export class RegistryService {
 			}
 
 			if (this.cache && this.cacheMetadata) {
-				console.log(
+				logger.info(
 					`[RegistryService] Loaded cache with ${this.cache.plugins.length} plugins, age: ${Math.floor((Date.now() - this.cacheMetadata.timestamp) / 1000 / 60)} minutes`,
 				);
 			}
 		} catch (error) {
-			console.error("[RegistryService] Failed to load cache:", error);
+			logger.error("Failed to load cache:", error);
 			this.cache = null;
 			this.cacheMetadata = null;
 		}
@@ -139,9 +142,9 @@ export class RegistryService {
 			this.cache = data;
 			this.cacheMetadata = metadata;
 
-			console.log(`[RegistryService] Saved cache with ${data.plugins.length} plugins`);
+			logger.info(`[RegistryService] Saved cache with ${data.plugins.length} plugins`);
 		} catch (error) {
-			console.error("[RegistryService] Failed to save cache:", error);
+			logger.error("Failed to save cache:", error);
 		}
 	}
 
@@ -149,7 +152,7 @@ export class RegistryService {
 	 * Fetch registry from remote
 	 */
 	private async fetchRegistry(): Promise<RegistryData> {
-		console.log(`[RegistryService] Fetching registry from ${REGISTRY_CONFIG.url}`);
+		logger.info(`[RegistryService] Fetching registry from ${REGISTRY_CONFIG.url}`);
 
 		try {
 			const headers: Record<string, string> = {
@@ -172,7 +175,7 @@ export class RegistryService {
 
 			// Check if content was modified
 			if (response.status === 304) {
-				console.log("[RegistryService] Registry not modified, using cache");
+				logger.info("Registry not modified, using cache");
 				if (this.cache) {
 					// Update timestamp but keep existing cache
 					if (this.cacheMetadata) {
@@ -194,14 +197,14 @@ export class RegistryService {
 			// Save to cache
 			await this.saveCache(data, etag);
 
-			console.log(`[RegistryService] Successfully fetched ${data.plugins.length} plugins`);
+			logger.info(`[RegistryService] Successfully fetched ${data.plugins.length} plugins`);
 			return data;
 		} catch (error) {
-			console.error("[RegistryService] Failed to fetch registry:", error);
+			logger.error("Failed to fetch registry:", error);
 
 			// Fallback to cache if available
 			if (this.cache) {
-				console.log("[RegistryService] Using stale cache due to fetch error");
+				logger.info("Using stale cache due to fetch error");
 				return this.cache;
 			}
 
@@ -227,7 +230,7 @@ export class RegistryService {
 
 		// If cache is valid, return it
 		if (this.isCacheValid()) {
-			console.log("[RegistryService] Using valid cache");
+			logger.info("Using valid cache");
 			return this.cache!;
 		}
 
@@ -246,13 +249,13 @@ export class RegistryService {
 	 * Get all plugins from registry
 	 */
 	async getMarketplacePlugins(_event: IpcMainInvokeEvent): Promise<PluginMarketEntry[]> {
-		console.log("[RegistryService] Getting marketplace plugins");
+		logger.info("Getting marketplace plugins");
 
 		try {
 			const registry = await this.getRegistry();
 			return registry.plugins;
 		} catch (error) {
-			console.error("[RegistryService] Error getting marketplace plugins:", error);
+			logger.error("Error getting marketplace plugins:", error);
 			throw error;
 		}
 	}
@@ -264,14 +267,14 @@ export class RegistryService {
 		_event: IpcMainInvokeEvent,
 		pluginId: string,
 	): Promise<PluginMarketEntry | null> {
-		console.log(`[RegistryService] Getting marketplace plugin: ${pluginId}`);
+		logger.info(`[RegistryService] Getting marketplace plugin: ${pluginId}`);
 
 		try {
 			const registry = await this.getRegistry();
 			const plugin = registry.plugins.find((p) => p.metadata.id === pluginId);
 			return plugin || null;
 		} catch (error) {
-			console.error(`[RegistryService] Error getting marketplace plugin ${pluginId}:`, error);
+			logger.error(`[RegistryService] Error getting marketplace plugin ${pluginId}:`, error);
 			throw error;
 		}
 	}
@@ -283,7 +286,7 @@ export class RegistryService {
 		_event: IpcMainInvokeEvent,
 		query: string,
 	): Promise<PluginMarketEntry[]> {
-		console.log(`[RegistryService] Searching marketplace plugins: "${query}"`);
+		logger.info(`[RegistryService] Searching marketplace plugins: "${query}"`);
 
 		try {
 			const registry = await this.getRegistry();
@@ -302,10 +305,10 @@ export class RegistryService {
 					plugin.metadata.tags?.some((tag) => tag.toLowerCase().includes(searchTerm)),
 			);
 
-			console.log(`[RegistryService] Found ${filtered.length} plugins matching "${query}"`);
+			logger.info(`[RegistryService] Found ${filtered.length} plugins matching "${query}"`);
 			return filtered;
 		} catch (error) {
-			console.error(`[RegistryService] Error searching marketplace plugins:`, error);
+			logger.error(`[RegistryService] Error searching marketplace plugins:`, error);
 			throw error;
 		}
 	}
@@ -314,16 +317,16 @@ export class RegistryService {
 	 * Get featured plugins
 	 */
 	async getFeaturedPlugins(_event: IpcMainInvokeEvent): Promise<PluginMarketEntry[]> {
-		console.log("[RegistryService] Getting featured plugins");
+		logger.info("Getting featured plugins");
 
 		try {
 			const registry = await this.getRegistry();
 			const featured = registry.plugins.filter((p) => p.featured);
 
-			console.log(`[RegistryService] Found ${featured.length} featured plugins`);
+			logger.info(`[RegistryService] Found ${featured.length} featured plugins`);
 			return featured;
 		} catch (error) {
-			console.error("[RegistryService] Error getting featured plugins:", error);
+			logger.error("Error getting featured plugins:", error);
 			throw error;
 		}
 	}
@@ -332,7 +335,7 @@ export class RegistryService {
 	 * Refresh registry (force reload)
 	 */
 	async refreshRegistry(_event: IpcMainInvokeEvent): Promise<PluginMarketEntry[]> {
-		console.log("[RegistryService] Refreshing registry (force reload)");
+		logger.info("Refreshing registry (force reload)");
 
 		try {
 			// Clear cache metadata to force refresh
@@ -341,7 +344,7 @@ export class RegistryService {
 			const registry = await this.getRegistry();
 			return registry.plugins;
 		} catch (error) {
-			console.error("[RegistryService] Error refreshing registry:", error);
+			logger.error("Error refreshing registry:", error);
 			throw error;
 		}
 	}
@@ -350,7 +353,7 @@ export class RegistryService {
 	 * Clear registry cache
 	 */
 	async clearCache(_event: IpcMainInvokeEvent): Promise<void> {
-		console.log("[RegistryService] Clearing registry cache");
+		logger.info("Clearing registry cache");
 
 		try {
 			this.cache = null;
@@ -358,10 +361,10 @@ export class RegistryService {
 
 			if (await fs.pathExists(REGISTRY_CONFIG.cacheDir)) {
 				await fs.remove(REGISTRY_CONFIG.cacheDir);
-				console.log("[RegistryService] Cache cleared successfully");
+				logger.info("Cache cleared successfully");
 			}
 		} catch (error) {
-			console.error("[RegistryService] Error clearing cache:", error);
+			logger.error("Error clearing cache:", error);
 			throw error;
 		}
 	}

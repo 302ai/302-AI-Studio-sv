@@ -5,6 +5,9 @@
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { threadsState } from "$lib/stores/threads-state.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	async function handleStartNewSession() {
 		await tabBarState.handleNewTab(m.title_new_chat());
@@ -16,7 +19,7 @@
 		// Delete thread first (before closing tab, which broadcasts "thread-list-updated")
 		const success = await threadsState.deleteThread(threadId);
 		if (!success) {
-			console.error("Failed to delete thread:", threadId);
+			logger.error("Failed to delete thread:", threadId);
 			return;
 		}
 

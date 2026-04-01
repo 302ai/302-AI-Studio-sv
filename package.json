@@ -155,6 +155,7 @@
 		"croner": "^9.1.0",
 		"date-fns": "^4.1.0",
 		"dedent": "^1.7.0",
+		"electron-log": "^5.4.3",
 		"electron-squirrel-startup": "^1.0.1",
 		"electron-window-state": "^5.0.3",
 		"emoji-picker-element": "^1.27.0",

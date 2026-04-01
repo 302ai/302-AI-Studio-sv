@@ -120,6 +120,9 @@ importers:
       dedent:
         specifier: ^1.7.0
         version: 1.7.0
+      electron-log:
+        specifier: ^5.4.3
+        version: 5.4.3
       electron-squirrel-startup:
         specifier: ^1.0.1
         version: 1.0.1
@@ -3571,6 +3574,10 @@ packages:
     engines: {node: '>= 10.0.0'}
     os: [darwin, linux]
     hasBin: true
+
+  electron-log@5.4.3:
+    resolution: {integrity: sha512-sOUsM3LjZdugatazSQ/XTyNcw8dfvH1SYhXWiJyfYodAAKOZdHs0txPiLDXFzOZbhXgAgshQkshH2ccq0feyLQ==}
+    engines: {node: '>= 14'}
 
   electron-publish@24.13.1:
     resolution: {integrity: sha512-2ZgdEqJ8e9D17Hwp5LEq5mLQPjqU3lv/IALvgp+4W8VeNhryfGhYEQC/PgDPMrnWUp+l60Ou5SJLsu+k4mhQ8A==}
@@ -10691,6 +10698,8 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
     optional: true
+
+  electron-log@5.4.3: {}
 
   electron-publish@24.13.1:
     dependencies:

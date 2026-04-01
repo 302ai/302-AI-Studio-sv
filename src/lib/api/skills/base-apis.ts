@@ -2,6 +2,9 @@ import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 import { skill } from "@shared/types";
 import { type } from "arktype";
 import { getCodeAgentKy } from "../utils";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 function normalizeSkillRecord(value: unknown) {
 	if (!value || typeof value !== "object") {
@@ -85,12 +88,12 @@ export async function _listSkills(request: ListSkillsRequest): Promise<ListSkill
 
 		const validated = listSkillsResponseSchema(normalizeListSkillsResponse(response));
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate list skills response:", validated.summary);
+			logger.error("Failed to validate list skills response:", validated.summary);
 			throw new Error("Invalid response format from list skills API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to list skills:", error);
+		logger.error("Failed to list skills:", error);
 		throw error;
 	}
 }
@@ -127,12 +130,12 @@ export async function checkSkillDetails(
 			skill: normalizeSkillRecord((response as Record<string, unknown>)?.skill),
 		});
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate check skill details response:", validated.summary);
+			logger.error("Failed to validate check skill details response:", validated.summary);
 			throw new Error("Invalid response format from check skill details API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to check skill details:", error);
+		logger.error("Failed to check skill details:", error);
 		throw error;
 	}
 }
@@ -168,7 +171,7 @@ export async function _editSkillDetails(request: SkillDetailsRequest): Promise<B
 				}
 			}
 		}
-		console.error("Failed to edit skill details:", error);
+		logger.error("Failed to edit skill details:", error);
 		throw error;
 	}
 }
@@ -197,12 +200,12 @@ export async function _createSkill(zipFile: File): Promise<CreateSkillResponse> 
 
 		const validated = createSkillResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate create skill response:", validated.summary);
+			logger.error("Failed to validate create skill response:", validated.summary);
 			throw new Error("Invalid response format from create skill API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to create skill:", error);
+		logger.error("Failed to create skill:", error);
 		throw error;
 	}
 }
@@ -222,7 +225,7 @@ export async function _createSkillFromGitHub(githubUrl: string): Promise<CreateS
 
 		const validated = createSkillResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate create skill from GitHub response:", validated.summary);
+			logger.error("Failed to validate create skill from GitHub response:", validated.summary);
 			throw new Error("Invalid response format from create skill API");
 		}
 		return validated;
@@ -243,7 +246,7 @@ export async function _createSkillFromGitHub(githubUrl: string): Promise<CreateS
 				// Failed to parse error response JSON
 			}
 		}
-		console.error("Failed to create skill from GitHub:", error);
+		logger.error("Failed to create skill from GitHub:", error);
 		throw error;
 	}
 }
@@ -268,12 +271,12 @@ export async function deleteSkill(request: DeleteSkillRequest): Promise<DeleteSk
 
 		const validated = deleteSkillResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate delete skill response:", validated.summary);
+			logger.error("Failed to validate delete skill response:", validated.summary);
 			throw new Error("Invalid response format from delete skill API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to delete skill:", error);
+		logger.error("Failed to delete skill:", error);
 		throw error;
 	}
 }
@@ -300,12 +303,12 @@ export async function addSkillFavorite(
 
 		const validated = skillFavoriteResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate add skill favorite response:", validated.summary);
+			logger.error("Failed to validate add skill favorite response:", validated.summary);
 			throw new Error("Invalid response format from add skill favorite API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to add skill favorite:", error);
+		logger.error("Failed to add skill favorite:", error);
 		throw error;
 	}
 }
@@ -323,12 +326,12 @@ export async function cancelSkillFavorite(
 
 		const validated = skillFavoriteResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate cancel skill favorite response:", validated.summary);
+			logger.error("Failed to validate cancel skill favorite response:", validated.summary);
 			throw new Error("Invalid response format from cancel skill favorite API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to cancel skill favorite:", error);
+		logger.error("Failed to cancel skill favorite:", error);
 		throw error;
 	}
 }
@@ -377,12 +380,12 @@ export async function syncSkills(request: SyncSkillsRequest): Promise<SyncSkills
 
 		const validated = syncSkillsResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate sync skills response:", validated.summary);
+			logger.error("Failed to validate sync skills response:", validated.summary);
 			throw new Error("Invalid response format from sync skills API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to sync skills:", error);
+		logger.error("Failed to sync skills:", error);
 		throw error;
 	}
 }

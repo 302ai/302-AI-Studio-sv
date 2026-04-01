@@ -5,6 +5,9 @@ import { UNSUPPORTED_INJECTING_THEME } from "../constants";
 import { withExternalLinkHandler } from "../mixins/web-contents-mixins";
 import { generalSettingsStorage } from "../services/storage-service/general-settings-storage";
 import { TempStorage } from "../utils/temp-storage";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 
 // Context menu labels for i18n
 const contextMenuLabels = {
@@ -136,7 +139,7 @@ export class WebContentsFactory {
 		const isUnsupported = UNSUPPORTED_INJECTING_THEME.some((domain) =>
 			new URL(url).hostname.endsWith(`${domain}`),
 		);
-		console.log(`Applying theme to ${url}`, isUnsupported);
+		logger.info(`Applying theme to ${url}`, isUnsupported);
 		if (isUnsupported) return;
 		if (webContents.isDestroyed()) return;
 
@@ -157,7 +160,7 @@ export class WebContentsFactory {
 		`;
 
 		webContents.insertCSS(themeCSS).catch((err) => {
-			console.warn("Failed to inject theme CSS:", err);
+			logger.warn("Failed to inject theme CSS:", err);
 		});
 
 		webContents
@@ -240,7 +243,7 @@ export class WebContentsFactory {
 		`,
 			)
 			.catch((err) => {
-				console.warn("Failed to set color-scheme:", err);
+				logger.warn("Failed to set color-scheme:", err);
 			});
 	}
 

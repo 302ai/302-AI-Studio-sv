@@ -4,6 +4,9 @@ import type {
 	CodeAgentMetadata,
 } from "@shared/storage/code-agent";
 import { prefixStorage } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("storage");
 import { isNull } from "es-toolkit";
 import { StorageService } from "..";
 
@@ -31,7 +34,7 @@ class ClaudeCodeStorage extends StorageService<CodeAgentMetadata> {
 			await this.setItemInternal(key, codeAgentMetadata);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error setting Claude code sandbox ID:", error);
+			logger.error("Error setting Claude code sandbox ID:", error);
 			return { isOK: false };
 		}
 	}
@@ -43,7 +46,7 @@ class ClaudeCodeStorage extends StorageService<CodeAgentMetadata> {
 			if (isNull(codeAgentMetadata)) return { isOK: false, sandboxId: "" };
 			return { isOK: true, sandboxId: codeAgentMetadata.sandboxId };
 		} catch (error) {
-			console.error("Error getting Claude code sandbox ID:", error);
+			logger.error("Error getting Claude code sandbox ID:", error);
 			return { isOK: false, sandboxId: "" };
 		}
 	}
@@ -57,7 +60,7 @@ class ClaudeCodeStorage extends StorageService<CodeAgentMetadata> {
 			await this.setItemInternal(key, codeAgentMetadata);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error setting Claude code model:", error);
+			logger.error("Error setting Claude code model:", error);
 			return { isOK: false };
 		}
 	}
@@ -76,7 +79,7 @@ class ClaudeCodeStorage extends StorageService<CodeAgentMetadata> {
 			await this.setItemInternal(key, codeAgentMetadata);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error updating Claude code sessions:", error);
+			logger.error("Error updating Claude code sessions:", error);
 			return { isOK: false };
 		}
 	}
@@ -96,7 +99,7 @@ class ClaudeCodeSandboxStorage extends StorageService<ClaudeCodeSandboxInfo[]> {
 			if (isNull(sandboxes)) return { isOK: false, sandboxes: [] };
 			return { isOK: true, sandboxes };
 		} catch (error) {
-			console.error("Error getting Claude code sandboxes:", error);
+			logger.error("Error getting Claude code sandboxes:", error);
 			return { isOK: false, sandboxes: [] };
 		}
 	}
@@ -106,7 +109,7 @@ class ClaudeCodeSandboxStorage extends StorageService<ClaudeCodeSandboxInfo[]> {
 			await this.setItemInternal(this.prefix, list);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error setting Claude code sandboxes:", error);
+			logger.error("Error setting Claude code sandboxes:", error);
 			return { isOK: false };
 		}
 	}
@@ -138,7 +141,7 @@ class ClaudeCodeSandboxStorage extends StorageService<ClaudeCodeSandboxInfo[]> {
 			await this.setItemInternal(this.prefix, sandboxes);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error adding Claude code sandbox:", error);
+			logger.error("Error adding Claude code sandbox:", error);
 			return { isOK: false };
 		}
 	}
@@ -159,7 +162,7 @@ class ClaudeCodeSandboxStorage extends StorageService<ClaudeCodeSandboxInfo[]> {
 			await this.setItemInternal(this.prefix, sandboxes);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error setting Claude code sessions:", error);
+			logger.error("Error setting Claude code sessions:", error);
 			return { isOK: false };
 		}
 	}

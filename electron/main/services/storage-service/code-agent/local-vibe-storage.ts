@@ -1,4 +1,7 @@
 import { PLATFORM } from "@electron/main/constants";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("storage");
 import { type LocalVibeStorageData } from "@shared/storage/code-agent";
 import { prefixStorage } from "@shared/types";
 import { isNull } from "es-toolkit";
@@ -32,7 +35,7 @@ class LocalVibeStorage extends StorageService<LocalVibeStorageData> {
 			if (isNull(data)) return { isOK: false, data: DEFAULT_DATA };
 			return { isOK: true, data: { ...DEFAULT_DATA, ...data } };
 		} catch (error) {
-			console.error("Error getting local vibe storage data:", error);
+			logger.error("Error getting local vibe storage data:", error);
 			return { isOK: false, data: DEFAULT_DATA };
 		}
 	}
@@ -43,7 +46,7 @@ class LocalVibeStorage extends StorageService<LocalVibeStorageData> {
 			await this.setItemInternal(STORAGE_KEY, { ...current, ...data });
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error setting local vibe storage data:", error);
+			logger.error("Error setting local vibe storage data:", error);
 			return { isOK: false };
 		}
 	}

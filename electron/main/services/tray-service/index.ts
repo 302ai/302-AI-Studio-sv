@@ -1,4 +1,7 @@
 import type { LanguageCode } from "@shared/storage/general-settings";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("tray");
 import { app, Menu, nativeImage, Tray } from "electron";
 import path from "node:path";
 import { isLinux, isMac } from "../../constants";
@@ -52,7 +55,7 @@ export class TrayService {
 	 */
 	async init(): Promise<void> {
 		if (this.tray) {
-			console.log("[TrayService] Tray already initialized");
+			logger.info("Tray already initialized");
 			return;
 		}
 
@@ -83,9 +86,9 @@ export class TrayService {
 				this.showMainWindow();
 			});
 
-			console.log("[TrayService] Tray initialized successfully");
+			logger.info("Tray initialized successfully");
 		} catch (error) {
-			console.error("[TrayService] Failed to initialize tray:", error);
+			logger.error("Failed to initialize tray:", error);
 		}
 	}
 
@@ -221,7 +224,7 @@ export class TrayService {
 		if (this.tray) {
 			this.tray.destroy();
 			this.tray = null;
-			console.log("[TrayService] Tray destroyed");
+			logger.info("Tray destroyed");
 		}
 	}
 }

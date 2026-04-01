@@ -42,6 +42,9 @@ import {
 	sendStreamError,
 	uploadAttachmentsFromMessages,
 } from "./utils";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 
 export type RouterRequestBody = {
 	baseUrl?: string;
@@ -234,7 +237,8 @@ app.post("/chat/302ai", async (c) => {
 		contextSummary?: string;
 		compressedMessageCount?: number;
 	}>();
-	console.log(
+	logger.info(
+		"Router request params:",
 		baseUrl,
 		model,
 		apiKey,
@@ -292,14 +296,14 @@ app.post("/chat/302ai", async (c) => {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
 				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
-				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+				logger.info(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
-			console.error("Failed to load MCP tools:", error);
+			logger.error("Failed to load MCP tools:", error);
 		}
 	}
 	let resolvedMessages = messages;
-	console.log(
+	logger.info(
 		"Resolving user prompt template variables for thread - before:",
 		JSON.stringify(resolvedMessages, null, 2),
 	);
@@ -323,7 +327,7 @@ app.post("/chat/302ai", async (c) => {
 		}
 	}
 
-	console.log(
+	logger.info(
 		"Resolving user prompt template variables for thread - after:",
 		JSON.stringify(resolvedMessages, null, 2),
 	);
@@ -365,7 +369,7 @@ app.post("/chat/302ai", async (c) => {
 
 	// Check if model supports streaming (image generation models don't)
 	if (!isStreamingSupported(model)) {
-		console.log(`[302ai] Model ${model} does not support streaming, using generateText`);
+		logger.info(`[302ai] Model ${model} does not support streaming, using generateText`);
 
 		const streamTextOptions = {
 			...baseConfig,
@@ -419,12 +423,12 @@ app.post("/chat/302ai", async (c) => {
 		}),
 	});
 
-	console.log("[302ai] Stream created successfully, returning response");
+	logger.info("[302ai] Stream created successfully, returning response");
 
 	// 	const debugStream = stream.pipeThrough(
 	// 	new TransformStream({
 	// 		transform(chunk, controller) {
-	// 			console.debug("Stream chunk:", chunk);
+	// 			logger.debug("Stream chunk:", chunk);
 	// 			controller.enqueue(chunk);
 	// 		},
 	// 	}),
@@ -502,10 +506,10 @@ app.post("/chat/openai", async (c) => {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
 				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
-				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+				logger.info(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
-			console.error("Failed to load MCP tools:", error);
+			logger.error("Failed to load MCP tools:", error);
 		}
 	}
 
@@ -566,7 +570,7 @@ app.post("/chat/openai", async (c) => {
 
 	// Check if model supports streaming (image generation models don't)
 	if (!isStreamingSupported(model)) {
-		console.log(`[openai] Model ${model} does not support streaming, using generateText`);
+		logger.info(`[openai] Model ${model} does not support streaming, using generateText`);
 
 		// Use createUIMessageStreamFromGenerator for immediate start event and async content generation
 		const stream = createUIMessageStreamFromGenerator(
@@ -623,7 +627,7 @@ app.post("/chat/openai", async (c) => {
 		}),
 	});
 
-	console.log("[openai] Stream created successfully, returning response");
+	logger.info("[openai] Stream created successfully, returning response");
 
 	// AI SDK's createUIMessageStreamResponse automatically handles:
 	// - controller.close() in all paths (success, error, abort)
@@ -695,10 +699,10 @@ app.post("/chat/anthropic", async (c) => {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
 				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
-				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+				logger.info(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
-			console.error("Failed to load MCP tools:", error);
+			logger.error("Failed to load MCP tools:", error);
 		}
 	}
 
@@ -759,7 +763,7 @@ app.post("/chat/anthropic", async (c) => {
 
 	// Check if model supports streaming (image generation models don't)
 	if (!isStreamingSupported(model)) {
-		console.log(`[anthropic] Model ${model} does not support streaming, using generateText`);
+		logger.info(`[anthropic] Model ${model} does not support streaming, using generateText`);
 
 		// Use createUIMessageStreamFromGenerator for immediate start event and async content generation
 		const stream = createUIMessageStreamFromGenerator(
@@ -816,7 +820,7 @@ app.post("/chat/anthropic", async (c) => {
 		}),
 	});
 
-	console.log("[anthropic] Stream created successfully, returning response");
+	logger.info("[anthropic] Stream created successfully, returning response");
 
 	// AI SDK's createUIMessageStreamResponse automatically handles:
 	// - controller.close() in all paths (success, error, abort)
@@ -888,10 +892,10 @@ app.post("/chat/gemini", async (c) => {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
 				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
-				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+				logger.info(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
-			console.error("Failed to load MCP tools:", error);
+			logger.error("Failed to load MCP tools:", error);
 		}
 	}
 
@@ -951,7 +955,7 @@ app.post("/chat/gemini", async (c) => {
 
 	// Check if model supports streaming (image generation models don't)
 	if (!isStreamingSupported(model)) {
-		console.log(`[gemini] Model ${model} does not support streaming, using generateText`);
+		logger.info(`[gemini] Model ${model} does not support streaming, using generateText`);
 
 		// Use createUIMessageStreamFromGenerator for immediate start event and async content generation
 		const stream = createUIMessageStreamFromGenerator(
@@ -1008,7 +1012,7 @@ app.post("/chat/gemini", async (c) => {
 		}),
 	});
 
-	console.log("[gemini] Stream created successfully, returning response");
+	logger.info("[gemini] Stream created successfully, returning response");
 
 	// AI SDK's createUIMessageStreamResponse automatically handles:
 	// - controller.close() in all paths (success, error, abort)
@@ -1146,7 +1150,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
 			summary = parsed.summary || "";
 		} catch {
 			// Fallback: if JSON parsing fails, use the whole text as title
-			console.warn("Failed to parse title generation JSON response, using fallback");
+			logger.warn("Failed to parse title generation JSON response, using fallback");
 			// Strip any thinking tags from fallback text too
 			let fallbackText = text.trim();
 			fallbackText = fallbackText.replace(
@@ -1161,7 +1165,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
 
 		return c.json({ title, summary });
 	} catch (error) {
-		console.error("Title generation error:", error);
+		logger.error("Title generation error:", error);
 		return c.json({ error: "Failed to generate title" }, 500);
 	}
 });
@@ -1304,7 +1308,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
 			summary = parsed.summary || "";
 		} catch {
 			// Fallback: if JSON parsing fails, use the raw text as summary
-			console.warn("Failed to parse context summary JSON response, using fallback");
+			logger.warn("Failed to parse context summary JSON response, using fallback");
 			// Strip any thinking tags from fallback text too
 			let fallbackText = text.trim();
 			fallbackText = fallbackText.replace(
@@ -1318,7 +1322,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
 
 		return c.json({ summary });
 	} catch (error) {
-		console.error("Context summary generation error:", error);
+		logger.error("Context summary generation error:", error);
 		return c.json({ error: "Failed to generate context summary" }, 500);
 	}
 });
@@ -1382,7 +1386,7 @@ app.post("/generate-suggestions", async (c) => {
 	}
 
 	try {
-		console.log("[Suggestions] Starting to generate suggestions...");
+		logger.info("[Suggestions] Starting to generate suggestions...");
 		const convertedMessages = await convertToModelMessages(enhanceMessagesWithFeedback(messages));
 		const { text } = await generateText({
 			model: languageModel,
@@ -1395,7 +1399,7 @@ app.post("/generate-suggestions", async (c) => {
 			],
 		});
 
-		console.log("[Suggestions] Received text:", text);
+		logger.info("[Suggestions] Received text:", text);
 
 		// Parse the JSON array
 		try {
@@ -1410,17 +1414,17 @@ app.post("/generate-suggestions", async (c) => {
 
 			const suggestions = JSON.parse(cleanText);
 			if (Array.isArray(suggestions)) {
-				console.log("[Suggestions] Parsed suggestions:", suggestions);
+				logger.info("[Suggestions] Parsed suggestions:", suggestions);
 				return c.json({ suggestions: suggestions.slice(0, count) });
 			}
-			console.log("[Suggestions] Invalid suggestions format");
+			logger.info("[Suggestions] Invalid suggestions format");
 			return c.json({ error: "Invalid suggestions format" }, 500);
 		} catch (parseError) {
-			console.error("[Suggestions] Failed to parse JSON:", parseError);
+			logger.error("[Suggestions] Failed to parse JSON:", parseError);
 			return c.json({ error: "Failed to parse suggestions" }, 500);
 		}
 	} catch (error) {
-		console.error("[Suggestions] Failed to generate suggestions:", error);
+		logger.error("[Suggestions] Failed to generate suggestions:", error);
 		return c.json({ error: "Failed to generate suggestions" }, 500);
 	}
 });
@@ -1530,7 +1534,7 @@ app.post("/decompose-tasks", async (c) => {
 			],
 		});
 
-		console.log("[TaskDecompose] Received text:", text);
+		logger.info("[TaskDecompose] Received text:", text);
 
 		// Parse the JSON response
 		let jsonStr = text.trim();
@@ -1544,20 +1548,20 @@ app.post("/decompose-tasks", async (c) => {
 
 		const parsed = JSON.parse(jsonStr);
 		if (parsed.tasks && Array.isArray(parsed.tasks)) {
-			console.log("[TaskDecompose] Parsed tasks:", parsed.tasks.length);
+			logger.info("[TaskDecompose] Parsed tasks:", parsed.tasks.length);
 			return parsed.tasks;
 		} else {
-			console.log("[TaskDecompose] Invalid response format");
+			logger.info("[TaskDecompose] Invalid response format");
 			return [];
 		}
 	};
 
 	try {
-		console.log("[TaskDecompose] Starting task decomposition with model:", model);
+		logger.info("[TaskDecompose] Starting task decomposition with model:", model);
 		const tasks = await doDecompose(languageModel);
 		return c.json({ tasks });
 	} catch (error) {
-		console.error("[TaskDecompose] Model failed:", error);
+		logger.error("[TaskDecompose] Model failed:", error);
 		// Return error - let frontend handle retry with different model
 		return c.json({ error: "Failed to decompose tasks" }, 500);
 	}
@@ -1588,7 +1592,7 @@ app.post("/chat/302ai-code-agent", async (c) => {
 	const { data: globalConfigs } = await codeAgentGlobalConfigsStorage.getGlobalConfigs();
 	if (globalConfigs.lastVibeMode !== currentVibeMode) {
 		await codeAgentGlobalConfigsStorage.setLastVibeMode(currentVibeMode);
-		console.log("[302ai-code-agent] Updated lastVibeMode to:", currentVibeMode);
+		logger.info("[302ai-code-agent] Updated lastVibeMode to:", currentVibeMode);
 	}
 
 	const { data: codeAgentConfig } = await codeAgentService.getCodeAgentConfig(threadId);
@@ -1598,10 +1602,10 @@ app.post("/chat/302ai-code-agent", async (c) => {
 	const currentAgentId = codeAgentConfig.currentAgentId as CodingAgentClass;
 	if (globalConfigs.lastAgentId !== currentAgentId) {
 		// await codeAgentGlobalConfigsStorage.setLastAgentId(currentAgentId);
-		console.log("[302ai-code-agent] Updated lastAgentId to:", currentAgentId);
+		logger.info("[302ai-code-agent] Updated lastAgentId to:", currentAgentId);
 	}
 
-	console.log(
+	logger.info(
 		"[302ai-code-agent] Received request",
 		JSON.stringify({
 			baseUrl,
@@ -1708,7 +1712,7 @@ CHECK BEFORE EVERY ACTION:
 
 	// Build request body for 302.AI Claude Code API
 	const convertedMessages = await convertToModelMessages(enhanceMessagesWithFeedback(messages));
-	console.log(
+	logger.info(
 		"[302ai-code-agent] After convertToModelMessages:",
 		JSON.stringify(convertedMessages, null, 2),
 	);
@@ -1734,9 +1738,9 @@ CHECK BEFORE EVERY ACTION:
 		...(agentType !== undefined ? { agent_type: agentType } : {}),
 	};
 
-	console.log("[302ai-code-agent] Messages:", JSON.stringify(requestBody.messages));
-	console.log("[302ai-code-agent] Sending request to 302.AI...");
-	console.log("[302ai-code-agent] Request body:", JSON.stringify(requestBody, null, 2));
+	logger.info("[302ai-code-agent] Messages:", JSON.stringify(requestBody.messages));
+	logger.info("[302ai-code-agent] Sending request to 302.AI...");
+	logger.info("[302ai-code-agent] Request body:", JSON.stringify(requestBody, null, 2));
 
 	// Create immediate start event for optimistic UI update
 	// Include messageMetadata with model and provider info so the UI shows correct icon/name
@@ -1777,7 +1781,7 @@ CHECK BEFORE EVERY ACTION:
 				if (!streamClosed) {
 					try {
 						controller.close();
-						console.log("[302ai-code-agent] Stream closed via safeClose");
+						logger.info("[302ai-code-agent] Stream closed via safeClose");
 					} catch (_closeError) {
 						// Controller already closed, ignore
 					}
@@ -1787,7 +1791,7 @@ CHECK BEFORE EVERY ACTION:
 
 			// Send start event immediately for optimistic UI update
 			controller.enqueue(encoder.encode(immediateStartEvent));
-			console.log("[302ai-code-agent] Sent immediate start event");
+			logger.info("[302ai-code-agent] Sent immediate start event");
 
 			// Upload attachments after sending start event (non-blocking UX)
 			// This allows the UI to show "AI is typing" immediately while upload happens in background
@@ -1795,7 +1799,7 @@ CHECK BEFORE EVERY ACTION:
 			// 	try {
 			// 		await uploadAttachmentsFromMessages(sandboxId, workspacePath, messages);
 			// 	} catch (uploadError) {
-			// 		console.error("[302ai-code-agent] Failed to upload attachments:", uploadError);
+			// 		logger.error("[302ai-code-agent] Failed to upload attachments:", uploadError);
 			// 		sendStreamError(controller, "Failed to upload attachments");
 			// 		return;
 			// 	}
@@ -1808,42 +1812,42 @@ CHECK BEFORE EVERY ACTION:
 					messages,
 				);
 			} catch (uploadError) {
-				console.error("[302ai-code-agent] Failed to upload attachments:", uploadError);
+				logger.error("[302ai-code-agent] Failed to upload attachments:", uploadError);
 				sendStreamError(controller, "Failed to upload attachments");
 				streamClosed = true; // sendStreamError closes the controller
-				console.log("[302ai-code-agent] Error sent, stream closed via sendStreamError");
+				logger.info("[302ai-code-agent] Error sent, stream closed via sendStreamError");
 				return;
 			}
 
 			try {
 				const response = await responsePromise;
 
-				console.log("[302ai-code-agent] Response status:", response.status, response.statusText);
-				console.log(
+				logger.info("[302ai-code-agent] Response status:", response.status, response.statusText);
+				logger.info(
 					"[302ai-code-agent] Response headers:",
 					Object.fromEntries(response.headers.entries()),
 				);
 				if (!response.ok) {
 					const errorText = await response.text();
-					console.error("[302ai-code-agent] API error:", response.status, response.statusText);
-					console.error("[302ai-code-agent] Error response body:", errorText || "(empty)");
-					console.error("[302ai-code-agent] Request that caused error:");
-					console.error(JSON.stringify(requestBody, null, 2));
+					logger.error("[302ai-code-agent] API error:", response.status, response.statusText);
+					logger.error("[302ai-code-agent] Error response body:", errorText || "(empty)");
+					logger.error("[302ai-code-agent] Request that caused error:");
+					logger.error(JSON.stringify(requestBody, null, 2));
 					sendStreamError(
 						controller,
 						errorText || `HTTP ${response.status}: ${response.statusText}`,
 					);
 					streamClosed = true; // sendStreamError closes the controller
-					console.log("[302ai-code-agent] Error sent, stream closed via sendStreamError");
+					logger.info("[302ai-code-agent] Error sent, stream closed via sendStreamError");
 					return;
 				}
 
-				console.log("[302ai-code-agent] Got response, streaming...");
+				logger.info("[302ai-code-agent] Got response, streaming...");
 
 				// Pipe the transformed stream from ClaudeCodeProcessor
 				const reader = response.body?.getReader();
 				if (!reader) {
-					console.log("[302ai-code-agent] No reader available, closing stream");
+					logger.info("[302ai-code-agent] No reader available, closing stream");
 					return; // finally block will call safeClose
 				}
 
@@ -1851,14 +1855,14 @@ CHECK BEFORE EVERY ACTION:
 					while (true) {
 						const { done, value } = await reader.read();
 						if (done) {
-							console.log("[302ai-code-agent] Reader done, stream complete");
+							logger.info("[302ai-code-agent] Reader done, stream complete");
 							break; // finally block will call safeClose
 						}
 						try {
 							controller.enqueue(value);
 						} catch (_error) {
 							// Client disconnected or controller closed
-							console.log("[302ai-code-agent] Controller closed, stopping stream");
+							logger.info("[302ai-code-agent] Controller closed, stopping stream");
 							reader.cancel();
 							abortController.abort();
 							streamClosed = true; // Controller was closed externally
@@ -1866,21 +1870,21 @@ CHECK BEFORE EVERY ACTION:
 						}
 					}
 				} catch (error) {
-					console.error("[302ai-code-agent] Reader error:", error);
+					logger.error("[302ai-code-agent] Reader error:", error);
 					reader.cancel().catch(() => {
 						// Ignore cancel errors
 					});
 					throw error; // Re-throw to be caught by outer catch
 				}
 			} catch (error) {
-				console.error("[302ai-code-agent] Stream error:", error);
+				logger.error("[302ai-code-agent] Stream error:", error);
 				const errorMessage = error instanceof Error ? error.message : "Unknown error";
 				sendStreamError(controller, errorMessage);
 				streamClosed = true; // sendStreamError closes the controller
-				console.log("[302ai-code-agent] Error sent, stream closed via sendStreamError");
+				logger.info("[302ai-code-agent] Error sent, stream closed via sendStreamError");
 			} finally {
 				// CRITICAL: Guarantee stream closure in ALL code paths
-				console.log("[302ai-code-agent] Finally block reached, ensuring stream closure");
+				logger.info("[302ai-code-agent] Finally block reached, ensuring stream closure");
 				safeClose();
 			}
 		},
@@ -2031,7 +2035,7 @@ app.get("/sso/callback/:lang", async (c) => {
 	const username = c.req.query("username");
 	const lang = c.req.param("lang") || "zh"; // Get language from path param
 
-	console.log("[SSO Callback] Received:", {
+	logger.info("[SSO Callback] Received:", {
 		apikey: apikey ? "exists" : "missing",
 		uid,
 		username,
@@ -2060,7 +2064,7 @@ app.get("/sso/callback", async (c) => {
 		}
 	}
 
-	console.log("[SSO Callback Legacy] Received:", {
+	logger.info("[SSO Callback Legacy] Received:", {
 		apikey: apikey ? "exists" : "missing",
 		uid,
 		username,
@@ -2079,6 +2083,6 @@ export async function initServer(preferredPort = 8089): Promise<number> {
 		hostname: "localhost",
 	});
 
-	console.log(`Server started successfully on port ${port}`);
+	logger.info(`Server started successfully on port ${port}`);
 	return port;
 }

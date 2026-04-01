@@ -8,6 +8,9 @@
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { Loader2 } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		open?: boolean;
@@ -53,7 +56,7 @@
 					success = await claudeCodeSandboxState.deleteSession(sandboxId, sessionId);
 				}
 				if (!success) {
-					console.error("Failed to delete session, but continuing with thread deletion");
+					logger.error("Failed to delete session, but continuing with thread deletion");
 				}
 			}
 

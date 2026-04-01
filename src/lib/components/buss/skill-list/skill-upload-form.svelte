@@ -5,6 +5,9 @@
 	import { SvelteMap } from "svelte/reactivity";
 	import { getFrontMatterText, parseSkillFrontMatter } from "./skill-frontmatter";
 	import SkillManualForm from "./skill-manual-form.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface SkillUploadData {
 		skillRootDir: string;
@@ -103,7 +106,7 @@
 
 			uploadState = "ready";
 		} catch (error) {
-			console.error("Failed to extract ZIP:", error);
+			logger.error("Failed to extract ZIP:", error);
 			uploadState = "error";
 			errorMessage = m.skills_create_failed();
 		}

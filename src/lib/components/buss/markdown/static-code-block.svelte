@@ -8,6 +8,9 @@
 	import { onMount } from "svelte";
 	import type { ShikiHighlighter } from "./highlighter";
 	import { ensureHighlighter, ensureLanguageLoaded } from "./highlighter";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		code: string;
@@ -98,7 +101,7 @@
 				theme: resolvedTheme,
 			});
 		} catch (e) {
-			console.warn("Failed to highlight code:", e);
+			logger.warn("Failed to highlight code:", e);
 			// Fallback to plaintext if highlighting fails
 			try {
 				highlightedHtml = highlighter.codeToHtml(props.code, {

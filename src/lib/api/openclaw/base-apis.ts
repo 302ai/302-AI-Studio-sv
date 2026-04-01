@@ -1,5 +1,8 @@
 import { type } from "arktype";
 import { getCodeAgentKy } from "../utils";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export const openclawCronJobResultResponseSchema = type({
 	success: "boolean",
@@ -38,15 +41,15 @@ export async function getOpenClawCronJobResult(
 		const response = await kyInstance
 			.get(`302/openclaw/cron/get_runs?session_id=${sessionId}`)
 			.json();
-		console.log("[getOpenClawCronJobResult] Cron job result response:", response);
+		logger.info("[getOpenClawCronJobResult] Cron job result response:", response);
 		const validated = openclawCronJobResultResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate cron job result response:", validated.summary);
+			logger.error("Failed to validate cron job result response:", validated.summary);
 			throw new Error(`Invalid cron job result response: ${validated.summary}`);
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to get openclaw cron job result:", error);
+		logger.error("Failed to get openclaw cron job result:", error);
 		throw error;
 	}
 }
@@ -76,15 +79,15 @@ export async function pushOpenClawCronJobRecord(request: PushOpenClawCronJobReco
 				json: request,
 			})
 			.json();
-		console.log("[pushOpenClawCronJobRecord] Cron job record response:", response);
+		logger.info("[pushOpenClawCronJobRecord] Cron job record response:", response);
 		const validated = pushOpenClawCronJobRecordResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate cron job record response:", validated.summary);
+			logger.error("Failed to validate cron job record response:", validated.summary);
 			throw new Error(`Invalid cron job record response: ${validated.summary}`);
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to push openclaw cron job record:", error);
+		logger.error("Failed to push openclaw cron job record:", error);
 		throw error;
 	}
 }

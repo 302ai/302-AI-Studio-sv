@@ -1,3 +1,7 @@
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("tab");
+
 export type MemoryPressureLevel = "low" | "medium" | "high";
 
 export interface MemorySnapshot {
@@ -42,7 +46,6 @@ export interface MemoryManagerOptions {
 	policy?: MemoryPolicy;
 	initialState?: MemoryState;
 	getSnapshot?: () => MemorySnapshot;
-	logger?: (message: string) => void;
 	setTimeoutFn?: typeof setTimeout;
 	clearTimeoutFn?: typeof clearTimeout;
 	immediateDelayMs?: number;
@@ -142,7 +145,6 @@ const createDefaultSnapshot = (): MemorySnapshot => ({
 export class MemoryManager {
 	private readonly policy: MemoryPolicy;
 	private readonly getSnapshot: () => MemorySnapshot;
-	private readonly logger: (message: string) => void;
 	private readonly setTimeoutFn: typeof setTimeout;
 	private readonly clearTimeoutFn: typeof clearTimeout;
 	private readonly immediateDelayMs: number;
@@ -160,7 +162,6 @@ export class MemoryManager {
 			? { ...options.initialState }
 			: { ...DEFAULT_MEMORY_STATE };
 		this.getSnapshot = options.getSnapshot ?? createDefaultSnapshot;
-		this.logger = options.logger ?? console.log;
 		this.setTimeoutFn = options.setTimeoutFn ?? setTimeout;
 		this.clearTimeoutFn = options.clearTimeoutFn ?? clearTimeout;
 		this.immediateDelayMs = options.immediateDelayMs ?? 1000;
@@ -234,7 +235,7 @@ export class MemoryManager {
 				try {
 					await this.onTick();
 				} catch (error) {
-					console.error("[MemoryManager] onTick failed:", error);
+					logger.error("onTick failed:", error);
 				}
 			}
 		} finally {
@@ -272,7 +273,7 @@ export class MemoryManager {
 		].filter(Boolean);
 		const reasonLabel = changeReasons.length > 0 ? changeReasons.join("+") : "unknown";
 
-		this.logger(
+		logger.info(
 			`[MemoryManager] Policy change (${reasonLabel}): pressure ${
 				previous?.pressure ?? "none"
 			} -> ${evaluation.pressure}, interval ${previousInterval} -> ${

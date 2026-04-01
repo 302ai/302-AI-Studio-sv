@@ -1,4 +1,7 @@
 import { experimental_createMCPClient as createMCPClient } from "@ai-sdk/mcp";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("mcp");
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import type { McpServer } from "@shared/storage/mcp";
@@ -25,8 +28,8 @@ export class McpService {
 				const command = parts[0];
 				const args = parts.slice(1);
 
-				console.log("[MCP] Creating stdio transport:", { command, args });
-				console.log("[MCP] Current PATH:", process.env.PATH);
+				logger.info("Creating stdio transport:", { command, args });
+				logger.info("Current PATH:", process.env.PATH);
 
 				const envVars = {
 					...(server.advancedSettings?.customEnvVars as Record<string, string> | undefined),
@@ -75,17 +78,15 @@ export class McpService {
 			this.clients.set(server.id, wrapper);
 			return wrapper;
 		} catch (error) {
-			console.error(`[MCP] Failed to create MCP client for server ${server.name}:`, error);
+			logger.error(`[MCP] Failed to create MCP client for server ${server.name}:`, error);
 
 			if (
 				error instanceof Error &&
 				(error.message.includes("ENOENT") || error.message.includes("command not found"))
 			) {
-				console.error(
-					`[MCP] Command not found: ${server.command}. This may be due to PATH issues.`,
-				);
-				console.error(`[MCP] Current PATH: ${process.env.PATH}`);
-				console.error("[MCP] If launching via double-click, ensure fix-path is loaded at startup.");
+				logger.error(`[MCP] Command not found: ${server.command}. This may be due to PATH issues.`);
+				logger.error(`[MCP] Current PATH: ${process.env.PATH}`);
+				logger.error("If launching via double-click, ensure fix-path is loaded at startup.");
 			}
 
 			return null;
@@ -112,7 +113,7 @@ export class McpService {
 					await existingWrapper.mcpClient.close();
 					this.clients.delete(server.id);
 				} catch (error) {
-					console.warn(`Failed to close existing client for server ${server.id}:`, error);
+					logger.warn(`Failed to close existing client for server ${server.id}:`, error);
 				}
 			}
 
@@ -148,7 +149,7 @@ export class McpService {
 							inputSchema = (inputSchema as any).jsonSchema;
 						}
 					} catch (error) {
-						console.warn(`Failed to serialize inputSchema for tool ${name}:`, error);
+						logger.warn(`Failed to serialize inputSchema for tool ${name}:`, error);
 						inputSchema = {};
 					}
 				}
@@ -162,7 +163,7 @@ export class McpService {
 
 			return { isOk: true, tools };
 		} catch (error) {
-			console.error(`Failed to get tools from server ${server.name}:`, error);
+			logger.error(`Failed to get tools from server ${server.name}:`, error);
 			return { isOk: false, error: String(error) };
 		}
 	}
@@ -179,7 +180,7 @@ export class McpService {
 			}
 			return { isOk: true };
 		} catch (error) {
-			console.error(`Failed to close MCP server ${serverId}:`, error);
+			logger.error(`Failed to close MCP server ${serverId}:`, error);
 			return { isOk: false, error: String(error) };
 		}
 	}
@@ -189,7 +190,7 @@ export class McpService {
 			try {
 				await wrapper.mcpClient.close();
 			} catch (error) {
-				console.error(`Failed to close MCP server ${id}:`, error);
+				logger.error(`Failed to close MCP server ${id}:`, error);
 			}
 		});
 
@@ -226,7 +227,7 @@ export class McpService {
 
 			const mcpClient = await this.getClient(serverId, server);
 			if (!mcpClient) {
-				console.error(`Failed to get MCP client for server ${server.name}`);
+				logger.error(`Failed to get MCP client for server ${server.name}`);
 				continue;
 			}
 
@@ -238,7 +239,7 @@ export class McpService {
 					allTools[prefixedName] = toolDef;
 				}
 			} catch (error) {
-				console.error(`Failed to get tools from server ${server.name}:`, error);
+				logger.error(`Failed to get tools from server ${server.name}:`, error);
 			}
 		}
 

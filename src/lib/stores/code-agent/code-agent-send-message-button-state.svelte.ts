@@ -1,4 +1,7 @@
 import { batchUploadFile, initProject } from "$lib/api/vibe-mode/base-apis";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import { m } from "$lib/paraglide/messages";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
@@ -65,13 +68,13 @@ class CodeAgentSendMessageButtonState {
 			// Show success toast only when actually started (not already running)
 			if (!result.wasAlreadyRunning) {
 				toast.success(m.code_agent_local_sandbox_started());
-				console.log("[CodeAgent] Local sandbox started successfully on port:", result.port);
+				logger.info("Local sandbox started successfully on port:", result.port);
 			}
 
 			return { isOk: true };
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[CodeAgent] Failed to ensure local sandbox ready:", errorMessage);
+			logger.error("Failed to ensure local sandbox ready:", errorMessage);
 			return { isOk: false, error: errorMessage };
 		} finally {
 			if (startedChecking) {
@@ -142,7 +145,7 @@ class CodeAgentSendMessageButtonState {
 
 					return `data:${mimeType};base64,${window.btoa(binary)}`;
 				} catch (error) {
-					console.error("Failed to read file from path:", attachment.filePath, error);
+					logger.error("Failed to read file from path:", attachment.filePath, error);
 					// Fallback to preview if file read fails
 				}
 			}
@@ -240,14 +243,14 @@ class CodeAgentSendMessageButtonState {
 
 					// 3. pending attachments
 					if (codeAgentTaskboardState.pendingAttachments.length > 0) {
-						console.log(
+						logger.info(
 							"pending attachments count:",
 							codeAgentTaskboardState.pendingAttachments.length,
 						);
 						const pendingAttachmentResults = await Promise.all(
 							codeAgentTaskboardState.pendingAttachments.map(async (att) => {
 								const content = att.file ? await fileToBase64(att.file) : null;
-								if (!content) console.warn("Pending attachment content is null for:", att.name);
+								if (!content) logger.warn("Pending attachment content is null for:", att.name);
 								return content
 									? { content, save_path: `${workspacePath}/.302ai/attachments/${att.name}` }
 									: null;
@@ -256,18 +259,18 @@ class CodeAgentSendMessageButtonState {
 						const validPendingAttachments = pendingAttachmentResults.filter(
 							(item): item is { content: string; save_path: string } => item !== null,
 						);
-						console.log("valid pending attachments:", validPendingAttachments.length);
+						logger.info("valid pending attachments:", validPendingAttachments.length);
 						filesToUpload.push(...validPendingAttachments);
 						codeAgentTaskboardState.clearPendingAttachments();
 					}
 
 					if (chatState.attachments.length > 0) {
-						console.log("chat attachments count:", chatState.attachments.length);
+						logger.info("chat attachments count:", chatState.attachments.length);
 						const chatAttachmentResults = await Promise.all(
 							chatState.attachments.map(async (att) => {
 								const content = await this.#attachmentToBase64(att);
 								if (!content)
-									console.warn("Chat attachment content is null for:", att.name, att.filePath);
+									logger.warn("Chat attachment content is null for:", att.name, att.filePath);
 								return content
 									? { content, save_path: `${workspacePath}/.302ai/attachments/${att.name}` }
 									: null;
@@ -277,13 +280,13 @@ class CodeAgentSendMessageButtonState {
 						const validChatAttachments = chatAttachmentResults.filter(
 							(item): item is { content: string; save_path: string } => item !== null,
 						);
-						console.log("valid chat attachments:", validChatAttachments.length);
+						logger.info("valid chat attachments:", validChatAttachments.length);
 						filesToUpload.push(...validChatAttachments);
 					}
 
 					// Upload all files in a single batch request
 					if (filesToUpload.length > 0) {
-						console.log("Total files to upload:", filesToUpload.length);
+						logger.info("Total files to upload:", filesToUpload.length);
 						const response = await batchUploadFile({
 							sandbox_id: sandboxInfo.sandboxId,
 							file_list: filesToUpload,
@@ -291,7 +294,7 @@ class CodeAgentSendMessageButtonState {
 
 						const faileds = response.result.filter((r) => !r.success);
 						if (!response.success || faileds.length > 0) {
-							console.error("Failed to upload files:", faileds.map((r) => r.error).join(", "));
+							logger.error("Failed to upload files:", faileds.map((r) => r.error).join(", "));
 							toast.error(m.taskboard_error_attachment_upload_failed());
 							return;
 						}
@@ -313,7 +316,7 @@ class CodeAgentSendMessageButtonState {
 						try {
 							await addClaudeCodeSandboxMCP(sandboxInfo.sandboxId, infos, codeAgentState.type);
 						} catch (error) {
-							console.error("Failed to add MCP servers:", error);
+							logger.error("Failed to add MCP servers:", error);
 						}
 					}
 				}
@@ -332,7 +335,7 @@ class CodeAgentSendMessageButtonState {
 
 			fn();
 		} catch (error) {
-			console.error("Failed to enable code agent flow:", error);
+			logger.error("Failed to enable code agent flow:", error);
 		} finally {
 			this.isChecking = false;
 		}

@@ -15,6 +15,9 @@
 		stringifySkillFrontMatter,
 		updateSkillFrontMatterTextFields,
 	} from "./skill-frontmatter";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	export interface SkillFormData {
 		name: string;
@@ -63,7 +66,7 @@
 				manualSkillMdPath = result.skillMdPath;
 				manualChangedFiles = new SvelteMap([[result.skillMdPath, formData.content]]);
 			} catch (error) {
-				console.error("Failed to create temp directory:", error);
+				logger.error("Failed to create temp directory:", error);
 				toast.error(m.skills_create_temp_dir_failed());
 				return;
 			} finally {
@@ -162,7 +165,7 @@
 						await window.electronAPI.appService.renameFile(oldRootPath, newRootPath);
 						handleRootPathChange(newRootPath);
 					} catch (error) {
-						console.error("Failed to rename directory:", error);
+						logger.error("Failed to rename directory:", error);
 					} finally {
 						isRenaming = false;
 					}
@@ -176,7 +179,7 @@
 			try {
 				await window.electronAPI.appService.deleteTempDir(manualRootPath);
 			} catch (error) {
-				console.error("Failed to cleanup temp directory:", error);
+				logger.error("Failed to cleanup temp directory:", error);
 			}
 
 			manualRootPath = undefined;

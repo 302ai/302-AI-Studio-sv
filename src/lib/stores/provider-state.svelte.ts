@@ -1,4 +1,7 @@
 import { getModelsByProvider } from "$lib/api/models.js";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("provider");
 import { DEFAULT_PROVIDERS } from "$lib/datas/providers.js";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages.js";
@@ -171,7 +174,7 @@ class ProviderState {
 		if (updates.id && updates.id !== id) {
 			const existingModel = persistedModelState.current.find((m) => m.id === updates.id);
 			if (existingModel) {
-				console.warn(`Model with ID "${updates.id}" already exists`);
+				logger.warn(`Model with ID "${updates.id}" already exists`);
 				return false;
 			}
 		}
@@ -251,32 +254,32 @@ class ProviderState {
 			const latestUsedModel = sessionState.latestUsedModel;
 			if (latestUsedModel && deletedModelIdSet.has(latestUsedModel.id)) {
 				sessionState.latestUsedModel = null;
-				console.log(`[Provider] Cleared latestUsedModel reference for deleted model`);
+				logger.info(`[Provider] Cleared latestUsedModel reference for deleted model`);
 			}
 
 			const newSessionModel = preferencesSettings.newSessionModel;
 			if (newSessionModel && deletedModelIdSet.has(newSessionModel.id)) {
 				preferencesSettings.setNewSessionModel(null);
-				console.log(`[Provider] Cleared newSessionModel reference for deleted model`);
+				logger.info(`[Provider] Cleared newSessionModel reference for deleted model`);
 			}
 
 			const vibeNewSessionModel = preferencesSettings.vibeNewSessionModel;
 			if (vibeNewSessionModel && deletedModelIdSet.has(vibeNewSessionModel.id)) {
 				preferencesSettings.setVibeNewSessionModel(null);
-				console.log(`[Provider] Cleared vibeNewSessionModel reference for deleted model`);
+				logger.info(`[Provider] Cleared vibeNewSessionModel reference for deleted model`);
 			}
 
 			const titleGenModel = preferencesSettings.state.titleGenerationModel;
 			if (titleGenModel && deletedModelIdSet.has(titleGenModel.id)) {
 				preferencesSettings.setTitleGenerationModel(null);
-				console.log(`[Provider] Cleared titleGenerationModel reference for deleted model`);
+				logger.info(`[Provider] Cleared titleGenerationModel reference for deleted model`);
 			}
 
 			try {
 				const { threadService, broadcastService } = window.electronAPI;
 				const clearedCount = await threadService.clearDeletedModelReferences(deletedModelIds);
 				if (clearedCount > 0) {
-					console.log(
+					logger.info(
 						`[Provider] Cleared selectedModel references in ${clearedCount} thread(s) for deleted models`,
 					);
 				}
@@ -288,7 +291,7 @@ class ProviderState {
 					providerId,
 				});
 			} catch (error) {
-				console.error("[Provider] Failed to clear deleted model references:", error);
+				logger.error("Failed to clear deleted model references:", error);
 			}
 		}
 
@@ -302,7 +305,7 @@ class ProviderState {
 			// 确保使用最新的 provider 数据
 			const latestProvider = this.getProvider(provider.id);
 			if (!latestProvider) {
-				console.error(`Provider ${provider.id} not found`);
+				logger.error(`Provider ${provider.id} not found`);
 				return false;
 			}
 
@@ -353,7 +356,7 @@ class ProviderState {
 				return false;
 			}
 		} catch (error) {
-			console.error(`Failed to fetch models for provider ${provider.id}:`, error);
+			logger.error(`Failed to fetch models for provider ${provider.id}:`, error);
 			await this.updateProvider(provider.id, { status: "error" });
 			toast.error(m.text_fetch_models_error({ provider: provider.name }), {
 				description: error instanceof Error ? error.message : m.text_fetch_models_network_error(),
@@ -380,7 +383,7 @@ class ProviderState {
 		// Find the default model from the fetched models
 		const models = persistedModelState.current;
 		if (models.length === 0) {
-			console.log(
+			logger.info(
 				`[Provider] No models available for ${provider.name}, skipping default model setup`,
 			);
 			return;
@@ -412,14 +415,14 @@ class ProviderState {
 			if (preferencesSettings.newSessionModel === null && sessionState.latestUsedModel === null) {
 				preferencesSettings.setNewSessionModel(defaultModel);
 				broadcastNeeded = true;
-				console.log(
+				logger.info(
 					`[Provider] Applied Chat default model "${defaultModel.name}" for ${provider.name}`,
 				);
 			}
 
 			if (preferencesSettings.vibeNewSessionModel === null) {
 				preferencesSettings.setVibeNewSessionModel(defaultModel);
-				console.log(
+				logger.info(
 					`[Provider] Applied Vibe default model "${defaultModel.name}" for ${provider.name}`,
 				);
 				// We might want to broadcast this too, or reuse the same event if it triggers a re-check
@@ -436,7 +439,7 @@ class ProviderState {
 						model: modelForBroadcast,
 					});
 				} catch (error) {
-					console.error(
+					logger.error(
 						`[Provider] Failed to broadcast apply-default-model event for ${provider.name}:`,
 						error,
 					);
@@ -497,13 +500,13 @@ class ProviderState {
 			this.updateProvider("302AI", { apiKey: "" });
 			// Also clear all models for this provider
 			const removedCount = await this.removeModelsByProvider("302AI");
-			console.log(
+			logger.info(
 				`[Provider] Cleared associated API key and ${removedCount} models from 302.AI provider`,
 			);
 			return true;
 		}
 
-		console.log("[Provider] API key mismatch, not clearing (user may have modified it)");
+		logger.info("API key mismatch, not clearing (user may have modified it)");
 		return false;
 	}
 
@@ -545,7 +548,7 @@ class ProviderState {
 				return false;
 			}
 		} catch (error) {
-			console.error(`[Provider] Silent fetch failed for ${provider.id}:`, error);
+			logger.error(`[Provider] Silent fetch failed for ${provider.id}:`, error);
 			await this.updateProvider(provider.id, { status: "error" });
 			return false;
 		}
@@ -567,7 +570,7 @@ class ProviderState {
 
 		if (providersToUpdate.length === 0) return;
 
-		console.log(`[Provider] Auto-updating models for ${providersToUpdate.length} provider(s)`);
+		logger.info(`[Provider] Auto-updating models for ${providersToUpdate.length} provider(s)`);
 
 		// 并行更新所有供应商（静默模式，不显示 toast）
 		const results = await Promise.allSettled(
@@ -583,7 +586,7 @@ class ProviderState {
 		});
 
 		const successCount = results.filter((r) => r.status === "fulfilled" && r.value).length;
-		console.log(
+		logger.info(
 			`[Provider] Auto-update completed: ${successCount}/${providersToUpdate.length} succeeded`,
 		);
 	}

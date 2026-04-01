@@ -1,3 +1,7 @@
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
+
 import type { StorageValue } from "@302ai/unstorage";
 import { isEqual } from "es-toolkit";
 import superjson from "superjson";
@@ -167,7 +171,7 @@ export class PersistedState<T extends StorageValue> {
 			}
 			this.#isHydrated = true;
 		} catch (error) {
-			console.error(`Error hydrate persisted state from Electron storage for key "${key}":`, error);
+			logger.error(`Error hydrate persisted state from Electron storage for key "${key}":`, error);
 			this.#current = initialValue;
 			this.#isHydrated = true;
 		}
@@ -176,8 +180,8 @@ export class PersistedState<T extends StorageValue> {
 	#store(value: T | undefined | null): void {
 		if (!this.#debounce) {
 			this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
-				console.log("Value", value);
-				console.error(
+				logger.info("Value", value);
+				logger.error(
 					`Error when writing value from persisted store "${this.#key}" to Electron storage`,
 					error,
 				);
@@ -193,8 +197,8 @@ export class PersistedState<T extends StorageValue> {
 		this.#storeTimeoutId = setTimeout(() => {
 			const write = () => {
 				this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
-					console.log("Value", value);
-					console.error(
+					logger.info("Value", value);
+					logger.error(
 						`Error when writing value from persisted store "${this.#key}" to Electron storage`,
 						error,
 					);
@@ -219,10 +223,7 @@ export class PersistedState<T extends StorageValue> {
 		try {
 			await this.#storage?.setItemDirectAsync(this.#key, this.#current ?? null);
 		} catch (error) {
-			console.error(
-				`Error when flushing persisted store "${this.#key}" to Electron storage`,
-				error,
-			);
+			logger.error(`Error when flushing persisted store "${this.#key}" to Electron storage`, error);
 		}
 	}
 
@@ -235,7 +236,7 @@ export class PersistedState<T extends StorageValue> {
 				this.#update?.();
 			}
 		} catch (error) {
-			console.error(
+			logger.error(
 				`Error when refreshing persisted store "${this.#key}" from Electron storage`,
 				error,
 			);

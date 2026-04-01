@@ -1,4 +1,7 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("theme");
 import type { Theme, ThemeState } from "@shared/types";
 import { setMode } from "mode-watcher";
 import { untrack } from "svelte";
@@ -34,7 +37,7 @@ export function toggleTheme() {
 }
 
 export function setTheme(theme: Theme) {
-	console.log("setTheme");
+	logger.info("setTheme");
 	transitionState.isTransitioning = true;
 	const currentState = persistedThemeState.current;
 	persistedThemeState.current = {

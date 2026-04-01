@@ -5,6 +5,9 @@
 
 import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 import { getCodeAgentKy } from "./utils";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export interface SandboxFileInfo {
 	name: string;
@@ -69,7 +72,7 @@ export async function listSandboxFiles(
 
 		return await response.json();
 	} catch (error) {
-		console.error("Failed to list files:", error);
+		logger.error("Failed to list files:", error);
 		throw error;
 	}
 }
@@ -241,13 +244,13 @@ export async function getFileContent(
 		});
 
 		const contentType = response.headers.get("content-type");
-		console.log("[getFileContent] Content-Type:", contentType);
+		logger.info("[getFileContent] Content-Type:", contentType);
 
 		// 如果返回的是 JSON，说明返回的是下载 URL
 		if (contentType?.includes("application/json")) {
 			// Clone response to read json, as we might need text fallback
 			const jsonResponse = await response.json();
-			console.log("[getFileContent] JSON response:", jsonResponse);
+			logger.info("[getFileContent] JSON response:", jsonResponse);
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const data = jsonResponse as any;
@@ -277,7 +280,7 @@ export async function getFileContent(
 		if (error && typeof error === "object" && "response" in error) {
 			const httpError = error as { response: Response };
 			const errorText = await httpError.response.text();
-			console.error("[getFileContent] Error response:", errorText);
+			logger.error("[getFileContent] Error response:", errorText);
 			throw new Error(`Failed to download file: ${httpError.response.statusText}`);
 		}
 		throw error;
@@ -339,7 +342,7 @@ async function sandboxFileOperation(
 		if (error && typeof error === "object" && "response" in error) {
 			const httpError = error as { response: Response };
 			const errorText = await httpError.response.text();
-			console.error("[sandboxFileOperation] Error response:", errorText);
+			logger.error("[sandboxFileOperation] Error response:", errorText);
 			throw new Error(`Failed to perform file operation: ${httpError.response.statusText}`);
 		}
 		throw error;
@@ -405,7 +408,7 @@ export async function uploadSandboxFile(
 			const filePath = (file as any).path;
 
 			if (filePath && typeof filePath === "string") {
-				console.log("[SandboxFile] Local mode detected, using direct copy for:", filePath);
+				logger.info("[SandboxFile] Local mode detected, using direct copy for:", filePath);
 				const result = await window.electronAPI.localVibeService.copyToWorkspaceByIpc(
 					filePath,
 					path,
@@ -446,7 +449,7 @@ export async function uploadSandboxFile(
 		}
 		return data;
 	} catch (error) {
-		console.error("Error uploading sandbox file:", error);
+		logger.error("Error uploading sandbox file:", error);
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : "Unknown error",

@@ -12,6 +12,9 @@
 	import { SvelteSet } from "svelte/reactivity";
 	import FileNameDialog from "./file-name-dialog.svelte";
 	import SkillFileTreeNode from "./skill-file-tree-node.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	type DialogMode = "create-file" | "create-folder" | "rename";
 
@@ -143,7 +146,7 @@
 				}
 			}
 		} catch (error) {
-			console.error("Failed to scan directory:", error);
+			logger.error("Failed to scan directory:", error);
 		} finally {
 			loading = false;
 		}
@@ -160,7 +163,7 @@
 				const content = await readFile(node.path);
 				onSelect?.({ path: node.path, content });
 			} catch (error) {
-				console.error("Failed to read file:", error);
+				logger.error("Failed to read file:", error);
 			}
 		}
 	}
@@ -176,7 +179,7 @@
 			selectedPath = filePath;
 			onSelect?.({ path: filePath, content: "" });
 		} catch (error) {
-			console.error("Create file failed:", error);
+			logger.error("Create file failed:", error);
 		}
 	}
 
@@ -189,7 +192,7 @@
 			// Refresh tree
 			await loadTree(rootPath);
 		} catch (error) {
-			console.error("Create folder failed:", error);
+			logger.error("Create folder failed:", error);
 		}
 	}
 
@@ -209,7 +212,7 @@
 				await loadTree(rootPath);
 			}
 		} catch (error) {
-			console.error("Rename failed:", error);
+			logger.error("Rename failed:", error);
 		}
 	}
 
@@ -247,7 +250,7 @@
 			// Refresh tree
 			await loadTree(rootPath);
 		} catch (error) {
-			console.error("File operation failed:", error);
+			logger.error("File operation failed:", error);
 		}
 	}
 
@@ -264,7 +267,7 @@
 			// Refresh tree
 			await loadTree(rootPath);
 		} catch (error) {
-			console.error("Delete failed:", error);
+			logger.error("Delete failed:", error);
 		}
 	}
 

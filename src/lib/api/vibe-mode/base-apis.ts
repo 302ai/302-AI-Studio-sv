@@ -1,6 +1,9 @@
 import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 import { type } from "arktype";
 import { getCodeAgentKy } from "../utils";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export const executeCommandRequestSchema = type({
 	sandboxId: "string",
@@ -50,12 +53,12 @@ export async function executeCommand(
 
 		const validated = executeCommandResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate execute command response:", validated.summary);
+			logger.error("Failed to validate execute command response:", validated.summary);
 			throw new Error("Invalid response format from execute command API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to execute command:", error);
+		logger.error("Failed to execute command:", error);
 		throw error;
 	}
 }
@@ -107,12 +110,12 @@ export async function uploadFileToSandbox(
 
 		const validated = sandboxFileOperationResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate upload file response:", validated.summary);
+			logger.error("Failed to validate upload file response:", validated.summary);
 			throw new Error("Invalid response format from upload file API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to upload file:", error);
+		logger.error("Failed to upload file:", error);
 		throw error;
 	}
 }
@@ -159,12 +162,12 @@ export async function initProject(request: InitProjectRequest): Promise<InitProj
 
 		const validated = initProjectResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate init project response:", validated.summary);
+			logger.error("Failed to validate init project response:", validated.summary);
 			throw new Error("Invalid response format from init project API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to init project:", error);
+		logger.error("Failed to init project:", error);
 		throw error;
 	}
 }
@@ -218,16 +221,16 @@ export async function batchUploadFile(
 			})
 			.json();
 
-		console.log("Batch upload raw response:", JSON.stringify(response, null, 2));
+		logger.info("Batch upload raw response:", JSON.stringify(response, null, 2));
 
 		const validated = batchUploadFileResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate batch upload file response:", validated.summary);
+			logger.error("Failed to validate batch upload file response:", validated.summary);
 			throw new Error("Invalid response format from batch upload file API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to batch upload files:", error);
+		logger.error("Failed to batch upload files:", error);
 		throw error;
 	}
 }
@@ -282,12 +285,12 @@ export async function downloadFilesFromSandbox(
 
 		const validated = downloadFilesResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate download files response:", validated.summary);
+			logger.error("Failed to validate download files response:", validated.summary);
 			throw new Error("Invalid response format from download files API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to download files:", error);
+		logger.error("Failed to download files:", error);
 		throw error;
 	}
 }

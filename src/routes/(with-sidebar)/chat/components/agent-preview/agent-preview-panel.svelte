@@ -59,6 +59,9 @@
 	import SessionDeleted from "./session-deleted.svelte";
 	import Terminal from "./terminal.svelte";
 	import { handleError, isFileStillSelected } from "./utils";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	// --- Utils (Move strictly pure functions outside) ---
 	const LANGUAGE_MAP: Record<string, string> = {
@@ -411,11 +414,11 @@
 						}
 					} else {
 						// No context.
-						console.warn("[PreviewSync] Missing syncDir context, skipping clear check.");
+						logger.warn("Missing syncDir context, skipping clear check.");
 					}
 
 					if (shouldClear) {
-						console.log("[PreviewSync] Clearing preview");
+						logger.info("Clearing preview");
 						// Clear preview state for deleted file
 						cleanupPreviewUrl();
 						fileViewer.selectedFile = null;
@@ -501,7 +504,7 @@
 			// Mark as restored only after successful completion
 			lastRestoredKey = key;
 		} catch (e) {
-			console.warn("[AgentPreview] State restore failed (ignored):", e);
+			logger.warn("State restore failed (ignored):", e);
 		} finally {
 			isRestoringState = false;
 		}
@@ -541,7 +544,7 @@
 		// 类似于 React 的 usePrevious + useEffect 组合
 		if (previousStreamingState && !isStreaming) {
 			if (isAgentMode && agentPreviewState.isVisible && currentSandboxId) {
-				console.log("[AgentPreview] Task completed, triggering refresh");
+				logger.info("Task completed, triggering refresh");
 				refreshTrigger++;
 
 				// Refresh sessions to get updated workspace_path after agent completes
@@ -779,7 +782,7 @@
 		} catch (e) {
 			if (!signal.aborted && isFileStillSelected(currentFilePath, fileViewer.selectedFile)) {
 				handleError(e, "Failed to load file content");
-				console.error("[AgentPreview] File load error:", e);
+				logger.error("File load error:", e);
 			}
 		} finally {
 			if (!signal.aborted) fileViewer.isLoading = false;
@@ -847,13 +850,13 @@
 				try {
 					await navigator.clipboard.writeText(result.data.url);
 				} catch (e) {
-					console.warn("Clipboard write failed:", e);
+					logger.warn("Clipboard write failed:", e);
 				}
 				toast.success(successMsg);
 			}
 			return result.data;
 		} catch (error) {
-			console.error("Deploy failed:", error);
+			logger.error("Deploy failed:", error);
 			const rawMessage = error instanceof Error ? error.message : "Unknown error";
 			const truncatedMessage =
 				rawMessage.length > 300 ? rawMessage.slice(0, 300) + "..." : rawMessage;
@@ -893,7 +896,7 @@
 					toast.error(m.openclaw_webui_failed_to_load());
 				}
 			} catch (error) {
-				console.error("[OpenClaw WebUI] Failed to open internal tab:", error);
+				logger.error("Failed to open internal tab:", error);
 				toast.error(m.openclaw_webui_failed_to_load());
 			}
 			return;
@@ -992,7 +995,7 @@
 				lastModified: Date.now(),
 			});
 
-			console.log("[AgentPreview] Uploading file:", {
+			logger.info("Uploading file:", {
 				path: filePath,
 				name: file.name,
 				size: file.size,
@@ -1017,7 +1020,7 @@
 				toast.success(m.toast_file_upload_success(), { id: loadingId });
 			}
 		} catch (e) {
-			console.error("Save edit failed:", e);
+			logger.error("Save edit failed:", e);
 			toast.error(m.toast_file_upload_failed(), { id: loadingId });
 		} finally {
 			isSaving = false;
@@ -1122,7 +1125,7 @@
 			}
 			toast.success(m.toast_download_file_success({ fileName: fileViewer.selectedFile.name }));
 		} catch (e) {
-			console.error("Download failed:", e);
+			logger.error("Download failed:", e);
 			toast.error(m.toast_download_failed());
 		}
 	};

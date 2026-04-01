@@ -1,6 +1,9 @@
 import { taskListSchema, type Task } from "@shared/types";
 import { type } from "arktype";
 import { batchUploadFile, downloadFilesFromSandbox, executeCommand } from "./base-apis";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 const TODO_TASKS_FILE_PATH = ".302ai/todo/tasks.json";
 const ATTACHMENTS_DIR_PATH = ".302ai/attachments";
@@ -23,8 +26,8 @@ async function validateAndRepairTaskList(
 	try {
 		parsed = JSON.parse(content);
 	} catch (error) {
-		console.warn("Task list JSON parse failed, returning empty list:", error);
-		console.error("Task list content:", content);
+		logger.warn("Task list JSON parse failed, returning empty list:", error);
+		logger.error("Task list content:", content);
 		return [];
 	}
 
@@ -64,7 +67,7 @@ async function validateAndRepairTaskList(
 	const validated = taskListSchema(parsed);
 
 	if (validated instanceof type.errors) {
-		console.warn("Task list schema validation failed, returning empty list:", validated.summary);
+		logger.warn("Task list schema validation failed, returning empty list:", validated.summary);
 		return [];
 	}
 
@@ -80,7 +83,7 @@ async function validateAndRepairTaskList(
 
 	// If duplicates were found, update the file
 	if (uniqueTasks.length !== validated.length) {
-		console.warn(
+		logger.warn(
 			`Found ${validated.length - uniqueTasks.length} duplicate task(s), removing duplicates`,
 		);
 		await updateTasklist(sandboxId, cwd, uniqueTasks);
@@ -116,7 +119,7 @@ export async function getTasklist(
 		const tasks = await validateAndRepairTaskList(sandboxId, cwd, response.result.stdout);
 		return { isOk: true, tasks };
 	} catch (error) {
-		console.error("Failed to get task list:", error);
+		logger.error("Failed to get task list:", error);
 		return { isOk: false, tasks: [] };
 	}
 }
@@ -142,7 +145,7 @@ export async function _getTasklist(
 		const tasks = await validateAndRepairTaskList(sandboxId, cwd, response.content);
 		return { isOk: true, tasks };
 	} catch (error) {
-		console.error("Failed to get task list:", error);
+		logger.error("Failed to get task list:", error);
 		return { isOk: false, tasks: [] };
 	}
 }
@@ -165,11 +168,11 @@ export async function updateTasklist(
 		try {
 			jsonContent = JSON.stringify(tasks);
 		} catch (error) {
-			console.error("Failed to stringify tasks:", error);
-			console.error("Tasks content:", tasks);
+			logger.error("Failed to stringify tasks:", error);
+			logger.error("Tasks content:", tasks);
 			return { isOk: false };
 		}
-		console.log("Updating task list content:", jsonContent);
+		logger.info("Updating task list content:", jsonContent);
 		const base64Content =
 			"data:application/json;base64," +
 			window.btoa(
@@ -190,12 +193,12 @@ export async function updateTasklist(
 		});
 
 		if (!response.success || !response.result?.[0]?.success) {
-			console.error("Failed to update task list:", response.result?.[0]?.error);
+			logger.error("Failed to update task list:", response.result?.[0]?.error);
 			return { isOk: false };
 		}
 		return { isOk: true };
 	} catch (error) {
-		console.error("Failed to update task list:", error);
+		logger.error("Failed to update task list:", error);
 		return { isOk: false };
 	}
 }
@@ -234,13 +237,13 @@ export async function uploadAttachments(
 
 		const faileds = response.result.filter((r) => !r.success);
 		if (!response.success || faileds.length > 0) {
-			console.error("Failed to upload attachments:", faileds.map((r) => r.error).join(", "));
+			logger.error("Failed to upload attachments:", faileds.map((r) => r.error).join(", "));
 			return { isOk: false };
 		}
 
 		return { isOk: true };
 	} catch (error) {
-		console.error("Failed to upload attachments:", error);
+		logger.error("Failed to upload attachments:", error);
 		return { isOk: false };
 	}
 }

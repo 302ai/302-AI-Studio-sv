@@ -1,5 +1,8 @@
 <script lang="ts" module>
 	import type { DynamicToolUIPart } from "ai";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	export interface ToolCallModalProps {
 		part: DynamicToolUIPart;
@@ -83,7 +86,7 @@
 			await chatState.rerunToolCall(messageIdToRerun, toolCallIdToRerun);
 			toast.success(m.tool_call_rerun_success());
 		} catch (error) {
-			console.error("Failed to rerun tool call:", error);
+			logger.error("Failed to rerun tool call:", error);
 			toast.error(m.tool_call_rerun_error());
 		} finally {
 			isRerunning = false;

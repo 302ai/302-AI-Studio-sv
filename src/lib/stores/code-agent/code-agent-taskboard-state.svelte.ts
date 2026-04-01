@@ -5,6 +5,9 @@ import {
 	type Attachment,
 } from "$lib/api/vibe-mode";
 import { emitter, EventNames } from "$lib/event/emitter";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import { m } from "$lib/paraglide/messages";
 import type { ChatMessage } from "$lib/types/chat";
 import {
@@ -287,7 +290,7 @@ export class CodeAgentTaskboardState {
 				toast.error(m.taskboard_error_attachment_upload_failed());
 			}
 		} catch (error) {
-			console.error("Failed to upload pending attachments:", error);
+			logger.error("Failed to upload pending attachments:", error);
 			toast.error(m.taskboard_error_attachment_upload_failed());
 		} finally {
 			this.clearPendingAttachments();
@@ -320,7 +323,7 @@ export class CodeAgentTaskboardState {
 								if (tasks.length === 0 && this.tasklist.length > 0) {
 									// Remote is empty, but we have local data.
 									// Assume remote might be corrupted/reset, so we repair it with local data.
-									console.warn(
+									logger.warn(
 										"Remote tasklist is empty but local has data. Repairing remote with local data.",
 									);
 									await this.updateTasklist(this.tasklist);
@@ -343,7 +346,7 @@ export class CodeAgentTaskboardState {
 								// Get failed completely.
 								// If we have local data, try to push it to remote to fix the issue.
 								if (this.tasklist.length > 0) {
-									console.warn("Failed to get tasklist. Attempting to restore from local state.");
+									logger.warn("Failed to get tasklist. Attempting to restore from local state.");
 									await this.updateTasklist(this.tasklist);
 								}
 							}
@@ -368,7 +371,7 @@ export class CodeAgentTaskboardState {
 			.otherwise(async () => {
 				this.tasklist = sortedTasklist;
 				const [sandboxId, path] = [codeAgentState.sandboxId, codeAgentState.currentWorkspacePath];
-				console.log("Updating tasklist", path);
+				logger.info("Updating tasklist", path);
 
 				const result = await updateTasklist(sandboxId, path, sortedTasklist);
 				if (!result.isOk) {
@@ -523,7 +526,7 @@ export class CodeAgentTaskboardState {
 						currentTaskList = this.#sortTasks(tasks);
 						this.tasklist = currentTaskList;
 
-						console.log("[TaskBoard] Tasklist updated", currentTaskList);
+						logger.info("Tasklist updated", currentTaskList);
 					}
 
 					const updatedTask = currentTaskList.find((t) => t.id === task.id);
@@ -542,9 +545,9 @@ export class CodeAgentTaskboardState {
 				}
 
 				this.#currentRetryCount++;
-				console.log(`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`);
+				logger.info(`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`);
 			}
-			console.log(`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`);
+			logger.info(`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`);
 
 			if (this.#currentRetryCount >= this.#MAX_RETRY_COUNT) {
 				this.retryExhausted = true;
@@ -604,7 +607,7 @@ export class CodeAgentTaskboardState {
 	 * Handles the chat finished event.
 	 */
 	#handleChatFinished = ({ lastMessage }: { lastMessage: ChatMessage }) => {
-		console.log("[TaskBoard] CHAT_FINISHED event received", {
+		logger.info("CHAT_FINISHED event received", {
 			hasTaskResolve: !!this.#taskResolve,
 			taskboardStatus: this.taskboardStatus,
 		});
@@ -614,14 +617,14 @@ export class CodeAgentTaskboardState {
 		// 🔧 open-claw 模式下直接认为成功，claude-code 模式检查 metadata.result
 		let success: boolean;
 		if (codeAgentState.currentAgentId === "open-claw") {
-			console.log("[TaskBoard] Open-claw mode: treating chat completion as task success");
+			logger.info("Open-claw mode: treating chat completion as task success");
 			success = true;
 		} else {
 			const result = lastMessage.metadata?.result;
 			success = !!result && result.is_error === false;
 		}
 
-		console.log("[TaskBoard] Resolving task with success:", success);
+		logger.info("Resolving task with success:", success);
 		this.#taskResolve(success);
 	};
 

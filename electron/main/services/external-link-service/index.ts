@@ -1,4 +1,7 @@
 import { shell, type IpcMainInvokeEvent } from "electron";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 
 export class ExternalLinkService {
 	async openExternalLink(
@@ -12,7 +15,7 @@ export class ExternalLinkService {
 			await shell.openExternal(url);
 			return { isOk: true };
 		} catch (error) {
-			console.error("Failed to open external link:", error);
+			logger.error("Failed to open external link:", error);
 			return { isOk: false, error: error as string };
 		}
 	}

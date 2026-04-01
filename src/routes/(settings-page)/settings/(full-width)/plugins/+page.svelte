@@ -20,6 +20,9 @@
 	import type { InstalledPlugin, PluginSource, PluginMarketEntry } from "@shared/types";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	onMount(async () => {
 		await pluginState.initialize();
@@ -108,7 +111,7 @@
 				installPath = path;
 			}
 		} catch (err) {
-			console.error("Failed to select folder:", err);
+			logger.error("Failed to select folder:", err);
 			toast.error(m.plugins_error(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
@@ -160,7 +163,7 @@
 			installPath = "";
 			installUrl = "";
 		} catch (err) {
-			console.error("Failed to install plugin:", err);
+			logger.error("Failed to install plugin:", err);
 			toast.error(m.plugins_install_error(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
@@ -176,7 +179,7 @@
 			const config = await pluginState.getPluginConfig(plugin.metadata.id);
 			pluginConfig = config || {};
 		} catch (err) {
-			console.error("Failed to load plugin config:", err);
+			logger.error("Failed to load plugin config:", err);
 			toast.error(m.plugins_error(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
@@ -198,7 +201,7 @@
 			settingsDialogOpen = false;
 			toast.success(m.plugins_settings_saved());
 		} catch (err) {
-			console.error("Failed to save plugin config:", err);
+			logger.error("Failed to save plugin config:", err);
 			toast.error(m.plugins_error(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
@@ -209,7 +212,7 @@
 		try {
 			await pluginState.enablePlugin(pluginId);
 		} catch (err) {
-			console.error("Failed to enable plugin:", err);
+			logger.error("Failed to enable plugin:", err);
 			toast.error(m.plugins_error(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
@@ -220,7 +223,7 @@
 		try {
 			await pluginState.disablePlugin(pluginId);
 		} catch (err) {
-			console.error("Failed to disable plugin:", err);
+			logger.error("Failed to disable plugin:", err);
 			toast.error(m.plugins_error(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
@@ -243,7 +246,7 @@
 			uninstallDialogOpen = false;
 			selectedPlugin = null;
 		} catch (err) {
-			console.error("Failed to uninstall plugin:", err);
+			logger.error("Failed to uninstall plugin:", err);
 			toast.error(m.plugins_error(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
@@ -263,7 +266,7 @@
 				description: "Plugin reloaded successfully",
 			});
 		} catch (err) {
-			console.error("Failed to update plugin:", err);
+			logger.error("Failed to update plugin:", err);
 			toast.error(m.plugins_error(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
@@ -328,7 +331,7 @@
 			// Refresh plugin list
 			await pluginState.refreshPlugins();
 		} catch (err) {
-			console.error("Failed to install from marketplace:", err);
+			logger.error("Failed to install from marketplace:", err);
 			toast.error(m.plugins_install_error(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
@@ -341,7 +344,7 @@
 		try {
 			await marketplaceState.search(query);
 		} catch (err) {
-			console.error("Marketplace search failed:", err);
+			logger.error("Marketplace search failed:", err);
 			toast.error(m.plugins_marketplace_search_failed(), {
 				description: err instanceof Error ? err.message : String(err),
 			});
@@ -353,7 +356,7 @@
 			await marketplaceState.refreshMarketplace(true);
 			toast.success(m.plugins_marketplace_refreshed());
 		} catch (err) {
-			console.error("Failed to refresh marketplace:", err);
+			logger.error("Failed to refresh marketplace:", err);
 			toast.error(m.plugins_marketplace_refresh_failed(), {
 				description: err instanceof Error ? err.message : String(err),
 			});

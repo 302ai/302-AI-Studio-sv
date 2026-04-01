@@ -25,6 +25,9 @@
 	import { SvelteMap } from "svelte/reactivity";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 	import CompactNumberInput from "./compact-number-input.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		open?: boolean;
@@ -101,7 +104,7 @@
 							return;
 						}
 					} catch (error) {
-						console.error("Failed to upload attachments:", error);
+						logger.error("Failed to upload attachments:", error);
 						toast.error(m.taskboard_error_attachment_upload_failed());
 						return;
 					}

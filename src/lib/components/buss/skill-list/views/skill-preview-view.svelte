@@ -8,6 +8,9 @@
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
 	import SkillFileExplorer from "../skill-file-tree/skill-file-explorer.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		skillName: string;
@@ -62,7 +65,7 @@
 
 			skillRootDir = getSkillRootDir(skillMdPath);
 		} catch (error) {
-			console.error("Failed to load skill content:", error);
+			logger.error("Failed to load skill content:", error);
 			const errorMessage = error instanceof Error ? error.message : m.skills_load_failed();
 			toast.error(errorMessage);
 			skillsPanelState.pop();

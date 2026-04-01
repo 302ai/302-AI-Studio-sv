@@ -5,6 +5,9 @@ import {
 	type CodingAgentClass,
 } from "@shared/storage/code-agent";
 import type { MigrationConfig } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("storage");
 import { prefixStorage } from "@shared/types";
 import { isNull } from "es-toolkit";
 import { StorageService } from "..";
@@ -56,7 +59,7 @@ const migrations = {
 
 const globalConfigsMigrationConfig: MigrationConfig<CodeAgentGlobalConfigs> = {
 	version: 1,
-	migrate: createMigrate(migrations, { debug: true }),
+	migrate: createMigrate(migrations),
 	debug: true,
 };
 
@@ -107,7 +110,7 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 			if (isNull(data)) return { isOK: false, data: defaultData };
 			return { isOK: true, data };
 		} catch (error) {
-			console.error("Error getting global configs:", error);
+			logger.error("Error getting global configs:", error);
 			return { isOK: false, data: defaultData };
 		}
 	}
@@ -119,7 +122,7 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 			await this.setItemInternal("code-agent-global-configs", updatedData);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error setting lastVibeMode:", error);
+			logger.error("Error setting lastVibeMode:", error);
 			return { isOK: false };
 		}
 	}
@@ -131,7 +134,7 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 	// 		await this.setItemInternal("code-agent-global-configs", updatedData);
 	// 		return { isOK: true };
 	// 	} catch (error) {
-	// 		console.error("Error setting lastAgentId:", error);
+	// 		logger.error("Error setting lastAgentId:", error);
 	// 		return { isOK: false };
 	// 	}
 	// }

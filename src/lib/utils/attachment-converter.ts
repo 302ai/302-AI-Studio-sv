@@ -8,6 +8,9 @@ import * as XLSX from "xlsx";
 import { compressFile } from "./file-compressor";
 import { officeMimeTypes } from "./file-preview";
 import { toast } from "svelte-sonner";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export type MessagePart = FileUIPart | { type: "text"; text: string };
 
@@ -143,7 +146,7 @@ async function readPdfFile(attachment: AttachmentFile): Promise<string> {
 		const markdown = await pdf2md(uint8Array);
 		return markdown;
 	} catch (error) {
-		console.error("Failed to parse PDF:", error);
+		logger.error("Failed to parse PDF:", error);
 		throw new Error(
 			`Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
 		);
@@ -207,7 +210,7 @@ async function readExcelFile(attachment: AttachmentFile): Promise<string> {
 
 		return content;
 	} catch (error) {
-		console.error("Failed to parse Excel file:", error);
+		logger.error("Failed to parse Excel file:", error);
 		throw new Error(
 			`Failed to parse Excel file: ${error instanceof Error ? error.message : "Unknown error"}`,
 		);
@@ -223,7 +226,7 @@ async function readWordFile(attachment: AttachmentFile): Promise<string> {
 
 		return result.value;
 	} catch (error) {
-		console.error("Failed to parse Word document:", error);
+		logger.error("Failed to parse Word document:", error);
 		throw new Error(
 			`Failed to parse Word document: ${error instanceof Error ? error.message : "Unknown error"}`,
 		);
@@ -269,7 +272,7 @@ export async function convertAttachmentToMessagePart(
 						reader.readAsDataURL(blob);
 					});
 				} catch (error) {
-					console.error("Failed to convert blob URL to data URL:", error);
+					logger.error("Failed to convert blob URL to data URL:", error);
 					// Fallback to filePath if blob fetch fails
 					url = await fileToDataURL(attachment.file, attachment.filePath);
 				}
@@ -282,7 +285,7 @@ export async function convertAttachmentToMessagePart(
 				try {
 					url = await compressFile(attachment.file);
 				} catch (error) {
-					console.error("[AttachmentConverter] Failed to compress image, using original:", error);
+					logger.error("[AttachmentConverter] Failed to compress image, using original:", error);
 					url = await fileToDataURL(attachment.file, attachment.filePath);
 				}
 			} else {
@@ -381,7 +384,7 @@ export async function convertAttachmentToMessagePart(
 				};
 			}
 		} catch (error) {
-			console.error(`Failed to read Office document ${attachment.name}:`, error);
+			logger.error(`Failed to read Office document ${attachment.name}:`, error);
 			toast.error(m.toast_attachment_convert_failed({ fileName: attachment.name }));
 			// If parsing fails, return a description instead
 			const sizeInKB = (attachment.size / 1024).toFixed(2);
@@ -439,7 +442,7 @@ export async function convertAttachmentsToMessageParts(
 			parts.push(part);
 			metadataList.push(createAttachmentMetadata(attachment, textContent, preview));
 		} catch (error) {
-			console.error(`Failed to convert attachment ${attachment.name}:`, error);
+			logger.error(`Failed to convert attachment ${attachment.name}:`, error);
 			toast.error(m.toast_attachment_convert_failed({ fileName: attachment.name }));
 		}
 	}
@@ -476,7 +479,7 @@ async function fileToDataURL(file: File, filePath?: string): Promise<string> {
 
 			return `data:${type};base64,${base64}`;
 		} catch (e) {
-			console.error("Failed to read file from path:", filePath, e);
+			logger.error("Failed to read file from path:", filePath, e);
 		}
 	}
 

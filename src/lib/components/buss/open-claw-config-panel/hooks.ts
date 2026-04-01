@@ -4,6 +4,9 @@
  *Date: 2026-03-23
  **/
 import { m } from "$lib/paraglide/messages";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 import { codeAgentState } from "$lib/stores/code-agent";
 import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 import { toast } from "svelte-sonner";
@@ -45,7 +48,7 @@ export function ApplyOpenClawChannelConfigConfirm({
 					});
 				}
 			}
-			console.warn(e);
+			logger.warn("OpenClaw config panel error:", e);
 		} finally {
 			finishAction?.();
 			open(false);

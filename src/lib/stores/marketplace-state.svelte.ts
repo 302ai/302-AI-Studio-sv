@@ -5,6 +5,9 @@
  */
 
 import type { PluginMarketEntry } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("marketplace");
 
 const { registryService } = window.electronAPI;
 
@@ -43,14 +46,14 @@ class MarketplaceState {
 	async initialize(): Promise<void> {
 		if (this.initialized) return;
 
-		console.log("[MarketplaceState] Initializing...");
+		logger.info("Initializing...");
 
 		try {
 			await this.refreshMarketplace();
 			this.initialized = true;
-			console.log("[MarketplaceState] Initialized successfully");
+			logger.info("Initialized successfully");
 		} catch (error) {
-			console.error("[MarketplaceState] Initialization failed:", error);
+			logger.error("Initialization failed:", error);
 			this.error = error instanceof Error ? error.message : "Failed to initialize marketplace";
 		}
 	}
@@ -63,7 +66,7 @@ class MarketplaceState {
 		this.error = null;
 
 		try {
-			console.log("[MarketplaceState] Refreshing marketplace...");
+			logger.info("Refreshing marketplace...");
 
 			// Force refresh if requested
 			let plugins: PluginMarketEntry[];
@@ -82,7 +85,7 @@ class MarketplaceState {
 
 			this.lastRefresh = Date.now();
 
-			console.log(
+			logger.info(
 				`[MarketplaceState] Refreshed: ${this.marketplacePlugins.length} plugins, ` +
 					`${this.featuredPlugins.length} featured`,
 			);
@@ -94,7 +97,7 @@ class MarketplaceState {
 				this.searchResults = this.marketplacePlugins;
 			}
 		} catch (error) {
-			console.error("[MarketplaceState] Failed to refresh marketplace:", error);
+			logger.error("Failed to refresh marketplace:", error);
 			this.error = error instanceof Error ? error.message : "Failed to refresh marketplace";
 			throw error;
 		} finally {
@@ -114,15 +117,15 @@ class MarketplaceState {
 		}
 
 		try {
-			console.log(`[MarketplaceState] Searching for: "${query}"`);
+			logger.info(`[MarketplaceState] Searching for: "${query}"`);
 			const results = await registryService.searchMarketplacePlugins(query);
 
 			// Filter out invalid entries
 			this.searchResults = results.filter((p) => p && p.metadata && p.metadata.id);
 
-			console.log(`[MarketplaceState] Found ${this.searchResults.length} results`);
+			logger.info(`[MarketplaceState] Found ${this.searchResults.length} results`);
 		} catch (error) {
-			console.error("[MarketplaceState] Search failed:", error);
+			logger.error("Search failed:", error);
 			this.error = error instanceof Error ? error.message : "Search failed";
 			throw error;
 		}
@@ -135,7 +138,7 @@ class MarketplaceState {
 		try {
 			return await registryService.getMarketplacePlugin(pluginId);
 		} catch (error) {
-			console.error(`[MarketplaceState] Failed to get plugin ${pluginId}:`, error);
+			logger.error(`[MarketplaceState] Failed to get plugin ${pluginId}:`, error);
 			throw error;
 		}
 	}
@@ -152,7 +155,7 @@ class MarketplaceState {
 		try {
 			return await registryService.getCacheInfo();
 		} catch (error) {
-			console.error("[MarketplaceState] Failed to get cache info:", error);
+			logger.error("Failed to get cache info:", error);
 			return { valid: false, age: 0, pluginCount: 0 };
 		}
 	}
@@ -162,15 +165,15 @@ class MarketplaceState {
 	 */
 	async clearCache(): Promise<void> {
 		try {
-			console.log("[MarketplaceState] Clearing cache...");
+			logger.info("Clearing cache...");
 			await registryService.clearCache();
 			this.marketplacePlugins = [];
 			this.featuredPlugins = [];
 			this.searchResults = [];
 			this.lastRefresh = 0;
-			console.log("[MarketplaceState] Cache cleared");
+			logger.info("Cache cleared");
 		} catch (error) {
-			console.error("[MarketplaceState] Failed to clear cache:", error);
+			logger.error("Failed to clear cache:", error);
 			throw error;
 		}
 	}
@@ -232,6 +235,6 @@ export const marketplaceState = new MarketplaceState();
 // Auto-initialize when module loads
 if (typeof window !== "undefined") {
 	marketplaceState.initialize().catch((error) => {
-		console.error("[MarketplaceState] Auto-initialization failed:", error);
+		logger.error("Auto-initialization failed:", error);
 	});
 }

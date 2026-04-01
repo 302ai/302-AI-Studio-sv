@@ -19,6 +19,7 @@ import {
 	dataService,
 	devLauncherService,
 	externalLinkService,
+	loggerService,
 	mcpService,
 	notificationService,
 	openClawService,
@@ -509,6 +510,11 @@ export function registerIpcHandlers() {
 		externalLinkService.openExternalLink(event, url),
 	);
 
+	// loggerService service registration
+	ipcMain.handle("loggerService:log", (event, level, category, processType, message, args) =>
+		loggerService.log(event, level, category, processType, message, args),
+	);
+
 	// mcpService service registration
 	ipcMain.handle("mcpService:getToolsFromServer", (event, server) =>
 		mcpService.getToolsFromServer(event, server),
@@ -751,6 +757,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("devLauncherService:launchDevSandbox");
 	ipcMain.removeHandler("devLauncherService:stopDevSandbox");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
+	ipcMain.removeHandler("loggerService:log");
 	ipcMain.removeHandler("mcpService:getToolsFromServer");
 	ipcMain.removeHandler("mcpService:closeServer");
 	ipcMain.removeHandler("notificationService:notifyTaskCompleted");

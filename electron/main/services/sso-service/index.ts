@@ -1,4 +1,7 @@
 import { shell, type IpcMainInvokeEvent } from "electron";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("sso");
 
 export class SsoService {
 	private pendingCallback: ((apiKey: string) => void) | null = null;
@@ -16,7 +19,7 @@ export class SsoService {
 			// Use local server as redirect URL with language in path (not query params)
 			// 302.AI will append ?apikey=... so we can't have query params in the redirect URL
 			const redirectUrl = `http://localhost:${serverPort}/sso/callback/${language}`;
-			console.log("[SSO] Using redirect URL:", redirectUrl);
+			logger.info("Using redirect URL:", redirectUrl);
 
 			// Use 'redirecturl' (no underscore) as per 302.AI SSO API
 			const params = new URLSearchParams({
@@ -28,12 +31,12 @@ export class SsoService {
 			});
 
 			const ssoUrl = `https://302.ai/sso/login?${params.toString()}`;
-			console.log("[SSO] Opening SSO URL:", ssoUrl);
+			logger.info("Opening SSO URL:", ssoUrl);
 			await shell.openExternal(ssoUrl);
 
 			return { success: true };
 		} catch (error) {
-			console.error("[SSO] Failed to open SSO login:", error);
+			logger.error("Failed to open SSO login:", error);
 			return { success: false, error: String(error) };
 		}
 	}
@@ -42,11 +45,11 @@ export class SsoService {
 	 * Handle SSO callback from local server
 	 */
 	handleSsoCallbackFromServer(apiKey: string) {
-		console.log("[SSO] Received callback from server with API key");
+		logger.info("Received callback from server with API key");
 		if (this.pendingCallback) {
 			this.pendingCallback(apiKey);
 		} else {
-			console.warn("[SSO] No pending callback to handle API key");
+			logger.warn("No pending callback to handle API key");
 		}
 	}
 
@@ -57,18 +60,18 @@ export class SsoService {
 		_event: IpcMainInvokeEvent,
 		timeoutMs: number = 300000,
 	): Promise<{ success: boolean; apiKey?: string; error?: string }> {
-		console.log("[SSO] Waiting for callback, timeout:", timeoutMs);
+		logger.info("Waiting for callback, timeout:", timeoutMs);
 		return new Promise((resolve) => {
 			// Set timeout
 			this.callbackTimeout = setTimeout(() => {
-				console.log("[SSO] Callback timeout");
+				logger.info("Callback timeout");
 				this.pendingCallback = null;
 				resolve({ success: false, error: "SSO login timed out" });
 			}, timeoutMs);
 
 			// Set callback handler
 			this.pendingCallback = (apiKey: string) => {
-				console.log("[SSO] Callback handler called with API key");
+				logger.info("Callback handler called with API key");
 				if (this.callbackTimeout) {
 					clearTimeout(this.callbackTimeout);
 					this.callbackTimeout = null;
@@ -83,7 +86,7 @@ export class SsoService {
 	 * Cancel pending SSO login
 	 */
 	cancelSsoLogin(_event: IpcMainInvokeEvent): void {
-		console.log("[SSO] Canceling SSO login");
+		logger.info("Canceling SSO login");
 		if (this.callbackTimeout) {
 			clearTimeout(this.callbackTimeout);
 			this.callbackTimeout = null;

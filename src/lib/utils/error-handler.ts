@@ -1,5 +1,8 @@
 import * as m from "$lib/paraglide/messages.js";
 import { toast } from "svelte-sonner";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export interface ErrorContext {
 	provider?: string;
@@ -152,7 +155,7 @@ export class ChatErrorHandler {
 		if (showNotification) {
 			this.showErrorNotification(chatError);
 		}
-		console.error("Chat error:", chatError);
+		logger.error("Chat error:", chatError);
 		return chatError;
 	}
 

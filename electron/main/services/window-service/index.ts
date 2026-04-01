@@ -1,4 +1,7 @@
 import type { SheetWindowConfig, TabType } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("window");
 import {
 	BrowserWindow,
 	nativeTheme,
@@ -69,7 +72,7 @@ export class WindowService {
 	getMainWindow(): BrowserWindow | null {
 		const mainWindow = this.windows.find((win) => win.id === this.mainWindowId);
 		if (isUndefined(mainWindow)) {
-			console.error("Main window not found");
+			logger.error("Main window not found");
 			return null;
 		}
 		return mainWindow;
@@ -90,13 +93,13 @@ export class WindowService {
 	async initShellWindows() {
 		// Prevent duplicate initialization
 		if (this.isInitializing) {
-			console.log("[WindowService] Window initialization already in progress, skipping");
+			logger.info("Window initialization already in progress, skipping");
 			return;
 		}
 
 		// Prevent re-initialization if windows already exist
 		if (this.windows.length > 0) {
-			console.log("[WindowService] Windows already exist, skipping initialization");
+			logger.info("Windows already exist, skipping initialization");
 			return;
 		}
 
@@ -227,13 +230,13 @@ export class WindowService {
 		this.addWindow(shellWindow);
 
 		shellWindow.addListener("focus", () => {
-			console.log(
+			logger.info(
 				`window ${shellWindow.id} focus --- windows: ${this.windows.map((win) => win.id)}`,
 			);
 		});
 
 		shellWindow.addListener("blur", () => {
-			console.log(
+			logger.info(
 				`window ${shellWindow.id} blur --- windows: ${this.windows.map((win) => win.id)}`,
 			);
 		});
@@ -258,7 +261,7 @@ export class WindowService {
 		};
 
 		shellWindow.addListener("resize", () => {
-			console.log("resize", shellWindow.id);
+			logger.info("resize", shellWindow.id);
 			syncWindowViews();
 		});
 
@@ -279,10 +282,10 @@ export class WindowService {
 			const isLastWindow = windowCount === 1;
 			const isQuittingApp = this.isCMDQ;
 
-			console.log("closing --->", currentWindowId);
-			console.log("isMainWindow --->", isMainWindow);
-			console.log("isLastWindow --->", isLastWindow);
-			console.log("isQuittingApp --->", isQuittingApp);
+			logger.info("closing --->", currentWindowId);
+			logger.info("isMainWindow --->", isMainWindow);
+			logger.info("isLastWindow --->", isLastWindow);
+			logger.info("isQuittingApp --->", isQuittingApp);
 
 			// macOS: Hide the last window instead of closing it (unless quitting with CMD+Q)
 			if (isLastWindow && isMac && !isQuittingApp) {
@@ -306,11 +309,11 @@ export class WindowService {
 			const shouldCleanupPrivateChats = !isQuittingApp; // Always cleanup private chats unless quitting entire app
 
 			if (shouldCleanup) {
-				console.log("shouldCleanup ---", true);
+				logger.info("shouldCleanup ---", true);
 				await tabService.removeWindowTabs(currentWindowId);
 				await tabStorage.removeWindowState(currentWindowId.toString());
 			} else if (shouldCleanupPrivateChats) {
-				console.log("shouldCleanupPrivateChats ---", true);
+				logger.info("shouldCleanupPrivateChats ---", true);
 				// Only cleanup private chat data, don't remove window state
 				await tabService.cleanupPrivateChatData(currentWindowId);
 			}
@@ -319,7 +322,7 @@ export class WindowService {
 		});
 
 		shellWindow.addListener("closed", () => {
-			console.log("window closed, id: ", shellWindow.id);
+			logger.info("window closed, id: ", shellWindow.id);
 			this.removeWindow(shellWindow.id);
 		});
 
@@ -440,7 +443,7 @@ export class WindowService {
 				}));
 				tabState[windowId] = { tabs: updatedTabs };
 				await tabStorage.setItemInternal("tab-bar-state", tabState);
-				console.log(`[WindowService] Activated tab ${tabId} in window ${windowId} via focusWindow`);
+				logger.info(`[WindowService] Activated tab ${tabId} in window ${windowId} via focusWindow`);
 			}
 		}
 	}
@@ -454,19 +457,19 @@ export class WindowService {
 		| { action: "detached"; newWindowId: string }
 		| null
 	> {
-		console.log(
+		logger.info(
 			`[WindowService] Dropping tab ${tabId} at pointer (${pointer.screenX}, ${pointer.screenY})`,
 		);
 
 		const originWindow = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(originWindow)) {
-			console.error("[WindowService] Origin window not found");
+			logger.error("Origin window not found");
 			return null;
 		}
 
 		// Get insert target from ghost window service (synchronous read before stop() clears it)
 		const insertTarget = ghostWindowService.getCurrentInsertTargetSync();
-		console.log("[WindowService] Using insert target:", insertTarget);
+		logger.info("Using insert target:", insertTarget);
 
 		// Find target window at pointer position
 		const targetWindowData = this.findWindowAtPoint(pointer.screenX, pointer.screenY);
@@ -479,7 +482,7 @@ export class WindowService {
 				targetWindowId !== originWindow.id.toString() &&
 				this.isPointInTitlebar(targetWindow, pointer.screenX, pointer.screenY)
 			) {
-				console.log(`[WindowService] Merging tab ${tabId} into window ${targetWindowId}`);
+				logger.info(`[WindowService] Merging tab ${tabId} into window ${targetWindowId}`);
 
 				const toIndex =
 					insertTarget?.windowId === targetWindowId ? insertTarget.insertIndex : undefined;
@@ -489,7 +492,7 @@ export class WindowService {
 		}
 
 		// Fall back to creating new window
-		console.log("[WindowService] No valid drop target found, creating new window");
+		logger.info("No valid drop target found, creating new window");
 		const newWindowId = await this.handleSplitShellWindow(event, tabId);
 		if (newWindowId) {
 			return { action: "detached", newWindowId };
@@ -548,7 +551,7 @@ export class WindowService {
 
 		// Single atomic write - triggers only ONE sync broadcast
 		await tabStorage.setItemInternal("tab-bar-state", tabState);
-		console.log(
+		logger.info(
 			`[WindowService] Atomic update: moved tab ${triggerTabId} from window ${sourceWindowId} to window ${newShellWindowId}`,
 		);
 		// =============================================================================
@@ -646,7 +649,7 @@ export class WindowService {
 
 		// Single atomic write - triggers only ONE sync broadcast
 		await tabStorage.setItemInternal("tab-bar-state", tabState);
-		console.log(
+		logger.info(
 			`[WindowService] Atomic update: moved tab ${triggerTabId} from window ${sourceWindowId} to window ${targetWindowId} at index ${insertIndex}`,
 		);
 		// =============================================================================
@@ -661,7 +664,7 @@ export class WindowService {
 
 		// Close source window if it has no remaining tabs after transfer
 		if (shouldCloseSourceWindow) {
-			console.log(
+			logger.info(
 				`Source window ${fromWindow.id} has no remaining tabs after move, closing window`,
 			);
 			fromWindow.close();

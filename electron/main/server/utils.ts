@@ -1,5 +1,8 @@
 import type { UIMessage } from "ai";
 import { batchUploadFile } from "../apis/code-agent";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("app");
 
 /**
  * Send an error message through SSE stream and close the controller.
@@ -184,7 +187,7 @@ export function createUIMessageStreamFromGenerator(
 					})}\n\n`,
 				),
 			);
-			console.log(
+			logger.info(
 				`[createUIMessageStreamFromGenerator] Sent immediate start event for model ${model}`,
 			);
 
@@ -270,7 +273,7 @@ export function createUIMessageStreamFromGenerator(
 
 				controller.close();
 			} catch (error) {
-				console.error(`[createUIMessageStreamFromGenerator] Error for model ${model}:`, error);
+				logger.error(`[createUIMessageStreamFromGenerator] Error for model ${model}:`, error);
 
 				// Send error as text-delta so user sees it
 				const errorId = `error-${Date.now()}`;
@@ -370,7 +373,7 @@ export function convertAiSdkMessagesToOpenAiMessages(messages: unknown): OpenAIC
 		const content = (message as AiSdkIntermediateMessage).content;
 
 		// Debug: Log message structure
-		console.log("[convertAiSdkMessagesToOpenAiMessages] Processing message:", {
+		logger.info("[convertAiSdkMessagesToOpenAiMessages] Processing message:", {
 			role,
 			contentType: typeof content,
 			isArray: Array.isArray(content),
@@ -401,7 +404,7 @@ export function convertAiSdkMessagesToOpenAiMessages(messages: unknown): OpenAIC
 
 		// Check for tool-call parts (assistant message with tool calls)
 		const toolCallParts = content.filter((p): p is AiSdkToolCallPart => isToolCallPart(p));
-		console.log(
+		logger.info(
 			"[convertAiSdkMessagesToOpenAiMessages] toolCallParts found:",
 			toolCallParts.length,
 			"for role:",
@@ -428,7 +431,7 @@ export function convertAiSdkMessagesToOpenAiMessages(messages: unknown): OpenAIC
 
 		// Check for tool-result parts (tool message with results)
 		const toolResultParts = content.filter((p): p is AiSdkToolResultPart => isToolResultPart(p));
-		console.log(
+		logger.info(
 			"[convertAiSdkMessagesToOpenAiMessages] toolResultParts found:",
 			toolResultParts.length,
 			"for role:",
@@ -968,7 +971,7 @@ export async function uploadAttachmentsFromMessages(
 		return;
 	}
 
-	console.log(`[uploadAttachmentsFromMessages] Uploading ${attachments.length} attachments`);
+	logger.info(`[uploadAttachmentsFromMessages] Uploading ${attachments.length} attachments`);
 
 	try {
 		const fileList = await Promise.all(
@@ -981,7 +984,7 @@ export async function uploadAttachmentsFromMessages(
 				}
 
 				if (!base64Content) {
-					console.warn(
+					logger.warn(
 						`[uploadAttachmentsFromMessages] Attachment ${att.name} has no preview or filePath`,
 					);
 					return null;
@@ -1011,19 +1014,19 @@ export async function uploadAttachmentsFromMessages(
 
 			const failedUploads = uploadResponse.result.filter((r) => !r.success);
 			if (!uploadResponse.success || failedUploads.length > 0) {
-				console.error(
+				logger.error(
 					"[uploadAttachmentsFromMessages] Some attachments failed to upload:",
 					failedUploads.map((r) => r.error).join(", "),
 				);
 				// Continue anyway - partial upload is better than blocking
 			} else {
-				console.log(
+				logger.info(
 					`[uploadAttachmentsFromMessages] Successfully uploaded ${validFiles.length} attachments`,
 				);
 			}
 		}
 	} catch (error) {
-		console.error("[uploadAttachmentsFromMessages] Failed to upload attachments:", error);
+		logger.error("[uploadAttachmentsFromMessages] Failed to upload attachments:", error);
 		// Continue anyway - don't block message sending
 	}
 }
