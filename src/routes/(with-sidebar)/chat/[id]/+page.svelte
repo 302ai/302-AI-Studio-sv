@@ -63,7 +63,10 @@
 					const viewport = document.querySelector('[data-slot="scroll-area-viewport"]');
 					if (viewport) {
 						viewport.scrollTop = uiState.scrollPosition ?? 0;
-						console.log("[Chat Page] Restored scroll position:", uiState.scrollPosition);
+						console.log(
+							"[Chat Page] Restored scroll position:",
+							uiState.scrollPosition,
+						);
 					}
 				}, 100);
 			}
@@ -206,8 +209,9 @@
 						await chat.sendMessage(undefined, {
 							body: {
 								model: currentModel.id,
-								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
-									?.apiKey,
+								apiKey: persistedProviderState.current.find(
+									(p) => p.id === currentModel.providerId,
+								)?.apiKey,
 							},
 						});
 					} catch (error) {
@@ -357,13 +361,21 @@
 	<div class="flex h-full overflow-hidden relative">
 		{#if agentPreviewState.isPinned}
 			<Resizable.PaneGroup direction="horizontal" class="h-full">
-				<Resizable.Pane defaultSize={50} minSize={30} class="min-w-0" style="min-width: 450px;">
+				<Resizable.Pane
+					defaultSize={50}
+					minSize={30}
+					class="min-w-0"
+					style="min-width: 450px;"
+				>
 					<div class="flex h-full flex-col relative">
 						<PageHeader />
 						<div class="flex flex-1 flex-col items-center justify-center gap-y-6">
-							<div class="flex w-full flex-col items-center justify-center gap-chat-gap-y">
-								<span class="text-center text-chat-slogan" data-layoutid="chat-slogan"
-									>{m.app_slogan()}</span
+							<div
+								class="flex w-full flex-col items-center justify-center gap-chat-gap-y"
+							>
+								<span
+									class="text-center text-chat-slogan"
+									data-layoutid="chat-slogan">{m.app_slogan()}</span
 								>
 								<ChatInputBox />
 							</div>
@@ -399,7 +411,9 @@
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>
-					<div class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
+					<div
+						class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border"
+					>
 						<GripVerticalIcon class="size-2.5" />
 					</div>
 				</button>
@@ -411,7 +425,12 @@
 	<div class="flex h-full overflow-hidden relative">
 		{#if agentPreviewState.isPinned}
 			<Resizable.PaneGroup direction="horizontal" class="h-full">
-				<Resizable.Pane defaultSize={50} minSize={30} class="min-w-0" style="min-width: 450px;">
+				<Resizable.Pane
+					defaultSize={50}
+					minSize={30}
+					class="min-w-0"
+					style="min-width: 450px;"
+				>
 					<div class="flex h-full flex-col min-w-0">
 						<div class="flex-1 overflow-hidden relative">
 							<PageHeader />
@@ -443,7 +462,9 @@
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>
-					<div class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
+					<div
+						class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border"
+					>
 						<GripVerticalIcon class="size-2.5" />
 					</div>
 				</button>
@@ -455,7 +476,12 @@
 	<div class="flex h-full overflow-hidden relative">
 		{#if htmlPreviewState.isPinned}
 			<Resizable.PaneGroup direction="horizontal" class="h-full">
-				<Resizable.Pane defaultSize={50} minSize={30} class="min-w-0" style="min-width: 450px;">
+				<Resizable.Pane
+					defaultSize={50}
+					minSize={30}
+					class="min-w-0"
+					style="min-width: 450px;"
+				>
 					<div class="flex h-full flex-col min-w-0">
 						<div class="flex-1 overflow-hidden relative">
 							<PageHeader />
@@ -487,7 +513,9 @@
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>
-					<div class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
+					<div
+						class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border"
+					>
 						<GripVerticalIcon class="size-2.5" />
 					</div>
 				</button>

@@ -196,7 +196,9 @@ class SyncBus {
 	private initChannel() {
 		try {
 			this.channel = new BroadcastChannel("agent-preview-sync");
-			this.channel.onmessage = (event: MessageEvent<SyncEnvelope<AgentPreviewSyncMessage>>) => {
+			this.channel.onmessage = (
+				event: MessageEvent<SyncEnvelope<AgentPreviewSyncMessage>>,
+			) => {
 				this.deliver(event.data);
 			};
 		} catch (e) {
@@ -305,7 +307,9 @@ export class AgentPreviewState {
 	private get storageMap(): AgentPreviewStorageMap {
 		const current = persistedAgentPreviewStorage.current;
 		if (!current) {
-			console.warn("[AgentPreviewState] persistedAgentPreviewStorage.current is null/undefined");
+			console.warn(
+				"[AgentPreviewState] persistedAgentPreviewStorage.current is null/undefined",
+			);
 		}
 		return current || {};
 	}
@@ -357,7 +361,10 @@ export class AgentPreviewState {
 	/**
 	 * Load file list and contents from storage
 	 */
-	async loadFromStorage(sandboxId: string, sessionId: string): Promise<AgentPreviewStorage | null> {
+	async loadFromStorage(
+		sandboxId: string,
+		sessionId: string,
+	): Promise<AgentPreviewStorage | null> {
 		if (!sandboxId || !sessionId) {
 			return null;
 		}
@@ -431,7 +438,11 @@ export class AgentPreviewState {
 		}
 
 		// If file was modified after caching, cache is stale
-		if (currentModifiedTime && cached.modifiedTime && currentModifiedTime !== cached.modifiedTime) {
+		if (
+			currentModifiedTime &&
+			cached.modifiedTime &&
+			currentModifiedTime !== cached.modifiedTime
+		) {
 			return null; // Force reload from API
 		}
 
@@ -692,7 +703,11 @@ export class AgentPreviewState {
 	/**
 	 * Set selected file path for a sandbox session
 	 */
-	async setSelectedFilePath(sandboxId: string, sessionId: string, filePath: string): Promise<void> {
+	async setSelectedFilePath(
+		sandboxId: string,
+		sessionId: string,
+		filePath: string,
+	): Promise<void> {
 		if (!sandboxId || !sessionId) {
 			return;
 		}

@@ -112,7 +112,10 @@ export class OpenClawService {
 			this.getOpenClawConfig("channels"),
 		]);
 
-		const filteredData = pick(configs.data, isWin ? WIN_SUPPORTED_CHANNELS : SUPPORTED_CHANNELS);
+		const filteredData = pick(
+			configs.data,
+			isWin ? WIN_SUPPORTED_CHANNELS : SUPPORTED_CHANNELS,
+		);
 
 		await this.setOpenClawConfig("channels", merge(channels, filteredData));
 	}
@@ -173,7 +176,11 @@ export class OpenClawService {
 				};
 				for (const key in tgAccounts) {
 					// key == "default" You can't delete it !!!!!!!!!!!!!!
-					if (key != accountId && tgAccounts[key].botToken == telegramBotId && key != "default") {
+					if (
+						key != accountId &&
+						tgAccounts[key].botToken == telegramBotId &&
+						key != "default"
+					) {
 						delete tgAccounts[key];
 					}
 				}

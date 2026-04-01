@@ -4,8 +4,8 @@ version_anchors: ["SvelteKit@2.x", "Svelte@5.x", "Tailwind@4.x"]
 authored: true
 origin: self
 adapted_from:
-  - "Community styling patterns from production Svelte applications"
-  - "Tailwind CSS advanced patterns and component design strategies"
+    - "Community styling patterns from production Svelte applications"
+    - "Tailwind CSS advanced patterns and component design strategies"
 last_reviewed: 2025-10-28
 summary: "Master advanced Tailwind CSS patterns in Svelte 5 including component variants, conditional styling with runes, dynamic themes, reusable utilities, and design system integration."
 ---
@@ -601,7 +601,9 @@ Create maintainable utility classes:
 <div class="grid grid-cols-3 gap-4">
 	{#each items as item (item.id)}
 		<div class="card-hover rounded-lg p-6 bg-white shadow-md">
-			<h3 class="text-xl font-bold text-shadow-md gradient-primary bg-clip-text text-transparent">
+			<h3
+				class="text-xl font-bold text-shadow-md gradient-primary bg-clip-text text-transparent"
+			>
 				{item.title}
 			</h3>
 			<p class="mt-2 text-gray-600">Content</p>
@@ -831,7 +833,11 @@ Create smooth animations:
 
 {#if open}
 	<!-- Backdrop -->
-	<div class="fixed inset-0 bg-black/50 fade-enter" onclick={closeModal} role="presentation"></div>
+	<div
+		class="fixed inset-0 bg-black/50 fade-enter"
+		onclick={closeModal}
+		role="presentation"
+	></div>
 
 	<!-- Modal -->
 	<div class="fixed inset-0 flex items-center justify-center p-4">
@@ -845,7 +851,10 @@ Create smooth animations:
 				{@render children()}
 			</div>
 			<div class="px-6 py-4 bg-gray-50 flex justify-end gap-2">
-				<button class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300" onclick={closeModal}>
+				<button
+					class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300"
+					onclick={closeModal}
+				>
 					Close
 				</button>
 			</div>

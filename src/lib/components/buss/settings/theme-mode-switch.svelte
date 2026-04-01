@@ -82,7 +82,9 @@
 				bind:this={itemElements[index]}
 				class={cn(
 					"h-seg-thumb relative z-2 flex flex-1 cursor-pointer items-center justify-center gap-1 rounded-md text-sm",
-					isActive ? "text-accent-foreground" : "text-secondary-foreground hover:bg-tab-hover z-1",
+					isActive
+						? "text-accent-foreground"
+						: "text-secondary-foreground hover:bg-tab-hover z-1",
 				)}
 				type="button"
 				onmousedown={() => handleSelect(option.key)}

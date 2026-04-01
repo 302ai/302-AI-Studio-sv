@@ -91,7 +91,9 @@
 
 		<!-- Search -->
 		<div class="relative">
-			<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+			<Search
+				class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+			/>
 			<Input
 				placeholder={m.placeholder_search_session()}
 				class="pl-9 bg-muted/50 border-transparent focus-visible:ring-0 focus-visible:bg-background"
@@ -122,7 +124,9 @@
 											<span class="font-medium text-sm">
 												{session.note || session.session_id}
 											</span>
-											<span class="text-xs text-muted-foreground">{session.session_id}</span>
+											<span class="text-xs text-muted-foreground"
+												>{session.session_id}</span
+											>
 										</div>
 										{#if session.workspace_path}
 											<div class="flex flex-col items-end gap-1">
@@ -149,5 +153,9 @@
 		</div>
 	</section>
 
-	<SandboxDeleteConfirmDialog bind:open={isDeleteDialogOpen} mode="local" session={targetSession} />
+	<SandboxDeleteConfirmDialog
+		bind:open={isDeleteDialogOpen}
+		mode="local"
+		session={targetSession}
+	/>
 </div>

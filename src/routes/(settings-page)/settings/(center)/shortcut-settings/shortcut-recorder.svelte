@@ -39,7 +39,9 @@
 
 		return allShortcuts.some((shortcut) => {
 			const normalizedExistingKeys = !isMac
-				? shortcut.keys.map((key) => (key === "Cmd" ? "Ctrl" : key === "Option" ? "Alt" : key))
+				? shortcut.keys.map((key) =>
+						key === "Cmd" ? "Ctrl" : key === "Option" ? "Alt" : key,
+					)
 				: shortcut.keys;
 
 			const existingKeysStr = normalizedExistingKeys.slice().sort().join(",");
@@ -153,9 +155,13 @@
 	};
 	const displayValue = $derived(() => {
 		if (isRecording) {
-			return currentKeys.length > 0 ? formatKeys(currentKeys) : m.settings_shortcut_pressKeys();
+			return currentKeys.length > 0
+				? formatKeys(currentKeys)
+				: m.settings_shortcut_pressKeys();
 		}
-		return value.length > 0 ? formatKeys(value) : placeholder || m.settings_shortcut_placeholder();
+		return value.length > 0
+			? formatKeys(value)
+			: placeholder || m.settings_shortcut_placeholder();
 	});
 	$effect(() => {
 		if (!isRecording) return;

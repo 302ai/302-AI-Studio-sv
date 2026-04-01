@@ -100,7 +100,8 @@ class SidebarSearchState {
 	async #loadSearchQueryFromStorage(): Promise<void> {
 		try {
 			if (typeof window === "undefined" || !window.electronAPI?.storageService) return;
-			const stored = await window.electronAPI.storageService.getItem(SEARCH_QUERY_STORAGE_KEY);
+			const stored =
+				await window.electronAPI.storageService.getItem(SEARCH_QUERY_STORAGE_KEY);
 			if (typeof stored === "string" && stored.trim()) {
 				this.#isBroadcastUpdate = true;
 				this.#localSearchQuery = stored;
@@ -121,7 +122,8 @@ class SidebarSearchState {
 			const stored = (await window.electronAPI.storageService.getItem(
 				SEARCH_RESULTS_STORAGE_KEY,
 			)) as SidebarSearchResultsPayload | null;
-			if (!stored || typeof stored.query !== "string" || !Array.isArray(stored.resultIds)) return;
+			if (!stored || typeof stored.query !== "string" || !Array.isArray(stored.resultIds))
+				return;
 			const normalized = this.#normalizeQuery(stored.query);
 			if (!normalized) return;
 			this.#applySearchResults(normalized, stored.resultIds, {
@@ -245,10 +247,13 @@ class SidebarSearchState {
 
 	#broadcastSearchResults(query: string, resultIds: string[]): void {
 		if (typeof window !== "undefined" && window.electronAPI?.broadcastService) {
-			window.electronAPI.broadcastService.broadcastExcludeSource("sidebar-search-results-updated", {
-				query,
-				resultIds,
-			});
+			window.electronAPI.broadcastService.broadcastExcludeSource(
+				"sidebar-search-results-updated",
+				{
+					query,
+					resultIds,
+				},
+			);
 		}
 	}
 
@@ -381,7 +386,11 @@ class SidebarSearchState {
 			if (threadData.thread.title.toLowerCase().includes(searchTerm)) {
 				results.push(threadData);
 			} else {
-				const hasMatch = await this.#hasThreadMessageMatch(threadData.threadId, searchTerm, runId);
+				const hasMatch = await this.#hasThreadMessageMatch(
+					threadData.threadId,
+					searchTerm,
+					runId,
+				);
 				if (runId !== this.searchRunId) return results;
 				if (hasMatch) {
 					results.push(threadData);

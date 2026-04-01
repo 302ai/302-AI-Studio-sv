@@ -192,7 +192,8 @@ class PreferencesSettingsManager {
 
 	get titleGenerationModel(): Model | null {
 		return (
-			persistedPreferencesSettings.current.titleGenerationModel ?? sessionState.latestUsedModel
+			persistedPreferencesSettings.current.titleGenerationModel ??
+			sessionState.latestUsedModel
 		);
 	}
 
@@ -296,7 +297,10 @@ class PreferencesSettingsManager {
 	}
 
 	update(partial: Partial<PreferencesSettingsState>): void {
-		persistedPreferencesSettings.current = { ...persistedPreferencesSettings.current, ...partial };
+		persistedPreferencesSettings.current = {
+			...persistedPreferencesSettings.current,
+			...partial,
+		};
 	}
 }
 

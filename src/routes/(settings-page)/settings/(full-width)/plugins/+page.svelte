@@ -55,7 +55,8 @@
 	let isUninstalling = $state(false);
 	let updatingPlugins = $state(new Set<string>());
 
-	const { installedPlugins, builtinPlugins, thirdPartyPlugins, isLoading } = $derived(pluginState);
+	const { installedPlugins, builtinPlugins, thirdPartyPlugins, isLoading } =
+		$derived(pluginState);
 	const { searchResults: marketplacePlugins, isLoading: isLoadingMarketplace } =
 		$derived(marketplaceState);
 
@@ -420,7 +421,9 @@
 			{#if isLoading}
 				<div class="flex items-center justify-center py-12">
 					<div class="text-center">
-						<RefreshCw class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
+						<RefreshCw
+							class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground"
+						/>
 						<p class="text-muted-foreground">{m.plugins_loading()}</p>
 					</div>
 				</div>
@@ -442,7 +445,9 @@
 							<!-- Builtin badge - moved to top right corner -->
 							{#if plugin.metadata.builtin}
 								<div class="absolute right-2 top-2">
-									<Badge variant="secondary" class="text-xs">{m.plugins_badge_builtin()}</Badge>
+									<Badge variant="secondary" class="text-xs"
+										>{m.plugins_badge_builtin()}</Badge
+									>
 								</div>
 							{/if}
 
@@ -467,8 +472,13 @@
 									<div class="flex-1">
 										<h3 class="font-semibold">{plugin.metadata.name}</h3>
 										<div class="flex items-center gap-2">
-											<p class="text-xs text-muted-foreground">v{plugin.metadata.version}</p>
-											<Badge variant={getStatusBadgeVariant(plugin.status)} class="text-xs">
+											<p class="text-xs text-muted-foreground">
+												v{plugin.metadata.version}
+											</p>
+											<Badge
+												variant={getStatusBadgeVariant(plugin.status)}
+												class="text-xs"
+											>
 												{getStatusText(plugin.status)}
 											</Badge>
 										</div>
@@ -519,10 +529,18 @@
 										{m.plugins_button_enable()}
 									</Button>
 								{/if}
-								<Button size="sm" variant="ghost" onclick={() => openDetails(plugin)}>
+								<Button
+									size="sm"
+									variant="ghost"
+									onclick={() => openDetails(plugin)}
+								>
 									{m.plugins_button_details()}
 								</Button>
-								<Button size="sm" variant="ghost" onclick={() => openSettings(plugin)}>
+								<Button
+									size="sm"
+									variant="ghost"
+									onclick={() => openSettings(plugin)}
+								>
 									{m.plugins_button_settings()}
 								</Button>
 								{#if !plugin.metadata.builtin}
@@ -559,7 +577,9 @@
 			{#if isLoading}
 				<div class="flex items-center justify-center py-12">
 					<div class="text-center">
-						<RefreshCw class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
+						<RefreshCw
+							class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground"
+						/>
 						<p class="text-muted-foreground">{m.plugins_loading()}</p>
 					</div>
 				</div>
@@ -576,7 +596,9 @@
 							<!-- Same plugin card content as installed tab -->
 							{#if plugin.metadata.builtin}
 								<div class="absolute right-2 top-2">
-									<Badge variant="secondary" class="text-xs">{m.plugins_badge_builtin()}</Badge>
+									<Badge variant="secondary" class="text-xs"
+										>{m.plugins_badge_builtin()}</Badge
+									>
 								</div>
 							{/if}
 							<div class="mb-3 flex items-start justify-between">
@@ -599,8 +621,13 @@
 									<div class="flex-1">
 										<h3 class="font-semibold">{plugin.metadata.name}</h3>
 										<div class="flex items-center gap-2">
-											<p class="text-xs text-muted-foreground">v{plugin.metadata.version}</p>
-											<Badge variant={getStatusBadgeVariant(plugin.status)} class="text-xs">
+											<p class="text-xs text-muted-foreground">
+												v{plugin.metadata.version}
+											</p>
+											<Badge
+												variant={getStatusBadgeVariant(plugin.status)}
+												class="text-xs"
+											>
 												{getStatusText(plugin.status)}
 											</Badge>
 										</div>
@@ -641,10 +668,18 @@
 										{m.plugins_button_enable()}
 									</Button>
 								{/if}
-								<Button size="sm" variant="ghost" onclick={() => openDetails(plugin)}>
+								<Button
+									size="sm"
+									variant="ghost"
+									onclick={() => openDetails(plugin)}
+								>
 									{m.plugins_button_details()}
 								</Button>
-								<Button size="sm" variant="ghost" onclick={() => openSettings(plugin)}>
+								<Button
+									size="sm"
+									variant="ghost"
+									onclick={() => openSettings(plugin)}
+								>
 									{m.plugins_button_settings()}
 								</Button>
 							</div>
@@ -659,7 +694,9 @@
 			{#if isLoading}
 				<div class="flex items-center justify-center py-12">
 					<div class="text-center">
-						<RefreshCw class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
+						<RefreshCw
+							class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground"
+						/>
 						<p class="text-muted-foreground">{m.plugins_loading()}</p>
 					</div>
 				</div>
@@ -694,8 +731,13 @@
 									<div class="flex-1">
 										<h3 class="font-semibold">{plugin.metadata.name}</h3>
 										<div class="flex items-center gap-2">
-											<p class="text-xs text-muted-foreground">v{plugin.metadata.version}</p>
-											<Badge variant={getStatusBadgeVariant(plugin.status)} class="text-xs">
+											<p class="text-xs text-muted-foreground">
+												v{plugin.metadata.version}
+											</p>
+											<Badge
+												variant={getStatusBadgeVariant(plugin.status)}
+												class="text-xs"
+											>
 												{getStatusText(plugin.status)}
 											</Badge>
 										</div>
@@ -736,10 +778,18 @@
 										{m.plugins_button_enable()}
 									</Button>
 								{/if}
-								<Button size="sm" variant="ghost" onclick={() => openDetails(plugin)}>
+								<Button
+									size="sm"
+									variant="ghost"
+									onclick={() => openDetails(plugin)}
+								>
 									{m.plugins_button_details()}
 								</Button>
-								<Button size="sm" variant="ghost" onclick={() => openSettings(plugin)}>
+								<Button
+									size="sm"
+									variant="ghost"
+									onclick={() => openSettings(plugin)}
+								>
 									{m.plugins_button_settings()}
 								</Button>
 								{#if !plugin.metadata.builtin}
@@ -776,14 +826,18 @@
 			{#if isLoadingMarketplace}
 				<div class="flex items-center justify-center py-12">
 					<div class="text-center">
-						<RefreshCw class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground" />
+						<RefreshCw
+							class="mx-auto mb-4 h-10 w-10 animate-spin text-muted-foreground"
+						/>
 						<p class="text-muted-foreground">{m.plugins_marketplace_loading()}</p>
 					</div>
 				</div>
 			{:else if marketplacePlugins.length === 0}
 				<div class="flex items-center justify-center py-12">
 					<div class="text-center">
-						<p class="text-muted-foreground mb-4">{m.plugins_marketplace_no_plugins()}</p>
+						<p class="text-muted-foreground mb-4">
+							{m.plugins_marketplace_no_plugins()}
+						</p>
 						<Button variant="outline" onclick={handleRefreshMarketplace}>
 							<RefreshCw class="mr-2 h-4 w-4" />
 							{m.plugins_marketplace_refresh()}
@@ -810,7 +864,11 @@
 							<div class="mb-3 flex items-start justify-between">
 								<div class="flex items-center gap-3">
 									{#if plugin.icon}
-										<img src={plugin.icon} alt={plugin.metadata.name} class="h-10 w-10 rounded" />
+										<img
+											src={plugin.icon}
+											alt={plugin.metadata.name}
+											class="h-10 w-10 rounded"
+										/>
 									{:else}
 										<div
 											class="flex h-10 w-10 items-center justify-center rounded bg-primary/10 text-primary"
@@ -822,7 +880,9 @@
 									{/if}
 									<div class="flex-1">
 										<h3 class="font-semibold">{plugin.metadata.name}</h3>
-										<p class="text-xs text-muted-foreground">v{plugin.metadata.version}</p>
+										<p class="text-xs text-muted-foreground">
+											v{plugin.metadata.version}
+										</p>
 									</div>
 								</div>
 							</div>
@@ -872,7 +932,8 @@
 										size="sm"
 										variant="default"
 										class="flex-1"
-										onclick={() => handleInstallFromMarketplace(plugin.metadata.id)}
+										onclick={() =>
+											handleInstallFromMarketplace(plugin.metadata.id)}
 										disabled={isInstalling}
 									>
 										{#if isInstalling}
@@ -883,7 +944,11 @@
 										{m.plugins_marketplace_install()}
 									</Button>
 								{/if}
-								<Button size="sm" variant="ghost" onclick={() => openMarketplaceDetails(plugin)}>
+								<Button
+									size="sm"
+									variant="ghost"
+									onclick={() => openMarketplaceDetails(plugin)}
+								>
 									{m.plugins_marketplace_details()}
 								</Button>
 							</div>
@@ -900,7 +965,9 @@
 	<DialogContent class="max-w-2xl max-h-[80vh] overflow-y-auto">
 		<DialogHeader>
 			<DialogTitle
-				>{m.plugins_settings_title({ name: selectedPlugin?.metadata.name || "" })}</DialogTitle
+				>{m.plugins_settings_title({
+					name: selectedPlugin?.metadata.name || "",
+				})}</DialogTitle
 			>
 			<DialogDescription>
 				{m.plugins_settings_description({ name: selectedPlugin?.metadata.name || "" })}
@@ -932,11 +999,15 @@
 								<Label for={key} class="text-sm font-medium">
 									{schema.title || key}
 									{#if Array.isArray(selectedPlugin.metadata.configSchema.required) && selectedPlugin.metadata.configSchema.required.includes(key)}
-										<span class="text-destructive">{m.plugins_settings_required()}</span>
+										<span class="text-destructive"
+											>{m.plugins_settings_required()}</span
+										>
 									{/if}
 								</Label>
 								{#if schema.description}
-									<p class="text-xs text-muted-foreground">{schema.description}</p>
+									<p class="text-xs text-muted-foreground">
+										{schema.description}
+									</p>
 								{/if}
 
 								<!-- Render different input types based on schema type -->
@@ -945,13 +1016,15 @@
 										<Checkbox
 											id={key}
 											checked={!!pluginConfig[key]}
-											onCheckedChange={(checked) => (pluginConfig[key] = checked)}
+											onCheckedChange={(checked) =>
+												(pluginConfig[key] = checked)}
 										/>
 										<Label
 											for={key}
 											class="text-sm font-normal leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 										>
-											{schema.description || m.plugins_settings_enable_label()}
+											{schema.description ||
+												m.plugins_settings_enable_label()}
 										</Label>
 									</div>
 								{:else if schema.enum && Array.isArray(schema.enum)}
@@ -978,7 +1051,9 @@
 							</div>
 						{/each}
 					{:else}
-						<p class="text-sm text-muted-foreground">{m.plugins_settings_no_config()}</p>
+						<p class="text-sm text-muted-foreground">
+							{m.plugins_settings_no_config()}
+						</p>
 					{/if}
 				</div>
 			</div>
@@ -1054,7 +1129,9 @@
 						bind:value={installUrl}
 						placeholder={m.plugins_install_url_placeholder()}
 					/>
-					<p class="text-xs text-muted-foreground">This feature is not yet implemented.</p>
+					<p class="text-xs text-muted-foreground">
+						This feature is not yet implemented.
+					</p>
 				</div>
 			{/if}
 		</div>
@@ -1082,7 +1159,9 @@
 		<DialogHeader>
 			<DialogTitle>{m.plugins_uninstall_confirm_title()}</DialogTitle>
 			<DialogDescription>
-				{m.plugins_uninstall_confirm_description({ name: selectedPlugin?.metadata.name || "" })}
+				{m.plugins_uninstall_confirm_description({
+					name: selectedPlugin?.metadata.name || "",
+				})}
 			</DialogDescription>
 		</DialogHeader>
 
@@ -1107,10 +1186,14 @@
 						{/if}
 						<div>
 							<p class="font-medium">{selectedPlugin.metadata.name}</p>
-							<p class="text-xs text-muted-foreground">v{selectedPlugin.metadata.version}</p>
+							<p class="text-xs text-muted-foreground">
+								v{selectedPlugin.metadata.version}
+							</p>
 						</div>
 					</div>
-					<p class="text-sm text-muted-foreground">{selectedPlugin.metadata.description}</p>
+					<p class="text-sm text-muted-foreground">
+						{selectedPlugin.metadata.description}
+					</p>
 				</div>
 			</div>
 		{/if}
@@ -1168,7 +1251,9 @@
 								<Badge variant="secondary">{m.plugins_badge_builtin()}</Badge>
 							{/if}
 						</div>
-						<p class="text-sm text-muted-foreground mb-2">v{selectedPlugin.metadata.version}</p>
+						<p class="text-sm text-muted-foreground mb-2">
+							v{selectedPlugin.metadata.version}
+						</p>
 						<div class="flex flex-wrap gap-2">
 							{#if selectedPlugin.metadata.tags && selectedPlugin.metadata.tags.length > 0}
 								{#each selectedPlugin.metadata.tags as tag (tag)}
@@ -1188,15 +1273,20 @@
 						<h4 class="font-medium text-sm mb-3">{m.plugins_details_basic_info()}</h4>
 						<div class="space-y-1.5 text-sm">
 							<div class="flex justify-between">
-								<span class="text-muted-foreground">{m.plugins_details_author()}：</span>
+								<span class="text-muted-foreground"
+									>{m.plugins_details_author()}：</span
+								>
 								<span class="font-medium">{selectedPlugin.metadata.author}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-muted-foreground">{m.plugins_details_version()}：</span>
+								<span class="text-muted-foreground"
+									>{m.plugins_details_version()}：</span
+								>
 								<span class="font-medium">{selectedPlugin.metadata.version}</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-muted-foreground">{m.plugins_details_id()}：</span>
+								<span class="text-muted-foreground">{m.plugins_details_id()}：</span
+								>
 								<span class="font-mono text-xs">{selectedPlugin.metadata.id}</span>
 							</div>
 						</div>
@@ -1204,10 +1294,14 @@
 
 					<!-- Installation Info -->
 					<div class="rounded-lg border p-4 space-y-2">
-						<h4 class="font-medium text-sm mb-3">{m.plugins_details_installation_info()}</h4>
+						<h4 class="font-medium text-sm mb-3">
+							{m.plugins_details_installation_info()}
+						</h4>
 						<div class="space-y-1.5 text-sm">
 							<div class="flex justify-between">
-								<span class="text-muted-foreground">{m.plugins_details_type()}：</span>
+								<span class="text-muted-foreground"
+									>{m.plugins_details_type()}：</span
+								>
 								<span class="font-medium">
 									{selectedPlugin.metadata.builtin
 										? m.plugins_details_builtin()
@@ -1215,20 +1309,30 @@
 								</span>
 							</div>
 							<div class="flex justify-between">
-								<span class="text-muted-foreground">{m.plugins_details_status()}：</span>
-								<span class="font-medium">{getStatusText(selectedPlugin.status)}</span>
+								<span class="text-muted-foreground"
+									>{m.plugins_details_status()}：</span
+								>
+								<span class="font-medium"
+									>{getStatusText(selectedPlugin.status)}</span
+								>
 							</div>
 							{#if selectedPlugin.installedAt}
 								<div class="flex justify-between">
-									<span class="text-muted-foreground">{m.plugins_details_installed_at()}：</span>
+									<span class="text-muted-foreground"
+										>{m.plugins_details_installed_at()}：</span
+									>
 									<span class="font-medium">
 										{new Date(selectedPlugin.installedAt).toLocaleDateString()}
 									</span>
 								</div>
 							{/if}
 							<div class="flex flex-col gap-1">
-								<span class="text-muted-foreground">{m.plugins_details_path()}：</span>
-								<span class="font-mono text-xs break-all">{selectedPlugin.path}</span>
+								<span class="text-muted-foreground"
+									>{m.plugins_details_path()}：</span
+								>
+								<span class="font-mono text-xs break-all"
+									>{selectedPlugin.path}</span
+								>
 							</div>
 						</div>
 					</div>
@@ -1245,7 +1349,9 @@
 				<!-- Configuration Schema -->
 				{#if selectedPlugin.metadata.configSchema?.properties && Object.keys(selectedPlugin.metadata.configSchema.properties).length > 0}
 					<div class="rounded-lg border p-4">
-						<h4 class="font-medium text-sm mb-3">{m.plugins_details_configurable_options()}</h4>
+						<h4 class="font-medium text-sm mb-3">
+							{m.plugins_details_configurable_options()}
+						</h4>
 						<div class="space-y-2">
 							{#each Object.entries(selectedPlugin.metadata.configSchema.properties) as [key, schema] (key)}
 								<div class="flex items-start gap-3 text-sm">
@@ -1333,7 +1439,9 @@
 					{/if}
 					<div class="flex-1">
 						<div class="flex items-center gap-2 mb-1">
-							<h3 class="text-xl font-semibold">{selectedMarketplacePlugin.metadata.name}</h3>
+							<h3 class="text-xl font-semibold">
+								{selectedMarketplacePlugin.metadata.name}
+							</h3>
 							{#if selectedMarketplacePlugin.featured}
 								<Badge variant="default">
 									<Star class="mr-1 h-3 w-3" />
@@ -1429,7 +1537,9 @@
 					<Button
 						variant="default"
 						onclick={() =>
-							handleInstallFromMarketplace(selectedMarketplacePlugin?.metadata.id || "")}
+							handleInstallFromMarketplace(
+								selectedMarketplacePlugin?.metadata.id || "",
+							)}
 						disabled={isInstalling}
 					>
 						{#if isInstalling}
@@ -1439,7 +1549,9 @@
 						{m.plugins_marketplace_install()}
 					</Button>
 				{:else}
-					<Button variant="outline" disabled>{m.plugins_marketplace_already_installed()}</Button>
+					<Button variant="outline" disabled
+						>{m.plugins_marketplace_already_installed()}</Button
+					>
 				{/if}
 			</DialogFooter>
 		{/if}

@@ -34,7 +34,8 @@ async function validateAndRepairTaskList(
 
 		// number (repeat count / total repeats): ensure finite integer in [1, 99]
 		const rawNumber = task?.number;
-		const n = typeof rawNumber === "number" ? rawNumber : Number.parseInt(String(rawNumber), 10);
+		const n =
+			typeof rawNumber === "number" ? rawNumber : Number.parseInt(String(rawNumber), 10);
 		if (!Number.isFinite(n)) {
 			task.number = 1;
 		} else {
@@ -44,7 +45,9 @@ async function validateAndRepairTaskList(
 		// executedCount: default missing/invalid to 0 (old data can't be reliably inferred)
 		const rawExecuted = task?.executedCount;
 		const executed =
-			typeof rawExecuted === "number" ? rawExecuted : Number.parseInt(String(rawExecuted), 10);
+			typeof rawExecuted === "number"
+				? rawExecuted
+				: Number.parseInt(String(rawExecuted), 10);
 		if (!Number.isFinite(executed)) {
 			task.executedCount = 0;
 		} else {
@@ -64,7 +67,10 @@ async function validateAndRepairTaskList(
 	const validated = taskListSchema(parsed);
 
 	if (validated instanceof type.errors) {
-		console.warn("Task list schema validation failed, returning empty list:", validated.summary);
+		console.warn(
+			"Task list schema validation failed, returning empty list:",
+			validated.summary,
+		);
 		return [];
 	}
 

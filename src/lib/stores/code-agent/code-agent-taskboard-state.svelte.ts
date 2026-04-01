@@ -144,7 +144,10 @@ export class CodeAgentTaskboardState {
 					id: nanoid(),
 					content: this.inputValue.trim(),
 					status: "pending",
-					number: Math.min(99, Math.max(1, Number.parseInt(`${this.repeatCount}`, 10) || 1)),
+					number: Math.min(
+						99,
+						Math.max(1, Number.parseInt(`${this.repeatCount}`, 10) || 1),
+					),
 					executedCount: 0,
 				};
 				const updatedTasklist = [...this.tasklist, newTask];
@@ -171,7 +174,9 @@ export class CodeAgentTaskboardState {
 		const ATTACHMENTS_DIR_PATH = ".302ai/attachments";
 		const attachmentRefs =
 			attachments.length > 0
-				? attachments.map((att) => `[Attachment: ${ATTACHMENTS_DIR_PATH}/${att.name}]`).join("\n")
+				? attachments
+						.map((att) => `[Attachment: ${ATTACHMENTS_DIR_PATH}/${att.name}]`)
+						.join("\n")
 				: "";
 		const taskContent = attachmentRefs
 			? trimmedContent
@@ -343,7 +348,9 @@ export class CodeAgentTaskboardState {
 								// Get failed completely.
 								// If we have local data, try to push it to remote to fix the issue.
 								if (this.tasklist.length > 0) {
-									console.warn("Failed to get tasklist. Attempting to restore from local state.");
+									console.warn(
+										"Failed to get tasklist. Attempting to restore from local state.",
+									);
 									await this.updateTasklist(this.tasklist);
 								}
 							}
@@ -367,7 +374,10 @@ export class CodeAgentTaskboardState {
 			})
 			.otherwise(async () => {
 				this.tasklist = sortedTasklist;
-				const [sandboxId, path] = [codeAgentState.sandboxId, codeAgentState.currentWorkspacePath];
+				const [sandboxId, path] = [
+					codeAgentState.sandboxId,
+					codeAgentState.currentWorkspacePath,
+				];
 				console.log("Updating tasklist", path);
 
 				const result = await updateTasklist(sandboxId, path, sortedTasklist);
@@ -498,7 +508,9 @@ export class CodeAgentTaskboardState {
 		try {
 			while (this.#currentRetryCount < this.#MAX_RETRY_COUNT) {
 				const message =
-					this.#currentRetryCount === 0 ? task.content : `${m.text_continue()}: ${task.content}`;
+					this.#currentRetryCount === 0
+						? task.content
+						: `${m.text_continue()}: ${task.content}`;
 
 				const waitPromise = this.#waitForChatFinished();
 				const didSend = await fn(message);
@@ -515,7 +527,10 @@ export class CodeAgentTaskboardState {
 				const success = await waitPromise;
 
 				if (success) {
-					const [sandboxId, path] = [codeAgentState.sandboxId, codeAgentState.currentWorkspacePath];
+					const [sandboxId, path] = [
+						codeAgentState.sandboxId,
+						codeAgentState.currentWorkspacePath,
+					];
 
 					let currentTaskList = this.tasklist;
 					const { isOk, tasks } = await _getTasklist(sandboxId, path);
@@ -542,9 +557,13 @@ export class CodeAgentTaskboardState {
 				}
 
 				this.#currentRetryCount++;
-				console.log(`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`);
+				console.log(
+					`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`,
+				);
 			}
-			console.log(`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`);
+			console.log(
+				`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`,
+			);
 
 			if (this.#currentRetryCount >= this.#MAX_RETRY_COUNT) {
 				this.retryExhausted = true;

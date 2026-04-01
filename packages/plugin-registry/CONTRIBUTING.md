@@ -41,14 +41,14 @@ Before submitting, ensure your plugin:
 1. Create a GitHub Release in your plugin repository
 2. Tag the release with your version (e.g., `v1.0.0`)
 3. Build your plugin and create a ZIP file containing:
-   ```
-   plugin.zip
-   ├── plugin.json
-   ├── main/
-   │   └── index.js (or .ts)
-   ├── README.md
-   └── (other necessary files)
-   ```
+    ```
+    plugin.zip
+    ├── plugin.json
+    ├── main/
+    │   └── index.js (or .ts)
+    ├── README.md
+    └── (other necessary files)
+    ```
 4. Upload the ZIP file to the GitHub Release
 5. Get the direct download URL (should be HTTPS)
 
@@ -58,44 +58,44 @@ Before submitting, ensure your plugin:
 2. Clone your fork locally
 3. Add your plugin entry to `registry.json`:
 
-   **Option A: Manual**
+    **Option A: Manual**
 
-   ```bash
-   # Edit registry.json directly
-   vim registry.json
-   ```
+    ```bash
+    # Edit registry.json directly
+    vim registry.json
+    ```
 
-   **Option B: Interactive (Recommended)**
+    **Option B: Interactive (Recommended)**
 
-   ```bash
-   # Use the helper script
-   pnpm run add-plugin
-   ```
+    ```bash
+    # Use the helper script
+    pnpm run add-plugin
+    ```
 
 4. Validate your changes:
-   ```bash
-   pnpm run validate
-   ```
+    ```bash
+    pnpm run validate
+    ```
 
 ### 4. Submit Pull Request
 
 1. Commit your changes with a clear message:
 
-   ```bash
-   git add registry.json
-   git commit -m "feat: add my-awesome-plugin v1.0.0"
-   ```
+    ```bash
+    git add registry.json
+    git commit -m "feat: add my-awesome-plugin v1.0.0"
+    ```
 
 2. Push to your fork:
 
-   ```bash
-   git push origin main
-   ```
+    ```bash
+    git push origin main
+    ```
 
 3. Create a Pull Request with:
-   - **Title**: `Add [plugin-name] v[version]`
-   - **Description**: Brief description of your plugin and what it does
-   - **Checklist**: Confirm all requirements are met
+    - **Title**: `Add [plugin-name] v[version]`
+    - **Description**: Brief description of your plugin and what it does
+    - **Checklist**: Confirm all requirements are met
 
 ## Quality Standards
 
@@ -144,24 +144,24 @@ While we don't review plugin source code in detail for registry submission, we e
 Reviewers will check:
 
 1. **Completeness**
-   - All required fields present
-   - Valid and accessible URLs
-   - Proper formatting
+    - All required fields present
+    - Valid and accessible URLs
+    - Proper formatting
 
 2. **Functionality**
-   - Plugin installs correctly
-   - Basic functionality works
-   - No critical bugs
+    - Plugin installs correctly
+    - Basic functionality works
+    - No critical bugs
 
 3. **Documentation**
-   - Clear description
-   - Installation instructions
-   - Usage examples
+    - Clear description
+    - Installation instructions
+    - Usage examples
 
 4. **Compliance**
-   - Follows SDK guidelines
-   - Meets quality standards
-   - Appropriate tags
+    - Follows SDK guidelines
+    - Meets quality standards
+    - Appropriate tags
 
 ### Possible Outcomes
 

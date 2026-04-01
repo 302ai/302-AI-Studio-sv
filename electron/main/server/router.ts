@@ -291,7 +291,10 @@ app.post("/chat/302ai", async (c) => {
 		try {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
-				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
+				mcpTools = await mcpService.getToolsFromServerIds(
+					mcpServerIds,
+					allServers as McpServer[],
+				);
 				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
@@ -308,17 +311,19 @@ app.post("/chat/302ai", async (c) => {
 		// Find the last user message
 		const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user");
 		if (lastUserMessage) {
-			const prevResolvedMessages = await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
-				threadId,
-				model,
-				lastUserMessage.id, // Exclude last user message to avoid duplicate processing
-			);
+			const prevResolvedMessages =
+				await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
+					threadId,
+					model,
+					lastUserMessage.id, // Exclude last user message to avoid duplicate processing
+				);
 
-			const resolvedLastMessage = await chatParametersService.resolveLastUserTextByUserPromptTemp(
-				threadId,
-				lastUserMessage as ChatMessage,
-				model,
-			);
+			const resolvedLastMessage =
+				await chatParametersService.resolveLastUserTextByUserPromptTemp(
+					threadId,
+					lastUserMessage as ChatMessage,
+					model,
+				);
 			resolvedMessages = [...prevResolvedMessages, resolvedLastMessage];
 		}
 	}
@@ -501,7 +506,10 @@ app.post("/chat/openai", async (c) => {
 		try {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
-				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
+				mcpTools = await mcpService.getToolsFromServerIds(
+					mcpServerIds,
+					allServers as McpServer[],
+				);
 				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
@@ -516,17 +524,19 @@ app.post("/chat/openai", async (c) => {
 		const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user");
 		if (lastUserMessage) {
 			// Resolve previous user messages (using metadata)
-			const prevResolvedMessages = await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
-				threadId,
-				model,
-				lastUserMessage.id, // Exclude last user message to avoid duplicate processing
-			);
+			const prevResolvedMessages =
+				await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
+					threadId,
+					model,
+					lastUserMessage.id, // Exclude last user message to avoid duplicate processing
+				);
 			// Resolve last user message (using storage)
-			const resolvedLastMessage = await chatParametersService.resolveLastUserTextByUserPromptTemp(
-				threadId,
-				lastUserMessage as ChatMessage,
-				model,
-			);
+			const resolvedLastMessage =
+				await chatParametersService.resolveLastUserTextByUserPromptTemp(
+					threadId,
+					lastUserMessage as ChatMessage,
+					model,
+				);
 			resolvedMessages = [...prevResolvedMessages, resolvedLastMessage];
 		}
 	}
@@ -694,7 +704,10 @@ app.post("/chat/anthropic", async (c) => {
 		try {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
-				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
+				mcpTools = await mcpService.getToolsFromServerIds(
+					mcpServerIds,
+					allServers as McpServer[],
+				);
 				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
@@ -709,17 +722,19 @@ app.post("/chat/anthropic", async (c) => {
 		const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user");
 		if (lastUserMessage) {
 			// Resolve previous user messages (using metadata)
-			const prevResolvedMessages = await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
-				threadId,
-				model,
-				lastUserMessage.id, // Exclude last user message to avoid duplicate processing
-			);
+			const prevResolvedMessages =
+				await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
+					threadId,
+					model,
+					lastUserMessage.id, // Exclude last user message to avoid duplicate processing
+				);
 			// Resolve last user message (using storage)
-			const resolvedLastMessage = await chatParametersService.resolveLastUserTextByUserPromptTemp(
-				threadId,
-				lastUserMessage as ChatMessage,
-				model,
-			);
+			const resolvedLastMessage =
+				await chatParametersService.resolveLastUserTextByUserPromptTemp(
+					threadId,
+					lastUserMessage as ChatMessage,
+					model,
+				);
 			resolvedMessages = [...prevResolvedMessages, resolvedLastMessage];
 		}
 	}
@@ -887,7 +902,10 @@ app.post("/chat/gemini", async (c) => {
 		try {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
-				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
+				mcpTools = await mcpService.getToolsFromServerIds(
+					mcpServerIds,
+					allServers as McpServer[],
+				);
 				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
@@ -901,17 +919,19 @@ app.post("/chat/gemini", async (c) => {
 		const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user");
 		if (lastUserMessage) {
 			// Resolve previous user messages (using metadata)
-			const prevResolvedMessages = await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
-				threadId,
-				model,
-				lastUserMessage.id, // Exclude last user message to avoid duplicate processing
-			);
+			const prevResolvedMessages =
+				await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
+					threadId,
+					model,
+					lastUserMessage.id, // Exclude last user message to avoid duplicate processing
+				);
 			// Resolve last user message (using storage)
-			const resolvedLastMessage = await chatParametersService.resolveLastUserTextByUserPromptTemp(
-				threadId,
-				lastUserMessage as ChatMessage,
-				model,
-			);
+			const resolvedLastMessage =
+				await chatParametersService.resolveLastUserTextByUserPromptTemp(
+					threadId,
+					lastUserMessage as ChatMessage,
+					model,
+				);
 			resolvedMessages = [...prevResolvedMessages, resolvedLastMessage];
 		}
 	}
@@ -1383,7 +1403,9 @@ app.post("/generate-suggestions", async (c) => {
 
 	try {
 		console.log("[Suggestions] Starting to generate suggestions...");
-		const convertedMessages = await convertToModelMessages(enhanceMessagesWithFeedback(messages));
+		const convertedMessages = await convertToModelMessages(
+			enhanceMessagesWithFeedback(messages),
+		);
 		const { text } = await generateText({
 			model: languageModel,
 			messages: [
@@ -1818,15 +1840,26 @@ CHECK BEFORE EVERY ACTION:
 			try {
 				const response = await responsePromise;
 
-				console.log("[302ai-code-agent] Response status:", response.status, response.statusText);
+				console.log(
+					"[302ai-code-agent] Response status:",
+					response.status,
+					response.statusText,
+				);
 				console.log(
 					"[302ai-code-agent] Response headers:",
 					Object.fromEntries(response.headers.entries()),
 				);
 				if (!response.ok) {
 					const errorText = await response.text();
-					console.error("[302ai-code-agent] API error:", response.status, response.statusText);
-					console.error("[302ai-code-agent] Error response body:", errorText || "(empty)");
+					console.error(
+						"[302ai-code-agent] API error:",
+						response.status,
+						response.statusText,
+					);
+					console.error(
+						"[302ai-code-agent] Error response body:",
+						errorText || "(empty)",
+					);
 					console.error("[302ai-code-agent] Request that caused error:");
 					console.error(JSON.stringify(requestBody, null, 2));
 					sendStreamError(

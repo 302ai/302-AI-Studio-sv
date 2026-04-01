@@ -234,13 +234,16 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 				//   behaves as users expect (clears those sessions too).
 				const isAssociatedByHash = thread.apiKeyHash === apiKeyHash;
 				const isAssociatedLegacy =
-					!thread.apiKeyHash && (thread as ThreadParmas).selectedModel?.providerId === "302AI";
+					!thread.apiKeyHash &&
+					(thread as ThreadParmas).selectedModel?.providerId === "302AI";
 
 				if (isAssociatedByHash || isAssociatedLegacy) {
 					try {
 						await this.deleteThread(threadId);
 						deletedThreadIds.push(threadId);
-						console.log(`[ThreadStorage] Deleted thread ${threadId} with matching apiKeyHash`);
+						console.log(
+							`[ThreadStorage] Deleted thread ${threadId} with matching apiKeyHash`,
+						);
 					} catch (error) {
 						console.error(`Failed to delete thread ${threadId}:`, error);
 					}
@@ -270,8 +273,14 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 			for (const threadId of metadata.threadIds) {
 				try {
 					const threadKey = "app-thread:" + threadId;
-					const thread = (await storageService.getItemInternal(threadKey)) as ThreadParmas;
-					if (thread && thread.selectedModel && deletedModelIds.has(thread.selectedModel.id)) {
+					const thread = (await storageService.getItemInternal(
+						threadKey,
+					)) as ThreadParmas;
+					if (
+						thread &&
+						thread.selectedModel &&
+						deletedModelIds.has(thread.selectedModel.id)
+					) {
 						// Clear the selectedModel reference
 						await storageService.setItemInternal(threadKey, {
 							...thread,

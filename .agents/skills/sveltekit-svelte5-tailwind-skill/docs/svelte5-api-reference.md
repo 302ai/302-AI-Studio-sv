@@ -4,7 +4,7 @@ version_anchors: ["Svelte@5.x"]
 authored: true
 origin: self
 adapted_from:
-  - "sveltejs/svelte#1b2f7b0 (Svelte 5 runes and template syntax documentation)"
+    - "sveltejs/svelte#1b2f7b0 (Svelte 5 runes and template syntax documentation)"
 last_reviewed: 2025-10-28
 summary: "Complete API reference for Svelte 5 including runes ($state, $derived, $effect, $props), template syntax, component lifecycle, and reactivity patterns"
 ---

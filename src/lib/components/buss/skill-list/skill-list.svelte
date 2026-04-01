@@ -85,7 +85,9 @@
 			]),
 		);
 
-		for (const [skillName, optimisticFavorite] of Array.from(optimisticFavoriteStates.entries())) {
+		for (const [skillName, optimisticFavorite] of Array.from(
+			optimisticFavoriteStates.entries(),
+		)) {
 			if (!persistedFavoriteStates.has(skillName)) {
 				optimisticFavoriteStates.delete(skillName);
 				optimisticFavoriteAts.delete(skillName);
@@ -97,7 +99,9 @@
 			}
 		}
 
-		for (const [skillName, optimisticFavoriteAt] of Array.from(optimisticFavoriteAts.entries())) {
+		for (const [skillName, optimisticFavoriteAt] of Array.from(
+			optimisticFavoriteAts.entries(),
+		)) {
 			if (!persistedFavoriteAts.has(skillName)) {
 				optimisticFavoriteAts.delete(skillName);
 				optimisticFavoriteStates.delete(skillName);
@@ -337,7 +341,10 @@
 					onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 					downloading={downloadingSkills.has(item.name)}
 					favoriteLoading={favoritingSkills.has(item.name)}
-					onFavoriteToggle={canFavoriteSkill(currentCodeAgentType, item.isBuiltin ?? false)
+					onFavoriteToggle={canFavoriteSkill(
+						currentCodeAgentType,
+						item.isBuiltin ?? false,
+					)
 						? handleFavoriteToggle
 						: undefined}
 					{onForceUseToggle}
@@ -381,7 +388,11 @@
 			{m.skills_confirm_delete_message({ name: deletingSkill?.name || "" })}
 		</Dialog.Description>
 		<Dialog.Footer>
-			<Button variant="outline" onclick={() => (deleteDialogOpen = false)} disabled={isDeleting}>
+			<Button
+				variant="outline"
+				onclick={() => (deleteDialogOpen = false)}
+				disabled={isDeleting}
+			>
 				{m.text_button_cancel()}
 			</Button>
 			<Button variant="destructive" onclick={confirmDelete} disabled={isDeleting}>

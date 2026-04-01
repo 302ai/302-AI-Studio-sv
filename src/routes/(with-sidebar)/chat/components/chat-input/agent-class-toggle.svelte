@@ -47,7 +47,10 @@
 		]}
 		selectedKey={codeAgentState.currentAgentId}
 		onSelect={handleAgentSelect}
-		class={cn("!h-7 !rounded-md !px-1 bg-muted", !canSwitch && "opacity-50 pointer-events-none")}
+		class={cn(
+			"!h-7 !rounded-md !px-1 bg-muted",
+			!canSwitch && "opacity-50 pointer-events-none",
+		)}
 		thumbClass="!h-5 text-xs rounded px-1"
 	/>
 </div>

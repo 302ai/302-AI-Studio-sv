@@ -133,7 +133,8 @@
 
 		(Object.keys(groups) as TimeGroup[]).forEach((groupKey) => {
 			groups[groupKey].sort(
-				(a, b) => new Date(b.thread.updatedAt).getTime() - new Date(a.thread.updatedAt).getTime(),
+				(a, b) =>
+					new Date(b.thread.updatedAt).getTime() - new Date(a.thread.updatedAt).getTime(),
 			);
 		});
 
@@ -193,7 +194,9 @@
 						(s) => s.sandboxId === sandboxId,
 					);
 					if (sandbox) {
-						const session = sandbox.sessionInfos.find((s) => s.sessionId === currentSessionId);
+						const session = sandbox.sessionInfos.find(
+							(s) => s.sessionId === currentSessionId,
+						);
 						if (session) {
 							return {
 								isCodeAgent: true,
@@ -239,10 +242,13 @@
 		if (existingTab) {
 			await tabBarState.handleActivateTab(existingTab.id);
 			if (searchData?.query) {
-				await window.electronAPI.broadcastService.broadcastToAll("sidebar-search-navigate", {
-					threadId,
-					query: searchData.query,
-				});
+				await window.electronAPI.broadcastService.broadcastToAll(
+					"sidebar-search-navigate",
+					{
+						threadId,
+						query: searchData.query,
+					},
+				);
 			}
 		} else {
 			// Pass search query and result IDs when creating new tab from search results
@@ -339,9 +345,9 @@
 		if (agentInfo.isCodeAgent && agentInfo.sandboxId && agentInfo.sessionId) {
 			// Check if the session note was manually set by user
 			const claudeStateKey = `CodeAgentStorage:claude-code-agent-state-${renameTargetThreadId}`;
-			const claudeState = (await window.electronAPI.storageService.getItem(claudeStateKey)) as
-				| CodeAgentMetadata
-				| undefined;
+			const claudeState = (await window.electronAPI.storageService.getItem(
+				claudeStateKey,
+			)) as CodeAgentMetadata | undefined;
 			const isManualNote = claudeState?.isManualNote ?? false;
 
 			if (!isManualNote) {
@@ -419,7 +425,8 @@
 										sandboxId={agentInfo.sandboxId || ""}
 										sessionId={agentInfo.sessionId || ""}
 										onThreadClick={handleThreadClick}
-										onToggleFavorite={() => threadsState.toggleFavorite(threadId)}
+										onToggleFavorite={() =>
+											threadsState.toggleFavorite(threadId)}
 										onRenameThread={handleRenameThread}
 										onThreadGenerateTitle={handleThreadGenerateTitle}
 										onThreadClearMessages={handleThreadClearMessages}
@@ -459,7 +466,8 @@
 												sandboxId={agentInfo.sandboxId || ""}
 												sessionId={agentInfo.sessionId || ""}
 												onThreadClick={handleThreadClick}
-												onToggleFavorite={() => threadsState.toggleFavorite(threadId)}
+												onToggleFavorite={() =>
+													threadsState.toggleFavorite(threadId)}
 												onRenameThread={handleRenameThread}
 												onThreadGenerateTitle={handleThreadGenerateTitle}
 												onThreadClearMessages={handleThreadClearMessages}

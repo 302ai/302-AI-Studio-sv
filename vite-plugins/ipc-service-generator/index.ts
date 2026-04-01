@@ -93,7 +93,9 @@ export function ipcServiceGenerator(options: IpcServiceGeneratorOptions = {}): P
 			console.log(`📸 Found ${methods.length} methods containing _event parameters`);
 
 			if (methods.length === 0) {
-				console.log("ℹ️  No methods containing _event parameters found, skipping generation");
+				console.log(
+					"ℹ️  No methods containing _event parameters found, skipping generation",
+				);
 				return;
 			}
 

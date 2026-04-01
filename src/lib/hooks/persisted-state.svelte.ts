@@ -65,7 +65,14 @@ function proxy<T>(
 		p = new Proxy(value, {
 			get: (target, property) => {
 				subscribe?.();
-				return proxy(Reflect.get(target, property), root, proxies, subscribe, update, store);
+				return proxy(
+					Reflect.get(target, property),
+					root,
+					proxies,
+					subscribe,
+					update,
+					store,
+				);
 			},
 			set: (target, property, value) => {
 				update?.();
@@ -167,7 +174,10 @@ export class PersistedState<T extends StorageValue> {
 			}
 			this.#isHydrated = true;
 		} catch (error) {
-			console.error(`Error hydrate persisted state from Electron storage for key "${key}":`, error);
+			console.error(
+				`Error hydrate persisted state from Electron storage for key "${key}":`,
+				error,
+			);
 			this.#current = initialValue;
 			this.#isHydrated = true;
 		}

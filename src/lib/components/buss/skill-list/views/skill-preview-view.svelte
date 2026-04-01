@@ -25,7 +25,11 @@
 	const { scanDirectory } = window.electronAPI.appService;
 
 	// 递归查找 SKILL.md 文件
-	function findSkillMd(node: { name: string; path: string; children?: unknown[] }): string | null {
+	function findSkillMd(node: {
+		name: string;
+		path: string;
+		children?: unknown[];
+	}): string | null {
 		if (node.name === "SKILL.md") {
 			return node.path;
 		}

@@ -368,7 +368,10 @@ export abstract class BaseProviderPlugin implements ProviderPlugin {
 	/**
 	 * Utility: Show notification
 	 */
-	protected notify(message: string, type: "info" | "success" | "warning" | "error" = "info"): void {
+	protected notify(
+		message: string,
+		type: "info" | "success" | "warning" | "error" = "info",
+	): void {
 		this.api?.ui.showNotification(message, type);
 	}
 }

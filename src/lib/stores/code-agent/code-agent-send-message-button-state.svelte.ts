@@ -100,7 +100,9 @@ class CodeAgentSendMessageButtonState {
 
 			if (isAbsolutePath) {
 				try {
-					const buffer = await window.electronAPI.appService.readFileAsBuffer(attachment.filePath);
+					const buffer = await window.electronAPI.appService.readFileAsBuffer(
+						attachment.filePath,
+					);
 					let binary = "";
 					const bytes = new Uint8Array(buffer);
 					for (let i = 0; i < bytes.byteLength; i++) {
@@ -168,7 +170,10 @@ class CodeAgentSendMessageButtonState {
 				return;
 			}
 
-			if (chatState.selectedModel && codeAgentState.currentModel !== chatState.selectedModel.id) {
+			if (
+				chatState.selectedModel &&
+				codeAgentState.currentModel !== chatState.selectedModel.id
+			) {
 				codeAgentState.updateSandboxModel(chatState.selectedModel.id);
 			}
 
@@ -182,8 +187,11 @@ class CodeAgentSendMessageButtonState {
 
 				if (codeAgentState.isPristineSession) {
 					const isSessionIdEmpty = codeAgentState.sessionId === "";
-					const sessionId: string = isSessionIdEmpty ? nanoid() : codeAgentState.sessionId;
-					const shouldSkipInitProject = codeAgentState.type === "local" && !isSessionIdEmpty;
+					const sessionId: string = isSessionIdEmpty
+						? nanoid()
+						: codeAgentState.sessionId;
+					const shouldSkipInitProject =
+						codeAgentState.type === "local" && !isSessionIdEmpty;
 
 					if (!shouldSkipInitProject) {
 						const { workspace_path } = await initProject({
@@ -228,7 +236,10 @@ class CodeAgentSendMessageButtonState {
 							codeAgentTaskboardState.attachments.map(async (att) => {
 								const content = att.file ? await fileToBase64(att.file) : null;
 								return content
-									? { content, save_path: `${workspacePath}/.302ai/attachments/${att.name}` }
+									? {
+											content,
+											save_path: `${workspacePath}/.302ai/attachments/${att.name}`,
+										}
 									: null;
 							}),
 						);
@@ -247,9 +258,16 @@ class CodeAgentSendMessageButtonState {
 						const pendingAttachmentResults = await Promise.all(
 							codeAgentTaskboardState.pendingAttachments.map(async (att) => {
 								const content = att.file ? await fileToBase64(att.file) : null;
-								if (!content) console.warn("Pending attachment content is null for:", att.name);
+								if (!content)
+									console.warn(
+										"Pending attachment content is null for:",
+										att.name,
+									);
 								return content
-									? { content, save_path: `${workspacePath}/.302ai/attachments/${att.name}` }
+									? {
+											content,
+											save_path: `${workspacePath}/.302ai/attachments/${att.name}`,
+										}
 									: null;
 							}),
 						);
@@ -267,9 +285,16 @@ class CodeAgentSendMessageButtonState {
 							chatState.attachments.map(async (att) => {
 								const content = await this.#attachmentToBase64(att);
 								if (!content)
-									console.warn("Chat attachment content is null for:", att.name, att.filePath);
+									console.warn(
+										"Chat attachment content is null for:",
+										att.name,
+										att.filePath,
+									);
 								return content
-									? { content, save_path: `${workspacePath}/.302ai/attachments/${att.name}` }
+									? {
+											content,
+											save_path: `${workspacePath}/.302ai/attachments/${att.name}`,
+										}
 									: null;
 							}),
 						);
@@ -291,7 +316,10 @@ class CodeAgentSendMessageButtonState {
 
 						const faileds = response.result.filter((r) => !r.success);
 						if (!response.success || faileds.length > 0) {
-							console.error("Failed to upload files:", faileds.map((r) => r.error).join(", "));
+							console.error(
+								"Failed to upload files:",
+								faileds.map((r) => r.error).join(", "),
+							);
 							toast.error(m.taskboard_error_attachment_upload_failed());
 							return;
 						}
@@ -302,7 +330,10 @@ class CodeAgentSendMessageButtonState {
 					}
 				}
 
-				if (chatState.selectedModel && chatState.selectedModel.id !== sandboxInfo.llmModel) {
+				if (
+					chatState.selectedModel &&
+					chatState.selectedModel.id !== sandboxInfo.llmModel
+				) {
 					await codeAgentState.handleCodeAgentModelChange(chatState.selectedModel);
 				}
 
@@ -311,14 +342,20 @@ class CodeAgentSendMessageButtonState {
 					const infos = mcpState.getMCPInfosByIds(chatState.mcpServerIds);
 					if (infos.length > 0) {
 						try {
-							await addClaudeCodeSandboxMCP(sandboxInfo.sandboxId, infos, codeAgentState.type);
+							await addClaudeCodeSandboxMCP(
+								sandboxInfo.sandboxId,
+								infos,
+								codeAgentState.type,
+							);
 						} catch (error) {
 							console.error("Failed to add MCP servers:", error);
 						}
 					}
 				}
 
-				await openclawConfigState.bindingAndRestart(extractAgentIdFromWorkspacePath(workspacePath));
+				await openclawConfigState.bindingAndRestart(
+					extractAgentIdFromWorkspacePath(workspacePath),
+				);
 
 				if (sandboxInfo.diskUsage === "insufficient") {
 					this.showLackOfDiskDialog = true;

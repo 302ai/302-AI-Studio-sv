@@ -114,7 +114,9 @@
 				>
 				<StatusIndicator
 					status={sandboxRunning ? "green" : "gray"}
-					text={sandboxRunning ? m.local_platform_started() : m.local_platform_not_started()}
+					text={sandboxRunning
+						? m.local_platform_started()
+						: m.local_platform_not_started()}
 				/>
 			</div>
 			<!-- Health Status -->

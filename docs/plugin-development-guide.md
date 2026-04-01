@@ -285,10 +285,13 @@ export class CustomProviderPlugin extends BaseProviderPlugin {
 		this.log("info", "Fetching models...");
 
 		const url = this.buildApiUrl(provider, "models");
-		const response = await this.httpRequest<{ models: Array<{ id: string; name: string }> }>(url, {
-			method: "GET",
-			provider,
-		});
+		const response = await this.httpRequest<{ models: Array<{ id: string; name: string }> }>(
+			url,
+			{
+				method: "GET",
+				provider,
+			},
+		);
 
 		return response.models.map((model) => ({
 			id: model.id,

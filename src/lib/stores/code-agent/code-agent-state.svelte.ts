@@ -83,7 +83,8 @@ class CodeAgentState {
 		() => persistedCodeAgentConfigState.current?.currentAgentId ?? "claude-code",
 	);
 	codingAgentId = $derived.by(() =>
-		(persistedCodeAgentConfigState.current?.codingAgentId ?? this.currentAgentId === "open-claw")
+		(persistedCodeAgentConfigState.current?.codingAgentId ??
+		this.currentAgentId === "open-claw")
 			? "claude-code"
 			: this.currentAgentId,
 	);
@@ -384,7 +385,9 @@ class CodeAgentState {
 			(loading) => (this.isLoadingSkills = loading),
 			() =>
 				match(this.currentAgentId)
-					.with("claude-code", "open-claw", () => claudeCodeAgentState.listClaudeCodeSkills(isInit))
+					.with("claude-code", "open-claw", () =>
+						claudeCodeAgentState.listClaudeCodeSkills(isInit),
+					)
 					.otherwise(() => ({
 						success: false,
 						user_skills: [],
@@ -432,7 +435,10 @@ class CodeAgentState {
 			() =>
 				match(this.currentAgentId)
 					.with("claude-code", "open-claw", () =>
-						claudeCodeSandboxState.updateSandboxRemark(claudeCodeAgentState.sandboxId, remark),
+						claudeCodeSandboxState.updateSandboxRemark(
+							claudeCodeAgentState.sandboxId,
+							remark,
+						),
 					)
 					.otherwise(() => false),
 		);

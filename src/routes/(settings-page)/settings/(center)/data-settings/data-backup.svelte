@@ -56,7 +56,9 @@
 			restoreDialogOpen = false;
 			toast.info(m.settings_backupRestoring());
 
-			const result = await window.electronAPI.dataService.restoreFromBackup(selectedBackup.path);
+			const result = await window.electronAPI.dataService.restoreFromBackup(
+				selectedBackup.path,
+			);
 
 			if (result.success) {
 				toast.success(result.message, {
@@ -184,7 +186,9 @@
 			{#if selectedBackup}
 				<div class="bg-muted rounded-md p-3">
 					<div class="text-sm font-medium">{formatDate(selectedBackup.timestamp)}</div>
-					<div class="text-muted-foreground text-xs">{formatBytes(selectedBackup.size)}</div>
+					<div class="text-muted-foreground text-xs">
+						{formatBytes(selectedBackup.size)}
+					</div>
 				</div>
 			{/if}
 

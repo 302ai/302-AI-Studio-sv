@@ -303,7 +303,12 @@ class PluginState {
 			const serializedValue =
 				typeof value === "object" && value !== null ? $state.snapshot(value) : value;
 
-			console.log("[PluginState] Setting plugin config value:", pluginId, key, serializedValue);
+			console.log(
+				"[PluginState] Setting plugin config value:",
+				pluginId,
+				key,
+				serializedValue,
+			);
 			await pluginService.setPluginConfigValue(pluginId, key, serializedValue);
 			console.log("[PluginState] Plugin config value updated:", pluginId, key);
 		} catch (error) {

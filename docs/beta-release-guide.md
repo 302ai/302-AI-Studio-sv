@@ -18,8 +18,8 @@
 1. 打开应用设置
 2. 导航到"通用设置" > "版本更新"
 3. 在"更新渠道"下拉菜单中选择：
-   - **稳定版**: 仅接收稳定版本更新
-   - **测试版**: 接收 beta 预发布版本更新
+    - **稳定版**: 仅接收稳定版本更新
+    - **测试版**: 接收 beta 预发布版本更新
 4. 切换渠道后，如果启用了自动更新，应用会立即检查新渠道的更新
 
 ## 发布流程
@@ -28,25 +28,25 @@
 
 1. 更新 `package.json` 中的版本号（例如：`25.45.5`）
 2. 创建并推送稳定版本标签：
-   ```bash
-   git tag v25.45.5
-   git push origin v25.45.5
-   ```
+    ```bash
+    git tag v25.45.5
+    git push origin v25.45.5
+    ```
 3. GitHub Actions 会自动构建并发布到 `stable` 渠道
 
 ### 发布 Beta 版
 
 1. 更新 `package.json` 中的版本号，添加 `-beta` 后缀（例如：`25.46.0-beta`）
 2. 创建并推送 beta 版本标签：
-   ```bash
-   git tag v25.46.0-beta
-   git push origin v25.46.0-beta
-   ```
-   或者使用带构建号的标签：
-   ```bash
-   git tag v25.46.0-beta.1
-   git push origin v25.46.0-beta.1
-   ```
+    ```bash
+    git tag v25.46.0-beta
+    git push origin v25.46.0-beta
+    ```
+    或者使用带构建号的标签：
+    ```bash
+    git tag v25.46.0-beta.1
+    git push origin v25.46.0-beta.1
+    ```
 3. GitHub Actions 会自动构建并发布到 `beta` 渠道，标记为预发布版本
 
 ## 版本号规范
@@ -70,14 +70,14 @@
 
 - **稳定版用户**:
 
-  ```
-  https://update.electronjs.org/302ai/302-AI-Studio-sv/{platform}-{arch}/25.45.5
-  ```
+    ```
+    https://update.electronjs.org/302ai/302-AI-Studio-sv/{platform}-{arch}/25.45.5
+    ```
 
 - **Beta 版用户**:
-  ```
-  https://update.electronjs.org/302ai/302-AI-Studio-sv/{platform}-{arch}/25.46.0-beta
-  ```
+    ```
+    https://update.electronjs.org/302ai/302-AI-Studio-sv/{platform}-{arch}/25.46.0-beta
+    ```
 
 ### 渠道切换行为
 
@@ -106,23 +106,23 @@
 
 1. 更新 `package.json` 版本号为 beta 版本：
 
-   ```json
-   {
-   	"version": "25.46.0-beta"
-   }
-   ```
+    ```json
+    {
+    	"version": "25.46.0-beta"
+    }
+    ```
 
 2. 构建应用：
 
-   ```bash
-   pnpm run build
-   pnpm run make
-   ```
+    ```bash
+    pnpm run build
+    pnpm run make
+    ```
 
 3. 检查构建产物：
-   - macOS: `out/make/*.dmg`
-   - Windows: `out/make/squirrel.windows/**/*`
-   - Linux: `out/make/deb/**/*`, `out/make/rpm/**/*`
+    - macOS: `out/make/*.dmg`
+    - Windows: `out/make/squirrel.windows/**/*`
+    - Linux: `out/make/deb/**/*`, `out/make/rpm/**/*`
 
 ### 测试更新渠道切换
 

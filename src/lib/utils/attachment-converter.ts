@@ -282,7 +282,10 @@ export async function convertAttachmentToMessagePart(
 				try {
 					url = await compressFile(attachment.file);
 				} catch (error) {
-					console.error("[AttachmentConverter] Failed to compress image, using original:", error);
+					console.error(
+						"[AttachmentConverter] Failed to compress image, using original:",
+						error,
+					);
 					url = await fileToDataURL(attachment.file, attachment.filePath);
 				}
 			} else {
@@ -296,7 +299,9 @@ export async function convertAttachmentToMessagePart(
 				type: "file",
 				mediaType:
 					attachment.type ||
-					(attachment.name.endsWith(".zip") ? "application/zip" : "application/octet-stream"),
+					(attachment.name.endsWith(".zip")
+						? "application/zip"
+						: "application/octet-stream"),
 				filename: attachment.name,
 				url,
 			},
@@ -327,7 +332,9 @@ export async function convertAttachmentToMessagePart(
 				// Generate preview for message history (only if not already present)
 				const preview =
 					attachment.preview ||
-					(attachment.file ? await fileToDataURL(attachment.file, attachment.filePath) : undefined);
+					(attachment.file
+						? await fileToDataURL(attachment.file, attachment.filePath)
+						: undefined);
 				return {
 					part: {
 						type: "text",
@@ -344,7 +351,9 @@ export async function convertAttachmentToMessagePart(
 				// Generate preview for message history (only if not already present)
 				const preview =
 					attachment.preview ||
-					(attachment.file ? await fileToDataURL(attachment.file, attachment.filePath) : undefined);
+					(attachment.file
+						? await fileToDataURL(attachment.file, attachment.filePath)
+						: undefined);
 				return {
 					part: {
 						type: "text",

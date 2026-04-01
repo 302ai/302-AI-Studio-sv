@@ -135,7 +135,9 @@ export class PluginService {
 			});
 
 			if (!response.ok) {
-				throw new Error(`Failed to download plugin: ${response.status} ${response.statusText}`);
+				throw new Error(
+					`Failed to download plugin: ${response.status} ${response.statusText}`,
+				);
 			}
 
 			// Get the array buffer and save to file
@@ -179,7 +181,10 @@ export class PluginService {
 	/**
 	 * Install a plugin from a source
 	 */
-	async installPlugin(_event: IpcMainInvokeEvent, source: PluginSource): Promise<InstalledPlugin> {
+	async installPlugin(
+		_event: IpcMainInvokeEvent,
+		source: PluginSource,
+	): Promise<InstalledPlugin> {
 		console.log(`[PluginService] Installing plugin from source:`, source);
 
 		let pluginPath: string;
@@ -202,7 +207,10 @@ export class PluginService {
 				}
 
 				// Get plugin info from registry
-				const marketplacePlugin = await registryService.getMarketplacePlugin(_event, source.id);
+				const marketplacePlugin = await registryService.getMarketplacePlugin(
+					_event,
+					source.id,
+				);
 				if (!marketplacePlugin) {
 					throw new Error(`Plugin ${source.id} not found in marketplace`);
 				}
@@ -487,7 +495,9 @@ export class PluginService {
 			// Execute fetch models hook through plugin
 			const models = await executeFetchModelsHook(provider);
 
-			console.log(`[PluginService] Fetched ${models.length} models for provider: ${provider.id}`);
+			console.log(
+				`[PluginService] Fetched ${models.length} models for provider: ${provider.id}`,
+			);
 
 			// Convert Set to Array for IPC serialization
 			const serializedModels = models.map((model) => ({
@@ -497,7 +507,10 @@ export class PluginService {
 
 			return serializedModels as unknown as Model[];
 		} catch (error) {
-			console.error(`[PluginService] Error fetching models for provider ${provider.id}:`, error);
+			console.error(
+				`[PluginService] Error fetching models for provider ${provider.id}:`,
+				error,
+			);
 			throw error;
 		}
 	}

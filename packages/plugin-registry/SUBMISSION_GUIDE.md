@@ -204,9 +204,9 @@ After creating the release:
 1. Right-click on the ZIP file in the release
 2. Copy link address
 3. It should look like:
-   ```
-   https://github.com/yourusername/your-plugin/releases/download/v1.0.0/my-plugin.zip
-   ```
+    ```
+    https://github.com/yourusername/your-plugin/releases/download/v1.0.0/my-plugin.zip
+    ```
 
 ### Step 4: Submit to Registry
 
@@ -215,10 +215,10 @@ After creating the release:
 1. Go to [plugin-registry](https://github.com/302ai/302-AI-Studio-SV/tree/main/packages/plugin-registry)
 2. Click "Fork"
 3. Clone your fork:
-   ```bash
-   git clone https://github.com/yourusername/302-AI-Studio-SV.git
-   cd 302-AI-Studio-SV/packages/plugin-registry
-   ```
+    ```bash
+    git clone https://github.com/yourusername/302-AI-Studio-SV.git
+    cd 302-AI-Studio-SV/packages/plugin-registry
+    ```
 
 #### 4.2 Add Your Plugin
 
@@ -281,27 +281,27 @@ git push origin main
 3. **Title**: `Add my-awesome-plugin v1.0.0`
 4. **Description**:
 
-   ```markdown
-   ## Plugin Information
+    ```markdown
+    ## Plugin Information
 
-   - **Name**: My Awesome Plugin
-   - **Version**: 1.0.0
-   - **Type**: Provider Plugin
-   - **Repository**: https://github.com/yourusername/your-plugin
+    - **Name**: My Awesome Plugin
+    - **Version**: 1.0.0
+    - **Type**: Provider Plugin
+    - **Repository**: https://github.com/yourusername/your-plugin
 
-   ## Description
+    ## Description
 
-   Brief description of what your plugin does and why it's useful.
+    Brief description of what your plugin does and why it's useful.
 
-   ## Checklist
+    ## Checklist
 
-   - [x] Plugin uses @302ai/studio-plugin-sdk v1.0.0+
-   - [x] Valid plugin.json included
-   - [x] README with instructions
-   - [x] Tested in 302 AI Studio
-   - [x] HTTPS download URL
-   - [x] Validation passed
-   ```
+    - [x] Plugin uses @302ai/studio-plugin-sdk v1.0.0+
+    - [x] Valid plugin.json included
+    - [x] README with instructions
+    - [x] Tested in 302 AI Studio
+    - [x] HTTPS download URL
+    - [x] Validation passed
+    ```
 
 5. Click "Create pull request"
 
@@ -350,10 +350,10 @@ When releasing a new version:
 2. Create new GitHub Release with updated ZIP
 3. Fork registry again (or pull latest changes)
 4. Update your entry in `registry.json`:
-   - `version`: new version number
-   - `downloadUrl`: new release URL
-   - `updatedAt`: current date
-   - `changelog`: link to changelog (optional)
+    - `version`: new version number
+    - `downloadUrl`: new release URL
+    - `updatedAt`: current date
+    - `changelog`: link to changelog (optional)
 5. Submit new PR with title: `Update my-awesome-plugin to v1.1.0`
 
 ## ❓ Common Issues

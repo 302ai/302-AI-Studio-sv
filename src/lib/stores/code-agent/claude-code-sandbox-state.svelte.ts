@@ -63,7 +63,8 @@ class ClaudeCodeSandboxState {
 			...sanboxes
 				.flatMap((sandbox) => sandbox.sessionInfos)
 				.map((session) => {
-					const name = session.note && session.note !== "" ? session.note : session.sessionId;
+					const name =
+						session.note && session.note !== "" ? session.note : session.sessionId;
 					// Filter out zero/default dates (e.g. 0001-01-01)
 					const date = new Date(session.usedAt);
 					const hasValidDate = !isNaN(date.getTime()) && date.getFullYear() > 2020;
@@ -222,7 +223,9 @@ class ClaudeCodeSandboxState {
 			}));
 
 		return {
-			standalone: [{ key: "new", label: m.local_platform_new_work_directory(), value: "new" }],
+			standalone: [
+				{ key: "new", label: m.local_platform_new_work_directory(), value: "new" },
+			],
 			groups: groups,
 		};
 	});
@@ -281,8 +284,9 @@ class ClaudeCodeSandboxState {
 				claudeCodeAgentState.selectedSandboxId = targetSandbox.sandboxId;
 				claudeCodeAgentState.selectedSandboxRemark = targetSandbox.sandboxRemark;
 				claudeCodeAgentState.selectedSessionRemark =
-					targetSandbox.sessionInfos.find((sessionInfo) => sessionInfo.sessionId === sessionId)
-						?.note || "";
+					targetSandbox.sessionInfos.find(
+						(sessionInfo) => sessionInfo.sessionId === sessionId,
+					)?.note || "";
 
 				// Sync workspacePath when selecting a session (use composite key format)
 				const session = targetSandbox.sessionInfos.find((s) => s.sessionId === sessionId);

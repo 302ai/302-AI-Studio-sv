@@ -102,7 +102,8 @@
 			manualSkillMdPath = newPath;
 		} else if (
 			manualSkillMdPath &&
-			(manualSkillMdPath.startsWith(oldPath + "/") || manualSkillMdPath.startsWith(oldPath + "\\"))
+			(manualSkillMdPath.startsWith(oldPath + "/") ||
+				manualSkillMdPath.startsWith(oldPath + "\\"))
 		) {
 			manualSkillMdPath = manualSkillMdPath.replace(oldPath, newPath);
 		}
@@ -153,7 +154,10 @@
 			const currentDirName = manualRootPath.split(/[/\\]/).pop() || "";
 			if (newName !== currentDirName) {
 				const oldRootPath = manualRootPath;
-				const parentPath = oldRootPath.substring(0, oldRootPath.length - currentDirName.length - 1);
+				const parentPath = oldRootPath.substring(
+					0,
+					oldRootPath.length - currentDirName.length - 1,
+				);
 				const newRootPath = `${parentPath}/${newName}`;
 
 				isRenaming = true;
@@ -374,7 +378,9 @@
 					defaultExpandAll={true}
 					changedFiles={effectiveChangedFiles}
 					onFileChange={rootPath ? onFileChange : handleManualFileChange}
-					onRootPathChange={rootPath && onRootPathChange ? onRootPathChange : handleRootPathChange}
+					onRootPathChange={rootPath && onRootPathChange
+						? onRootPathChange
+						: handleRootPathChange}
 					onFileRename={rootPath ? onFileRename : handleManualFileRename}
 				/>
 			</div>

@@ -108,9 +108,9 @@ export const PRESET_VARIABLES: UserPromptTemplateVariables[] = [
 **相关文件：**
 
 - `src/renderer/components/business/chat-input/tool-bar/chat-parameters/prompt-editor/`
-  - `index.tsx` - 主编辑器组件
-  - `nodes/variable-value-node.tsx` - 变量节点定义
-  - `plugins/variable-plugin.tsx` - 变量输入触发逻辑
+    - `index.tsx` - 主编辑器组件
+    - `nodes/variable-value-node.tsx` - 变量节点定义
+    - `plugins/variable-plugin.tsx` - 变量输入触发逻辑
 
 ### 阶段 2：保存（数据库）
 
@@ -162,8 +162,8 @@ result = "你是助手，时间 2025-12-12 14:30:45，问题：用户实际输�
 **核心渲染文件：**
 
 - `src/main/services/thread-forms-service.ts`
-  - `renderTemplateByThreadId()` - 渲染用户提示词模板
-  - `renderMessagesBySystemPrompt()` - 渲染系统提示词
+    - `renderTemplateByThreadId()` - 渲染用户提示词模板
+    - `renderMessagesBySystemPrompt()` - 渲染系统提示词
 
 ### 阶段 4：发送（AI）
 

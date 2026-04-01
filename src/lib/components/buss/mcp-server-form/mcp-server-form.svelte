@@ -331,7 +331,12 @@
 
 			<div class="flex gap-2">
 				{#if mode === "edit"}
-					<Button variant="outline" size="sm" class="text-[#D82525]" onclick={handleDelete}>
+					<Button
+						variant="outline"
+						size="sm"
+						class="text-[#D82525]"
+						onclick={handleDelete}
+					>
 						<Trash2 class="h-4 w-4" />
 						{m.mcp_delete()}
 					</Button>
@@ -394,7 +399,9 @@
 				<Collapsible.Trigger class="flex w-full items-center justify-between px-3 py-2">
 					<span class="font-medium">{m.mcp_advanced_settings()}</span>
 					<ChevronDown
-						class="h-4 w-4 transition-transform duration-200 {isAdvancedOpen ? 'rotate-180' : ''}"
+						class="h-4 w-4 transition-transform duration-200 {isAdvancedOpen
+							? 'rotate-180'
+							: ''}"
 					/>
 				</Collapsible.Trigger>
 				<Collapsible.Content class="px-3 pb-4 pt-2">
@@ -431,8 +438,14 @@
 
 						<!-- 其他设置 -->
 						<div class="flex flex-col gap-2">
-							<AdvancedSwitchItem label={m.mcp_auto_use_tools()} bind:checked={autoUseTools} />
-							<AdvancedSwitchItem label={m.mcp_keep_connection()} bind:checked={keepConnection} />
+							<AdvancedSwitchItem
+								label={m.mcp_auto_use_tools()}
+								bind:checked={autoUseTools}
+							/>
+							<AdvancedSwitchItem
+								label={m.mcp_keep_connection()}
+								bind:checked={keepConnection}
+							/>
 						</div>
 					</div>
 				</Collapsible.Content>
@@ -463,7 +476,9 @@
 					<div class="min-h-[200px]">
 						{#if selectedResourceTab === "tools"}
 							{#if tools.length === 0}
-								<div class="text-muted-foreground flex h-[200px] items-center justify-center">
+								<div
+									class="text-muted-foreground flex h-[200px] items-center justify-center"
+								>
 									{m.mcp_no_tools()}
 								</div>
 							{:else}
@@ -480,11 +495,15 @@
 								</div>
 							{/if}
 						{:else if selectedResourceTab === "prompts"}
-							<div class="text-muted-foreground flex h-[200px] items-center justify-center">
+							<div
+								class="text-muted-foreground flex h-[200px] items-center justify-center"
+							>
 								Coming soon...
 							</div>
 						{:else}
-							<div class="text-muted-foreground flex h-[200px] items-center justify-center">
+							<div
+								class="text-muted-foreground flex h-[200px] items-center justify-center"
+							>
 								Coming soon...
 							</div>
 						{/if}
@@ -540,7 +559,8 @@
 					</div>
 					{#if selectedTool.inputSchema}
 						<div class="flex-1 min-h-0 flex flex-col">
-							<span class="text-sm font-medium mb-1 flex-shrink-0">{m.mcp_tool_input_schema()}</span
+							<span class="text-sm font-medium mb-1 flex-shrink-0"
+								>{m.mcp_tool_input_schema()}</span
 							>
 							<div class="flex-1 min-h-0">
 								<StaticCodeBlock

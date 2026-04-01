@@ -87,7 +87,9 @@
 			</p>
 
 			{#if sandboxId && sessionId}
-				<div class="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg border border-border">
+				<div
+					class="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg border border-border"
+				>
 					<Checkbox
 						id="delete-remote"
 						bind:checked={deleteRemoteSession}

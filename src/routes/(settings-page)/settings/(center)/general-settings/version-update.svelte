@@ -154,7 +154,11 @@
 		</Button>
 	{/snippet}
 
-	<SettingInfoItem label={m.version_information()} value={appInfo.version} action={updateButton} />
+	<SettingInfoItem
+		label={m.version_information()}
+		value={appInfo.version}
+		action={updateButton}
+	/>
 
 	<!-- New version notification -->
 	{#if hasNewerVersion && latestVersionNumber}
@@ -174,7 +178,9 @@
 		{:else if changelogState.latestVersion}
 			<ChangelogItem
 				version={changelogState.latestVersion}
-				isCurrentVersion={changelogState.isCurrentVersion(changelogState.latestVersion.version)}
+				isCurrentVersion={changelogState.isCurrentVersion(
+					changelogState.latestVersion.version,
+				)}
 				defaultOpen={true}
 			/>
 			<Button

@@ -58,7 +58,9 @@
 			// 异步生成预览或读取完整内容（不阻塞 UI）
 			const processFile = async () => {
 				const isAbsolutePath =
-					filePath.includes("/") || filePath.includes("\\") || /^[a-zA-Z]:/.test(filePath);
+					filePath.includes("/") ||
+					filePath.includes("\\") ||
+					/^[a-zA-Z]:/.test(filePath);
 
 				if (!isAbsolutePath) {
 					// 如果没有绝对路径，强制读取文件完整内容作为 preview

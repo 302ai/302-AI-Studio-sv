@@ -119,7 +119,12 @@
 				>
 					<RefreshCw class="size-4" />
 				</Button>
-				<Button variant="outline" size="sm" onclick={handleLogoutClick} class="dark:hover:bg-muted">
+				<Button
+					variant="outline"
+					size="sm"
+					onclick={handleLogoutClick}
+					class="dark:hover:bg-muted"
+				>
 					{m.settings_logout()}
 				</Button>
 			</div>
@@ -142,7 +147,8 @@
 						<Button
 							variant="ghost"
 							size="icon-sm"
-							onclick={() => copyToClipboard(userState.userInfo!.invite_code, "invite_code")}
+							onclick={() =>
+								copyToClipboard(userState.userInfo!.invite_code, "invite_code")}
 							class="relative"
 						>
 							{#each [{ Icon: Check, visible: copiedField === "invite_code", id: "check" }, { Icon: Copy, visible: copiedField !== "invite_code", id: "copy" }] as { Icon, visible, id } (id)}

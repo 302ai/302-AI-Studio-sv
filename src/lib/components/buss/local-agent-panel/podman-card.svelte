@@ -92,7 +92,9 @@
 				>
 				<StatusIndicator
 					status={podmanInstalled ? "green" : "gray"}
-					text={podmanInstalled ? m.local_platform_installed() : m.local_platform_not_installed()}
+					text={podmanInstalled
+						? m.local_platform_installed()
+						: m.local_platform_not_installed()}
 				/>
 			</div>
 			<!-- Health Status -->
@@ -127,7 +129,11 @@
 			{#if !podmanInstalled}
 				{#if isWindows}
 					{@const docUrl = `https://studio.302.ai/${getLocale()}/docs/advanced/local-sandbox/windows`}
-					<Button size="sm" variant="outline" onclick={() => window.open(docUrl, "_blank")}>
+					<Button
+						size="sm"
+						variant="outline"
+						onclick={() => window.open(docUrl, "_blank")}
+					>
 						<ExternalLink class="mr-1 h-3.5 w-3.5" />
 						{m.local_platform_install_guide()}
 					</Button>

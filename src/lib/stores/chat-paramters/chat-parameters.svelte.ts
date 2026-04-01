@@ -46,11 +46,15 @@ class ChatParameters {
 		() => persistedChatParametersState.current.systemPromptVariables,
 	);
 	systemPromptMap = $derived.by(() => persistedChatParametersState.current.systemPromptMap);
-	systemPromptContent = $derived.by(() => persistedChatParametersState.current.systemPromptContent);
+	systemPromptContent = $derived.by(
+		() => persistedChatParametersState.current.systemPromptContent,
+	);
 	systemPromptPresetType = $derived.by(
 		() => persistedChatParametersState.current.systemPromptPresetType,
 	);
-	systemPromptRawJson = $derived.by(() => persistedChatParametersState.current.systemPromptRawJson);
+	systemPromptRawJson = $derived.by(
+		() => persistedChatParametersState.current.systemPromptRawJson,
+	);
 
 	userPromptTemplateVariables = $derived.by(
 		() => persistedChatParametersState.current.userPromptTemplateVariables,

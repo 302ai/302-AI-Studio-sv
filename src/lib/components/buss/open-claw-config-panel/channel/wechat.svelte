@@ -1,5 +1,9 @@
 <script lang="ts">
-	import { AccordionContent, AccordionItem, AccordionTrigger } from "$lib/components/ui/accordion";
+	import {
+		AccordionContent,
+		AccordionItem,
+		AccordionTrigger,
+	} from "$lib/components/ui/accordion";
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
@@ -132,7 +136,9 @@
 
 <AccordionItem id="wechat" value="wechat" class="border-b-0 my-1" onclick={handleWechartTrigger}>
 	<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-		<Label class=" font-normal no-underline cursor-pointer">{m.open_claw_channel_wechat()}</Label>
+		<Label class=" font-normal no-underline cursor-pointer"
+			>{m.open_claw_channel_wechat()}</Label
+		>
 	</AccordionTrigger>
 	<AccordionContent class="pb-0 pt-2 space-y-2">
 		<div class="rounded-lg border p-4 space-y-4">

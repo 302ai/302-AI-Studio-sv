@@ -76,7 +76,13 @@ export async function updateClaudeCodeSandbox(
 	try {
 		const response = await (sandbox_id === "local" ? localCodeAgentKy : _302AIKy)
 			.post("302/claude-code/sandbox/reset", {
-				json: { sandbox_id, llm_model, sandbox_name, max_thinking_token, auto_pause_seconds: 30 },
+				json: {
+					sandbox_id,
+					llm_model,
+					sandbox_name,
+					max_thinking_token,
+					auto_pause_seconds: 30,
+				},
 			})
 			.json();
 
@@ -342,7 +348,9 @@ export async function getSkillDetails(
 			console.error("Failed to validate skill details response:", validated.summary);
 			return null;
 		}
-		console.log(`[getSkillDetails] Skill content length: ${validated.skill.content?.length ?? 0}`);
+		console.log(
+			`[getSkillDetails] Skill content length: ${validated.skill.content?.length ?? 0}`,
+		);
 		return validated.skill;
 	} catch (error) {
 		console.error("Failed to get skill details:", error);

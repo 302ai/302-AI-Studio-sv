@@ -88,7 +88,9 @@ class LocalClaudeCodeSandboxState {
 					groupKey: g.workspacePath,
 					groupLabel: groupLabel,
 					items: g.items
-						.sort((a, b) => new Date(b.used_at).getTime() - new Date(a.used_at).getTime())
+						.sort(
+							(a, b) => new Date(b.used_at).getTime() - new Date(a.used_at).getTime(),
+						)
 						.map((s) => ({
 							value: s.session_id,
 							label: s.note || s.session_id,
@@ -118,7 +120,10 @@ class LocalClaudeCodeSandboxState {
 		for (const session of this.sessions) {
 			if (session.workspace_path && session.workspace_path !== "") {
 				if (!workspaceMap.has(session.workspace_path)) {
-					workspaceMap.set(session.workspace_path, { latestUsedAt: 0, relatedSessions: [] });
+					workspaceMap.set(session.workspace_path, {
+						latestUsedAt: 0,
+						relatedSessions: [],
+					});
 				}
 				const data = workspaceMap.get(session.workspace_path)!;
 				data.relatedSessions.push({ note: session.note, session_id: session.session_id });

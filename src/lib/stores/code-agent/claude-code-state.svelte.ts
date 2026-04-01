@@ -126,7 +126,8 @@ class ClaudeCodeAgentState {
 	}) {
 		if (!canDeploy || !lastMessage || lastMessage.role !== "assistant") return;
 
-		let deployInfo: DeploySandboxResponse | null = await this.handleActiveDeployment(lastMessage);
+		let deployInfo: DeploySandboxResponse | null =
+			await this.handleActiveDeployment(lastMessage);
 		const textDeployInfo = this.parseDeployInfoFromText(lastMessage);
 		if (textDeployInfo) {
 			deployInfo = textDeployInfo;
@@ -139,7 +140,8 @@ class ClaudeCodeAgentState {
 
 		// Deploy was attempted but failed — try auto-retry if possible
 		if (sendRetryMessage) {
-			const errorText = this.extractDeployErrorFromMessage(lastMessage) || this.#lastDeployApiError;
+			const errorText =
+				this.extractDeployErrorFromMessage(lastMessage) || this.#lastDeployApiError;
 			this.#lastDeployApiError = null;
 
 			if (errorText) {
@@ -258,7 +260,9 @@ class ClaudeCodeAgentState {
 		errorText: string,
 		sendRetryMessage: (content: string) => Promise<void>,
 	): Promise<void> {
-		console.log(`[ClaudeCodeAgentState] Sending deploy error to model: ${errorText.slice(0, 200)}`);
+		console.log(
+			`[ClaudeCodeAgentState] Sending deploy error to model: ${errorText.slice(0, 200)}`,
+		);
 
 		// Delay to let UI settle
 		await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -282,7 +286,9 @@ class ClaudeCodeAgentState {
 		// Remote 模式
 		const sandboxId = this.sandboxId;
 		const sessionId = this.currentSessionId;
-		const sandbox = persistedClaudeCodeSandboxState.current.find((s) => s.sandboxId === sandboxId);
+		const sandbox = persistedClaudeCodeSandboxState.current.find(
+			(s) => s.sandboxId === sandboxId,
+		);
 		if (!sandbox) return null;
 		const session = sandbox.sessionInfos.find((s) => s.sessionId === sessionId);
 		return session?.note ?? null;
@@ -337,8 +343,9 @@ class ClaudeCodeAgentState {
 
 		if (codeAgentState.type === "local") {
 			return (
-				persistedLocalClaudeCodeSessionsState.current.find((s) => s.session_id === sessionId)
-					?.workspace_path ?? ""
+				persistedLocalClaudeCodeSessionsState.current.find(
+					(s) => s.session_id === sessionId,
+				)?.workspace_path ?? ""
 			);
 		}
 
@@ -404,7 +411,9 @@ class ClaudeCodeAgentState {
 		sandboxInfo?: ClaudeCodeSandboxInfo;
 	}> {
 		if (this.agentMode === "existing") {
-			const { isOK, valid, sandboxInfo } = await checkClaudeCodeSandbox(this.selectedSandboxId);
+			const { isOK, valid, sandboxInfo } = await checkClaudeCodeSandbox(
+				this.selectedSandboxId,
+			);
 			if (!isOK || !valid) {
 				toast.error(m.error_verify_sandbox());
 				return { isOK: false };
@@ -448,7 +457,9 @@ class ClaudeCodeAgentState {
 
 				return { isOK: true, sandboxInfo };
 			} else {
-				const { isOK, valid, sandboxInfo } = await checkClaudeCodeSandbox(this.selectedSandboxId);
+				const { isOK, valid, sandboxInfo } = await checkClaudeCodeSandbox(
+					this.selectedSandboxId,
+				);
 				if (!isOK || !valid) {
 					toast.error(m.error_verify_sandbox());
 					return { isOK: false };
@@ -506,8 +517,12 @@ class ClaudeCodeAgentState {
 	}
 
 	async listClaudeCodeSkills(isInit: boolean): Promise<ListSkillsResponse> {
-		const [selectedSandboxId, selectedSessionId] = [this.selectedSandboxId, this.selectedSessionId];
-		const isListExistsSessionSkills = selectedSandboxId !== "auto" && selectedSessionId !== "new";
+		const [selectedSandboxId, selectedSessionId] = [
+			this.selectedSandboxId,
+			this.selectedSessionId,
+		];
+		const isListExistsSessionSkills =
+			selectedSandboxId !== "auto" && selectedSessionId !== "new";
 
 		const listSkillsResponse = await listSkills(
 			isListExistsSessionSkills
@@ -562,7 +577,9 @@ class ClaudeCodeAgentState {
 	}
 
 	handleSkillForceUseToggle(skillName: string, forceUse: boolean): void {
-		const updatedSkills = this.skills.map((s) => (s.name === skillName ? { ...s, forceUse } : s));
+		const updatedSkills = this.skills.map((s) =>
+			s.name === skillName ? { ...s, forceUse } : s,
+		);
 		this.updateSkills(updatedSkills);
 	}
 

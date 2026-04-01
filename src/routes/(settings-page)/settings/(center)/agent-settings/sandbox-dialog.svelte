@@ -162,7 +162,8 @@
 
 			// Try to navigate to existing thread first
 			if (isOK && existingThreadId) {
-				const result = await window.electronAPI.windowService.navigateToThread(existingThreadId);
+				const result =
+					await window.electronAPI.windowService.navigateToThread(existingThreadId);
 				console.log("[handleOpenSession] navigateToThread result:", result);
 
 				if (result.success) {
@@ -250,19 +251,25 @@
 					{#each sessions as session (session.sessionId)}
 						<ContextMenu.Root>
 							<ContextMenu.Trigger>
-								<div class="flex items-center justify-between p-4 rounded-xl bg-muted/50 group">
+								<div
+									class="flex items-center justify-between p-4 rounded-xl bg-muted/50 group"
+								>
 									<div class="flex items-center gap-3 flex-1 min-w-0">
 										<div class="min-w-0 flex-1">
 											<p class="text-sm font-medium text-foreground">
 												{session.note || session.sessionId}
 											</p>
 											{#if session.note}
-												<p class="text-xs text-muted-foreground">{session.sessionId}</p>
+												<p class="text-xs text-muted-foreground">
+													{session.sessionId}
+												</p>
 											{/if}
 										</div>
 									</div>
 									<div class="flex items-center gap-2">
-										<span class="text-sm text-muted-foreground">{formatTime(session)}</span>
+										<span class="text-sm text-muted-foreground"
+											>{formatTime(session)}</span
+										>
 										<ButtonWithTooltip
 											tooltip={m.tooltip_open_session()}
 											variant="ghost"
@@ -281,7 +288,9 @@
 								</div>
 							</ContextMenu.Trigger>
 							<ContextMenu.Content>
-								<ContextMenu.Item onclick={() => handleModifySessionRemark(session)}>
+								<ContextMenu.Item
+									onclick={() => handleModifySessionRemark(session)}
+								>
 									{m.text_button_edit()}
 								</ContextMenu.Item>
 								<ContextMenu.Item

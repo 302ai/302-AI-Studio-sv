@@ -41,7 +41,8 @@
 			>();
 
 			for (const session of localClaudeCodeSandboxState.sessions) {
-				const workspacePath = session.workspace_path || m.local_platform_new_work_directory();
+				const workspacePath =
+					session.workspace_path || m.local_platform_new_work_directory();
 				const groupKey = `local:${workspacePath}`;
 				const usedAt = new Date(session.used_at).getTime();
 
@@ -74,7 +75,8 @@
 					sandboxLabel: group.groupLabel,
 					latestUsedAt: group.latestUsedAt,
 					items: group.items.sort(
-						(a, b) => new Date(b.extra ?? 0).getTime() - new Date(a.extra ?? 0).getTime(),
+						(a, b) =>
+							new Date(b.extra ?? 0).getTime() - new Date(a.extra ?? 0).getTime(),
 					),
 				}))
 				.sort((a, b) => b.latestUsedAt - a.latestUsedAt)
@@ -198,7 +200,10 @@
 		{:else}
 			{#each filteredGroups as group (group.groupKey)}
 				{@const isExpanded = expandedSandboxes.has(group.groupKey)}
-				<Collapsible.Root open={isExpanded} onOpenChange={() => toggleSandbox(group.groupKey)}>
+				<Collapsible.Root
+					open={isExpanded}
+					onOpenChange={() => toggleSandbox(group.groupKey)}
+				>
 					<!-- Sandbox header (collapsible trigger) -->
 					<Collapsible.Trigger
 						class="flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/50"
@@ -230,7 +235,9 @@
 										>{session.label}</span
 									>
 									{#if session.extra}
-										<span class="text-muted-foreground text-xs whitespace-nowrap">
+										<span
+											class="text-muted-foreground text-xs whitespace-nowrap"
+										>
 											{new Date(session.extra).toLocaleString(undefined, {
 												month: "2-digit",
 												day: "2-digit",

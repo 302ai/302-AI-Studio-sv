@@ -120,7 +120,9 @@
 					</Sheet.Trigger>
 					<Sheet.Content class="border-none !max-w-[260px] bg-input">
 						<Sheet.Header class="pb-0">
-							<Sheet.Title class="font-light text-sm">{m.label_ai_applications()}</Sheet.Title>
+							<Sheet.Title class="font-light text-sm"
+								>{m.label_ai_applications()}</Sheet.Title
+							>
 							<Input
 								class="!bg-background h-10 rounded-[10px]"
 								bind:value={searchQuery}
@@ -156,7 +158,8 @@
 													<AiApplicationItem
 														{aiApplication}
 														type="sheet"
-														onClick={() => handleAiApplicationClick(aiApplication)}
+														onClick={() =>
+															handleAiApplicationClick(aiApplication)}
 													/>
 												{/each}
 											</Collapsible.Content>

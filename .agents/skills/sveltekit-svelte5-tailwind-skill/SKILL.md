@@ -49,10 +49,10 @@ This skill provides comprehensive guidance for building modern web applications 
 When a user asks you to build something with this stack:
 
 1. **Research first** - Search the documentation to understand:
-   - How SvelteKit handles this use case
-   - What Svelte 5 runes patterns apply
-   - How to style with Tailwind v4
-   - Common integration pitfalls to avoid
+    - How SvelteKit handles this use case
+    - What Svelte 5 runes patterns apply
+    - How to style with Tailwind v4
+    - Common integration pitfalls to avoid
 
 2. **Then execute** - Implement the solution using the knowledge gained from documentation
 

@@ -17,19 +17,19 @@ Skills that bundle indexed documentation should guide users to perform the searc
 Package skills should instruct users (Claude) to follow a research-first approach:
 
 1. **When user requests an implementation:**
-   - First, search the documentation to understand the package's recommended approach
-   - Understand patterns, configuration, and best practices
-   - Then implement based on that research
+    - First, search the documentation to understand the package's recommended approach
+    - Understand patterns, configuration, and best practices
+    - Then implement based on that research
 
 2. **Why this matters:**
-   - Package documentation represents authoritative guidance
-   - Prevents implementing anti-patterns or deprecated approaches
-   - Results in solutions that align with package design philosophy
-   - Users get better, more maintainable code
+    - Package documentation represents authoritative guidance
+    - Prevents implementing anti-patterns or deprecated approaches
+    - Results in solutions that align with package design philosophy
+    - Users get better, more maintainable code
 
 3. **Workflow to teach:**
-   - User: "Help me [accomplish task] with {package}"
-   - Claude: Search documentation → Understand approach → Implement solution
+    - User: "Help me [accomplish task] with {package}"
+    - Claude: Search documentation → Understand approach → Implement solution
 
 **Do NOT assume:**
 
@@ -60,10 +60,10 @@ When creating a package skill, the SKILL.md should include both a research-first
 When a user asks you to accomplish something with {package-name}:
 
 1. **Research first** - Search the documentation to understand:
-   - How {package-name} handles this use case
-   - What the recommended approach is
-   - What configuration or setup is needed
-   - Common patterns and best practices
+    - How {package-name} handles this use case
+    - What the recommended approach is
+    - What configuration or setup is needed
+    - Common patterns and best practices
 
 2. **Then execute** - Implement the solution using the knowledge gained from documentation
 
@@ -267,20 +267,20 @@ The complete search workflow consists of 5 stages, beginning with discovering wh
 
 1. **Find index files from project root:**
 
-   ```bash
-   find . -name "index.jsonl" -type f
-   ```
+    ```bash
+    find . -name "index.jsonl" -type f
+    ```
 
 2. **For each discovered index, read first 3-5 entries:**
 
-   ```
-   Read {path}/index.jsonl with offset: 1, limit: 5
-   ```
+    ```
+    Read {path}/index.jsonl with offset: 1, limit: 5
+    ```
 
 3. **Analyze collection characteristics:**
-   - What topics does this collection cover?
-   - What is the scope (API docs, guides, tutorials, etc.)?
-   - Is it relevant to the current query?
+    - What topics does this collection cover?
+    - What is the scope (API docs, guides, tutorials, etc.)?
+    - Is it relevant to the current query?
 
 **Example discovery analysis:**
 
@@ -368,31 +368,31 @@ Selection: Search api-docs/ and vendor/oauth-lib/docs/ first
 **Reasoning considerations:**
 
 1. **Query Intent Analysis**
-   - "How to" → Implementation guides
-   - "What is" → Conceptual explanations
-   - "Why" → Troubleshooting or architecture
-   - "When" → Lifecycle or workflow documentation
+    - "How to" → Implementation guides
+    - "What is" → Conceptual explanations
+    - "Why" → Troubleshooting or architecture
+    - "When" → Lifecycle or workflow documentation
 
 2. **Topic Hierarchy**
-   - Getting started vs advanced guides
-   - General overviews vs specific references
-   - Prerequisites vs main content
+    - Getting started vs advanced guides
+    - General overviews vs specific references
+    - Prerequisites vs main content
 
 3. **Specificity Level**
-   - Comprehensive guides vs quick references
-   - Examples vs explanations
-   - API reference vs usage tutorials
+    - Comprehensive guides vs quick references
+    - Examples vs explanations
+    - API reference vs usage tutorials
 
 4. **Related Concepts**
-   - Direct topic mentions
-   - Prerequisite knowledge
-   - Related functionality
+    - Direct topic mentions
+    - Prerequisite knowledge
+    - Related functionality
 
 5. **Collection Authority**
-   - Primary project docs vs vendor docs
-   - Official API docs vs community tutorials
-   - Which collection is authoritative for this topic?
-   - Consider collection scope from Stage 0
+    - Primary project docs vs vendor docs
+    - Official API docs vs community tutorials
+    - Which collection is authoritative for this topic?
+    - Consider collection scope from Stage 0
 
 **Anti-patterns to avoid:**
 
@@ -417,9 +417,9 @@ Selection: Search api-docs/ and vendor/oauth-lib/docs/ first
 
 - Detailed summary (2-4 sentences) of file purpose
 - Array of H2 sections with:
-  - Section titles
-  - Line numbers (offset/limit)
-  - Section-specific summaries
+    - Section titles
+    - Line numbers (offset/limit)
+    - Section-specific summaries
 
 **Analysis to perform:**
 
@@ -460,16 +460,16 @@ Read docs/getting-started/quickstart.md with offset: 120, limit: 35
 **Reading strategies by query type:**
 
 1. **Comprehensive understanding needed**
-   - Read primary sections from 2-3 files
-   - Include prerequisite context if needed
+    - Read primary sections from 2-3 files
+    - Include prerequisite context if needed
 
 2. **Quick answer needed**
-   - Read single most relevant section
-   - Provide file references for deeper exploration
+    - Read single most relevant section
+    - Provide file references for deeper exploration
 
 3. **Example + explanation needed**
-   - Read guide section explaining concept
-   - Read example section demonstrating implementation
+    - Read guide section explaining concept
+    - Read example section demonstrating implementation
 
 ### Stage 5: Synthesize and Answer
 

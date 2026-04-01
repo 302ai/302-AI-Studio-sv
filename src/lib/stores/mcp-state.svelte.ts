@@ -147,7 +147,10 @@ class McpState {
 	 * @param ids - Array of server IDs to filter
 	 * @returns Object with compatible IDs and filtered out server names
 	 */
-	filterStreamableHTTPServers(ids: string[]): { compatibleIds: string[]; filteredNames: string[] } {
+	filterStreamableHTTPServers(ids: string[]): {
+		compatibleIds: string[];
+		filteredNames: string[];
+	} {
 		const compatibleIds: string[] = [];
 		const filteredNames: string[] = [];
 

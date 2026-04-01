@@ -68,7 +68,10 @@ export class UserDataManager {
 
 				if (match) {
 					// Replace time separators: T10-30-45-123Z -> T10:30:45.123Z
-					const isoString = match[1].replace(/T(\d{2})-(\d{2})-(\d{2})-(\d{3})/, "T$1:$2:$3.$4");
+					const isoString = match[1].replace(
+						/T(\d{2})-(\d{2})-(\d{2})-(\d{3})/,
+						"T$1:$2:$3.$4",
+					);
 					timestamp = new Date(isoString);
 
 					// Fallback to mtime if parsing failed

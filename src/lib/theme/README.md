@@ -73,8 +73,8 @@ User Overrides (Settings)
 API (optional helper)
 
 - import { applyUserVars, applyRawUserCss } from "$lib/theme/user-theme";
-  - applyUserVars({ "--ui-accent": "#9b59b6" })
-  - applyRawUserCss("--ui-accent: oklch(65% 0.17 277);\n--ui-radius: 8px;")
+    - applyUserVars({ "--ui-accent": "#9b59b6" })
+    - applyRawUserCss("--ui-accent: oklch(65% 0.17 277);\n--ui-radius: 8px;")
 
 Notes
 

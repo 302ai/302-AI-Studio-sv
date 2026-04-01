@@ -55,7 +55,9 @@ export async function fetch302McpServers(token: string): Promise<Mcp302Server[]>
 		});
 
 		if (!response.ok) {
-			console.error(`[302 MCP] API request failed: ${response.status} ${response.statusText}`);
+			console.error(
+				`[302 MCP] API request failed: ${response.status} ${response.statusText}`,
+			);
 			return [];
 		}
 

@@ -93,7 +93,12 @@
 	{#if !isOpenClawBundled}
 		<!-- Footer -->
 		<div class="flex gap-3 border-t px-6 py-4">
-			<Button variant="secondary" class="flex-1" onclick={handleDownload} disabled={downloading}>
+			<Button
+				variant="secondary"
+				class="flex-1"
+				onclick={handleDownload}
+				disabled={downloading}
+			>
 				{#if downloading}
 					<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 				{/if}

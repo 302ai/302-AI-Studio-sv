@@ -183,7 +183,11 @@
 				const voices = window.speechSynthesis.getVoices();
 				if (voices.length > 0) {
 					speechSynthesisAvailable = true;
-					console.log("[ReadAloud] Speech synthesis available with", voices.length, "voices");
+					console.log(
+						"[ReadAloud] Speech synthesis available with",
+						voices.length,
+						"voices",
+					);
 				}
 			};
 
@@ -312,7 +316,11 @@
 						const loadedVoices = window.speechSynthesis.getVoices();
 						if (loadedVoices.length > 0) {
 							clearTimeout(timeout);
-							console.log("[ReadAloud] Voices loaded:", loadedVoices.length, loadedVoices);
+							console.log(
+								"[ReadAloud] Voices loaded:",
+								loadedVoices.length,
+								loadedVoices,
+							);
 							resolve(loadedVoices);
 						}
 					};
@@ -338,12 +346,18 @@
 			const utterance = new SpeechSynthesisUtterance(textContent);
 
 			// Find a voice for the target language
-			let selectedVoice = voices.find((voice) => voice.lang.startsWith(targetLang.split("-")[0]));
+			let selectedVoice = voices.find((voice) =>
+				voice.lang.startsWith(targetLang.split("-")[0]),
+			);
 
 			// Fallback to any available voice
 			if (!selectedVoice) {
 				selectedVoice = voices[0];
-				console.log("[ReadAloud] Using fallback voice:", selectedVoice.name, selectedVoice.lang);
+				console.log(
+					"[ReadAloud] Using fallback voice:",
+					selectedVoice.name,
+					selectedVoice.lang,
+				);
 			}
 
 			utterance.voice = selectedVoice;
@@ -543,7 +557,9 @@
 						<div class="flex w-full items-center justify-between gap-x-4">
 							<!-- Left: Tool Icon and Name -->
 							<div class="flex items-center gap-3">
-								<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+								<div
+									class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted"
+								>
 									{#if getServerIcon(part.toolName)}
 										<span class="text-xl">{getServerIcon(part.toolName)}</span>
 									{:else}
@@ -556,24 +572,38 @@
 									<h3 class="text-sm font-medium text-foreground">
 										{getDisplayToolName(part.toolName)}
 									</h3>
-									<p class="text-xs text-muted-foreground">{getServerName(part.toolName)}</p>
+									<p class="text-xs text-muted-foreground">
+										{getServerName(part.toolName)}
+									</p>
 								</div>
 							</div>
 
 							<!-- Right: Status -->
 							<div class="flex items-center gap-2">
 								{#if part.state === "input-streaming"}
-									<div class="h-2 w-2 animate-pulse rounded-full bg-[#0056FE]"></div>
-									<span class="text-sm text-[#0056FE]">{m.tool_call_status_preparing()}</span>
+									<div
+										class="h-2 w-2 animate-pulse rounded-full bg-[#0056FE]"
+									></div>
+									<span class="text-sm text-[#0056FE]"
+										>{m.tool_call_status_preparing()}</span
+									>
 								{:else if part.state === "input-available"}
-									<div class="h-2 w-2 animate-pulse rounded-full bg-[#0056FE]"></div>
-									<span class="text-sm text-[#0056FE]">{m.tool_call_status_executing()}</span>
+									<div
+										class="h-2 w-2 animate-pulse rounded-full bg-[#0056FE]"
+									></div>
+									<span class="text-sm text-[#0056FE]"
+										>{m.tool_call_status_executing()}</span
+									>
 								{:else if part.state === "output-available"}
 									<div class="h-2 w-2 rounded-full bg-[#38B865]"></div>
-									<span class="text-sm text-[#38B865]">{m.tool_call_status_success()}</span>
+									<span class="text-sm text-[#38B865]"
+										>{m.tool_call_status_success()}</span
+									>
 								{:else if part.state === "output-error"}
 									<div class="h-2 w-2 rounded-full bg-[#D82525]"></div>
-									<span class="text-sm text-[#D82525]">{m.tool_call_status_error()}</span>
+									<span class="text-sm text-[#D82525]"
+										>{m.tool_call_status_error()}</span
+									>
 								{/if}
 							</div>
 						</div>
@@ -590,7 +620,11 @@
 				{#if toolName === "TodoWrite"}
 					<TodoWriteCard part={toolPart} messageId={message.id} />
 				{:else if toolName === "Write" || toolName === "Edit"}
-					<WriteCard part={toolPart} messageId={message.id} messagePartIndex={partIndex} />
+					<WriteCard
+						part={toolPart}
+						messageId={message.id}
+						messagePartIndex={partIndex}
+					/>
 				{:else if toolName === "Skill"}
 					<SkillCard part={toolPart} messageId={message.id} />
 				{:else if toolName === "AskUserQuestion"}
@@ -619,7 +653,9 @@
 						type="dot-pulse"
 						size={24}
 						speed={1.2}
-						color={persistedThemeState.current.shouldUseDarkColors ? "#a1a1aa" : "#71717a"}
+						color={persistedThemeState.current.shouldUseDarkColors
+							? "#a1a1aa"
+							: "#71717a"}
 					/>
 				</div>
 				<span class="text-sm text-muted-foreground italic">

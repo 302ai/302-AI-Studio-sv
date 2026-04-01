@@ -62,7 +62,10 @@ export class ChatErrorHandler {
 				return ErrorType.API;
 			if (typeof errorObj.name === "string" && errorObj.name.includes("TooManyRequestsError"))
 				return ErrorType.RATE_LIMIT;
-			if (typeof errorObj.name === "string" && errorObj.name.includes("InvalidResponseDataError"))
+			if (
+				typeof errorObj.name === "string" &&
+				errorObj.name.includes("InvalidResponseDataError")
+			)
 				return ErrorType.API;
 		}
 
@@ -113,7 +116,10 @@ export class ChatErrorHandler {
 
 			case ErrorType.API:
 				if (chatError.statusCode) {
-					return m.error_api_with_code({ provider, statusCode: chatError.statusCode.toString() });
+					return m.error_api_with_code({
+						provider,
+						statusCode: chatError.statusCode.toString(),
+					});
 				}
 				return m.error_api_service({ provider });
 

@@ -19,10 +19,11 @@
 			const { sandboxId, sessionId } = selected;
 
 			// 1. 根据 sessionId 查找 threadId
-			const { isOK, threadId } = await window.electronAPI.codeAgentService.getThreadIdBySessionId(
-				sandboxId,
-				sessionId,
-			);
+			const { isOK, threadId } =
+				await window.electronAPI.codeAgentService.getThreadIdBySessionId(
+					sandboxId,
+					sessionId,
+				);
 
 			if (!isOK || !threadId) {
 				toast.error(m.skills_history_thread_not_found());

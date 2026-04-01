@@ -169,7 +169,9 @@
 		}
 
 		const trimmed = code.trim();
-		return trimmed.startsWith("<svg") || (trimmed.startsWith("<?xml") && trimmed.includes("<svg"));
+		return (
+			trimmed.startsWith("<svg") || (trimmed.startsWith("<?xml") && trimmed.includes("<svg"))
+		);
 	};
 
 	const detectHtml = (code: string, language: string | null): boolean => {
@@ -554,7 +556,9 @@
 
 	const updateTheme = (): boolean => {
 		const requested = props.theme?.trim();
-		let next = persistedThemeState.current.shouldUseDarkColors ? "vitesse-dark" : "vitesse-light";
+		let next = persistedThemeState.current.shouldUseDarkColors
+			? "vitesse-dark"
+			: "vitesse-light";
 		if (requested && highlighter) {
 			try {
 				const loaded = highlighter.getInternalContext().getLoadedThemes();
@@ -716,7 +720,10 @@
 		</div>
 	{/if}
 {:else if props.code.trim() && lineCount > 0}
-	<div data-code-block-wrapper class="rounded-xl overflow-hidden border border-border my-7 bg-card">
+	<div
+		data-code-block-wrapper
+		class="rounded-xl overflow-hidden border border-border my-7 bg-card"
+	>
 		<div
 			class="flex justify-between items-center px-4 py-2 bg-muted border-b border-border min-h-10"
 		>
@@ -750,7 +757,9 @@
 				{#if isMermaidCode}
 					<ButtonWithTooltip
 						class="text-muted-foreground hover:!bg-chat-action-hover"
-						tooltip={showMermaidPreview ? m.tooltip_show_code() : m.tooltip_preview_diagram()}
+						tooltip={showMermaidPreview
+							? m.tooltip_show_code()
+							: m.tooltip_preview_diagram()}
 						tooltipSide="bottom"
 						onclick={toggleMermaidPreview}
 					>
@@ -762,7 +771,9 @@
 					</ButtonWithTooltip>
 					<ButtonWithTooltip
 						class="text-muted-foreground hover:!bg-chat-action-hover"
-						tooltip={isStreaming ? "Waiting for output to finish..." : m.tooltip_open_in_new_tab()}
+						tooltip={isStreaming
+							? "Waiting for output to finish..."
+							: m.tooltip_open_in_new_tab()}
 						tooltipSide="bottom"
 						disabled={isStreaming}
 						onclick={handleOpenMermaidInNewTab}
@@ -797,7 +808,9 @@
 				{@html props.code}
 			</div>
 		{:else if showMermaidPreview && isMermaidCode}
-			<div class="p-4 bg-background flex items-center justify-center min-h-[200px] overflow-auto">
+			<div
+				class="p-4 bg-background flex items-center justify-center min-h-[200px] overflow-auto"
+			>
 				{#if mermaidError}
 					<div class="flex flex-col items-center gap-3 text-center max-w-md mx-auto py-2">
 						<div class="flex items-center gap-2 text-muted-foreground">

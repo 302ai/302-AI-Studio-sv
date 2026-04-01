@@ -54,7 +54,9 @@ class CodeAgentGlobalConfigsState {
 	qqbot = $derived(
 		persistedCodeAgentGlobalConfigsState.current.qqbot ?? { appId: "", clientSecret: "" },
 	);
-	wecom = $derived(persistedCodeAgentGlobalConfigsState.current.wecom ?? { botId: "", secret: "" });
+	wecom = $derived(
+		persistedCodeAgentGlobalConfigsState.current.wecom ?? { botId: "", secret: "" },
+	);
 	telegram = $derived(
 		persistedCodeAgentGlobalConfigsState.current.telegram ?? {
 			accounts: {
@@ -159,7 +161,10 @@ class CodeAgentGlobalConfigsState {
 	batchUpdater() {
 		const value: Partial<CodeAgentGlobalConfigs> = {};
 		const obj = {
-			update: <T extends keyof CodeAgentGlobalConfigs>(key: T, v: CodeAgentGlobalConfigs[T]) => {
+			update: <T extends keyof CodeAgentGlobalConfigs>(
+				key: T,
+				v: CodeAgentGlobalConfigs[T],
+			) => {
 				value[key] = v;
 				return obj;
 			},

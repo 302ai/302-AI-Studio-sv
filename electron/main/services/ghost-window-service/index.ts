@@ -192,7 +192,10 @@ export class GhostWindowService {
 		const relativeY = y - bounds.y;
 
 		return (
-			relativeX >= 0 && relativeX <= bounds.width && relativeY >= 0 && relativeY <= TITLE_BAR_HEIGHT
+			relativeX >= 0 &&
+			relativeX <= bounds.width &&
+			relativeY >= 0 &&
+			relativeY <= TITLE_BAR_HEIGHT
 		);
 	}
 

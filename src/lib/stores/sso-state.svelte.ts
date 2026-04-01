@@ -31,7 +31,9 @@ class SsoStateManager {
 
 			if (result.success && result.apiKey) {
 				// Set the API key as token with Basic prefix
-				const token = result.apiKey.startsWith("Basic ") ? result.apiKey : `Basic ${result.apiKey}`;
+				const token = result.apiKey.startsWith("Basic ")
+					? result.apiKey
+					: `Basic ${result.apiKey}`;
 				userState.setToken(token);
 
 				// Extract raw API key
@@ -62,7 +64,11 @@ class SsoStateManager {
 				}
 			} else {
 				this.hasError = true;
-				if (result.error && !result.error.includes("closed") && !result.error.includes("timeout")) {
+				if (
+					result.error &&
+					!result.error.includes("closed") &&
+					!result.error.includes("timeout")
+				) {
 					toast.error(result.error);
 				}
 				this.isLoading = false;
@@ -197,7 +203,8 @@ class SsoStateManager {
 				return {
 					id: nanoid(),
 					name: server.name,
-					description: server.displayTools.length > 0 ? server.displayTools.join(", ") : "",
+					description:
+						server.displayTools.length > 0 ? server.displayTools.join(", ") : "",
 					type: "streamableHTTP" as const,
 					url: serverUrl,
 					command: null,

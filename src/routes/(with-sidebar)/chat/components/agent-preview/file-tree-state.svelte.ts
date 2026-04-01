@@ -181,7 +181,9 @@ export class FileTreeState {
 	 * Get 302.AI provider API key
 	 */
 	private get302ApiKey(): string {
-		const provider = persistedProviderState.current.find((p) => p.name === "302.AI" && p.enabled);
+		const provider = persistedProviderState.current.find(
+			(p) => p.name === "302.AI" && p.enabled,
+		);
 		const key = provider?.apiKey || "";
 		return key;
 	}
@@ -488,7 +490,9 @@ export class FileTreeState {
 			if (isDirectoryNotFound && !isAtSystemRoot(this.currentDirectory)) {
 				// Try to navigate to parent directory
 				const parentPath = pathUtils.getParentDir(this.currentDirectory);
-				console.log(`[FileTree] Current directory deleted, navigating to parent: ${parentPath}`);
+				console.log(
+					`[FileTree] Current directory deleted, navigating to parent: ${parentPath}`,
+				);
 
 				// Update currentDirectory and try loading parent
 				this.currentDirectory = parentPath;
@@ -499,7 +503,9 @@ export class FileTreeState {
 				} catch (_retryError) {
 					// If parent also fails, fallback to workspace root
 					if (!isAtSystemRoot(parentPath)) {
-						console.log("[FileTree] Parent directory also invalid, falling back to workspace root");
+						console.log(
+							"[FileTree] Parent directory also invalid, falling back to workspace root",
+						);
 						this.currentDirectory = this.rootPath;
 						this.error = null;
 						await this.loadFiles(this.rootPath, false, true);
@@ -713,7 +719,9 @@ export class FileTreeState {
 					stripWorkspace(newPath),
 				);
 				if (!result.success) {
-					toast.error(result.error || m.toast_file_rename_folder_failed(), { id: toastId });
+					toast.error(result.error || m.toast_file_rename_folder_failed(), {
+						id: toastId,
+					});
 					return false;
 				}
 			} else {
@@ -725,7 +733,9 @@ export class FileTreeState {
 				}
 				const response = await renameSandboxFile(this.sandboxId, oldPath, newPath);
 				if (!response.success) {
-					toast.error(response.error || m.toast_file_rename_folder_failed(), { id: toastId });
+					toast.error(response.error || m.toast_file_rename_folder_failed(), {
+						id: toastId,
+					});
 					return false;
 				}
 			}
@@ -823,11 +833,15 @@ export class FileTreeState {
 	 */
 	private generateUniqueName(targetDirPath: string, originalName: string): string {
 		// Normalize target directory path
-		const normalizedDir = targetDirPath.endsWith("/") ? targetDirPath.slice(0, -1) : targetDirPath;
+		const normalizedDir = targetDirPath.endsWith("/")
+			? targetDirPath.slice(0, -1)
+			: targetDirPath;
 
 		// Get all existing names in target directory
 		const existingNames = new SvelteSet(
-			this.files.filter((f) => pathUtils.getParentDir(f.path) === normalizedDir).map((f) => f.name),
+			this.files
+				.filter((f) => pathUtils.getParentDir(f.path) === normalizedDir)
+				.map((f) => f.name),
 		);
 
 		// If no conflict, return original name
@@ -1083,7 +1097,8 @@ export class FileTreeState {
 					return false;
 				}
 			} catch (e) {
-				const errorMsg = e instanceof Error ? e.message : m.toast_file_upload_folder_failed();
+				const errorMsg =
+					e instanceof Error ? e.message : m.toast_file_upload_folder_failed();
 				toast.error(errorMsg, { id: uploadToastId });
 				return false;
 			}
@@ -1313,7 +1328,8 @@ export class FileTreeState {
 
 		// Show result
 		if (successCount > 0) {
-			const failedText = failCount > 0 ? m.toast_download_folder_success_failed({ failCount }) : "";
+			const failedText =
+				failCount > 0 ? m.toast_download_folder_success_failed({ failCount }) : "";
 			toast.success(
 				m.toast_download_folder_success({
 					count: successCount,
@@ -1380,7 +1396,9 @@ export class FileTreeState {
 				});
 				const fileResponse = await fetch(fileItem.upload_url);
 				if (!fileResponse.ok) {
-					throw new Error(m.toast_download_file_failed({ error: fileResponse.statusText }));
+					throw new Error(
+						m.toast_download_file_failed({ error: fileResponse.statusText }),
+					);
 				}
 				blob = await fileResponse.blob();
 			} else {

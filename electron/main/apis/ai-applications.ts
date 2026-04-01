@@ -97,7 +97,8 @@ export async function fetch302AIToolList(
 
 		const drawingRobotData = {
 			tool_id: -1,
-			tool_name: lang === "cn" ? "绘画机器人" : lang === "jp" ? "描画ロボット" : "Drawing Robot",
+			tool_name:
+				lang === "cn" ? "绘画机器人" : lang === "jp" ? "描画ロボット" : "Drawing Robot",
 			tool_description:
 				lang === "cn"
 					? "支持Midjourney、Flux、SD、Ideogram、Recraft"
@@ -105,14 +106,19 @@ export async function fetch302AIToolList(
 						? "Midjourney、Flux、SD、Ideogram、Recraftをサポート"
 						: "Supports Midjourney, Flux, SD, Ideogram, Recraft",
 			enable: true,
-			category_name: lang === "cn" ? "图片处理" : lang === "jp" ? "画像処理" : "Image Processing",
+			category_name:
+				lang === "cn" ? "图片处理" : lang === "jp" ? "画像処理" : "Image Processing",
 			category_id: 4,
 		};
 		const newToolsNotFromApi = [
 			{
 				tool_id: 9997,
 				tool_name:
-					lang === "cn" ? "3D摄影棚" : lang === "jp" ? "3Dカメラスタジオ" : "3D Camera Studio",
+					lang === "cn"
+						? "3D摄影棚"
+						: lang === "jp"
+							? "3Dカメラスタジオ"
+							: "3D Camera Studio",
 				tool_description:
 					lang === "cn"
 						? "对图像进行多角度变换及背景融合处理"
@@ -120,7 +126,8 @@ export async function fetch302AIToolList(
 							? "画像を複数角度で変換し、背景を融合処理"
 							: "Transform images from multiple angles and fuse backgrounds",
 				enable: true,
-				category_name: lang === "cn" ? "图片处理" : lang === "jp" ? "画像処理" : "Image Processing",
+				category_name:
+					lang === "cn" ? "图片处理" : lang === "jp" ? "画像処理" : "Image Processing",
 				category_id: 4,
 			},
 			{
@@ -133,7 +140,8 @@ export async function fetch302AIToolList(
 							? "Nano-Bananaを使って記事に画像を自動で付ける"
 							: "Use Nano-Banana to automatically add images to articles",
 				enable: true,
-				category_name: lang === "cn" ? "工作效率" : lang === "jp" ? "効率化" : "Work Efficiency",
+				category_name:
+					lang === "cn" ? "工作效率" : lang === "jp" ? "効率化" : "Work Efficiency",
 				category_id: 1,
 			},
 			{
@@ -146,7 +154,8 @@ export async function fetch302AIToolList(
 							? "Nano-Bananaを使ってPPTを作成"
 							: "Use Nano-Banana to create PPT",
 				enable: true,
-				category_name: lang === "cn" ? "工作效率" : lang === "jp" ? "効率化" : "Work Efficiency",
+				category_name:
+					lang === "cn" ? "工作效率" : lang === "jp" ? "効率化" : "Work Efficiency",
 				category_id: 1,
 			},
 		];

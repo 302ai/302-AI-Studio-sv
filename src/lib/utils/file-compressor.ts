@@ -110,7 +110,9 @@ export async function compressImage(file: File, maxSizeMB: number = MAX_SIZE_MB)
 			const recompressedDataURL = await fileToDataURL(recompressedFile);
 
 			const recompressedBase64Size = getBase64Size(recompressedDataURL);
-			console.log(`[Compression] Recompressed base64 size: ${formatBytes(recompressedBase64Size)}`);
+			console.log(
+				`[Compression] Recompressed base64 size: ${formatBytes(recompressedBase64Size)}`,
+			);
 
 			return recompressedDataURL;
 		}

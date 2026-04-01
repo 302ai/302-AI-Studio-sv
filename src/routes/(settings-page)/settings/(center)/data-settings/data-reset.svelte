@@ -124,7 +124,9 @@
 					class="border-border text-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring dark:border-border dark:text-foreground dark:hover:bg-muted dark:hover:text-foreground border bg-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
 					variant="outline">{m.common_cancel()}</Button
 				>
-				<Button variant="destructive" onclick={handleReset}>{m.settings_resetConfirm()}</Button>
+				<Button variant="destructive" onclick={handleReset}
+					>{m.settings_resetConfirm()}</Button
+				>
 			</Dialog.Footer>
 		</Dialog.Content>
 	</Dialog.Root>

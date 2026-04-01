@@ -40,7 +40,10 @@ export function createCitationsFetch(
 				Object.assign(bodyJson, providerOptions);
 
 				console.log("[302.AI] Adding provider options to request:", providerOptions);
-				console.log("[302.AI] Modified request body (full):", JSON.stringify(bodyJson, null, 2));
+				console.log(
+					"[302.AI] Modified request body (full):",
+					JSON.stringify(bodyJson, null, 2),
+				);
 
 				options.body = JSON.stringify(bodyJson);
 			} catch (error) {
@@ -191,7 +194,9 @@ class CitationsProcessor {
 	private shouldAddCitations(choice: Choice | undefined): boolean {
 		if (!choice) return false;
 
-		return choice.finish_reason === "stop" && this.citations.length > 0 && !this.hasAddedCitations;
+		return (
+			choice.finish_reason === "stop" && this.citations.length > 0 && !this.hasAddedCitations
+		);
 	}
 
 	private getFirstChoice(data: SSEData): Choice | undefined {
@@ -204,7 +209,9 @@ class CitationsProcessor {
 			return "";
 		}
 
-		const citationLines = this.citations.map((citation, index) => `- [${index + 1}] ${citation}`);
+		const citationLines = this.citations.map(
+			(citation, index) => `- [${index + 1}] ${citation}`,
+		);
 
 		return `\n\n${citationLines.join("\n")}\n`;
 	}

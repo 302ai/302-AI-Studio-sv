@@ -51,7 +51,8 @@ class MarketplaceState {
 			console.log("[MarketplaceState] Initialized successfully");
 		} catch (error) {
 			console.error("[MarketplaceState] Initialization failed:", error);
-			this.error = error instanceof Error ? error.message : "Failed to initialize marketplace";
+			this.error =
+				error instanceof Error ? error.message : "Failed to initialize marketplace";
 		}
 	}
 

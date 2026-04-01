@@ -20,6 +20,7 @@
 		name="titleGenerationTiming"
 		value={preferencesSettings.titleGenerationTiming}
 		options={searchServices}
-		onValueChange={(v) => preferencesSettings.setTitleGenerationTiming(v as TitleGenerationTiming)}
+		onValueChange={(v) =>
+			preferencesSettings.setTitleGenerationTiming(v as TitleGenerationTiming)}
 	/>
 </div>

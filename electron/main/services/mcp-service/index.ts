@@ -29,7 +29,9 @@ export class McpService {
 				console.log("[MCP] Current PATH:", process.env.PATH);
 
 				const envVars = {
-					...(server.advancedSettings?.customEnvVars as Record<string, string> | undefined),
+					...(server.advancedSettings?.customEnvVars as
+						| Record<string, string>
+						| undefined),
 				};
 
 				if (!envVars.PATH && process.env.PATH) {
@@ -46,7 +48,9 @@ export class McpService {
 					throw new Error("SSE server requires URL");
 				}
 
-				const { SSEClientTransport } = await import("@modelcontextprotocol/sdk/client/sse.js");
+				const { SSEClientTransport } = await import(
+					"@modelcontextprotocol/sdk/client/sse.js"
+				);
 
 				transport = new SSEClientTransport(new URL(server.url));
 			} else if (server.type === "streamableHTTP") {
@@ -85,7 +89,9 @@ export class McpService {
 					`[MCP] Command not found: ${server.command}. This may be due to PATH issues.`,
 				);
 				console.error(`[MCP] Current PATH: ${process.env.PATH}`);
-				console.error("[MCP] If launching via double-click, ensure fix-path is loaded at startup.");
+				console.error(
+					"[MCP] If launching via double-click, ensure fix-path is loaded at startup.",
+				);
 			}
 
 			return null;

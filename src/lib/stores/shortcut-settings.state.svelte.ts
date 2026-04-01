@@ -137,7 +137,10 @@ class ShortcutSettingsManager {
 		}
 
 		if (updates.length > 0) {
-			console.log(`[Shortcut Migration] Updated ${updates.length} shortcuts:`, updates.join(", "));
+			console.log(
+				`[Shortcut Migration] Updated ${updates.length} shortcuts:`,
+				updates.join(", "),
+			);
 		}
 
 		// Sort shortcuts by order
@@ -203,9 +206,11 @@ if (typeof window !== "undefined" && window.electronAPI) {
 				scope: s.scope,
 				order: s.order,
 			}));
-			window.electronAPI.shortcutService.updateShortcuts(serializableShortcuts).catch((err) => {
-				console.error("Failed to sync shortcuts:", err);
-			});
+			window.electronAPI.shortcutService
+				.updateShortcuts(serializableShortcuts)
+				.catch((err) => {
+					console.error("Failed to sync shortcuts:", err);
+				});
 		});
 	});
 }

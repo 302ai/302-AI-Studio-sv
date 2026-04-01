@@ -256,7 +256,11 @@
 			// trigger a refresh to load files from the correct path
 			// Skip if we're still loading from storage (initial load)
 			const shouldRefresh =
-				wasEmpty && isNowValid && !hasLoadedWithWorkspacePath && !isLoadingFromStorage && sandboxId;
+				wasEmpty &&
+				isNowValid &&
+				!hasLoadedWithWorkspacePath &&
+				!isLoadingFromStorage &&
+				sandboxId;
 
 			if (shouldRefresh) {
 				hasLoadedWithWorkspacePath = true;
@@ -295,7 +299,8 @@
 
 			// 2. Load from storage logic
 			const isRealChange =
-				(sandboxChanged && oldSandboxId !== undefined) || (sessionChanged && oldSessionId !== null);
+				(sandboxChanged && oldSandboxId !== undefined) ||
+				(sessionChanged && oldSessionId !== null);
 			const isComponentRecreation = oldSandboxId === undefined && oldSessionId === null;
 
 			if (sandboxId && currentSessionId) {
@@ -381,7 +386,10 @@
 		if (target.files && target.files.length > 0) {
 			const file = target.files[0];
 			// Upload to pendingUploadPath
-			await fileTreeState.uploadFile(file, pendingUploadPath ?? fileTreeState.currentDirectory);
+			await fileTreeState.uploadFile(
+				file,
+				pendingUploadPath ?? fileTreeState.currentDirectory,
+			);
 
 			// Reset input and path
 			target.value = "";
@@ -475,7 +483,9 @@
 				<!-- Paste -->
 				<ContextMenu.Item
 					onSelect={() => handlePaste(node)}
-					disabled={!fileTreeState.copiedFilePath || isPasteOperating || isModificationDisabled}
+					disabled={!fileTreeState.copiedFilePath ||
+						isPasteOperating ||
+						isModificationDisabled}
 				>
 					{#if isPasteOperating}
 						<Loader2 class="mr-2 h-4 w-4 animate-spin" />
@@ -653,7 +663,9 @@
 				>
 					<div class="flex items-center gap-1.5 flex-1 min-w-0">
 						{#if fileTreeState.loadingDirs.has(node.path)}
-							<Loader2 class="h-3 w-3 flex-shrink-0 animate-spin text-muted-foreground" />
+							<Loader2
+								class="h-3 w-3 flex-shrink-0 animate-spin text-muted-foreground"
+							/>
 							<Folder class="h-3.5 w-3.5 flex-shrink-0 text-blue-500" />
 						{:else if fileTreeState.selectedFile === node.path}
 							<span class="h-3 w-3 flex-shrink-0"></span>
@@ -785,13 +797,19 @@
 				</DropdownMenu.Trigger>
 				<DropdownMenu.Content align="start">
 					<!-- Create File -->
-					<DropdownMenu.Item onclick={() => handleCreateFile()} disabled={isModificationDisabled}>
+					<DropdownMenu.Item
+						onclick={() => handleCreateFile()}
+						disabled={isModificationDisabled}
+					>
 						<FilePlus class="mr-2 h-4 w-4" />
 						<span>{m.label_file_tree_create_file()}</span>
 					</DropdownMenu.Item>
 
 					<!-- Create Folder -->
-					<DropdownMenu.Item onclick={() => handleCreateFolder()} disabled={isModificationDisabled}>
+					<DropdownMenu.Item
+						onclick={() => handleCreateFolder()}
+						disabled={isModificationDisabled}
+					>
 						<FolderPlus class="mr-2 h-4 w-4" />
 						<span>{m.label_file_tree_new_folder()}</span>
 					</DropdownMenu.Item>
@@ -799,13 +817,19 @@
 					<DropdownMenu.Separator />
 
 					<!-- Upload File -->
-					<DropdownMenu.Item onclick={() => triggerFileUpload()} disabled={isModificationDisabled}>
+					<DropdownMenu.Item
+						onclick={() => triggerFileUpload()}
+						disabled={isModificationDisabled}
+					>
 						<FileUp class="mr-2 h-4 w-4" />
 						<span>{m.label_file_tree_upload_file()}</span>
 					</DropdownMenu.Item>
 
 					<!-- Upload Folder -->
-					<DropdownMenu.Item onclick={() => handleFolderUpload()} disabled={isModificationDisabled}>
+					<DropdownMenu.Item
+						onclick={() => handleFolderUpload()}
+						disabled={isModificationDisabled}
+					>
 						<FolderUp class="mr-2 h-4 w-4" />
 						<span>{m.label_file_tree_upload_folder()}</span>
 					</DropdownMenu.Item>

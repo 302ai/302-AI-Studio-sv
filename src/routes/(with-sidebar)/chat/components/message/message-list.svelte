@@ -133,7 +133,9 @@
 				let match;
 				while ((match = regex.exec(text)) !== null) {
 					if (match.index > lastIndex) {
-						fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+						fragment.appendChild(
+							document.createTextNode(text.slice(lastIndex, match.index)),
+						);
 					}
 					const mark = document.createElement("mark");
 					mark.className = "search-highlight";

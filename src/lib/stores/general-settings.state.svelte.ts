@@ -53,7 +53,10 @@ class GeneralSettingsManager {
 	}
 
 	setLayoutMode(mode: LayoutMode): void {
-		persistedGeneralSettings.current = { ...persistedGeneralSettings.current, layoutMode: mode };
+		persistedGeneralSettings.current = {
+			...persistedGeneralSettings.current,
+			layoutMode: mode,
+		};
 	}
 
 	get language(): LanguageCode {
@@ -86,7 +89,10 @@ class GeneralSettingsManager {
 	}
 
 	setAutoUpdate(value: boolean): void {
-		persistedGeneralSettings.current = { ...persistedGeneralSettings.current, autoUpdate: value };
+		persistedGeneralSettings.current = {
+			...persistedGeneralSettings.current,
+			autoUpdate: value,
+		};
 		// Notify main process to enable/disable auto-check
 		window.electronAPI.updaterService.setAutoUpdate(value);
 	}

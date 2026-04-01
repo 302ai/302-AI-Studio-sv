@@ -7,11 +7,13 @@
 	const sidebar = useSidebar();
 
 	onMount(() => {
-		const cleanup = window.electronAPI.shortcut.onShortcutAction?.((event: ShortcutActionEvent) => {
-			if (event.action === "toggleSidebar") {
-				sidebar.toggle();
-			}
-		});
+		const cleanup = window.electronAPI.shortcut.onShortcutAction?.(
+			(event: ShortcutActionEvent) => {
+				if (event.action === "toggleSidebar") {
+					sidebar.toggle();
+				}
+			},
+		);
 
 		return cleanup;
 	});

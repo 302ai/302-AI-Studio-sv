@@ -112,8 +112,7 @@ services:
 		if (!ready) {
 			return {
 				isOk: false,
-				error:
-					"Podman machine started but not responding after 60s. Try `podman machine stop ai302-machine` then retry.",
+				error: "Podman machine started but not responding after 60s. Try `podman machine stop ai302-machine` then retry.",
 			};
 		}
 

@@ -58,7 +58,9 @@
 	const visibleRunningTasks = $derived(() =>
 		filteredTasks().filter((t) => t.status === "in_progress"),
 	);
-	const visiblePendingTasks = $derived(() => filteredTasks().filter((t) => t.status === "pending"));
+	const visiblePendingTasks = $derived(() =>
+		filteredTasks().filter((t) => t.status === "pending"),
+	);
 	const visibleDoneTasks = $derived(() => filteredTasks().filter((t) => t.status === "done"));
 
 	// Sync local tasks with store (only when not dragging)
@@ -109,7 +111,9 @@
 		// Only update if we're actively dragging
 		if (draggedElementId) {
 			// Check if order changed within the active tasks
-			const hasOrderChanged = newItems.some((item, index) => item.id !== localTasks[index]?.id);
+			const hasOrderChanged = newItems.some(
+				(item, index) => item.id !== localTasks[index]?.id,
+			);
 			if (hasOrderChanged) localTasks = newItems;
 		}
 	}
@@ -130,7 +134,9 @@
 			const allRunningTasks = codeAgentTaskboardState.tasklist.filter(
 				(t) => t.status === "in_progress",
 			);
-			const allDoneTasks = codeAgentTaskboardState.tasklist.filter((t) => t.status === "done");
+			const allDoneTasks = codeAgentTaskboardState.tasklist.filter(
+				(t) => t.status === "done",
+			);
 
 			codeAgentTaskboardState.updateTasklist([
 				...allRunningTasks,
@@ -195,7 +201,8 @@
 					class={cn(
 						"text-sm truncate block min-w-0",
 						task.status === "pending" && "font-medium text-foreground",
-						task.status === "in_progress" && "font-medium text-blue-700 dark:text-blue-300",
+						task.status === "in_progress" &&
+							"font-medium text-blue-700 dark:text-blue-300",
 						task.status === "done" && "line-through text-muted-foreground",
 					)}
 				>
@@ -225,7 +232,9 @@
 					{m.taskboard_filter_done()}
 				</span>
 			{:else}
-				<span class="text-xs text-muted-foreground font-medium px-2 py-1 bg-muted/50 rounded-lg">
+				<span
+					class="text-xs text-muted-foreground font-medium px-2 py-1 bg-muted/50 rounded-lg"
+				>
 					{m.taskboard_filter_open()}
 				</span>
 			{/if}

@@ -4,7 +4,7 @@ version_anchors: ["SvelteKit@2.x", "Svelte@5.x"]
 authored: true
 origin: self
 adapted_from:
-  - "sveltejs/kit repository (data loading documentation)"
+    - "sveltejs/kit repository (data loading documentation)"
 last_reviewed: 2025-10-28
 summary: "Master SvelteKit load functions with server vs client execution, passing data to Svelte 5 runes, reactive patterns, streaming, error handling, and caching strategies."
 ---

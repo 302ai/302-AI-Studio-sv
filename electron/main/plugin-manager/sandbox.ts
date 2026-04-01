@@ -146,7 +146,9 @@ function createRestrictedFS(fs: typeof import("fs"), allowedDir: string): Record
 		const normalized = path.normalize(resolved);
 
 		if (!normalized.startsWith(allowedDir)) {
-			throw new Error(`Access denied: Path ${filePath} is outside plugin directory ${allowedDir}`);
+			throw new Error(
+				`Access denied: Path ${filePath} is outside plugin directory ${allowedDir}`,
+			);
 		}
 
 		return normalized;

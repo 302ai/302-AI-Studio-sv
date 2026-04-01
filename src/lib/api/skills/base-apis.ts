@@ -20,7 +20,8 @@ function normalizeSkillRecord(value: unknown) {
 				? skillRecord.favorite_at
 				: null,
 		manual_import_at:
-			typeof skillRecord.manual_import_at === "string" || skillRecord.manual_import_at === null
+			typeof skillRecord.manual_import_at === "string" ||
+			skillRecord.manual_import_at === null
 				? skillRecord.manual_import_at
 				: null,
 	};
@@ -222,7 +223,10 @@ export async function _createSkillFromGitHub(githubUrl: string): Promise<CreateS
 
 		const validated = createSkillResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate create skill from GitHub response:", validated.summary);
+			console.error(
+				"Failed to validate create skill from GitHub response:",
+				validated.summary,
+			);
 			throw new Error("Invalid response format from create skill API");
 		}
 		return validated;

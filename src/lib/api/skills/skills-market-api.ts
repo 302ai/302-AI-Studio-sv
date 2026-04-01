@@ -104,7 +104,9 @@ export async function getCategoriesByNames(
 			batches.push(names.slice(i, i + 100));
 		}
 
-		const results = await Promise.all(batches.map((batch) => getCategoriesByNames(batch, locale)));
+		const results = await Promise.all(
+			batches.map((batch) => getCategoriesByNames(batch, locale)),
+		);
 
 		return results.flat();
 	}

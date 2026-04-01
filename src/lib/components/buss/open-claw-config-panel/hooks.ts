@@ -24,7 +24,10 @@ export function ApplyOpenClawChannelConfigConfirm({
 		loading(true);
 		try {
 			await prepareAction?.();
-			if (!codeAgentState.isPristineSession && localEnvState.openClawHealthStatus !== "unknown") {
+			if (
+				!codeAgentState.isPristineSession &&
+				localEnvState.openClawHealthStatus !== "unknown"
+			) {
 				await window.electronAPI.localVibeService.restartPodmanMachine();
 			}
 		} catch (e) {

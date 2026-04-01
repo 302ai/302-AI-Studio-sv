@@ -232,7 +232,10 @@ class TabBarState {
 			const currentTabs = this.#isShellView ? this.tabs : await this.getCurrentWindowTabs();
 
 			if (currentTabs.length > 1) {
-				const newActiveTabId = await this.#handleTabRemovalWithActiveState(tabId, currentTabs);
+				const newActiveTabId = await this.#handleTabRemovalWithActiveState(
+					tabId,
+					currentTabs,
+				);
 
 				// Ensure storage is written before the IPC call destroys the WebContentsView.
 				// In tab views, #safeUpdateWindowTabs fires an async storage write that may not
@@ -405,7 +408,11 @@ class TabBarState {
 
 	handleNewTabForExistingThread = throttle(
 		(threadId: string, initialSearchQuery?: string, initialSearchResultIds?: string[]) => {
-			this.#doHandleNewTabForExistingThread(threadId, initialSearchQuery, initialSearchResultIds);
+			this.#doHandleNewTabForExistingThread(
+				threadId,
+				initialSearchQuery,
+				initialSearchResultIds,
+			);
 		},
 		NEW_TAB_THROTTLE_MS,
 		{ edges: ["leading"] },
@@ -434,14 +441,18 @@ class TabBarState {
 			const existingTab = currentWindowTabs.find((tab) => tab.threadId === threadId);
 			if (existingTab) {
 				// Found the tab in current window - activate it
-				console.log(`[TabBarState] Found tab ${existingTab.id} in current window, activating it`);
+				console.log(
+					`[TabBarState] Found tab ${existingTab.id} in current window, activating it`,
+				);
 				await this.handleActivateTab(existingTab.id);
 				return;
 			}
 		}
 
 		// Thread doesn't exist in current window - create a new tab in current window
-		console.log(`[TabBarState] Thread ${threadId} not found in current window, creating new tab`);
+		console.log(
+			`[TabBarState] Thread ${threadId} not found in current window, creating new tab`,
+		);
 
 		// Tab limit check (reuse currentWindowTabs from above, no extra IPC call)
 		if (currentWindowTabs && currentWindowTabs.length >= MAX_TABS_PER_WINDOW) {

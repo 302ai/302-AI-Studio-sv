@@ -96,7 +96,9 @@ if (!gotTheLock) {
 		if (!isMac) {
 			// Skip if we are currently installing an update, as updater service handles its own stop logic
 			if (UpdaterService.isInstallingUpdateNow()) {
-				console.log("[Main] Update installation in progress, skipping window-all-closed handler");
+				console.log(
+					"[Main] Update installation in progress, skipping window-all-closed handler",
+				);
 				return;
 			}
 
@@ -185,7 +187,9 @@ async function init() {
 		requiresNonEditable: true,
 	}));
 	shortcutService.getEngine().init(defaultShortcuts, async (action, ctx) => {
-		const { shortcutActionsHandler } = await import("./services/shortcut-service/actions-handler");
+		const { shortcutActionsHandler } = await import(
+			"./services/shortcut-service/actions-handler"
+		);
 		await shortcutActionsHandler.handle(action, ctx);
 	});
 

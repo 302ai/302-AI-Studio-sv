@@ -91,7 +91,8 @@
 				</Empty.Header>
 				<Empty.Content class="flex-row gap-4">
 					{@const waitingForOpenClaw =
-						localEnvState.sandboxRunning && localEnvState.openClawHealthStatus !== "healthy"}
+						localEnvState.sandboxRunning &&
+						localEnvState.openClawHealthStatus !== "healthy"}
 					<Button
 						onclick={handleStartSandbox}
 						disabled={localEnvState.sandboxStarting || waitingForOpenClaw}

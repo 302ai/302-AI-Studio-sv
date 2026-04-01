@@ -270,7 +270,10 @@ class ClaudeCodeProcessor {
 		} catch (e) {
 			// If JSON parsing fails and this is an SSE error event, treat as plain-text error
 			if (this.currentSSEEventType === "error" && jsonStr) {
-				console.log("[ClaudeCodeProcessor] Handling plain-text SSE error:", jsonStr.slice(0, 200));
+				console.log(
+					"[ClaudeCodeProcessor] Handling plain-text SSE error:",
+					jsonStr.slice(0, 200),
+				);
 				this.currentSSEEventType = null;
 				return this.handleErrorPayload({
 					error: {
@@ -581,7 +584,9 @@ class ClaudeCodeProcessor {
 			// Ensure start event is sent if not already
 			if (!this.hasStarted) {
 				this.hasStarted = true;
-				results.push(`data: ${JSON.stringify({ type: "start", messageId: this.messageId })}`);
+				results.push(
+					`data: ${JSON.stringify({ type: "start", messageId: this.messageId })}`,
+				);
 			}
 
 			const textId = `deploy-text-${Date.now()}`;
@@ -614,7 +619,9 @@ class ClaudeCodeProcessor {
 						delta: `\n\n✅ **Deployment successful!**\nURL: ${data.url}${magicText}`,
 					})}`,
 				);
-				results.push(`data: ${JSON.stringify({ type: "text-end", id: this.openaiTextId })}`);
+				results.push(
+					`data: ${JSON.stringify({ type: "text-end", id: this.openaiTextId })}`,
+				);
 				this.openaiTextId = null;
 			}
 			results.push(`data: ${JSON.stringify({ type: "finish" })}`);
@@ -697,7 +704,10 @@ class ClaudeCodeProcessor {
 				};
 
 				// If this is a skill tool, track it to associate with synthetic messages
-				if (typeof resultContent === "string" && resultContent.startsWith("Launching skill:")) {
+				if (
+					typeof resultContent === "string" &&
+					resultContent.startsWith("Launching skill:")
+				) {
 					this.lastSkillToolCallId = content.tool_use_id;
 				} else if (
 					typeof resultContent === "object" &&
@@ -1023,7 +1033,9 @@ class ClaudeCodeProcessor {
 			if (this.pendingFinishEvent) {
 				const result = this.pendingFinishEvent + "\n\n" + "data: [DONE]\n\n";
 				this.pendingFinishEvent = null;
-				console.log("[ClaudeCodeProcessor] Stream completed, sent finish event and [DONE] marker");
+				console.log(
+					"[ClaudeCodeProcessor] Stream completed, sent finish event and [DONE] marker",
+				);
 				return result;
 			}
 			return "";
@@ -1050,7 +1062,9 @@ class ClaudeCodeProcessor {
 			// CRITICAL: Send [DONE] marker after finish event per AI SDK SSE protocol
 			result += "data: [DONE]\n\n";
 			this.pendingFinishEvent = null;
-			console.log("[ClaudeCodeProcessor] Stream completed, sent finish event and [DONE] marker");
+			console.log(
+				"[ClaudeCodeProcessor] Stream completed, sent finish event and [DONE] marker",
+			);
 		}
 
 		return result;
@@ -1117,7 +1131,10 @@ function interceptSSEResponse(response: Response, processor: ClaudeCodeProcessor
 							controller.enqueue(encoder.encode(processedChunk));
 						} catch (_error) {
 							// Client disconnected or controller closed
-							console.log("[ClaudeCodeProcessor] Controller closed, stopping stream", _error);
+							console.log(
+								"[ClaudeCodeProcessor] Controller closed, stopping stream",
+								_error,
+							);
 							reader.cancel().catch(() => {
 								// Ignore cancel errors
 							});

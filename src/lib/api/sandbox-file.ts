@@ -171,7 +171,10 @@ export async function downloadSandboxFile(
 			try {
 				const errorText = await httpError.response.text();
 				throw new Error(
-					parseErrorMessage(errorText, `Failed to download file: ${httpError.response.statusText}`),
+					parseErrorMessage(
+						errorText,
+						`Failed to download file: ${httpError.response.statusText}`,
+					),
 				);
 			} catch (parseError) {
 				throw parseError instanceof Error ? parseError : error;
@@ -414,7 +417,10 @@ export async function uploadSandboxFile(
 				if (result.success) {
 					return { success: true, result: "File copied successfully" };
 				} else {
-					return { success: false, error: result.error || "Failed to copy file to workspace" };
+					return {
+						success: false,
+						error: result.error || "Failed to copy file to workspace",
+					};
 				}
 			}
 		}

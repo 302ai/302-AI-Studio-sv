@@ -43,7 +43,11 @@
 		/>
 
 		<Dialog.Footer class="flex !justify-between">
-			<Button variant="outline" onclick={onCancel} class="!border-border hover:!border-border/80">
+			<Button
+				variant="outline"
+				onclick={onCancel}
+				class="!border-border hover:!border-border/80"
+			>
 				{m.text_button_cancel()}
 			</Button>
 			<div class="flex gap-2">

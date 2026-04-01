@@ -8,7 +8,10 @@
 		htmlPreviewDeploymentsState,
 		type HtmlPreviewDeploymentRecord,
 	} from "$lib/stores/html-preview-deployments-state.svelte";
-	import { htmlPreviewState, type HtmlPreviewContext } from "$lib/stores/html-preview-state.svelte";
+	import {
+		htmlPreviewState,
+		type HtmlPreviewContext,
+	} from "$lib/stores/html-preview-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { toast } from "svelte-sonner";
@@ -56,7 +59,8 @@
 	const _isDirty = $derived(
 		() =>
 			htmlPreviewState.editedHtml !== (htmlPreviewState.initialHtml ?? "") ||
-			(htmlPreviewState.selectedLanguage ?? null) !== (htmlPreviewState.initialLanguage ?? null),
+			(htmlPreviewState.selectedLanguage ?? null) !==
+				(htmlPreviewState.initialLanguage ?? null),
 	);
 
 	const handleModeSwitch = (mode: "preview" | "edit") => {
@@ -85,7 +89,9 @@
 			// 如果 selectedLanguage 为 null（用户选择了"自动识别"），传 undefined 以保留原语言
 			// 如果 selectedLanguage 有值，传该值以更新语言
 			const normalizedLanguage =
-				htmlPreviewState.selectedLanguage === null ? undefined : htmlPreviewState.selectedLanguage;
+				htmlPreviewState.selectedLanguage === null
+					? undefined
+					: htmlPreviewState.selectedLanguage;
 
 			const success = chatState.updateMessageCodeBlock(
 				messageId,

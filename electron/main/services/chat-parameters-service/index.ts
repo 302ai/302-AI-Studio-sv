@@ -34,7 +34,9 @@ class ChatParametersService {
 		let messagesToTruncate = previousMessages;
 
 		if (excludeLastUserMessageId) {
-			const targetIndex = previousMessages.findIndex((msg) => msg.id === excludeLastUserMessageId);
+			const targetIndex = previousMessages.findIndex(
+				(msg) => msg.id === excludeLastUserMessageId,
+			);
 			if (targetIndex !== -1) {
 				// If target message exists in storage (e.g. regeneration), truncate everything after it
 				messagesToTruncate = previousMessages.slice(0, targetIndex + 1);
@@ -70,9 +72,16 @@ class ChatParametersService {
 		const resolvedMessages = messagesToProcess.map((message) => {
 			if (message.role !== "user") return message;
 			if (!message.metadata) return message;
-			const { userPromptTemplateVariables, userPromptTemplateContent, userPromptTemplateMap } =
-				message.metadata;
-			if (!userPromptTemplateVariables || !userPromptTemplateContent || !userPromptTemplateMap)
+			const {
+				userPromptTemplateVariables,
+				userPromptTemplateContent,
+				userPromptTemplateMap,
+			} = message.metadata;
+			if (
+				!userPromptTemplateVariables ||
+				!userPromptTemplateContent ||
+				!userPromptTemplateMap
+			)
 				return message;
 			const needResolve = userPromptTemplateVariables.includes(DETECTOR_VARIABLE);
 			if (!needResolve) return message;

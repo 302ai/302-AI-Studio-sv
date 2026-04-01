@@ -100,7 +100,9 @@
 				<div
 					class="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-muted/30 hover:bg-muted/50 transition-colors"
 				>
-					<span class="text-xs truncate max-w-[200px]" title={item.file}>{item.fileName}</span>
+					<span class="text-xs truncate max-w-[200px]" title={item.file}
+						>{item.fileName}</span
+					>
 					{#if item.downloading}
 						<ButtonWithTooltip
 							tooltipSide="top"

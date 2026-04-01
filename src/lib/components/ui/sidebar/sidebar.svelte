@@ -34,7 +34,10 @@
 		{@render children?.()}
 	</div>
 {:else if sidebar.isMobile}
-	<Sheet.Root bind:open={() => sidebar.openMobile, (v) => sidebar.setOpenMobile(v)} {...restProps}>
+	<Sheet.Root
+		bind:open={() => sidebar.openMobile, (v) => sidebar.setOpenMobile(v)}
+		{...restProps}
+	>
 		<Sheet.Content
 			data-sidebar="sidebar"
 			data-slot="sidebar"
@@ -67,7 +70,9 @@
 			data-slot="sidebar-gap"
 			class={cn(
 				"relative w-(--sidebar-width) bg-transparent",
-				sidebar.shouldDisableTransitions ? "" : "transition-[width] duration-200 ease-linear",
+				sidebar.shouldDisableTransitions
+					? ""
+					: "transition-[width] duration-200 ease-linear",
 				"group-data-[collapsible=offcanvas]:w-0",
 				"group-data-[side=right]:rotate-180",
 				variant === "floating" || variant === "inset"

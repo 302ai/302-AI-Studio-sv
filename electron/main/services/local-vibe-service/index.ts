@@ -92,7 +92,9 @@ export class LocalVibeService {
 				// Fallback: assume relative to workspace if not starting with /home/user
 				const workspaceDir = path.join(composeDir, "workspace");
 				const safeSubPath = normalizedContainerPath.replace(/\.\./g, "");
-				const cleanSubPath = safeSubPath.startsWith("/") ? safeSubPath.substring(1) : safeSubPath;
+				const cleanSubPath = safeSubPath.startsWith("/")
+					? safeSubPath.substring(1)
+					: safeSubPath;
 				targetPath = path.join(workspaceDir, cleanSubPath);
 			}
 
@@ -353,7 +355,11 @@ export class LocalVibeService {
 					});
 				}
 
-				finalConfig = this._mergeTemplateConfig(existingConfig, templateConfig, overridePaths);
+				finalConfig = this._mergeTemplateConfig(
+					existingConfig,
+					templateConfig,
+					overridePaths,
+				);
 				console.log("[Local Vibe] Merged template updates into existing openclaw.json");
 			}
 
@@ -365,7 +371,9 @@ export class LocalVibeService {
 		}
 
 		// Find available port for Sandbox (starting from default, will find next available if occupied)
-		const preferredPort = isNull(this.runtimePort) ? DEFAULT_SANDBOX_PORT : this.runtimePort + 1;
+		const preferredPort = isNull(this.runtimePort)
+			? DEFAULT_SANDBOX_PORT
+			: this.runtimePort + 1;
 		const hostPort = await getPort({ port: preferredPort });
 
 		// Store the allocated port
@@ -426,7 +434,9 @@ export class LocalVibeService {
 			// Get API key from provider storage
 			const { valid, apiKey } = await providerStorage.validate302AIProvider();
 			if (!valid || !apiKey) {
-				console.warn("[Local Vibe] No valid 302AI API key found, proceeding without injection");
+				console.warn(
+					"[Local Vibe] No valid 302AI API key found, proceeding without injection",
+				);
 			}
 
 			// Prepare runtime compose with .env file (includes port detection)
@@ -440,7 +450,10 @@ export class LocalVibeService {
 			// This ensures we have the latest version for the current platform
 			const pullResult = await this.runPodmanComposePull();
 			if (!pullResult.isOk) {
-				console.warn("[Local Vibe] Auto-pull failed, trying to start anyway:", pullResult.error);
+				console.warn(
+					"[Local Vibe] Auto-pull failed, trying to start anyway:",
+					pullResult.error,
+				);
 			}
 
 			// Execute: podman-compose -f <path> up -d --force-recreate
@@ -556,7 +569,9 @@ export class LocalVibeService {
 				const errorMessage = result.output;
 				// Check if podman-compose command is not found - treat as non-fatal for stop
 				if (isCommandNotFound(errorMessage)) {
-					console.warn("[Local Vibe] podman-compose stop: podman-compose not found (non-fatal)");
+					console.warn(
+						"[Local Vibe] podman-compose stop: podman-compose not found (non-fatal)",
+					);
 					return { isOk: true, output: "podman-compose not installed, nothing to stop" };
 				}
 
@@ -704,7 +719,10 @@ export class LocalVibeService {
 				"stderr:",
 				stderr,
 			);
-			return { success: false, error: await this.t("无法获取密码", "Failed to get password") };
+			return {
+				success: false,
+				error: await this.t("无法获取密码", "Failed to get password"),
+			};
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			console.error("[LocalVibeService] AppleScript error:", errorMessage);
@@ -742,7 +760,8 @@ export class LocalVibeService {
 				step,
 				type: "error",
 				data:
-					passwordResult.error || (await this.t("用户取消操作", "User cancelled the operation")),
+					passwordResult.error ||
+					(await this.t("用户取消操作", "User cancelled the operation")),
 			});
 			return { isOk: false, wasCancelled: passwordResult.wasCancelled };
 		}
@@ -767,7 +786,11 @@ export class LocalVibeService {
 			const processOutput = (data: Buffer, type: "stdout" | "stderr") => {
 				const text = data.toString().replace(/\r/g, "\n").replace(/\n+/g, "\n");
 				if (text.trim()) {
-					broadcastService.broadcastChannelToAll("install-log", { step, type, data: text });
+					broadcastService.broadcastChannelToAll("install-log", {
+						step,
+						type,
+						data: text,
+					});
 				}
 			};
 
@@ -963,7 +986,9 @@ export class LocalVibeService {
 						await execAsync("podman system connection default ai302-machine");
 						console.log("[Local Vibe] Set ai302-machine as default connection");
 					} catch (_error) {
-						console.log("[Local Vibe] Failed to set default connection，, will retry...");
+						console.log(
+							"[Local Vibe] Failed to set default connection，, will retry...",
+						);
 					}
 				}
 
@@ -1064,7 +1089,10 @@ export class LocalVibeService {
 			// Suppress error logging if operating (starting/stopping) or if it's a connection error
 			// unexpected errors should still be logged
 			if (!this.isOperating && !this.isExpectedSandboxHealthConnectionError(errorMessage)) {
-				console.error("[LocalVibeService] Local sandbox health check failed:", errorMessage);
+				console.error(
+					"[LocalVibeService] Local sandbox health check failed:",
+					errorMessage,
+				);
 			}
 			return { isOk: true, isHealth: false, isOcHealth: false, error: errorMessage };
 		}
@@ -1121,7 +1149,11 @@ export class LocalVibeService {
 					isOk: true,
 					isValid: false,
 					output: `${stdout}\n${stderr}`,
-					details: { podmanInstalled: false, machineExists: false, composeInstalled: false },
+					details: {
+						podmanInstalled: false,
+						machineExists: false,
+						composeInstalled: false,
+					},
 				};
 			}
 
@@ -1136,7 +1168,11 @@ export class LocalVibeService {
 						isOk: false,
 						isValid: false,
 						error: "Failed to check machine list",
-						details: { podmanInstalled: true, machineExists: false, composeInstalled: false },
+						details: {
+							podmanInstalled: true,
+							machineExists: false,
+							composeInstalled: false,
+						},
 					};
 				}
 				machineExists = machineCheck.exists;
@@ -1181,7 +1217,11 @@ export class LocalVibeService {
 					isOk: true,
 					isValid: false,
 					error: errorMessage,
-					details: { podmanInstalled: false, machineExists: false, composeInstalled: false },
+					details: {
+						podmanInstalled: false,
+						machineExists: false,
+						composeInstalled: false,
+					},
 				};
 			}
 
@@ -1437,7 +1477,9 @@ export class LocalVibeService {
 				const scriptsPath = await this.detectPythonScriptsPath();
 				if (scriptsPath) {
 					await this.persistPathToUserRegistry(scriptsPath);
-					console.log("[LocalVibeService] Persisted Python Scripts to registry after install");
+					console.log(
+						"[LocalVibeService] Persisted Python Scripts to registry after install",
+					);
 				}
 				await this.refreshWindowsPath();
 			}
@@ -1573,7 +1615,8 @@ export class LocalVibeService {
 				// If it's the last attempt, fail with the specific message
 				if (attempt === maxRetries) {
 					const language = await generalSettingsService.getLanguage();
-					const finalError = language === "zh" ? networkError.zhMessage : networkError.enMessage;
+					const finalError =
+						language === "zh" ? networkError.zhMessage : networkError.enMessage;
 					broadcastService.broadcastChannelToAll("install-log", {
 						step: "init-podman",
 						type: "error",
@@ -1621,7 +1664,9 @@ export class LocalVibeService {
 		try {
 			await execAsync("podman machine stop ai302-machine");
 
-			console.log("[LocalVibeService] Cleaned up stale machine/connections for 'ai302-machine'");
+			console.log(
+				"[LocalVibeService] Cleaned up stale machine/connections for 'ai302-machine'",
+			);
 			broadcastService.broadcastChannelToAll("install-log", {
 				step: "init-podman",
 				type: "stdout",
@@ -1921,7 +1966,11 @@ export class LocalVibeService {
 					}
 				}
 
-				await this.runCommandWithBroadcast("scoop", ["install", "podman@5.7.0"], "install-podman");
+				await this.runCommandWithBroadcast(
+					"scoop",
+					["install", "podman@5.7.0"],
+					"install-podman",
+				);
 
 				// Refresh PATH so podman command is available in this process
 				await this.refreshWindowsPath();
@@ -1998,7 +2047,11 @@ export class LocalVibeService {
 		// 1. Check and install Homebrew
 		const brewCheck = await this.checkHomebrew();
 		if (!brewCheck.isValid) {
-			const sudoAuth = await this.runSudoCommandWithBroadcast("true", [], "install-homebrew-auth");
+			const sudoAuth = await this.runSudoCommandWithBroadcast(
+				"true",
+				[],
+				"install-homebrew-auth",
+			);
 			if (!sudoAuth.isOk) return { isOk: false };
 
 			const brewInstall = await this.runCommandWithBroadcast(
@@ -2232,7 +2285,9 @@ export class LocalVibeService {
 		// For stop operations, if it's already stopping or operating, we can treat it as success
 		// or at least avoid redundant/conflicting commands.
 		if (this.isOperating) {
-			console.log("[Local Vibe] Operation already in progress, skipping redundant stop request");
+			console.log(
+				"[Local Vibe] Operation already in progress, skipping redundant stop request",
+			);
 			return { isOk: true, output: "Stop already in progress" };
 		}
 
@@ -2252,7 +2307,10 @@ export class LocalVibeService {
 				);
 			}
 			if (composeResult.error) {
-				console.error("[Local Vibe] podman compose stop error (non-fatal):", composeResult.error);
+				console.error(
+					"[Local Vibe] podman compose stop error (non-fatal):",
+					composeResult.error,
+				);
 			}
 
 			// On Linux, Podman runs rootless without a VM - skip machine stop

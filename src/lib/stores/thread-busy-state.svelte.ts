@@ -15,7 +15,10 @@ class ThreadBusyState {
 			console.log("[ThreadBusyState] Initial busy threads:", initialBusyThreads);
 			if (initialBusyThreads) {
 				(
-					Object.entries(initialBusyThreads) as [string, { isBusy: boolean; reason?: string }][]
+					Object.entries(initialBusyThreads) as [
+						string,
+						{ isBusy: boolean; reason?: string },
+					][]
 				).forEach(([threadId, state]) => {
 					this.busyMap.set(threadId, state);
 				});

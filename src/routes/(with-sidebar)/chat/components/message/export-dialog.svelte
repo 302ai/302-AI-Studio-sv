@@ -40,7 +40,11 @@
 	// Props & State
 	// ============================================================================
 
-	let { open = $bindable(), onOpenChange, startFromMessageId = null }: ExportDialogProps = $props();
+	let {
+		open = $bindable(),
+		onOpenChange,
+		startFromMessageId = null,
+	}: ExportDialogProps = $props();
 
 	let exportFormat = $state<ExportFormat>("markdown");
 	let selectedMessageIds = new SvelteSet<string>();
@@ -304,7 +308,10 @@
 					theme: theme ?? "vitesse-light",
 				});
 			} catch {
-				const escapedCode = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+				const escapedCode = code
+					.replace(/&/g, "&amp;")
+					.replace(/</g, "&lt;")
+					.replace(/>/g, "&gt;");
 				highlightedCode = `<pre><code>${escapedCode}</code></pre>`;
 			}
 

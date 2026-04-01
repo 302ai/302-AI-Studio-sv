@@ -127,7 +127,10 @@ export class PluginLoader {
 					.replace(configPrefix, "") // "enabled.json"
 					.replace(/\.json$/, ""); // "enabled"
 
-				const value = await storageService.getItem({ sender: { id: -1 } } as never, fullKey);
+				const value = await storageService.getItem(
+					{ sender: { id: -1 } } as never,
+					fullKey,
+				);
 				if (value !== null) {
 					plugin.config[configKey] = value;
 				}
@@ -218,7 +221,9 @@ export class PluginLoader {
 	private validateCompatibility(metadata: PluginMetadata): void {
 		// For now, just log a warning if compatibility info is missing
 		if (!metadata.compatibleVersion) {
-			console.warn(`[PluginLoader] Plugin ${metadata.id} does not specify compatible version`);
+			console.warn(
+				`[PluginLoader] Plugin ${metadata.id} does not specify compatible version`,
+			);
 			return;
 		}
 

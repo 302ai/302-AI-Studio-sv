@@ -248,7 +248,8 @@
 
 					{#each windowTabsInfo as { windowId, tabs, firstTabTitle } (windowId)}
 						<ContextMenu.Item
-							onSelect={() => tabBarState.handleMoveTab(tab.id, "existing-window", windowId)}
+							onSelect={() =>
+								tabBarState.handleMoveTab(tab.id, "existing-window", windowId)}
 						>
 							{tabs.length === 1
 								? firstTabTitle
@@ -275,7 +276,10 @@
 			{m.label_button_close()}
 		</ContextMenu.Item>
 
-		<ContextMenu.Item onSelect={() => onTabCloseOthers(tab.id)} disabled={!closable || isTabBusy}>
+		<ContextMenu.Item
+			onSelect={() => onTabCloseOthers(tab.id)}
+			disabled={!closable || isTabBusy}
+		>
 			{m.label_button_close_others()}
 		</ContextMenu.Item>
 

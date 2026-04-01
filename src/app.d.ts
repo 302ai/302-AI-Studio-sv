@@ -46,7 +46,9 @@ declare global {
 				callback: (data: { type: string; message: string; threadId?: string }) => void,
 			) => () => void;
 			onTriggerSendMessage: (callback: (data: { threadId: string }) => void) => () => void;
-			onTriggerCreateSkillSummary: (callback: (data: { threadId: string }) => void) => () => void;
+			onTriggerCreateSkillSummary: (
+				callback: (data: { threadId: string }) => void,
+			) => () => void;
 			onSidebarStateChanged: (callback: (data: { open: boolean }) => void) => () => void;
 			onSidebarSearchChanged: (callback: (data: { query: string }) => void) => () => void;
 			onSidebarSearchResultsUpdated: (
@@ -130,7 +132,9 @@ declare global {
 			) => () => void;
 			onTabRequestSnapshot: (callback: () => Promise<TabUIState> | TabUIState) => () => void;
 			openClaw: {
-				onWeiXinLoginInformation: (callback: (event: OpenClawWeixinLoginMsg) => void) => () => void;
+				onWeiXinLoginInformation: (
+					callback: (event: OpenClawWeixinLoginMsg) => void,
+				) => () => void;
 			};
 		};
 		windowId: string;

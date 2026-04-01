@@ -114,8 +114,15 @@ export class HookManager implements IHookManager {
 				result = (await Promise.race([handlerPromise, timeoutPromise])) as T;
 
 				// Check if we should stop execution
-				if (result && typeof result === "object" && "stop" in result && result.stop === true) {
-					console.log(`[HookManager] Hook ${hookName} in plugin ${pluginId} requested stop`);
+				if (
+					result &&
+					typeof result === "object" &&
+					"stop" in result &&
+					result.stop === true
+				) {
+					console.log(
+						`[HookManager] Hook ${hookName} in plugin ${pluginId} requested stop`,
+					);
 					break;
 				}
 			} catch (error) {

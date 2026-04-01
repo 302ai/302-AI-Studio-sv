@@ -69,7 +69,10 @@
 				disabled={localClaudeCodeSandboxState.isLoading}
 			>
 				<RefreshCcw
-					class={cn("h-4 w-4", localClaudeCodeSandboxState.isLoading ? "animate-spin" : "")}
+					class={cn(
+						"h-4 w-4",
+						localClaudeCodeSandboxState.isLoading ? "animate-spin" : "",
+					)}
 				/>
 			</ButtonWithTooltip>
 		</div>

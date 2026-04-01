@@ -34,7 +34,12 @@
 		const lang = locale === "en" ? "en" : "zh";
 		const helpDocsUrl = `https://studio.302.ai/${lang}/docs`;
 
-		await window.electronAPI.tabService.handleNewTab("Help Docs", "helpDocs", true, helpDocsUrl);
+		await window.electronAPI.tabService.handleNewTab(
+			"Help Docs",
+			"helpDocs",
+			true,
+			helpDocsUrl,
+		);
 	}
 
 	// Check if agent preview button (with full tabs) should be shown
@@ -43,7 +48,8 @@
 			((codeAgentState.currentAgentId === "claude-code" &&
 				codeAgentState.sandboxId !== "" &&
 				codeAgentState.currentSessionId !== "") ||
-				(codeAgentState.currentAgentId === "open-claw" && codeAgentState.currentSessionId !== "")),
+				(codeAgentState.currentAgentId === "open-claw" &&
+					codeAgentState.currentSessionId !== "")),
 	);
 
 	// Handle agent preview toggle (full mode with sandbox)
@@ -132,7 +138,11 @@
 	});
 
 	$effect(() => {
-		if (chatState.isSearchInput && !wasSearchInputOpened && searchHighlightState.searchKeyword) {
+		if (
+			chatState.isSearchInput &&
+			!wasSearchInputOpened &&
+			searchHighlightState.searchKeyword
+		) {
 			searchInputValue = searchHighlightState.searchKeyword;
 			wasSearchInputOpened = true;
 		}
@@ -261,7 +271,9 @@
 		const mark = marks[index];
 		if (!mark) return;
 
-		const viewport = document.querySelector('[data-slot="scroll-area-viewport"]') as HTMLElement;
+		const viewport = document.querySelector(
+			'[data-slot="scroll-area-viewport"]',
+		) as HTMLElement;
 		if (!viewport) {
 			mark.scrollIntoView({ behavior: "smooth", block: "center" });
 			return;
@@ -310,7 +322,9 @@
 	class="absolute top-0 left-0 right-0 z-40 flex h-12 w-full flex-row items-center justify-between bg-transparent px-2"
 >
 	<ButtonWithTooltip
-		tooltip={useSidebar().state === "expanded" ? m.title_sidebar_close() : m.title_sidebar_open()}
+		tooltip={useSidebar().state === "expanded"
+			? m.title_sidebar_close()
+			: m.title_sidebar_open()}
 		tooltipSide="bottom"
 	>
 		<Sidebar.Trigger class="hover:!bg-icon-btn-hover size-9 [&_svg]:!size-5" />
@@ -377,7 +391,9 @@
 					tooltip={m.tooltip_search_content()}
 					onclick={() => chatState.handleSearchInputStateChange(!chatState.isSearchInput)}
 				>
-					<ScanSearch class={cn("size-5", chatState.isSearchInput && "!text-icon-btn-active-fg")} />
+					<ScanSearch
+						class={cn("size-5", chatState.isSearchInput && "!text-icon-btn-active-fg")}
+					/>
 				</ButtonWithTooltip>
 
 				{#if chatState.isSearchInput}
@@ -431,7 +447,9 @@
 						>
 							<Code class="size-3.5" />
 						</button>
-						<span class="flex items-center gap-0.5 text-xs text-foreground tabular-nums">
+						<span
+							class="flex items-center gap-0.5 text-xs text-foreground tabular-nums"
+						>
 							<span
 								class="min-w-[2.5rem] text-center w-14 py-0 px-[2px] whitespace-nowrap box-content"
 							>
@@ -473,11 +491,15 @@
 				chatState.isPrivateChatActive && "!bg-icon-btn-active hover:!bg-icon-btn-active",
 			)}
 			tooltipSide="bottom"
-			tooltip={chatState.canTogglePrivacy ? m.title_incognito() : m.title_incognito_disabled()}
+			tooltip={chatState.canTogglePrivacy
+				? m.title_incognito()
+				: m.title_incognito_disabled()}
 			disabled={!chatState.canTogglePrivacy}
 			onclick={() => chatState.handlePrivateChatActiveChange(!chatState.isPrivateChatActive)}
 		>
-			<Ghost class={cn("size-5", chatState.isPrivateChatActive && "!text-icon-btn-active-fg")} />
+			<Ghost
+				class={cn("size-5", chatState.isPrivateChatActive && "!text-icon-btn-active-fg")}
+			/>
 		</ButtonWithTooltip>
 
 		<ButtonWithTooltip

@@ -24,7 +24,8 @@ export function parseCssVariables(cssContent: string): Record<string, string> {
 					variables[cleanName] = cleanValue;
 				} else {
 					const existingHasVar =
-						variables[cleanName].includes("var(") || variables[cleanName].includes("calc(");
+						variables[cleanName].includes("var(") ||
+						variables[cleanName].includes("calc(");
 					const newHasVar = cleanValue.includes("var(") || cleanValue.includes("calc(");
 
 					if (existingHasVar && !newHasVar) {

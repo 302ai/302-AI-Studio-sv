@@ -81,8 +81,9 @@
 		onValueChange={handlePresetChange}
 	>
 		<Select.Trigger
-			>{PRESET_SYSTEM_PROMPT.find((item) => item.key === chatParameters.systemPromptPresetType)
-				?.text}
+			>{PRESET_SYSTEM_PROMPT.find(
+				(item) => item.key === chatParameters.systemPromptPresetType,
+			)?.text}
 		</Select.Trigger>
 		<Select.Content>
 			{#each PRESET_SYSTEM_PROMPT as item (item.key)}

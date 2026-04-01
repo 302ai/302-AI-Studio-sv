@@ -13,7 +13,12 @@
 
 <ViewerBase>
 	{#if src}
-		<video {src} controls preload="metadata" style="width: 100%; height: 100%; object-fit: contain">
+		<video
+			{src}
+			controls
+			preload="metadata"
+			style="width: 100%; height: 100%; object-fit: contain"
+		>
 			<track kind="captions" />
 		</video>
 	{:else}

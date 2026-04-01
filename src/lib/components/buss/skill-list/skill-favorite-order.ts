@@ -59,7 +59,9 @@ export function getOrderedSkillsByFavorite(
 			const overriddenFavorite = favoriteOverrides.get(skill.name);
 			const isFavorite = overriddenFavorite ?? skill.is_favorite ?? false;
 			const overriddenFavoriteAt = favoriteAtOverrides.get(skill.name);
-			const favoriteAt = isFavorite ? (overriddenFavoriteAt ?? skill.favorite_at ?? null) : null;
+			const favoriteAt = isFavorite
+				? (overriddenFavoriteAt ?? skill.favorite_at ?? null)
+				: null;
 			const hasFavoriteChanged = isFavorite !== (skill.is_favorite ?? false);
 			const hasFavoriteAtChanged = favoriteAt !== (skill.favorite_at ?? null);
 

@@ -4,8 +4,8 @@ version_anchors: ["SvelteKit@2.x", "Svelte@4.x→5.x", "Tailwind@4.x"]
 authored: true
 origin: self
 adapted_from:
-  - "sveltejs/svelte GitHub repository (Svelte 5 migration guide and breaking changes)"
-  - "Community migration experiences from SvelteKit projects"
+    - "sveltejs/svelte GitHub repository (Svelte 5 migration guide and breaking changes)"
+    - "Community migration experiences from SvelteKit projects"
 last_reviewed: 2025-10-28
 summary: "Upgrade existing SvelteKit applications from Svelte 4 to Svelte 5 with complete migration paths for stores, reactive statements, slots, events, and lifecycle hooks with testing strategies."
 ---

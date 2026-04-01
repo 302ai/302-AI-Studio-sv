@@ -214,7 +214,9 @@
 						class={cn(
 							"relative size-14",
 							"flex items-center justify-center",
-							attachment.preview && shouldShowPreviewAsThumbnail(attachment) ? "" : "bg-muted",
+							attachment.preview && shouldShowPreviewAsThumbnail(attachment)
+								? ""
+								: "bg-muted",
 							isLoading && "cursor-wait",
 						)}
 						onclick={() => openViewer(attachment)}
@@ -242,7 +244,9 @@
 						{/if}
 
 						{#if isLoading}
-							<div class="absolute inset-0 flex items-center justify-center bg-background/50">
+							<div
+								class="absolute inset-0 flex items-center justify-center bg-background/50"
+							>
 								<Loader class="size-5 animate-spin" />
 							</div>
 						{/if}
@@ -257,7 +261,9 @@
 							)}
 						>
 							<Eye class="size-4" />
-							<div class="absolute right-0 bottom-0 left-0 px-1.5 text-center text-xs">
+							<div
+								class="absolute right-0 bottom-0 left-0 px-1.5 text-center text-xs"
+							>
 								{formatFileSize(attachment.size)}
 							</div>
 						</div>

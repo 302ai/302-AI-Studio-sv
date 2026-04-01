@@ -210,16 +210,19 @@
 			label: actionDisabled ? m.title_unsupport_action() : m.title_online_search(),
 			active: chatState.isOnlineSearchActive,
 			disabled: disabled || actionDisabled,
-			onclick: () => chatState.handleOnlineSearchActiveChange(!chatState.isOnlineSearchActive),
+			onclick: () =>
+				chatState.handleOnlineSearchActiveChange(!chatState.isOnlineSearchActive),
 		})}
 	{:else}
 		<ButtonWithTooltip
 			class={cn(
 				"hover:!bg-chat-action-hover",
-				chatState.isOnlineSearchActive && "!bg-chat-action-active hover:!bg-chat-action-active",
+				chatState.isOnlineSearchActive &&
+					"!bg-chat-action-active hover:!bg-chat-action-active",
 			)}
 			tooltip={actionDisabled ? m.title_unsupport_action() : m.title_online_search()}
-			onclick={() => chatState.handleOnlineSearchActiveChange(!chatState.isOnlineSearchActive)}
+			onclick={() =>
+				chatState.handleOnlineSearchActiveChange(!chatState.isOnlineSearchActive)}
 			{disabled}
 		>
 			<Globe class={cn(chatState.isOnlineSearchActive && "!text-chat-action-active-fg")} />
@@ -312,7 +315,8 @@
 			icon: Sparkles,
 			label: m.quick_prompt_panel_title(),
 			active: quickPromptState.isOpen,
-			onclick: () => (quickPromptState.isOpen ? quickPromptState.close() : quickPromptState.open()),
+			onclick: () =>
+				quickPromptState.isOpen ? quickPromptState.close() : quickPromptState.open(),
 			disabled,
 		})}
 	{:else}
@@ -322,7 +326,8 @@
 				quickPromptState.isOpen && "!bg-chat-action-active hover:!bg-chat-action-active",
 			)}
 			tooltip={m.quick_prompt_panel_title()}
-			onclick={() => (quickPromptState.isOpen ? quickPromptState.close() : quickPromptState.open())}
+			onclick={() =>
+				quickPromptState.isOpen ? quickPromptState.close() : quickPromptState.open()}
 			{disabled}
 		>
 			<Sparkles class={cn(quickPromptState.isOpen && "!text-chat-action-active-fg")} />
@@ -393,7 +398,9 @@
 							"flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors hover:bg-accent",
 							codeAgentState.thinkingBudget !== "off" &&
 								"bg-chat-action-active/10 text-chat-action-active-fg",
-							(disabled || codeAgentState.isUpdatingThinkingBudget || codeAgentState.isChecking) &&
+							(disabled ||
+								codeAgentState.isUpdatingThinkingBudget ||
+								codeAgentState.isChecking) &&
 								"cursor-not-allowed opacity-50",
 						)}
 						disabled={disabled ||
@@ -407,7 +414,8 @@
 								<Lightbulb
 									class={cn(
 										"size-4",
-										codeAgentState.thinkingBudget !== "off" && "text-chat-action-active-fg",
+										codeAgentState.thinkingBudget !== "off" &&
+											"text-chat-action-active-fg",
 									)}
 								/>
 							{/if}
@@ -444,7 +452,8 @@
 										{:else}
 											<Lightbulb
 												class={cn(
-													codeAgentState.thinkingBudget !== "off" && "!text-chat-action-active-fg",
+													codeAgentState.thinkingBudget !== "off" &&
+														"!text-chat-action-active-fg",
 												)}
 											/>
 										{/if}
@@ -469,12 +478,15 @@
 			<div class="flex flex-col gap-2">
 				<div class="flex flex-col gap-2">
 					<Label class="text-label-fg">{m.title_thinking_strength()}</Label>
-					<div class="text-muted-foreground text-xs">{m.description_thinking_strength()}</div>
+					<div class="text-muted-foreground text-xs">
+						{m.description_thinking_strength()}
+					</div>
 				</div>
 				<SegButton
 					options={thinkingBudgetOptions}
 					selectedKey={codeAgentState.thinkingBudget}
-					onSelect={(key) => codeAgentState.updateThinkingBudget(key as ThinkingBudgetType)}
+					onSelect={(key) =>
+						codeAgentState.updateThinkingBudget(key as ThinkingBudgetType)}
 					disabled={codeAgentState.isUpdatingThinkingBudget}
 				/>
 			</div>
@@ -559,7 +571,9 @@
 							"!bg-chat-action-active hover:!bg-chat-action-active !text-chat-action-active-fg",
 					)}
 				>
-					<ToolCase class={cn("size-4", hasActiveTool && "!text-chat-action-active-fg")} />
+					<ToolCase
+						class={cn("size-4", hasActiveTool && "!text-chat-action-active-fg")}
+					/>
 					<span>{m.mcp_tools()}</span>
 				</Button>
 			{/snippet}

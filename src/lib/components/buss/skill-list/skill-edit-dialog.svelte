@@ -15,7 +15,10 @@
 		open: boolean;
 		skill: Skill | null;
 		onOpenChange?: (open: boolean) => void;
-		onSave?: (skill: Skill, data: { name: string; description: string; content: string }) => void;
+		onSave?: (
+			skill: Skill,
+			data: { name: string; description: string; content: string },
+		) => void;
 	}
 
 	let { open = $bindable(false), skill, onOpenChange, onSave }: Props = $props();
@@ -37,7 +40,11 @@
 	let changedFiles = $state<Map<string, string>>(new Map());
 
 	// 递归查找 SKILL.md 文件
-	function findSkillMd(node: { name: string; path: string; children?: unknown[] }): string | null {
+	function findSkillMd(node: {
+		name: string;
+		path: string;
+		children?: unknown[];
+	}): string | null {
 		if (node.name === "SKILL.md") {
 			return node.path;
 		}

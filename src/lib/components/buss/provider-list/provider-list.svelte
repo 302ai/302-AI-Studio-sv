@@ -131,7 +131,11 @@
 				animate:flip={{ duration: 200 }}
 				in:scale={draggedElementId || isDndFinalizing
 					? { duration: 0 }
-					: { duration: 250, start: 0.8, delay: ANIMATION_CONSTANTS.PROVIDER_APPEAR_DELAY }}
+					: {
+							duration: 250,
+							start: 0.8,
+							delay: ANIMATION_CONSTANTS.PROVIDER_APPEAR_DELAY,
+						}}
 				out:scale={draggedElementId || isDndFinalizing
 					? { duration: 0 }
 					: { duration: 200, start: 0.8 }}

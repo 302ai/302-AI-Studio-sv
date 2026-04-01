@@ -440,7 +440,9 @@ export class WindowService {
 				}));
 				tabState[windowId] = { tabs: updatedTabs };
 				await tabStorage.setItemInternal("tab-bar-state", tabState);
-				console.log(`[WindowService] Activated tab ${tabId} in window ${windowId} via focusWindow`);
+				console.log(
+					`[WindowService] Activated tab ${tabId} in window ${windowId} via focusWindow`,
+				);
 			}
 		}
 	}
@@ -482,7 +484,9 @@ export class WindowService {
 				console.log(`[WindowService] Merging tab ${tabId} into window ${targetWindowId}`);
 
 				const toIndex =
-					insertTarget?.windowId === targetWindowId ? insertTarget.insertIndex : undefined;
+					insertTarget?.windowId === targetWindowId
+						? insertTarget.insertIndex
+						: undefined;
 				await this.handleMoveTabIntoExistingWindow(event, tabId, targetWindowId, toIndex);
 				return { action: "merged", targetWindowId };
 			}
@@ -712,7 +716,10 @@ export class WindowService {
 
 		const titlebarHeight = CONFIG.TITLE_BAR_OVERLAY.DARK.height;
 		return (
-			relativeX >= 0 && relativeX <= bounds.width && relativeY >= 0 && relativeY <= titlebarHeight
+			relativeX >= 0 &&
+			relativeX <= bounds.width &&
+			relativeY >= 0 &&
+			relativeY <= titlebarHeight
 		);
 	}
 

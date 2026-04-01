@@ -146,7 +146,9 @@
 
 			<div class="flex items-center gap-3">
 				<Checkbox id="terms" class="border-border dark:border-border" {onCheckedChange} />
-				<Label class="text-label-fg font-normal" for="terms">{m.label_no_show_again()}</Label>
+				<Label class="text-label-fg font-normal" for="terms"
+					>{m.label_no_show_again()}</Label
+				>
 			</div>
 
 			<Dialog.Footer>

@@ -25,7 +25,9 @@ export function createMigrate<T extends StorageValue = StorageValue>(
 	return function migrate(persistedState: any, currentVersion: number): T {
 		if (!persistedState || typeof persistedState !== "object") {
 			if (debug) {
-				logger(`[Migration] No persisted state found, running migration for null/undefined state`);
+				logger(
+					`[Migration] No persisted state found, running migration for null/undefined state`,
+				);
 			}
 			// 运行从版本 0 开始的迁移来创建默认状态
 			let migratedState = persistedState;
@@ -41,7 +43,10 @@ export function createMigrate<T extends StorageValue = StorageValue>(
 						migratedState = migrationFunction(migratedState);
 					} catch (error) {
 						if (debug) {
-							logger(`[Migration] Error applying migration for version ${version}:`, error);
+							logger(
+								`[Migration] Error applying migration for version ${version}:`,
+								error,
+							);
 						}
 						throw new Error(
 							`Migration failed at version ${version}: ${error instanceof Error ? error.message : String(error)}`,
@@ -85,13 +90,18 @@ export function createMigrate<T extends StorageValue = StorageValue>(
 			const migrationFunction = migrations[version];
 			if (migrationFunction) {
 				if (debug) {
-					logger(`[Migration] Applying migration from version ${version} to ${version + 1}`);
+					logger(
+						`[Migration] Applying migration from version ${version} to ${version + 1}`,
+					);
 				}
 				try {
 					migratedState = migrationFunction(migratedState);
 				} catch (error) {
 					if (debug) {
-						logger(`[Migration] Error applying migration for version ${version}:`, error);
+						logger(
+							`[Migration] Error applying migration for version ${version}:`,
+							error,
+						);
 					}
 					throw new Error(
 						`Migration failed at version ${version}: ${error instanceof Error ? error.message : String(error)}`,
@@ -99,7 +109,9 @@ export function createMigrate<T extends StorageValue = StorageValue>(
 				}
 			} else {
 				if (debug) {
-					logger(`[Migration] No migration function found for version ${version}, skipping`);
+					logger(
+						`[Migration] No migration function found for version ${version}, skipping`,
+					);
 				}
 			}
 		}

@@ -44,7 +44,9 @@ export class CodeAgentService {
 			const keys = await claudeCodeStorage.getKeysInternal();
 			for (const key of keys) {
 				if (key.startsWith("claude-code-agent-state-")) {
-					const threadId = key.replace("claude-code-agent-state-", "").replace(".json", "");
+					const threadId = key
+						.replace("claude-code-agent-state-", "")
+						.replace(".json", "");
 					const state = await claudeCodeStorage.getItemInternal(key);
 					if (state && state.sandboxId === sandboxId) {
 						const configKey = `code-agent-config-state-${threadId}`;
@@ -66,9 +68,15 @@ export class CodeAgentService {
 			const keys = await claudeCodeStorage.getKeysInternal();
 			for (const key of keys) {
 				if (key.startsWith("claude-code-agent-state-")) {
-					const threadId = key.replace("claude-code-agent-state-", "").replace(".json", "");
+					const threadId = key
+						.replace("claude-code-agent-state-", "")
+						.replace(".json", "");
 					const state = await claudeCodeStorage.getItemInternal(key);
-					if (state && state.sandboxId === sandboxId && state.currentSessionId === sessionId) {
+					if (
+						state &&
+						state.sandboxId === sandboxId &&
+						state.currentSessionId === sessionId
+					) {
 						const configKey = `code-agent-config-state-${threadId}`;
 						const config = await codeAgentStorage.getItemInternal(configKey);
 						if (config) {
@@ -90,7 +98,10 @@ export class CodeAgentService {
 				const validList = response.list.filter((sandbox) => sandbox.status !== "killed");
 
 				const list = validList.map((sandbox) => {
-					const diskUsage = this.calculateDiskUsage(sandbox.disk_total, sandbox.disk_used);
+					const diskUsage = this.calculateDiskUsage(
+						sandbox.disk_total,
+						sandbox.disk_used,
+					);
 
 					return {
 						sandboxId: sandbox.sandbox_id,
@@ -115,7 +126,10 @@ export class CodeAgentService {
 
 				await claudeCodeSandboxStorage.setClaudeCodeSandboxes(list);
 
-				console.log("[CodeAgentService] Updated Claude code sandboxes, count: ", list.length);
+				console.log(
+					"[CodeAgentService] Updated Claude code sandboxes, count: ",
+					list.length,
+				);
 			}
 		} catch (error) {
 			console.error("Error listing Claude code sandboxes:", error);
@@ -379,7 +393,8 @@ export class CodeAgentService {
 
 		const normalSandboxes = sandboxes.filter((sandbox) => sandbox.diskUsage === "normal");
 		if (normalSandboxes.length > 0) {
-			const randomSandbox = normalSandboxes[Math.floor(Math.random() * normalSandboxes.length)];
+			const randomSandbox =
+				normalSandboxes[Math.floor(Math.random() * normalSandboxes.length)];
 			return {
 				isOK: true,
 				sandboxInfo: {
@@ -492,7 +507,9 @@ export class CodeAgentService {
 					createdAt: new Date(),
 					parts: [],
 				};
-				await storageService.setItemInternal("app-chat-messages:" + threadId, [initialMessage]);
+				await storageService.setItemInternal("app-chat-messages:" + threadId, [
+					initialMessage,
+				]);
 
 				const { threadStorage } = await import("../storage-service/thread-storage");
 				await threadStorage.addThread(threadId);
@@ -544,9 +561,15 @@ export class CodeAgentService {
 			const keys = await claudeCodeStorage.getKeysInternal();
 			for (const key of keys) {
 				if (key.startsWith("claude-code-agent-state-")) {
-					const threadId = key.replace("claude-code-agent-state-", "").replace(".json", "");
+					const threadId = key
+						.replace("claude-code-agent-state-", "")
+						.replace(".json", "");
 					const state = await claudeCodeStorage.getItemInternal(key);
-					if (state && state.sandboxId === sandboxId && state.currentSessionId === sessionId) {
+					if (
+						state &&
+						state.sandboxId === sandboxId &&
+						state.currentSessionId === sessionId
+					) {
 						return { isOK: true, threadId };
 					}
 				}
@@ -575,7 +598,11 @@ export class CodeAgentService {
 			for (const key of keys) {
 				if (key.startsWith("claude-code-agent-state-")) {
 					const state = await claudeCodeStorage.getItemInternal(key);
-					if (state && state.sandboxId === sandboxId && state.currentSessionId === sessionId) {
+					if (
+						state &&
+						state.sandboxId === sandboxId &&
+						state.currentSessionId === sessionId
+					) {
 						state.isManualNote = isManualNote;
 						await claudeCodeStorage.setItemInternal(key, state);
 						updatedCount++;
@@ -643,7 +670,11 @@ export class CodeAgentService {
 
 		// Safety: ensure both paths are inside workspaceDir
 		if (!oldDir.startsWith(workspaceDir) || !newDir.startsWith(workspaceDir)) {
-			console.error("[CodeAgentService] Path traversal attempt blocked:", oldSubPath, newSubPath);
+			console.error(
+				"[CodeAgentService] Path traversal attempt blocked:",
+				oldSubPath,
+				newSubPath,
+			);
 			return { success: false, error: "Invalid path" };
 		}
 

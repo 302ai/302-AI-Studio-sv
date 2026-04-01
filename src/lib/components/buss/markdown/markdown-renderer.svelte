@@ -382,7 +382,9 @@
 						"activeForm" in todo &&
 						typeof (todo as { content: unknown }).content === "string" &&
 						typeof (todo as { activeForm: unknown }).activeForm === "string" &&
-						["pending", "in_progress", "completed"].includes((todo as { status: string }).status),
+						["pending", "in_progress", "completed"].includes(
+							(todo as { status: string }).status,
+						),
 				);
 
 				if (isValid && todos.length > 0) {

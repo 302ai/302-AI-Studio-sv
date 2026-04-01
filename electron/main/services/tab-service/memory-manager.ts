@@ -86,7 +86,8 @@ export function evaluateMemoryPressure(
 	const isHigh =
 		emaFreeRatio < policy.freeRatioHigh || snapshot.appWorkingSetKB > policy.workingSetHighKB;
 	const isMedium =
-		emaFreeRatio < policy.freeRatioMedium || snapshot.appWorkingSetKB > policy.workingSetMediumKB;
+		emaFreeRatio < policy.freeRatioMedium ||
+		snapshot.appWorkingSetKB > policy.workingSetMediumKB;
 
 	const pressure: MemoryPressureLevel = isHigh ? "high" : isMedium ? "medium" : "low";
 	const previousLowStreak = prevState?.lowStreak ?? 0;
@@ -101,7 +102,9 @@ export function evaluateMemoryPressure(
 		nextIntervalMs = policy.mediumIntervalMs;
 	} else if (policy.lowIntervalMaxMs > policy.lowIntervalMs) {
 		nextIntervalMs =
-			lowStreak >= policy.lowStreakThreshold * 2 ? policy.lowIntervalMaxMs : policy.lowIntervalMs;
+			lowStreak >= policy.lowStreakThreshold * 2
+				? policy.lowIntervalMaxMs
+				: policy.lowIntervalMs;
 	}
 
 	return {

@@ -77,7 +77,12 @@
 
 			<!-- Buttons -->
 			<div class="flex justify-between">
-				<Button variant="outline" class="rounded-lg" onclick={handleClose} disabled={isSaving}>
+				<Button
+					variant="outline"
+					class="rounded-lg"
+					onclick={handleClose}
+					disabled={isSaving}
+				>
 					{m.text_button_cancel()}
 				</Button>
 				<Button

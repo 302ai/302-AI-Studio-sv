@@ -88,7 +88,10 @@ export class ThreadService {
 	 * Also closes any tabs that reference the deleted threads
 	 * Used when logging out to clean up associated sessions
 	 */
-	async deleteThreadsByApiKeyHash(_event: IpcMainInvokeEvent, apiKeyHash: string): Promise<number> {
+	async deleteThreadsByApiKeyHash(
+		_event: IpcMainInvokeEvent,
+		apiKeyHash: string,
+	): Promise<number> {
 		try {
 			const { deletedCount, deletedThreadIds } =
 				await threadStorage.deleteThreadsByApiKeyHash(apiKeyHash);
@@ -121,7 +124,8 @@ export class ThreadService {
 	): Promise<number> {
 		try {
 			const deletedModelIdsSet = new Set(deletedModelIds);
-			const clearedCount = await threadStorage.clearDeletedModelReferences(deletedModelIdsSet);
+			const clearedCount =
+				await threadStorage.clearDeletedModelReferences(deletedModelIdsSet);
 
 			if (clearedCount > 0) {
 				// Broadcast thread list update to refresh UI
@@ -168,7 +172,9 @@ export class ThreadService {
 					const browserWindow = BrowserWindow.fromId(numericWindowId);
 					if (browserWindow && !browserWindow.isDestroyed()) {
 						for (const tab of tabsToClose) {
-							console.log(`[ThreadService] Removing tab view ${tab.id} from window ${windowId}`);
+							console.log(
+								`[ThreadService] Removing tab view ${tab.id} from window ${windowId}`,
+							);
 							tabService.removeTab(browserWindow, tab.id);
 						}
 					}

@@ -32,7 +32,10 @@
 	$effect(() => {
 		const handleWindowIdChanged = (event: Event) => {
 			const customEvent = event as CustomEvent<{ newWindowId: string }>;
-			console.log("[HTML Preview] windowIdChanged event received:", customEvent.detail.newWindowId);
+			console.log(
+				"[HTML Preview] windowIdChanged event received:",
+				customEvent.detail.newWindowId,
+			);
 
 			windowId = customEvent.detail.newWindowId;
 

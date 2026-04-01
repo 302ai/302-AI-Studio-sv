@@ -57,9 +57,12 @@
 
 			// Broadcast state change to other tabs
 			if (typeof window !== "undefined" && window.electronAPI?.broadcastService) {
-				window.electronAPI.broadcastService.broadcastExcludeSource("sidebar-state-changed", {
-					open: value,
-				});
+				window.electronAPI.broadcastService.broadcastExcludeSource(
+					"sidebar-state-changed",
+					{
+						open: value,
+					},
+				);
 			}
 		},
 		isBroadcastUpdate: () => isBroadcastUpdate,

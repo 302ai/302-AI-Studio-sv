@@ -393,7 +393,9 @@ class LocalEnvState {
 
 					if (result) {
 						// User chose to restart now
-						console.log("[LocalEnvState] User confirmed restart, triggering system restart...");
+						console.log(
+							"[LocalEnvState] User confirmed restart, triggering system restart...",
+						);
 						await window.electronAPI.localVibeService.triggerSystemRestart();
 					} else {
 						console.log("[LocalEnvState] User cancelled restart");
@@ -592,7 +594,10 @@ class LocalEnvState {
 							this.ocStartupGraceUntil = Date.now() + this.OC_STARTUP_GRACE_PERIOD_MS;
 						}
 						this.sandboxStarting = data.starting;
-						console.log("[LocalEnvState] Sandbox starting state changed:", data.starting);
+						console.log(
+							"[LocalEnvState] Sandbox starting state changed:",
+							data.starting,
+						);
 					}
 					if (data.running !== undefined) {
 						this.sandboxRunning = data.running;

@@ -48,7 +48,12 @@
 
 <TooltipProvider {delayDuration}>
 	<Tooltip {onOpenChange} ignoreNonKeyboardFocus={true}>
-		<TooltipTrigger class={cn(buttonClass, "group rounded-[10px]")} {disabled} {onclick} {style}>
+		<TooltipTrigger
+			class={cn(buttonClass, "group rounded-[10px]")}
+			{disabled}
+			{onclick}
+			{style}
+		>
 			{@render children?.()}
 		</TooltipTrigger>
 		<TooltipContent

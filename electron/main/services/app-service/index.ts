@@ -63,7 +63,9 @@ export class AppService {
 					const webContentsView = view as WebContentsView;
 					const url = webContentsView.webContents.getURL();
 					if (!url.includes("shell")) {
-						const backgroundColor = nativeTheme.shouldUseDarkColors ? "#121212" : "#F9F9F9";
+						const backgroundColor = nativeTheme.shouldUseDarkColors
+							? "#121212"
+							: "#F9F9F9";
 						webContentsView.setBackgroundColor(backgroundColor);
 					}
 					if (!webContentsView.webContents.isDestroyed()) {

@@ -58,7 +58,9 @@ export class DynamicChatTransport<
 									if (done) {
 										// TRANS-03: Connection close detection
 										if (DEBUG_TRANSPORT) {
-											console.log("[DynamicChatTransport] Stream connection closed");
+											console.log(
+												"[DynamicChatTransport] Stream connection closed",
+											);
 										}
 										if (buffer) {
 											controller.enqueue(encoder.encode(buffer));
@@ -76,16 +78,21 @@ export class DynamicChatTransport<
 									for (const line of lines) {
 										// TRANS-01: Finish event detection logging
 										if (DEBUG_TRANSPORT && line.includes('"type":"finish"')) {
-											console.log("[DynamicChatTransport] FINISH event received:", {
-												timestamp: new Date().toISOString(),
-												line: line.substring(0, 200),
-											});
+											console.log(
+												"[DynamicChatTransport] FINISH event received:",
+												{
+													timestamp: new Date().toISOString(),
+													line: line.substring(0, 200),
+												},
+											);
 										}
 
 										// TRANS-02: [DONE] marker validation
 										if (line.includes("[DONE]")) {
 											if (DEBUG_TRANSPORT) {
-												console.log("[DynamicChatTransport] [DONE] marker received");
+												console.log(
+													"[DynamicChatTransport] [DONE] marker received",
+												);
 											}
 											// Forward [DONE] marker unchanged - critical for AI SDK stream termination
 											controller.enqueue(encoder.encode(line + "\n"));
@@ -98,13 +105,17 @@ export class DynamicChatTransport<
 												const jsonStr = line.replace(/^data: /, "").trim();
 												if (jsonStr) {
 													const data = JSON.parse(jsonStr);
-													if (data.type === "message-metadata" && data.metadata) {
+													if (
+														data.type === "message-metadata" &&
+														data.metadata
+													) {
 														console.log(
 															"[DynamicChatTransport] Captured result metadata:",
 															data.metadata,
 														);
 														// Store metadata for later use in onFinish
-														pendingResultMetadata = data.metadata as ResultMetadata;
+														pendingResultMetadata =
+															data.metadata as ResultMetadata;
 														// Don't forward this event to the stream
 														continue;
 													}
@@ -130,15 +141,20 @@ export class DynamicChatTransport<
 														);
 														// Store error in metadata for auto-retry instead of showing in chat
 														if (!pendingResultMetadata) {
-															pendingResultMetadata = {} as ResultMetadata;
+															pendingResultMetadata =
+																{} as ResultMetadata;
 														}
 														// eslint-disable-next-line @typescript-eslint/no-explicit-any
-														(pendingResultMetadata as any).deployError = data.errorText;
+														(pendingResultMetadata as any).deployError =
+															data.errorText;
 														continue;
 													}
 												}
 											} catch (e) {
-												console.error("[DynamicChatTransport] Failed to parse error line:", e);
+												console.error(
+													"[DynamicChatTransport] Failed to parse error line:",
+													e,
+												);
 											}
 										}
 										controller.enqueue(encoder.encode(line + "\n"));

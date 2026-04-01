@@ -321,7 +321,8 @@ async function handleTitleGeneration(context: AfterChatFinishedContext): Promise
 				let lastAssistant: ChatMessage | undefined;
 				for (let i = messages.length - 1; i >= 0; i--) {
 					if (!lastUser && messages[i].role === "user") lastUser = messages[i];
-					if (!lastAssistant && messages[i].role === "assistant") lastAssistant = messages[i];
+					if (!lastAssistant && messages[i].role === "assistant")
+						lastAssistant = messages[i];
 					if (lastUser && lastAssistant) break;
 				}
 				messagesToSend = [lastAssistant, lastUser].filter(Boolean) as ChatMessage[];
@@ -375,7 +376,10 @@ async function handleTitleGeneration(context: AfterChatFinishedContext): Promise
 				const fallbackTitle = [...textPart.text.trim()].slice(0, 10).join("");
 				if (fallbackTitle) {
 					persistedChatParamsState.current.title = fallbackTitle;
-					await tabBarState.updateTabTitle(persistedChatParamsState.current.id, fallbackTitle);
+					await tabBarState.updateTabTitle(
+						persistedChatParamsState.current.id,
+						fallbackTitle,
+					);
 				}
 			}
 		}
@@ -537,9 +541,15 @@ export async function afterChatFinished(args: {
 		console.error("[afterChatFinished] Title post-process failed:", titleResult.reason);
 	}
 	if (summaryResult.status === "rejected") {
-		console.error("[afterChatFinished] Context summary post-process failed:", summaryResult.reason);
+		console.error(
+			"[afterChatFinished] Context summary post-process failed:",
+			summaryResult.reason,
+		);
 	}
 	if (suggestionsResult.status === "rejected") {
-		console.error("[afterChatFinished] Suggestions post-process failed:", suggestionsResult.reason);
+		console.error(
+			"[afterChatFinished] Suggestions post-process failed:",
+			suggestionsResult.reason,
+		);
 	}
 }

@@ -131,7 +131,9 @@ function createUIAPI(plugin: InstalledPlugin): PluginUIAPI {
 			}
 
 			componentRegistry.set(name, component);
-			console.log(`[PluginAPI] Registered component: ${name} for plugin ${plugin.metadata.id}`);
+			console.log(
+				`[PluginAPI] Registered component: ${name} for plugin ${plugin.metadata.id}`,
+			);
 		},
 
 		showNotification(
@@ -145,7 +147,9 @@ function createUIAPI(plugin: InstalledPlugin): PluginUIAPI {
 				message,
 				type,
 			});
-			console.log(`[PluginAPI] Notification from ${plugin.metadata.name}: [${type}] ${message}`);
+			console.log(
+				`[PluginAPI] Notification from ${plugin.metadata.name}: [${type}] ${message}`,
+			);
 		},
 
 		async showDialog(options: DialogOptions): Promise<DialogResult> {
@@ -323,7 +327,10 @@ function createI18nAPI(_plugin: InstalledPlugin): PluginI18nAPI {
 			// Replace params
 			if (params) {
 				for (const [paramKey, paramValue] of Object.entries(params)) {
-					message = message.replace(new RegExp(`\\{${paramKey}\\}`, "g"), String(paramValue));
+					message = message.replace(
+						new RegExp(`\\{${paramKey}\\}`, "g"),
+						String(paramValue),
+					);
 				}
 			}
 

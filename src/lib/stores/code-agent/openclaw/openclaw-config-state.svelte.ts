@@ -45,13 +45,17 @@ class OpenClawConfigState {
 	);
 
 	currentOcAgentId = $derived.by(() => {
-		return persistedOpenclawConfigState.current?.agentId ?? this.#resolveOCAgentIdFromSessionId();
+		return (
+			persistedOpenclawConfigState.current?.agentId ?? this.#resolveOCAgentIdFromSessionId()
+		);
 	});
 
 	#resolveOCAgentIdFromSessionId(): string {
 		const sessionId = codeAgentState.currentSessionId;
 		if (!sessionId) return "";
-		const session = localClaudeCodeSandboxState.sessions.find((s) => s.session_id === sessionId);
+		const session = localClaudeCodeSandboxState.sessions.find(
+			(s) => s.session_id === sessionId,
+		);
 		return session?.oc_agent_id ?? "";
 	}
 
@@ -116,7 +120,9 @@ class OpenClawConfigState {
 						}) => {
 							if (!data.isOk) {
 								cleanup?.();
-								reject(new Error(data.error || "Health check failed (isOk is false)"));
+								reject(
+									new Error(data.error || "Health check failed (isOk is false)"),
+								);
 								return;
 							}
 

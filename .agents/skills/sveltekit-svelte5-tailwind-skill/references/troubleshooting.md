@@ -755,22 +755,22 @@ When stuck, ask for help the right way.
 **Before asking:**
 
 1. **Search existing issues:**
-   - GitHub: `is:issue repo:sveltejs/kit <your error>`
-   - Stack Overflow: `[sveltekit] <your error>`
-   - Discord: Search history
+    - GitHub: `is:issue repo:sveltejs/kit <your error>`
+    - Stack Overflow: `[sveltekit] <your error>`
+    - Discord: Search history
 
 2. **Create minimal reproduction:**
 
-   ```bash
-   npm create svelte@latest repro
-   # Add only code needed to reproduce
-   ```
+    ```bash
+    npm create svelte@latest repro
+    # Add only code needed to reproduce
+    ```
 
 3. **Gather info:**
-   - Error messages (full stack trace)
-   - Package versions
-   - Config files
-   - Steps to reproduce
+    - Error messages (full stack trace)
+    - Package versions
+    - Config files
+    - Steps to reproduce
 
 **Good issue template:**
 

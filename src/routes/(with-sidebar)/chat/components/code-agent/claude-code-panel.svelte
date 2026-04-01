@@ -141,10 +141,17 @@
 					/>
 
 					<Dialog.Footer class="flex flex-row items-center sm:justify-between">
-						<Button variant="secondary" onclick={() => (isCreateSandboxDialogOpen = false)}>
+						<Button
+							variant="secondary"
+							onclick={() => (isCreateSandboxDialogOpen = false)}
+						>
 							{m.common_cancel()}
 						</Button>
-						<Button variant="default" disabled={isCreatingSandbox} onclick={handleCreateSandbox}>
+						<Button
+							variant="default"
+							disabled={isCreatingSandbox}
+							onclick={handleCreateSandbox}
+						>
 							{#if isCreatingSandbox}
 								<LdrsLoader type="line-spinner" size={16} />
 								{m.sandbox_creating()}
@@ -186,7 +193,9 @@
 {/snippet}
 
 {#snippet advancedSettings()}
-	<Collapsible.Root class="!bg-settings-item-bg dark:!bg-settings-item-bg rounded-[10px] px-4 py-2">
+	<Collapsible.Root
+		class="!bg-settings-item-bg dark:!bg-settings-item-bg rounded-[10px] px-4 py-2"
+	>
 		<div class="flex flex-row items-center justify-between">
 			<Label class="text-label-fg">{m.title_advanced_settings()}</Label>
 			<Collapsible.Trigger

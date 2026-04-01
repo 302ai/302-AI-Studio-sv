@@ -214,7 +214,9 @@ class ChatState {
 
 	// Task result rendering state and queue
 	isRenderingTaskResult = $state(false);
-	private pendingTaskResults = $state<OpenClawCronJobResultResponse["data"][number]["runs"][]>([]);
+	private pendingTaskResults = $state<OpenClawCronJobResultResponse["data"][number]["runs"][]>(
+		[],
+	);
 
 	private isActive = $derived(tabBarState.activeTab?.id === tab.id);
 
@@ -312,7 +314,11 @@ class ChatState {
 
 			// Effect to consume the pending task results when chat is ready (not streaming)
 			$effect(() => {
-				if (this.isReady && this.pendingTaskResults.length > 0 && !this.isRenderingTaskResult) {
+				if (
+					this.isReady &&
+					this.pendingTaskResults.length > 0 &&
+					!this.isRenderingTaskResult
+				) {
 					untrack(() => this.processNextTaskResult());
 				}
 			});
@@ -672,8 +678,13 @@ class ChatState {
 							? chatError.originalError.message
 							: String(chatError.originalError),
 					stack:
-						chatError.originalError instanceof Error ? chatError.originalError.stack : undefined,
-					name: chatError.originalError instanceof Error ? chatError.originalError.name : "Error",
+						chatError.originalError instanceof Error
+							? chatError.originalError.stack
+							: undefined,
+					name:
+						chatError.originalError instanceof Error
+							? chatError.originalError.name
+							: "Error",
 				},
 				errorContext,
 			);
@@ -1019,7 +1030,9 @@ class ChatState {
 						// If regenerating a user message, remove all messages after it (including assistant messages)
 						const messagesToKeep = this.messages.slice(0, messageIndex + 1);
 						const messagesAfter = this.messages.slice(messageIndex + 1);
-						const hasAssistantAfter = messagesAfter.some((msg) => msg.role === "assistant");
+						const hasAssistantAfter = messagesAfter.some(
+							(msg) => msg.role === "assistant",
+						);
 
 						if (hasAssistantAfter) {
 							chat.messages = messagesToKeep;
@@ -1236,7 +1249,9 @@ class ChatState {
 
 		try {
 			this.isGeneratingTitle = true;
-			const provider = persistedProviderState.current.find((p) => p.id === titleModel.providerId);
+			const provider = persistedProviderState.current.find(
+				(p) => p.id === titleModel.providerId,
+			);
 			const serverPort = window.app?.serverPort ?? 8089;
 
 			// Get previous summary and determine if first generation
@@ -1652,7 +1667,9 @@ class ChatState {
 					console.error("[CronPoll] failed to push cron job records:", error);
 				}
 
-				console.log(`[CronPoll] successfully merged ${newMessages.length} cron job results`);
+				console.log(
+					`[CronPoll] successfully merged ${newMessages.length} cron job results`,
+				);
 			}
 		} catch (error) {
 			console.error("[CronPoll] failed to merge cron job results:", error);
@@ -1769,7 +1786,8 @@ export const chat = new Chat({
 						contextSummary: chatState.contextSummary,
 						compressedMessageCount: chatState.compressedMessageCount ?? 0,
 					}),
-				...(codeAgentEnabled && codeAgentState.currentAgentId === "open-claw" && { agentType: 1 }),
+				...(codeAgentEnabled &&
+					codeAgentState.currentAgentId === "open-claw" && { agentType: 1 }),
 			};
 		},
 	}),

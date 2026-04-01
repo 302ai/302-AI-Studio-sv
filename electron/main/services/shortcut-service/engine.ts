@@ -28,7 +28,10 @@ export class ShortcutEngine {
 	private webviewIndex = new Map<string, Map<string, ShortcutBinding>>();
 
 	// Track view listeners for detachment/reattachment
-	private viewListeners = new Map<number, (event: Electron.Event, input: Electron.Input) => void>();
+	private viewListeners = new Map<
+		number,
+		(event: Electron.Event, input: Electron.Input) => void
+	>();
 
 	// Deduplication: track last handled shortcut to prevent duplicate triggers
 	private lastHandledKey: string | null = null;

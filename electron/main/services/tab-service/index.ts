@@ -273,7 +273,9 @@ export class TabService {
 				}
 			`,
 				)
-				.catch((err) => console.error("Failed to update windowId during resurrection:", err));
+				.catch((err) =>
+					console.error("Failed to update windowId during resurrection:", err),
+				);
 
 			// Rebind shortcuts
 			shortcutService.getEngine().attachToView(view, targetWindow.id, pendingTabId);
@@ -435,12 +437,17 @@ export class TabService {
 					storageService.getItemInternal(
 						`CodeAgentStorage:claude-code-agent-state-${tab.threadId}`,
 					),
-					storageService.getItemInternal(`OpenClawStorage:openclaw-config-state-${tab.threadId}`),
+					storageService.getItemInternal(
+						`OpenClawStorage:openclaw-config-state-${tab.threadId}`,
+					),
 				]);
 
 			const threadFilePath = TempStorage.writeData(thread, "thread");
 			const messagesFilePath = TempStorage.writeData(messages, "messages");
-			const codeAgentConfigFilePath = TempStorage.writeData(codeAgentConfig, "code-agent-config");
+			const codeAgentConfigFilePath = TempStorage.writeData(
+				codeAgentConfig,
+				"code-agent-config",
+			);
 			const claudeCodeAgentStateFilePath = TempStorage.writeData(
 				claudeCodeAgentState,
 				"claude-code-agent-state",
@@ -566,7 +573,12 @@ export class TabService {
 	private attachViewToWindow(window: BrowserWindow, view: WebContentsView) {
 		window.contentView.addChildView(view);
 		const { width, height } = window.getContentBounds();
-		view.setBounds({ x: 0, y: TITLE_BAR_HEIGHT + 1, width, height: height - TITLE_BAR_HEIGHT - 1 });
+		view.setBounds({
+			x: 0,
+			y: TITLE_BAR_HEIGHT + 1,
+			width,
+			height: height - TITLE_BAR_HEIGHT - 1,
+		});
 	}
 
 	private async switchActiveTab(window: BrowserWindow, newActiveTabId: string) {
@@ -871,7 +883,9 @@ export class TabService {
 		tabId: string,
 		tab: Tab,
 	): Promise<void> {
-		console.log(`Transferring Tab ${tabId} from window ${fromWindow.id} to window ${toWindow.id}`);
+		console.log(
+			`Transferring Tab ${tabId} from window ${fromWindow.id} to window ${toWindow.id}`,
+		);
 
 		const view = this.tabViewMap.get(tabId);
 		if (isUndefined(view)) return;
@@ -1071,7 +1085,9 @@ export class TabService {
 				: [...currentTabs, newTab];
 			finalTabState[windowId] = { tabs: updatedTabs };
 			await tabStorage.setItemInternal("tab-bar-state", finalTabState);
-			console.log(`[TabService] Created tab ${newTabId} (${type}, ${href}) in window ${windowId}`);
+			console.log(
+				`[TabService] Created tab ${newTabId} (${type}, ${href}) in window ${windowId}`,
+			);
 		}
 
 		return { tabId: newTabId };
@@ -1101,7 +1117,9 @@ export class TabService {
 		const windowId = window.id.toString();
 		const tabState = await tabStorage.getItemInternal("tab-bar-state");
 
-		console.log(`[TabService] handleNewTabWithThread: threadId=${threadId}, windowId=${windowId}`);
+		console.log(
+			`[TabService] handleNewTabWithThread: threadId=${threadId}, windowId=${windowId}`,
+		);
 		console.log(`[TabService] Current tabState windows:`, Object.keys(tabState || {}));
 		console.log(`[TabService] tabViewMap size:`, this.tabViewMap.size);
 
@@ -1116,7 +1134,10 @@ export class TabService {
 
 					// Check if the tab's view still exists
 					const existingView = this.tabViewMap.get(existingTab.id);
-					console.log(`[TabService] View exists for tab ${existingTab.id}:`, !!existingView);
+					console.log(
+						`[TabService] View exists for tab ${existingTab.id}:`,
+						!!existingView,
+					);
 
 					if (existingView) {
 						// View exists - activate it
@@ -1148,7 +1169,9 @@ export class TabService {
 							`[TabService] Tab ${existingTab.id} for thread ${threadId} exists in storage but view is destroyed, cleaning up`,
 						);
 						// Remove the orphaned tab from storage
-						const cleanedTabs = tabState[wId].tabs.filter((t) => t.id !== existingTab.id);
+						const cleanedTabs = tabState[wId].tabs.filter(
+							(t) => t.id !== existingTab.id,
+						);
 						tabState[wId] = { tabs: cleanedTabs };
 						await tabStorage.setItemInternal("tab-bar-state", tabState);
 						console.log(
@@ -1290,7 +1313,10 @@ export class TabService {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const newMessages: any = [];
 			await storageService.setItemInternal("app-thread:" + newTab.threadId, newThread);
-			await storageService.setItemInternal("app-chat-messages:" + newTab.threadId, newMessages);
+			await storageService.setItemInternal(
+				"app-chat-messages:" + newTab.threadId,
+				newMessages,
+			);
 		}
 
 		const view = await this.newWebContentsView(window.id, newTab);
@@ -1639,7 +1665,9 @@ export class TabService {
 		tabId: string,
 		threadId: string,
 	): Promise<boolean> {
-		console.log(`[handleClearTabMessages] Clearing messages for tab ${tabId}, thread ${threadId}`);
+		console.log(
+			`[handleClearTabMessages] Clearing messages for tab ${tabId}, thread ${threadId}`,
+		);
 
 		try {
 			// Clear messages in storage
@@ -1648,7 +1676,9 @@ export class TabService {
 			// Get the tab's WebContentsView
 			const view = this.tabViewMap.get(tabId);
 			if (isUndefined(view) || view.webContents.isDestroyed()) {
-				console.warn(`[handleClearTabMessages] View not found or destroyed for tab ${tabId}`);
+				console.warn(
+					`[handleClearTabMessages] View not found or destroyed for tab ${tabId}`,
+				);
 				return true; // Storage was cleared, which is the main goal
 			}
 
@@ -1670,13 +1700,17 @@ export class TabService {
 		tabId: string,
 		threadId: string,
 	): Promise<boolean> {
-		console.log(`[handleGenerateTabTitle] Generating title for tab ${tabId}, thread ${threadId}`);
+		console.log(
+			`[handleGenerateTabTitle] Generating title for tab ${tabId}, thread ${threadId}`,
+		);
 
 		try {
 			// Get the tab's WebContentsView
 			const view = this.tabViewMap.get(tabId);
 			if (isUndefined(view) || view.webContents.isDestroyed()) {
-				console.warn(`[handleGenerateTabTitle] View not found or destroyed for tab ${tabId}`);
+				console.warn(
+					`[handleGenerateTabTitle] View not found or destroyed for tab ${tabId}`,
+				);
 				return false;
 			}
 
@@ -1693,7 +1727,10 @@ export class TabService {
 	/**
 	 * Trigger create skill summary in the chat
 	 */
-	async triggerCreateSkillSummary(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
+	async triggerCreateSkillSummary(
+		_event: IpcMainInvokeEvent,
+		threadId: string,
+	): Promise<boolean> {
 		console.log(`[triggerCreateSkillSummary] Triggering summary for thread ${threadId}`);
 
 		try {

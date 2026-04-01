@@ -25,7 +25,8 @@
 		try {
 			// Check if it's a PDF file
 			isPdf =
-				attachment.type === "application/pdf" || attachment.name.toLowerCase().endsWith(".pdf");
+				attachment.type === "application/pdf" ||
+				attachment.name.toLowerCase().endsWith(".pdf");
 
 			// Check if it's an Office document (Excel, Word, PowerPoint)
 			const lowerName = attachment.name.toLowerCase();

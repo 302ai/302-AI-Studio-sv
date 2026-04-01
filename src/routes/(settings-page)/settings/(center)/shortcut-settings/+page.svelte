@@ -178,14 +178,16 @@
 				{#if shortcut.action === "sendMessage"}
 					<ShortcutSelect
 						value={shortcut.keys}
-						onValueChange={(keys) => shortcutSettings.updateShortcut(shortcut.action, keys)}
+						onValueChange={(keys) =>
+							shortcutSettings.updateShortcut(shortcut.action, keys)}
 						disabled={false}
 						className="flex-1"
 					/>
 				{:else}
 					<ShortcutRecorder
 						value={shortcut.keys}
-						onValueChange={(keys) => shortcutSettings.updateShortcut(shortcut.action, keys)}
+						onValueChange={(keys) =>
+							shortcutSettings.updateShortcut(shortcut.action, keys)}
 						onRecordingChange={(_isRecording) => {}}
 						disabled={false}
 						allShortcuts={shortcutSettingsList()?.map((s) => ({

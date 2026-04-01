@@ -192,7 +192,12 @@ export async function executeErrorHook(
 		});
 
 		return result && typeof result === "object" && "handled" in result
-			? (result as { handled: boolean; retry?: boolean; retryDelay?: number; message?: string })
+			? (result as {
+					handled: boolean;
+					retry?: boolean;
+					retryDelay?: number;
+					message?: string;
+				})
 			: { handled: false };
 	} catch (hookError) {
 		console.error("[ProviderPluginHelper] Error hook failed:", hookError);

@@ -36,7 +36,10 @@ class PersistedStateBatcher {
 		try {
 			await window.electronAPI.storageService.setItems(items);
 		} catch (error) {
-			console.error("[Batcher] Batch write failed, falling back to individual writes:", error);
+			console.error(
+				"[Batcher] Batch write failed, falling back to individual writes:",
+				error,
+			);
 			for (const item of items) {
 				try {
 					await window.electronAPI.storageService.setItem(item.key, item.value);

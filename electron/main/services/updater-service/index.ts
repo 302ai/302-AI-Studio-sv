@@ -120,7 +120,9 @@ export class UpdaterService {
 				console.log("No releases available on server, treating as no update available");
 				broadcastService.broadcastChannelToAll("updater:update-not-available");
 			} else {
-				broadcastService.broadcastChannelToAll("updater:update-error", { message: error.message });
+				broadcastService.broadcastChannelToAll("updater:update-error", {
+					message: error.message,
+				});
 			}
 		});
 	}

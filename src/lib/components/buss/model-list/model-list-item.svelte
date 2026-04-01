@@ -270,7 +270,10 @@
 						onclick={onEdit}
 						title={m.title_button_edit()}
 					>
-						<PenLine class="text-muted-foreground hover:text-foreground size-4" strokeWidth={1.5} />
+						<PenLine
+							class="text-muted-foreground hover:text-foreground size-4"
+							strokeWidth={1.5}
+						/>
 					</Button>
 
 					<!-- Delete -->
@@ -302,7 +305,9 @@
 								<Star
 									class={cn(
 										"mr-2 h-4 w-4",
-										model.collected ? "fill-yellow-500 text-yellow-500" : "text-muted-foreground",
+										model.collected
+											? "fill-yellow-500 text-yellow-500"
+											: "text-muted-foreground",
 									)}
 								/>
 								{model.collected ? m.text_button_unstar() : m.text_button_star()}
@@ -318,7 +323,10 @@
 								</DropdownMenu.Item>
 							{/if}
 							<DropdownMenu.Separator />
-							<DropdownMenu.Item onclick={onDelete} class="text-destructive focus:text-destructive">
+							<DropdownMenu.Item
+								onclick={onDelete}
+								class="text-destructive focus:text-destructive"
+							>
 								<Trash2 class="mr-2 h-4 w-4" />
 								{m.text_button_delete()}
 							</DropdownMenu.Item>
@@ -358,7 +366,10 @@
 			<PenLine class="mr-2 h-4 w-4" />
 			{m.text_button_edit()}
 		</ContextMenu.Item>
-		<ContextMenu.Item onclick={() => onDelete?.()} class="text-destructive focus:text-destructive">
+		<ContextMenu.Item
+			onclick={() => onDelete?.()}
+			class="text-destructive focus:text-destructive"
+		>
 			<Trash2 class="mr-2 h-4 w-4" />
 			{m.text_button_delete()}
 		</ContextMenu.Item>

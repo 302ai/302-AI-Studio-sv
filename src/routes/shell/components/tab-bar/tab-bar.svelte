@@ -256,7 +256,9 @@
 						const newTabs = [...tabBarState.tabs];
 						const [removed] = newTabs.splice(currentIndex, 1);
 						const insertAt =
-							pendingTargetIndex > currentIndex ? pendingTargetIndex - 1 : pendingTargetIndex;
+							pendingTargetIndex > currentIndex
+								? pendingTargetIndex - 1
+								: pendingTargetIndex;
 						newTabs.splice(insertAt, 0, removed);
 						tabBarState.updatePersistedTabs(newTabs);
 					}
@@ -459,8 +461,8 @@
 
 		<div
 			class="flex shrink-0 items-center"
-			style="opacity: {buttonSpring.current.opacity}; transform: translateX({buttonSpring.current
-				.x + buttonBounceSpring.current.x}px);"
+			style="opacity: {buttonSpring.current.opacity}; transform: translateX({buttonSpring
+				.current.x + buttonBounceSpring.current.x}px);"
 		>
 			<Separator
 				orientation="vertical"

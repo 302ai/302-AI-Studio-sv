@@ -19,9 +19,11 @@ export class ShortcutActionsHandler {
 			return;
 		}
 
-		this.cleanup = window.electronAPI.shortcut.onShortcutAction((event: ShortcutActionEvent) => {
-			this.handleAction(event);
-		});
+		this.cleanup = window.electronAPI.shortcut.onShortcutAction(
+			(event: ShortcutActionEvent) => {
+				this.handleAction(event);
+			},
+		);
 
 		this.isInitialized = true;
 	}

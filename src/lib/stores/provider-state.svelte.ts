@@ -236,7 +236,9 @@ class ProviderState {
 	}
 	async removeModelsByProvider(providerId: string): Promise<number> {
 		const originalLength = persistedModelState.current.length;
-		const modelsToRemove = persistedModelState.current.filter((m) => m.providerId === providerId);
+		const modelsToRemove = persistedModelState.current.filter(
+			(m) => m.providerId === providerId,
+		);
 		const deletedModelIds = modelsToRemove.map((m) => m.id);
 		const deletedModelIdSet = new Set(deletedModelIds);
 
@@ -274,7 +276,8 @@ class ProviderState {
 
 			try {
 				const { threadService, broadcastService } = window.electronAPI;
-				const clearedCount = await threadService.clearDeletedModelReferences(deletedModelIds);
+				const clearedCount =
+					await threadService.clearDeletedModelReferences(deletedModelIds);
 				if (clearedCount > 0) {
 					console.log(
 						`[Provider] Cleared selectedModel references in ${clearedCount} thread(s) for deleted models`,
@@ -356,7 +359,8 @@ class ProviderState {
 			console.error(`Failed to fetch models for provider ${provider.id}:`, error);
 			await this.updateProvider(provider.id, { status: "error" });
 			toast.error(m.text_fetch_models_error({ provider: provider.name }), {
-				description: error instanceof Error ? error.message : m.text_fetch_models_network_error(),
+				description:
+					error instanceof Error ? error.message : m.text_fetch_models_network_error(),
 			});
 			return false;
 		}
@@ -409,7 +413,10 @@ class ProviderState {
 
 			let broadcastNeeded = false;
 
-			if (preferencesSettings.newSessionModel === null && sessionState.latestUsedModel === null) {
+			if (
+				preferencesSettings.newSessionModel === null &&
+				sessionState.latestUsedModel === null
+			) {
 				preferencesSettings.setNewSessionModel(defaultModel);
 				broadcastNeeded = true;
 				console.log(
@@ -432,9 +439,12 @@ class ProviderState {
 				try {
 					// Performance: Use $state.snapshot() to remove Svelte Proxy for IPC
 					const modelForBroadcast = $state.snapshot(defaultModel);
-					await window.electronAPI.broadcastService.broadcastToAll("apply-default-model", {
-						model: modelForBroadcast,
-					});
+					await window.electronAPI.broadcastService.broadcastToAll(
+						"apply-default-model",
+						{
+							model: modelForBroadcast,
+						},
+					);
 				} catch (error) {
 					console.error(
 						`[Provider] Failed to broadcast apply-default-model event for ${provider.name}:`,

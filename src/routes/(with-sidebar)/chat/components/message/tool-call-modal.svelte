@@ -181,7 +181,9 @@
 						class="h-[400px] overflow-auto rounded-xl border border-border bg-card flex flex-col"
 					>
 						<div class="flex-shrink-0 px-4 py-2 bg-muted border-b border-border">
-							<span class="text-sm font-medium text-[#D82525]">{m.tool_call_error_message()}</span>
+							<span class="text-sm font-medium text-[#D82525]"
+								>{m.tool_call_error_message()}</span
+							>
 						</div>
 						<div
 							class="flex-1 overflow-auto whitespace-pre-wrap p-4 text-xs text-red-900 dark:text-red-100"
@@ -194,7 +196,9 @@
 						class="flex h-[400px] items-center justify-center rounded-xl border border-border bg-card"
 					>
 						<div class="text-center">
-							<div class="mx-auto mb-2 h-8 w-8 animate-pulse rounded-full bg-[#0056FE]"></div>
+							<div
+								class="mx-auto mb-2 h-8 w-8 animate-pulse rounded-full bg-[#0056FE]"
+							></div>
 							<p class="text-sm text-[#0056FE]">
 								{part.state === "input-streaming"
 									? m.tool_call_status_preparing()
@@ -225,7 +229,11 @@
 					{m.tool_call_rerun()}
 				</Button>
 			{/if}
-			<Button variant="default" class="h-[42px] w-[148px]" onclick={() => onOpenChange(false)}>
+			<Button
+				variant="default"
+				class="h-[42px] w-[148px]"
+				onclick={() => onOpenChange(false)}
+			>
 				{m.tool_call_close()}
 			</Button>
 		</div>

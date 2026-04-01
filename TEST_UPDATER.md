@@ -63,26 +63,26 @@ await window.electronAPI.updaterService.isUpdateDownloaded();
 
 1. **修改当前版本号**（临时降低版本）
 
-   ```bash
-   # 在 package.json 中将 version 改为比 GitHub 最新版本低的版本
-   # 例如，如果 GitHub 最新是 1.0.5，改为 1.0.4
-   ```
+    ```bash
+    # 在 package.json 中将 version 改为比 GitHub 最新版本低的版本
+    # 例如，如果 GitHub 最新是 1.0.5，改为 1.0.4
+    ```
 
 2. **构建并打包应用**
 
-   ```bash
-   pnpm run build
-   pnpm run package
-   ```
+    ```bash
+    pnpm run build
+    pnpm run package
+    ```
 
 3. **运行打包后的应用**
-   - macOS: `/out/302-AI-Studio-darwin-arm64/302-AI-Studio.app`
-   - Windows: `/out/302-AI-Studio-win32-x64/302-AI-Studio.exe`
+    - macOS: `/out/302-AI-Studio-darwin-arm64/302-AI-Studio.app`
+    - Windows: `/out/302-AI-Studio-win32-x64/302-AI-Studio.exe`
 
 4. **触发更新检查**
-   - 打开应用设置 → 版本更新
-   - 点击「检查更新」按钮
-   - 观察控制台日志和 UI 变化
+    - 打开应用设置 → 版本更新
+    - 点击「检查更新」按钮
+    - 观察控制台日志和 UI 变化
 
 ---
 

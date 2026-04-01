@@ -85,7 +85,11 @@ export class WebContentsFactory {
 				);
 			}
 
-			menuItems.push({ label: labels.paste, role: "paste", enabled: params.editFlags.canPaste });
+			menuItems.push({
+				label: labels.paste,
+				role: "paste",
+				enabled: params.editFlags.canPaste,
+			});
 
 			if (params.selectionText) {
 				menuItems.push({
@@ -258,7 +262,9 @@ export class WebContentsFactory {
 			additionalArgs.push(`--code-agent-config-file=${config.codeAgentConfigFilePath}`);
 		}
 		if (config.claudeCodeAgentStateFilePath) {
-			additionalArgs.push(`--claude-code-agent-state-file=${config.claudeCodeAgentStateFilePath}`);
+			additionalArgs.push(
+				`--claude-code-agent-state-file=${config.claudeCodeAgentStateFilePath}`,
+			);
 		}
 
 		return this.create({
