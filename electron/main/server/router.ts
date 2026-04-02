@@ -19,9 +19,9 @@ import {
 	wrapLanguageModel,
 	type UIMessage,
 } from "ai";
+import dedent from "dedent";
 import getPort from "get-port";
 import { Hono, type Context } from "hono";
-// import { getSkillContent, getSkillDetails } from "../apis/code-agent";
 import { codeAgentService, ssoService } from "../services";
 import { chatParametersService } from "../services/chat-parameters-service";
 import { mcpService } from "../services/mcp-service";
@@ -35,9 +35,7 @@ import {
 	appendPromptToSystemMessage,
 	applyContextCompression,
 	convertAiSdkMessagesToOpenAiMessages,
-	// createForcedSkillModelMessages,
 	createUIMessageStreamFromGenerator,
-	// injectForcedSkillModelMessages,
 	isStreamingSupported,
 	sendStreamError,
 	uploadAttachmentsFromMessages,
@@ -1605,16 +1603,19 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		agentType,
 	} = await c.req.json<RouterRequestBody>();
 
-	// Persist lastVibeMode when it changes
 	const currentVibeMode = vibeMode ?? "remote";
-	const { data: globalConfigs } = await codeAgentGlobalConfigsStorage.getGlobalConfigs();
+
+	const [{ data: globalConfigs }, { data: codeAgentConfig }, { sandboxId }] = await Promise.all([
+		codeAgentGlobalConfigsStorage.getGlobalConfigs(),
+		codeAgentService.getCodeAgentConfig(threadId),
+		codeAgentService.getClaudeCodeSandboxId(threadId),
+	]);
+
+	// Persist lastVibeMode when it changes
 	if (globalConfigs.lastVibeMode !== currentVibeMode) {
 		await codeAgentGlobalConfigsStorage.setLastVibeMode(currentVibeMode);
 		console.log("[302ai-code-agent] Updated lastVibeMode to:", currentVibeMode);
 	}
-
-	const { data: codeAgentConfig } = await codeAgentService.getCodeAgentConfig(threadId);
-	const { sandboxId } = await codeAgentService.getClaudeCodeSandboxId(threadId);
 
 	// Persist lastAgentId when it changes
 	const currentAgentId = codeAgentConfig.currentAgentId as CodingAgentClass;
@@ -1657,8 +1658,8 @@ app.post("/chat/302ai-code-agent", async (c) => {
 			return acc;
 		}, []) ?? [];
 
-	// Collect forced skills for later injection (after message conversion)
-	// Using OpenCode-style forced tool call results instead of prompt injection
+	// Collect forced skills for native backend injection
+	// Using 302.AI's force_skill parameter instead of prompt injection
 	const forcedSkills = skills?.filter((skill) => skill.forceUse) ?? [];
 
 	if (inTaskOrchestrationMode) {
@@ -1673,58 +1674,58 @@ app.post("/chat/302ai-code-agent", async (c) => {
 	if (inPlanMode) {
 		const planModePrompt =
 			language === "zh"
-				? `
-<plan_mode_instructions>
+				? dedent`
+					<plan_mode_instructions>
 
-⚠️ 你处于计划模式 ⚠️
+					⚠️ 你处于计划模式 ⚠️
 
-关键规则：每轮只问一个问题 - 严格执行
-- 在计划模式下，每轮只能调用 AskUserQuestion 一次
-- 不要在本轮对话中调用 AskUserQuestion 之后再次调用 AskUserQuestion
-- 等待用户的实际回答后再继续
+					关键规则：每轮只问一个问题 - 严格执行
+					- 在计划模式下，每轮只能调用 AskUserQuestion 一次
+					- 不要在本轮对话中调用 AskUserQuestion 之后再次调用 AskUserQuestion
+					- 等待用户的实际回答后再继续
 
-工作流程：
-第1轮：调用 AskUserQuestion → 等待用户回答
-第2轮：处理用户回答 → 调用 AskUserQuestion（如需要）→ 等待用户回答
-第3轮：处理用户回答 → 创建计划 → 调用 ExitPlanMode
+					工作流程：
+					第1轮：调用 AskUserQuestion → 等待用户回答
+					第2轮：处理用户回答 → 调用 AskUserQuestion（如需要）→ 等待用户回答
+					第3轮：处理用户回答 → 创建计划 → 调用 ExitPlanMode
 
-重要提示：
-- 如果你看到输出 "Answer questions?"，这意味着工具正在工作
-- 等待用户的真实回答
-- 不要在同一轮中再次尝试调用 AskUserQuestion
+					重要提示：
+					- 如果你看到输出 "Answer questions?"，这意味着工具正在工作
+					- 等待用户的真实回答
+					- 不要在同一轮中再次尝试调用 AskUserQuestion
 
-每次行动前检查：
-□ 我在本轮中已经调用过 AskUserQuestion 了吗？ → 如果是：不要再次调用
-□ 我即将调用 AskUserQuestion 吗？ → 如果是：这将是本轮唯一一次调用
+					每次行动前检查：
+					□ 我在本轮中已经调用过 AskUserQuestion 了吗？ → 如果是：不要再次调用
+					□ 我即将调用 AskUserQuestion 吗？ → 如果是：这将是本轮唯一一次调用
 
-</plan_mode_instructions>
-`
-				: `
-<plan_mode_instructions>
+					</plan_mode_instructions>
+				`
+				: dedent`
+					<plan_mode_instructions>
 
-⚠️ YOU ARE IN PLAN MODE ⚠️
+					⚠️ YOU ARE IN PLAN MODE ⚠️
 
-CRITICAL RULE: ONE QUESTION PER TURN - STRICTLY ENFORCED
-- In plan mode, you can only call AskUserQuestion ONCE per turn
-- DO NOT call AskUserQuestion again after calling it in the same turn
-- Wait for the user's actual response before proceeding
+					CRITICAL RULE: ONE QUESTION PER TURN - STRICTLY ENFORCED
+					- In plan mode, you can only call AskUserQuestion ONCE per turn
+					- DO NOT call AskUserQuestion again after calling it in the same turn
+					- Wait for the user's actual response before proceeding
 
-WORKFLOW:
-Turn 1: Call AskUserQuestion → Wait for user response
-Turn 2: Process user's answer → Call AskUserQuestion (if needed) → Wait for user response
-Turn 3: Process user's answer → Create plan → Call ExitPlanMode
+					WORKFLOW:
+					Turn 1: Call AskUserQuestion → Wait for user response
+					Turn 2: Process user's answer → Call AskUserQuestion (if needed) → Wait for user response
+					Turn 3: Process user's answer → Create plan → Call ExitPlanMode
 
-IMPORTANT:
-- If you see output "Answer questions?", this means the tool is working
-- Wait for the user's real answer
-- Do NOT try to call AskUserQuestion again in the same turn
+					IMPORTANT:
+					- If you see output "Answer questions?", this means the tool is working
+					- Wait for the user's real answer
+					- Do NOT try to call AskUserQuestion again in the same turn
 
-CHECK BEFORE EVERY ACTION:
-□ Have I already called AskUserQuestion in this turn? → If YES: Do NOT call it again
-□ Am I about to call AskUserQuestion? → If YES: This will be my ONLY call this turn
+					CHECK BEFORE EVERY ACTION:
+					□ Have I already called AskUserQuestion in this turn? → If YES: Do NOT call it again
+					□ Am I about to call AskUserQuestion? → If YES: This will be my ONLY call this turn
 
-</plan_mode_instructions>
-`;
+					</plan_mode_instructions>
+				`;
 		appendPromptToSystemMessage(messages, planModePrompt);
 	}
 
@@ -1773,21 +1774,6 @@ CHECK BEFORE EVERY ACTION:
 		},
 	})}\n\n`;
 
-	// Make the request using the custom fetch that transforms the response
-	const abortController = new AbortController();
-	const responsePromise = claudeCodeFetch(
-		`${baseUrl ?? "https://api.302.ai/v1"}/chat/completions`,
-		{
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${apiKey}`,
-			},
-			body: JSON.stringify(requestBody),
-			signal: abortController.signal,
-		},
-	);
-
 	// Create a combined stream that sends start immediately, then pipes upstream data
 	const combinedStream = new ReadableStream({
 		async start(controller) {
@@ -1813,15 +1799,6 @@ CHECK BEFORE EVERY ACTION:
 
 			// Upload attachments after sending start event (non-blocking UX)
 			// This allows the UI to show "AI is typing" immediately while upload happens in background
-			// if (sandboxId && workspacePath) {
-			// 	try {
-			// 		await uploadAttachmentsFromMessages(sandboxId, workspacePath, messages);
-			// 	} catch (uploadError) {
-			// 		console.error("[302ai-code-agent] Failed to upload attachments:", uploadError);
-			// 		sendStreamError(controller, "Failed to upload attachments");
-			// 		return;
-			// 	}
-			// }
 			try {
 				await uploadAttachmentsFromMessages(
 					sandboxId,
@@ -1837,7 +1814,23 @@ CHECK BEFORE EVERY ACTION:
 				return;
 			}
 
+			// Make the request using the custom fetch that transforms the response
+			// after attachments have been successfully uploaded
+			const abortController = new AbortController();
+
 			try {
+				const responsePromise = claudeCodeFetch(
+					`${baseUrl ?? "https://api.302.ai/v1"}/chat/completions`,
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${apiKey}`,
+						},
+						body: JSON.stringify(requestBody),
+						signal: abortController.signal,
+					},
+				);
 				const response = await responsePromise;
 
 				console.log(
