@@ -61,8 +61,8 @@
 	] as const;
 </script>
 
-<div class="mx-auto flex w-full flex-col items-center">
-	<div class="flex items-center justify-center py-8 sticky top-12.5 bg-background z-99">
+<div class="mx-auto flex w-full flex-col items-center h-[calc(100vh-50px)] box-border">
+	<div class="flex items-center justify-center py-8">
 		<div class="flex items-center gap-y-[22px] flex-col">
 			<ModelIcon modelName="ai302" className="size-[62px]" forceApplyClassName />
 			<div class="flex items-center gap-y-2 flex-col">
@@ -87,7 +87,7 @@
 	</div>
 
 	<!-- Changelog Section -->
-	<div class="w-full px-4 pb-6">
+	<div class="w-full px-4 pb-6 grow h-full overflow-y-auto">
 		<div class="gap-settings-gap flex flex-col">
 			<Label class="text-label-fg font-normal">{m.changelog_title()}</Label>
 			<ChangelogList
@@ -101,9 +101,7 @@
 		</div>
 	</div>
 
-	<div
-		class="flex items-center gap-4 py-4 sticky bottom-0 z-99 bg-background w-full justify-center"
-	>
+	<div class="flex items-center gap-4 py-4 w-full justify-center">
 		<div class="flex items-center gap-2">
 			{#each socialMedias as item (item.name)}
 				<Button
