@@ -20,8 +20,14 @@ class CloudEnvState {
 	// Health status (健康状态)
 	healthStatus = $state<CloudHealthStatus>("unknown");
 
+	// 实例状态
+	instanceStatus = $state<CloudHealthStatus>("unknown");
+
 	// OpenClaw status
 	openClawStatus = $state<CloudHealthStatus>("unknown");
+
+	// 接口状态
+	apiStatus = $state<CloudHealthStatus>("unknown");
 
 	// Loading states
 	checking = $state(false);
@@ -82,7 +88,9 @@ class CloudEnvState {
 		this.running = false;
 		this.starting = false;
 		this.healthStatus = "unknown";
+		this.instanceStatus = "unknown";
 		this.openClawStatus = "unknown";
+		this.apiStatus = "unknown";
 		this.checking = false;
 	}
 }

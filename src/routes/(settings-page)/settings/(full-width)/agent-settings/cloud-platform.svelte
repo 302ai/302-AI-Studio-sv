@@ -17,21 +17,21 @@
 						>{m.agent_settings_instance_status()}</Label
 					>
 					<StatusIndicator
-						status={cloudEnvState.activated ? "green" : "gray"}
-						text={cloudEnvState.activated
-							? m.cloud_mode_running()
-							: m.agent_settings_not_activated()}
+						status={cloudEnvState.instanceStatus === "healthy" ? "green" : "gray"}
+						text={cloudEnvState.instanceStatus === "healthy"
+							? m.cloud_mode_healthy()
+							: m.cloud_mode_unknown()}
 					/>
 				</div>
 				<div class="flex items-center gap-3">
 					<Label class="text-muted-foreground min-w-18 font-normal"
-						>{m.cloud_mode_startup_status()}</Label
+						>{m.cloud_mode_api_status()}</Label
 					>
 					<StatusIndicator
-						status={cloudEnvState.running ? "green" : "gray"}
-						text={cloudEnvState.running
-							? m.settings_normal()
-							: m.local_platform_unhealthy()}
+						status={cloudEnvState.apiStatus === "healthy" ? "green" : "gray"}
+						text={cloudEnvState.apiStatus === "healthy"
+							? m.cloud_mode_healthy()
+							: m.cloud_mode_unknown()}
 					/>
 				</div>
 			</div>
