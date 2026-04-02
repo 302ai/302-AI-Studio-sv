@@ -5,7 +5,7 @@
 	import DeployedWebsitesList from "../deployed-websites-list.svelte";
 </script>
 
-<div class="mx-auto flex flex-col h-full w-full max-w-3xl gap-6">
+<div class="mx-auto flex flex-col h-full gap-6 max-w-settings-layout m-auto">
 	<div class="space-y-2">
 		<h2 class="text-sm text-label-fg">{m.agent_settings_notifications_section()}</h2>
 		<SettingSwitchItem

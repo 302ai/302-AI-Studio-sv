@@ -46,7 +46,7 @@
 		/>
 	</div>
 
-	<div class="grow">
+	<div class="grow max-w-settings-layout m-auto w-full">
 		{#if selectedPlatform === "remote"}
 			<RemotePlatform />
 		{:else if selectedPlatform === "cloud"}
