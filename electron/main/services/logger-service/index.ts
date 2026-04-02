@@ -1,12 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import log from "electron-log";
-import type { LogFunctions } from "electron-log";
 import { isDev } from "@electron/main/constants";
-import { userDataManager } from "../app-service/user-data-manager";
-import type { LogLevel, LogCategory } from "@shared/logger/types";
+import type { LogCategory, LogLevel } from "@shared/logger/types";
 import type { IpcMainInvokeEvent } from "electron";
+import { app } from "electron";
+import type { LogFunctions } from "electron-log";
+import log from "electron-log";
+import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { join } from "path";
-import { mkdirSync } from "node:fs";
+import { schedulerService } from "../scheduler-service";
 
 // electron-log LogFunctions doesn't include 'fatal', map it to 'error'
 type ElectronLogLevel = "debug" | "info" | "warn" | "error";
@@ -15,16 +16,16 @@ const mapLevel = (level: LogLevel): ElectronLogLevel => (level === "fatal" ? "er
 export class LoggerService {
 	private scopeCache = new Map<string, LogFunctions>();
 
+	private logsPath = isDev ? join(process.cwd(), "logs") : join(app.getPath("userData"), "logs");
+
 	constructor() {
 		log.initialize();
 		this.configureTransports();
+		this.cleanupOldLogs();
+		schedulerService.addTask("log-cleanup", "0 0 */24 * * *", () => this.cleanupOldLogs());
 	}
 
 	private configureTransports() {
-		const logsPath = isDev
-			? join(process.cwd(), "logs")
-			: join(userDataManager.storagePath, "logs");
-
 		// ─── File transport ──────────────────────────────────
 		log.transports.file.level = isDev ? "debug" : "info";
 		log.transports.file.format = "[{y}-{m}-{d} {h}:{i}:{s}.{ms}] [{level}] {text}";
@@ -35,8 +36,10 @@ export class LoggerService {
 			const hasSlash = scope.includes("/");
 			const processType = hasSlash ? scope.split("/")[0] : "renderer";
 			const category = hasSlash ? scope.split("/")[1] : scope;
-			const date = new Date().toISOString().slice(0, 10);
-			const dir = join(logsPath, processType, date);
+			const now = new Date();
+			const date = now.toISOString().slice(0, 10);
+			const hour = String(now.getHours()).padStart(2, "0");
+			const dir = join(this.logsPath, processType, date, hour);
 			mkdirSync(dir, { recursive: true });
 			return join(dir, `${category}.log`);
 		};
@@ -110,6 +113,30 @@ export class LoggerService {
 	logMain(level: LogLevel, category: LogCategory, message: string, ...args: any[]): void {
 		const scoped = this.getScoped(`main/${category}`);
 		scoped[mapLevel(level)](message, ...args);
+	}
+
+	/** Delete log date directories older than 14 days. */
+	private cleanupOldLogs(): void {
+		const maxAge = 14 * 24 * 60 * 60 * 1000;
+		const cutoff = Date.now() - maxAge;
+
+		if (!existsSync(this.logsPath)) return;
+
+		for (const processType of readdirSync(this.logsPath, { withFileTypes: true })) {
+			if (!processType.isDirectory()) continue;
+			const processDir = join(this.logsPath, processType.name);
+
+			for (const dateEntry of readdirSync(processDir, { withFileTypes: true })) {
+				if (!dateEntry.isDirectory()) continue;
+				const parsed = Date.parse(dateEntry.name);
+				if (isNaN(parsed)) continue;
+
+				if (parsed < cutoff) {
+					const target = join(processDir, dateEntry.name);
+					rmSync(target, { recursive: true, force: true });
+				}
+			}
+		}
 	}
 }
 
