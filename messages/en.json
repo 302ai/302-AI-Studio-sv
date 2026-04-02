@@ -934,6 +934,7 @@
 	"cloud_mode_running": "Running",
 	"cloud_mode_activate_button": "Activate",
 	"cloud_mode_cloud": "Cloud",
+	"cloud_mode_api_status": "API Status",
 	"cloud_mode_cloud_description": "Remote execution, managed hosting",
 	"toast_code_agent_model_change_failed": "Failed to replace sandbox model",
 	"code_agent_local_sandbox_start_failed": "Failed to start local sandbox",

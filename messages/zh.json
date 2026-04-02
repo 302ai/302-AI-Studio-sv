@@ -937,6 +937,7 @@
 	"cloud_mode_running": "运行中",
 	"cloud_mode_activate_button": "开通",
 	"cloud_mode_cloud": "云端",
+	"cloud_mode_api_status": "接口状态",
 	"cloud_mode_cloud_description": "远程运行，托管运行",
 	"toast_code_agent_model_change_failed": "更换沙盒模型失败",
 	"code_agent_local_sandbox_start_failed": "启动本地沙盒失败",
