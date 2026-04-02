@@ -2,11 +2,12 @@
 import { isDev } from "@electron/main/constants";
 import type { LogCategory, LogLevel } from "@shared/logger/types";
 import type { IpcMainInvokeEvent } from "electron";
-import { app } from "electron";
+import { app, dialog } from "electron";
 import type { LogFunctions } from "electron-log";
 import log from "electron-log";
-import { existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
+import { createWriteStream, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { join } from "path";
+import archiver from "archiver";
 import { schedulerService } from "../scheduler-service";
 
 // electron-log LogFunctions doesn't include 'fatal', map it to 'error'
@@ -113,6 +114,86 @@ export class LoggerService {
 	logMain(level: LogLevel, category: LogCategory, message: string, ...args: any[]): void {
 		const scoped = this.getScoped(`main/${category}`);
 		scoped[mapLevel(level)](message, ...args);
+	}
+
+	/**
+	 * Export logs within a time range as a zip file.
+	 */
+	async exportLogs(
+		_event: IpcMainInvokeEvent,
+		startDate: string,
+		startHour: number,
+		endDate: string,
+		endHour: number,
+	): Promise<string | null> {
+		if (!existsSync(this.logsPath)) return null;
+
+		// Collect matching log files
+		const files: Array<{ absPath: string; relPath: string }> = [];
+
+		for (const ptEntry of readdirSync(this.logsPath, { withFileTypes: true })) {
+			if (!ptEntry.isDirectory()) continue;
+			const processType = ptEntry.name;
+			const processDir = join(this.logsPath, processType);
+
+			for (const dateEntry of readdirSync(processDir, { withFileTypes: true })) {
+				if (!dateEntry.isDirectory()) continue;
+				const date = dateEntry.name;
+				// Skip dates outside range
+				if (date < startDate || date > endDate) continue;
+
+				const dateDir = join(processDir, date);
+
+				for (const hourEntry of readdirSync(dateDir, { withFileTypes: true })) {
+					if (!hourEntry.isDirectory()) continue;
+					const hour = parseInt(hourEntry.name, 10);
+					if (isNaN(hour)) continue;
+
+					// Check hour boundaries for start/end dates
+					if (date === startDate && hour < startHour) continue;
+					if (date === endDate && hour > endHour) continue;
+
+					const hourDir = join(dateDir, hourEntry.name);
+					for (const file of readdirSync(hourDir, { withFileTypes: true })) {
+						if (file.isFile()) {
+							files.push({
+								absPath: join(hourDir, file.name),
+								relPath: join(processType, date, hourEntry.name, file.name),
+							});
+						}
+					}
+				}
+			}
+		}
+
+		if (files.length === 0) return null;
+
+		// Ask user for save location
+		const { canceled, filePath } = await dialog.showSaveDialog({
+			title: "Export Logs",
+			defaultPath: `302ai-studio-logs-${startDate}-${String(startHour).padStart(2, "0")}-to-${endDate}-${String(endHour).padStart(2, "0")}.zip`,
+			filters: [{ name: "Zip Archive", extensions: ["zip"] }],
+		});
+		if (canceled || !filePath) return null;
+
+		// Create zip
+		await new Promise<void>((resolve, reject) => {
+			const output = createWriteStream(filePath);
+			const archive = archiver("zip", { zlib: { level: 9 } });
+
+			output.on("close", () => resolve());
+			archive.on("error", (err) => reject(err));
+
+			archive.pipe(output);
+
+			for (const f of files) {
+				archive.file(f.absPath, { name: f.relPath });
+			}
+
+			archive.finalize();
+		});
+
+		return filePath;
 	}
 
 	/** Delete log date directories older than 14 days. */

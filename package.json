@@ -91,7 +91,7 @@
 		"@types/node": "^24.4.0",
 		"@types/semver": "^7.7.1",
 		"ai": "6.0.1",
-		"bits-ui": "^2.9.8",
+		"bits-ui": "^2.10.0",
 		"clsx": "^2.1.1",
 		"electron": "^38.1.0",
 		"embla-carousel-svelte": "^8.6.0",

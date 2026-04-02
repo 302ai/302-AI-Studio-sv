@@ -514,6 +514,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("loggerService:log", (event, level, category, processType, message, args) =>
 		loggerService.log(event, level, category, processType, message, args),
 	);
+	ipcMain.handle("loggerService:exportLogs", (event, startDate, startHour, endDate, endHour) =>
+		loggerService.exportLogs(event, startDate, startHour, endDate, endHour),
+	);
 
 	// mcpService service registration
 	ipcMain.handle("mcpService:getToolsFromServer", (event, server) =>
@@ -758,6 +761,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("devLauncherService:stopDevSandbox");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
 	ipcMain.removeHandler("loggerService:log");
+	ipcMain.removeHandler("loggerService:exportLogs");
 	ipcMain.removeHandler("mcpService:getToolsFromServer");
 	ipcMain.removeHandler("mcpService:closeServer");
 	ipcMain.removeHandler("notificationService:notifyTaskCompleted");

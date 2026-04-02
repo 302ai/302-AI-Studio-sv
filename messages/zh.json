@@ -1427,5 +1427,16 @@
 	"open_claw_wechat_install_failed_retry": "微信插件安装失败，请重试",
 	"open_claw_wechat_loading_hint": "精彩即将呈现～",
 	"open_claw_channel_telegram": "Telegram",
-	"open_claw_telegram_get_bot_token": "点击此处获取密钥"
+	"open_claw_telegram_get_bot_token": "点击此处获取密钥",
+	"about_export_logs": "导出日志",
+	"about_export_logs_title": "导出日志",
+	"about_export_logs_date": "日期",
+	"about_export_logs_start_time": "开始时间",
+	"about_export_logs_end_time": "结束时间",
+	"about_export_logs_export": "导出",
+	"about_export_logs_exporting": "导出中...",
+	"about_export_logs_success": "日志导出成功",
+	"about_export_logs_failed": "日志导出失败",
+	"about_export_logs_no_logs": "所选时间范围内没有日志文件",
+	"about_export_logs_description": "导出日志，仅用于排查问题，可能包含对话记录、设备信息等数据"
 }
