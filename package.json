@@ -46,6 +46,8 @@
 		"test:e2e": "playwright test",
 		"test": "npm run test:unit -- --run && npm run test:e2e",
 		"generate:ipc": "tsx scripts/generate-ipc.ts",
+		"gen:service": "tsx scripts/generate.ts service",
+		"gen:state": "tsx scripts/generate.ts state",
 		"postinstall": "pre-commit install --install-hooks --hook-type commit-msg"
 	},
 	"devDependencies": {
