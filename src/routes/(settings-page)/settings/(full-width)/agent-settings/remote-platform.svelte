@@ -84,7 +84,7 @@
 </script>
 
 <!-- Agent Sandbox List Section -->
-<div class="space-y-3">
+<div class="flex flex-col gap-3 h-full">
 	<div class="flex items-center justify-between">
 		<div class="flex items-center">
 			<h2 class="text-base font-medium">{m.title_agent_sandbox_list()}</h2>
@@ -115,7 +115,12 @@
 	</div>
 
 	<!-- Sandbox List -->
-	<div class={cn("p-2", filteredSandboxes.length > 0 && "rounded-lg border bg-muted/20")}>
+	<div
+		class={cn(
+			"p-2 flex-1 min-h-0",
+			filteredSandboxes.length > 0 && "rounded-lg border bg-muted/20",
+		)}
+	>
 		{#if filteredSandboxes.length === 0}
 			<Empty.Root>
 				<Empty.Content class="h-[200px] flex flex-col items-center justify-start pt-8">
@@ -125,7 +130,7 @@
 				</Empty.Content>
 			</Empty.Root>
 		{:else}
-			<div class="max-h-[360px] overflow-y-auto pr-1">
+			<div class="overflow-y-auto h-full pr-1">
 				<div class="flex flex-col gap-2">
 					{#each filteredSandboxes as sandbox (sandbox.sandboxId)}
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
