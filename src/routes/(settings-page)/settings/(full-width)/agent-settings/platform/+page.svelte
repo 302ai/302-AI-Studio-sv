@@ -36,15 +36,17 @@
 
 <div class="mx-auto flex flex-col h-full w-full max-w-3xl gap-6">
 	<!-- Platform Section -->
-	<SegButton
-		options={platformOptions}
-		selectedKey={selectedPlatform}
-		onSelect={handlePlatformSelect}
-		class="!h-[52px] shrink-0"
-		thumbClass="!h-[40px]"
-	/>
+	<div class="sticky top-0 w-full bg-background z-50">
+		<SegButton
+			options={platformOptions}
+			selectedKey={selectedPlatform}
+			onSelect={handlePlatformSelect}
+			class="!h-[52px] shrink-0"
+			thumbClass="!h-[40px]"
+		/>
+	</div>
 
-	<div class="grow overflow-y-auto px-2">
+	<div class="grow">
 		{#if selectedPlatform === "remote"}
 			<RemotePlatform />
 		{:else if selectedPlatform === "cloud"}
