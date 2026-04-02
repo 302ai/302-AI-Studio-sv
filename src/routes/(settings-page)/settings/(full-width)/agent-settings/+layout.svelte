@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { page } from "$app/state";
-	import { DraggableList, type DndItem } from "$lib/components/buss/draggable-list";
 	import { m } from "$lib/paraglide/messages";
+	import { cn } from "$lib/utils";
 
 	const { children } = $props();
 
-	interface AgentNavItem extends DndItem {
+	interface AgentNavItem {
+		id: string;
 		name: string;
 		href: string;
+		label: string;
 	}
 
 	let items = $state<AgentNavItem[]>([
@@ -40,8 +42,21 @@
 	<div class="border-r w-56">
 		<div class="flex h-full w-auto min-w-[var(--setting-width)] justify-end">
 			<div class="flex w-full justify-end p-3">
-				<div class="h-full w-full">
-					<DraggableList bind:items bind:activeId={activeItemId} class="h-full" />
+				<div class="h-full w-full flex flex-col">
+					{#each items as item (item.id)}
+						<a
+							draggable="false"
+							href={item.href}
+							class={cn(
+								"flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium outline-hidden transition-colors my-1",
+								item.id === activeItemId
+									? "bg-tab-active text-tab-fg-active shadow-sm"
+									: "bg-tab-inactive text-tab-fg-inactive hover:bg-tab-hover",
+							)}
+						>
+							<span class="w-full truncate">{item.label}</span>
+						</a>
+					{/each}
 				</div>
 			</div>
 		</div>
