@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { m } from "$lib/paraglide/messages.js";
-	import Sidebar from "$lib/settings/sidebar.svelte";
 	import type { SidebarItem } from "$lib/settings/sidebar.svelte";
+	import Sidebar from "$lib/settings/sidebar.svelte";
 
 	const items: SidebarItem[] = [
 		{
@@ -31,7 +31,7 @@
 		},
 		{
 			name: "agent-settings",
-			path: "/settings/agent-settings/platform",
+			path: "/settings/agent-settings",
 			labelKey: m.title_code_agent(),
 		},
 		{
@@ -62,4 +62,4 @@
 	];
 </script>
 
-<Sidebar {items} />
+<Sidebar {items} className="bg-settings-sidebar-bg" />

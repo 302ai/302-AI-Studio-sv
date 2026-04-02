@@ -1,9 +1,17 @@
-<script lang="ts">
-	import { goto } from "$app/navigation";
-	import { page } from "$app/state";
-	import { cn } from "$lib/utils";
-	import { onMount } from "svelte";
+<script lang="ts" module>
+	interface Props {
+		className?: string;
+		items: SidebarItem[];
+	}
 
+	export interface SidebarItem {
+		name: string;
+		path: string;
+		labelKey: string;
+	}
+</script>
+
+<script lang="ts">
 	/**
 	 *Description: sidebar
 	 *Assisted: Qwen3.6 Plus
@@ -11,17 +19,12 @@
 	 *Date: 2026-04-01
 	 **/
 
-	export interface SidebarItem {
-		name: string;
-		path: string;
-		labelKey: string;
-	}
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
+	import { cn } from "$lib/utils";
+	import { onMount } from "svelte";
 
-	interface Props {
-		items: SidebarItem[];
-	}
-
-	let { items }: Props = $props();
+	let { items, className }: Props = $props();
 
 	let indicatorStyle: { top: string; height: string } = $state({ top: "", height: "" });
 	const itemElements: HTMLElement[] = $state([]);
@@ -60,7 +63,8 @@
 	});
 </script>
 
-<div class="bg-settings-sidebar-bg flex h-full w-auto min-w-[var(--setting-width)] justify-end">
+<!-- "bg-settings-sidebar-bg flex h-full w-auto min-w-[var(--setting-width)] justify-end" -->
+<div class={`${className} flex h-full w-auto min-w-[var(--setting-width)] justify-end`}>
 	<div class="flex w-full justify-end p-3">
 		<div
 			bind:this={containerElement}
