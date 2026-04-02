@@ -62,9 +62,7 @@
 </script>
 
 <div class="mx-auto flex w-full flex-col items-center">
-	<div
-		class="flex items-center justify-center py-8 sticky top-0 bg-background/15 backdrop-blur-md z-99"
-	>
+	<div class="flex items-center justify-center py-8 sticky top-12.5 bg-background z-99">
 		<div class="flex items-center gap-y-[22px] flex-col">
 			<ModelIcon modelName="ai302" className="size-[62px]" forceApplyClassName />
 			<div class="flex items-center gap-y-2 flex-col">
@@ -104,7 +102,7 @@
 	</div>
 
 	<div
-		class="flex items-center gap-4 py-4 sticky bottom-0 z-99 bg-background/15 backdrop-blur-md w-full justify-center"
+		class="flex items-center gap-4 py-4 sticky bottom-0 z-99 bg-background w-full justify-center"
 	>
 		<div class="flex items-center gap-2">
 			{#each socialMedias as item (item.name)}
