@@ -3,6 +3,7 @@ import fixPath from "fix-path";
 fixPath();
 
 import { DEFAULT_SHORTCUTS } from "@shared/config/default-shortcuts";
+import { createLogger } from "@shared/logger";
 import type { ShortcutBinding, ShortcutScope } from "@shared/types/shortcut";
 import { app, net, protocol } from "electron";
 import started from "electron-squirrel-startup";
@@ -23,6 +24,8 @@ import {
 import { StorageService } from "./services/storage-service";
 import { UpdaterService } from "./services/updater-service";
 import { setupNetworkInterceptor } from "./utils/network-interceptor";
+
+const logger = createLogger("main");
 
 protocol.registerSchemesAsPrivileged([
 	{ scheme: "app", privileges: { standard: true, secure: true } },
@@ -45,12 +48,12 @@ if (!gotTheLock) {
 } else {
 	// This instance got the lock, listen for second instance attempts
 	app.on("second-instance", (_event, commandLine, _workingDirectory) => {
-		console.log("[Main] second-instance event, commandLine:", commandLine);
+		logger.info("[Main] second-instance event, commandLine:", commandLine);
 
 		// Check for deep link
 		const deepLinkUrl = commandLine.find((arg) => arg.startsWith("ai302studio://"));
 		if (deepLinkUrl) {
-			console.log("[Main] Found deep link:", deepLinkUrl);
+			logger.info("[Main] Found deep link:", deepLinkUrl);
 			// Deep link service will handle this via its own second-instance listener
 		}
 
@@ -80,7 +83,7 @@ if (!gotTheLock) {
 		setupNetworkInterceptor();
 
 		const serverPort = await initServer();
-		console.log(`Server initialized on port ${serverPort}`);
+		logger.info(`Server initialized on port ${serverPort}`);
 		WebContentsFactory.setServerPort(serverPort);
 
 		// Initialize system tray
@@ -96,19 +99,19 @@ if (!gotTheLock) {
 		if (!isMac) {
 			// Skip if we are currently installing an update, as updater service handles its own stop logic
 			if (UpdaterService.isInstallingUpdateNow()) {
-				console.log(
+				logger.info(
 					"[Main] Update installation in progress, skipping window-all-closed handler",
 				);
 				return;
 			}
 
 			// Stop local sandbox before quitting (for Windows/Linux)
-			console.log("[Main] All windows closed, stopping local sandbox...");
+			logger.info("[Main] All windows closed, stopping local sandbox...");
 			if (app.isPackaged) {
 				// The program is running in the production environment.
 				await localVibeService.stopLocalSandbox();
 			}
-			console.log("[Main] Local sandbox stopped, quitting app...");
+			logger.info("[Main] Local sandbox stopped, quitting app...");
 			app.quit();
 		}
 	});
@@ -130,9 +133,9 @@ if (!gotTheLock) {
 			});
 
 			// Stop local sandbox before exiting (for macOS)
-			console.log("[Main] Stopping local sandbox before exit...");
+			logger.info("[Main] Stopping local sandbox before exit...");
 			const result = await localVibeService.stopLocalSandbox();
-			console.log("[Main] Local sandbox stop result:", result);
+			logger.info("[Main] Local sandbox stop result:", result);
 
 			app.exit();
 		});
@@ -141,7 +144,7 @@ if (!gotTheLock) {
 	app.on("activate", () => {
 		// Check if windows are currently being initialized
 		if (windowService.isInitializingWindows()) {
-			console.log("[Main] Windows are initializing, skipping activate handler");
+			logger.info("[Main] Windows are initializing, skipping activate handler");
 			return;
 		}
 
@@ -169,11 +172,11 @@ async function init() {
 
 	// Initialize plugin system
 	try {
-		console.log("[Main] Initializing plugin system...");
+		logger.info("[Main] Initializing plugin system...");
 		await initializePluginSystem();
-		console.log("[Main] Plugin system initialized successfully");
+		logger.info("[Main] Plugin system initialized successfully");
 	} catch (error) {
-		console.error("[Main] Failed to initialize plugin system:", error);
+		logger.error("[Main] Failed to initialize plugin system:", error);
 		// Continue app initialization even if plugin system fails
 	}
 

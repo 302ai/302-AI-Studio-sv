@@ -16,12 +16,15 @@ import { clone } from "$lib/utils/clone";
 import { ChatErrorHandler, type ChatError } from "$lib/utils/error-handler";
 import { replaceCodeBlockAt } from "$lib/utils/markdown-code-block";
 import { Chat } from "@ai-sdk/svelte";
+import { createLogger } from "@shared/logger";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
 import { hashApiKey } from "@shared/utils/hash";
 import { nanoid } from "nanoid";
 import { untrack } from "svelte";
 import { toast } from "svelte-sonner";
+
+const logger = createLogger("chat");
 
 import { startListeningOpenClawCronJobs, stopListeningOpenClawCronJobs } from "$lib/api/openclaw";
 import {
@@ -121,7 +124,7 @@ $effect.root(() => {
 			(m) => m.id === selected.id && m.providerId === selected.providerId,
 		);
 		if (!exists) {
-			console.log(
+			logger.info(
 				`[ChatState] Clearing selectedModel ${selected.providerId}:${selected.id} (model not found)`,
 			);
 			persistedChatParamsState.current.selectedModel = null;
@@ -148,7 +151,7 @@ $effect.root(() => {
 
 		// If some IDs were removed, update the state
 		if (validServerIds.length !== currentServerIds.length) {
-			console.log(
+			logger.info(
 				`[ChatState] Cleaning up deleted MCP server IDs: ${currentServerIds.length - validServerIds.length} removed`,
 			);
 			persistedChatParamsState.current = {
@@ -178,13 +181,13 @@ $effect.root(() => {
 			const vibeDefault = preferencesSettings.vibeNewSessionModel;
 			if (vibeDefault) {
 				persistedChatParamsState.current.selectedModel = vibeDefault;
-				console.log("[ChatState] Applied Vibe default model:", vibeDefault.name);
+				logger.info("Applied Vibe default model:", vibeDefault.name);
 			}
 		} else {
 			const chatDefault = preferencesSettings.newSessionModel;
 			if (chatDefault) {
 				persistedChatParamsState.current.selectedModel = chatDefault;
-				console.log("[ChatState] Applied Chat default model:", chatDefault.name);
+				logger.info("Applied Chat default model:", chatDefault.name);
 			}
 		}
 	});
@@ -228,7 +231,7 @@ class ChatState {
 		if (this.suggestionsAbortController) {
 			this.suggestionsAbortController.abort();
 			this.suggestionsAbortController = null;
-			console.log("[Suggestions] Cancelled pending suggestions generation");
+			logger.info("Cancelled pending suggestions generation");
 		}
 	}
 
@@ -240,7 +243,7 @@ class ChatState {
 		if (this.titleAbortController) {
 			this.titleAbortController.abort();
 			this.titleAbortController = null;
-			console.log("[Title] Cancelled pending title generation");
+			logger.info("Cancelled pending title generation");
 		}
 	}
 
@@ -252,7 +255,7 @@ class ChatState {
 		if (this.summaryAbortController) {
 			this.summaryAbortController.abort();
 			this.summaryAbortController = null;
-			console.log("[ContextSummary] Cancelled pending summary generation");
+			logger.info("Cancelled pending summary generation");
 		}
 	}
 
@@ -371,7 +374,7 @@ class ChatState {
 				(deletedModelIds.includes(currentModel.id) ||
 					(!!providerId && currentModel.providerId === providerId));
 			if (shouldClear) {
-				console.log(
+				logger.info(
 					`[ChatState] Clearing selectedModel ${currentModel?.providerId}:${currentModel?.id} (models deleted)`,
 				);
 				this.selectedModel = null;
@@ -690,7 +693,7 @@ class ChatState {
 			);
 
 			if (hookResult.handled) {
-				console.log("[ChatState] Error handled by plugin hook");
+				logger.info("Error handled by plugin hook");
 
 				// If plugin suggests custom message, use it
 				if (hookResult.message) {
@@ -717,7 +720,7 @@ class ChatState {
 				ChatErrorHandler.showErrorNotification(chatError);
 			}
 		} catch (hookError) {
-			console.error("[ChatState] Error hook failed:", hookError);
+			logger.error("Error hook failed:", hookError);
 			// Fallback to default error handling
 			notificationState.setError(chatError);
 			ChatErrorHandler.showErrorNotification(chatError);
@@ -827,13 +830,13 @@ class ChatState {
 						"stop" in modifiedContext &&
 						modifiedContext.stop === true
 					) {
-						console.log("[ChatState] Message sending cancelled by plugin hook");
+						logger.info("Message sending cancelled by plugin hook");
 						return;
 					}
 
-					console.log("[ChatState] Before send message hook executed successfully");
+					logger.info("Before send message hook executed successfully");
 				} catch (hookError) {
-					console.error("[ChatState] Before send message hook failed:", hookError);
+					logger.error("Before send message hook failed:", hookError);
 					// Continue with message sending even if hook fails
 				}
 
@@ -967,7 +970,7 @@ class ChatState {
 
 	regenerateMessage = async (messageId?: string) => {
 		if (!this.canRegenerate) {
-			console.warn("Cannot regenerate: chat is not ready or no model selected");
+			logger.warn("Cannot regenerate: chat is not ready or no model selected");
 			return;
 		}
 
@@ -1050,7 +1053,7 @@ class ChatState {
 				},
 			});
 		} catch (error) {
-			console.error("Failed to regenerate message:", error);
+			logger.error("Failed to regenerate message:", error);
 			this.handleChatError(error);
 		}
 	};
@@ -1188,7 +1191,7 @@ class ChatState {
 
 	rerunToolCall = async (messageId: string, toolCallId: string) => {
 		if (!this.canRegenerate) {
-			console.warn("Cannot rerun tool: chat is not ready or no model selected");
+			logger.warn("Cannot rerun tool: chat is not ready or no model selected");
 			return;
 		}
 
@@ -1227,7 +1230,7 @@ class ChatState {
 				},
 			});
 		} catch (error) {
-			console.error("Failed to rerun tool call:", error);
+			logger.error("Failed to rerun tool call:", error);
 			this.handleChatError(error);
 		}
 	};
@@ -1236,13 +1239,13 @@ class ChatState {
 		const titleModel = preferencesSettings.titleGenerationModel;
 
 		if (!titleModel) {
-			console.warn("No title generation model configured");
+			logger.warn("No title generation model configured");
 			toast.warning(m.toast_no_title_generation_model());
 			return;
 		}
 
 		if (this.messages.length < 2) {
-			console.warn("Not enough messages to generate title");
+			logger.warn("Not enough messages to generate title");
 			toast.warning(m.toast_empty_message());
 			return;
 		}
@@ -1307,9 +1310,9 @@ class ChatState {
 				if (codeAgentState.enabled) {
 					try {
 						await codeAgentState.handleThreadTitleUpdated({ title: result.title });
-						console.log("[ChatState] Session note synced to 302.AI");
+						logger.info("Session note synced to 302.AI");
 					} catch (syncError) {
-						console.error("[ChatState] Failed to sync session note:", syncError);
+						logger.error("Failed to sync session note:", syncError);
 						// 不阻塞主流程，只记录错误
 					}
 				}
@@ -1319,7 +1322,7 @@ class ChatState {
 				toast.error(m.toast_title_generation_failed());
 			}
 		} catch (error) {
-			console.error("Failed to generate title manually:", error);
+			logger.error("Failed to generate title manually:", error);
 			toast.error(m.toast_title_generation_failed());
 		} finally {
 			this.isGeneratingTitle = false;
@@ -1352,7 +1355,7 @@ class ChatState {
 			// 1. find the target message index
 			const messageIndex = this.messages.findIndex((msg) => msg.id === upToMessageId);
 			if (messageIndex === -1) {
-				console.error("Message not found:", upToMessageId);
+				logger.error("Message not found:", upToMessageId);
 				return null;
 			}
 
@@ -1396,7 +1399,7 @@ class ChatState {
 
 			return newThreadId;
 		} catch (error) {
-			console.error("Failed to create branch:", error);
+			logger.error("Failed to create branch:", error);
 			return null;
 		}
 	}
@@ -1410,7 +1413,7 @@ class ChatState {
 			// 1. find the target message index
 			const messageIndex = this.messages.findIndex((msg) => msg.id === upToMessageId);
 			if (messageIndex === -1) {
-				console.error("Message not found:", upToMessageId);
+				logger.error("Message not found:", upToMessageId);
 				return null;
 			}
 
@@ -1513,7 +1516,7 @@ class ChatState {
 
 			return newThreadId;
 		} catch (error) {
-			console.error("Failed to create branch and send:", error);
+			logger.error("Failed to create branch and send:", error);
 			return null;
 		}
 	}
@@ -1664,15 +1667,15 @@ class ChatState {
 				try {
 					await pushOpenClawCronJobRecord({ items: cronJobRecords });
 				} catch (error) {
-					console.error("[CronPoll] failed to push cron job records:", error);
+					logger.error("failed to push cron job records:", error);
 				}
 
-				console.log(
+				logger.info(
 					`[CronPoll] successfully merged ${newMessages.length} cron job results`,
 				);
 			}
 		} catch (error) {
-			console.error("[CronPoll] failed to merge cron job results:", error);
+			logger.error("failed to merge cron job results:", error);
 		} finally {
 			this.isRenderingTaskResult = false;
 		}
@@ -1792,7 +1795,7 @@ export const chat = new Chat({
 		},
 	}),
 	onError: (error) => {
-		console.error("[Chat onError]", error);
+		logger.error("", error);
 	},
 	onFinish: async ({ messages, isAbort, isDisconnect, isError }) => {
 		const { messages: updatedMessages, onFinishStartTime } = await onChatFinishPrePersist({

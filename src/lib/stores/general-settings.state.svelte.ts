@@ -1,4 +1,7 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import { applyLocale } from "$lib/i18n";
 import { getLocale } from "$lib/paraglide/runtime";
 import type {
@@ -36,7 +39,7 @@ $effect.root(() => {
 				applyLocale(language as "zh" | "en");
 			}
 		} catch (error) {
-			console.error("Failed to set locale:", error);
+			logger.error("Failed to set locale:", error);
 		}
 
 		applyLayout(layoutMode);

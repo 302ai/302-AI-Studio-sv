@@ -1,4 +1,7 @@
 import type { StorageValue } from "@302ai/unstorage";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 
 class PersistedStateBatcher {
 	private pendingWrites = new Map<string, StorageValue>();
@@ -36,15 +39,12 @@ class PersistedStateBatcher {
 		try {
 			await window.electronAPI.storageService.setItems(items);
 		} catch (error) {
-			console.error(
-				"[Batcher] Batch write failed, falling back to individual writes:",
-				error,
-			);
+			logger.error("[Batcher] Batch write failed, falling back to individual writes:", error);
 			for (const item of items) {
 				try {
 					await window.electronAPI.storageService.setItem(item.key, item.value);
 				} catch (e) {
-					console.error(`[Batcher] Failed to write ${item.key}:`, e);
+					logger.error(`[Batcher] Failed to write ${item.key}:`, e);
 				}
 			}
 		}

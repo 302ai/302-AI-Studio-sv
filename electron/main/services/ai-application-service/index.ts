@@ -1,4 +1,7 @@
 import type { LanguageCode } from "@shared/storage/general-settings";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import type { AiApplication } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
 import { isUndefined } from "es-toolkit";
@@ -74,7 +77,7 @@ export class AiApplicationService {
 
 			await aiApplicationStorage.setAiApplications(aiApplicationState);
 		} catch (error) {
-			console.error("Failed to init ai applications:", error);
+			logger.error("Failed to init ai applications:", error);
 		} finally {
 			broadcastService.broadcastChannelToAll("ai-applications:loading", false);
 		}
@@ -116,7 +119,7 @@ export class AiApplicationService {
 			});
 		} catch (error) {
 			broadcastService.broadcastChannelToAll("ai-applications:loading", false);
-			console.error("Failed to update ai application url map:", error);
+			logger.error("Failed to update ai application url map:", error);
 		}
 	}
 

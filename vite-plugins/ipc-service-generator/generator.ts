@@ -178,6 +178,17 @@ export class IpcStructureGenerator {
 			"Parameters",
 		]);
 
+		// Helper to check if a token is a string literal (e.g. "main", 'renderer')
+		// or a numeric literal (e.g. 0, 42) — these are not importable types.
+		const isLiteral = (t: string): boolean => {
+			const s = t.trim();
+			return (
+				(s.startsWith('"') && s.endsWith('"')) ||
+				(s.startsWith("'") && s.endsWith("'")) ||
+				/^\d+$/.test(s)
+			);
+		};
+
 		// Skip anonymous object types entirely
 		if (this.isAnonymousObjectType(typeString)) {
 			return types;
@@ -197,7 +208,7 @@ export class IpcStructureGenerator {
 			}
 
 			// Add the base type only if it's not a built-in (e.g., StorageItem from StorageItem<T>)
-			if (!builtInTypes.has(baseType)) {
+			if (!builtInTypes.has(baseType) && !isLiteral(baseType)) {
 				types.add(baseType);
 			}
 
@@ -206,7 +217,7 @@ export class IpcStructureGenerator {
 			if (genericArgs && !this.isAnonymousObjectType(genericArgs.trim())) {
 				const innerTypes = this.extractTypesFromString(genericArgs);
 				innerTypes.forEach((t) => {
-					if (!builtInTypes.has(t)) {
+					if (!builtInTypes.has(t) && !isLiteral(t)) {
 						types.add(t);
 					}
 				});
@@ -220,13 +231,17 @@ export class IpcStructureGenerator {
 				// Type was cleaned, extract from the cleaned version
 				const innerTypes = this.extractTypesFromString(cleanType);
 				innerTypes.forEach((t) => {
-					if (!builtInTypes.has(t)) {
+					if (!builtInTypes.has(t) && !isLiteral(t)) {
 						types.add(t);
 					}
 				});
 			} else {
-				// Simple type, add as is (unless it's an anonymous object type or built-in)
-				if (!this.isAnonymousObjectType(cleanType) && !builtInTypes.has(cleanType)) {
+				// Simple type, add as is (unless it's an anonymous object type, built-in, or literal)
+				if (
+					!this.isAnonymousObjectType(cleanType) &&
+					!builtInTypes.has(cleanType) &&
+					!isLiteral(cleanType)
+				) {
 					types.add(cleanType);
 				}
 			}

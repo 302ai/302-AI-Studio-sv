@@ -5,6 +5,9 @@
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
 	import { toast } from "svelte-sonner";
 	import SkillManualForm from "../skill-manual-form.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		onRefresh?: () => void;
@@ -81,7 +84,7 @@ description:
 				}
 			}
 		} catch (error) {
-			console.error("Failed to create skill:", error);
+			logger.error("Failed to create skill:", error);
 			toast.error(m.skills_create_failed());
 		} finally {
 			isCreating = false;

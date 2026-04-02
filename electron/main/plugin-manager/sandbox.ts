@@ -8,6 +8,9 @@
 import * as vm from "vm";
 import * as path from "path";
 import type { PluginPermission } from "@302ai/studio-plugin-sdk";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("plugin-manager");
 
 /**
  * Sandbox context for plugin execution
@@ -34,11 +37,11 @@ export function createPluginSandbox(context: SandboxContext): vm.Context {
 	const sandboxContext: Record<string, unknown> = {
 		// Console (always allowed)
 		console: {
-			log: (...args: unknown[]) => console.log(`[Plugin:${context.pluginId}]`, ...args),
-			info: (...args: unknown[]) => console.info(`[Plugin:${context.pluginId}]`, ...args),
-			warn: (...args: unknown[]) => console.warn(`[Plugin:${context.pluginId}]`, ...args),
-			error: (...args: unknown[]) => console.error(`[Plugin:${context.pluginId}]`, ...args),
-			debug: (...args: unknown[]) => console.debug(`[Plugin:${context.pluginId}]`, ...args),
+			log: (...args: unknown[]) => logger.info(`[Plugin:${context.pluginId}]`, ...args),
+			info: (...args: unknown[]) => logger.info(`[Plugin:${context.pluginId}]`, ...args),
+			warn: (...args: unknown[]) => logger.warn(`[Plugin:${context.pluginId}]`, ...args),
+			error: (...args: unknown[]) => logger.error(`[Plugin:${context.pluginId}]`, ...args),
+			debug: (...args: unknown[]) => logger.debug(`[Plugin:${context.pluginId}]`, ...args),
 		},
 
 		// Timers (always allowed but tracked)
@@ -232,7 +235,7 @@ export function executeInSandbox(
 			displayErrors: true,
 		});
 	} catch (error) {
-		console.error(`[Sandbox] Error executing code for plugin ${context.pluginId}:`, error);
+		logger.error(`[Sandbox] Error executing code for plugin ${context.pluginId}:`, error);
 		throw error;
 	}
 }
@@ -269,7 +272,7 @@ export function validatePermissions(permissions: PluginPermission[]): {
 	// Check for dangerous permission combinations
 	if (permissions.includes("filesystem") && permissions.includes("network")) {
 		// This is potentially dangerous but not necessarily invalid
-		console.warn(
+		logger.warn(
 			"[Sandbox] Plugin requests both filesystem and network permissions. " +
 				"This combination should be reviewed carefully.",
 		);

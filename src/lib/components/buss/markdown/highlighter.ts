@@ -1,4 +1,7 @@
 import type { Highlighter as ShikiHighlighter } from "shiki";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 import { createHighlighter, createJavaScriptRegexEngine } from "shiki";
 
 const CODE_THEMES = ["vitesse-dark", "vitesse-light"] as const;
@@ -317,7 +320,7 @@ export const ensureLanguageLoaded = async (lang: string): Promise<void> => {
 
 	// 不在支持列表中，回退到纯文本
 	if (!ALL_LANGUAGES.includes(normalized)) {
-		console.warn(`Language ${normalized} is not supported, falling back to plaintext`);
+		logger.warn(`Language ${normalized} is not supported, falling back to plaintext`);
 		return;
 	}
 
@@ -327,7 +330,7 @@ export const ensureLanguageLoaded = async (lang: string): Promise<void> => {
 		await highlighter.loadLanguage(normalized);
 		loadedLanguages.add(normalized);
 	} catch (error) {
-		console.warn(`Failed to load language: ${normalized}`, error);
+		logger.warn(`Failed to load language: ${normalized}`, error);
 	} finally {
 		loadingQueue.delete(normalized);
 	}

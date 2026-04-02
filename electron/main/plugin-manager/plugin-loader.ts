@@ -4,15 +4,18 @@
  * Loads and initializes plugins from file system
  */
 
+import type { InstalledPlugin, PluginMetadata, ProviderPlugin } from "@302ai/studio-plugin-sdk";
+import { createLogger } from "@shared/logger";
+import { app } from "electron";
 import * as fs from "fs";
 import * as path from "path";
-import { app } from "electron";
 import semver from "semver";
-import type { InstalledPlugin, PluginMetadata, ProviderPlugin } from "@302ai/studio-plugin-sdk";
-import { pluginRegistry } from "./plugin-registry";
+import { storageService } from "../services/storage-service";
 import { hookManager } from "./hook-manager";
 import { createPluginAPI } from "./plugin-api";
-import { storageService } from "../services/storage-service";
+import { pluginRegistry } from "./plugin-registry";
+
+const logger = createLogger("plugin-manager");
 
 /**
  * Plugin loader implementation
@@ -42,7 +45,7 @@ export class PluginLoader {
 		for (const dir of this.pluginDirs) {
 			if (!fs.existsSync(dir)) {
 				fs.mkdirSync(dir, { recursive: true });
-				console.log(`[PluginLoader] Created plugin directory: ${dir}`);
+				logger.info(`[PluginLoader] Created plugin directory: ${dir}`);
 			}
 		}
 	}
@@ -51,13 +54,13 @@ export class PluginLoader {
 	 * Load all plugins from configured directories
 	 */
 	async loadAllPlugins(): Promise<void> {
-		console.log("[PluginLoader] Loading plugins from directories:", this.pluginDirs);
+		logger.info("[PluginLoader] Loading plugins from directories:", this.pluginDirs);
 
 		for (const dir of this.pluginDirs) {
 			await this.loadPluginsFromDirectory(dir);
 		}
 
-		console.log(`[PluginLoader] Loaded ${this.loadedPlugins.size} plugins`);
+		logger.info(`[PluginLoader] Loaded ${this.loadedPlugins.size} plugins`);
 	}
 
 	/**
@@ -65,7 +68,7 @@ export class PluginLoader {
 	 */
 	private async loadPluginsFromDirectory(dir: string): Promise<void> {
 		if (!fs.existsSync(dir)) {
-			console.warn(`[PluginLoader] Directory does not exist: ${dir}`);
+			logger.warn(`[PluginLoader] Directory does not exist: ${dir}`);
 			return;
 		}
 
@@ -79,7 +82,7 @@ export class PluginLoader {
 			try {
 				await this.loadPlugin(pluginPath);
 			} catch (error) {
-				console.error(`[PluginLoader] Failed to load plugin from ${pluginPath}:`, error);
+				logger.error(`[PluginLoader] Failed to load plugin from ${pluginPath}:`, error);
 			}
 		}
 	}
@@ -88,7 +91,7 @@ export class PluginLoader {
 	 * Load a single plugin
 	 */
 	async loadPlugin(pluginPath: string): Promise<InstalledPlugin> {
-		console.log(`[PluginLoader] Loading plugin from: ${pluginPath}`);
+		logger.info(`[PluginLoader] Loading plugin from: ${pluginPath}`);
 
 		// Load and validate metadata
 		const metadata = await this.loadMetadata(pluginPath);
@@ -137,13 +140,13 @@ export class PluginLoader {
 			}
 
 			if (configKeys.length > 0) {
-				console.log(
+				logger.info(
 					`[PluginLoader] Loaded ${configKeys.length} config values for ${metadata.id}:`,
 					plugin.config,
 				);
 			}
 		} catch (error) {
-			console.warn(`[PluginLoader] Failed to load saved config for ${metadata.id}:`, error);
+			logger.warn(`[PluginLoader] Failed to load saved config for ${metadata.id}:`, error);
 			// Continue with default config
 		}
 
@@ -180,7 +183,7 @@ export class PluginLoader {
 			plugin.status = "enabled";
 			this.loadedPlugins.set(metadata.id, plugin);
 
-			console.log(`[PluginLoader] Successfully loaded plugin: ${metadata.id}`);
+			logger.info(`[PluginLoader] Successfully loaded plugin: ${metadata.id}`);
 		} catch (error) {
 			plugin.status = "error";
 			plugin.error = error instanceof Error ? error.message : String(error);
@@ -221,9 +224,7 @@ export class PluginLoader {
 	private validateCompatibility(metadata: PluginMetadata): void {
 		// For now, just log a warning if compatibility info is missing
 		if (!metadata.compatibleVersion) {
-			console.warn(
-				`[PluginLoader] Plugin ${metadata.id} does not specify compatible version`,
-			);
+			logger.warn(`[PluginLoader] Plugin ${metadata.id} does not specify compatible version`);
 			return;
 		}
 
@@ -232,17 +233,17 @@ export class PluginLoader {
 
 		try {
 			if (!semver.satisfies(appVersion, metadata.compatibleVersion)) {
-				console.warn(
+				logger.warn(
 					`[PluginLoader] Plugin ${metadata.id} specifies compatibility with ${metadata.compatibleVersion}, ` +
 						`but current app version is ${appVersion}. The plugin may not work correctly.`,
 				);
 			} else {
-				console.log(
+				logger.info(
 					`[PluginLoader] Plugin ${metadata.id} is compatible with app version ${appVersion}`,
 				);
 			}
 		} catch (err) {
-			console.error(
+			logger.error(
 				`[PluginLoader] Failed to check version compatibility for plugin ${metadata.id}:`,
 				err,
 			);
@@ -277,10 +278,10 @@ export class PluginLoader {
 			const { pathToFileURL } = await import("url");
 			const moduleUrl = pathToFileURL(modulePath).href;
 
-			console.log(`[PluginLoader] Importing plugin from: ${moduleUrl}`);
+			logger.info(`[PluginLoader] Importing plugin from: ${moduleUrl}`);
 			pluginModule = await import(moduleUrl);
 		} catch (error) {
-			console.error(`[PluginLoader] Failed to import plugin module:`, error);
+			logger.error(`[PluginLoader] Failed to import plugin module:`, error);
 			throw new Error(`Failed to load plugin module: ${error}`);
 		}
 
@@ -344,7 +345,7 @@ export class PluginLoader {
 			}
 		}
 
-		console.log(`[PluginLoader] Registered hooks for plugin: ${pluginId}`);
+		logger.info(`[PluginLoader] Registered hooks for plugin: ${pluginId}`);
 	}
 
 	/**
@@ -375,7 +376,7 @@ export class PluginLoader {
 		// Remove from loaded plugins
 		this.loadedPlugins.delete(pluginId);
 
-		console.log(`[PluginLoader] Unloaded plugin: ${pluginId}`);
+		logger.info(`[PluginLoader] Unloaded plugin: ${pluginId}`);
 	}
 
 	/**
@@ -395,7 +396,7 @@ export class PluginLoader {
 		// Load plugin again
 		await this.loadPlugin(pluginPath);
 
-		console.log(`[PluginLoader] Reloaded plugin: ${pluginId}`);
+		logger.info(`[PluginLoader] Reloaded plugin: ${pluginId}`);
 	}
 
 	/**

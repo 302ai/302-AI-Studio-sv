@@ -1,5 +1,8 @@
 <script lang="ts" module>
 	import type { AttachmentFile } from "@shared/types";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	export interface DocumentViewerProps {
 		attachment: AttachmentFile;
@@ -58,7 +61,7 @@
 				}
 			};
 		} catch (error) {
-			console.error("Failed to create document preview:", error);
+			logger.error("Failed to create document preview:", error);
 			hasError = true;
 		}
 	});

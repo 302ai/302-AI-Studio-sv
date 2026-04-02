@@ -2,6 +2,9 @@ import type { ChatMessage } from "$lib/types/chat";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { Model } from "@shared/types";
 import { withGenerationFallback, type FallbackModelConfig } from "./generation-fallback";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export interface GenerateSuggestionsRequest {
 	messages: ChatMessage[];
@@ -64,7 +67,7 @@ export async function generateSuggestions(
 	const port = serverPort ?? 8089;
 
 	try {
-		console.log("[Suggestions] Starting async generation...");
+		logger.info("[Suggestions] Starting async generation...");
 		const suggestions = await withGenerationFallback({
 			operation: "suggestions generation",
 			model,
@@ -87,15 +90,15 @@ export async function generateSuggestions(
 			return [];
 		}
 
-		console.log("[Suggestions] Received suggestions:", suggestions);
+		logger.info("[Suggestions] Received suggestions:", suggestions);
 		return suggestions;
 	} catch (error) {
 		// Don't log abort errors as they are expected when user sends a new message
 		if (error instanceof DOMException && error.name === "AbortError") {
-			console.log("[Suggestions] Generation aborted");
+			logger.info("[Suggestions] Generation aborted");
 			return [];
 		}
-		console.error("[Suggestions] Generation failed:", error);
+		logger.error("[Suggestions] Generation failed:", error);
 		return [];
 	}
 }

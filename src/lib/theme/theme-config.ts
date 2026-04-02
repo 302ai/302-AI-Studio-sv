@@ -5,6 +5,9 @@
 import type { ThemeConfig } from "./theme-types.js";
 import { parseThemeConfig } from "./theme-parser.js";
 import dsCssContent from "./ds.css?inline";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("theme");
 
 let cachedConfig: ThemeConfig | null = null;
 
@@ -19,7 +22,7 @@ export async function loadThemeConfig(): Promise<ThemeConfig> {
 	try {
 		cachedConfig = parseThemeConfig(dsCssContent);
 	} catch (error) {
-		console.warn("Failed to load theme configuration:", error);
+		logger.warn("Failed to load theme configuration:", error);
 		cachedConfig = { categories: [] };
 	}
 

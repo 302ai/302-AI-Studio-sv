@@ -11,6 +11,9 @@ import {
 import { type } from "arktype";
 import { createLocalCodeAgentKy } from "./core/local-code-agent-ky";
 import { getCodeAgentKy } from "./utils";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -110,7 +113,7 @@ export async function updateSessionNote(
 
 		const validated = updateSessionNoteResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate update session note response:", validated.summary);
+			logger.error("Failed to validate update session note response:", validated.summary);
 			return {
 				success: false,
 				error: "Invalid response format from update session note API",
@@ -212,7 +215,7 @@ export async function listLocalSessions(): Promise<ListLocalClaudeCodeSessionsRe
 
 		const validated = listLocalClaudeCodeSessionsResponse(response);
 		if (validated instanceof type.errors) {
-			console.error(
+			logger.error(
 				"Failed to validate list local claude code sessions response:",
 				validated.summary,
 			);
@@ -220,7 +223,7 @@ export async function listLocalSessions(): Promise<ListLocalClaudeCodeSessionsRe
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to list local claude code sessions:", error);
+		logger.error("Failed to list local claude code sessions:", error);
 		throw error;
 	}
 }

@@ -1,4 +1,7 @@
 import { app, type IpcMainInvokeEvent } from "electron";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { broadcastService } from "../broadcast-service";
 import { ssoService } from "../sso-service";
 import { windowService } from "../window-service";
@@ -25,7 +28,7 @@ export class DeepLinkService {
 	 * Can be called from renderer: window.electronAPI.deepLinkService.simulateDeepLink(url)
 	 */
 	async simulateDeepLink(_event: IpcMainInvokeEvent, url: string): Promise<void> {
-		console.log("[DeepLink] Simulating deep link:", url);
+		logger.info("Simulating deep link:", url);
 		this.handleDeepLink(url);
 	}
 
@@ -37,19 +40,19 @@ export class DeepLinkService {
 			return;
 		}
 
-		console.log("[DeepLink] Initializing protocol handler");
+		logger.info("Initializing protocol handler");
 
 		// Register custom protocol handler
 		if (!app.isDefaultProtocolClient("ai302studio")) {
 			const result = app.setAsDefaultProtocolClient("ai302studio");
-			console.log("[DeepLink] Set as default protocol client result:", result);
+			logger.info("Set as default protocol client result:", result);
 		} else {
-			console.log("[DeepLink] Already set as default protocol client");
+			logger.info("Already set as default protocol client");
 		}
 
 		// Handle deep links (macOS/Linux)
 		app.on("open-url", (event, url) => {
-			console.log("[DeepLink] open-url event received:", url);
+			logger.info("open-url event received:", url);
 			event.preventDefault();
 			this.handleDeepLink(url);
 		});
@@ -63,11 +66,11 @@ export class DeepLinkService {
 	setupSecondInstanceHandler() {
 		// Handle deep links (Windows) via second-instance event
 		app.on("second-instance", (_event, commandLine, _workingDirectory) => {
-			console.log("[DeepLink] second-instance handler, commandLine:", commandLine);
+			logger.info("second-instance handler, commandLine:", commandLine);
 			// Windows: commandLine contains the deep link URL
 			const url = commandLine.find((arg) => arg.startsWith("ai302studio://"));
 			if (url) {
-				console.log("[DeepLink] Found deep link:", url);
+				logger.info("Found deep link:", url);
 				this.handleDeepLink(url);
 			}
 		});
@@ -79,11 +82,11 @@ export class DeepLinkService {
 	handleDeepLink(url: string) {
 		// Trim whitespace that might be added by copy-paste or terminal
 		const trimmedUrl = url.trim();
-		console.log("[DeepLink] Processing URL:", trimmedUrl);
+		logger.info("Processing URL:", trimmedUrl);
 
 		try {
 			const parsedUrl = new URL(trimmedUrl);
-			console.log("[DeepLink] Parsed URL:", {
+			logger.info("Parsed URL:", {
 				protocol: parsedUrl.protocol,
 				host: parsedUrl.host,
 				pathname: parsedUrl.pathname,
@@ -100,10 +103,10 @@ export class DeepLinkService {
 					this.handleSkillImport(parsedUrl);
 					break;
 				default:
-					console.warn("[DeepLink] Unknown path:", path);
+					logger.warn("Unknown path:", path);
 			}
 		} catch (error) {
-			console.error("[DeepLink] Failed to parse URL:", error);
+			logger.error("Failed to parse URL:", error);
 		}
 	}
 
@@ -113,13 +116,13 @@ export class DeepLinkService {
 	 */
 	private handleAuthCallback(parsedUrl: URL) {
 		const apiKey = parsedUrl.searchParams.get("apikey");
-		console.log("[DeepLink] Auth callback, API key:", apiKey ? "exists" : "missing");
+		logger.info("Auth callback, API key:", apiKey ? "exists" : "missing");
 
 		if (apiKey) {
 			// Delegate to SSO service for callback handling
 			ssoService.handleSsoCallbackFromServer(apiKey);
 		} else {
-			console.warn("[DeepLink] No API key in auth callback");
+			logger.warn("No API key in auth callback");
 		}
 	}
 
@@ -129,10 +132,10 @@ export class DeepLinkService {
 	 */
 	private async handleSkillImport(parsedUrl: URL) {
 		const githubUrl = parsedUrl.searchParams.get("url");
-		console.log("[DeepLink] Skill import, GitHub URL:", githubUrl || "missing");
+		logger.info("Skill import, GitHub URL:", githubUrl || "missing");
 
 		if (!githubUrl) {
-			console.warn("[DeepLink] No GitHub URL in skill import");
+			logger.warn("No GitHub URL in skill import");
 			return;
 		}
 
@@ -156,7 +159,7 @@ export class DeepLinkService {
 		setTimeout(() => {
 			const data: SkillImportData = { url: githubUrl };
 			broadcastService.broadcastChannelToAll("skill:import-requested", data);
-			console.log("[DeepLink] Broadcasted skill import event");
+			logger.info("Broadcasted skill import event");
 		}, 500);
 	}
 }

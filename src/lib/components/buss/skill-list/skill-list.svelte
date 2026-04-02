@@ -18,6 +18,9 @@
 	import SkillEditDialog from "./skill-edit-dialog.svelte";
 	import { canFavoriteSkill } from "./skill-favorite-availability";
 	import { getOrderedSkillsByFavorite } from "./skill-favorite-order";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		userSkills: Skill[];
@@ -173,7 +176,7 @@
 			toast.dismiss(toastId);
 			toast.success(m.skills_download_success());
 		} catch (e) {
-			console.error("Failed to download skill:", e);
+			logger.error("Failed to download skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_download_failed());
 		} finally {
@@ -206,7 +209,7 @@
 			deletingSkill = null;
 			onRefresh?.();
 		} catch (e) {
-			console.error("Failed to delete skill:", e);
+			logger.error("Failed to delete skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_delete_failed());
 		} finally {
@@ -255,7 +258,7 @@
 		} catch (e) {
 			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
 			optimisticFavoriteAts.set(skill.name, previousFavoriteAt);
-			console.error("Failed to toggle skill favorite:", e);
+			logger.error("Failed to toggle skill favorite:", e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
 			favoritingSkills.delete(skill.name);

@@ -1,5 +1,8 @@
 import { isChatTab } from "@shared/storage/tab";
 import type { ShortcutContext } from "@shared/types/shortcut";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { BrowserWindow } from "electron";
 import { isNull } from "es-toolkit";
 import { aiApplicationService } from "../ai-application-service";
@@ -9,7 +12,7 @@ import { windowService } from "../window-service";
 export class ShortcutActionsHandler {
 	async handle(action: string, ctx: ShortcutContext): Promise<void> {
 		const { windowId } = ctx;
-		console.log(`[MainActionsHandler] Received Action: "${action}" (Window: ${windowId})`);
+		logger.info(`[MainActionsHandler] Received Action: "${action}" (Window: ${windowId})`);
 
 		// Tab-related actions require more than one tab
 		const tabRelatedActions = [
@@ -118,10 +121,10 @@ export class ShortcutActionsHandler {
 					break;
 
 				default:
-					console.warn(`Unknown shortcut action: ${action}`);
+					logger.warn(`Unknown shortcut action: ${action}`);
 			}
 		} catch (error) {
-			console.error(`Error handling shortcut action ${action}:`, error);
+			logger.error(`Error handling shortcut action ${action}:`, error);
 		}
 	}
 
@@ -206,7 +209,7 @@ export class ShortcutActionsHandler {
 		const activeTabId = tabService.getActiveTabId(windowId);
 
 		if (!activeTabId) {
-			console.log(`[ActionsHandler] No active tab found`);
+			logger.info(`[ActionsHandler] No active tab found`);
 			return;
 		}
 
@@ -218,14 +221,14 @@ export class ShortcutActionsHandler {
 				ctx: { windowId },
 			});
 		} else {
-			console.log(`[ActionsHandler] Cannot send - view is null or destroyed`);
+			logger.info(`[ActionsHandler] Cannot send - view is null or destroyed`);
 		}
 	}
 
 	private async handleToggleSidebarRight(windowId: number): Promise<void> {
 		const activeTabId = tabService.getActiveTabId(windowId);
 		if (!activeTabId) {
-			console.log(`[ActionsHandler] No active tab found`);
+			logger.info(`[ActionsHandler] No active tab found`);
 			return;
 		}
 
@@ -237,7 +240,7 @@ export class ShortcutActionsHandler {
 				ctx: { windowId },
 			});
 		} else {
-			console.log(`[ActionsHandler] Cannot send - view is null or destroyed`);
+			logger.info(`[ActionsHandler] Cannot send - view is null or destroyed`);
 		}
 	}
 
@@ -300,9 +303,7 @@ export class ShortcutActionsHandler {
 			});
 		} else {
 			// For tool view
-			console.log(
-				"[ShortcutActionsHandler] handleRegenerateResponse - activeView is null or destroyed",
-			);
+			logger.info("handleRegenerateResponse - activeView is null or destroyed");
 			await aiApplicationService.handleAiApplicationReload(windowId);
 		}
 	}
@@ -359,7 +360,7 @@ export class ShortcutActionsHandler {
 
 	private async handleTogglePlanMode(windowId: number): Promise<void> {
 		const activeView = this.getActiveTabWebContents(windowId);
-		console.log(
+		logger.info(
 			`[MainActionsHandler] handleTogglePlanMode for Window ${windowId}. Active View: ${activeView ? activeView.id : "None"}`,
 		);
 		if (activeView && !activeView.isDestroyed()) {

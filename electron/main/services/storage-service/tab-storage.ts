@@ -1,4 +1,7 @@
 import { prefixStorage, TabState, type Tab, type ThreadParmas } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { isNull } from "es-toolkit";
 import { isEmpty } from "es-toolkit/compat";
 import { nanoid } from "nanoid";
@@ -37,11 +40,11 @@ export class TabStorage extends StorageService<TabState> {
 		} catch (error) {
 			// If we get a JSON parsing error, the file is corrupted
 			if (error instanceof SyntaxError) {
-				console.error(`Thread ${threadId} has corrupted JSON format: ${error.message}`);
+				logger.error(`Thread ${threadId} has corrupted JSON format: ${error.message}`);
 				return false;
 			}
 			// Other errors (file access, etc.) are also treated as invalid
-			console.error(`Failed to validate thread ${threadId}:`, error);
+			logger.error(`Failed to validate thread ${threadId}:`, error);
 			return false;
 		}
 	}

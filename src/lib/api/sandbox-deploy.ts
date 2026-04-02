@@ -1,6 +1,9 @@
 import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 import { type } from "arktype";
 import { getCodeAgentKy } from "./utils";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export const deploySandboxRequestSchema = type({
 	sandbox_id: "string",
@@ -72,12 +75,12 @@ export async function deploySandboxProject(
 
 		const validated = deploySandboxResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate deploy sandbox response:", validated.summary);
+			logger.error("Failed to validate deploy sandbox response:", validated.summary);
 			throw new Error("Invalid response format from deploy sandbox API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to deploy sandbox project:", error);
+		logger.error("Failed to deploy sandbox project:", error);
 
 		// ky throws HTTPError on non-2xx responses (e.g. 500).
 		// Try to read the response body to extract the actual deploy error.

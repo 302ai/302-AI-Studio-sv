@@ -1,4 +1,7 @@
 import { buildMcpServerUrl, fetch302McpServers } from "$lib/api/302-mcp-servers";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import type { SsoApikeyDialogAction } from "$lib/components/buss/sso-apikey-dialog";
 import { m } from "$lib/paraglide/messages.js";
 import { open302SsoLogin } from "$lib/utils/sso";
@@ -135,7 +138,7 @@ class SsoStateManager {
 
 			await this.completeLoginFlow();
 		} catch (error) {
-			console.error("Failed to handle API key conflict:", error);
+			logger.error("Failed to handle API key conflict:", error);
 			this.hasError = true;
 			toast.error(m.sso_error());
 			this.isLoading = false;
@@ -183,14 +186,14 @@ class SsoStateManager {
 	private async fetchAndImportMcpServers() {
 		const token = userState.token;
 		if (!token) {
-			console.log("[302 MCP] No token available, skipping MCP server fetch");
+			logger.info("No token available, skipping MCP server fetch");
 			return;
 		}
 
 		try {
 			const servers302 = await fetch302McpServers(token);
 			if (servers302.length === 0) {
-				console.log("[302 MCP] No MCP servers found from 302.AI");
+				logger.info("No MCP servers found from 302.AI");
 				return;
 			}
 
@@ -223,12 +226,12 @@ class SsoStateManager {
 
 			// Add servers that don't already exist (by name)
 			const result = mcpState.addServersIfNotExists(mcpServers);
-			console.log(
+			logger.info(
 				`[302 MCP] Import complete: ${result.added} added, ${result.skipped} skipped (already exist)`,
 			);
 		} catch (error) {
 			// Silently log errors - don't affect login flow
-			console.error("[302 MCP] Failed to fetch/import MCP servers:", error);
+			logger.error("Failed to fetch/import MCP servers:", error);
 		}
 	}
 

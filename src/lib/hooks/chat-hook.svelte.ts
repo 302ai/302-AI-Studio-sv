@@ -1,3 +1,7 @@
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("chat");
+
 import { generateContextSummary } from "$lib/api/context-summary-generation";
 import { generateSuggestions } from "$lib/api/suggestions-generation";
 import { generateTitle, type FallbackModelConfig } from "$lib/api/title-generation";
@@ -69,10 +73,10 @@ export async function onChatFinishPrePersist(
 	const onFinishStartTime = performance.now();
 
 	// eslint-disable-next-line svelte/prefer-svelte-reactivity
-	console.log("[onFinish] Stream completion received at:", new Date().toISOString());
-	console.log("更新完成", $state.snapshot(messages));
-	console.debug("[onFinish] messages", JSON.stringify($state.snapshot(messages), null, 2));
-	console.log("[onFinish] isAbort:", isAbort, "isDisconnect:", isDisconnect, "isError:", isError);
+	logger.info("[onFinish] Stream completion received at:", new Date().toISOString());
+	logger.info("更新完成", $state.snapshot(messages));
+	logger.debug("[onFinish] messages", JSON.stringify($state.snapshot(messages), null, 2));
+	logger.info("[onFinish] isAbort:", isAbort, "isDisconnect:", isDisconnect, "isError:", isError);
 
 	// Performance: Single-pass reverse iteration to find last user and assistant messages
 	const perfStart = performance.now();
@@ -88,7 +92,7 @@ export async function onChatFinishPrePersist(
 		}
 		if (lastUserIdx !== -1 && lastAssistantIdx !== -1) break;
 	}
-	console.log(`[Performance] Message lookup: ${(performance.now() - perfStart).toFixed(3)}ms`);
+	logger.info(`[Performance] Message lookup: ${(performance.now() - perfStart).toFixed(3)}ms`);
 
 	// Update last user message metadata
 	if (lastUserIdx !== -1) {
@@ -125,7 +129,7 @@ export async function onChatFinishPrePersist(
 		chatState.messages = messages;
 	}
 
-	console.log("onFinish: async ({ messages }) pendingResultMetadata", pendingResultMetadata);
+	logger.info("onFinish: async ({ messages }) pendingResultMetadata", pendingResultMetadata);
 	const lastMessageIdx = messages.length - 1;
 	if (codeAgentEnabled && pendingResultMetadata && lastMessageIdx >= 0) {
 		const lastMessage = messages[lastMessageIdx];
@@ -134,13 +138,13 @@ export async function onChatFinishPrePersist(
 				...(lastMessage.metadata as MessageMetadata),
 				result: pendingResultMetadata,
 			};
-			console.log("[ChatState] Merged result metadata into message:", pendingResultMetadata);
+			logger.info("[ChatState] Merged result metadata into message:", pendingResultMetadata);
 		}
 		clearPendingResultMetadata();
 	}
 
-	console.log("onFinish: async ({ messages }) codeAgentEnabled", codeAgentEnabled);
-	console.log("onFinish: async ({ messages }) autoDeploy", autoDeploy);
+	logger.info("onFinish: async ({ messages }) codeAgentEnabled", codeAgentEnabled);
+	logger.info("onFinish: async ({ messages }) autoDeploy", autoDeploy);
 
 	const isDeployCommand =
 		lastUserIdx !== -1 &&
@@ -152,7 +156,7 @@ export async function onChatFinishPrePersist(
 		canDeploy: codeAgentEnabled && (autoDeploy || isDeployCommand),
 		lastMessage: messages[lastMessageIdx],
 	});
-	console.log(
+	logger.info(
 		"[onFinish] CHAT_FINISHED emitted, elapsed:",
 		(performance.now() - onFinishStartTime).toFixed(2),
 		"ms",
@@ -236,10 +240,10 @@ export async function onChatFinishPostPersist(args: OnChatFinishPostPersistArgs)
 			const serializedResponse = $state.snapshot(response);
 
 			await pluginService.executeAfterSendMessageHook(serializedContext, serializedResponse);
-			console.log("[ChatState] After send message hook executed successfully");
+			logger.info("[ChatState] After send message hook executed successfully");
 		}
 	} catch (hookError) {
-		console.error("[ChatState] After send message hook failed:", hookError);
+		logger.error("[ChatState] After send message hook failed:", hookError);
 		// Continue execution even if hook fails
 	}
 
@@ -250,7 +254,7 @@ export async function onChatFinishPostPersist(args: OnChatFinishPostPersistArgs)
 		persistedMessagesState,
 	});
 
-	console.log(
+	logger.info(
 		"[onFinish] Callback complete, total elapsed:",
 		(performance.now() - onFinishStartTime).toFixed(2),
 		"ms",
@@ -343,7 +347,7 @@ async function handleTitleGeneration(context: AfterChatFinishedContext): Promise
 				);
 
 				if (isPostProcessInterrupted(chatState, abortSignal)) {
-					console.log("[Title] Skipped: request was aborted or new stream in progress");
+					logger.info("[Title] Skipped: request was aborted or new stream in progress");
 					return;
 				}
 				if (!result) return;
@@ -355,10 +359,10 @@ async function handleTitleGeneration(context: AfterChatFinishedContext): Promise
 				await tabBarState.updateTabTitle(persistedChatParamsState.current.id, result.title);
 			} catch (error) {
 				if (error instanceof DOMException && error.name === "AbortError") {
-					console.log("[Title] Generation cancelled");
+					logger.info("[Title] Generation cancelled");
 					return;
 				}
-				console.error("Failed to generate title:", error);
+				logger.error("Failed to generate title:", error);
 			} finally {
 				chatState.isGeneratingTitle = false;
 			}
@@ -428,7 +432,7 @@ async function handleContextSummaryGeneration(context: AfterChatFinishedContext)
 		);
 
 		if (isPostProcessInterrupted(chatState, abortSignal)) {
-			console.log("[ContextSummary] Skipped: aborted or stream in progress");
+			logger.info("[ContextSummary] Skipped: aborted or stream in progress");
 			return;
 		}
 		if (!summaryResult) return;
@@ -437,13 +441,13 @@ async function handleContextSummaryGeneration(context: AfterChatFinishedContext)
 		chatState.compressedMessageCount = newCompressionEnd;
 		chatState.lastCompressionMessageId = messages[newCompressionEnd - 1]?.id;
 		persistedChatParamsState.flush();
-		console.log(`[ContextSummary] Updated: ${newCompressionEnd} messages compressed`);
+		logger.info(`[ContextSummary] Updated: ${newCompressionEnd} messages compressed`);
 	} catch (error) {
 		if (error instanceof DOMException && error.name === "AbortError") {
-			console.log("[ContextSummary] Generation cancelled");
+			logger.info("[ContextSummary] Generation cancelled");
 			return;
 		}
-		console.error("[ContextSummary] Failed:", error);
+		logger.error("[ContextSummary] Failed:", error);
 	}
 }
 
@@ -481,7 +485,7 @@ async function handleSuggestionsGeneration(context: AfterChatFinishedContext): P
 		);
 
 		if (isPostProcessInterrupted(chatState, abortSignal)) {
-			console.log("[Suggestions] Skipped: request was aborted or new stream in progress");
+			logger.info("[Suggestions] Skipped: request was aborted or new stream in progress");
 			return;
 		}
 		if (suggestions.length === 0) return;
@@ -510,16 +514,16 @@ async function handleSuggestionsGeneration(context: AfterChatFinishedContext): P
 		persistedMessagesState.current = updatedMessages;
 		if (!chatState.isStreaming && !chatState.isSubmitted) {
 			chatState.messages = updatedMessages;
-			console.log("[Suggestions] Successfully added to message");
+			logger.info("[Suggestions] Successfully added to message");
 			return;
 		}
 
-		console.log(
+		logger.info(
 			"[Suggestions] Saved to persisted state, skipped chat.messages update due to active stream",
 		);
 	} catch (error) {
 		if (error instanceof DOMException && error.name === "AbortError") return;
-		console.error("[Suggestions] Failed to generate:", error);
+		logger.error("[Suggestions] Failed to generate:", error);
 	}
 }
 
@@ -538,16 +542,16 @@ export async function afterChatFinished(args: {
 	]);
 
 	if (titleResult.status === "rejected") {
-		console.error("[afterChatFinished] Title post-process failed:", titleResult.reason);
+		logger.error("[afterChatFinished] Title post-process failed:", titleResult.reason);
 	}
 	if (summaryResult.status === "rejected") {
-		console.error(
+		logger.error(
 			"[afterChatFinished] Context summary post-process failed:",
 			summaryResult.reason,
 		);
 	}
 	if (suggestionsResult.status === "rejected") {
-		console.error(
+		logger.error(
 			"[afterChatFinished] Suggestions post-process failed:",
 			suggestionsResult.reason,
 		);

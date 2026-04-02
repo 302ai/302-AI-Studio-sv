@@ -31,6 +31,9 @@
 		isLanguageLoaded,
 		LANGUAGE_ALIASES,
 	} from "./highlighter";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface RenderedToken {
 		id: string;
@@ -245,7 +248,7 @@
 			const { svg } = await mermaid.render(id, code);
 			mermaidSvg = svg;
 		} catch (error) {
-			console.error("Mermaid render error:", error);
+			logger.error("Mermaid render error:", error);
 			mermaidError = error instanceof Error ? error.message : "Failed to render diagram";
 			mermaidSvg = "";
 			// Mermaid inserts an error SVG element into the DOM on failure — clean it up
@@ -544,7 +547,7 @@
 					syncCode(props.code);
 				})
 				.catch((error) => {
-					console.warn(`Failed to load language ${targetLanguage}:`, error);
+					logger.warn(`Failed to load language ${targetLanguage}:`, error);
 				});
 			return true;
 		}
@@ -564,7 +567,7 @@
 				const loaded = highlighter.getInternalContext().getLoadedThemes();
 				next = loaded.includes(requested) ? requested : next;
 			} catch (error) {
-				console.warn("Unable to read loaded themes", error);
+				logger.warn("Unable to read loaded themes", error);
 			}
 		} else if (requested) {
 			next = requested;

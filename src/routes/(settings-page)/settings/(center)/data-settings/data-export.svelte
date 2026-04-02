@@ -5,6 +5,9 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { Download } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let isExporting = $state(false);
 
@@ -19,7 +22,7 @@
 				});
 			}
 		} catch (error) {
-			console.error("Failed to export data:", error);
+			logger.error("Failed to export data:", error);
 			toast.error(m.settings_exportFailed(), {
 				description: error instanceof Error ? error.message : String(error),
 			});

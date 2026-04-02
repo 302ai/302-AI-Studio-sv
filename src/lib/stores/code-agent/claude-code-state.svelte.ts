@@ -6,6 +6,7 @@ import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
 import type { ChatMessage } from "$lib/types/chat";
 import { clone } from "$lib/utils/clone";
+import { createLogger } from "@shared/logger";
 import {
 	type CodeAgentMetadata,
 	type CodeAgentType,
@@ -18,6 +19,8 @@ import { persistedClaudeCodeSandboxState } from "./claude-code-sandbox-state.sve
 import { codeAgentState } from "./code-agent-state.svelte";
 import { BUILTIN_SKILLS } from "./constant";
 import { persistedLocalClaudeCodeSessionsState } from "./local-claude-code-sandbox-state.svelte";
+
+const logger = createLogger("state");
 
 export interface ClaudeCodeSandboxInfo {
 	sandboxId: string;
@@ -157,7 +160,7 @@ class ClaudeCodeAgentState {
 		const metadata = message.metadata as any;
 		if (!metadata?.result?.preDeploy?.success) return null;
 
-		console.log("[ClaudeCodeAgentState] Pre-deploy check passed, triggering deployment...");
+		logger.info("Pre-deploy check passed, triggering deployment...");
 
 		if (!this.sandboxId) return null;
 
@@ -169,19 +172,19 @@ class ClaudeCodeAgentState {
 			});
 
 			if (result.success) {
-				console.log("[ClaudeCodeAgentState] Deployment successful:", result);
+				logger.info("Deployment successful:", result);
 				return result;
 			} else {
 				const errorMsg =
 					result.error || `Deploy API returned success=false (status: ${result.status})`;
-				console.error("[ClaudeCodeAgentState] Deployment failed:", result);
+				logger.error("Deployment failed:", result);
 				toast.error(`${m.toast_deploy_failed()}`);
 				this.#lastDeployApiError = errorMsg;
 				return null;
 			}
 		} catch (error) {
 			const errorMsg = String(error);
-			console.error("[ClaudeCodeAgentState] Deployment error:", error);
+			logger.error("Deployment error:", error);
 			toast.error(`${m.toast_deploy_failed()}: ${errorMsg}`);
 			this.#lastDeployApiError = errorMsg;
 			return null;
@@ -213,7 +216,7 @@ class ClaudeCodeAgentState {
 				url: match[4],
 				cover: match[5],
 			};
-			console.log("[ClaudeCodeAgentState] Parsed deploy info:", info);
+			logger.info("Parsed deploy info:", info);
 			return info;
 		}
 
@@ -227,7 +230,7 @@ class ClaudeCodeAgentState {
 			deployInfo.url,
 			deployInfo.id,
 		);
-		console.log("[ClaudeCodeAgentState] Deploy detected:", { isDeploy: true, deployInfo });
+		logger.info("Deploy detected:", { isDeploy: true, deployInfo });
 	}
 
 	/**
@@ -260,7 +263,7 @@ class ClaudeCodeAgentState {
 		errorText: string,
 		sendRetryMessage: (content: string) => Promise<void>,
 	): Promise<void> {
-		console.log(
+		logger.info(
 			`[ClaudeCodeAgentState] Sending deploy error to model: ${errorText.slice(0, 200)}`,
 		);
 

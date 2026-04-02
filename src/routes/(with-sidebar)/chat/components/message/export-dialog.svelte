@@ -23,6 +23,9 @@
 	import { SvelteSet } from "svelte/reactivity";
 	import ExportMessageList from "./export-message-list.svelte";
 	import { htmlExportUtils, KATEX_MACROS } from "./html-export-utils.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	// ============================================================================
 	// Types
@@ -517,7 +520,7 @@
 				open = false;
 			}
 		} catch (error) {
-			console.error("Export failed:", error);
+			logger.error("Export failed:", error);
 			toast.error(m.export_failed());
 		} finally {
 			isExporting = false;

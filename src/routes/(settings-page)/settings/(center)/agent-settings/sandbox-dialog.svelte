@@ -13,11 +13,15 @@
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { formatDateTimeFull } from "$lib/utils/date-format";
 	import { ExternalLink, Loader2 } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { ClaudeCodeSandboxInfo } from "@shared/storage/code-agent";
 	import { toast } from "svelte-sonner";
 	import SandboxDeleteConfirmDialog from "./sandbox-delete-confirm-dialog.svelte";
 	import SessionDeleteConfirmDialog from "./session-delete-confirm-dialog.svelte";
 	import SessionRemarkDialog from "./session-remark-dialog.svelte";
+
+	const logger = createLogger("ui");
+
 	interface Props {
 		open?: boolean;
 		sandbox?: ClaudeCodeSandboxInfo | null;
@@ -119,7 +123,7 @@
 					true,
 				);
 			} catch (error) {
-				console.error("[handleConfirmSessionRename] Failed to update isManualNote:", error);
+				logger.error("Failed to update isManualNote:", error);
 			}
 
 			// Refresh sessions
@@ -140,12 +144,7 @@
 		if (!sandbox || !session) return;
 		isOpeningSession = session.sessionId;
 
-		console.log(
-			"[handleOpenSession] Starting, sandbox:",
-			sandbox.sandboxId,
-			"session:",
-			session.sessionId,
-		);
+		logger.info("Starting, sandbox:", sandbox.sandboxId, "session:", session.sessionId);
 
 		try {
 			// Check if there's an existing thread with proper data for this session
@@ -155,7 +154,7 @@
 					session.sessionId,
 				);
 
-			console.log("[handleOpenSession] getThreadIdBySessionId result:", {
+			logger.info("getThreadIdBySessionId result:", {
 				isOK,
 				threadId: existingThreadId,
 			});
@@ -164,21 +163,19 @@
 			if (isOK && existingThreadId) {
 				const result =
 					await window.electronAPI.windowService.navigateToThread(existingThreadId);
-				console.log("[handleOpenSession] navigateToThread result:", result);
+				logger.info("navigateToThread result:", result);
 
 				if (result.success) {
 					onClose();
 					return;
 				}
 				// Navigation failed - thread data might be missing, continue to create new
-				console.log(
-					"[handleOpenSession] Navigation to existing thread failed, will create new thread",
-				);
+				logger.info("Navigation to existing thread failed, will create new thread");
 			}
 
 			// Generate a new thread ID
 			const newThreadId = crypto.randomUUID();
-			console.log("[handleOpenSession] Generated new threadId:", newThreadId);
+			logger.info("Generated new threadId:", newThreadId);
 
 			// Setup the thread with all configurations FIRST (thread data + code agent config + state)
 			const setupResult = await window.electronAPI.codeAgentService.createThreadForSession(
@@ -190,26 +187,26 @@
 				session.note || "",
 				session.workspacePath || "",
 			);
-			console.log("[handleOpenSession] createThreadForSession result:", setupResult);
+			logger.info("createThreadForSession result:", setupResult);
 
 			if (!setupResult.isOK) {
-				console.error("[handleOpenSession] Failed to setup thread");
+				logger.error("Failed to setup thread");
 				toast.error(m.toast_navigate_failed());
 				return;
 			}
 
 			// Now navigate to the thread in the main window (this will create a new tab there)
 			const navResult = await window.electronAPI.windowService.navigateToThread(newThreadId);
-			console.log("[handleOpenSession] navigateToThread result:", navResult);
+			logger.info("navigateToThread result:", navResult);
 
 			if (navResult.success) {
 				onClose();
 			} else {
-				console.error("[handleOpenSession] Failed to navigate to new thread");
+				logger.error("Failed to navigate to new thread");
 				toast.error(m.toast_navigate_failed());
 			}
 		} catch (error) {
-			console.error("[handleOpenSession] Failed to open session:", error);
+			logger.error("Failed to open session:", error);
 			toast.error(m.toast_navigate_failed());
 		} finally {
 			isOpeningSession = "";

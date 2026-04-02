@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 import { parse } from "superjson";
 import { match, P } from "ts-pattern";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("utils");
 
 export function getAdditionalArgv(key: string) {
 	for (const arg of process.argv) {
@@ -22,7 +25,7 @@ export function loadDataFromTempFile(filePath?: string) {
 		const serializedData = readFileSync(filePath, "utf8");
 		return parse(serializedData);
 	} catch (error) {
-		console.error("Failed to load data from temp file:", filePath, error);
+		logger.error("Failed to load data from temp file:", filePath, error);
 		return null;
 	}
 }

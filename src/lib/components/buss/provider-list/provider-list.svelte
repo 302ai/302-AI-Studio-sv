@@ -1,6 +1,9 @@
 <script lang="ts" module>
 	import type { ModelProvider } from "@shared/types";
 	import type { DndEvent } from "svelte-dnd-action";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		providers: ModelProvider[];
@@ -74,7 +77,7 @@
 
 			onReorder?.(e.detail.items);
 		} catch (error) {
-			console.error("Error finalizing drag operation:", error);
+			logger.error("Error finalizing drag operation:", error);
 		} finally {
 			queueMicrotask(() => {
 				isDndFinalizing = false;
@@ -93,7 +96,7 @@
 			providerElement?.classList.add("bg-tab-active", "text-tab-fg-active", "shadow-sm");
 			providerElement?.classList.remove("bg-tab-inactive", "text-tab-fg-inactive");
 		} catch (error) {
-			console.warn("Error transforming dragged element:", error);
+			logger.warn("Error transforming dragged element:", error);
 		}
 	}
 

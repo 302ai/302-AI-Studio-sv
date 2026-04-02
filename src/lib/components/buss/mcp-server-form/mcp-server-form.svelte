@@ -24,6 +24,9 @@
 	import type { McpServerType } from "@shared/storage/mcp";
 	import { nanoid } from "nanoid";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface McpTool {
 		name: string;
@@ -236,7 +239,7 @@
 				goto("/settings/mcp-settings");
 			}
 		} catch (error) {
-			console.error("Failed to save MCP server:", error);
+			logger.error("Failed to save MCP server:", error);
 			toast.error(mode === "add" ? m.mcp_error_save() : m.mcp_error_update());
 		} finally {
 			isSaving = false;
@@ -303,7 +306,7 @@
 				toast.error(result.error || m.mcp_error_update());
 			}
 		} catch (error) {
-			console.error("Failed to fetch tools:", error);
+			logger.error("Failed to fetch tools:", error);
 			toast.error(m.mcp_error_update());
 		} finally {
 			isLoadingTools = false;

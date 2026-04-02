@@ -33,6 +33,9 @@
 	import ChatInputBoxHeader from "./chat-input-box-header.svelte";
 	import SendMessageButton from "./code-agent/send-message-button.svelte";
 	import StreamingIndicator from "./streaming-indicator.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	// Get skills that have forceUse=true
 	const forcedSkills = $derived(codeAgentState.skills.filter((s) => s.forceUse));
@@ -307,7 +310,7 @@
 						const content = await fileToBase64(file);
 						chatState.updateAttachment(attachmentId, { preview: content });
 					} catch (e) {
-						console.error("Failed to read file content:", e);
+						logger.error("Failed to read file content:", e);
 					}
 				} else {
 					// 正常的预览生成逻辑

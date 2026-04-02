@@ -8,6 +8,9 @@
 	import { dataSettings } from "$lib/stores/data-settings.state.svelte";
 	import { Upload } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	const { dataService } = window.electronAPI;
 
@@ -43,10 +46,10 @@
 					}, 1000);
 				}, 1500);
 			} else {
-				console.log("取消导入");
+				logger.info("取消导入");
 			}
 		} catch (error) {
-			console.error("Import error:", error);
+			logger.error("Import error:", error);
 			toast.error(m.settings_importFailed(), {
 				description: error instanceof Error ? error.message : "Unknown error",
 			});
@@ -89,10 +92,10 @@
 					}, 1000);
 				}, 1500);
 			} else {
-				console.log("取消导入");
+				logger.info("取消导入");
 			}
 		} catch (error) {
-			console.error("Legacy import error:", error);
+			logger.error("Legacy import error:", error);
 			toast.error(m.settings_importFailed(), {
 				description: error instanceof Error ? error.message : "Unknown error",
 			});

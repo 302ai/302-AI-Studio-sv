@@ -10,11 +10,14 @@
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import weixinChannelState from "$lib/stores/code-agent/openclaw/channel/weixin-channel-state.svelte";
 	import { ArrowDownToLine, CircleAlert } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { OpenClawWeixinLoginMsg } from "@shared/types";
 	import QRCodeStyling from "qr-code-styling";
 	import { onMount, tick } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { LdrsLoader } from "../../ldrs-loader";
+
+	const logger = createLogger("ui");
 
 	let wechatElm = $state<HTMLDivElement | null>(null);
 	const qrCode = new QRCodeStyling();
@@ -74,7 +77,7 @@
 		[
 			"unknown",
 			(event: OpenClawWeixinLoginMsg) => {
-				console.log("unknown", event);
+				logger.info("unknown", event);
 			},
 		],
 		[
@@ -111,7 +114,7 @@
 			toast.error(m.code_agent_local_container_not_started());
 			return;
 		}
-		console.log("handleWechartTrigger", !wechatLoginState.installed);
+		logger.debug("handleWechartTrigger", !wechatLoginState.installed);
 		if (!wechatLoginState.installed) return;
 
 		if (wechatTriggerSignal >= 1) return;

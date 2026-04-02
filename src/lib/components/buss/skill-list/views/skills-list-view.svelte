@@ -29,6 +29,7 @@
 		X,
 		Zap,
 	} from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { Skill } from "@shared/types";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -36,6 +37,8 @@
 	import SkillCard from "../skill-card.svelte";
 	import { canFavoriteSkill } from "../skill-favorite-availability";
 	import { getOrderedSkillsByFavorite } from "../skill-favorite-order";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		userSkills: Skill[];
@@ -311,7 +314,7 @@
 			toast.dismiss(toastId);
 			toast.success(m.skills_download_success());
 		} catch (e) {
-			console.error("Failed to download skill:", e);
+			logger.error("Failed to download skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_download_failed());
 		} finally {
@@ -344,7 +347,7 @@
 			deletingSkill = null;
 			onRefresh?.();
 		} catch (e) {
-			console.error("Failed to delete skill:", e);
+			logger.error("Failed to delete skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_delete_failed());
 		} finally {
@@ -391,7 +394,7 @@
 		} catch (e) {
 			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
 			optimisticFavoriteAts.set(skill.name, previousFavoriteAt);
-			console.error("Failed to toggle skill favorite:", e);
+			logger.error("Failed to toggle skill favorite:", e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
 			favoritingSkills.delete(skill.name);
@@ -463,7 +466,7 @@
 			clearSelection();
 			onRefresh?.();
 		} catch (e) {
-			console.error("Failed to delete skills:", e);
+			logger.error("Failed to delete skills:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_delete_failed());
 		} finally {
@@ -531,7 +534,7 @@
 				optimisticFavoriteAts.set(previousState.name, previousState.favoriteAt);
 			}
 
-			console.error(`Failed to batch ${action} skill favorite:`, e);
+			logger.error(`Failed to batch ${action} skill favorite:`, e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
 			batchFavoriteAction = null;
@@ -563,7 +566,7 @@
 				toast.error(errorMsg);
 			}
 		} catch (e: unknown) {
-			console.error("Failed to sync skills:", e);
+			logger.error("Failed to sync skills:", e);
 			toast.dismiss(toastId);
 
 			// Try to extract error message from response

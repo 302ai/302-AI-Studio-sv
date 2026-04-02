@@ -1,3 +1,4 @@
+import { createLogger } from "@shared/logger";
 import {
 	prefixStorage,
 	type ThreadData,
@@ -8,6 +9,8 @@ import { storageService, StorageService } from ".";
 import { emitter } from "../broadcast-service";
 import { chatParametersService } from "../chat-parameters-service";
 import { codeAgentService } from "../code-agent-service";
+
+const logger = createLogger("services");
 
 export class ThreadStorage extends StorageService<ThreadMetadata> {
 	constructor() {
@@ -95,7 +98,7 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 
 			emitter.emit("thread:thread-deleted", { threadId });
 		} catch (error) {
-			console.error(`Failed to delete thread ${threadId}:`, error);
+			logger.error(`Failed to delete thread ${threadId}:`, error);
 			throw error;
 		}
 	}
@@ -109,7 +112,7 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 				updatedAt: new Date(),
 			});
 		} catch (error) {
-			console.error(`Failed to rename thread ${threadId}:`, error);
+			logger.error(`Failed to rename thread ${threadId}:`, error);
 			throw error;
 		}
 	}
@@ -153,7 +156,7 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 				isFavorite: metadata.favorites.includes(threadId),
 			};
 		} catch (error) {
-			console.error("Failed to get thread:", error);
+			logger.error("Failed to get thread:", error);
 			return null;
 		}
 	}
@@ -180,7 +183,7 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 						});
 					}
 				} catch (error) {
-					console.warn(`Failed to load thread ${threadId}:`, error);
+					logger.warn(`Failed to load thread ${threadId}:`, error);
 				}
 			}
 
@@ -195,7 +198,7 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 
 			return allThreads;
 		} catch (error) {
-			console.error("Failed to get threads:", error);
+			logger.error("Failed to get threads:", error);
 			return null;
 		}
 	}
@@ -241,18 +244,18 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 					try {
 						await this.deleteThread(threadId);
 						deletedThreadIds.push(threadId);
-						console.log(
+						logger.info(
 							`[ThreadStorage] Deleted thread ${threadId} with matching apiKeyHash`,
 						);
 					} catch (error) {
-						console.error(`Failed to delete thread ${threadId}:`, error);
+						logger.error(`Failed to delete thread ${threadId}:`, error);
 					}
 				}
 			}
 
 			return { deletedCount: deletedThreadIds.length, deletedThreadIds };
 		} catch (error) {
-			console.error("Failed to delete threads by apiKeyHash:", error);
+			logger.error("Failed to delete threads by apiKeyHash:", error);
 			return { deletedCount: 0, deletedThreadIds: [] };
 		}
 	}
@@ -287,18 +290,18 @@ export class ThreadStorage extends StorageService<ThreadMetadata> {
 							selectedModel: null,
 						});
 						clearedCount++;
-						console.log(
+						logger.info(
 							`[ThreadStorage] Cleared selectedModel reference for deleted model ${thread.selectedModel.id} in thread ${threadId}`,
 						);
 					}
 				} catch (error) {
-					console.warn(`Failed to clear model reference in thread ${threadId}:`, error);
+					logger.warn(`Failed to clear model reference in thread ${threadId}:`, error);
 				}
 			}
 
 			return clearedCount;
 		} catch (error) {
-			console.error("Failed to clear deleted model references:", error);
+			logger.error("Failed to clear deleted model references:", error);
 			return 0;
 		}
 	}

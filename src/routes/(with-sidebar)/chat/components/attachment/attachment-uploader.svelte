@@ -8,6 +8,9 @@
 	import { Paperclip } from "@lucide/svelte";
 	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		disabled?: boolean;
@@ -69,7 +72,7 @@
 						const content = await fileToBase64(file);
 						chatState.updateAttachment(attachmentId, { preview: content });
 					} catch (e) {
-						console.error("Failed to read file content:", e);
+						logger.error("Failed to read file content:", e);
 					}
 				} else {
 					// 正常的预览生成逻辑

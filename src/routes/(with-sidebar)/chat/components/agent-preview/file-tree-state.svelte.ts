@@ -17,10 +17,13 @@ import { chatState } from "$lib/stores/chat-state.svelte";
 import { codeAgentState } from "$lib/stores/code-agent";
 import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 import { getSandboxDownloadErrorMessage } from "$lib/utils/sandbox-download-error";
+import { createLogger } from "@shared/logger";
 import { toast } from "svelte-sonner";
 import { SvelteDate, SvelteMap, SvelteSet } from "svelte/reactivity";
 import { DEFAULT_WORKSPACE_PATH } from "./constants";
 import { handleError, validatePath, validateSandboxId } from "./utils";
+
+const logger = createLogger("ui");
 
 export interface TreeNode extends SandboxFileInfo {
 	children: TreeNode[];
@@ -358,10 +361,10 @@ export class FileTreeState {
 				this.treeNodes = [];
 				this.loadedDirs = new SvelteSet();
 			} else {
-				console.log("[FileTree] No data in storage, keeping existing files");
+				logger.info("No data in storage, keeping existing files");
 			}
 		} catch (e) {
-			console.error("[FileTree] Failed to load from storage:", e);
+			logger.error("Failed to load from storage:", e);
 			if (clearIfNotFound) {
 				this.files = [];
 				this.treeNodes = [];
@@ -381,7 +384,7 @@ export class FileTreeState {
 		merge: boolean = false,
 		force: boolean = false,
 	): Promise<void> {
-		console.log("[FileTree] loadFiles", { path, merge, force, isStreaming: this.isStreaming });
+		logger.info("loadFiles", { path, merge, force, isStreaming: this.isStreaming });
 
 		if (!this.sandboxId) {
 			return;
@@ -399,7 +402,7 @@ export class FileTreeState {
 
 		// Do not load files while agent is streaming, unless forced (e.g. user initiated navigation)
 		if (this.isStreaming && !force) {
-			console.log("[FileTree] loadFiles skipped due to streaming");
+			logger.info("loadFiles skipped due to streaming");
 			return;
 		}
 
@@ -490,7 +493,7 @@ export class FileTreeState {
 			if (isDirectoryNotFound && !isAtSystemRoot(this.currentDirectory)) {
 				// Try to navigate to parent directory
 				const parentPath = pathUtils.getParentDir(this.currentDirectory);
-				console.log(
+				logger.info(
 					`[FileTree] Current directory deleted, navigating to parent: ${parentPath}`,
 				);
 
@@ -503,8 +506,8 @@ export class FileTreeState {
 				} catch (_retryError) {
 					// If parent also fails, fallback to workspace root
 					if (!isAtSystemRoot(parentPath)) {
-						console.log(
-							"[FileTree] Parent directory also invalid, falling back to workspace root",
+						logger.info(
+							"Parent directory also invalid, falling back to workspace root",
 						);
 						this.currentDirectory = this.rootPath;
 						this.error = null;
@@ -513,7 +516,7 @@ export class FileTreeState {
 				}
 			} else if (isDirectoryNotFound && isAtSystemRoot(this.currentDirectory)) {
 				// At system root and directory not found - reset to workspace path
-				console.log("[FileTree] At system root with error, resetting to workspace path");
+				logger.info("At system root with error, resetting to workspace path");
 				this.currentDirectory = this.rootPath;
 				this.error = null;
 				await this.saveToStorage(); // Update storage with valid path
@@ -540,7 +543,7 @@ export class FileTreeState {
 	 * Sets currentDirectory to the target folder and loads its contents
 	 */
 	async navigateToFolder(folderPath: string): Promise<void> {
-		console.log("[FileTree] navigateToFolder", folderPath);
+		logger.info("navigateToFolder", folderPath);
 		if (!folderPath) {
 			return;
 		}
@@ -554,7 +557,7 @@ export class FileTreeState {
 		try {
 			await this.loadFiles(folderPath, false, true);
 		} catch (error) {
-			console.error("[FileTree] Failed to load folder:", error);
+			logger.error("Failed to load folder:", error);
 			// If load fails, we might want to revert currentDirectory or handle error
 			// The loadFiles method already has recovery logic which updates currentDirectory if needed
 		}
@@ -573,7 +576,7 @@ export class FileTreeState {
 	 * Computes parent path and navigates to it, guarding against system root boundary
 	 */
 	async navigateToParent(): Promise<void> {
-		console.log("[FileTree] navigateToParent");
+		logger.info("navigateToParent");
 		// Guard against navigating above system root
 		if (this.currentDirectory === "/" || this.currentDirectory === "") {
 			return;
@@ -1317,7 +1320,7 @@ export class FileTreeState {
 					id: toastId,
 				});
 			} catch (e) {
-				console.error("[FileTree] Failed to download folder:", e);
+				logger.error("Failed to download folder:", e);
 				failCount++;
 
 				toast.loading(m.toast_downloading_folder(), {

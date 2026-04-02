@@ -42,6 +42,9 @@
 	import { isChatTab } from "@shared/storage/tab";
 	import type { Tab } from "@shared/types";
 	import { onDestroy } from "svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	const { handleAiApplicationReloadIpc } = window.electronAPI.aiApplicationService;
 	const { openExternalLink } = window.electronAPI.externalLinkService;
@@ -89,7 +92,7 @@
 			ro.observe(triggerRef.parentElement);
 			return () => ro.disconnect();
 		} catch (error) {
-			console.warn("Error setting up ResizeObserver:", error);
+			logger.warn("Error setting up ResizeObserver:", error);
 			const width = triggerRef.parentElement.clientWidth;
 			isCompact = width < COMPACT_THRESHOLD_PX;
 			return;

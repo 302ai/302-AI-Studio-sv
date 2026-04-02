@@ -1,3 +1,7 @@
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("server");
+
 interface SSEData {
 	choices?: Array<{
 		delta?: {
@@ -39,15 +43,15 @@ export function createCitationsFetch(
 				// Add provider options directly to request body
 				Object.assign(bodyJson, providerOptions);
 
-				console.log("[302.AI] Adding provider options to request:", providerOptions);
-				console.log(
+				logger.info("[302.AI] Adding provider options to request:", providerOptions);
+				logger.info(
 					"[302.AI] Modified request body (full):",
 					JSON.stringify(bodyJson, null, 2),
 				);
 
 				options.body = JSON.stringify(bodyJson);
 			} catch (error) {
-				console.error("[302.AI] Failed to modify request body:", error);
+				logger.error("[302.AI] Failed to modify request body:", error);
 			}
 		}
 

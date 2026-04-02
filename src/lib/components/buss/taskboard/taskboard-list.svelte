@@ -1,5 +1,8 @@
 <script lang="ts" module>
 	import type { DndEvent } from "svelte-dnd-action";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	type TaskDndEvent = DndEvent<Task>;
 </script>
@@ -144,7 +147,7 @@
 				...allDoneTasks,
 			]);
 		} catch (error) {
-			console.error("Error finalizing drag operation:", error);
+			logger.error("Error finalizing drag operation:", error);
 		} finally {
 			queueMicrotask(() => {
 				isDndFinalizing = false;
@@ -160,7 +163,7 @@
 			element.style.borderRadius = "0.75rem";
 			element.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
 		} catch (error) {
-			console.warn("Error transforming dragged element:", error);
+			logger.warn("Error transforming dragged element:", error);
 		}
 	}
 

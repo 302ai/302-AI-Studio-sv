@@ -1,4 +1,7 @@
 import type { BackupInfo } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { app } from "electron";
 import fs from "fs";
 import path from "path";
@@ -31,11 +34,11 @@ export class UserDataManager {
 	}
 
 	private logPathInfo() {
-		console.log("========== 路径信息 ==========");
-		console.log("平台:", process.platform);
-		console.log("userData 路径:", app.getPath("userData"));
-		console.log("备份路径:", this.backupPath);
-		console.log("==============================");
+		logger.info("========== 路径信息 ==========");
+		logger.info("平台:", process.platform);
+		logger.info("userData 路径:", app.getPath("userData"));
+		logger.info("备份路径:", this.backupPath);
+		logger.info("==============================");
 	}
 
 	/**
@@ -130,7 +133,7 @@ export class UserDataManager {
 		// Remove older backups
 		for (let i = keepCount; i < backups.length; i++) {
 			fs.rmSync(backups[i].path, { recursive: true, force: true });
-			console.log(`Removed old backup: ${backups[i].path}`);
+			logger.info(`Removed old backup: ${backups[i].path}`);
 		}
 	}
 }

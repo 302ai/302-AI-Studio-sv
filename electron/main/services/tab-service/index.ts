@@ -1,6 +1,13 @@
 import { MAX_TABS_PER_WINDOW } from "@shared/constants/tab";
-import { isChatTab } from "@shared/storage/tab";
-import type { ChatMessage, Tab, TabState, TabType, ThreadParmas } from "@shared/types";
+import { createLogger } from "@shared/logger";
+import {
+	isChatTab,
+	type ChatMessage,
+	type Tab,
+	type TabState,
+	type TabType,
+	type ThreadParmas,
+} from "@shared/types";
 import { BrowserWindow, ipcMain, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import { isNull, isUndefined } from "es-toolkit";
 import { nanoid } from "nanoid";
@@ -25,6 +32,8 @@ import { LRUTabManager, type TabUsageMetrics } from "./lru-tab-manager";
 import { MemoryManager } from "./memory-manager";
 import { createElectronSnapshotProvider } from "./memory-snapshot";
 import { ViewLoadTracker } from "./view-load-tracker";
+
+const logger = createLogger("services");
 
 type TabConfig = {
 	title: string;
@@ -121,7 +130,7 @@ export class TabService {
 		// 2. Update storage (this will trigger broadcast to all renderers)
 		await tabStorage.updateTabProperty(tabId, { type });
 
-		console.log(`[TabService] Tab ${tabId} type explicitly updated to ${type}`);
+		logger.info(`[TabService] Tab ${tabId} type explicitly updated to ${type}`);
 	}
 
 	async startMemoryManagerAfterInitialLoad(timeoutMs: number = 10_000) {
@@ -203,7 +212,7 @@ export class TabService {
 		for (const tabId of this.pendingDestroyTabs) {
 			const tab = this.tabMap.get(tabId);
 			if (tab && tab.threadId === threadId) {
-				console.log(
+				logger.info(
 					`[TabService] Thread ${threadId} is no longer busy, executing pending destruction for tab ${tabId}`,
 				);
 
@@ -226,7 +235,7 @@ export class TabService {
 	private forceDestroyTab(tabId: string) {
 		// Guard: if tab was resurrected, it's no longer in pendingDestroyTabs — skip destruction
 		if (!this.pendingDestroyTabs.has(tabId)) {
-			console.log(
+			logger.info(
 				`[TabService] Tab ${tabId} is no longer pending destruction (resurrected?), skipping`,
 			);
 			return;
@@ -236,11 +245,11 @@ export class TabService {
 		this.pendingDestroyTimers.delete(tabId);
 		const view = this.tabViewMap.get(tabId);
 		if (view && !view.webContents.isDestroyed()) {
-			console.log(`[TabService] Force destroying tab ${tabId}`);
+			logger.info(`[TabService] Force destroying tab ${tabId}`);
 			view.webContents.close({ waitForBeforeUnload: false });
 		} else {
 			// Cleanup maps if view is already gone
-			console.log(`[TabService] Cleaning up metadata for already destroyed tab ${tabId}`);
+			logger.info(`[TabService] Cleaning up metadata for already destroyed tab ${tabId}`);
 			this.tabViewMap.delete(tabId);
 			this.tabMap.delete(tabId);
 			this.tabWindowMap.delete(tabId);
@@ -273,7 +282,7 @@ export class TabService {
 			return null;
 		}
 
-		console.log(
+		logger.info(
 			`[TabService] Resurrecting pending tab ${pendingTabId} for thread ${threadId} into window ${targetWindow.id}`,
 		);
 
@@ -285,7 +294,7 @@ export class TabService {
 		if (pendingTimer) {
 			clearTimeout(pendingTimer);
 			this.pendingDestroyTimers.delete(pendingTabId);
-			console.log(
+			logger.info(
 				`[TabService] Cancelled pending destruction timer for resurrected tab ${pendingTabId}`,
 			);
 		}
@@ -309,7 +318,7 @@ export class TabService {
 			`,
 				)
 				.catch((err) =>
-					console.error("Failed to update windowId during resurrection:", err),
+					logger.error("Failed to update windowId during resurrection:", err),
 				);
 
 			// Rebind shortcuts
@@ -368,7 +377,7 @@ export class TabService {
 
 			// Timeout after 500ms (we don't want to block sleep too long)
 			const timeout = setTimeout(() => {
-				console.warn(`[TabService] Snapshot timeout for tab ${tabId}`);
+				logger.warn(`[TabService] Snapshot timeout for tab ${tabId}`);
 				cleanup();
 				resolve(null);
 			}, 500);
@@ -376,7 +385,7 @@ export class TabService {
 	}
 
 	private async sleepTab(tabId: string) {
-		console.log(`[TabService] Sleeping tab ${tabId}`);
+		logger.info(`[TabService] Sleeping tab ${tabId}`);
 		const view = this.tabViewMap.get(tabId);
 		const tab = this.tabMap.get(tabId);
 
@@ -390,7 +399,7 @@ export class TabService {
 
 			if (uiState) {
 				tab.uiState = uiState;
-				console.log(`[TabService] Captured UI state for tab ${tabId}`, uiState);
+				logger.info(`[TabService] Captured UI state for tab ${tabId}`, uiState);
 			}
 
 			tab.isSleeping = true;
@@ -400,7 +409,7 @@ export class TabService {
 			// We need to find which window this tab belongs to to update storage
 			// This is expensive, so maybe skip for now or do it efficiently
 		} catch (error) {
-			console.error(`[TabService] Failed to snapshot tab ${tabId}:`, error);
+			logger.error(`[TabService] Failed to snapshot tab ${tabId}:`, error);
 		}
 
 		// 2. Remove view from window
@@ -426,7 +435,7 @@ export class TabService {
 		const tab = this.tabMap.get(tabId);
 		if (!tab) return undefined;
 
-		console.log(`[TabService] Waking tab ${tabId}`);
+		logger.info(`[TabService] Waking tab ${tabId}`);
 		tab.isSleeping = false;
 		// Recreate view
 		const view = await this.newWebContentsView(window.id, tab);
@@ -534,7 +543,7 @@ export class TabService {
 				// Prevent old view from deleting data when a new view was created by wakeTab
 				const activeView = this.tabViewMap.get(capturedTabId);
 				if (activeView && activeView !== view) {
-					console.log(
+					logger.info(
 						`[TabService] Tab ${capturedTabId} old webContents destroyed, but a new view is already active. Skipping cleanup.`,
 					);
 					return;
@@ -542,14 +551,14 @@ export class TabService {
 
 				const currentTab = this.tabMap.get(capturedTabId);
 				if (currentTab?.isSleeping) {
-					console.log(
+					logger.info(
 						`Tab ${capturedTabId} is sleeping, preserving metadata but cleaning view maps`,
 					);
 					this.tabViewMap.delete(capturedTabId);
 					return;
 				}
 
-				console.log(`Tab ${capturedTabId} webContents destroyed, cleaning up all mappings`);
+				logger.info(`Tab ${capturedTabId} webContents destroyed, cleaning up all mappings`);
 
 				// === Business cleanup: handle private chat and empty thread data ===
 				await this.performTabBusinessCleanup(capturedTab);
@@ -572,10 +581,10 @@ export class TabService {
 
 				this.cleanupTabTempFiles(capturedTabId);
 
-				console.log(`Tab ${capturedTabId} cleanup completed`);
+				logger.info(`Tab ${capturedTabId} cleanup completed`);
 			},
 			onWillPreventUnload: () => {
-				console.log("view will prevent unload");
+				logger.info("view will prevent unload");
 			},
 		});
 
@@ -598,7 +607,7 @@ export class TabService {
 			]);
 
 			if (thread?.isPrivateChatActive || messages?.length === 0) {
-				console.log(`[TabService] Cleaning up business data for thread ${tab.threadId}`);
+				logger.info(`[TabService] Cleaning up business data for thread ${tab.threadId}`);
 				// Use unified cleanup method from ThreadStorage
 				await threadStorage.cleanupThreadData(tab.threadId);
 			}
@@ -742,7 +751,7 @@ export class TabService {
 		const windowTabs = await tabStorage.getTabsByWindowId(windowId.toString());
 		if (isNull(windowTabs)) return;
 
-		console.log(`[Privacy] Cleaning up private chat data for window ${windowId}`);
+		logger.info(`[Privacy] Cleaning up private chat data for window ${windowId}`);
 
 		const tabsToKeep: Tab[] = [];
 		let removedActiveTabIndex = -1;
@@ -759,7 +768,7 @@ export class TabService {
 
 				// If this is a private chat, delete all related data
 				if (thread?.isPrivateChatActive) {
-					console.log(
+					logger.info(
 						`[Privacy] Deleting private chat data for tab ${tab.id}, thread ${tab.threadId}`,
 					);
 					// Use unified cleanup method from ThreadStorage
@@ -781,13 +790,13 @@ export class TabService {
 
 		// Update tab storage to remove private tabs
 		if (tabsToKeep.length !== windowTabs.length) {
-			console.log(
+			logger.info(
 				`[Privacy] Removed ${windowTabs.length - tabsToKeep.length} private tab(s) from storage`,
 			);
 
 			// If we removed the active tab, set a new active tab
 			if (removedActiveTabIndex !== -1 && tabsToKeep.length > 0) {
-				console.log(
+				logger.info(
 					`[Privacy] Removed active tab at index ${removedActiveTabIndex}, reassigning active tab`,
 				);
 
@@ -818,12 +827,12 @@ export class TabService {
 				}
 
 				tabsToKeep[newActiveIndex].active = true;
-				console.log(`[Privacy] Set tab at index ${newActiveIndex} as active`);
+				logger.info(`[Privacy] Set tab at index ${newActiveIndex} as active`);
 			}
 
 			// If there are no tabs left, create a new default tab
 			if (tabsToKeep.length === 0) {
-				console.log(`[Privacy] No tabs left, will create default tab on next launch`);
+				logger.info(`[Privacy] No tabs left, will create default tab on next launch`);
 			}
 
 			await tabStorage.updateWindowTabs(windowId.toString(), tabsToKeep);
@@ -848,14 +857,14 @@ export class TabService {
 	}
 
 	async removeTab(window: BrowserWindow, tabId: string) {
-		console.log("Removing Tab --->", tabId);
+		logger.info("Removing Tab --->", tabId);
 
 		// Check if busy
 		const tab = this.tabMap.get(tabId);
 		const isThreadBusy = tab?.threadId ? threadStateService.isThreadBusy(tab.threadId) : false;
 
 		if (isThreadBusy) {
-			console.log(`[TabService] Tab ${tabId} is busy, deferring destruction.`);
+			logger.info(`[TabService] Tab ${tabId} is busy, deferring destruction.`);
 			const view = this.tabViewMap.get(tabId);
 			if (view) {
 				window.contentView.removeChildView(view);
@@ -884,7 +893,7 @@ export class TabService {
 	}
 
 	async addTabToWindow(window: BrowserWindow, tab: Tab): Promise<void> {
-		console.log("Adding Tab to Window --->", tab.id, "to window", window.id);
+		logger.info("Adding Tab to Window --->", tab.id, "to window", window.id);
 
 		// Create view for the tab
 		const view = await this.newWebContentsView(window.id, tab);
@@ -918,7 +927,7 @@ export class TabService {
 		tabId: string,
 		tab: Tab,
 	): Promise<void> {
-		console.log(
+		logger.info(
 			`Transferring Tab ${tabId} from window ${fromWindow.id} to window ${toWindow.id}`,
 		);
 
@@ -955,7 +964,7 @@ export class TabService {
 		`,
 			)
 			.catch((error) => {
-				console.error(`Failed to update window ID for tab ${tabId}:`, error);
+				logger.error(`Failed to update window ID for tab ${tabId}:`, error);
 			});
 
 		// Reattach shortcut engine with new windowId to fix shortcut context
@@ -1062,7 +1071,7 @@ export class TabService {
 				: [...currentTabs, newTab];
 			finalTabState[windowId] = { tabs: updatedTabs };
 			await tabStorage.setItemInternal("tab-bar-state", finalTabState);
-			console.log(
+			logger.info(
 				`[TabService] Created tab ${newTabId} for thread ${threadId} in window ${windowId}`,
 			);
 		}
@@ -1120,7 +1129,7 @@ export class TabService {
 				: [...currentTabs, newTab];
 			finalTabState[windowId] = { tabs: updatedTabs };
 			await tabStorage.setItemInternal("tab-bar-state", finalTabState);
-			console.log(
+			logger.info(
 				`[TabService] Created tab ${newTabId} (${type}, ${href}) in window ${windowId}`,
 			);
 		}
@@ -1152,24 +1161,24 @@ export class TabService {
 		const windowId = window.id.toString();
 		const tabState = await tabStorage.getItemInternal("tab-bar-state");
 
-		console.log(
+		logger.info(
 			`[TabService] handleNewTabWithThread: threadId=${threadId}, windowId=${windowId}`,
 		);
-		console.log(`[TabService] Current tabState windows:`, Object.keys(tabState || {}));
-		console.log(`[TabService] tabViewMap size:`, this.tabViewMap.size);
+		logger.info(`[TabService] Current tabState windows:`, Object.keys(tabState || {}));
+		logger.info(`[TabService] tabViewMap size:`, this.tabViewMap.size);
 
 		if (!isNull(tabState)) {
 			// Check in ALL windows, not just current window
 			for (const [wId, wData] of Object.entries(tabState)) {
 				const existingTab = wData.tabs.find((t) => t.threadId === threadId);
 				if (existingTab) {
-					console.log(
+					logger.info(
 						`[TabService] Found existing tab ${existingTab.id} for thread ${threadId} in window ${wId}`,
 					);
 
 					// Check if the tab's view still exists
 					const existingView = this.tabViewMap.get(existingTab.id);
-					console.log(
+					logger.info(
 						`[TabService] View exists for tab ${existingTab.id}:`,
 						!!existingView,
 					);
@@ -1178,7 +1187,7 @@ export class TabService {
 						// View exists - activate it
 						if (wId === windowId) {
 							// Same window
-							console.log(
+							logger.info(
 								`[TabService] Tab for thread ${threadId} already exists in current window, activating it`,
 							);
 							const updatedTabs = tabState[wId].tabs.map((t) => ({
@@ -1191,7 +1200,7 @@ export class TabService {
 							return stringify(existingTab);
 						} else {
 							// Different window - this shouldn't happen in normal flow
-							console.log(
+							logger.info(
 								`[TabService] Tab for thread ${threadId} exists in window ${wId}, but called from window ${windowId}. Allowing duplicate tab creation.`,
 							);
 							// Let it create a new tab in current window
@@ -1200,7 +1209,7 @@ export class TabService {
 						}
 					} else {
 						// View doesn't exist (was destroyed) - cleanup storage and create new tab
-						console.log(
+						logger.info(
 							`[TabService] Tab ${existingTab.id} for thread ${threadId} exists in storage but view is destroyed, cleaning up`,
 						);
 						// Remove the orphaned tab from storage
@@ -1209,7 +1218,7 @@ export class TabService {
 						);
 						tabState[wId] = { tabs: cleanedTabs };
 						await tabStorage.setItemInternal("tab-bar-state", tabState);
-						console.log(
+						logger.info(
 							`[TabService] Cleaned orphaned tab from window ${wId}, will create new tab`,
 						);
 						// Continue to create new tab
@@ -1219,7 +1228,7 @@ export class TabService {
 			}
 		}
 
-		console.log(`[TabService] No duplicate found, creating new tab for thread ${threadId}`);
+		logger.info(`[TabService] No duplicate found, creating new tab for thread ${threadId}`);
 		// ========================================================================
 
 		const { getHref } = getTabConfig(type);
@@ -1260,7 +1269,7 @@ export class TabService {
 				: [...currentTabs, newTab];
 			finalTabState[windowId] = { tabs: updatedTabs };
 			await tabStorage.setItemInternal("tab-bar-state", finalTabState);
-			console.log(`[TabService] Added new tab ${newTabId} to window ${windowId} storage`);
+			logger.info(`[TabService] Added new tab ${newTabId} to window ${windowId} storage`);
 		}
 		// ===========================================================
 
@@ -1379,7 +1388,7 @@ export class TabService {
 				: [...currentTabs, newTab];
 			tabState[windowId] = { tabs: updatedTabs };
 			await tabStorage.setItemInternal("tab-bar-state", tabState);
-			console.log(`[TabService] Added new tab ${newTabId} to window ${windowId} storage`);
+			logger.info(`[TabService] Added new tab ${newTabId} to window ${windowId} storage`);
 		}
 		// ===========================================================
 
@@ -1400,13 +1409,13 @@ export class TabService {
 		// Find which window this tab belongs to (based on view location)
 		const tabWindow = this.findWindowForTab(tabId);
 		if (isNull(tabWindow)) {
-			console.error(`[TabService] Cannot find window for tab ${tabId}`);
+			logger.error(`[TabService] Cannot find window for tab ${tabId}`);
 			return;
 		}
 
 		// If tab is in a different window, focus that window instead
 		if (tabWindow.id !== callerWindow.id) {
-			console.log(
+			logger.info(
 				`[TabService] Tab ${tabId} is in window ${tabWindow.id}, but called from window ${callerWindow.id}. Focusing target window instead.`,
 			);
 			// Focus the correct window and activate the tab
@@ -1422,7 +1431,7 @@ export class TabService {
 				}));
 				tabState[targetWindowId] = { tabs: updatedTabs };
 				await tabStorage.setItemInternal("tab-bar-state", tabState);
-				console.log(
+				logger.info(
 					`[TabService] Activated tab ${tabId} in window ${targetWindowId} (cross-window)`,
 				);
 			}
@@ -1452,7 +1461,7 @@ export class TabService {
 			}));
 			tabState[windowId] = { tabs: updatedTabs };
 			await tabStorage.setItemInternal("tab-bar-state", tabState);
-			console.log(`[TabService] Activated tab ${tabId} in window ${windowId} storage`);
+			logger.info(`[TabService] Activated tab ${tabId} in window ${windowId} storage`);
 		}
 		// ================================================================
 	}
@@ -1471,7 +1480,7 @@ export class TabService {
 	private isTabLimitReached(windowId: number): boolean {
 		const views = this.windowTabView.get(windowId) || [];
 		if (views.length >= MAX_TABS_PER_WINDOW) {
-			console.warn(
+			logger.warn(
 				`[TabService] Tab limit (${MAX_TABS_PER_WINDOW}) reached for window ${windowId}`,
 			);
 			return true;
@@ -1630,17 +1639,17 @@ export class TabService {
 		tabId: string,
 		newThreadId: string,
 	): Promise<boolean> {
-		console.log(`[replaceTabContent] Replacing tab ${tabId} with thread ${newThreadId}`);
+		logger.info(`[replaceTabContent] Replacing tab ${tabId} with thread ${newThreadId}`);
 
 		const window = BrowserWindow.fromWebContents(event.sender);
 		if (isNull(window)) {
-			console.error("[replaceTabContent] Window not found");
+			logger.error("Window not found");
 			return false;
 		}
 
 		const oldView = this.tabViewMap.get(tabId);
 		if (isUndefined(oldView) || oldView.webContents.isDestroyed()) {
-			console.error("[replaceTabContent] View not found or destroyed");
+			logger.error("View not found or destroyed");
 			return false;
 		}
 
@@ -1648,13 +1657,13 @@ export class TabService {
 			const threadData = await storageService.getItemInternal("app-thread:" + newThreadId);
 
 			if (!threadData || typeof threadData !== "object" || !("title" in threadData)) {
-				console.error(`[replaceTabContent] Thread ${newThreadId} not found in storage`);
+				logger.error(`[replaceTabContent] Thread ${newThreadId} not found in storage`);
 				return false;
 			}
 
 			const currentTab = this.tabMap.get(tabId);
 			if (isUndefined(currentTab)) {
-				console.error("[replaceTabContent] Current tab not found in tabMap");
+				logger.error("Current tab not found in tabMap");
 				return false;
 			}
 
@@ -1687,7 +1696,7 @@ export class TabService {
 
 			return true;
 		} catch (error) {
-			console.error(`[replaceTabContent] Failed to replace tab content:`, error);
+			logger.error(`[replaceTabContent] Failed to replace tab content:`, error);
 			return false;
 		}
 	}
@@ -1700,7 +1709,7 @@ export class TabService {
 		tabId: string,
 		threadId: string,
 	): Promise<boolean> {
-		console.log(
+		logger.info(
 			`[handleClearTabMessages] Clearing messages for tab ${tabId}, thread ${threadId}`,
 		);
 
@@ -1711,7 +1720,7 @@ export class TabService {
 			// Get the tab's WebContentsView
 			const view = this.tabViewMap.get(tabId);
 			if (isUndefined(view) || view.webContents.isDestroyed()) {
-				console.warn(
+				logger.warn(
 					`[handleClearTabMessages] View not found or destroyed for tab ${tabId}`,
 				);
 				return true; // Storage was cleared, which is the main goal
@@ -1722,7 +1731,7 @@ export class TabService {
 
 			return true;
 		} catch (error) {
-			console.error(`[handleClearTabMessages] Failed to clear messages:`, error);
+			logger.error(`[handleClearTabMessages] Failed to clear messages:`, error);
 			return false;
 		}
 	}
@@ -1735,7 +1744,7 @@ export class TabService {
 		tabId: string,
 		threadId: string,
 	): Promise<boolean> {
-		console.log(
+		logger.info(
 			`[handleGenerateTabTitle] Generating title for tab ${tabId}, thread ${threadId}`,
 		);
 
@@ -1743,7 +1752,7 @@ export class TabService {
 			// Get the tab's WebContentsView
 			const view = this.tabViewMap.get(tabId);
 			if (isUndefined(view) || view.webContents.isDestroyed()) {
-				console.warn(
+				logger.warn(
 					`[handleGenerateTabTitle] View not found or destroyed for tab ${tabId}`,
 				);
 				return false;
@@ -1754,7 +1763,7 @@ export class TabService {
 
 			return true;
 		} catch (error) {
-			console.error(`[handleGenerateTabTitle] Failed to generate title:`, error);
+			logger.error(`[handleGenerateTabTitle] Failed to generate title:`, error);
 			return false;
 		}
 	}
@@ -1766,7 +1775,7 @@ export class TabService {
 		_event: IpcMainInvokeEvent,
 		threadId: string,
 	): Promise<boolean> {
-		console.log(`[triggerCreateSkillSummary] Triggering summary for thread ${threadId}`);
+		logger.info(`[triggerCreateSkillSummary] Triggering summary for thread ${threadId}`);
 
 		try {
 			// Find the tab with matching threadId
@@ -1780,7 +1789,7 @@ export class TabService {
 			}
 
 			if (isUndefined(targetView) || targetView.webContents.isDestroyed()) {
-				console.warn(
+				logger.warn(
 					`[triggerCreateSkillSummary] View not found or destroyed for thread ${threadId}`,
 				);
 				return false;
@@ -1791,7 +1800,7 @@ export class TabService {
 
 			return true;
 		} catch (error) {
-			console.error(`[triggerCreateSkillSummary] Failed to trigger summary:`, error);
+			logger.error(`[triggerCreateSkillSummary] Failed to trigger summary:`, error);
 			return false;
 		}
 	}
@@ -1800,7 +1809,7 @@ export class TabService {
 	 * Notify sandbox created event to the tab associated with the given threadId
 	 */
 	notifySandboxCreated(threadId: string, sandboxId: string): void {
-		console.log(
+		logger.info(
 			`[TabService] Notifying sandbox created: threadId=${threadId}, sandboxId=${sandboxId}`,
 		);
 
@@ -1818,9 +1827,9 @@ export class TabService {
 				threadId,
 				sandboxId,
 			});
-			console.log(`[TabService] Sandbox created event sent to tab with threadId=${threadId}`);
+			logger.info(`[TabService] Sandbox created event sent to tab with threadId=${threadId}`);
 		} else {
-			console.warn(`[TabService] Could not find active tab for threadId=${threadId}`);
+			logger.warn(`[TabService] Could not find active tab for threadId=${threadId}`);
 		}
 	}
 }

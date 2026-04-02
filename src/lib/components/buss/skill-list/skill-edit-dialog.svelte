@@ -10,6 +10,9 @@
 	import { SvelteMap } from "svelte/reactivity";
 	import { getFrontMatterText, parseSkillFrontMatter } from "./skill-frontmatter";
 	import SkillManualForm from "./skill-manual-form.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		open: boolean;
@@ -99,7 +102,7 @@
 				content: content,
 			};
 		} catch (error) {
-			console.error("Failed to load skill content:", error);
+			logger.error("Failed to load skill content:", error);
 			const errorMessage = error instanceof Error ? error.message : m.skills_load_failed();
 			toast.error(errorMessage);
 			handleClose();
@@ -225,7 +228,7 @@
 				toast.error(m.skills_load_failed());
 			}
 		} catch (error) {
-			console.error("Failed to save skill:", error);
+			logger.error("Failed to save skill:", error);
 			toast.error(m.skills_load_failed());
 		} finally {
 			isSaving = false;

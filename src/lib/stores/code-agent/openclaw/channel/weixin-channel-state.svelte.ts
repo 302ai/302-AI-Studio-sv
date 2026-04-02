@@ -7,8 +7,7 @@ const weixinChannelState = $state({
 			weixinChannelState.loading = true;
 			const success = await window.electronAPI.openClawService.installWechat();
 			weixinChannelState.error = !success;
-		} catch (e) {
-			console.log("Failed to install WeChat channel:", e);
+		} catch (_e) {
 			weixinChannelState.error = true;
 		} finally {
 			weixinChannelState.loading = false;
