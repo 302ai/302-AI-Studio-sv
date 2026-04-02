@@ -9,7 +9,7 @@ import { hookManager } from "../plugin-manager/hook-manager";
 import { pluginRegistry } from "../plugin-manager/plugin-registry";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("plugin");
+const logger = createLogger("plugin-manager");
 
 /**
  * Execute provider authentication hook

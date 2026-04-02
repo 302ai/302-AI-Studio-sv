@@ -15,7 +15,7 @@ import { createPluginAPI } from "./plugin-api";
 import { storageService } from "../services/storage-service";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("plugin");
+const logger = createLogger("plugin-manager");
 
 /**
  * Plugin loader implementation

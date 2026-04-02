@@ -1,7 +1,7 @@
 import { isWin } from "@electron/main/constants";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import { SUPPORTED_CHANNELS, WIN_SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
 import { type IpcMainInvokeEvent } from "electron";
 import { isNil } from "es-toolkit";

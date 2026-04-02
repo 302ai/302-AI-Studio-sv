@@ -1,7 +1,7 @@
 import { PLATFORM } from "@electron/main/constants";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("storage");
+const logger = createLogger("services");
 import { type LocalVibeStorageData } from "@shared/storage/code-agent";
 import { prefixStorage } from "@shared/types";
 import { isNull } from "es-toolkit";

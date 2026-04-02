@@ -1,7 +1,7 @@
 import { getLocalSandboxHealthStatus } from "@electron/main/apis/code-agent";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import { isLinux, isWin, PLATFORM } from "@electron/main/constants/index";
 import { OPENCLAW_DEFAULT_CONFIG } from "@electron/main/datas/openclaw-template";
 import { broadcastService } from "@electron/main/services/broadcast-service";

@@ -16,7 +16,7 @@ import { pluginRegistry } from "./plugin-registry";
 import { hookManager } from "./hook-manager";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("plugin");
+const logger = createLogger("plugin-manager");
 
 /**
  * Initialize the plugin system

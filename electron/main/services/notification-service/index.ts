@@ -1,7 +1,7 @@
 import { BrowserWindow, Notification, type IpcMainInvokeEvent } from "electron";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("notification");
+const logger = createLogger("services");
 import { isNull, isUndefined } from "es-toolkit/predicate";
 import { tabStorage } from "../storage-service/tab-storage";
 import { tabService } from "../tab-service";

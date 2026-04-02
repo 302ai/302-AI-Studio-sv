@@ -1,7 +1,7 @@
 import type { ChatVariable } from "@shared/storage/chat-parameters";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import type { ChatMessage } from "@shared/types";
 import { resolvePrompt } from "@shared/utils/chat-parameters";
 import { chatMessagesService } from "../chat-messages-service";

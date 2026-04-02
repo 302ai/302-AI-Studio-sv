@@ -1,7 +1,7 @@
 import { MAX_TABS_PER_WINDOW } from "@shared/constants/tab";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("tab");
+const logger = createLogger("services");
 import type { ChatMessage, Tab, TabType, ThreadParmas } from "@shared/types";
 import { BrowserWindow, ipcMain, WebContentsView, type IpcMainInvokeEvent } from "electron";
 import { isNull, isUndefined } from "es-toolkit";

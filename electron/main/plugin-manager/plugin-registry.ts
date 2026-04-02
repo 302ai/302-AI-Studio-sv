@@ -8,7 +8,7 @@ import type { InstalledPlugin, ProviderPlugin } from "@302ai/studio-plugin-sdk";
 import type { IPluginRegistry } from "./types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("plugin");
+const logger = createLogger("plugin-manager");
 
 interface RegisteredPlugin {
 	plugin: InstalledPlugin;

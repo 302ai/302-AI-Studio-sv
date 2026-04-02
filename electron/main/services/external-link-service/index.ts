@@ -1,7 +1,7 @@
 import { shell, type IpcMainInvokeEvent } from "electron";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 
 export class ExternalLinkService {
 	async openExternalLink(

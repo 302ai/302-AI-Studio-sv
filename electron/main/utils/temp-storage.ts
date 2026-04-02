@@ -6,7 +6,7 @@ import { join } from "node:path";
 import { parse, stringify } from "superjson";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("utils");
 
 export class TempStorage {
 	private static readonly TEMP_DIR = join(tmpdir(), "302ai-studio-temp");

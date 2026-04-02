@@ -1,7 +1,7 @@
 import type { LanguageCode } from "@shared/storage/general-settings";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import type { AiApplication } from "@shared/types";
 import type { IpcMainInvokeEvent } from "electron";
 import { isUndefined } from "es-toolkit";

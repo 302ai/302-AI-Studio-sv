@@ -2,7 +2,7 @@
 import type { ImportResult } from "@shared/types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import { dialog } from "electron";
 import { readFile } from "fs/promises";
 import { storageService } from "../storage-service";

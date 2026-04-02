@@ -7,7 +7,7 @@
 import type { InstalledPlugin, ProviderDefinition } from "@302ai/studio-plugin-sdk";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("plugin");
+const logger = createLogger("services");
 import type { Model, ModelProvider, PluginSource } from "@shared/types";
 import { app, dialog, type IpcMainInvokeEvent } from "electron";
 import fs from "fs-extra";

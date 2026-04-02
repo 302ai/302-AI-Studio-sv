@@ -8,7 +8,7 @@ import type { HookHandler, HookOptions } from "@302ai/studio-plugin-sdk";
 import type { IHookManager } from "./types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("plugin");
+const logger = createLogger("plugin-manager");
 
 interface RegisteredHook<T = unknown> {
 	pluginId: string;

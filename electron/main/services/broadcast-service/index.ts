@@ -2,7 +2,7 @@
 import type { LanguageCode } from "@shared/storage/general-settings";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("broadcast");
+const logger = createLogger("services");
 import type { BroadcastEvent } from "@shared/types";
 import type { IpcMainInvokeEvent, WebContents } from "electron";
 import { webContents } from "electron";

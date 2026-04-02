@@ -1,7 +1,7 @@
 import type { OpenClawConfig } from "@shared/storage/openclaw";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("storage");
+const logger = createLogger("services");
 import { prefixStorage } from "@shared/types";
 import { StorageService } from "..";
 

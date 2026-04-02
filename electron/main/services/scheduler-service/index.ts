@@ -1,7 +1,7 @@
 import { Cron } from "croner";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 
 export const CRON_EXPRESSION = {
 	/**

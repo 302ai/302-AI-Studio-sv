@@ -1,7 +1,7 @@
 import { app, type IpcMainInvokeEvent } from "electron";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import { broadcastService } from "../broadcast-service";
 import { ssoService } from "../sso-service";
 import { windowService } from "../window-service";

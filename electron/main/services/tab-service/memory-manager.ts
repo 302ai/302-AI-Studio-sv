@@ -1,6 +1,6 @@
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("tab");
+const logger = createLogger("services");
 
 export type MemoryPressureLevel = "low" | "medium" | "high";
 

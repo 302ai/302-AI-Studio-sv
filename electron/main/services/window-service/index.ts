@@ -1,7 +1,7 @@
 import type { SheetWindowConfig, TabType } from "@shared/types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("window");
+const logger = createLogger("services");
 import {
 	BrowserWindow,
 	nativeTheme,

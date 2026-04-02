@@ -12,7 +12,7 @@ import { _302AIKy } from "./core/_302ai-ky";
 import { localCodeAgentKy } from "./core/code-agent-ky";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("apis");
 
 export const sessionInfoSchema = type({
 	session_id: "string",

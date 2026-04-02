@@ -7,7 +7,7 @@ import {
 import { storageService, StorageService } from ".";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("storage");
+const logger = createLogger("services");
 import { emitter } from "../broadcast-service";
 import { chatParametersService } from "../chat-parameters-service";
 import { codeAgentService } from "../code-agent-service";

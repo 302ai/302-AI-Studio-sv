@@ -1,7 +1,7 @@
 import type { ShortcutContext } from "@shared/types/shortcut";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("shortcut");
+const logger = createLogger("services");
 import { BrowserWindow } from "electron";
 import { isNull } from "es-toolkit";
 import { aiApplicationService } from "../ai-application-service";

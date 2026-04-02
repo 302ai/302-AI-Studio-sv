@@ -1,7 +1,7 @@
 import { prefixStorage, TabState, type Tab, type ThreadParmas } from "@shared/types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("storage");
+const logger = createLogger("services");
 import { isNull } from "es-toolkit";
 import { isEmpty } from "es-toolkit/compat";
 import { nanoid } from "nanoid";

@@ -1,7 +1,7 @@
 import type { InsertTarget } from "@shared/types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("window");
+const logger = createLogger("services");
 import { BrowserWindow, screen, type IpcMainInvokeEvent } from "electron";
 import { TITLE_BAR_HEIGHT } from "../../constants";
 import { broadcastService } from "../broadcast-service";

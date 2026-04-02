@@ -10,7 +10,7 @@ import { emitter } from "../broadcast-service";
 import { GlobalStorageWatcher } from "./global-storage-watcher";
 import { getStorageVersion, setStorageVersion } from "./migration-utils";
 
-const logger = createLogger("storage");
+const logger = createLogger("services");
 
 export class StorageService<T extends StorageValue> {
 	protected storage;

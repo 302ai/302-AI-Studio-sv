@@ -7,7 +7,7 @@ import { generalSettingsStorage } from "../services/storage-service/general-sett
 import { TempStorage } from "../utils/temp-storage";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("factories");
 
 // Context menu labels for i18n
 const contextMenuLabels = {

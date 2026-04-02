@@ -1,7 +1,7 @@
 import { PLATFORM } from "@electron/main/constants/index";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import { providerStorage } from "@electron/main/services/storage-service/provider-storage";
 import { exec } from "child_process";
 import { app, type IpcMainInvokeEvent } from "electron";

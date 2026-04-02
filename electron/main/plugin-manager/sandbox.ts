@@ -10,7 +10,7 @@ import * as path from "path";
 import type { PluginPermission } from "@302ai/studio-plugin-sdk";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("plugin");
+const logger = createLogger("plugin-manager");
 
 /**
  * Sandbox context for plugin execution

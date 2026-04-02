@@ -7,7 +7,7 @@
 import type { OpenClawWeixinLoginMsg } from "@shared/types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import { exec, spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { once } from "node:events";
 import * as readline from "node:readline";

@@ -2,7 +2,7 @@
 import type { StorageValue } from "@302ai/unstorage";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("storage");
+const logger = createLogger("services");
 
 export type MigrationFunction<T extends StorageValue = StorageValue> = (state: any) => T;
 

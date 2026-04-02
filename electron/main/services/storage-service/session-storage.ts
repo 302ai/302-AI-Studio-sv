@@ -1,7 +1,7 @@
 import type { Model } from "@302ai/studio-plugin-sdk";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("storage");
+const logger = createLogger("services");
 import type { SessionMetadata } from "@shared/storage/session";
 import { prefixStorage } from "@shared/types";
 import { isNull } from "es-toolkit";

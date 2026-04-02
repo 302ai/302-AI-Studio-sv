@@ -44,7 +44,7 @@ import {
 } from "./utils";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("server");
 
 export type RouterRequestBody = {
 	baseUrl?: string;

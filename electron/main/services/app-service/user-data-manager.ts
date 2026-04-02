@@ -1,7 +1,7 @@
 import type { BackupInfo } from "@shared/types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import { app } from "electron";
 import fs from "fs";
 import path from "path";

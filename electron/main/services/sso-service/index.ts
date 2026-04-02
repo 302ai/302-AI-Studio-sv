@@ -1,7 +1,7 @@
 import { shell, type IpcMainInvokeEvent } from "electron";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("sso");
+const logger = createLogger("services");
 
 export class SsoService {
 	private pendingCallback: ((apiKey: string) => void) | null = null;

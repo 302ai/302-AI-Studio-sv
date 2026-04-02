@@ -3,7 +3,7 @@ import { parse } from "superjson";
 import { match, P } from "ts-pattern";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("utils");
 
 export function getAdditionalArgv(key: string) {
 	for (const arg of process.argv) {

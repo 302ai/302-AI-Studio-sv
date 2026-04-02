@@ -2,7 +2,7 @@ import type { UIMessage } from "ai";
 import { batchUploadFile } from "../apis/code-agent";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("server");
 
 /**
  * Send an error message through SSE stream and close the controller.

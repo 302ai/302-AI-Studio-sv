@@ -25,7 +25,7 @@ import { storageService } from "../services/storage-service";
 import { broadcastService } from "../services/broadcast-service";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("plugin");
+const logger = createLogger("plugin-manager");
 
 /**
  * Create a dummy IPC event for internal API calls

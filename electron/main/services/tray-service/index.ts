@@ -1,7 +1,7 @@
 import type { LanguageCode } from "@shared/storage/general-settings";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("tray");
+const logger = createLogger("services");
 import { app, Menu, nativeImage, Tray } from "electron";
 import path from "node:path";
 import { isLinux, isMac } from "../../constants";

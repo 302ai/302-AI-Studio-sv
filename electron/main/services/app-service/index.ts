@@ -1,7 +1,7 @@
 import type { FileNode, Theme } from "@shared/types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import {
 	app,
 	BrowserWindow,

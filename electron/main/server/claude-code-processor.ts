@@ -35,7 +35,7 @@
 import { isJSON } from "es-toolkit";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("server");
 
 interface ClaudeCodeEvent {
 	type: string;

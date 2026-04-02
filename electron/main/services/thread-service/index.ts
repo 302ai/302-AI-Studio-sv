@@ -1,7 +1,7 @@
 import type { ThreadData } from "@shared/types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("thread");
+const logger = createLogger("services");
 import { BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import { isNull } from "es-toolkit";
 import { broadcastService } from "../broadcast-service";

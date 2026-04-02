@@ -7,7 +7,7 @@
 import type { IpcMainInvokeEvent } from "electron";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("services");
 import type { PluginMarketEntry } from "@shared/types";
 import ky from "ky";
 import path from "path";

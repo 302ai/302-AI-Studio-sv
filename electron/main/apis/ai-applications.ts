@@ -2,7 +2,7 @@ import { type } from "arktype";
 import ky from "ky";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("apis");
 
 const ai302UserInfoSchema = type({
 	data: {

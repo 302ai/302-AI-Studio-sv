@@ -14,7 +14,7 @@ import type {
 import type { ThreadParmas } from "@shared/types";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("code-agent");
+const logger = createLogger("services");
 import type { IpcMainInvokeEvent } from "electron";
 import fs from "fs";
 import path from "path";

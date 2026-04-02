@@ -1,7 +1,7 @@
 import { isMac } from "@electron/main/constants";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("updater");
+const logger = createLogger("services");
 import type { UpdateChannel } from "@shared/storage/general-settings";
 import { app, autoUpdater, dialog, type IpcMainInvokeEvent } from "electron";
 import { broadcastService } from "../broadcast-service";

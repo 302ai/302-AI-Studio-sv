@@ -1,6 +1,6 @@
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("app");
+const logger = createLogger("server");
 
 interface SSEData {
 	choices?: Array<{

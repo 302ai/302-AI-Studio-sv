@@ -9,7 +9,7 @@ import type {
 import { keysToAccelerator, keysToString, normalizeKeys } from "@shared/utils/shortcut-utils";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("shortcut");
+const logger = createLogger("services");
 import { globalShortcut, WebContentsView } from "electron";
 
 type ShortcutHandler = (action: string, ctx: ShortcutContext) => void | Promise<void>;

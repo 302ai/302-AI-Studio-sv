@@ -1,20 +1,14 @@
 export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
 
 export type MainProcessCategory =
-	| "app"
-	| "storage"
-	| "window"
-	| "mcp"
-	| "code-agent"
-	| "plugin"
-	| "tab"
-	| "thread"
-	| "updater"
-	| "shortcut"
-	| "tray"
-	| "broadcast"
-	| "sso"
-	| "notification";
+	| "main"
+	| "apis"
+	| "server"
+	| "services"
+	| "factories"
+	| "utils"
+	| "plugin-manager"
+	| "preload";
 
 export type RendererProcessCategory =
 	| "ui"
