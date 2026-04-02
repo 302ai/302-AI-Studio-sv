@@ -46,7 +46,7 @@
 		/>
 	</div>
 
-	<div class="grow">
+	<div class="grow min-h-0">
 		{#if selectedPlatform === "remote"}
 			<RemotePlatform />
 		{:else if selectedPlatform === "cloud"}
