@@ -17,7 +17,7 @@
 		onReorder?: (items: T[]) => void;
 		class?: string;
 		"aria-label"?: string;
-		children: Snippet<[item: T, isActive: boolean]>;
+		children?: Snippet<[item: T, isActive: boolean]>;
 	}
 
 	const ANIMATION_CONSTANTS = {
@@ -46,6 +46,12 @@
 		"aria-label": ariaLabel,
 		children: renderItem,
 	}: Props<T> = $props();
+
+	function handleItemClick(item: T) {
+		if (onItemClick) {
+			onItemClick(item);
+		}
+	}
 
 	let draggedElementId = $state<string | null>(null);
 	let isDndFinalizing = $state(false);
@@ -90,12 +96,14 @@
 			element.style.outline = "none";
 
 			const itemElement = element.querySelector('[role="button"]') as HTMLElement;
-			itemElement?.classList.add("bg-tab-active", "text-tab-fg-active", "shadow-sm");
-			itemElement?.classList.remove(
-				"bg-tab-inactive",
-				"text-tab-fg-inactive",
-				"hover:bg-tab-hover",
-			);
+			if (itemElement) {
+				itemElement.classList.add("bg-tab-active", "text-tab-fg-active", "shadow-sm");
+				itemElement.classList.remove(
+					"bg-tab-inactive",
+					"text-tab-fg-inactive",
+					"hover:bg-tab-hover",
+				);
+			}
 		} catch (error) {
 			console.warn("Error transforming dragged element:", error);
 		}
@@ -140,7 +148,39 @@
 					? { duration: 0 }
 					: { duration: 200, start: 0.8 }}
 			>
-				{@render renderItem(item, item.id === activeId)}
+				{#if renderItem}
+					{@render renderItem(item, item.id === activeId)}
+				{:else if item.href}
+					<a
+						href={item.href}
+						draggable="false"
+						class={cn(
+							"flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium outline-hidden transition-colors",
+							item.id === activeId
+								? "bg-tab-active text-tab-fg-active shadow-sm"
+								: "bg-tab-inactive text-tab-fg-inactive hover:bg-tab-hover",
+						)}
+						role="tab"
+						aria-selected={item.id === activeId}
+						tabindex={item.id === activeId ? 0 : -1}
+					>
+						<span class="w-full truncate">{item.label ?? item.id}</span>
+					</a>
+				{:else}
+					<button
+						type="button"
+						class={cn(
+							"flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium outline-hidden transition-colors",
+							item.id === activeId
+								? "bg-tab-active text-tab-fg-active shadow-sm"
+								: "bg-tab-inactive text-tab-fg-inactive hover:bg-tab-hover",
+						)}
+						tabindex={item.id === activeId ? 0 : -1}
+						onclick={() => handleItemClick(item)}
+					>
+						<span class="w-full truncate">{item.label ?? item.id}</span>
+					</button>
+				{/if}
 			</div>
 		{/each}
 	</div>

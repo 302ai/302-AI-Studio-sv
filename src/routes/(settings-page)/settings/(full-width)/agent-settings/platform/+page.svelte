@@ -34,7 +34,7 @@
 	}
 </script>
 
-<div class="mx-auto flex flex-col h-full w-full max-w-3xl gap-6">
+<div class="mx-auto flex flex-col h-full gap-6 w-full">
 	<!-- Platform Section -->
 	<div class="sticky top-0 w-full bg-background z-50">
 		<SegButton
@@ -46,7 +46,7 @@
 		/>
 	</div>
 
-	<div class="grow max-w-settings-layout m-auto w-full">
+	<div class="grow">
 		{#if selectedPlatform === "remote"}
 			<RemotePlatform />
 		{:else if selectedPlatform === "cloud"}
