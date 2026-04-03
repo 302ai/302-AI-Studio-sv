@@ -1,4 +1,4 @@
-name: AI Code Review
+name: Code Review
 
 on:
     pull_request:
@@ -11,9 +11,10 @@ permissions:
     contents: read
     pull-requests: write
     issues: write
+    id-token: write
 
 jobs:
-    ai-review:
+    code-review:
         runs-on: ubuntu-latest
         # 仅审查从开发分支发起的 PR，跳过 dependabot 和自动化 PR
         # 支持的分支前缀：feat/ fix/ refactor/ perf/ docs/ style/ test/ chore/ ci/ build/
