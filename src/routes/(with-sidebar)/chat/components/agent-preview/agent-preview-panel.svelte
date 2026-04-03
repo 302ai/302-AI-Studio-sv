@@ -426,7 +426,7 @@
 					}
 
 					if (shouldClear) {
-						logger.info("Clearing preview");
+						logger.debug("Clearing preview");
 						// Clear preview state for deleted file
 						cleanupPreviewUrl();
 						fileViewer.selectedFile = null;
@@ -553,7 +553,7 @@
 		// 类似于 React 的 usePrevious + useEffect 组合
 		if (previousStreamingState && !isStreaming) {
 			if (isAgentMode && agentPreviewState.isVisible && currentSandboxId) {
-				logger.info("Task completed, triggering refresh");
+				logger.debug("Task completed, triggering refresh");
 				refreshTrigger++;
 
 				// Refresh sessions to get updated workspace_path after agent completes
@@ -1019,7 +1019,7 @@
 				lastModified: Date.now(),
 			});
 
-			logger.info("Uploading file:", {
+			logger.debug("Uploading file:", {
 				path: filePath,
 				name: file.name,
 				size: file.size,

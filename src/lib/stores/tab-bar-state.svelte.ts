@@ -146,7 +146,7 @@ class TabBarState {
 		window.addEventListener("windowIdChanged", (event: Event) => {
 			const customEvent = event as CustomEvent<{ newWindowId: string }>;
 			const { newWindowId } = customEvent.detail;
-			logger.info(`Window ID changed from ${this.#windowId} to ${newWindowId}`);
+			logger.debug(`Window ID changed from ${this.#windowId} to ${newWindowId}`);
 			this.#windowId = newWindowId;
 		});
 	}

@@ -240,7 +240,7 @@ export async function onChatFinishPostPersist(args: OnChatFinishPostPersistArgs)
 			const serializedResponse = $state.snapshot(response);
 
 			await pluginService.executeAfterSendMessageHook(serializedContext, serializedResponse);
-			logger.info("[ChatState] After send message hook executed successfully");
+			logger.debug("[ChatState] After send message hook executed successfully");
 		}
 	} catch (hookError) {
 		logger.error("[ChatState] After send message hook failed:", hookError);

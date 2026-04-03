@@ -443,7 +443,7 @@ export class FileTreeState {
 				this.treeNodes = [];
 				this.loadedDirs = new SvelteSet();
 			} else {
-				logger.info("No data in storage, keeping existing files");
+				logger.debug("No data in storage, keeping existing files");
 			}
 		} catch (e) {
 			logger.error("Failed to load from storage:", e);
@@ -466,7 +466,7 @@ export class FileTreeState {
 		merge: boolean = false,
 		force: boolean = false,
 	): Promise<void> {
-		logger.info("loadFiles", { path, merge, force, isStreaming: this.isStreaming });
+		logger.debug("loadFiles", { path, merge, force, isStreaming: this.isStreaming });
 
 		if (!this.sandboxId) {
 			return;
@@ -484,7 +484,7 @@ export class FileTreeState {
 
 		// Do not load files while agent is streaming, unless forced (e.g. user initiated navigation)
 		if (this.isStreaming && !force) {
-			logger.info("loadFiles skipped due to streaming");
+			logger.debug("loadFiles skipped due to streaming");
 			return;
 		}
 
@@ -572,7 +572,7 @@ export class FileTreeState {
 			if (isDirectoryNotFound && !isAtSystemRoot(this.currentDirectory)) {
 				// Try to navigate to parent directory
 				const parentPath = pathUtils.getParentDir(this.currentDirectory);
-				logger.info(
+				logger.debug(
 					`[FileTree] Current directory deleted, navigating to parent: ${parentPath}`,
 				);
 
@@ -585,7 +585,7 @@ export class FileTreeState {
 				} catch (_retryError) {
 					// If parent also fails, fallback to workspace root
 					if (!isAtSystemRoot(parentPath)) {
-						logger.info(
+						logger.debug(
 							"Parent directory also invalid, falling back to workspace root",
 						);
 						this.currentDirectory = this.rootPath;
@@ -595,7 +595,7 @@ export class FileTreeState {
 				}
 			} else if (isDirectoryNotFound && isAtSystemRoot(this.currentDirectory)) {
 				// At system root and directory not found - reset to workspace path
-				logger.info("At system root with error, resetting to workspace path");
+				logger.debug("At system root with error, resetting to workspace path");
 				this.currentDirectory = this.rootPath;
 				this.error = null;
 				await this.saveToStorage(); // Update storage with valid path
@@ -622,7 +622,7 @@ export class FileTreeState {
 	 * Sets currentDirectory to the target folder and loads its contents
 	 */
 	async navigateToFolder(folderPath: string): Promise<void> {
-		logger.info("navigateToFolder", folderPath);
+		logger.debug("navigateToFolder", folderPath);
 		if (!folderPath) {
 			return;
 		}
@@ -655,7 +655,7 @@ export class FileTreeState {
 	 * Computes parent path and navigates to it, guarding against system root boundary
 	 */
 	async navigateToParent(): Promise<void> {
-		logger.info("navigateToParent");
+		logger.debug("navigateToParent");
 		// Guard against navigating above system root
 		if (this.currentDirectory === "/" || this.currentDirectory === "") {
 			return;

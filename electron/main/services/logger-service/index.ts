@@ -22,8 +22,10 @@ export class LoggerService {
 	constructor() {
 		log.initialize();
 		this.configureTransports();
-		this.cleanupOldLogs();
-		schedulerService.addTask("log-cleanup", "0 0 */24 * * *", () => this.cleanupOldLogs());
+		if (!isDev) {
+			this.cleanupOldLogs();
+			schedulerService.addTask("log-cleanup", "0 0 */24 * * *", () => this.cleanupOldLogs());
+		}
 	}
 
 	private configureTransports() {

@@ -256,25 +256,25 @@ class ProviderState {
 			const latestUsedModel = sessionState.latestUsedModel;
 			if (latestUsedModel && deletedModelIdSet.has(latestUsedModel.id)) {
 				sessionState.latestUsedModel = null;
-				logger.info(`[Provider] Cleared latestUsedModel reference for deleted model`);
+				logger.debug(`[Provider] Cleared latestUsedModel reference for deleted model`);
 			}
 
 			const newSessionModel = preferencesSettings.newSessionModel;
 			if (newSessionModel && deletedModelIdSet.has(newSessionModel.id)) {
 				preferencesSettings.setNewSessionModel(null);
-				logger.info(`[Provider] Cleared newSessionModel reference for deleted model`);
+				logger.debug(`[Provider] Cleared newSessionModel reference for deleted model`);
 			}
 
 			const vibeNewSessionModel = preferencesSettings.vibeNewSessionModel;
 			if (vibeNewSessionModel && deletedModelIdSet.has(vibeNewSessionModel.id)) {
 				preferencesSettings.setVibeNewSessionModel(null);
-				logger.info(`[Provider] Cleared vibeNewSessionModel reference for deleted model`);
+				logger.debug(`[Provider] Cleared vibeNewSessionModel reference for deleted model`);
 			}
 
 			const titleGenModel = preferencesSettings.state.titleGenerationModel;
 			if (titleGenModel && deletedModelIdSet.has(titleGenModel.id)) {
 				preferencesSettings.setTitleGenerationModel(null);
-				logger.info(`[Provider] Cleared titleGenerationModel reference for deleted model`);
+				logger.debug(`[Provider] Cleared titleGenerationModel reference for deleted model`);
 			}
 
 			try {

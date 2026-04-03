@@ -4,10 +4,10 @@
  * Helper functions for executing provider plugin hooks in the main process
  */
 
+import { createLogger } from "@shared/logger";
 import type { Model, ModelProvider } from "@shared/types";
 import { hookManager } from "../plugin-manager/hook-manager";
 import { pluginRegistry } from "../plugin-manager/plugin-registry";
-import { createLogger } from "@shared/logger";
 
 const logger = createLogger("plugin-manager");
 
@@ -82,10 +82,10 @@ export async function executeFetchModelsHook(provider: ModelProvider): Promise<M
 		}
 
 		// Execute fetch models hook
-		logger.info(`[ProviderPluginHelper] Executing fetch models hook for ${provider.id}`);
+		logger.debug(`[ProviderPluginHelper] Executing fetch models hook for ${provider.id}`);
 		const models = await providerPlugin.instance.onFetchModels(provider);
 
-		logger.info(`[ProviderPluginHelper] Fetched ${models.length} models for ${provider.id}`);
+		logger.debug(`[ProviderPluginHelper] Fetched ${models.length} models for ${provider.id}`);
 		return models;
 	} catch (error) {
 		logger.error("[ProviderPluginHelper] Fetch models hook failed:", error);

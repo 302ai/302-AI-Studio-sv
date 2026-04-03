@@ -12,7 +12,7 @@ import { windowService } from "../window-service";
 export class ShortcutActionsHandler {
 	async handle(action: string, ctx: ShortcutContext): Promise<void> {
 		const { windowId } = ctx;
-		logger.info(`[MainActionsHandler] Received Action: "${action}" (Window: ${windowId})`);
+		logger.debug(`[MainActionsHandler] Received Action: "${action}" (Window: ${windowId})`);
 
 		// Tab-related actions require more than one tab
 		const tabRelatedActions = [
@@ -303,7 +303,7 @@ export class ShortcutActionsHandler {
 			});
 		} else {
 			// For tool view
-			logger.info("handleRegenerateResponse - activeView is null or destroyed");
+			logger.debug("handleRegenerateResponse - activeView is null or destroyed");
 			await aiApplicationService.handleAiApplicationReload(windowId);
 		}
 	}

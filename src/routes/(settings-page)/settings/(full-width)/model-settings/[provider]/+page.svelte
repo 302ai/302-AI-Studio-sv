@@ -13,9 +13,9 @@
 	import { userState } from "$lib/stores/user-state.svelte";
 	import { getFilteredModels } from "$lib/utils/model-filters.js";
 	import { Eye, EyeOff } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { Model, ModelCreateInput, ModelProvider } from "@shared/types";
 	import { toast } from "svelte-sonner";
-	import { createLogger } from "@shared/logger";
 
 	const logger = createLogger("ui");
 
@@ -230,11 +230,11 @@
 		}
 	}
 
-	async function handleModelToggleCollected(model: Model) {
-		await providerState.toggleModelCollected(model.id);
+	function handleModelToggleCollected(model: Model) {
+		providerState.toggleModelCollected(model.id);
 	}
 
-	async function handleModelDuplicate(model: Model) {
+	function handleModelDuplicate(model: Model) {
 		if (!currentProvider) return;
 		let newId = `${model.id}_copy`;
 		let counter = 1;
@@ -242,8 +242,8 @@
 			newId = `${model.id}_copy_${counter}`;
 			counter++;
 		}
-		logger.info("Model capabilities:", model.capabilities);
-		await providerState.addModel({
+		logger.debug("Model capabilities:", model.capabilities);
+		providerState.addModel({
 			id: newId,
 			name: `${model.name} (Copy)`,
 			remark: model.remark ? `${model.remark} (Copy)` : "",

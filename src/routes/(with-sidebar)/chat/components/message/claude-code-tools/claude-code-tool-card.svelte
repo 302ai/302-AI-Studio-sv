@@ -1,13 +1,10 @@
 <script lang="ts" module>
 	import type { DynamicToolUIPart } from "ai";
-	import { createLogger } from "@shared/logger";
 
-	const logger = createLogger("ui");
-
-	export interface ClaudeCodeToolCardProps {
+	export type ClaudeCodeToolCardProps = {
 		part: DynamicToolUIPart;
 		messageId: string;
-	}
+	};
 </script>
 
 <script lang="ts">
@@ -35,7 +32,6 @@
 			codeAgentState.inPlanMode &&
 			!hasDisabledPlanMode
 		) {
-			logger.info("Calling updatePlanMode(false)");
 			codeAgentState.updateInPlanMode(false);
 			hasDisabledPlanMode = true;
 		}

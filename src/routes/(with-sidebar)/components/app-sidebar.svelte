@@ -11,14 +11,14 @@
 	import { threadsState } from "$lib/stores/threads-state.svelte";
 	import { TIME_GROUP_ORDER, TimeGroup } from "$lib/types/time-group";
 	import { ChevronDown } from "@lucide/svelte";
-	import { isChatTab } from "@shared/storage/tab";
+	import { createLogger } from "@shared/logger";
 	import type { CodeAgentConfigMetadata, CodeAgentMetadata } from "@shared/storage/code-agent";
+	import { isChatTab } from "@shared/storage/tab";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import RenameDialog from "./rename-dialog.svelte";
 	import ThreadDeleteDialog from "./thread-delete-dialog.svelte";
 	import ThreadItem from "./thread-item.svelte";
-	import { createLogger } from "@shared/logger";
 
 	const logger = createLogger("ui");
 
@@ -141,8 +141,6 @@
 					new Date(b.thread.updatedAt).getTime() - new Date(a.thread.updatedAt).getTime(),
 			);
 		});
-
-		logger.info("Grouped threads:", groups);
 
 		return groups;
 	});

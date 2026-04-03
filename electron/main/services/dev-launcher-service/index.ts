@@ -91,7 +91,7 @@ services:
 		// Check if podman is already responsive
 		try {
 			await execAsync("podman ps");
-			logger.info("Podman already responsive");
+			logger.debug("Podman already responsive");
 			return { isOk: true };
 		} catch {
 			logger.info("Podman not responsive, starting machine...");
@@ -107,7 +107,7 @@ services:
 			if (!msg.includes("already running")) {
 				return { isOk: false, error: `Failed to start Podman machine: ${msg}` };
 			}
-			logger.info("Machine already running");
+			logger.debug("Machine already running");
 		}
 
 		// Poll until podman is ready (up to 60s)
@@ -132,10 +132,10 @@ services:
 		while (Date.now() - start < timeoutMs) {
 			try {
 				await execAsync("podman ps");
-				logger.info("Podman is ready");
+				logger.debug("Podman is ready");
 				return true;
 			} catch {
-				logger.info("Podman not ready yet, retrying...");
+				logger.debug("Podman not ready yet, retrying...");
 				await new Promise((r) => setTimeout(r, interval));
 			}
 		}

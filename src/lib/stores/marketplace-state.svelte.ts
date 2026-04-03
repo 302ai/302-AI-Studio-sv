@@ -46,12 +46,12 @@ class MarketplaceState {
 	async initialize(): Promise<void> {
 		if (this.initialized) return;
 
-		logger.info("Initializing...");
+		logger.debug("Initializing...");
 
 		try {
 			await this.refreshMarketplace();
 			this.initialized = true;
-			logger.info("Initialized successfully");
+			logger.debug("Initialized successfully");
 		} catch (error) {
 			logger.error("Initialization failed:", error);
 			this.error =

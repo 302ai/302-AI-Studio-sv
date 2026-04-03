@@ -55,7 +55,7 @@ export async function compressImage(file: File, maxSizeMB: number = MAX_SIZE_MB)
 	}
 
 	try {
-		logger.info(`[Compression] Original file: ${file.name}, size: ${formatBytes(file.size)}`);
+		logger.debug(`[Compression] Original file: ${file.name}, size: ${formatBytes(file.size)}`);
 
 		// Configure compression options
 		const options = {
@@ -72,17 +72,17 @@ export async function compressImage(file: File, maxSizeMB: number = MAX_SIZE_MB)
 			preserveExif: false,
 			// Progress callback (optional)
 			onProgress: (progress: number) => {
-				logger.info(`[Compression] Progress: ${progress}%`);
+				logger.debug(`[Compression] Progress: ${progress}%`);
 			},
 		};
 
 		// Compress the image
 		const compressedFile = await imageCompression(file, options);
 
-		logger.info(
+		logger.debug(
 			`[Compression] Compressed file: ${compressedFile.name}, size: ${formatBytes(compressedFile.size)}`,
 		);
-		logger.info(
+		logger.debug(
 			`[Compression] Compression ratio: ${((1 - compressedFile.size / file.size) * 100).toFixed(1)}%`,
 		);
 
@@ -91,7 +91,7 @@ export async function compressImage(file: File, maxSizeMB: number = MAX_SIZE_MB)
 
 		// Check base64 size
 		const base64Size = getBase64Size(dataURL);
-		logger.info(`[Compression] Base64 size: ${formatBytes(base64Size)}`);
+		logger.debug(`[Compression] Base64 size: ${formatBytes(base64Size)}`);
 
 		// If still too large, try more aggressive compression
 		if (base64Size > maxSizeMB * 1024 * 1024) {
@@ -113,7 +113,7 @@ export async function compressImage(file: File, maxSizeMB: number = MAX_SIZE_MB)
 			const recompressedDataURL = await fileToDataURL(recompressedFile);
 
 			const recompressedBase64Size = getBase64Size(recompressedDataURL);
-			logger.info(
+			logger.debug(
 				`[Compression] Recompressed base64 size: ${formatBytes(recompressedBase64Size)}`,
 			);
 
@@ -148,7 +148,7 @@ export async function compressFile(file: File, maxSizeMB: number = MAX_SIZE_MB):
 	const size = getBase64Size(dataURL);
 
 	if (size <= maxSizeBytes) {
-		logger.info(
+		logger.debug(
 			`[Compression] File ${file.name} is within size limit: ${formatBytes(size)} / ${formatBytes(maxSizeBytes)}`,
 		);
 		return dataURL;

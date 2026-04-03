@@ -130,7 +130,7 @@ export class TabService {
 		// 2. Update storage (this will trigger broadcast to all renderers)
 		await tabStorage.updateTabProperty(tabId, { type });
 
-		logger.info(`[TabService] Tab ${tabId} type explicitly updated to ${type}`);
+		logger.debug(`[TabService] Tab ${tabId} type explicitly updated to ${type}`);
 	}
 
 	async startMemoryManagerAfterInitialLoad(timeoutMs: number = 10_000) {
@@ -249,7 +249,7 @@ export class TabService {
 			view.webContents.close({ waitForBeforeUnload: false });
 		} else {
 			// Cleanup maps if view is already gone
-			logger.info(`[TabService] Cleaning up metadata for already destroyed tab ${tabId}`);
+			logger.debug(`[TabService] Cleaning up metadata for already destroyed tab ${tabId}`);
 			this.tabViewMap.delete(tabId);
 			this.tabMap.delete(tabId);
 			this.tabWindowMap.delete(tabId);
@@ -435,7 +435,7 @@ export class TabService {
 		const tab = this.tabMap.get(tabId);
 		if (!tab) return undefined;
 
-		logger.info(`[TabService] Waking tab ${tabId}`);
+		logger.debug(`[TabService] Waking tab ${tabId}`);
 		tab.isSleeping = false;
 		// Recreate view
 		const view = await this.newWebContentsView(window.id, tab);
@@ -607,7 +607,7 @@ export class TabService {
 			]);
 
 			if (thread?.isPrivateChatActive || messages?.length === 0) {
-				logger.info(`[TabService] Cleaning up business data for thread ${tab.threadId}`);
+				logger.debug(`[TabService] Cleaning up business data for thread ${tab.threadId}`);
 				// Use unified cleanup method from ThreadStorage
 				await threadStorage.cleanupThreadData(tab.threadId);
 			}
@@ -751,7 +751,7 @@ export class TabService {
 		const windowTabs = await tabStorage.getTabsByWindowId(windowId.toString());
 		if (isNull(windowTabs)) return;
 
-		logger.info(`[Privacy] Cleaning up private chat data for window ${windowId}`);
+		logger.debug(`[Privacy] Cleaning up private chat data for window ${windowId}`);
 
 		const tabsToKeep: Tab[] = [];
 		let removedActiveTabIndex = -1;
@@ -1165,7 +1165,7 @@ export class TabService {
 			`[TabService] handleNewTabWithThread: threadId=${threadId}, windowId=${windowId}`,
 		);
 		logger.info(`[TabService] Current tabState windows:`, Object.keys(tabState || {}));
-		logger.info(`[TabService] tabViewMap size:`, this.tabViewMap.size);
+		logger.debug(`[TabService] tabViewMap size:`, this.tabViewMap.size);
 
 		if (!isNull(tabState)) {
 			// Check in ALL windows, not just current window
@@ -1269,7 +1269,7 @@ export class TabService {
 				: [...currentTabs, newTab];
 			finalTabState[windowId] = { tabs: updatedTabs };
 			await tabStorage.setItemInternal("tab-bar-state", finalTabState);
-			logger.info(`[TabService] Added new tab ${newTabId} to window ${windowId} storage`);
+			logger.debug(`[TabService] Added new tab ${newTabId} to window ${windowId} storage`);
 		}
 		// ===========================================================
 
@@ -1388,7 +1388,7 @@ export class TabService {
 				: [...currentTabs, newTab];
 			tabState[windowId] = { tabs: updatedTabs };
 			await tabStorage.setItemInternal("tab-bar-state", tabState);
-			logger.info(`[TabService] Added new tab ${newTabId} to window ${windowId} storage`);
+			logger.debug(`[TabService] Added new tab ${newTabId} to window ${windowId} storage`);
 		}
 		// ===========================================================
 
@@ -1775,7 +1775,7 @@ export class TabService {
 		_event: IpcMainInvokeEvent,
 		threadId: string,
 	): Promise<boolean> {
-		logger.info(`[triggerCreateSkillSummary] Triggering summary for thread ${threadId}`);
+		logger.debug(`[triggerCreateSkillSummary] Triggering summary for thread ${threadId}`);
 
 		try {
 			// Find the tab with matching threadId

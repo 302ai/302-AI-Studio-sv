@@ -130,11 +130,11 @@ function createUIAPI(plugin: InstalledPlugin): PluginUIAPI {
 	return {
 		registerComponent(name: string, component: typeof import("svelte").SvelteComponent): void {
 			if (componentRegistry.has(name)) {
-				logger.warn(`[PluginAPI] Component ${name} already registered, overwriting...`);
+				logger.debug(`[PluginAPI] Component ${name} already registered, overwriting...`);
 			}
 
 			componentRegistry.set(name, component);
-			logger.info(
+			logger.debug(
 				`[PluginAPI] Registered component: ${name} for plugin ${plugin.metadata.id}`,
 			);
 		},
@@ -150,7 +150,7 @@ function createUIAPI(plugin: InstalledPlugin): PluginUIAPI {
 				message,
 				type,
 			});
-			logger.info(
+			logger.debug(
 				`[PluginAPI] Notification from ${plugin.metadata.name}: [${type}] ${message}`,
 			);
 		},
@@ -201,11 +201,11 @@ function createLoggerAPI(plugin: InstalledPlugin): PluginLoggerAPI {
 		},
 
 		info(message: string, ...args: unknown[]): void {
-			logger.info(prefix, message, ...args);
+			logger.debug(prefix, message, ...args);
 		},
 
 		warn(message: string, ...args: unknown[]): void {
-			logger.warn(prefix, message, ...args);
+			logger.debug(prefix, message, ...args);
 		},
 
 		error(message: string, ...args: unknown[]): void {

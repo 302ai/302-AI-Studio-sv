@@ -122,7 +122,7 @@ export class PluginService {
 	 * @returns The path to the downloaded and extracted plugin
 	 */
 	private async downloadPluginFromUrl(url: string): Promise<string> {
-		logger.info(`[PluginService] Downloading plugin from: ${url}`);
+		logger.debug(`[PluginService] Downloading plugin from: ${url}`);
 
 		// Create a temporary directory for download
 		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "plugin-download-"));
@@ -147,7 +147,7 @@ export class PluginService {
 			const arrayBuffer = await response.arrayBuffer();
 			await fs.writeFile(zipPath, Buffer.from(arrayBuffer));
 
-			logger.info(`[PluginService] Downloaded plugin to: ${zipPath}`);
+			logger.debug(`[PluginService] Downloaded plugin to: ${zipPath}`);
 
 			// Extract the zip file
 			const extractDir = path.join(tempDir, "extracted");
@@ -157,7 +157,7 @@ export class PluginService {
 				dir: extractDir,
 			});
 
-			logger.info(`[PluginService] Extracted plugin to: ${extractDir}`);
+			logger.debug(`[PluginService] Extracted plugin to: ${extractDir}`);
 
 			// Move to final location
 			const pluginsDir = path.join(app.getPath("userData"), "plugins", "external");
@@ -171,7 +171,7 @@ export class PluginService {
 			// Clean up temp zip file
 			await fs.remove(zipPath);
 
-			logger.info(`[PluginService] Plugin installed to: ${finalDir}`);
+			logger.debug(`[PluginService] Plugin installed to: ${finalDir}`);
 
 			return finalDir;
 		} catch (err) {
@@ -188,7 +188,7 @@ export class PluginService {
 		_event: IpcMainInvokeEvent,
 		source: PluginSource,
 	): Promise<InstalledPlugin> {
-		logger.info(`[PluginService] Installing plugin from source:`, source);
+		logger.debug(`[PluginService] Installing plugin from source:`, source);
 
 		let pluginPath: string;
 
@@ -219,7 +219,7 @@ export class PluginService {
 				}
 
 				// Download from the registry's download URL
-				logger.info(
+				logger.debug(
 					`[PluginService] Installing ${marketplacePlugin.metadata.name} from marketplace`,
 				);
 				pluginPath = await this.downloadPluginFromUrl(marketplacePlugin.downloadUrl);
@@ -258,7 +258,7 @@ export class PluginService {
 		// Delete plugin files
 		try {
 			await fs.remove(pluginPath);
-			logger.info(`[PluginService] Deleted plugin files at: ${pluginPath}`);
+			logger.debug(`[PluginService] Deleted plugin files at: ${pluginPath}`);
 		} catch (err) {
 			logger.error(`[PluginService] Failed to delete plugin files:`, err);
 			throw new Error(
@@ -416,7 +416,7 @@ export class PluginService {
 			await storageService.setItem(_event, configPrefix + key, value as never);
 		}
 
-		logger.info(`[PluginService] Updated and persisted config for plugin: ${pluginId}`);
+		logger.debug(`[PluginService] Updated and persisted config for plugin: ${pluginId}`);
 	}
 
 	/**
@@ -456,7 +456,7 @@ export class PluginService {
 		const configPrefix = `plugin:${pluginId}:config:`;
 		await storageService.setItem(_event, configPrefix + key, value as never);
 
-		logger.info(
+		logger.debug(
 			`[PluginService] Updated and persisted config value for plugin: ${pluginId}, key: ${key}`,
 		);
 	}
@@ -466,11 +466,11 @@ export class PluginService {
 	 * Called when the application starts
 	 */
 	async initialize(): Promise<void> {
-		logger.info("Initializing plugin system...");
+		logger.debug("Initializing plugin system...");
 
 		try {
 			await pluginLoader.loadAllPlugins();
-			logger.info(
+			logger.debug(
 				`[PluginService] Plugin system initialized with ${pluginLoader.getLoadedPlugins().length} plugins`,
 			);
 		} catch (error) {
@@ -486,7 +486,7 @@ export class PluginService {
 		_event: IpcMainInvokeEvent,
 		provider: ModelProvider,
 	): Promise<Model[]> {
-		logger.info(`[PluginService] Fetching models for provider: ${provider.id}`);
+		logger.debug(`[PluginService] Fetching models for provider: ${provider.id}`);
 
 		try {
 			// Check if provider has a registered plugin
@@ -498,7 +498,7 @@ export class PluginService {
 			// Execute fetch models hook through plugin
 			const models = await executeFetchModelsHook(provider);
 
-			logger.info(
+			logger.debug(
 				`[PluginService] Fetched ${models.length} models for provider: ${provider.id}`,
 			);
 
@@ -539,7 +539,7 @@ export class PluginService {
 		parameters: Record<string, unknown>;
 		options: Record<string, unknown>;
 	}> {
-		logger.info("Executing before send message hook");
+		logger.debug("Executing before send message hook");
 
 		try {
 			const { executeBeforeSendMessageHook } = await import(
@@ -579,7 +579,7 @@ export class PluginService {
 			metadata?: Record<string, unknown>;
 		},
 	): Promise<void> {
-		logger.info("Executing after send message hook");
+		logger.debug("Executing after send message hook");
 
 		try {
 			const { executeAfterSendMessageHook } = await import(
@@ -610,7 +610,7 @@ export class PluginService {
 		retryDelay?: number;
 		message?: string;
 	}> {
-		logger.info("Executing error hook");
+		logger.debug("Executing error hook");
 
 		try {
 			const { executeErrorHook } = await import("../plugin-manager/provider-plugin-helper");

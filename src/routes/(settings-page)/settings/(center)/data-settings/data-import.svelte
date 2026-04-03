@@ -46,7 +46,7 @@
 					}, 1000);
 				}, 1500);
 			} else {
-				logger.info("取消导入");
+				logger.debug("取消导入");
 			}
 		} catch (error) {
 			logger.error("Import error:", error);
@@ -92,7 +92,7 @@
 					}, 1000);
 				}, 1500);
 			} else {
-				logger.info("取消导入");
+				logger.debug("取消导入");
 			}
 		} catch (error) {
 			logger.error("Legacy import error:", error);

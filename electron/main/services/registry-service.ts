@@ -87,7 +87,7 @@ export class RegistryService {
 			const metadataPath = this.getCacheMetadataPath();
 
 			if (!(await fs.pathExists(cachePath))) {
-				logger.info("No cache file found");
+				logger.debug("No cache file found");
 				return;
 			}
 
@@ -152,7 +152,7 @@ export class RegistryService {
 	 * Fetch registry from remote
 	 */
 	private async fetchRegistry(): Promise<RegistryData> {
-		logger.info(`[RegistryService] Fetching registry from ${REGISTRY_CONFIG.url}`);
+		logger.debug(`[RegistryService] Fetching registry from ${REGISTRY_CONFIG.url}`);
 
 		try {
 			const headers: Record<string, string> = {

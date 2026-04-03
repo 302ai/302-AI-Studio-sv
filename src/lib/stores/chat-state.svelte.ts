@@ -231,7 +231,7 @@ class ChatState {
 		if (this.suggestionsAbortController) {
 			this.suggestionsAbortController.abort();
 			this.suggestionsAbortController = null;
-			logger.info("Cancelled pending suggestions generation");
+			logger.debug("Cancelled pending suggestions generation");
 		}
 	}
 
@@ -243,7 +243,7 @@ class ChatState {
 		if (this.titleAbortController) {
 			this.titleAbortController.abort();
 			this.titleAbortController = null;
-			logger.info("Cancelled pending title generation");
+			logger.debug("Cancelled pending title generation");
 		}
 	}
 
@@ -255,7 +255,7 @@ class ChatState {
 		if (this.summaryAbortController) {
 			this.summaryAbortController.abort();
 			this.summaryAbortController = null;
-			logger.info("Cancelled pending summary generation");
+			logger.debug("Cancelled pending summary generation");
 		}
 	}
 
@@ -693,7 +693,7 @@ class ChatState {
 			);
 
 			if (hookResult.handled) {
-				logger.info("Error handled by plugin hook");
+				logger.debug("Error handled by plugin hook");
 
 				// If plugin suggests custom message, use it
 				if (hookResult.message) {
@@ -830,11 +830,11 @@ class ChatState {
 						"stop" in modifiedContext &&
 						modifiedContext.stop === true
 					) {
-						logger.info("Message sending cancelled by plugin hook");
+						logger.debug("Message sending cancelled by plugin hook");
 						return;
 					}
 
-					logger.info("Before send message hook executed successfully");
+					logger.debug("Before send message hook executed successfully");
 				} catch (hookError) {
 					logger.error("Before send message hook failed:", hookError);
 					// Continue with message sending even if hook fails

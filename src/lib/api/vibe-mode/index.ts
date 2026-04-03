@@ -175,7 +175,7 @@ export async function updateTasklist(
 			logger.error("Tasks content:", tasks);
 			return { isOk: false };
 		}
-		logger.info("Updating task list content:", jsonContent);
+		logger.debug("Updating task list content:", jsonContent);
 		const base64Content =
 			"data:application/json;base64," +
 			window.btoa(

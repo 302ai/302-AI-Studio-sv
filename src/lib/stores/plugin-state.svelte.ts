@@ -46,12 +46,12 @@ class PluginState {
 	async initialize(): Promise<void> {
 		if (this.initialized) return;
 
-		logger.info("Initializing...");
+		logger.debug("Initializing...");
 
 		try {
 			await this.refreshPlugins();
 			this.initialized = true;
-			logger.info("Initialized successfully");
+			logger.debug("Initialized successfully");
 		} catch (error) {
 			logger.error("Initialization failed:", error);
 			this.error = error instanceof Error ? error.message : "Failed to initialize plugins";
@@ -221,7 +221,7 @@ class PluginState {
 		this.error = null;
 
 		try {
-			logger.info("Updating plugin:", pluginId);
+			logger.debug("Updating plugin:", pluginId);
 			await pluginService.updatePlugin(pluginId);
 
 			// Refresh plugin lists
@@ -281,9 +281,9 @@ class PluginState {
 			// Performance: Use $state.snapshot() instead of JSON.parse(JSON.stringify())
 			const serializedConfig = $state.snapshot(config);
 
-			logger.info("Setting plugin config:", pluginId, serializedConfig);
+			logger.debug("Setting plugin config:", pluginId, serializedConfig);
 			await pluginService.setPluginConfig(pluginId, serializedConfig);
-			logger.info("Plugin config updated:", pluginId);
+			logger.debug("Plugin config updated:", pluginId);
 		} catch (error) {
 			logger.error("Failed to set plugin config:", error);
 			throw error;
@@ -311,9 +311,9 @@ class PluginState {
 			const serializedValue =
 				typeof value === "object" && value !== null ? $state.snapshot(value) : value;
 
-			logger.info("Setting plugin config value:", pluginId, key, serializedValue);
+			logger.debug("Setting plugin config value:", pluginId, key, serializedValue);
 			await pluginService.setPluginConfigValue(pluginId, key, serializedValue);
-			logger.info("Plugin config value updated:", pluginId, key);
+			logger.debug("Plugin config value updated:", pluginId, key);
 		} catch (error) {
 			logger.error("Failed to set plugin config value:", error);
 			throw error;
@@ -353,7 +353,7 @@ class PluginState {
 	 */
 	async fetchModelsFromProvider(provider: ModelProvider): Promise<Model[]> {
 		try {
-			logger.info(`[PluginState] Fetching models for provider: ${provider.id}`);
+			logger.debug(`[PluginState] Fetching models for provider: ${provider.id}`);
 			const models = await pluginService.fetchModelsFromProvider(provider);
 			logger.info(`[PluginState] Fetched ${models.length} models for ${provider.id}`);
 			return models;

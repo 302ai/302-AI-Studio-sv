@@ -107,7 +107,7 @@ export class LocalVibeService {
 				fs.mkdirSync(targetDir, { recursive: true });
 			}
 
-			logger.info(`[LocalVibeService] Copying ${sourcePath} to ${targetPath}`);
+			logger.debug(`[LocalVibeService] Copying ${sourcePath} to ${targetPath}`);
 			await cp(sourcePath, targetPath, { recursive: true });
 
 			return { success: true };
@@ -316,7 +316,7 @@ export class LocalVibeService {
 			if (!fs.existsSync(openclawFilePath)) {
 				// New file: use template directly
 				finalConfig = templateConfig;
-				logger.info("Creating new openclaw.json");
+				logger.debug("Creating new openclaw.json");
 			} else {
 				// Existing file: merge template into existing config with forced API key override
 				const existingContent = fs.readFileSync(openclawFilePath, "utf-8");
@@ -351,7 +351,7 @@ export class LocalVibeService {
 						"to",
 						OPENCLAW_DEFAULT_CONFIG._version,
 					);
-					logger.info("Override paths:", overridePaths);
+					logger.debug("Override paths:", overridePaths);
 
 					await localVibeStorage.setData({
 						openclawJsonTemplateVersion: OPENCLAW_DEFAULT_CONFIG._version,
@@ -704,7 +704,7 @@ export class LocalVibeService {
 				const match = output.match(pattern);
 				if (match && match[1]) {
 					const password = match[1].trim();
-					logger.info("Extracted password (length):", password.length);
+					logger.debug("Extracted password (length):", password.length);
 					return { success: true, password };
 				}
 			}
@@ -958,12 +958,12 @@ export class LocalVibeService {
 		while (Date.now() - startTime < timeoutMs) {
 			try {
 				await execAsync("podman ps");
-				logger.info("Podman is ready");
+				logger.debug("Podman is ready");
 				return true;
 			} catch (error) {
 				// Podman not ready yet, log error and wait
 				const errorMsg = error instanceof Error ? error.message : String(error);
-				logger.info("Podman not ready yet:", errorMsg.substring(0, 100));
+				logger.debug("Podman not ready yet:", errorMsg.substring(0, 100));
 
 				// Check for WSL connection issues (Windows only)
 				if (
@@ -1690,7 +1690,7 @@ export class LocalVibeService {
 			return { isOk: true };
 		}
 
-		logger.info("Configuring WSL automount options in /etc/wsl.conf...");
+		logger.debug("Configuring WSL automount options in /etc/wsl.conf...");
 		broadcastService.broadcastChannelToAll("install-log", {
 			step: "wsl-conf-configure",
 			type: "stdout",
@@ -2262,7 +2262,7 @@ export class LocalVibeService {
 		// For stop operations, if it's already stopping or operating, we can treat it as success
 		// or at least avoid redundant/conflicting commands.
 		if (this.isOperating) {
-			logger.info("Operation already in progress, skipping redundant stop request");
+			logger.debug("Operation already in progress, skipping redundant stop request");
 			return { isOk: true, output: "Stop already in progress" };
 		}
 
@@ -2405,7 +2405,7 @@ export class LocalVibeService {
 				// Sandbox is already running
 				const port = this.getRuntimePort() ?? DEFAULT_SANDBOX_PORT;
 				const openClawPort = this.getRuntimeOpenClawPort() ?? DEFAULT_OPENCLAW_PORT;
-				logger.info("Local sandbox already running on port:", port);
+				logger.debug("Local sandbox already running on port:", port);
 				return { isOk: true, port, openClawPort, wasAlreadyRunning: true };
 			}
 
@@ -2525,7 +2525,7 @@ export class LocalVibeService {
 			//   (init may have set the values, but this ensures consistency)
 			const { data: localVibeData } = await localVibeStorage.getData();
 			if (localVibeData.needUpdateVmConfig) {
-				logger.info("Applying VM config update (--cpus 4 --memory 4096)...");
+				logger.debug("Applying VM config update (--cpus 4 --memory 4096)...");
 				await this.runCommandWithBroadcast(
 					"podman",
 					["machine", "set", "ai302-machine", "--cpus", "4", "--memory", "4096"],

@@ -34,11 +34,11 @@ export class UserDataManager {
 	}
 
 	private logPathInfo() {
-		logger.info("========== 路径信息 ==========");
-		logger.info("平台:", process.platform);
-		logger.info("userData 路径:", app.getPath("userData"));
-		logger.info("备份路径:", this.backupPath);
-		logger.info("==============================");
+		logger.debug("========== 路径信息 ==========");
+		logger.debug("平台:", process.platform);
+		logger.debug("userData 路径:", app.getPath("userData"));
+		logger.debug("备份路径:", this.backupPath);
+		logger.debug("==============================");
 	}
 
 	/**
@@ -133,7 +133,7 @@ export class UserDataManager {
 		// Remove older backups
 		for (let i = keepCount; i < backups.length; i++) {
 			fs.rmSync(backups[i].path, { recursive: true, force: true });
-			logger.info(`Removed old backup: ${backups[i].path}`);
+			logger.debug(`Removed old backup: ${backups[i].path}`);
 		}
 	}
 }

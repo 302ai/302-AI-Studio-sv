@@ -40,14 +40,14 @@ export class DeepLinkService {
 			return;
 		}
 
-		logger.info("Initializing protocol handler");
+		logger.debug("Initializing protocol handler");
 
 		// Register custom protocol handler
 		if (!app.isDefaultProtocolClient("ai302studio")) {
 			const result = app.setAsDefaultProtocolClient("ai302studio");
 			logger.info("Set as default protocol client result:", result);
 		} else {
-			logger.info("Already set as default protocol client");
+			logger.debug("Already set as default protocol client");
 		}
 
 		// Handle deep links (macOS/Linux)
@@ -82,7 +82,7 @@ export class DeepLinkService {
 	handleDeepLink(url: string) {
 		// Trim whitespace that might be added by copy-paste or terminal
 		const trimmedUrl = url.trim();
-		logger.info("Processing URL:", trimmedUrl);
+		logger.debug("Processing URL:", trimmedUrl);
 
 		try {
 			const parsedUrl = new URL(trimmedUrl);

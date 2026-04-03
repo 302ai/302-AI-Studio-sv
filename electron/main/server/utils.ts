@@ -388,7 +388,7 @@ export function convertAiSdkMessagesToOpenAiMessages(messages: unknown): OpenAIC
 		const content = (message as AiSdkIntermediateMessage).content;
 
 		// Debug: Log message structure
-		logger.info("[convertAiSdkMessagesToOpenAiMessages] Processing message:", {
+		logger.debug("[convertAiSdkMessagesToOpenAiMessages] Processing message:", {
 			role,
 			contentType: typeof content,
 			isArray: Array.isArray(content),
@@ -994,7 +994,7 @@ export async function uploadAttachmentsFromMessages(
 		return;
 	}
 
-	logger.info(`[uploadAttachmentsFromMessages] Uploading ${attachments.length} attachments`);
+	logger.debug(`[uploadAttachmentsFromMessages] Uploading ${attachments.length} attachments`);
 
 	try {
 		const fileList = await Promise.all(
