@@ -1,20 +1,3 @@
-<script lang="ts" module>
-	export const PRESET_SYSTEM_PROMPT = [
-		{
-			key: "universal-type",
-			text: m.text_universal_type(),
-		},
-		{
-			key: "terse-and-effective-type",
-			text: m.text_terse_and_effective_type(),
-		},
-		{
-			key: "deep-thinking-type",
-			text: m.text_deep_thinking_type(),
-		},
-	];
-</script>
-
 <script lang="ts">
 	import { UPDATE_CONTENT_COMMAND } from "$lib/components/buss/prompt-editor/plugins/external-update-plugin.svelte";
 	import PromptEditor from "$lib/components/buss/prompt-editor/prompt-editor.svelte";
@@ -23,31 +6,34 @@
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import * as Select from "$lib/components/ui/select/index.js";
+	import {
+		BUILTIN_SYSTEM_PHRASING_MAP,
+		getBuiltinPresets,
+		isBuiltinPresetKey,
+		isReadonlyBuiltinPresetKey,
+		PRESET_SYSTEM_PROMPT_KEYS,
+	} from "$lib/constants/preset-phrasing";
 	import { m } from "$lib/paraglide/messages";
 	import { chatParameters } from "$lib/stores/chat-paramters/chat-parameters.svelte";
-	import { customPresetsStore } from "$lib/stores/custom-presets-store.svelte";
+	import {
+		customPresetsStore,
+		DEFAULT_USER_PHRASING,
+		EMPTY_PHRASING,
+	} from "$lib/stores/custom-presets-store.svelte";
 	import { CirclePlus, Save } from "@lucide/svelte";
 	import type { LexicalEditor } from "lexical";
 	import { toast } from "svelte-sonner";
-	import deepThinkingType from "./preset-prompt-templates/deep-thinking-type.json";
-	import terseAndEffectiveType from "./preset-prompt-templates/terse-and-effective-type.json";
-	import universalType from "./preset-prompt-templates/universal-type.json";
 
 	let showAddDialog = $state(false);
 	let newPromptName = $state("");
 	let isInitialized = $state(false);
-	const PRESET_PROMPT_MAP: Record<string, string> = {
-		"universal-type": JSON.stringify(universalType),
-		"terse-and-effective-type": JSON.stringify(terseAndEffectiveType),
-		"deep-thinking-type": JSON.stringify(deepThinkingType),
-	};
+
+	const builtinPresets = $derived(getBuiltinPresets());
 
 	const allPresets = $derived.by(() => {
-		const builtinKeys = new Set(PRESET_SYSTEM_PROMPT.map((p) => p.key));
-		const customOnly = customPresetsStore.presets
-			.filter((p) => !builtinKeys.has(p.key))
-			.map((p) => ({ key: p.key, text: p.name }));
-		return [...PRESET_SYSTEM_PROMPT, ...customOnly];
+		const builtinKeys = new Set<string>(PRESET_SYSTEM_PROMPT_KEYS);
+		const customOnly = customPresetsStore.presets.filter((p) => !builtinKeys.has(p.key));
+		return [...builtinPresets, ...customOnly];
 	});
 
 	const canSave = $derived.by(() => {
@@ -55,12 +41,11 @@
 		const savedPreset = customPresetsStore.getPreset(currentType);
 
 		if (savedPreset) {
-			return chatParameters.systemPromptRawJson !== savedPreset.rawJson;
+			return chatParameters.systemPromptRawJson !== savedPreset.systemPhrasing;
 		}
 
-		const isBuiltin = currentType in PRESET_PROMPT_MAP;
-		if (isBuiltin) {
-			return chatParameters.systemPromptRawJson !== PRESET_PROMPT_MAP[currentType];
+		if (isBuiltinPresetKey(currentType)) {
+			return chatParameters.systemPromptRawJson !== BUILTIN_SYSTEM_PHRASING_MAP[currentType];
 		}
 
 		return false;
@@ -75,18 +60,15 @@
 			chatParameters.startPresetChange(newValue);
 			chatParameters.systemPromptEditorRef.dispatchCommand(
 				UPDATE_CONTENT_COMMAND,
-				customPreset.rawJson,
+				customPreset.systemPhrasing,
 			);
 			return;
 		}
 
-		const prompt = PRESET_PROMPT_MAP[newValue];
+		const prompt = BUILTIN_SYSTEM_PHRASING_MAP[newValue] ?? EMPTY_PHRASING;
 
 		chatParameters.startPresetChange(newValue);
-
-		if (prompt) {
-			chatParameters.systemPromptEditorRef.dispatchCommand(UPDATE_CONTENT_COMMAND, prompt);
-		}
+		chatParameters.systemPromptEditorRef.dispatchCommand(UPDATE_CONTENT_COMMAND, prompt);
 	}
 
 	function handleEditorReady(editor: LexicalEditor) {
@@ -99,22 +81,29 @@
 		const savedPreset = customPresetsStore.getPreset(currentType);
 
 		if (savedPreset) {
-			editor.dispatchCommand(UPDATE_CONTENT_COMMAND, savedPreset.rawJson);
-		} else if (currentType in PRESET_PROMPT_MAP) {
-			editor.dispatchCommand(UPDATE_CONTENT_COMMAND, PRESET_PROMPT_MAP[currentType]);
+			editor.dispatchCommand(UPDATE_CONTENT_COMMAND, savedPreset.systemPhrasing);
+		} else {
+			const builtinPreset = allPresets.find((preset) => preset.key === currentType);
+			if (builtinPreset) {
+				editor.dispatchCommand(UPDATE_CONTENT_COMMAND, builtinPreset.systemPhrasing);
+			}
 		}
 	}
 
 	function handleAddPrompt() {
 		if (!newPromptName.trim()) return;
 
-		const emptyRawJson =
-			'{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0,"textStyle":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}';
-
-		const newPreset = customPresetsStore.addPreset(newPromptName.trim(), emptyRawJson);
+		const newPreset = customPresetsStore.addPreset(
+			newPromptName.trim(),
+			EMPTY_PHRASING,
+			DEFAULT_USER_PHRASING,
+		);
 
 		chatParameters.startPresetChange(newPreset.key);
-		chatParameters.systemPromptEditorRef?.dispatchCommand(UPDATE_CONTENT_COMMAND, emptyRawJson);
+		chatParameters.systemPromptEditorRef?.dispatchCommand(
+			UPDATE_CONTENT_COMMAND,
+			EMPTY_PHRASING,
+		);
 
 		newPromptName = "";
 		showAddDialog = false;
@@ -122,9 +111,27 @@
 
 	function handleSavePrompt() {
 		const currentType = chatParameters.systemPromptPresetType;
-		const presetName = allPresets.find((p) => p.key === currentType)?.text || currentType;
+		const currentPreset = allPresets.find((p) => p.key === currentType);
+		const presetName = currentPreset?.name || currentType;
+		const userPhrasing = currentPreset?.userPhrasing ?? DEFAULT_USER_PHRASING;
 
-		customPresetsStore.savePreset(currentType, presetName, chatParameters.systemPromptRawJson);
+		if (isReadonlyBuiltinPresetKey(currentType)) {
+			const newPreset = customPresetsStore.addPreset(
+				`${presetName} copy`,
+				chatParameters.systemPromptRawJson,
+				userPhrasing,
+			);
+			chatParameters.startPresetChange(newPreset.key);
+			toast.success(m.phrasing_copied_as_custom());
+			return;
+		}
+
+		customPresetsStore.savePreset(
+			currentType,
+			presetName,
+			chatParameters.systemPromptRawJson,
+			userPhrasing,
+		);
 
 		toast.success(m.system_prompt_save_success());
 	}
@@ -143,11 +150,11 @@
 			>
 				<Select.Trigger class="w-full"
 					>{allPresets.find((item) => item.key === chatParameters.systemPromptPresetType)
-						?.text}
+						?.name}
 				</Select.Trigger>
 				<Select.Content>
 					{#each allPresets as item (item.key)}
-						<Select.Item value={item.key} label={item.text} />
+						<Select.Item value={item.key} label={item.name} />
 					{/each}
 				</Select.Content>
 			</Select.Root>

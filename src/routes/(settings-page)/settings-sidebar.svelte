@@ -32,6 +32,11 @@
 			labelKey: m.text_button_settings_models(),
 		},
 		{
+			name: "phrasing-settings",
+			path: "/settings/phrasing-settings",
+			labelKey: "提示词",
+		},
+		{
 			name: "agent-settings",
 			path: "/settings/agent-settings",
 			labelKey: m.title_code_agent(),
