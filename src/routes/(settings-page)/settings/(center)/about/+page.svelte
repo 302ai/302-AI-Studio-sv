@@ -83,6 +83,8 @@
 				endHourValue,
 			);
 
+			if (result === undefined) return;
+
 			if (result) {
 				toast.success(m.about_export_logs_success(), { description: result });
 				openExportDialog = false;

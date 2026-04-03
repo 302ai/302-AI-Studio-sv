@@ -2,6 +2,23 @@
 
 Step-by-step guide for adding new UI components.
 
+## AI Agent Guidance (CRITICAL)
+
+If you are an AI agent, you **MUST** activate and use the following project-level skill before implementing or modifying any components:
+
+```bash
+# Activate the skill to get expert guidance on Svelte 5 + Tailwind v4
+activate_skill sveltekit-svelte5-tailwind-skill
+```
+
+This skill provides:
+
+- **Research-First Methodology**: Guidance on searching internal documentation for Svelte 5 runes and Tailwind v4 patterns.
+- **Runes Reference**: Deep details on `$state`, `$derived`, and `$props` in the context of this project.
+- **Tailwind v4 Patterns**: Best practices for styling with the new CSS-first configuration.
+
+**DO NOT** rely solely on your training data for Svelte 5 syntax or Tailwind v4 classes, as these are evolving rapidly. Always verify against the skill's documentation collections (`references/` and `docs/`).
+
 ## Decision: Component Type
 
 **Is it reusable across features?**

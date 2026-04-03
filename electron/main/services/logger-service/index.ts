@@ -127,7 +127,7 @@ export class LoggerService {
 		startHour: number,
 		endDate: string,
 		endHour: number,
-	): Promise<string | null> {
+	): Promise<string | null | undefined> {
 		if (!existsSync(this.logsPath)) return null;
 
 		// Collect matching log files
@@ -176,7 +176,7 @@ export class LoggerService {
 			defaultPath: `302ai-studio-logs-${startDate}-${String(startHour).padStart(2, "0")}-to-${endDate}-${String(endHour).padStart(2, "0")}.zip`,
 			filters: [{ name: "Zip Archive", extensions: ["zip"] }],
 		});
-		if (canceled || !filePath) return null;
+		if (canceled || !filePath) return undefined;
 
 		// Create zip
 		await new Promise<void>((resolve, reject) => {

@@ -17,11 +17,13 @@ const threadId =
 		? tab.threadId
 		: "shell";
 
+const VALID_BUILTIN_TYPES = ["universal-type", "terse-and-effective-type", "deep-thinking-type"];
+
 const initialChatParameters: ChatParametersType = {
 	systemPromptVariables: [],
 	systemPromptMap: {},
 	systemPromptContent: "",
-	systemPromptPresetType: "custom-type",
+	systemPromptPresetType: "universal-type",
 	systemPromptRawJson:
 		'{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0,"textStyle":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
 	userPromptTemplateVariables: ["input"],
@@ -36,6 +38,10 @@ export const persistedChatParametersState = new PersistedState<ChatParametersTyp
 	initialChatParameters,
 );
 
+function isValidPresetType(type: string): boolean {
+	return VALID_BUILTIN_TYPES.includes(type) || type.startsWith("custom-");
+}
+
 class ChatParameters {
 	#isPresetUpdate = $state(false);
 
@@ -49,9 +55,13 @@ class ChatParameters {
 	systemPromptContent = $derived.by(
 		() => persistedChatParametersState.current.systemPromptContent,
 	);
-	systemPromptPresetType = $derived.by(
-		() => persistedChatParametersState.current.systemPromptPresetType,
-	);
+	systemPromptPresetType = $derived.by(() => {
+		const type = persistedChatParametersState.current.systemPromptPresetType;
+		if (!isValidPresetType(type)) {
+			return "universal-type";
+		}
+		return type;
+	});
 	systemPromptRawJson = $derived.by(
 		() => persistedChatParametersState.current.systemPromptRawJson,
 	);
@@ -156,10 +166,6 @@ class ChatParameters {
 
 			if (this.#isPresetUpdate) {
 				this.#isPresetUpdate = false;
-			} else {
-				if (this.systemPromptPresetType !== "custom-type") {
-					updates.systemPromptPresetType = "custom-type";
-				}
 			}
 		} else {
 			updates = {

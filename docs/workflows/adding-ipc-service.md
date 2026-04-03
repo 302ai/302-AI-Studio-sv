@@ -2,6 +2,26 @@
 
 **Time**: 5-10 minutes | **Difficulty**: Easy
 
+## AI Agent Guidance (CRITICAL)
+
+If you are an AI agent, you **MUST** activate and use the following project-level skills before implementing or modifying IPC services:
+
+```bash
+# For Main Process logic and Electron-specific APIs:
+activate_skill electron
+
+# For Svelte 5 frontend integration and calling services:
+activate_skill sveltekit-svelte5-tailwind-skill
+```
+
+This ensures you follow:
+
+- **Electron 38 Standards**: Proper IPC handling and security.
+- **IPC Binding Automation**: Using the `pnpm generate:ipc` command.
+- **Svelte 5 Patterns**: Correctly using reactive state when data is returned from services.
+
+**DO NOT** manually write IPC listeners in the main process. Use the code generators described below.
+
 ## Use Code Generator (Recommended)
 
 ```bash

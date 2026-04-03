@@ -2,6 +2,20 @@
 
 > **For all AI coding assistants**: Claude Code, Gemini CLI, Codex, Copilot CLI, and other AI development tools.
 
+## 🚀 Global Mandate: Activate Skills First
+
+Before you perform any research or implementation, you **MUST** activate the relevant skills to ensure you follow the project's specific Svelte 5, Tailwind v4, and Electron 38 patterns.
+
+```bash
+# For UI, Stores, and Frontend Logic:
+activate_skill sveltekit-svelte5-tailwind-skill
+
+# For Main Process, IPC, and Native Features:
+activate_skill electron
+```
+
+**Why this is mandatory**: This project uses Svelte 5 Runes and Tailwind v4, which differ significantly from older versions in your training data. Use the skill's `Stage 0-4` research methodology before writing any code.
+
 ## Project Overview
 
 **302-AI-Studio** is an Electron desktop AI chat application with multi-provider support, Code Agent (Claude Code sandbox), MCP integration, plugin system, and multi-tab architecture.
