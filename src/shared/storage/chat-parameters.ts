@@ -4,9 +4,16 @@ export const ChatVariable = type("'input' | 'date' | 'time' | 'datetime' | 'now'
 export type ChatVariable = typeof ChatVariable.infer;
 
 export const SystemPromptPresetType = type(
-	"'custom-type' | 'universal-type' | 'terse-and-effective-type' | 'deep-thinking-type'",
+	"'universal-type' | 'terse-and-effective-type' | 'deep-thinking-type'",
 );
 export type SystemPromptPresetType = typeof SystemPromptPresetType.infer;
+
+export const CustomPreset = type({
+	key: "string",
+	name: "string",
+	rawJson: "string.json",
+});
+export type CustomPreset = typeof CustomPreset.infer;
 
 export const ChatParameters = type({
 	// System Prompt

@@ -6,6 +6,7 @@
 
 	import LabelWithTips from "$lib/components/buss/label-with-tips/label-with-tips.svelte";
 	import { Label } from "$lib/components/ui/label";
+	import { createLogger } from "@shared/logger";
 	import ClearEditorBtn from "./clear-editor-btn.svelte";
 	import { CustomTextNode } from "./nodes/custom-text-node";
 	import { VariableValueNode } from "./nodes/variable-value-node";
@@ -14,7 +15,6 @@
 	import OnChangePlugin from "./plugins/on-change-plugin.svelte";
 	import VariablePlugin from "./plugins/variable-plugin.svelte";
 	import { isLexicalEditorState, textJsonToEditorState } from "./utils";
-	import { createLogger } from "@shared/logger";
 
 	const logger = createLogger("ui");
 
@@ -31,6 +31,7 @@
 		onEditorReady?: (editor: LexicalEditor) => void;
 		onFocus?: () => void;
 		onBlur?: () => void;
+		topBar?: import("svelte").Snippet;
 		right?: import("svelte").Snippet;
 	}
 
@@ -47,6 +48,7 @@
 		onEditorReady,
 		onFocus,
 		onBlur,
+		topBar,
 		right,
 	}: Props = $props();
 
@@ -141,6 +143,11 @@
 
 <Composer {initialConfig} bind:this={composer}>
 	<div class="flex flex-col justify-center">
+		<div class="flex flex-row gap-x-2 items-center justify-between">
+			{#if topBar}
+				{@render topBar()}
+			{/if}
+		</div>
 		<div class="flex items-center justify-between h-9">
 			{#if tips}
 				<LabelWithTips {label} {tips} tooltipPlacement="right" />
