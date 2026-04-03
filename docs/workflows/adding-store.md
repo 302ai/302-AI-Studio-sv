@@ -2,6 +2,23 @@
 
 **Time**: 5-10 minutes | **Difficulty**: Easy
 
+## AI Agent Guidance (CRITICAL)
+
+If you are an AI agent, you **MUST** activate and use the following project-level skill before implementing or modifying any state management:
+
+```bash
+# Activate the skill to get expert guidance on Svelte 5 Runes
+activate_skill sveltekit-svelte5-tailwind-skill
+```
+
+This skill provides:
+
+- **Runes Reference**: Deep details on `$state`, `$derived`, and `$props`.
+- **SSR Constraints**: Guidance on why `$state()` doesn't work in SSR contexts and how to pass data from `load()` functions to client-side state.
+- **State Patterns**: Best practices for reactive singleton instances.
+
+**DO NOT** manually write boilerplate for stores. Use the code generators described below.
+
 ## Use Code Generator (Recommended)
 
 ```bash
