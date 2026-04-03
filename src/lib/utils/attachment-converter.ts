@@ -4,9 +4,9 @@ import pdf2md from "@opendocsg/pdf2md";
 import { createLogger } from "@shared/logger";
 import type { AttachmentFile } from "@shared/types";
 import type { FileUIPart } from "ai";
+import ExcelJS from "exceljs";
 import mammoth from "mammoth";
 import { toast } from "svelte-sonner";
-import * as XLSX from "xlsx";
 import { compressFile } from "./file-compressor";
 import { officeMimeTypes } from "./file-preview";
 
@@ -188,23 +188,67 @@ async function readTextFile(attachment: AttachmentFile): Promise<string> {
 	throw new Error("No content available for text file");
 }
 
+/**
+ * Convert ExcelJS worksheet to CSV string
+ * Handles cell values, special characters, and proper CSV escaping
+ */
+function worksheetToCSV(worksheet: ExcelJS.Worksheet): string {
+	const rows: string[] = [];
+	const maxCol = worksheet.columnCount;
+
+	worksheet.eachRow((row: ExcelJS.Row) => {
+		const cells: string[] = [];
+		for (let colNum = 1; colNum <= maxCol; colNum++) {
+			const cell = row.getCell(colNum);
+			const value = cell.value;
+
+			// Handle different cell value types
+			let cellStr = "";
+			if (value === null || value === undefined) {
+				cellStr = "";
+			} else if (typeof value === "object" && "richText" in value) {
+				// Rich text - extract plain text
+				cellStr = (value as ExcelJS.CellRichTextValue).richText
+					.map((rt: ExcelJS.RichText) => rt.text)
+					.join("");
+			} else if (value instanceof Date) {
+				cellStr = value.toISOString();
+			} else if (typeof value === "number") {
+				cellStr = String(value);
+			} else if (typeof value === "boolean") {
+				cellStr = value ? "TRUE" : "FALSE";
+			} else {
+				cellStr = String(value);
+			}
+
+			// CSV escaping: quote if contains comma, quote, or newline
+			if (cellStr.includes(",") || cellStr.includes('"') || cellStr.includes("\n")) {
+				cellStr = `"${cellStr.replace(/"/g, '""')}"`;
+			}
+			cells.push(cellStr);
+		}
+		rows.push(cells.join(","));
+	});
+
+	return rows.join("\n");
+}
+
 async function readExcelFile(attachment: AttachmentFile): Promise<string> {
 	try {
 		const arrayBuffer = await getArrayBufferFromAttachment(attachment);
 
-		// Parse Excel file
-		const workbook = XLSX.read(arrayBuffer, { type: "array" });
+		// Parse Excel file using ExcelJS
+		const workbook = new ExcelJS.Workbook();
+		await workbook.xlsx.load(arrayBuffer);
 
 		let content = "";
 
 		// Process each sheet
-		workbook.SheetNames.forEach((sheetName, index) => {
-			const worksheet = workbook.Sheets[sheetName];
+		workbook.eachSheet((worksheet: ExcelJS.Worksheet, sheetId: number) => {
+			const sheetName = worksheet.name || `Sheet${sheetId}`;
+			const csv = worksheetToCSV(worksheet);
 
-			// Convert sheet to CSV format (more readable than JSON)
-			const csv = XLSX.utils.sheet_to_csv(worksheet);
-
-			if (index > 0) content += "\n\n";
+			if (sheetId > 1) content += "\n\n";
 			content += `[${m.attachment_sheet()}: ${sheetName}]\n${csv}`;
 		});
 
