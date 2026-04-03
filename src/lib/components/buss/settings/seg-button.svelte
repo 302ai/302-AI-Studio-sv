@@ -73,6 +73,7 @@
 	});
 
 	function handleSelect(key: string) {
+		if (disabled) return;
 		const option = options.find((o) => o.key === key);
 		if (option?.disabled) {
 			return;

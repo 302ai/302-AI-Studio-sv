@@ -15,6 +15,7 @@
 <script lang="ts">
 	import { DraggableList } from "$lib/components/buss/draggable-list";
 	import { m } from "$lib/paraglide/messages";
+	import { onDestroy } from "svelte";
 	import ProviderItem from "./provider-item.svelte";
 
 	let {
@@ -26,6 +27,10 @@
 		onRemove,
 		class: className,
 	}: Props = $props();
+
+	onDestroy(() => {
+		window.cancelAnimationFrame?.(0);
+	});
 </script>
 
 <DraggableList

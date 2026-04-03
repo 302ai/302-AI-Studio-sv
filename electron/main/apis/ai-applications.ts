@@ -1,5 +1,8 @@
 import { type } from "arktype";
 import ky from "ky";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("apis");
 
 const ai302UserInfoSchema = type({
 	data: {
@@ -34,13 +37,13 @@ export async function fetch302AIUserInfo(apiKey: string): Promise<Ai302UserInfo>
 
 		const validated = ai302UserInfoSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate 302.AI user info:", validated.summary);
+			logger.error("Failed to validate 302.AI user info:", validated.summary);
 			throw new Error("Invalid response format from 302.AI user info API");
 		}
 
 		return validated;
 	} catch (error) {
-		console.error("Failed to fetch 302.AI user info:", error);
+		logger.error("Failed to fetch 302.AI user info:", error);
 		throw new Error("Failed to fetch 302.AI user info");
 	}
 }
@@ -91,7 +94,7 @@ export async function fetch302AIToolList(
 
 		const validated = ai302ToolListSchema(filteredResponse);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate 302.AI tools list:", validated.summary);
+			logger.error("Failed to validate 302.AI tools list:", validated.summary);
 			throw new Error("Invalid response format from 302.AI tools list API");
 		}
 
@@ -163,7 +166,7 @@ export async function fetch302AIToolList(
 
 		return tools;
 	} catch (error) {
-		console.error("Failed to fetch 302.AI tools list:", error);
+		logger.error("Failed to fetch 302.AI tools list:", error);
 		throw new Error("Failed to fetch 302.AI tools list");
 	}
 }
@@ -193,13 +196,13 @@ export async function fetch302AIToolDetail(apiKey: string): Promise<Ai302ToolDet
 
 		const validated = ai302ToolDetailSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate 302.AI tool detail:", validated.summary);
+			logger.error("Failed to validate 302.AI tool detail:", validated.summary);
 			throw new Error("Invalid response format from 302.AI tool detail API");
 		}
 
 		return validated;
 	} catch (error) {
-		console.error("Failed to fetch 302.AI tool detail:", error);
+		logger.error("Failed to fetch 302.AI tool detail:", error);
 		throw new Error("Failed to fetch 302.AI tool detail");
 	}
 }

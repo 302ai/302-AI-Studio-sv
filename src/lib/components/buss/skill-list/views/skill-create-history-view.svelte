@@ -4,6 +4,9 @@
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
 	import { toast } from "svelte-sonner";
 	import SkillHistoryForm from "../skill-history-form.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let historyFormRef = $state<SkillHistoryForm | undefined>();
 	let isCreating = $state(false);
@@ -50,7 +53,7 @@
 				toast.error(m.skills_history_navigate_failed());
 			}
 		} catch (error) {
-			console.error("Failed to navigate to history thread:", error);
+			logger.error("Failed to navigate to history thread:", error);
 			toast.error(m.skills_history_navigate_failed());
 		} finally {
 			isCreating = false;

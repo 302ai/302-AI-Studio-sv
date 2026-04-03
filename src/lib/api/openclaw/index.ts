@@ -1,4 +1,7 @@
 import { getOpenClawCronJobResult, type OpenClawCronJobResultResponse } from "./base-apis";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 let currentPollInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -20,14 +23,14 @@ export async function startListeningOpenClawCronJobs(
 		try {
 			const response = await getOpenClawCronJobResult(sessionId);
 			if (response.success) {
-				console.log("[CronPoll] Fetched result for session:", sessionId);
+				logger.info("[CronPoll] Fetched result for session:", sessionId);
 				const allRuns = response.data.flatMap((d) => d.runs);
 				onResult(allRuns);
 			} else {
-				console.error("[CronPoll] Failed to fetch result:", response);
+				logger.error("[CronPoll] Failed to fetch result:", response);
 			}
 		} catch (error) {
-			console.error("[CronPoll] Failed to fetch result:", error);
+			logger.error("[CronPoll] Failed to fetch result:", error);
 		}
 	};
 
@@ -45,6 +48,6 @@ export function stopListeningOpenClawCronJobs() {
 	if (currentPollInterval) {
 		clearInterval(currentPollInterval);
 		currentPollInterval = null;
-		console.log("[CronPoll] Polling stopped for current tab.");
+		logger.info("[CronPoll] Polling stopped for current tab.");
 	}
 }

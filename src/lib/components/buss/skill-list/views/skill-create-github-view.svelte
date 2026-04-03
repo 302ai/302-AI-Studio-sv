@@ -5,6 +5,9 @@
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
 	import { toast } from "svelte-sonner";
 	import SkillGithubForm from "../skill-github-form.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		onRefresh?: () => void;
@@ -34,7 +37,7 @@
 				toast.error(m.skills_create_failed());
 			}
 		} catch (error) {
-			console.error("Failed to create skill from GitHub:", error);
+			logger.error("Failed to create skill from GitHub:", error);
 			toast.error(m.skills_create_failed());
 		} finally {
 			isCreating = false;

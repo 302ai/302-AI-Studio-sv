@@ -2,12 +2,15 @@ import { createStorage, type StorageMeta, type StorageValue } from "@302ai/unsto
 import fsDriver from "@302ai/unstorage/drivers/fs";
 import { isDev } from "@electron/main/constants";
 import type { MigrationConfig, StorageItem, StorageMetadata, StorageOptions } from "@shared/types";
+import { createLogger } from "@shared/logger";
 import type { IpcMainInvokeEvent } from "electron";
 import { join } from "path";
 import { userDataManager } from "../app-service/user-data-manager";
 import { emitter } from "../broadcast-service";
 import { GlobalStorageWatcher } from "./global-storage-watcher";
 import { getStorageVersion, setStorageVersion } from "./migration-utils";
+
+const logger = createLogger("services");
 
 export class StorageService<T extends StorageValue> {
 	protected storage;
@@ -74,7 +77,7 @@ export class StorageService<T extends StorageValue> {
 			const value = await this.storage.getItem<T>(this.ensureJsonExtension(key));
 			return await this.migrateIfNeeded(key, value);
 		} catch (error) {
-			console.error("Failed to get item from storage:", error);
+			logger.error("Failed to get item from storage:", error);
 			return null;
 		}
 	}
@@ -178,7 +181,7 @@ export class StorageService<T extends StorageValue> {
 		} catch (error) {
 			// Handle JSON parsing errors from corrupted files
 			if (error instanceof SyntaxError) {
-				console.error(
+				logger.error(
 					`Failed to parse storage file "${key}": ${error.message}. The file may be corrupted.`,
 				);
 				return null;
@@ -219,9 +222,7 @@ export class StorageService<T extends StorageValue> {
 			}
 
 			if (this.migrationConfig.debug) {
-				console.log(
-					`[StorageService] Migrating from version ${persistedVersion} to ${currentVersion}`,
-				);
+				logger.info(`Migrating from version ${persistedVersion} to ${currentVersion}`);
 			}
 
 			const migratedValue = this.migrationConfig.migrate(value, currentVersion);
@@ -230,14 +231,14 @@ export class StorageService<T extends StorageValue> {
 			if (migratedValue !== value) {
 				await this.storage.setItem(this.ensureJsonExtension(key), migratedValue);
 				if (this.migrationConfig.debug) {
-					console.log(`[StorageService] Migration completed and saved for key: ${key}`);
+					logger.info(`Migration completed and saved for key: ${key}`);
 				}
 			}
 
 			return migratedValue;
 		} catch (error) {
 			if (this.migrationConfig.debug) {
-				console.error("[StorageService] Migration failed:", error);
+				logger.error("Migration failed:", error);
 			}
 			return value;
 		}

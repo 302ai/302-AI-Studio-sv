@@ -1,4 +1,6 @@
 import { isWin } from "@electron/main/constants";
+import { createLogger } from "@shared/logger";
+
 import { SUPPORTED_CHANNELS, WIN_SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
 import { type IpcMainInvokeEvent } from "electron";
 import { isNil } from "es-toolkit";
@@ -10,6 +12,8 @@ import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
 import { openClawConfigStorage } from "../storage-service/openclaw/openclaw-config-storage";
 import { tabService } from "../tab-service";
 import WeChatChannel from "./wechat";
+
+const logger = createLogger("services");
 
 type OpenClawBindingConfig = {
 	agentId: string;
@@ -37,7 +41,7 @@ export class OpenClawService {
 
 		const gatewayToken = await this.getOpenClawConfig<string>("gateway.auth.token");
 		const url = `http://localhost:${port}/#token=${gatewayToken || ""}`;
-		console.log("[OpenClawService] WebUI URL:", url);
+		logger.info("WebUI URL:", url);
 
 		return url;
 	}
@@ -68,7 +72,7 @@ export class OpenClawService {
 
 			return get(config, path) ?? null;
 		} catch (error) {
-			console.error("[OpenClawService] Failed to read or parse openclaw.json:", error);
+			logger.error("Failed to read or parse openclaw.json:", error);
 			return null;
 		}
 	}
@@ -85,7 +89,7 @@ export class OpenClawService {
 		try {
 			const config = await this.getOpenClawConfig<Record<string, unknown>>();
 			if (!config) {
-				console.error("[OpenClawService] Failed to read existing config");
+				logger.error("Failed to read existing config");
 				return false;
 			}
 
@@ -94,7 +98,7 @@ export class OpenClawService {
 			await fs.writeFile(configPath, JSON.stringify(config, null, 2), "utf-8");
 			return true;
 		} catch (error) {
-			console.error("[OpenClawService] Failed to write openclaw.json:", error);
+			logger.error("Failed to write openclaw.json:", error);
 			return false;
 		}
 	}
@@ -129,7 +133,7 @@ export class OpenClawService {
 	async applyOpenClawBindingsConfig(_event: IpcMainInvokeEvent, threadId: string) {
 		const config = await openClawConfigStorage.getOpenClawConfig(threadId);
 		if (!config.isOK) {
-			console.error("[OpenClawService] Failed to get thread config:", threadId);
+			logger.error("Failed to get thread config:", threadId);
 			return;
 		}
 
@@ -216,21 +220,40 @@ export class OpenClawService {
 		const tabView = tabService.getTabView(tabId);
 		if (isUndefined(tabView)) return;
 		const url = await this._getOpenClawWebUiUrl();
-		console.log("[OpenClawService] Reloading OpenClaw Web UI with URL:", url);
+		logger.info("Reloading OpenClaw Web UI with URL:", url);
 		if (!url) return;
 		tabView.webContents.loadURL(url);
 	}
 
 	wechatChannel = new WeChatChannel();
 
-	async wechatInsalled(_event: IpcMainInvokeEvent) {
+	async wechatInsalled(_event: IpcMainInvokeEvent): Promise<boolean> {
 		const config = await this.getOpenClawConfig("plugins.installs.openclaw-weixin");
 		return !isNil(config);
 	}
 
 	async connectWechat(_event: IpcMainInvokeEvent) {
 		const installed = await this.wechatInsalled(_event);
-		await this.wechatChannel.startWeixinLoginFlow(installed);
+		if (!installed) {
+			logger.warn("WeChat channel is not installed. Please install it first.");
+			return;
+		}
+		await this.wechatChannel.startWeixinLogin();
+	}
+
+	async installWechat(_event: IpcMainInvokeEvent): Promise<boolean> {
+		try {
+			const res = await this.wechatChannel.wechatInstall();
+			if (res) {
+				// restart local vibe to make openclaw re-detect the channel plugin
+				logger.info("Restarting LocalVibe to apply WeChat channel installation...");
+				await localVibeService.restartPodmanMachine(_event);
+			}
+			return res;
+		} catch (e) {
+			logger.error("Failed to install WeChat channel:", e);
+			return false;
+		}
 	}
 
 	async disposeWechat(_event: IpcMainInvokeEvent) {

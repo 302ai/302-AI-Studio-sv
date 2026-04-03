@@ -19,6 +19,7 @@ import {
 	dataService,
 	devLauncherService,
 	externalLinkService,
+	loggerService,
 	mcpService,
 	notificationService,
 	openClawService,
@@ -380,6 +381,9 @@ export function registerIpcHandlers() {
 	);
 
 	// tabService service registration
+	ipcMain.handle("tabService:handleUpdateTabType", (event, tabId, type) =>
+		tabService.handleUpdateTabType(event, tabId, type),
+	);
 	ipcMain.handle(
 		"tabService:handleNewTabWithThread",
 		(event, threadId, title, type, active, initialSearchQuery, initialSearchResultIds) =>
@@ -538,6 +542,14 @@ export function registerIpcHandlers() {
 		externalLinkService.openExternalLink(event, url),
 	);
 
+	// loggerService service registration
+	ipcMain.handle("loggerService:log", (event, level, category, processType, message, args) =>
+		loggerService.log(event, level, category, processType, message, args),
+	);
+	ipcMain.handle("loggerService:exportLogs", (event, startDate, startHour, endDate, endHour) =>
+		loggerService.exportLogs(event, startDate, startHour, endDate, endHour),
+	);
+
 	// mcpService service registration
 	ipcMain.handle("mcpService:getToolsFromServer", (event, server) =>
 		mcpService.getToolsFromServer(event, server),
@@ -572,6 +584,9 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("openClawService:connectWechat", (event) =>
 		openClawService.connectWechat(event),
+	);
+	ipcMain.handle("openClawService:installWechat", (event) =>
+		openClawService.installWechat(event),
 	);
 	ipcMain.handle("openClawService:disposeWechat", (event) =>
 		openClawService.disposeWechat(event),
@@ -737,6 +752,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("threadStateService:updateBusyState");
 	ipcMain.removeHandler("threadStateService:getBusyThreads");
 	ipcMain.removeHandler("threadStateService:getBusyLocalAgentThreads");
+	ipcMain.removeHandler("tabService:handleUpdateTabType");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");
@@ -786,6 +802,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("devLauncherService:launchDevSandbox");
 	ipcMain.removeHandler("devLauncherService:stopDevSandbox");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
+	ipcMain.removeHandler("loggerService:log");
+	ipcMain.removeHandler("loggerService:exportLogs");
 	ipcMain.removeHandler("mcpService:getToolsFromServer");
 	ipcMain.removeHandler("mcpService:closeServer");
 	ipcMain.removeHandler("notificationService:notifyTaskCompleted");
@@ -796,6 +814,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("openClawService:handleOpenClawWebUiReloadIpc");
 	ipcMain.removeHandler("openClawService:wechatInsalled");
 	ipcMain.removeHandler("openClawService:connectWechat");
+	ipcMain.removeHandler("openClawService:installWechat");
 	ipcMain.removeHandler("openClawService:disposeWechat");
 	ipcMain.removeHandler("providerService:handle302AIProviderChange");
 	ipcMain.removeHandler("providerService:get302AIApiKey");

@@ -7,6 +7,9 @@
 	import { cn } from "$lib/utils";
 	import { LoaderCircle, Play, RefreshCw } from "@lucide/svelte";
 	import { onMount } from "svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let webUiUrl = $state<string | null>(null);
 	let isLoading = $state(true);
@@ -16,7 +19,7 @@
 			const url = await window.electronAPI.openClawService.getOpenClawWebUiUrl();
 			webUiUrl = url;
 		} catch (error) {
-			console.error("[OpenClaw WebUI] Failed to get URL:", error);
+			logger.error("Failed to get URL:", error);
 		}
 	};
 

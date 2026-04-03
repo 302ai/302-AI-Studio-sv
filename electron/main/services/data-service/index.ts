@@ -1,4 +1,7 @@
 import { isDev } from "@electron/main/constants";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import type { BackupInfo, ImportResult } from "@shared/types";
 import archiver from "archiver";
 import { type IpcMainInvokeEvent, app, dialog } from "electron";
@@ -24,7 +27,7 @@ export class DataService {
 
 			// Create backup before importing legacy data
 			const backupPath = await this.createBackupToDirectory(storagePath);
-			console.log(`Backup created before legacy import: ${backupPath}`);
+			logger.info(`Backup created before legacy import: ${backupPath}`);
 
 			try {
 				const result = await importLegacyJson();
@@ -47,7 +50,7 @@ export class DataService {
 				throw error;
 			}
 		} catch (error) {
-			console.error("Failed to import legacy JSON:", error);
+			logger.error("Failed to import legacy JSON:", error);
 			return {
 				success: false,
 				message: error instanceof Error ? error.message : "Unknown error occurred",
@@ -80,7 +83,7 @@ export class DataService {
 
 			return filePath;
 		} catch (error) {
-			console.error("Failed to export storage:", error);
+			logger.error("Failed to export storage:", error);
 			throw error;
 		}
 	}
@@ -143,7 +146,7 @@ export class DataService {
 				throw error;
 			}
 		} catch (error) {
-			console.error("Failed to import storage:", error);
+			logger.error("Failed to import storage:", error);
 			return {
 				success: false,
 				message: error instanceof Error ? error.message : "Unknown error occurred",
@@ -194,7 +197,7 @@ export class DataService {
 				throw error;
 			}
 		} catch (error) {
-			console.error("Failed to restore from backup:", error);
+			logger.error("Failed to restore from backup:", error);
 			return {
 				success: false,
 				message: error instanceof Error ? error.message : "Unknown error occurred",
@@ -211,10 +214,10 @@ export class DataService {
 				return false;
 			}
 			await rm(backupPath, { recursive: true, force: true });
-			console.log(`Backup deleted: ${backupPath}`);
+			logger.info(`Backup deleted: ${backupPath}`);
 			return true;
 		} catch (error) {
-			console.error("Failed to delete backup:", error);
+			logger.error("Failed to delete backup:", error);
 			return false;
 		}
 	}
@@ -236,7 +239,7 @@ export class DataService {
 		const backupPath = `${storagePath}_backup_${timestamp}`;
 
 		await cp(storagePath, backupPath, { recursive: true });
-		console.log(`Temporary backup created at: ${backupPath}`);
+		logger.info(`Temporary backup created at: ${backupPath}`);
 
 		return backupPath;
 	}
@@ -250,7 +253,7 @@ export class DataService {
 		const backupPath = join(backupDir, `backup_${timestamp}`);
 
 		await cp(storagePath, backupPath, { recursive: true });
-		console.log(`Backup created at: ${backupPath}`);
+		logger.info(`Backup created at: ${backupPath}`);
 
 		return backupPath;
 	}
@@ -264,9 +267,9 @@ export class DataService {
 			await rm(storagePath, { recursive: true, force: true });
 			// Restore from backup
 			await cp(backupPath, storagePath, { recursive: true });
-			console.log("Storage restored from backup");
+			logger.info("Storage restored from backup");
 		} catch (error) {
-			console.error("Failed to restore backup:", error);
+			logger.error("Failed to restore backup:", error);
 			throw error;
 		}
 	}
@@ -281,7 +284,7 @@ export class DataService {
 			await readFile(zipPath);
 			return true;
 		} catch (error) {
-			console.error("Invalid zip file:", error);
+			logger.error("Invalid zip file:", error);
 			return false;
 		}
 	}
@@ -324,7 +327,7 @@ export class DataService {
 		try {
 			await extract(zipPath, { dir: destPath });
 		} catch (error) {
-			console.error("Failed to extract zip:", error);
+			logger.error("Failed to extract zip:", error);
 			throw error;
 		}
 	}
@@ -382,7 +385,7 @@ export class DataService {
 			});
 
 			output.on("close", () => {
-				console.log(`Storage exported: ${archive.pointer()} total bytes`);
+				logger.info(`Storage exported: ${archive.pointer()} total bytes`);
 				resolve();
 			});
 
@@ -398,7 +401,7 @@ export class DataService {
 
 	async checkOldVersionData(_event: IpcMainInvokeEvent): Promise<boolean> {
 		const triplitPath = join(app.getPath("userData"), "../", "302 AI Studio", "triplit");
-		console.log(triplitPath);
+		logger.info(triplitPath);
 		return existsSync(triplitPath);
 	}
 
@@ -434,7 +437,7 @@ export class DataService {
 
 			return { zipPath, folderName };
 		} catch (error) {
-			console.error("Failed to create zip for upload:", error);
+			logger.error("Failed to create zip for upload:", error);
 			throw error;
 		}
 	}
@@ -462,7 +465,7 @@ export class DataService {
 
 			return { folderPath, folderName };
 		} catch (error) {
-			console.error("Failed to select folder:", error);
+			logger.error("Failed to select folder:", error);
 			throw error;
 		}
 	}
@@ -496,7 +499,7 @@ export class DataService {
 			await writeFile(filePath, content, "utf-8");
 			return filePath;
 		} catch (error) {
-			console.error("Failed to export chat:", error);
+			logger.error("Failed to export chat:", error);
 			throw error;
 		}
 	}

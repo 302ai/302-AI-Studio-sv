@@ -32,10 +32,13 @@
 
 <script lang="ts" generics="T extends DndItem">
 	import { cn } from "$lib/utils";
+	import { createLogger } from "@shared/logger";
 	import { onDestroy } from "svelte";
 	import { dndzone, TRIGGERS } from "svelte-dnd-action";
 	import { flip } from "svelte/animate";
 	import { scale } from "svelte/transition";
+
+	const console = createLogger("ui");
 
 	let {
 		items = $bindable<T[]>(),

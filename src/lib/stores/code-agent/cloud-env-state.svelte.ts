@@ -5,7 +5,11 @@
  * Backend polling logic will be connected in a future task.
  */
 
+import { createLogger } from "@shared/logger";
+
 export type CloudHealthStatus = "unknown" | "healthy" | "unhealthy";
+
+const console = createLogger("ui");
 
 class CloudEnvState {
 	// Activation status (开通状态)
@@ -53,7 +57,7 @@ class CloudEnvState {
 		this.starting = true;
 		try {
 			// TODO: Connect to real backend API / IPC
-			console.log("[CloudEnvState] startCloud: not implemented yet");
+			console.debug("[CloudEnvState] startCloud: not implemented yet");
 			return false;
 		} catch (error) {
 			console.error("[CloudEnvState] Failed to start cloud:", error);
@@ -70,7 +74,7 @@ class CloudEnvState {
 		this.starting = true;
 		try {
 			// TODO: Connect to real backend API / IPC
-			console.log("[CloudEnvState] stopCloud: not implemented yet");
+			console.debug("[CloudEnvState] stopCloud: not implemented yet");
 			return false;
 		} catch (error) {
 			console.error("[CloudEnvState] Failed to stop cloud:", error);

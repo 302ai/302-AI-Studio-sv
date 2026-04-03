@@ -1,3 +1,4 @@
+import { createLogger } from "@shared/logger";
 import type { ThreadData } from "@shared/types";
 import { BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import { isNull } from "es-toolkit";
@@ -6,13 +7,15 @@ import { tabStorage } from "../storage-service/tab-storage";
 import { threadStorage } from "../storage-service/thread-storage";
 import { tabService } from "../tab-service";
 
+const logger = createLogger("services");
+
 export class ThreadService {
 	async addThread(_event: IpcMainInvokeEvent, threadId: string): Promise<boolean> {
 		try {
 			await threadStorage.addThread(threadId);
 			return true;
 		} catch (error) {
-			console.error("ThreadService: Failed to add thread:", error);
+			logger.error("ThreadService: Failed to add thread:", error);
 			return false;
 		}
 	}
@@ -21,7 +24,7 @@ export class ThreadService {
 		try {
 			return await threadStorage.getThreadsData();
 		} catch (error) {
-			console.error("ThreadService: Failed to get threads:", error);
+			logger.error("ThreadService: Failed to get threads:", error);
 			return null;
 		}
 	}
@@ -30,7 +33,7 @@ export class ThreadService {
 		try {
 			return await threadStorage.getThread(threadId);
 		} catch (error) {
-			console.error("ThreadService: Failed to get thread:", error);
+			logger.error("ThreadService: Failed to get thread:", error);
 			return null;
 		}
 	}
@@ -44,7 +47,7 @@ export class ThreadService {
 			});
 			return true;
 		} catch (error) {
-			console.error("ThreadService: Failed to delete thread:", error);
+			logger.error("ThreadService: Failed to delete thread:", error);
 			return false;
 		}
 	}
@@ -58,7 +61,7 @@ export class ThreadService {
 			await threadStorage.renameThread(threadId, newName);
 			return true;
 		} catch (error) {
-			console.error("ThreadService: Failed to rename thread:", error);
+			logger.error("ThreadService: Failed to rename thread:", error);
 			return false;
 		}
 	}
@@ -68,7 +71,7 @@ export class ThreadService {
 			await threadStorage.addFavorite(threadId);
 			return true;
 		} catch (error) {
-			console.error("ThreadService: Failed to add favorite:", error);
+			logger.error("ThreadService: Failed to add favorite:", error);
 			return false;
 		}
 	}
@@ -78,7 +81,7 @@ export class ThreadService {
 			await threadStorage.removeFavorite(threadId);
 			return true;
 		} catch (error) {
-			console.error("ThreadService: Failed to remove favorite:", error);
+			logger.error("ThreadService: Failed to remove favorite:", error);
 			return false;
 		}
 	}
@@ -107,7 +110,7 @@ export class ThreadService {
 			}
 			return deletedCount;
 		} catch (error) {
-			console.error("ThreadService: Failed to delete threads by apiKeyHash:", error);
+			logger.error("ThreadService: Failed to delete threads by apiKeyHash:", error);
 			return 0;
 		}
 	}
@@ -137,7 +140,7 @@ export class ThreadService {
 
 			return clearedCount;
 		} catch (error) {
-			console.error("ThreadService: Failed to clear deleted model references:", error);
+			logger.error("ThreadService: Failed to clear deleted model references:", error);
 			return 0;
 		}
 	}
@@ -162,7 +165,7 @@ export class ThreadService {
 
 			if (remainingTabs.length !== originalLength) {
 				hasChanges = true;
-				console.log(
+				logger.info(
 					`[ThreadService] Closing ${originalLength - remainingTabs.length} tab(s) in window ${windowId}`,
 				);
 
@@ -172,7 +175,7 @@ export class ThreadService {
 					const browserWindow = BrowserWindow.fromId(numericWindowId);
 					if (browserWindow && !browserWindow.isDestroyed()) {
 						for (const tab of tabsToClose) {
-							console.log(
+							logger.info(
 								`[ThreadService] Removing tab view ${tab.id} from window ${windowId}`,
 							);
 							tabService.removeTab(browserWindow, tab.id);

@@ -16,6 +16,9 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { toast } from "svelte-sonner";
 	import EditorPanel from "./editor-panel.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	const LANGUAGE_OPTIONS = [
 		{ label: "Markdown", value: "markdown" },
@@ -110,7 +113,7 @@
 			htmlPreviewState.commitChanges();
 			toast.success(m.toast_save_success());
 		} catch (error) {
-			console.error("保存 HTML 预览内容失败", error);
+			logger.error("保存 HTML 预览内容失败", error);
 			toast.error(m.toast_save_failed());
 		} finally {
 			_isSaving = false;
@@ -194,10 +197,10 @@
 				await navigator.clipboard.writeText(result.data.url);
 				// toast.success(m.toast_deploy_url_copied());
 			} catch (clipboardError) {
-				console.error("Failed to copy URL to clipboard:", clipboardError);
+				logger.error("Failed to copy URL to clipboard:", clipboardError);
 			}
 		} catch (error) {
-			console.error("Deploy HTML failed:", error);
+			logger.error("Deploy HTML failed:", error);
 			toast.error(m.toast_deploy_failed(), {
 				description: error instanceof Error ? error.message : "Unknown error",
 			});
@@ -236,7 +239,7 @@
 			await navigator.clipboard.writeText(latestDeployment.url);
 			toast.success(m.toast_deploy_url_copied());
 		} catch (error) {
-			console.error("Copy deployed url failed:", error);
+			logger.error("Copy deployed url failed:", error);
 			toast.error(m.toast_copied_failed());
 		}
 	};

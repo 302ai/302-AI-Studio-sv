@@ -1,5 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+const { loggerInfoMock } = vi.hoisted(() => ({
+	loggerInfoMock: vi.fn(),
+}));
+
+vi.mock("@shared/logger", () => ({
+	createLogger: () => ({ info: loggerInfoMock, error: vi.fn() }),
+}));
+
 import {
 	DEFAULT_MEMORY_POLICY,
 	DEFAULT_MEMORY_STATE,
@@ -125,11 +133,11 @@ describe("memory-manager", () => {
 	describe("MemoryManager", () => {
 		afterEach(() => {
 			vi.useRealTimers();
+			loggerInfoMock.mockClear();
 		});
 
 		it("schedules onTick based on evaluation interval and logs changes", async () => {
 			vi.useFakeTimers();
-			const logger = vi.fn();
 			const onTick = vi.fn();
 			const policy = {
 				...DEFAULT_MEMORY_POLICY,
@@ -144,30 +152,29 @@ describe("memory-manager", () => {
 				makeSnapshot({ totalKB: 1000, freeKB: 800 }), // low
 			];
 			const getSnapshot = vi.fn(() => snapshots.shift() ?? makeSnapshot());
-			const manager = new MemoryManager({ policy, getSnapshot, logger });
+			const manager = new MemoryManager({ policy, getSnapshot });
 
 			manager.start(onTick);
 
-			expect(logger).toHaveBeenCalledTimes(1);
+			expect(loggerInfoMock).toHaveBeenCalledTimes(1);
 			expect(onTick).not.toHaveBeenCalled();
 
 			await vi.advanceTimersByTimeAsync(1000);
 
 			expect(onTick).toHaveBeenCalledTimes(1);
-			expect(logger).toHaveBeenCalledTimes(2);
+			expect(loggerInfoMock).toHaveBeenCalledTimes(2);
 		});
 
 		it("stop prevents further ticks", async () => {
 			vi.useFakeTimers();
 			const onTick = vi.fn();
-			const logger = vi.fn();
 			const policy = {
 				...DEFAULT_MEMORY_POLICY,
 				emaAlpha: 1,
 				highIntervalMs: 500,
 			};
 			const getSnapshot = vi.fn(() => makeSnapshot({ totalKB: 1000, freeKB: 50 }));
-			const manager = new MemoryManager({ policy, getSnapshot, logger });
+			const manager = new MemoryManager({ policy, getSnapshot });
 
 			manager.start(onTick);
 			manager.stop();

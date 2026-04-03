@@ -4,8 +4,16 @@
  * Manages plugin state in the renderer process
  */
 
-import type { InstalledPlugin, PluginSource, ProviderDefinition } from "@shared/types";
-import type { Model, ModelProvider } from "@shared/types";
+import { createLogger } from "@shared/logger";
+import type {
+	InstalledPlugin,
+	Model,
+	ModelProvider,
+	PluginSource,
+	ProviderDefinition,
+} from "@shared/types";
+
+const logger = createLogger("state");
 
 const { pluginService } = window.electronAPI;
 
@@ -38,14 +46,14 @@ class PluginState {
 	async initialize(): Promise<void> {
 		if (this.initialized) return;
 
-		console.log("[PluginState] Initializing...");
+		logger.info("Initializing...");
 
 		try {
 			await this.refreshPlugins();
 			this.initialized = true;
-			console.log("[PluginState] Initialized successfully");
+			logger.info("Initialized successfully");
 		} catch (error) {
-			console.error("[PluginState] Initialization failed:", error);
+			logger.error("Initialization failed:", error);
 			this.error = error instanceof Error ? error.message : "Failed to initialize plugins";
 		}
 	}
@@ -67,12 +75,12 @@ class PluginState {
 			// Get provider plugins
 			this.providerPlugins = await pluginService.getProviderPlugins();
 
-			console.log(
+			logger.info(
 				`[PluginState] Refreshed: ${this.installedPlugins.length} installed, ` +
 					`${this.enabledPlugins.length} enabled, ${this.providerPlugins.length} providers`,
 			);
 		} catch (error) {
-			console.error("[PluginState] Failed to refresh plugins:", error);
+			logger.error("Failed to refresh plugins:", error);
 			this.error = error instanceof Error ? error.message : "Failed to refresh plugins";
 			throw error;
 		} finally {
@@ -116,16 +124,16 @@ class PluginState {
 		this.error = null;
 
 		try {
-			console.log("[PluginState] Installing plugin from source:", source);
+			logger.info("Installing plugin from source:", source);
 			const plugin = await pluginService.installPlugin(source);
 
 			// Refresh plugin lists
 			await this.refreshPlugins();
 
-			console.log("[PluginState] Plugin installed:", plugin.metadata.id);
+			logger.info("Plugin installed:", plugin.metadata.id);
 			return plugin;
 		} catch (error) {
-			console.error("[PluginState] Failed to install plugin:", error);
+			logger.error("Failed to install plugin:", error);
 			this.error = error instanceof Error ? error.message : "Failed to install plugin";
 			throw error;
 		} finally {
@@ -141,15 +149,15 @@ class PluginState {
 		this.error = null;
 
 		try {
-			console.log("[PluginState] Uninstalling plugin:", pluginId);
+			logger.info("Uninstalling plugin:", pluginId);
 			await pluginService.uninstallPlugin(pluginId);
 
 			// Refresh plugin lists
 			await this.refreshPlugins();
 
-			console.log("[PluginState] Plugin uninstalled:", pluginId);
+			logger.info("Plugin uninstalled:", pluginId);
 		} catch (error) {
-			console.error("[PluginState] Failed to uninstall plugin:", error);
+			logger.error("Failed to uninstall plugin:", error);
 			this.error = error instanceof Error ? error.message : "Failed to uninstall plugin";
 			throw error;
 		} finally {
@@ -165,15 +173,15 @@ class PluginState {
 		this.error = null;
 
 		try {
-			console.log("[PluginState] Enabling plugin:", pluginId);
+			logger.info("Enabling plugin:", pluginId);
 			await pluginService.enablePlugin(pluginId);
 
 			// Refresh plugin lists
 			await this.refreshPlugins();
 
-			console.log("[PluginState] Plugin enabled:", pluginId);
+			logger.info("Plugin enabled:", pluginId);
 		} catch (error) {
-			console.error("[PluginState] Failed to enable plugin:", error);
+			logger.error("Failed to enable plugin:", error);
 			this.error = error instanceof Error ? error.message : "Failed to enable plugin";
 			throw error;
 		} finally {
@@ -189,15 +197,15 @@ class PluginState {
 		this.error = null;
 
 		try {
-			console.log("[PluginState] Disabling plugin:", pluginId);
+			logger.info("Disabling plugin:", pluginId);
 			await pluginService.disablePlugin(pluginId);
 
 			// Refresh plugin lists
 			await this.refreshPlugins();
 
-			console.log("[PluginState] Plugin disabled:", pluginId);
+			logger.info("Plugin disabled:", pluginId);
 		} catch (error) {
-			console.error("[PluginState] Failed to disable plugin:", error);
+			logger.error("Failed to disable plugin:", error);
 			this.error = error instanceof Error ? error.message : "Failed to disable plugin";
 			throw error;
 		} finally {
@@ -213,15 +221,15 @@ class PluginState {
 		this.error = null;
 
 		try {
-			console.log("[PluginState] Updating plugin:", pluginId);
+			logger.info("Updating plugin:", pluginId);
 			await pluginService.updatePlugin(pluginId);
 
 			// Refresh plugin lists
 			await this.refreshPlugins();
 
-			console.log("[PluginState] Plugin updated:", pluginId);
+			logger.info("Plugin updated:", pluginId);
 		} catch (error) {
-			console.error("[PluginState] Failed to update plugin:", error);
+			logger.error("Failed to update plugin:", error);
 			this.error = error instanceof Error ? error.message : "Failed to update plugin";
 			throw error;
 		} finally {
@@ -237,15 +245,15 @@ class PluginState {
 		this.error = null;
 
 		try {
-			console.log("[PluginState] Reloading plugin:", pluginId);
+			logger.info("Reloading plugin:", pluginId);
 			await pluginService.reloadPlugin(pluginId);
 
 			// Refresh plugin lists
 			await this.refreshPlugins();
 
-			console.log("[PluginState] Plugin reloaded:", pluginId);
+			logger.info("Plugin reloaded:", pluginId);
 		} catch (error) {
-			console.error("[PluginState] Failed to reload plugin:", error);
+			logger.error("Failed to reload plugin:", error);
 			this.error = error instanceof Error ? error.message : "Failed to reload plugin";
 			throw error;
 		} finally {
@@ -260,7 +268,7 @@ class PluginState {
 		try {
 			return await pluginService.getPluginConfig(pluginId);
 		} catch (error) {
-			console.error("[PluginState] Failed to get plugin config:", error);
+			logger.error("Failed to get plugin config:", error);
 			throw error;
 		}
 	}
@@ -273,11 +281,11 @@ class PluginState {
 			// Performance: Use $state.snapshot() instead of JSON.parse(JSON.stringify())
 			const serializedConfig = $state.snapshot(config);
 
-			console.log("[PluginState] Setting plugin config:", pluginId, serializedConfig);
+			logger.info("Setting plugin config:", pluginId, serializedConfig);
 			await pluginService.setPluginConfig(pluginId, serializedConfig);
-			console.log("[PluginState] Plugin config updated:", pluginId);
+			logger.info("Plugin config updated:", pluginId);
 		} catch (error) {
-			console.error("[PluginState] Failed to set plugin config:", error);
+			logger.error("Failed to set plugin config:", error);
 			throw error;
 		}
 	}
@@ -289,7 +297,7 @@ class PluginState {
 		try {
 			return await pluginService.getPluginConfigValue(pluginId, key);
 		} catch (error) {
-			console.error("[PluginState] Failed to get plugin config value:", error);
+			logger.error("Failed to get plugin config value:", error);
 			throw error;
 		}
 	}
@@ -303,16 +311,11 @@ class PluginState {
 			const serializedValue =
 				typeof value === "object" && value !== null ? $state.snapshot(value) : value;
 
-			console.log(
-				"[PluginState] Setting plugin config value:",
-				pluginId,
-				key,
-				serializedValue,
-			);
+			logger.info("Setting plugin config value:", pluginId, key, serializedValue);
 			await pluginService.setPluginConfigValue(pluginId, key, serializedValue);
-			console.log("[PluginState] Plugin config value updated:", pluginId, key);
+			logger.info("Plugin config value updated:", pluginId, key);
 		} catch (error) {
-			console.error("[PluginState] Failed to set plugin config value:", error);
+			logger.error("Failed to set plugin config value:", error);
 			throw error;
 		}
 	}
@@ -350,12 +353,12 @@ class PluginState {
 	 */
 	async fetchModelsFromProvider(provider: ModelProvider): Promise<Model[]> {
 		try {
-			console.log(`[PluginState] Fetching models for provider: ${provider.id}`);
+			logger.info(`[PluginState] Fetching models for provider: ${provider.id}`);
 			const models = await pluginService.fetchModelsFromProvider(provider);
-			console.log(`[PluginState] Fetched ${models.length} models for ${provider.id}`);
+			logger.info(`[PluginState] Fetched ${models.length} models for ${provider.id}`);
 			return models;
 		} catch (error) {
-			console.error(`[PluginState] Failed to fetch models:`, error);
+			logger.error(`[PluginState] Failed to fetch models:`, error);
 			throw error;
 		}
 	}
@@ -367,6 +370,6 @@ export const pluginState = new PluginState();
 // Initialize plugin state when module loads
 if (typeof window !== "undefined") {
 	pluginState.initialize().catch((error) => {
-		console.error("[PluginState] Auto-initialization failed:", error);
+		logger.error("Auto-initialization failed:", error);
 	});
 }

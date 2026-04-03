@@ -24,6 +24,9 @@
 		prepareMessageContent,
 	} from "./screenshot-helpers";
 	import UserMessage from "./user-message.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		messages: ChatMessage[];
@@ -112,7 +115,7 @@
 		try {
 			regex = new RegExp(`(${pattern})`, flags);
 		} catch (e) {
-			console.error("[highlightKeywordInDOM] Invalid regex pattern:", e);
+			logger.error("Invalid regex pattern:", e);
 			return;
 		}
 
@@ -155,13 +158,13 @@
 
 	function clearSearchHighlights(container: HTMLElement): void {
 		const highlights = container.querySelectorAll("mark.search-highlight");
-		console.log(highlights);
+		logger.debug("Search highlights found:", highlights.length);
 		for (const mark of highlights) {
 			const text = document.createTextNode(mark.textContent ?? "");
 			// const parent = mark.parentNode
 			// ?.normalize()
 			mark.replaceWith(text);
-			// console.log(parent);
+			// logger.info(parent);
 			if (messageBoxEl != null) {
 				messageBoxEl!.normalize();
 			}
@@ -504,7 +507,7 @@
 
 					toast.success(m.screenshot_success(), { id: loadingToast });
 				} catch (error) {
-					console.error("Screenshot failed:", error);
+					logger.error("Screenshot failed:", error);
 					toast.error(m.screenshot_failed(), { id: loadingToast });
 				} finally {
 					// 6. 确保清理 DOM

@@ -5,7 +5,10 @@
  */
 
 import type { HookHandler, HookOptions } from "@302ai/studio-plugin-sdk";
+import { createLogger } from "@shared/logger";
 import type { IHookManager } from "./types";
+
+const logger = createLogger("plugin-manager");
 
 interface RegisteredHook<T = unknown> {
 	pluginId: string;
@@ -38,7 +41,7 @@ export class HookManager implements IHookManager {
 		// Check if this plugin already registered this hook
 		const existing = handlers.findIndex((h) => h.pluginId === pluginId);
 		if (existing !== -1) {
-			console.warn(
+			logger.warn(
 				`[HookManager] Plugin ${pluginId} already registered hook ${hookName}, replacing...`,
 			);
 			handlers.splice(existing, 1);
@@ -54,7 +57,7 @@ export class HookManager implements IHookManager {
 			handlers.splice(insertIndex, 0, { pluginId, handler, options } as RegisteredHook);
 		}
 
-		console.log(
+		logger.info(
 			`[HookManager] Registered hook ${hookName} for plugin ${pluginId} (priority: ${priority})`,
 		);
 	}
@@ -65,18 +68,18 @@ export class HookManager implements IHookManager {
 	unregister(hookName: string, pluginId: string): void {
 		const handlers = this.hooks.get(hookName);
 		if (!handlers) {
-			console.warn(`[HookManager] No handlers registered for hook ${hookName}`);
+			logger.warn(`[HookManager] No handlers registered for hook ${hookName}`);
 			return;
 		}
 
 		const index = handlers.findIndex((h) => h.pluginId === pluginId);
 		if (index === -1) {
-			console.warn(`[HookManager] Plugin ${pluginId} has no handler for hook ${hookName}`);
+			logger.warn(`[HookManager] Plugin ${pluginId} has no handler for hook ${hookName}`);
 			return;
 		}
 
 		handlers.splice(index, 1);
-		console.log(`[HookManager] Unregistered hook ${hookName} for plugin ${pluginId}`);
+		logger.info(`[HookManager] Unregistered hook ${hookName} for plugin ${pluginId}`);
 
 		// Clean up empty hook arrays
 		if (handlers.length === 0) {
@@ -94,7 +97,7 @@ export class HookManager implements IHookManager {
 			return context;
 		}
 
-		console.log(`[HookManager] Executing hook ${hookName} (${handlers.length} handlers)`);
+		logger.info(`[HookManager] Executing hook ${hookName} (${handlers.length} handlers)`);
 
 		let result = context;
 		const stopOnError = options?.stopOnError ?? false;
@@ -120,13 +123,13 @@ export class HookManager implements IHookManager {
 					"stop" in result &&
 					result.stop === true
 				) {
-					console.log(
+					logger.info(
 						`[HookManager] Hook ${hookName} in plugin ${pluginId} requested stop`,
 					);
 					break;
 				}
 			} catch (error) {
-				console.error(
+				logger.error(
 					`[HookManager] Error executing hook ${hookName} in plugin ${pluginId}:`,
 					error,
 				);
@@ -188,7 +191,7 @@ export class HookManager implements IHookManager {
 	 */
 	clear(): void {
 		this.hooks.clear();
-		console.log("[HookManager] Cleared all hooks");
+		logger.info("[HookManager] Cleared all hooks");
 	}
 
 	/**
@@ -205,7 +208,7 @@ export class HookManager implements IHookManager {
 			}
 		}
 
-		console.log(`[HookManager] Cleared hooks for plugin ${pluginId}`);
+		logger.info(`[HookManager] Cleared hooks for plugin ${pluginId}`);
 	}
 }
 

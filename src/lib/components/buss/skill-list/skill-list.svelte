@@ -12,12 +12,15 @@
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
-	import { canFavoriteSkill } from "./skill-favorite-availability";
 	import SkillCard from "./skill-card.svelte";
 	import SkillCreateDialog from "./skill-create-dialog.svelte";
 	import SkillDetailDialog from "./skill-detail-dialog.svelte";
 	import SkillEditDialog from "./skill-edit-dialog.svelte";
+	import { canFavoriteSkill } from "./skill-favorite-availability";
 	import { getOrderedSkillsByFavorite } from "./skill-favorite-order";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		userSkills: Skill[];
@@ -122,7 +125,9 @@
 	);
 
 	const allSkills = $derived.by(() =>
-		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts),
+		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts, {
+			useOptimisticOrder: currentCodeAgentType === "local",
+		}),
 	);
 
 	const filteredSkills = $derived(
@@ -171,7 +176,7 @@
 			toast.dismiss(toastId);
 			toast.success(m.skills_download_success());
 		} catch (e) {
-			console.error("Failed to download skill:", e);
+			logger.error("Failed to download skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_download_failed());
 		} finally {
@@ -204,7 +209,7 @@
 			deletingSkill = null;
 			onRefresh?.();
 		} catch (e) {
-			console.error("Failed to delete skill:", e);
+			logger.error("Failed to delete skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_delete_failed());
 		} finally {
@@ -253,7 +258,7 @@
 		} catch (e) {
 			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
 			optimisticFavoriteAts.set(skill.name, previousFavoriteAt);
-			console.error("Failed to toggle skill favorite:", e);
+			logger.error("Failed to toggle skill favorite:", e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
 			favoritingSkills.delete(skill.name);

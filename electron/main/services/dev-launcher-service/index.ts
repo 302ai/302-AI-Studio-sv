@@ -1,4 +1,7 @@
 import { PLATFORM } from "@electron/main/constants/index";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { providerStorage } from "@electron/main/services/storage-service/provider-storage";
 import { exec } from "child_process";
 import { app, type IpcMainInvokeEvent } from "electron";
@@ -81,30 +84,30 @@ services:
 	private async ensurePodmanMachineRunning(): Promise<{ isOk: boolean; error?: string }> {
 		// Linux runs rootless — no VM needed
 		if (process.platform === "linux") {
-			console.log("[DevLauncherService] Linux detected, skipping machine start");
+			logger.info("Linux detected, skipping machine start");
 			return { isOk: true };
 		}
 
 		// Check if podman is already responsive
 		try {
 			await execAsync("podman ps");
-			console.log("[DevLauncherService] Podman already responsive");
+			logger.info("Podman already responsive");
 			return { isOk: true };
 		} catch {
-			console.log("[DevLauncherService] Podman not responsive, starting machine...");
+			logger.info("Podman not responsive, starting machine...");
 		}
 
 		// Start the machine
 		try {
 			const { stderr } = await execAsync("podman machine start ai302-machine");
-			console.log("[DevLauncherService] podman machine start output:", stderr);
+			logger.info("podman machine start output:", stderr);
 		} catch (error) {
 			const msg = error instanceof Error ? error.message : String(error);
 			// "already running" is fine
 			if (!msg.includes("already running")) {
 				return { isOk: false, error: `Failed to start Podman machine: ${msg}` };
 			}
-			console.log("[DevLauncherService] Machine already running");
+			logger.info("Machine already running");
 		}
 
 		// Poll until podman is ready (up to 60s)
@@ -129,10 +132,10 @@ services:
 		while (Date.now() - start < timeoutMs) {
 			try {
 				await execAsync("podman ps");
-				console.log("[DevLauncherService] Podman is ready");
+				logger.info("Podman is ready");
 				return true;
 			} catch {
-				console.log("[DevLauncherService] Podman not ready yet, retrying...");
+				logger.info("Podman not ready yet, retrying...");
 				await new Promise((r) => setTimeout(r, interval));
 			}
 		}
@@ -161,10 +164,10 @@ services:
 
 			if (engine === "podman") {
 				try {
-					console.log("[DevLauncherService] Pulling latest image with podman-compose...");
+					logger.info("Pulling latest image with podman-compose...");
 					await execAsync(`podman-compose -f "${devComposePath}" pull`);
 				} catch (pullError) {
-					console.warn("[DevLauncherService] podman-compose pull warning:", pullError);
+					logger.warn("podman-compose pull warning:", pullError);
 				}
 			}
 
@@ -178,7 +181,7 @@ services:
 			return { isOk: true };
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
-			console.error("[DevLauncherService] Launch failed:", message);
+			logger.error("Launch failed:", message);
 			return { isOk: false, error: message };
 		}
 	}
@@ -208,12 +211,12 @@ services:
 			if (engine === "podman" && process.platform !== "linux") {
 				try {
 					await execAsync("podman machine stop ai302-machine");
-					console.log("[DevLauncherService] Podman machine stopped");
+					logger.info("Podman machine stopped");
 				} catch (error) {
 					const msg = error instanceof Error ? error.message : String(error);
 					// "not running" is fine
 					if (!msg.includes("not running")) {
-						console.warn("[DevLauncherService] Failed to stop machine:", msg);
+						logger.warn("Failed to stop machine:", msg);
 					}
 				}
 			}
@@ -222,7 +225,7 @@ services:
 			return { isOk: true };
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
-			console.error("[DevLauncherService] Stop failed:", message);
+			logger.error("Stop failed:", message);
 			return { isOk: false, error: message };
 		}
 	}

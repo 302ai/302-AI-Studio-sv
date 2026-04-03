@@ -1,6 +1,9 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { type ShortcutAction, type ShortcutScope } from "$lib/shortcut/shortcut-config";
 import { DEFAULT_SHORTCUTS } from "@shared/config/default-shortcuts";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 
 export interface ShortcutBinding {
 	id: string;
@@ -137,7 +140,7 @@ class ShortcutSettingsManager {
 		}
 
 		if (updates.length > 0) {
-			console.log(
+			logger.info(
 				`[Shortcut Migration] Updated ${updates.length} shortcuts:`,
 				updates.join(", "),
 			);
@@ -209,7 +212,7 @@ if (typeof window !== "undefined" && window.electronAPI) {
 			window.electronAPI.shortcutService
 				.updateShortcuts(serializableShortcuts)
 				.catch((err) => {
-					console.error("Failed to sync shortcuts:", err);
+					logger.error("Failed to sync shortcuts:", err);
 				});
 		});
 	});

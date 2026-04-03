@@ -50,8 +50,7 @@ import type { MigrationConfig } from "@shared/types";
 
 const migrationConfig: MigrationConfig<YourStateType> = {
 	version: 2, // 当前版本
-	migrate: createMigrate(migrations, { debug: true }), // 启用调试模式
-	debug: true,
+	migrate: createMigrate(migrations),
 };
 ```
 
@@ -106,8 +105,7 @@ const migrations = {
 // 创建迁移配置
 const migrationConfig: MigrationConfig<ThemeState> = {
 	version: 1,
-	migrate: createMigrate(migrations, { debug: true }),
-	debug: true,
+	migrate: createMigrate(migrations),
 };
 
 // 实现存储服务

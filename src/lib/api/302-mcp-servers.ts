@@ -1,4 +1,7 @@
 import { API_BASE_URL } from "$lib/constants/api";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 /**
  * MCP Server info from 302.AI API
@@ -55,16 +58,14 @@ export async function fetch302McpServers(token: string): Promise<Mcp302Server[]>
 		});
 
 		if (!response.ok) {
-			console.error(
-				`[302 MCP] API request failed: ${response.status} ${response.statusText}`,
-			);
+			logger.error(`[302 MCP] API request failed: ${response.status} ${response.statusText}`);
 			return [];
 		}
 
 		const data: Mcp302ApiResponse = await response.json();
 
 		if (data.code !== 0) {
-			console.error(`[302 MCP] API returned error: ${data.msg}`);
+			logger.error(`[302 MCP] API returned error: ${data.msg}`);
 			return [];
 		}
 
@@ -81,10 +82,10 @@ export async function fetch302McpServers(token: string): Promise<Mcp302Server[]>
 			}
 		}
 
-		console.log(`[302 MCP] Fetched ${servers.length} MCP servers from 302.AI`);
+		logger.info(`[302 MCP] Fetched ${servers.length} MCP servers from 302.AI`);
 		return servers;
 	} catch (error) {
-		console.error("[302 MCP] Failed to fetch MCP servers:", error);
+		logger.error("[302 MCP] Failed to fetch MCP servers:", error);
 		return [];
 	}
 }

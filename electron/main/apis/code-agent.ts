@@ -1,3 +1,4 @@
+import { createLogger } from "@shared/logger";
 import {
 	createClaudeCodeSandboxResponse,
 	skill,
@@ -10,6 +11,8 @@ import JSZip from "jszip";
 import ky from "ky";
 import { _302AIKy } from "./core/_302ai-ky";
 import { localCodeAgentKy } from "./core/code-agent-ky";
+
+const logger = createLogger("apis");
 
 export const sessionInfoSchema = type({
 	session_id: "string",
@@ -29,7 +32,7 @@ export async function createClaudeCodeSandbox(
 	request: CreateClaudeCodeSandboxRequest,
 ): Promise<CreateClaudeCodeSandboxResponse> {
 	try {
-		console.debug("request", request);
+		logger.debug("request", request);
 		const response = await _302AIKy
 			.post("302/claude-code/sandbox/create", {
 				json: {
@@ -39,16 +42,16 @@ export async function createClaudeCodeSandbox(
 			})
 			.json();
 
-		console.debug(response);
+		logger.debug("createClaudeCodeSandbox response:", response);
 
 		const validated = createClaudeCodeSandboxResponse(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate create claude code sandbox:", validated.summary);
+			logger.error("Failed to validate create claude code sandbox:", validated.summary);
 			throw new Error("Invalid response format from create claude code sandbox API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to create claude code sandbox:", error);
+		logger.error("Failed to create claude code sandbox:", error);
 		throw error;
 	}
 }
@@ -86,16 +89,16 @@ export async function updateClaudeCodeSandbox(
 			})
 			.json();
 
-		console.debug("[updateClaudeCodeSandbox] response:", response);
+		logger.debug("[updateClaudeCodeSandbox] response:", response);
 
 		const validated = updateClaudeCodeSandboxResponse(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate update claude code sandbox:", validated.summary);
+			logger.error("Failed to validate update claude code sandbox:", validated.summary);
 			throw new Error("Invalid response format from update claude code sandbox API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to update claude code sandbox:", error);
+		logger.error("Failed to update claude code sandbox:", error);
 		throw error;
 	}
 }
@@ -120,16 +123,16 @@ export async function deleteClaudeCodeSandbox(
 			})
 			.json();
 
-		console.debug(response);
+		logger.debug("deleteClaudeCodeSandbox response:", response);
 
 		const validated = deleteClaudeCodeSandboxResponse(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate delete claude code sandbox:", validated.summary);
+			logger.error("Failed to validate delete claude code sandbox:", validated.summary);
 			throw new Error("Invalid response format from delete claude code sandbox API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to delete claude code sandbox:", error);
+		logger.error("Failed to delete claude code sandbox:", error);
 		throw error;
 	}
 }
@@ -182,12 +185,12 @@ export async function listClaudeCodeSandboxes(
 
 		const validated = listClaudeCodeSandboxesResponse(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate list claude code sandboxes:", validated.summary);
+			logger.error("Failed to validate list claude code sandboxes:", validated.summary);
 			throw new Error("Invalid response format from list claude code sandboxes API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to list claude code sandboxes:", error);
+		logger.error("Failed to list claude code sandboxes:", error);
 		throw error;
 	}
 }
@@ -214,12 +217,12 @@ export async function listClaudeCodeSessions(
 
 		const validated = listClaudeCodeSessionsResponse(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate list claude code sessions:", validated.summary);
+			logger.error("Failed to validate list claude code sessions:", validated.summary);
 			throw new Error("Invalid response format from list claude code sessions API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to list claude code sessions:", error);
+		logger.error("Failed to list claude code sessions:", error);
 		throw error;
 	}
 }
@@ -254,12 +257,12 @@ export async function addClaudeCodeSandboxMCP(
 
 		const validated = addMcpSchemaResponse(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate add claude code MCP response:", validated.summary);
+			logger.error("Failed to validate add claude code MCP response:", validated.summary);
 			throw new Error("Invalid response format from add claude code MCP API");
 		}
 		return validated;
 	} catch (error) {
-		console.error("Failed to add claude code MCP:", error);
+		logger.error("Failed to add claude code MCP:", error);
 		throw error;
 	}
 }
@@ -302,11 +305,11 @@ export async function batchUploadFile(
 		})
 		.json();
 
-	console.log("[batchUploadFile] Raw response:", JSON.stringify(response, null, 2));
+	logger.info("[batchUploadFile] Raw response:", JSON.stringify(response, null, 2));
 
 	const validated = batchUploadFileResponseSchema(response);
 	if (validated instanceof type.errors) {
-		console.error("Failed to validate batch upload file response:", validated.summary);
+		logger.error("Failed to validate batch upload file response:", validated.summary);
 		throw new Error("Invalid response format from batch upload file API");
 	}
 	return validated;
@@ -330,7 +333,7 @@ export async function getSkillDetails(
 	builtin: boolean = false,
 ): Promise<Skill | null> {
 	try {
-		console.log(`[getSkillDetails] Fetching skill: ${skillName}, builtin: ${builtin}`);
+		logger.info(`[getSkillDetails] Fetching skill: ${skillName}, builtin: ${builtin}`);
 		const response = await _302AIKy
 			.get("302/claude-code/skills/detail", {
 				searchParams: {
@@ -341,19 +344,19 @@ export async function getSkillDetails(
 			})
 			.json();
 
-		console.log(`[getSkillDetails] Response:`, JSON.stringify(response, null, 2));
+		logger.info(`[getSkillDetails] Response:`, JSON.stringify(response, null, 2));
 
 		const validated = skillDetailsResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate skill details response:", validated.summary);
+			logger.error("Failed to validate skill details response:", validated.summary);
 			return null;
 		}
-		console.log(
+		logger.info(
 			`[getSkillDetails] Skill content length: ${validated.skill.content?.length ?? 0}`,
 		);
 		return validated.skill;
 	} catch (error) {
-		console.error("Failed to get skill details:", error);
+		logger.error("Failed to get skill details:", error);
 		return null;
 	}
 }
@@ -370,7 +373,7 @@ export async function getSkillContent(
 	builtin: boolean = false,
 ): Promise<string | null> {
 	try {
-		console.log(`[getSkillContent] Fetching skill zip: ${skillName}, builtin: ${builtin}`);
+		logger.info(`[getSkillContent] Fetching skill zip: ${skillName}, builtin: ${builtin}`);
 
 		// Use edit mode to get the zip file
 		const response = await _302AIKy.get("302/claude-code/skills/detail", {
@@ -382,7 +385,7 @@ export async function getSkillContent(
 		});
 
 		const blob = await response.blob();
-		console.log(`[getSkillContent] Got zip blob, size: ${blob.size}`);
+		logger.info(`[getSkillContent] Got zip blob, size: ${blob.size}`);
 
 		// Extract SKILL.md from the zip
 		const zip = await JSZip.loadAsync(await blob.arrayBuffer());
@@ -393,7 +396,7 @@ export async function getSkillContent(
 		for (const [path, file] of Object.entries(zip.files)) {
 			if (path.endsWith("SKILL.md") && !file.dir) {
 				skillMdContent = await file.async("string");
-				console.log(
+				logger.info(
 					`[getSkillContent] Found SKILL.md at: ${path}, length: ${skillMdContent.length}`,
 				);
 				break;
@@ -401,12 +404,12 @@ export async function getSkillContent(
 		}
 
 		if (!skillMdContent) {
-			console.warn(`[getSkillContent] SKILL.md not found in zip for skill: ${skillName}`);
+			logger.warn(`[getSkillContent] SKILL.md not found in zip for skill: ${skillName}`);
 		}
 
 		return skillMdContent;
 	} catch (error) {
-		console.error(`[getSkillContent] Failed to get skill content for ${skillName}:`, error);
+		logger.error(`[getSkillContent] Failed to get skill content for ${skillName}:`, error);
 		return null;
 	}
 }
@@ -421,10 +424,10 @@ export type LocalSandboxHealthResponse = typeof localSandboxHealthResponseSchema
 export async function getLocalSandboxHealthStatus(): Promise<LocalSandboxHealthResponse> {
 	try {
 		const response = await localCodeAgentKy.get("302/claude-code/sandbox/health").json();
-		console.log("[getLocalSandboxHealthStatus] Health check response:", response);
+		logger.info("[getLocalSandboxHealthStatus] Health check response:", response);
 		const validated = localSandboxHealthResponseSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate health check response:", validated.summary);
+			logger.error("Failed to validate health check response:", validated.summary);
 			throw new Error(`Invalid health check response: ${validated.summary}`);
 		}
 		return validated;
@@ -440,7 +443,7 @@ export async function getLocalSandboxHealthStatus(): Promise<LocalSandboxHealthR
 			lowerMsg.includes("timed out");
 
 		if (!isExpectedConnectionError) {
-			console.error("[getLocalSandboxHealthStatus] Health check failed:", error);
+			logger.error("[getLocalSandboxHealthStatus] Health check failed:", error);
 		}
 		throw error;
 	}

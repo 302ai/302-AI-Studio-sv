@@ -1,4 +1,7 @@
 import type { OpenClawConfig } from "@shared/storage/openclaw";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { prefixStorage } from "@shared/types";
 import { StorageService } from "..";
 
@@ -22,7 +25,7 @@ class OpenClawConfigStorage extends StorageService<OpenClawConfig> {
 			if (!data) return { isOK: false, data: DEFAULT_OPENCLAW_CONFIG };
 			return { isOK: true, data };
 		} catch (error) {
-			console.error("Error getting openclaw config:", error);
+			logger.error("Error getting openclaw config:", error);
 			return { isOK: false, data: DEFAULT_OPENCLAW_CONFIG };
 		}
 	}

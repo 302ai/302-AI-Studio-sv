@@ -12,6 +12,9 @@
 	import { getSandboxDownloadErrorMessage } from "$lib/utils/sandbox-download-error";
 	import { Download, FileIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let { files }: Props = $props();
 
@@ -78,7 +81,7 @@
 
 			toast.success(m.toast_download_file_success({ fileName: filename }));
 		} catch (error) {
-			console.error("Failed to download file:", error);
+			logger.error("Failed to download file:", error);
 			toast.error(getSandboxDownloadErrorMessage(error));
 		} finally {
 			// Reset to undefined by removing key to keep state map clean.

@@ -10,6 +10,9 @@
 	import SkillHistoryForm from "./skill-history-form.svelte";
 	import SkillManualForm from "./skill-manual-form.svelte";
 	import SkillUploadForm from "./skill-upload-form.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	export type SkillCreateMethod = "manual" | "upload" | "github" | "history";
 
@@ -174,7 +177,7 @@ description:
 					}
 				}
 			} catch (error) {
-				console.error("Failed to create skill:", error);
+				logger.error("Failed to create skill:", error);
 				toast.error(m.skills_create_failed());
 			} finally {
 				isCreating = false;
@@ -206,7 +209,7 @@ description:
 					toast.error(m.skills_create_failed());
 				}
 			} catch (error) {
-				console.error("Failed to create skill from upload:", error);
+				logger.error("Failed to create skill from upload:", error);
 				toast.error(m.skills_create_failed());
 			} finally {
 				isCreating = false;
@@ -254,7 +257,7 @@ description:
 					toast.error(m.skills_history_navigate_failed());
 				}
 			} catch (error) {
-				console.error("Failed to navigate to history thread:", error);
+				logger.error("Failed to navigate to history thread:", error);
 				toast.error(m.skills_history_navigate_failed());
 			} finally {
 				isCreating = false;
@@ -276,7 +279,7 @@ description:
 					toast.error(m.skills_create_failed());
 				}
 			} catch (error) {
-				console.error("Failed to create skill from GitHub:", error);
+				logger.error("Failed to create skill from GitHub:", error);
 				toast.error(m.skills_create_failed());
 			} finally {
 				isCreating = false;

@@ -15,7 +15,9 @@
 	import { Label } from "$lib/components/ui/field";
 	import { m } from "$lib/paraglide/messages";
 	import { codeAgentGlobalConfigsState } from "$lib/stores/code-agent";
+	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
 	import SettingInputField from "../settings/setting-input-field.svelte";
 	import Wechat from "./channel/wechat.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
@@ -73,6 +75,14 @@
 	const url = new URL(window.location.href);
 	const queryChannel = url.searchParams.get("channel");
 	let channelAccordion = $state(queryChannel || "");
+
+	const handleApplyBtn = () => {
+		if (!localEnvState.sandboxRunning) {
+			toast.error(m.code_agent_local_container_not_started());
+			return;
+		}
+		confirmDialogOpen = true;
+	};
 </script>
 
 {#snippet feishu()}
@@ -319,7 +329,7 @@
 				>{m.agent_framework_open_claw_set_channel()}</Label
 			>
 		</AccordionTrigger>
-		<AccordionContent class="pb-1 pt-0 space-y-2">
+		<AccordionContent class="pb-1 pt-0 space-y-2 relative">
 			<Accordion value={channelAccordion} type="single" class="w-full rounded-settings-item">
 				{@render feishu()}
 				{@render dingtalk()}
@@ -330,7 +340,7 @@
 				{@render discord()}
 			</Accordion>
 			<div class="flex flex-col items-end">
-				<Button class="w-fit" onclick={() => (confirmDialogOpen = true)}>
+				<Button class="w-fit" onclick={handleApplyBtn}>
 					<RefreshCw class="size-4" />
 					{m.open_claw_update_config()}
 				</Button>

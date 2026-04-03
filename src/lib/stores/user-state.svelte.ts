@@ -1,4 +1,7 @@
 import type { SsoLogoutOptions } from "$lib/components/buss/sso-logout-dialog";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import { API_BASE_URL } from "$lib/constants/api";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages.js";
@@ -66,7 +69,7 @@ class UserStateManager {
 			return { success: false, error: m.error_no_token() };
 		}
 
-		console.log("fetchUserInfo 使用的 token:", token);
+		logger.info("fetchUserInfo 使用的 token:", token);
 
 		try {
 			const res = await fetch(`${API_BASE_URL}/user/info`, {
@@ -83,7 +86,7 @@ class UserStateManager {
 			});
 
 			const data = await res.json();
-			console.log("fetchUserInfo 响应:", data);
+			logger.info("fetchUserInfo 响应:", data);
 			if (data.code === 0 || data.code === 200) {
 				this.setUserInfo(data.data);
 				return { success: true };
@@ -127,7 +130,7 @@ class UserStateManager {
 			// Clear all models for 302AI provider (including default models fetched from server)
 			// This will also clear selectedModel references in all threads
 			const removedCount = await providerState.removeModelsByProvider("302AI");
-			console.log(`[Logout] Cleared API key and ${removedCount} models from 302.AI provider`);
+			logger.info(`[Logout] Cleared API key and ${removedCount} models from 302.AI provider`);
 		}
 
 		// 2. Clear associated sessions if option is selected
@@ -135,7 +138,7 @@ class UserStateManager {
 			const apiKeyHash = hashApiKey(apiKeyForHash);
 			if (apiKeyHash) {
 				const deletedCount = await threadService.deleteThreadsByApiKeyHash(apiKeyHash);
-				console.log(`[Logout] Deleted ${deletedCount} associated sessions`);
+				logger.info(`[Logout] Deleted ${deletedCount} associated sessions`);
 
 				// Broadcast thread list update
 				await broadcastService.broadcastToAll("thread-list-updated", {});
@@ -145,7 +148,7 @@ class UserStateManager {
 		// 3. Clear associated MCP servers if option is selected
 		if (options.clearMcpServers) {
 			const removedCount = mcpState.removeAssociatedServers();
-			console.log(`[Logout] Removed ${removedCount} associated MCP servers`);
+			logger.info(`[Logout] Removed ${removedCount} associated MCP servers`);
 		}
 
 		// Finally, logout (clear user state)

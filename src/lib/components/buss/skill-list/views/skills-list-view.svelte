@@ -13,8 +13,8 @@
 		UNCATEGORIZED_SLUG,
 	} from "$lib/stores/skills-category-state.svelte";
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
-	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import { cn } from "$lib/utils";
+	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import {
 		ChevronRight,
 		FolderOpen,
@@ -29,13 +29,16 @@
 		X,
 		Zap,
 	} from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { Skill } from "@shared/types";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
+	import SkillCard from "../skill-card.svelte";
 	import { canFavoriteSkill } from "../skill-favorite-availability";
 	import { getOrderedSkillsByFavorite } from "../skill-favorite-order";
-	import SkillCard from "../skill-card.svelte";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		userSkills: Skill[];
@@ -97,7 +100,9 @@
 	);
 
 	const allSkills = $derived.by(() =>
-		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts),
+		getOrderedSkillsByFavorite(baseSkills, optimisticFavoriteStates, optimisticFavoriteAts, {
+			useOptimisticOrder: currentCodeAgentType === "local",
+		}),
 	);
 
 	// Filter by search query
@@ -309,7 +314,7 @@
 			toast.dismiss(toastId);
 			toast.success(m.skills_download_success());
 		} catch (e) {
-			console.error("Failed to download skill:", e);
+			logger.error("Failed to download skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_download_failed());
 		} finally {
@@ -342,7 +347,7 @@
 			deletingSkill = null;
 			onRefresh?.();
 		} catch (e) {
-			console.error("Failed to delete skill:", e);
+			logger.error("Failed to delete skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_delete_failed());
 		} finally {
@@ -389,7 +394,7 @@
 		} catch (e) {
 			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
 			optimisticFavoriteAts.set(skill.name, previousFavoriteAt);
-			console.error("Failed to toggle skill favorite:", e);
+			logger.error("Failed to toggle skill favorite:", e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
 			favoritingSkills.delete(skill.name);
@@ -461,7 +466,7 @@
 			clearSelection();
 			onRefresh?.();
 		} catch (e) {
-			console.error("Failed to delete skills:", e);
+			logger.error("Failed to delete skills:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_delete_failed());
 		} finally {
@@ -529,7 +534,7 @@
 				optimisticFavoriteAts.set(previousState.name, previousState.favoriteAt);
 			}
 
-			console.error(`Failed to batch ${action} skill favorite:`, e);
+			logger.error(`Failed to batch ${action} skill favorite:`, e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
 			batchFavoriteAction = null;
@@ -561,7 +566,7 @@
 				toast.error(errorMsg);
 			}
 		} catch (e: unknown) {
-			console.error("Failed to sync skills:", e);
+			logger.error("Failed to sync skills:", e);
 			toast.dismiss(toastId);
 
 			// Try to extract error message from response

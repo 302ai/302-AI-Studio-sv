@@ -1,4 +1,7 @@
 import { deleteSession } from "$lib/api/sandbox-session";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import { validate302Provider } from "$lib/api/webserve-deploy";
 import type { GroupedSelectData } from "$lib/components/buss/settings/setting-select.svelte";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
@@ -257,7 +260,7 @@ class ClaudeCodeSandboxState {
 			toast.success(m.delete_sandbox_success());
 		} else {
 			toast.error(m.delete_sandbox_failed());
-			console.error(error);
+			logger.error("Failed to delete sandbox:", error);
 		}
 		return isOK;
 	}

@@ -6,7 +6,10 @@
  */
 
 import { m } from "$lib/paraglide/messages";
+import { createLogger } from "@shared/logger";
 import { toast } from "svelte-sonner";
+
+const logger = createLogger("state");
 
 export type PodmanHealthStatus = "unknown" | "healthy" | "unhealthy";
 export type SandboxHealthStatus = "unknown" | "healthy" | "unhealthy";
@@ -116,9 +119,9 @@ class LocalEnvState {
 				this.podmanComponentStatus = result.details;
 			}
 
-			console.log("[LocalEnvState] Initial podmanInstalled sync:", this.podmanInstalled);
+			logger.info("Initial podmanInstalled sync:", this.podmanInstalled);
 		} catch (error) {
-			console.error("[LocalEnvState] Failed to sync initial podmanInstalled status:", error);
+			logger.error("Failed to sync initial podmanInstalled status:", error);
 		}
 	}
 
@@ -138,13 +141,13 @@ class LocalEnvState {
 
 			// Print command output
 			if (result.output) {
-				console.log("[Local Vibe] validPodman:", result.output);
+				logger.info("validPodman:", result.output);
 			}
 			if (result.error) {
-				console.error("[Local Vibe] validPodman error:", result.error);
+				logger.error("validPodman error:", result.error);
 			}
 		} catch (error) {
-			console.error("[LocalEnvState] Failed to check Podman status:", error);
+			logger.error("Failed to check Podman status:", error);
 			this.podmanInstalled = false;
 		} finally {
 			this.checking = false;
@@ -162,7 +165,7 @@ class LocalEnvState {
 		try {
 			await window.electronAPI.localVibeService.startPodmanHealthCheck();
 		} catch (error) {
-			console.error("[LocalEnvState] Failed to start Podman health check:", error);
+			logger.error("Failed to start Podman health check:", error);
 		}
 	}
 
@@ -187,7 +190,7 @@ class LocalEnvState {
 				await this.ensurePodmanHealthCheckStarted();
 			}
 		} catch (error) {
-			console.error("[LocalEnvState] Failed to install Podman:", error);
+			logger.error("Failed to install Podman:", error);
 			this.installFailed = true;
 		} finally {
 			this.installing = false;
@@ -208,7 +211,7 @@ class LocalEnvState {
 				return;
 			}
 		} catch (error) {
-			console.error("[LocalEnvState] Failed to validate Podman prerequisites:", error);
+			logger.error("Failed to validate Podman prerequisites:", error);
 			toast.error(m.local_platform_prerequisites_missing());
 			return;
 		}
@@ -227,7 +230,7 @@ class LocalEnvState {
 				await this.ensurePodmanHealthCheckStarted();
 			}
 		} catch (error) {
-			console.error("[LocalEnvState] Failed to init Podman machine:", error);
+			logger.error("Failed to init Podman machine:", error);
 			this.installFailed = true;
 		} finally {
 			this.installing = false;
@@ -245,7 +248,7 @@ class LocalEnvState {
 
 		toast.info(m.code_agent_local_sandbox_starting());
 		if (!this.podmanInstalled) {
-			console.error("[LocalEnvState] Cannot start sandbox: Podman not installed");
+			logger.error("Cannot start sandbox: Podman not installed");
 			return false;
 		}
 
@@ -260,21 +263,21 @@ class LocalEnvState {
 
 			// Capture Podman machine output
 			if (result.output) {
-				console.log("[Local Vibe] startPodmanMachine:", result.output);
+				logger.info("startPodmanMachine:", result.output);
 				this.sandboxLogs.push(`[INFO] [podman-machine] ${result.output}`);
 			}
 			if (result.error) {
-				console.error("[Local Vibe] startPodmanMachine error:", result.error);
+				logger.error("startPodmanMachine error:", result.error);
 				this.sandboxLogs.push(`[ERROR] [podman-machine] ${result.error}`);
 			}
 
 			// Capture docker-compose output
 			if (result.composeOutput) {
-				console.log("[Local Vibe] docker-compose up:", result.composeOutput);
+				logger.info("docker-compose up:", result.composeOutput);
 				this.sandboxLogs.push(`[INFO] [docker-compose] ${result.composeOutput}`);
 			}
 			if (result.composeError) {
-				console.error("[Local Vibe] docker-compose error:", result.composeError);
+				logger.error("docker-compose error:", result.composeError);
 				this.sandboxLogs.push(`[ERROR] [docker-compose] ${result.composeError}`);
 			}
 
@@ -298,7 +301,7 @@ class LocalEnvState {
 
 			return result.isOk;
 		} catch (error) {
-			console.error("[LocalEnvState] Failed to start sandbox:", error);
+			logger.error("Failed to start sandbox:", error);
 			return false;
 		} finally {
 			this.sandboxStarting = false;
@@ -318,11 +321,11 @@ class LocalEnvState {
 
 			// Capture command output
 			if (result.output) {
-				console.log("[Local Vibe] stopLocalSandboxByIpc:", result.output);
+				logger.info("stopLocalSandboxByIpc:", result.output);
 				this.sandboxLogs.push(`[INFO] [stop-sandbox] ${result.output}`);
 			}
 			if (result.error) {
-				console.error("[Local Vibe] stopLocalSandboxByIpc error:", result.error);
+				logger.error("stopLocalSandboxByIpc error:", result.error);
 				this.sandboxLogs.push(`[ERROR] [stop-sandbox] ${result.error}`);
 			}
 
@@ -337,7 +340,7 @@ class LocalEnvState {
 
 			return result.isOk;
 		} catch (error) {
-			console.error("[LocalEnvState] Failed to stop sandbox:", error);
+			logger.error("Failed to stop sandbox:", error);
 			return false;
 		} finally {
 			this.sandboxStarting = false;
@@ -374,7 +377,7 @@ class LocalEnvState {
 						this.podmanHealth = "unknown";
 					}
 
-					console.log("[LocalEnvState] Podman health check:", this.podmanHealth);
+					logger.info("Podman health check:", this.podmanHealth);
 				},
 			);
 		}
@@ -384,7 +387,7 @@ class LocalEnvState {
 			this.unsubscribeWslRestart = window.electronAPI.onWslRestartRequired(
 				async (data: { reason: string; message: string }) => {
 					this.wslRestartRequired = data;
-					console.log("[LocalEnvState] WSL restart required:", data);
+					logger.info("WSL restart required:", data);
 
 					// Show dialog immediately in the callback
 					const result = confirm(
@@ -393,12 +396,10 @@ class LocalEnvState {
 
 					if (result) {
 						// User chose to restart now
-						console.log(
-							"[LocalEnvState] User confirmed restart, triggering system restart...",
-						);
+						logger.info("User confirmed restart, triggering system restart...");
 						await window.electronAPI.localVibeService.triggerSystemRestart();
 					} else {
-						console.log("[LocalEnvState] User cancelled restart");
+						logger.info("User cancelled restart");
 					}
 
 					// Clear the notification
@@ -448,7 +449,7 @@ class LocalEnvState {
 				if (index > -1) {
 					this.healthCheckResolvers.splice(index, 1);
 				}
-				console.warn("[LocalEnvState] Health check timeout, proceeding anyway");
+				logger.warn("Health check timeout, proceeding anyway");
 				resolve();
 			}, timeout);
 
@@ -485,7 +486,7 @@ class LocalEnvState {
 				this.sandboxStarting = true;
 			}
 		} catch (error) {
-			console.error("[LocalEnvState] Failed to sync initial state:", error);
+			logger.error("Failed to sync initial state:", error);
 		}
 	}
 
@@ -574,8 +575,8 @@ class LocalEnvState {
 						this.openClawHealthStatus = "unknown";
 						this.ocStartupGraceUntil = 0;
 					}
-					console.log(
-						"[LocalEnvState] Sandbox health check:",
+					logger.info(
+						"Sandbox health check:",
 						this.sandboxHealthStatus,
 						this.openClawHealthStatus,
 						data.error ?? "no error",
@@ -594,17 +595,14 @@ class LocalEnvState {
 							this.ocStartupGraceUntil = Date.now() + this.OC_STARTUP_GRACE_PERIOD_MS;
 						}
 						this.sandboxStarting = data.starting;
-						console.log(
-							"[LocalEnvState] Sandbox starting state changed:",
-							data.starting,
-						);
+						logger.info("Sandbox starting state changed:", data.starting);
 					}
 					if (data.running !== undefined) {
 						this.sandboxRunning = data.running;
 						if (!data.running) {
 							this.ocStartupGraceUntil = 0;
 						}
-						console.log("[LocalEnvState] Sandbox running state changed:", data.running);
+						logger.info("Sandbox running state changed:", data.running);
 					}
 				},
 			);
@@ -708,7 +706,7 @@ class LocalEnvState {
 			};
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error("[LocalEnvState] Failed to ensure sandbox running:", errorMessage);
+			logger.error("Failed to ensure sandbox running:", errorMessage);
 			return { isOk: false, error: errorMessage, wasAlreadyRunning: false };
 		} finally {
 			this.sandboxStarting = false;

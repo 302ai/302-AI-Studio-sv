@@ -6,6 +6,9 @@
 
 import type { InstalledPlugin, ProviderPlugin } from "@302ai/studio-plugin-sdk";
 import type { IPluginRegistry } from "./types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("plugin-manager");
 
 interface RegisteredPlugin {
 	plugin: InstalledPlugin;
@@ -28,7 +31,7 @@ export class PluginRegistry implements IPluginRegistry {
 		}
 
 		this.plugins.set(plugin.metadata.id, { plugin, instance });
-		console.log(`[PluginRegistry] Registered plugin: ${plugin.metadata.id}`);
+		logger.info(`[PluginRegistry] Registered plugin: ${plugin.metadata.id}`);
 	}
 
 	/**
@@ -36,12 +39,12 @@ export class PluginRegistry implements IPluginRegistry {
 	 */
 	unregister(pluginId: string): void {
 		if (!this.plugins.has(pluginId)) {
-			console.warn(`[PluginRegistry] Plugin ${pluginId} is not registered`);
+			logger.warn(`[PluginRegistry] Plugin ${pluginId} is not registered`);
 			return;
 		}
 
 		this.plugins.delete(pluginId);
-		console.log(`[PluginRegistry] Unregistered plugin: ${pluginId}`);
+		logger.info(`[PluginRegistry] Unregistered plugin: ${pluginId}`);
 	}
 
 	/**
@@ -91,7 +94,7 @@ export class PluginRegistry implements IPluginRegistry {
 	 */
 	clear(): void {
 		this.plugins.clear();
-		console.log("[PluginRegistry] Cleared all plugins");
+		logger.info("[PluginRegistry] Cleared all plugins");
 	}
 }
 

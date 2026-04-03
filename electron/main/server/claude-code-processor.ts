@@ -32,7 +32,10 @@
  * The stream continues naturally after tool-input-available and tool-output-available.
  */
 
+import { createLogger } from "@shared/logger";
 import { isJSON } from "es-toolkit";
+
+const logger = createLogger("server");
 
 interface ClaudeCodeEvent {
 	type: string;
@@ -270,7 +273,7 @@ class ClaudeCodeProcessor {
 		} catch (e) {
 			// If JSON parsing fails and this is an SSE error event, treat as plain-text error
 			if (this.currentSSEEventType === "error" && jsonStr) {
-				console.log(
+				logger.info(
 					"[ClaudeCodeProcessor] Handling plain-text SSE error:",
 					jsonStr.slice(0, 200),
 				);
@@ -285,7 +288,7 @@ class ClaudeCodeProcessor {
 				});
 			}
 			// Otherwise log and skip
-			console.log("[ClaudeCodeProcessor] JSON parse failed for:", jsonStr, "Error:", e);
+			logger.info("[ClaudeCodeProcessor] JSON parse failed for:", jsonStr, "Error:", e);
 			this.currentSSEEventType = null;
 			return null;
 		}
@@ -354,7 +357,7 @@ class ClaudeCodeProcessor {
 			return this.transformAnthropicEvent(data.event);
 		}
 
-		console.log(
+		logger.info(
 			"[ClaudeCodeProcessor] Unhandled event type:",
 			data.type,
 			"data:",
@@ -1033,7 +1036,7 @@ class ClaudeCodeProcessor {
 			if (this.pendingFinishEvent) {
 				const result = this.pendingFinishEvent + "\n\n" + "data: [DONE]\n\n";
 				this.pendingFinishEvent = null;
-				console.log(
+				logger.info(
 					"[ClaudeCodeProcessor] Stream completed, sent finish event and [DONE] marker",
 				);
 				return result;
@@ -1062,7 +1065,7 @@ class ClaudeCodeProcessor {
 			// CRITICAL: Send [DONE] marker after finish event per AI SDK SSE protocol
 			result += "data: [DONE]\n\n";
 			this.pendingFinishEvent = null;
-			console.log(
+			logger.info(
 				"[ClaudeCodeProcessor] Stream completed, sent finish event and [DONE] marker",
 			);
 		}
@@ -1120,18 +1123,18 @@ function interceptSSEResponse(response: Response, processor: ClaudeCodeProcessor
 					const chunk = decoder.decode(value, { stream: true });
 
 					// Debug: Log raw SSE chunk
-					console.log("[ClaudeCodeProcessor] Raw SSE chunk:", chunk);
+					logger.info("[ClaudeCodeProcessor] Raw SSE chunk:", chunk);
 
 					const processedChunk = processor.processSSEChunk(chunk);
 
 					if (processedChunk) {
 						// Debug: Log processed SSE chunk
-						console.log("[ClaudeCodeProcessor] Processed SSE chunk:", processedChunk);
+						logger.info("[ClaudeCodeProcessor] Processed SSE chunk:", processedChunk);
 						try {
 							controller.enqueue(encoder.encode(processedChunk));
 						} catch (_error) {
 							// Client disconnected or controller closed
-							console.log(
+							logger.info(
 								"[ClaudeCodeProcessor] Controller closed, stopping stream",
 								_error,
 							);
@@ -1143,7 +1146,7 @@ function interceptSSEResponse(response: Response, processor: ClaudeCodeProcessor
 					}
 				}
 			} catch (error) {
-				console.error("[ClaudeCodeProcessor] Error processing chunk:", error);
+				logger.error("[ClaudeCodeProcessor] Error processing chunk:", error);
 				controller.error(error);
 			}
 		},

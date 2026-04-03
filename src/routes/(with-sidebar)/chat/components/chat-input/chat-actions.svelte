@@ -580,9 +580,7 @@
 		</Popover.Trigger>
 		<Popover.Content class="w-52 p-1.5" align="start" side="top" sideOffset={10}>
 			<div class="flex flex-col gap-0.5">
-				{#if !codeAgentState.enabled}
-					{@render actionOpenQuickPrompt(true)}
-				{/if}
+				{@render actionOpenQuickPrompt(true)}
 
 				{#if !codeAgentState.enabled && chatState.providerType === "302ai"}
 					{@render actionEnableOnlineSearch(true)}
@@ -627,9 +625,7 @@
 		{@render actionToolCase()}
 	{:else}
 		<div class="flex items-center gap-chat-bar-gap shrink-0">
-			{#if !codeAgentState.enabled}
-				{@render actionOpenQuickPrompt()}
-			{/if}
+			{@render actionOpenQuickPrompt()}
 
 			{#if !codeAgentState.enabled && chatState.providerType === "302ai"}
 				{@render actionEnableOnlineSearch()}

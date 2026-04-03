@@ -3,6 +3,9 @@
  */
 
 import type { MessagePart } from "$lib/utils/attachment-converter";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import type { ThreadData } from "@shared/types";
 
 const SEARCH_QUERY_STORAGE_KEY = "SidebarSearch:current-query";
@@ -61,7 +64,7 @@ class SidebarSearchState {
 		// Check if tab has initial search query (from clicking a search result)
 		if (tab?.initialSearchQuery) {
 			this.#localSearchQuery = tab.initialSearchQuery;
-			console.log("[SidebarSearch] Initialized with search query:", tab.initialSearchQuery);
+			logger.info("Initialized with search query:", tab.initialSearchQuery);
 		}
 
 		// Check if tab has initial search results
@@ -74,8 +77,8 @@ class SidebarSearchState {
 				this.#hasCachedResults = true;
 				this.#cachedResultsUpdatedAt = Date.now();
 			}
-			console.log(
-				"[SidebarSearch] Initialized with search results:",
+			logger.info(
+				"Initialized with search results:",
 				tab.initialSearchResultIds.length,
 				"items",
 			);
@@ -345,7 +348,7 @@ class SidebarSearchState {
 				}
 			}
 		} catch (error) {
-			console.warn(`Failed to load messages for thread ${threadId}:`, error);
+			logger.warn(`Failed to load messages for thread ${threadId}:`, error);
 		}
 
 		return false;

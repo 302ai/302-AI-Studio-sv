@@ -24,6 +24,9 @@
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let searchQuery = $state("");
 	let isOpen = $state(false);
@@ -45,7 +48,7 @@
 		try {
 			const validation = validate302Provider(persistedProviderState.current);
 			if (!validation.valid) {
-				console.error("Provider validation failed:", validation.error);
+				logger.error("Provider validation failed:", validation.error);
 				return;
 			}
 			const provider = validation.provider;
@@ -57,7 +60,7 @@
 					pagination = response.pagination;
 				}
 			} else {
-				console.error("Failed to fetch websites:", response.error);
+				logger.error("Failed to fetch websites:", response.error);
 			}
 		} finally {
 			isLoading = false;
@@ -109,7 +112,7 @@
 				);
 			}
 		} catch (error) {
-			console.error("Failed to delete website:", error);
+			logger.error("Failed to delete website:", error);
 			toast.error(m.toast_unknown_error());
 		} finally {
 			isDeleting = false;

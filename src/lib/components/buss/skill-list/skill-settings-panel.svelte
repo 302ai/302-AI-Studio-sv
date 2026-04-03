@@ -16,6 +16,9 @@
 	import SkillEditView from "./views/skill-edit-view.svelte";
 	import SkillPreviewView from "./views/skill-preview-view.svelte";
 	import SkillsListView from "./views/skills-list-view.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let skillsData = $state<ListSkillsResponse>({
 		success: true,
@@ -31,7 +34,7 @@
 			const data = await listSkills({});
 			skillsData = data;
 		} catch (e) {
-			console.error("Failed to load skills:", e);
+			logger.error("Failed to load skills:", e);
 			toast.error(m.skills_load_failed());
 		} finally {
 			loading = false;
@@ -70,7 +73,7 @@
 
 		// Listen for skill import requests from deep links
 		const unsubscribe = window.electronAPI.skill.onSkillImportRequested((data) => {
-			console.log("[SkillSettingsPanel] Received skill import request:", data.url);
+			logger.info("Received skill import request:", data.url);
 			skillsPanelState.goToCreateGitHubWithUrl(data.url);
 			toast.info(m.skills_import_from_link());
 		});

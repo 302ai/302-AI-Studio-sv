@@ -7,6 +7,9 @@ import type {
 	ShortcutScope,
 } from "@shared/types/shortcut";
 import { keysToAccelerator, keysToString, normalizeKeys } from "@shared/utils/shortcut-utils";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { globalShortcut, WebContentsView } from "electron";
 
 type ShortcutHandler = (action: string, ctx: ShortcutContext) => void | Promise<void>;
@@ -94,14 +97,14 @@ export class ShortcutEngine {
 	handleKeyPressed(keyEvent: ShortcutKeyPressEvent): void {
 		const key = keysToString(keyEvent.keys);
 		const windowId = keyEvent.windowId;
-		console.log(
+		logger.info(
 			`[ShortcutEngine] Key Pressed: "${key}" (Window: ${windowId}, View: ${keyEvent.viewId || "N/A"})`,
 		);
 		const viewId = keyEvent.viewId || "";
 
 		// Check if this is editable and the shortcut requires non-editable
 		const match = this.findMatch(key, windowId, viewId);
-		console.log(
+		logger.info(
 			`[ShortcutEngine] Find Match Result for "${key}":`,
 			match ? `Action=${match.binding.action}` : "None",
 		);
@@ -178,7 +181,7 @@ export class ShortcutEngine {
 				});
 
 				if (!success) {
-					console.warn(`Failed to register global shortcut: ${key}`);
+					logger.warn(`Failed to register global shortcut: ${key}`);
 					this.conflicts.push({
 						key,
 						bindings: [binding],
@@ -187,7 +190,7 @@ export class ShortcutEngine {
 					});
 				}
 			} catch (error) {
-				console.error(`Error registering global shortcut ${key}:`, error);
+				logger.error(`Error registering global shortcut ${key}:`, error);
 			}
 		}
 	}
