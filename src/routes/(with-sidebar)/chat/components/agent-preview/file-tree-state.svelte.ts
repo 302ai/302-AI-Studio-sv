@@ -207,6 +207,88 @@ export class FileTreeState {
 	}
 
 	/**
+	 * Try to extract a more specific error message and HTTP status from ky HTTPError.
+	 * Some sandbox APIs return the real "path not found" reason in the response body
+	 * even when the thrown error message is only a generic 500/404 text.
+	 */
+	private async getErrorDetails(
+		error: unknown,
+	): Promise<{ message: string; status: number | null }> {
+		const fallbackMessage = this.getErrorMessage(error);
+
+		if (!error || typeof error !== "object" || !("response" in error)) {
+			return { message: fallbackMessage, status: null };
+		}
+
+		const response = (error as { response?: Response }).response;
+		const status = typeof response?.status === "number" ? response.status : null;
+
+		if (!response) {
+			return { message: fallbackMessage, status };
+		}
+
+		try {
+			const readableResponse =
+				typeof response.clone === "function" ? response.clone() : response;
+			const rawText = await readableResponse.text();
+			const parsedMessage = this.parseErrorResponseText(rawText);
+
+			if (parsedMessage) {
+				return { message: parsedMessage, status };
+			}
+		} catch {
+			// Ignore response parsing failures and fall back to the thrown error message.
+		}
+
+		return { message: fallbackMessage, status };
+	}
+
+	/**
+	 * Parse API error text and extract a user-facing message.
+	 */
+	private parseErrorResponseText(text: string): string | null {
+		const trimmedText = text.trim();
+		if (!trimmedText) {
+			return null;
+		}
+
+		try {
+			const parsed = JSON.parse(trimmedText) as {
+				error?: { message?: string };
+				message?: string;
+			};
+
+			if (parsed.error?.message) {
+				return parsed.error.message;
+			}
+
+			if (typeof parsed.message === "string" && parsed.message.trim()) {
+				return parsed.message;
+			}
+		} catch {
+			// Non-JSON response body, fall back to plain text below.
+		}
+
+		return trimmedText;
+	}
+
+	/**
+	 * Check whether the current load failure means the target directory no longer exists.
+	 */
+	private isDirectoryNotFoundError(errorMessage: string, status: number | null): boolean {
+		if (status === 404) {
+			return true;
+		}
+
+		return (
+			errorMessage.includes("path not found") ||
+			errorMessage.includes("no such file or directory") ||
+			errorMessage.includes("does not exist") ||
+			errorMessage.includes("Failed to list files")
+		);
+	}
+
+	/**
 	 * Build tree structure with flat directory view
 	 * Shows only direct children of currentDirectory with depth 0 and empty children arrays
 	 * Prepends ".." parent entry when not at root
@@ -432,7 +514,7 @@ export class FileTreeState {
 				return;
 			}
 
-			const response = await listSandboxFiles(this.sandboxId, path, 2);
+			const response = await listSandboxFiles(this.sandboxId, path, 1);
 
 			if (response.success && response.filelist) {
 				if (merge) {
@@ -473,7 +555,8 @@ export class FileTreeState {
 				}
 			}
 		} catch (e) {
-			this.error = this.getErrorMessage(e);
+			const { message, status } = await this.getErrorDetails(e);
+			this.error = message;
 			handleError(e, "Load sandbox files", false);
 			if (!merge) {
 				this.files = [];
@@ -484,11 +567,7 @@ export class FileTreeState {
 			// Recovery: if current directory was deleted, navigate to parent or root
 			// Detect directory deletion by checking error message patterns
 			const errorMsg = this.error || "";
-			const isDirectoryNotFound =
-				errorMsg.includes("path not found") ||
-				errorMsg.includes("no such file or directory") ||
-				errorMsg.includes("does not exist") ||
-				errorMsg.includes("Failed to list files");
+			const isDirectoryNotFound = this.isDirectoryNotFoundError(errorMsg, status);
 
 			if (isDirectoryNotFound && !isAtSystemRoot(this.currentDirectory)) {
 				// Try to navigate to parent directory
