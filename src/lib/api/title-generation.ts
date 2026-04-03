@@ -1,6 +1,7 @@
 import type { ChatMessage } from "$lib/types/chat";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { Model } from "@shared/types";
+import { normalizeGeneratedTitleResult } from "@shared/utils/title-generation";
 import { withGenerationFallback, type FallbackModelConfig } from "./generation-fallback";
 
 export type { FallbackModelConfig } from "./generation-fallback";
@@ -56,15 +57,7 @@ async function generateTitleRequest(
 	}
 
 	const data: GenerateTitleResponse = await response.json();
-	let embeddedSummary = "";
-	if (!data.summary) {
-		embeddedSummary = extractEmbeddedSummary(data.title);
-	}
-
-	return {
-		title: sanitizeGeneratedTitle(embeddedSummary || data.title),
-		summary: data.summary || embeddedSummary || "",
-	};
+	return normalizeGeneratedTitleResult(data);
 }
 
 export async function generateTitle(
@@ -96,36 +89,4 @@ export async function generateTitle(
 				signal,
 			),
 	});
-}
-
-const reasoningBlockPattern = /<(think|thinking|reason|reasoning)>[\s\S]*?<\/\1>/gi;
-// Pattern for unclosed thinking tags (when response is truncated)
-const unclosedReasoningPattern = /<(think|thinking|reason|reasoning)>[\s\S]*/gi;
-
-function sanitizeGeneratedTitle(rawTitle: string): string {
-	if (!rawTitle) {
-		return "";
-	}
-
-	// First, remove complete thinking blocks with closing tags
-	let sanitized = rawTitle.replace(reasoningBlockPattern, "");
-	// Then, remove any unclosed thinking blocks (handles truncated responses)
-	sanitized = sanitized.replace(unclosedReasoningPattern, "");
-
-	return sanitized.trim();
-}
-
-function extractEmbeddedSummary(rawTitle: string): string {
-	const sanitized = sanitizeGeneratedTitle(rawTitle);
-	if (!sanitized.startsWith("{") || !/["']?summary["']?\s*:/i.test(sanitized)) {
-		return "";
-	}
-
-	try {
-		const parsed = JSON.parse(sanitized) as Partial<GenerateTitleResult>;
-		return typeof parsed.summary === "string" ? parsed.summary.trim() : "";
-	} catch {
-		const match = sanitized.match(/["']?summary["']?\s*:\s*(?:"([^"]*)"|'([^']*)'|([^,{}]+))/i);
-		return (match?.[1] || match?.[2] || match?.[3] || "").trim();
-	}
 }
