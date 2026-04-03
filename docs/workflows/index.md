@@ -2,6 +2,18 @@
 
 Step-by-step guides for common development tasks.
 
+## 🛩️ AI Agent Pre-flight Checklist
+
+Before you start any workflow, you **MUST** follow this checklist to ensure you are aligned with the project's current architecture and technology stack:
+
+1. **Activate Skills**:
+    - `activate_skill sveltekit-svelte5-tailwind-skill` (for UI/State/Frontend)
+    - `activate_skill electron` (for Electron/Main Process)
+2. **Read Mandates**: Re-read the **Global Mandate** in `AGENTS.md`.
+3. **Research-First**: Use the Skill's `Stage 0-4` methodology to search for existing patterns in `src/lib/` or `electron/main/services/`.
+4. **Use Generators**: **DO NOT** manually write boilerplate. Use `pnpm gen:service` or `pnpm gen:state`.
+5. **Verify Stack**: Confirm you are using **Svelte 5 Runes** and **Tailwind v4** (no `$store` and no `@tailwindcss/ui` plugins).
+
 ## Available Workflows
 
 ### Core Development
@@ -10,6 +22,10 @@ Step-by-step guides for common development tasks.
 - [Adding a Svelte Store](./adding-store.md) - Create reactive state with Svelte 5 runes
 - [Adding a UI Component](./adding-component.md) - Build base or business components
 - [Debugging Issues](./debugging.md) - Diagnose and fix problems by layer
+
+### AI Automation
+
+- [AI Code Review](./ai-review.md) - Automated AI-powered PR code review
 
 ### Coming Soon
 
@@ -38,6 +54,7 @@ Each workflow follows this pattern:
 | IPC communication | [Adding IPC Service](./adding-ipc-service.md) | `pnpm gen:service <Name>` |
 | State management  | [Adding Svelte Store](./adding-store.md)      | `pnpm gen:state <Name>`   |
 | UI component      | [Adding Component](./adding-component.md)     | Manual                    |
+| AI code review    | [AI Code Review](./ai-review.md)              | GitHub Actions + Claude   |
 | Fix bug           | [Debugging](./debugging.md)                   | N/A                       |
 
 ## Before You Start

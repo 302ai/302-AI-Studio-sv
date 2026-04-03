@@ -2,6 +2,24 @@
 
 Step-by-step guide for debugging issues in 302-AI-Studio.
 
+## AI Agent Guidance (CRITICAL)
+
+If you are an AI agent, you **MUST** activate and use the following project-level skills before attempting to diagnose or fix any bugs:
+
+```bash
+# For UI, State, Rendering, and Styling issues:
+activate_skill sveltekit-svelte5-tailwind-skill
+
+# For IPC, Main Process, and Native OS issues:
+activate_skill electron
+```
+
+These skills provide:
+
+- **Common Issues & Quick Fixes**: Specialized troubleshooting for Svelte 5 Runes and Tailwind v4.
+- **Systematic Debugging Methodology**: Step-by-step guides for tracing issues across the dual-process architecture.
+- **Performance Optimization**: Guidance on memory leaks and slow rendering specific to this stack.
+
 ## Quick Diagnosis
 
 ### 1. Identify the Layer
