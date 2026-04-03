@@ -587,7 +587,11 @@ async function main() {
 	}
 
 	if (!finalOptions.noCommit && filesToAdd.length > 0) {
-		run("git", ["commit", "-m", `chore(release): ${tagName}`], { stdio: "inherit" });
+		const commitArgs = ["commit", "-m", `chore(release): ${tagName}`];
+		if (finalOptions.skipQuality) {
+			commitArgs.push("--no-verify");
+		}
+		run("git", commitArgs, { stdio: "inherit" });
 	}
 
 	if (!finalOptions.noTag) {
