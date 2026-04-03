@@ -336,6 +336,7 @@ export class CodeAgentTaskboardState {
 									// Remote has data, or both are empty. Trust remote.
 									const sortedTasks = this.#sortTasks(tasks);
 									this.tasklist = sortedTasks;
+									this.#reconcileWaitingForChatStatus(sortedTasks);
 
 									if (
 										shouldPauseAfterTaskRestore({
@@ -374,9 +375,11 @@ export class CodeAgentTaskboardState {
 		match(codeAgentState.isPristineSession)
 			.with(true, () => {
 				this.tasklist = sortedTasklist;
+				this.#reconcileWaitingForChatStatus(sortedTasklist);
 			})
 			.otherwise(async () => {
 				this.tasklist = sortedTasklist;
+				this.#reconcileWaitingForChatStatus(sortedTasklist);
 				const [sandboxId, path] = [
 					codeAgentState.sandboxId,
 					codeAgentState.currentWorkspacePath,
@@ -387,6 +390,7 @@ export class CodeAgentTaskboardState {
 				if (!result.isOk) {
 					const { isOk, tasks } = await _getTasklist(sandboxId, path);
 					this.tasklist = isOk ? this.#sortTasks(tasks) : [];
+					this.#reconcileWaitingForChatStatus(this.tasklist);
 
 					toast.error(m.taskboard_update_failed());
 				}
@@ -657,6 +661,20 @@ export class CodeAgentTaskboardState {
 			const orderB = statusOrder[b.status] ?? 1;
 			return orderA - orderB;
 		});
+	}
+
+	/**
+	 * 当等待聊天期间任务已被清空时，回收过期状态，避免状态栏卡在等待中。
+	 */
+	#reconcileWaitingForChatStatus(tasklist: Task[]): void {
+		if (this.taskboardStatus !== "waiting_for_chat") return;
+
+		const hasExecutableTasks = tasklist.some(
+			(task) => task.status === "pending" || task.status === "in_progress",
+		);
+		if (!hasExecutableTasks) {
+			this.taskboardStatus = "idle";
+		}
 	}
 
 	/**
