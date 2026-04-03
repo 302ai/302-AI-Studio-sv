@@ -65,7 +65,9 @@
 			days: 13,
 		}),
 	);
-	const maxDate = $derived(new CalendarDate(now.getFullYear(), now.getMonth() + 1, now.getDate()));
+	const maxDate = $derived(
+		new CalendarDate(now.getFullYear(), now.getMonth() + 1, now.getDate()),
+	);
 
 	async function handleExportLogs() {
 		try {
@@ -231,11 +233,15 @@
 				<Label class="text-label-fg">{m.about_export_logs_date()}</Label>
 				<Popover.Root>
 					<Popover.Trigger class="w-full">
-						<Button variant="outline" class="w-full justify-start text-left font-normal">
+						<Button
+							variant="outline"
+							class="w-full justify-start text-left font-normal"
+						>
 							<CalendarIcon class="mr-2 h-4 w-4" />
-							{selectedDate.year}-{String(selectedDate.month).padStart(2, "0")}-{String(
-								selectedDate.day,
-							).padStart(2, "0")}
+							{selectedDate.year}-{String(selectedDate.month).padStart(
+								2,
+								"0",
+							)}-{String(selectedDate.day).padStart(2, "0")}
 						</Button>
 					</Popover.Trigger>
 					<Popover.Content class="w-auto p-0">
@@ -254,7 +260,9 @@
 				<Label class="text-label-fg">{m.about_export_logs_start_time()}</Label>
 				<Select.Root type="single" bind:value={startHour}>
 					<Select.Trigger class="w-full">
-						<span class="truncate">{hours.find((h) => h.value === startHour)?.label}</span>
+						<span class="truncate"
+							>{hours.find((h) => h.value === startHour)?.label}</span
+						>
 					</Select.Trigger>
 					<Select.Content class="max-h-60 overflow-y-auto">
 						{#each startHourOptions as h (h.value)}
@@ -267,7 +275,8 @@
 				<Label class="text-label-fg">{m.about_export_logs_end_time()}</Label>
 				<Select.Root type="single" bind:value={endHour}>
 					<Select.Trigger class="w-full">
-						<span class="truncate">{hours.find((h) => h.value === endHour)?.label}</span>
+						<span class="truncate">{hours.find((h) => h.value === endHour)?.label}</span
+						>
 					</Select.Trigger>
 					<Select.Content class="max-h-60 overflow-y-auto">
 						{#each endHourOptions as h (h.value)}
@@ -279,7 +288,11 @@
 		</div>
 
 		<Dialog.Footer>
-			<Button variant="outline" onclick={() => (openExportDialog = false)} disabled={isExporting}>
+			<Button
+				variant="outline"
+				onclick={() => (openExportDialog = false)}
+				disabled={isExporting}
+			>
 				{m.common_cancel()}
 			</Button>
 			<Button onclick={handleExportLogs} disabled={isExporting}>

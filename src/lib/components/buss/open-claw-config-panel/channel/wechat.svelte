@@ -8,7 +8,7 @@
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
-	import weixinChannelState from "$lib/stores/code-agent/openclaw/channel/weixin-channel-state.svelte";
+	import weixinChannelState from "$lib/components/buss/open-claw-config-panel/channel/weixin-channel-state.svelte";
 	import { ArrowDownToLine, CircleAlert } from "@lucide/svelte";
 	import { createLogger } from "@shared/logger";
 	import type { OpenClawWeixinLoginMsg } from "@shared/types";
