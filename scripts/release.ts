@@ -587,11 +587,12 @@ async function main() {
 	}
 
 	if (!finalOptions.noCommit && filesToAdd.length > 0) {
-				const commitArgs = ["commit", "-m", `chore(release): ${tagName}`];
+		const commitArgs = ["commit", "-m", `chore(release): ${tagName}`];
 		if (finalOptions.skipQuality) {
 			commitArgs.push("--no-verify");
 		}
 		run("git", commitArgs, { stdio: "inherit" });
+	}
 
 	if (!finalOptions.noTag) {
 		run("git", ["tag", "-a", tagName, "-m", tagMessage], { stdio: "inherit" });
