@@ -311,7 +311,7 @@ class CodeAgentSendMessageButtonState {
 
 					// Upload all files in a single batch request
 					if (filesToUpload.length > 0) {
-						logger.info("Total files to upload:", filesToUpload.length);
+						logger.debug("Total files to upload:", filesToUpload.length);
 						const response = await batchUploadFile({
 							sandbox_id: sandboxInfo.sandboxId,
 							file_list: filesToUpload,

@@ -24,12 +24,12 @@
 	import { animateButtonBounce } from "$lib/utils/animation";
 	import { isMac } from "$lib/utils/platform";
 	import { Plus } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import { onDestroy, onMount } from "svelte";
 	import { flip } from "svelte/animate";
 	import { Spring } from "svelte/motion";
 	import { scale } from "svelte/transition";
 	import TabItem from "./tab-item.svelte";
-	import { createLogger } from "@shared/logger";
 
 	const logger = createLogger("ui");
 
@@ -117,7 +117,7 @@
 		tabBarState.handleActivateTab(tab.id);
 		tabBarState.handleGeneralOverlayChange(true);
 
-		logger.info("Drag started for tab", tab.id);
+		logger.debug("Drag started for tab", tab.id);
 	}
 
 	function handleDragOver(e: DragEvent) {
@@ -175,7 +175,7 @@
 			const currentIndex = tabBarState.tabs.findIndex((t) => t.id === draggedTabId);
 			if (currentIndex === -1) {
 				// Tab not in current window - this is a cross-window drag, ignore
-				logger.info("Drop ignored - tab not in current window");
+				logger.debug("Drop ignored - tab not in current window");
 				return;
 			}
 		} else {
@@ -183,7 +183,7 @@
 			return;
 		}
 
-		logger.info("Drop occurred in same window");
+		logger.debug("Drop occurred in same window");
 		droppedInThisWindow = true;
 
 		// Finalize reorder now that the drag has completed
@@ -239,7 +239,7 @@
 			pendingTargetIndex = null;
 			droppedInThisWindow = false;
 			insertIndicatorX = null;
-			logger.info("Drag ended (handled by same-window drop)");
+			logger.debug("Drag ended (handled by same-window drop)");
 			return;
 		}
 
@@ -277,7 +277,7 @@
 				pendingTargetIndex = null;
 				droppedInThisWindow = false;
 				insertIndicatorX = null;
-				logger.info("Drag ended (treated as same-window drop by bounds)");
+				logger.debug("Drag ended (treated as same-window drop by bounds)");
 				return;
 			}
 		}
@@ -285,7 +285,7 @@
 		// Otherwise, treat as potential cross-window action only if no valid drop target
 		// IMPORTANT: Call handleDropAtPointer BEFORE stopTracking to preserve insertTarget
 		if (e.dataTransfer?.dropEffect === "none" && tabId) {
-			logger.info("Tab dragged out of window, calling dropAtPointer");
+			logger.debug("Tab dragged out of window, calling dropAtPointer");
 
 			const result = await window.electronAPI.windowService.handleDropAtPointer(tabId, {
 				screenX: e.screenX,
@@ -294,11 +294,11 @@
 
 			if (result) {
 				if (result.action === "merged") {
-					logger.info("Tab merged into window", result.targetWindowId);
+					logger.debug("Tab merged into window", result.targetWindowId);
 					// Backend has atomically updated storage
 					// Wait for PersistedState sync to update UI
 				} else if (result.action === "detached") {
-					logger.info("Tab detached to new window", result.newWindowId);
+					logger.debug("Tab detached to new window", result.newWindowId);
 					// Backend has atomically updated storage
 					// Wait for PersistedState sync to update UI
 				}
@@ -315,7 +315,7 @@
 		pendingTargetIndex = null;
 		droppedInThisWindow = false;
 		insertIndicatorX = null;
-		logger.info("Drag ended");
+		logger.debug("Drag ended");
 	}
 
 	function handleGhostHover(event: { clientX: number; clientY: number; draggedWidth: number }) {

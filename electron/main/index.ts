@@ -47,31 +47,22 @@ if (!gotTheLock) {
 	app.quit();
 } else {
 	// This instance got the lock, listen for second instance attempts
-	app.on("second-instance", (_event, commandLine, _workingDirectory) => {
-		logger.info("[Main] second-instance event, commandLine:", commandLine);
+	app.on("second-instance", (_event, commandLine) => {
+		logger.info("[Main] second-instance event");
 
-		// Check for deep link
+		// Delegate deep link handling to service if present in commandLine
 		const deepLinkUrl = commandLine.find((arg) => arg.startsWith("ai302studio://"));
 		if (deepLinkUrl) {
-			logger.info("[Main] Found deep link:", deepLinkUrl);
-			// Deep link service will handle this via its own second-instance listener
+			deepLinkService.handleDeepLink(deepLinkUrl);
 		}
 
-		// When a second instance tries to start, focus the main window instead
+		// When a second instance tries to start, focus the main window
 		const mainWindow = windowService.getMainWindow();
-		if (mainWindow) {
-			if (mainWindow.isMinimized()) {
-				mainWindow.restore();
-			}
-			if (!mainWindow.isVisible()) {
-				mainWindow.show();
-			}
-			mainWindow.focus();
-		}
+		if (!mainWindow) return;
+		if (mainWindow.isMinimized()) mainWindow.restore();
+		if (!mainWindow.isVisible()) mainWindow.show();
+		mainWindow.focus();
 	});
-
-	// Setup deep link second instance handler
-	deepLinkService.setupSecondInstanceHandler();
 
 	// This method will be called when Electron has finished
 	// initialization and is ready to create browser windows.
@@ -83,7 +74,7 @@ if (!gotTheLock) {
 		setupNetworkInterceptor();
 
 		const serverPort = await initServer();
-		logger.info(`Server initialized on port ${serverPort}`);
+		logger.debug(`Server initialized on port ${serverPort}`);
 		WebContentsFactory.setServerPort(serverPort);
 
 		// Initialize system tray
@@ -165,20 +156,23 @@ async function init() {
 	// Register auto-generated IPC handlers
 	registerIpcHandlers();
 
-	await appService.initFromStorage();
-
-	// Run storage migrations
+	// Run storage migrations FIRST to ensure data integrity
 	await StorageService.runAllMigrations();
+
+	await appService.initFromStorage();
 
 	// Initialize plugin system
 	try {
-		logger.info("[Main] Initializing plugin system...");
+		logger.debug("[Main] Initializing plugin system...");
 		await initializePluginSystem();
 		logger.info("[Main] Plugin system initialized successfully");
 	} catch (error) {
 		logger.error("[Main] Failed to initialize plugin system:", error);
 		// Continue app initialization even if plugin system fails
 	}
+
+	// Pre-load shortcut actions handler to avoid first-run latency
+	const { shortcutActionsHandler } = await import("./services/shortcut-service/actions-handler");
 
 	// Initialize shortcut system
 	const defaultShortcuts: ShortcutBinding[] = DEFAULT_SHORTCUTS.map((s) => ({
@@ -190,9 +184,6 @@ async function init() {
 		requiresNonEditable: true,
 	}));
 	shortcutService.getEngine().init(defaultShortcuts, async (action, ctx) => {
-		const { shortcutActionsHandler } = await import(
-			"./services/shortcut-service/actions-handler"
-		);
 		await shortcutActionsHandler.handle(action, ctx);
 	});
 

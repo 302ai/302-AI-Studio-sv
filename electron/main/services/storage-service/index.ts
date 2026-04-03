@@ -222,7 +222,7 @@ export class StorageService<T extends StorageValue> {
 			}
 
 			if (this.migrationConfig.debug) {
-				logger.info(`Migrating from version ${persistedVersion} to ${currentVersion}`);
+				logger.debug(`Migrating from version ${persistedVersion} to ${currentVersion}`);
 			}
 
 			const migratedValue = this.migrationConfig.migrate(value, currentVersion);

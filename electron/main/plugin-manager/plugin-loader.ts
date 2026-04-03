@@ -45,7 +45,7 @@ export class PluginLoader {
 		for (const dir of this.pluginDirs) {
 			if (!fs.existsSync(dir)) {
 				fs.mkdirSync(dir, { recursive: true });
-				logger.info(`[PluginLoader] Created plugin directory: ${dir}`);
+				logger.debug(`[PluginLoader] Created plugin directory: ${dir}`);
 			}
 		}
 	}
@@ -54,13 +54,13 @@ export class PluginLoader {
 	 * Load all plugins from configured directories
 	 */
 	async loadAllPlugins(): Promise<void> {
-		logger.info("[PluginLoader] Loading plugins from directories:", this.pluginDirs);
+		logger.debug("[PluginLoader] Loading plugins from directories:", this.pluginDirs);
 
 		for (const dir of this.pluginDirs) {
 			await this.loadPluginsFromDirectory(dir);
 		}
 
-		logger.info(`[PluginLoader] Loaded ${this.loadedPlugins.size} plugins`);
+		logger.debug(`[PluginLoader] Loaded ${this.loadedPlugins.size} plugins`);
 	}
 
 	/**
@@ -91,7 +91,7 @@ export class PluginLoader {
 	 * Load a single plugin
 	 */
 	async loadPlugin(pluginPath: string): Promise<InstalledPlugin> {
-		logger.info(`[PluginLoader] Loading plugin from: ${pluginPath}`);
+		logger.debug(`[PluginLoader] Loading plugin from: ${pluginPath}`);
 
 		// Load and validate metadata
 		const metadata = await this.loadMetadata(pluginPath);
@@ -140,7 +140,7 @@ export class PluginLoader {
 			}
 
 			if (configKeys.length > 0) {
-				logger.info(
+				logger.debug(
 					`[PluginLoader] Loaded ${configKeys.length} config values for ${metadata.id}:`,
 					plugin.config,
 				);
@@ -183,7 +183,7 @@ export class PluginLoader {
 			plugin.status = "enabled";
 			this.loadedPlugins.set(metadata.id, plugin);
 
-			logger.info(`[PluginLoader] Successfully loaded plugin: ${metadata.id}`);
+			logger.debug(`[PluginLoader] Successfully loaded plugin: ${metadata.id}`);
 		} catch (error) {
 			plugin.status = "error";
 			plugin.error = error instanceof Error ? error.message : String(error);
@@ -238,7 +238,7 @@ export class PluginLoader {
 						`but current app version is ${appVersion}. The plugin may not work correctly.`,
 				);
 			} else {
-				logger.info(
+				logger.debug(
 					`[PluginLoader] Plugin ${metadata.id} is compatible with app version ${appVersion}`,
 				);
 			}
@@ -278,7 +278,7 @@ export class PluginLoader {
 			const { pathToFileURL } = await import("url");
 			const moduleUrl = pathToFileURL(modulePath).href;
 
-			logger.info(`[PluginLoader] Importing plugin from: ${moduleUrl}`);
+			logger.debug(`[PluginLoader] Importing plugin from: ${moduleUrl}`);
 			pluginModule = await import(moduleUrl);
 		} catch (error) {
 			logger.error(`[PluginLoader] Failed to import plugin module:`, error);
@@ -345,7 +345,7 @@ export class PluginLoader {
 			}
 		}
 
-		logger.info(`[PluginLoader] Registered hooks for plugin: ${pluginId}`);
+		logger.debug(`[PluginLoader] Registered hooks for plugin: ${pluginId}`);
 	}
 
 	/**
@@ -376,7 +376,7 @@ export class PluginLoader {
 		// Remove from loaded plugins
 		this.loadedPlugins.delete(pluginId);
 
-		logger.info(`[PluginLoader] Unloaded plugin: ${pluginId}`);
+		logger.debug(`[PluginLoader] Unloaded plugin: ${pluginId}`);
 	}
 
 	/**
@@ -396,7 +396,7 @@ export class PluginLoader {
 		// Load plugin again
 		await this.loadPlugin(pluginPath);
 
-		logger.info(`[PluginLoader] Reloaded plugin: ${pluginId}`);
+		logger.debug(`[PluginLoader] Reloaded plugin: ${pluginId}`);
 	}
 
 	/**

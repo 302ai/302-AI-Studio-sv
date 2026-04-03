@@ -33,7 +33,7 @@ export async function decomposeTasks(
 ): Promise<string[]> {
 	const port = serverPort ?? 8089;
 
-	logger.info("[TaskDecomposer] Starting task decomposition with model:", model.id);
+	logger.debug("[TaskDecomposer] Starting task decomposition with model:", model.id);
 
 	try {
 		const data: DecomposeTaskResponse = await ky
@@ -52,7 +52,7 @@ export async function decomposeTasks(
 			})
 			.json();
 
-		logger.info("[TaskDecomposer] Received response:", data);
+		logger.debug("[TaskDecomposer] Received response:", data);
 
 		if (!data.tasks || !Array.isArray(data.tasks)) {
 			logger.error("[TaskDecomposer] Invalid response format:", data);

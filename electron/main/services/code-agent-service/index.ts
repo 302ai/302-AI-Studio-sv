@@ -640,7 +640,7 @@ export class CodeAgentService {
 		try {
 			if (fs.existsSync(targetDir)) {
 				fs.rmSync(targetDir, { recursive: true, force: true });
-				logger.info("Deleted workspace directory:", targetDir);
+				logger.debug("Deleted workspace directory:", targetDir);
 			}
 			return { success: true };
 		} catch (error) {
@@ -679,7 +679,7 @@ export class CodeAgentService {
 				return { success: false, error: "Source path not found" };
 			}
 			fs.renameSync(oldDir, newDir);
-			logger.info("Renamed workspace directory:", oldDir, "->", newDir);
+			logger.debug("Renamed workspace directory:", oldDir, "->", newDir);
 			return { success: true };
 		} catch (error) {
 			logger.error("Failed to rename workspace directory:", error);

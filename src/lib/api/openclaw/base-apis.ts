@@ -41,7 +41,7 @@ export async function getOpenClawCronJobResult(
 		const response = await kyInstance
 			.get(`302/openclaw/cron/get_runs?session_id=${sessionId}`)
 			.json();
-		logger.info("[getOpenClawCronJobResult] Cron job result response:", response);
+		logger.debug("[getOpenClawCronJobResult] Cron job result response:", response);
 		const validated = openclawCronJobResultResponseSchema(response);
 		if (validated instanceof type.errors) {
 			logger.error("Failed to validate cron job result response:", validated.summary);
@@ -79,7 +79,7 @@ export async function pushOpenClawCronJobRecord(request: PushOpenClawCronJobReco
 				json: request,
 			})
 			.json();
-		logger.info("[pushOpenClawCronJobRecord] Cron job record response:", response);
+		logger.debug("[pushOpenClawCronJobRecord] Cron job record response:", response);
 		const validated = pushOpenClawCronJobRecordResponseSchema(response);
 		if (validated instanceof type.errors) {
 			logger.error("Failed to validate cron job record response:", validated.summary);

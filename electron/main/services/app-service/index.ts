@@ -23,7 +23,7 @@ export class AppService {
 
 	async initFromStorage() {
 		const state = await themeStorage.getThemeState();
-		logger.info(`state = ${JSON.stringify(state)}, ${typeof state}`);
+		logger.debug(`state = ${JSON.stringify(state)}, ${typeof state}`);
 
 		if (state === null) {
 			logger.warn("Unable to load themeState from storage");
@@ -230,20 +230,20 @@ export class AppService {
 		try {
 			// Get all storage keys
 			const allKeys = await storageService.getKeys(_event);
-			logger.info("All storage keys:", allKeys);
+			logger.debug("All storage keys:", allKeys);
 
 			// Filter and delete chat messages and threads
 			const chatAndThreadKeys = allKeys.filter(
 				(key) => key.startsWith("app-chat-messages:") || key.startsWith("app-thread:"),
 			);
 
-			logger.info("Deleting chat and thread keys:", chatAndThreadKeys);
+			logger.debug("Deleting chat and thread keys:", chatAndThreadKeys);
 			for (const key of chatAndThreadKeys) {
 				await storageService.removeItem(_event, key);
 			}
 
 			// Remove tab-bar-state file (will be recreated on restart with new initial tab)
-			logger.info("Removing tab-bar-state...");
+			logger.debug("Removing tab-bar-state...");
 			await tabStorage.removeItem(_event, "tab-bar-state");
 
 			logger.info("Chat history cleared, restarting...");
@@ -279,16 +279,16 @@ export class AppService {
 			const zipPath = join(tempDir, zipFileName);
 			const extractPath = join(tempDir, baseName);
 
-			logger.info(`[extractZipBlob] zipPath: ${zipPath}, extractPath: ${extractPath}`);
+			logger.debug(`[extractZipBlob] zipPath: ${zipPath}, extractPath: ${extractPath}`);
 
 			// Write zip file
 			await writeFile(zipPath, Buffer.from(zipData));
-			logger.info(`[extractZipBlob] ZIP file written, size: ${zipData.byteLength} bytes`);
+			logger.debug(`[extractZipBlob] ZIP file written, size: ${zipData.byteLength} bytes`);
 
 			// Clean existing directory before extraction to avoid stale files
 			try {
 				await rm(extractPath, { recursive: true, force: true });
-				logger.info(`[extractZipBlob] Cleaned existing directory`);
+				logger.debug(`[extractZipBlob] Cleaned existing directory`);
 			} catch {
 				// Directory might not exist, ignore error
 			}
@@ -298,11 +298,11 @@ export class AppService {
 
 			// Extract
 			await this.extractZip(zipPath, extractPath);
-			logger.info(`[extractZipBlob] Extraction completed`);
+			logger.debug(`[extractZipBlob] Extraction completed`);
 
 			// Verify extraction by listing files
 			const extractedFiles = await readdir(extractPath);
-			logger.info(`[extractZipBlob] Extracted files: ${extractedFiles.join(", ")}`);
+			logger.debug(`[extractZipBlob] Extracted files: ${extractedFiles.join(", ")}`);
 
 			if (extractedFiles.length === 0) {
 				logger.warn(`[extractZipBlob] Warning: No files extracted to ${extractPath}`);
@@ -519,7 +519,7 @@ export class AppService {
 		try {
 			// extract-zip requires absolute paths
 			const absoluteDestPath = resolve(destPath);
-			logger.info(`[extractZip] Extracting to: ${absoluteDestPath}`);
+			logger.debug(`[extractZip] Extracting to: ${absoluteDestPath}`);
 			await extract(zipPath, { dir: absoluteDestPath });
 		} catch (error) {
 			logger.error("Failed to extract zip:", error);
@@ -544,28 +544,28 @@ export class AppService {
 			const rootPath = join(basePath, skillName || "new-skill");
 			const skillMdPath = join(rootPath, "SKILL.md");
 
-			logger.info(`[createSkillTempDir] Creating directory: ${rootPath}`);
+			logger.debug(`[createSkillTempDir] Creating directory: ${rootPath}`);
 			await mkdir(rootPath, { recursive: true });
 
 			// Verify directory was created
 			const dirExists = await stat(rootPath)
 				.then(() => true)
 				.catch(() => false);
-			logger.info(`[createSkillTempDir] Directory exists after mkdir: ${dirExists}`);
+			logger.debug(`[createSkillTempDir] Directory exists after mkdir: ${dirExists}`);
 
 			// Create empty SKILL.md file
-			logger.info(`[createSkillTempDir] Creating SKILL.md: ${skillMdPath}`);
+			logger.debug(`[createSkillTempDir] Creating SKILL.md: ${skillMdPath}`);
 			await writeFile(skillMdPath, "", "utf-8");
 
 			// Verify file was created
 			const fileExists = await stat(skillMdPath)
 				.then(() => true)
 				.catch(() => false);
-			logger.info(`[createSkillTempDir] SKILL.md exists after writeFile: ${fileExists}`);
+			logger.debug(`[createSkillTempDir] SKILL.md exists after writeFile: ${fileExists}`);
 
 			// List directory contents
 			const contents = await readdir(rootPath);
-			logger.info(`[createSkillTempDir] Directory contents: ${contents.join(", ")}`);
+			logger.debug(`[createSkillTempDir] Directory contents: ${contents.join(", ")}`);
 
 			return { rootPath, skillMdPath };
 		} catch (error) {

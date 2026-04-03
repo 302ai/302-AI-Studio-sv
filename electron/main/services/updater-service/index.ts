@@ -78,7 +78,7 @@ export class UpdaterService {
 		autoUpdater.setFeedURL({ url: this.updateFeedUrl });
 
 		autoUpdater.on("checking-for-update", () => {
-			logger.info("Checking for updates...");
+			logger.debug("Checking for updates...");
 			broadcastService.broadcastChannelToAll("updater:update-checking");
 		});
 
@@ -152,7 +152,7 @@ export class UpdaterService {
 
 	private checkForUpdates() {
 		if (this.isChecking) {
-			logger.info("Update check already in progress, skipping...");
+			logger.debug("Update check already in progress, skipping...");
 			return;
 		}
 

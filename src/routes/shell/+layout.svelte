@@ -1,20 +1,19 @@
 <script lang="ts">
 	import { m } from "$lib/paraglide/messages";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
+	import { createLogger } from "@shared/logger";
 	import type { ShortcutActionEvent } from "@shared/types/shortcut";
 	import { ModeWatcher } from "mode-watcher";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import "../../app.css";
 	import TabBar from "./components/tab-bar/tab-bar.svelte";
-	import { createLogger } from "@shared/logger";
 
 	const logger = createLogger("ui");
 
 	const { children } = $props();
 
 	onMount(() => {
-		logger.info("ShortcutService: onShortcutAction");
 		const shortcutCleanup = window.electronAPI?.shortcut?.onShortcutAction?.(
 			(event: ShortcutActionEvent) => {
 				handleShortcutAction(event.action);

@@ -186,7 +186,7 @@
 				const voices = window.speechSynthesis.getVoices();
 				if (voices.length > 0) {
 					speechSynthesisAvailable = true;
-					logger.info("Speech synthesis available with", voices.length, "voices");
+					logger.debug("Speech synthesis available with", voices.length, "voices");
 				}
 			};
 
@@ -303,11 +303,11 @@
 
 			// Get available voices - wait for them to load if necessary
 			let voices = window.speechSynthesis.getVoices();
-			logger.info("Initial voices:", voices.length);
+			logger.debug("Initial voices:", voices.length);
 
 			if (voices.length === 0) {
 				// Wait for voices to load
-				logger.info("Waiting for voices to load...");
+				logger.debug("Waiting for voices to load...");
 				voices = await new Promise<SpeechSynthesisVoice[]>((resolve) => {
 					let timeout: NodeJS.Timeout;
 
@@ -315,7 +315,7 @@
 						const loadedVoices = window.speechSynthesis.getVoices();
 						if (loadedVoices.length > 0) {
 							clearTimeout(timeout);
-							logger.info("Voices loaded:", loadedVoices.length, loadedVoices);
+							logger.debug("Voices loaded:", loadedVoices.length, loadedVoices);
 							resolve(loadedVoices);
 						}
 					};
@@ -327,7 +327,7 @@
 
 					// Timeout after 3 seconds
 					timeout = setTimeout(() => {
-						logger.info("Timeout waiting for voices");
+						logger.debug("Timeout waiting for voices");
 						resolve([]);
 					}, 3000);
 				});
@@ -348,7 +348,7 @@
 			// Fallback to any available voice
 			if (!selectedVoice) {
 				selectedVoice = voices[0];
-				logger.info("Using fallback voice:", selectedVoice.name, selectedVoice.lang);
+				logger.debug("Using fallback voice:", selectedVoice.name, selectedVoice.lang);
 			}
 
 			utterance.voice = selectedVoice;
@@ -359,13 +359,13 @@
 
 			utterance.onstart = () => {
 				isReading = true;
-				logger.info("Started reading");
+				logger.debug("Started reading");
 			};
 
 			utterance.onend = () => {
 				isReading = false;
 				_currentUtterance = null;
-				logger.info("Finished reading");
+				logger.debug("Finished reading");
 			};
 
 			utterance.onerror = (event) => {
@@ -382,7 +382,7 @@
 
 			// Start speaking
 			window.speechSynthesis.speak(utterance);
-			logger.info(
+			logger.debug(
 				"Speech synthesis started with voice:",
 				utterance.voice.name,
 				utterance.voice.lang,

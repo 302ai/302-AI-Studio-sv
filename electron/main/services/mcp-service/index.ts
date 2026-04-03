@@ -28,8 +28,8 @@ export class McpService {
 				const command = parts[0];
 				const args = parts.slice(1);
 
-				logger.info("Creating stdio transport:", { command, args });
-				logger.info("Current PATH:", process.env.PATH);
+				logger.debug("Creating stdio transport:", { command, args });
+				logger.debug("Current PATH:", process.env.PATH);
 
 				const envVars = {
 					...(server.advancedSettings?.customEnvVars as

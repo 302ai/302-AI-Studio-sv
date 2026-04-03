@@ -221,7 +221,7 @@ export async function batchUploadFile(
 			})
 			.json();
 
-		logger.info("Batch upload raw response:", JSON.stringify(response, null, 2));
+		logger.debug("Batch upload raw response:", JSON.stringify(response, null, 2));
 
 		const validated = batchUploadFileResponseSchema(response);
 		if (validated instanceof type.errors) {

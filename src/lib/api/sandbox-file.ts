@@ -247,13 +247,13 @@ export async function getFileContent(
 		});
 
 		const contentType = response.headers.get("content-type");
-		logger.info("[getFileContent] Content-Type:", contentType);
+		logger.debug("[getFileContent] Content-Type:", contentType);
 
 		// 如果返回的是 JSON，说明返回的是下载 URL
 		if (contentType?.includes("application/json")) {
 			// Clone response to read json, as we might need text fallback
 			const jsonResponse = await response.json();
-			logger.info("[getFileContent] JSON response:", jsonResponse);
+			logger.debug("[getFileContent] JSON response:", jsonResponse);
 
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const data = jsonResponse as any;
@@ -411,7 +411,7 @@ export async function uploadSandboxFile(
 			const filePath = (file as any).path;
 
 			if (filePath && typeof filePath === "string") {
-				logger.info("[SandboxFile] Local mode detected, using direct copy for:", filePath);
+				logger.debug("[SandboxFile] Local mode detected, using direct copy for:", filePath);
 				const result = await window.electronAPI.localVibeService.copyToWorkspaceByIpc(
 					filePath,
 					path,

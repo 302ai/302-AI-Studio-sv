@@ -67,7 +67,7 @@ export async function generateSuggestions(
 	const port = serverPort ?? 8089;
 
 	try {
-		logger.info("[Suggestions] Starting async generation...");
+		logger.debug("[Suggestions] Starting async generation...");
 		const suggestions = await withGenerationFallback({
 			operation: "suggestions generation",
 			model,
@@ -90,7 +90,7 @@ export async function generateSuggestions(
 			return [];
 		}
 
-		logger.info("[Suggestions] Received suggestions:", suggestions);
+		logger.debug("[Suggestions] Received suggestions:", suggestions);
 		return suggestions;
 	} catch (error) {
 		// Don't log abort errors as they are expected when user sends a new message

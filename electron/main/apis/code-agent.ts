@@ -305,7 +305,7 @@ export async function batchUploadFile(
 		})
 		.json();
 
-	logger.info("[batchUploadFile] Raw response:", JSON.stringify(response, null, 2));
+	logger.debug("[batchUploadFile] Raw response:", JSON.stringify(response, null, 2));
 
 	const validated = batchUploadFileResponseSchema(response);
 	if (validated instanceof type.errors) {
@@ -333,7 +333,7 @@ export async function getSkillDetails(
 	builtin: boolean = false,
 ): Promise<Skill | null> {
 	try {
-		logger.info(`[getSkillDetails] Fetching skill: ${skillName}, builtin: ${builtin}`);
+		logger.debug(`[getSkillDetails] Fetching skill: ${skillName}, builtin: ${builtin}`);
 		const response = await _302AIKy
 			.get("302/claude-code/skills/detail", {
 				searchParams: {
@@ -344,7 +344,7 @@ export async function getSkillDetails(
 			})
 			.json();
 
-		logger.info(`[getSkillDetails] Response:`, JSON.stringify(response, null, 2));
+		logger.debug(`[getSkillDetails] Response:`, JSON.stringify(response, null, 2));
 
 		const validated = skillDetailsResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -373,7 +373,7 @@ export async function getSkillContent(
 	builtin: boolean = false,
 ): Promise<string | null> {
 	try {
-		logger.info(`[getSkillContent] Fetching skill zip: ${skillName}, builtin: ${builtin}`);
+		logger.debug(`[getSkillContent] Fetching skill zip: ${skillName}, builtin: ${builtin}`);
 
 		// Use edit mode to get the zip file
 		const response = await _302AIKy.get("302/claude-code/skills/detail", {
@@ -385,7 +385,7 @@ export async function getSkillContent(
 		});
 
 		const blob = await response.blob();
-		logger.info(`[getSkillContent] Got zip blob, size: ${blob.size}`);
+		logger.debug(`[getSkillContent] Got zip blob, size: ${blob.size}`);
 
 		// Extract SKILL.md from the zip
 		const zip = await JSZip.loadAsync(await blob.arrayBuffer());
@@ -424,7 +424,7 @@ export type LocalSandboxHealthResponse = typeof localSandboxHealthResponseSchema
 export async function getLocalSandboxHealthStatus(): Promise<LocalSandboxHealthResponse> {
 	try {
 		const response = await localCodeAgentKy.get("302/claude-code/sandbox/health").json();
-		logger.info("[getLocalSandboxHealthStatus] Health check response:", response);
+		logger.debug("[getLocalSandboxHealthStatus] Health check response:", response);
 		const validated = localSandboxHealthResponseSchema(response);
 		if (validated instanceof type.errors) {
 			logger.error("Failed to validate health check response:", validated.summary);

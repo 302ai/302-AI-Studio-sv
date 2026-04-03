@@ -19,7 +19,7 @@ export class SsoService {
 			// Use local server as redirect URL with language in path (not query params)
 			// 302.AI will append ?apikey=... so we can't have query params in the redirect URL
 			const redirectUrl = `http://localhost:${serverPort}/sso/callback/${language}`;
-			logger.info("Using redirect URL:", redirectUrl);
+			logger.debug("Using redirect URL:", redirectUrl);
 
 			// Use 'redirecturl' (no underscore) as per 302.AI SSO API
 			const params = new URLSearchParams({
@@ -31,7 +31,7 @@ export class SsoService {
 			});
 
 			const ssoUrl = `https://302.ai/sso/login?${params.toString()}`;
-			logger.info("Opening SSO URL:", ssoUrl);
+			logger.debug("Opening SSO URL:", ssoUrl);
 			await shell.openExternal(ssoUrl);
 
 			return { success: true };
@@ -60,18 +60,18 @@ export class SsoService {
 		_event: IpcMainInvokeEvent,
 		timeoutMs: number = 300000,
 	): Promise<{ success: boolean; apiKey?: string; error?: string }> {
-		logger.info("Waiting for callback, timeout:", timeoutMs);
+		logger.debug("Waiting for callback, timeout:", timeoutMs);
 		return new Promise((resolve) => {
 			// Set timeout
 			this.callbackTimeout = setTimeout(() => {
-				logger.info("Callback timeout");
+				logger.debug("Callback timeout");
 				this.pendingCallback = null;
 				resolve({ success: false, error: "SSO login timed out" });
 			}, timeoutMs);
 
 			// Set callback handler
 			this.pendingCallback = (apiKey: string) => {
-				logger.info("Callback handler called with API key");
+				logger.debug("Callback handler called with API key");
 				if (this.callbackTimeout) {
 					clearTimeout(this.callbackTimeout);
 					this.callbackTimeout = null;

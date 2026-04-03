@@ -94,7 +94,7 @@ class McpState {
 			const existingServer = this.getServerByName(server.name);
 			if (existingServer) {
 				skipped++;
-				logger.info(`[MCP] Skipped server "${server.name}" - already exists`);
+				logger.debug(`[MCP] Skipped server "${server.name}" - already exists`);
 			} else {
 				serversToAdd.push(server);
 				added++;

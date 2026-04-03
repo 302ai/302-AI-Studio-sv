@@ -35,7 +35,7 @@ export async function withGenerationFallback<T>(args: {
 		if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 		logger.error(`${operation} failed with configured model:`, error);
 
-		logger.info(`Retrying ${operation} after ${DEFAULT_FALLBACK_RETRY_DELAY_MS}ms...`);
+		logger.debug(`Retrying ${operation} after ${DEFAULT_FALLBACK_RETRY_DELAY_MS}ms...`);
 		await sleep(DEFAULT_FALLBACK_RETRY_DELAY_MS);
 		if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
@@ -47,12 +47,12 @@ export async function withGenerationFallback<T>(args: {
 			// Use provided fallback config (typically current chat model)
 			fallbackModelId = fallbackConfig.model.id;
 			fallbackProvider = fallbackConfig.provider;
-			logger.info(`Using chat model as fallback: ${fallbackModelId}`);
+			logger.debug(`Using chat model as fallback: ${fallbackModelId}`);
 		} else {
 			// Use hardcoded default fallback model
 			fallbackModelId = DEFAULT_FALLBACK_MODEL_ID;
 			fallbackProvider = provider;
-			logger.info(`Using default fallback model: ${fallbackModelId}`);
+			logger.debug(`Using default fallback model: ${fallbackModelId}`);
 		}
 
 		// If fallback is identical to the original, give up.

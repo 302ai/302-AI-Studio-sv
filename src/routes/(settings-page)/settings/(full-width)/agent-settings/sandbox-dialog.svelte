@@ -144,7 +144,7 @@
 		if (!sandbox || !session) return;
 		isOpeningSession = session.sessionId;
 
-		logger.info("Starting, sandbox:", sandbox.sandboxId, "session:", session.sessionId);
+		logger.debug("Starting, sandbox:", sandbox.sandboxId, "session:", session.sessionId);
 
 		try {
 			// Check if there's an existing thread with proper data for this session
@@ -154,7 +154,7 @@
 					session.sessionId,
 				);
 
-			logger.info("getThreadIdBySessionId result:", {
+			logger.debug("getThreadIdBySessionId result:", {
 				isOK,
 				threadId: existingThreadId,
 			});
@@ -163,19 +163,19 @@
 			if (isOK && existingThreadId) {
 				const result =
 					await window.electronAPI.windowService.navigateToThread(existingThreadId);
-				logger.info("navigateToThread result:", result);
+				logger.debug("navigateToThread result:", result);
 
 				if (result.success) {
 					onClose();
 					return;
 				}
 				// Navigation failed - thread data might be missing, continue to create new
-				logger.info("Navigation to existing thread failed, will create new thread");
+				logger.debug("Navigation to existing thread failed, will create new thread");
 			}
 
 			// Generate a new thread ID
 			const newThreadId = crypto.randomUUID();
-			logger.info("Generated new threadId:", newThreadId);
+			logger.debug("Generated new threadId:", newThreadId);
 
 			// Setup the thread with all configurations FIRST (thread data + code agent config + state)
 			const setupResult = await window.electronAPI.codeAgentService.createThreadForSession(
@@ -187,7 +187,7 @@
 				session.note || "",
 				session.workspacePath || "",
 			);
-			logger.info("createThreadForSession result:", setupResult);
+			logger.debug("createThreadForSession result:", setupResult);
 
 			if (!setupResult.isOK) {
 				logger.error("Failed to setup thread");
@@ -197,7 +197,7 @@
 
 			// Now navigate to the thread in the main window (this will create a new tab there)
 			const navResult = await window.electronAPI.windowService.navigateToThread(newThreadId);
-			logger.info("navigateToThread result:", navResult);
+			logger.debug("navigateToThread result:", navResult);
 
 			if (navResult.success) {
 				onClose();

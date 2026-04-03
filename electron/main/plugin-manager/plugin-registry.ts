@@ -31,7 +31,7 @@ export class PluginRegistry implements IPluginRegistry {
 		}
 
 		this.plugins.set(plugin.metadata.id, { plugin, instance });
-		logger.info(`[PluginRegistry] Registered plugin: ${plugin.metadata.id}`);
+		logger.debug(`[PluginRegistry] Registered plugin: ${plugin.metadata.id}`);
 	}
 
 	/**
@@ -44,7 +44,7 @@ export class PluginRegistry implements IPluginRegistry {
 		}
 
 		this.plugins.delete(pluginId);
-		logger.info(`[PluginRegistry] Unregistered plugin: ${pluginId}`);
+		logger.debug(`[PluginRegistry] Unregistered plugin: ${pluginId}`);
 	}
 
 	/**
@@ -94,7 +94,7 @@ export class PluginRegistry implements IPluginRegistry {
 	 */
 	clear(): void {
 		this.plugins.clear();
-		logger.info("[PluginRegistry] Cleared all plugins");
+		logger.debug("[PluginRegistry] Cleared all plugins");
 	}
 }
 

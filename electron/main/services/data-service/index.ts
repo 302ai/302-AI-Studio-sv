@@ -27,7 +27,7 @@ export class DataService {
 
 			// Create backup before importing legacy data
 			const backupPath = await this.createBackupToDirectory(storagePath);
-			logger.info(`Backup created before legacy import: ${backupPath}`);
+			logger.debug(`Backup created before legacy import: ${backupPath}`);
 
 			try {
 				const result = await importLegacyJson();
@@ -214,7 +214,7 @@ export class DataService {
 				return false;
 			}
 			await rm(backupPath, { recursive: true, force: true });
-			logger.info(`Backup deleted: ${backupPath}`);
+			logger.debug(`Backup deleted: ${backupPath}`);
 			return true;
 		} catch (error) {
 			logger.error("Failed to delete backup:", error);
@@ -239,7 +239,7 @@ export class DataService {
 		const backupPath = `${storagePath}_backup_${timestamp}`;
 
 		await cp(storagePath, backupPath, { recursive: true });
-		logger.info(`Temporary backup created at: ${backupPath}`);
+		logger.debug(`Temporary backup created at: ${backupPath}`);
 
 		return backupPath;
 	}
@@ -253,7 +253,7 @@ export class DataService {
 		const backupPath = join(backupDir, `backup_${timestamp}`);
 
 		await cp(storagePath, backupPath, { recursive: true });
-		logger.info(`Backup created at: ${backupPath}`);
+		logger.debug(`Backup created at: ${backupPath}`);
 
 		return backupPath;
 	}
@@ -385,7 +385,7 @@ export class DataService {
 			});
 
 			output.on("close", () => {
-				logger.info(`Storage exported: ${archive.pointer()} total bytes`);
+				logger.debug(`Storage exported: ${archive.pointer()} total bytes`);
 				resolve();
 			});
 

@@ -55,7 +55,7 @@
 		// Restore UI state if available (Tab Rehydration)
 		const uiState = window.tab?.uiState;
 		if (uiState) {
-			logger.info("Restoring UI state:", uiState);
+			logger.debug("Restoring UI state:", uiState);
 			if (uiState.inputValue) {
 				chatState.inputValue = uiState.inputValue;
 			}
@@ -66,7 +66,7 @@
 					const viewport = document.querySelector('[data-slot="scroll-area-viewport"]');
 					if (viewport) {
 						viewport.scrollTop = uiState.scrollPosition ?? 0;
-						logger.info("Restored scroll position:", uiState.scrollPosition);
+						logger.debug("Restored scroll position:", uiState.scrollPosition);
 					}
 				}, 100);
 			}
@@ -74,7 +74,7 @@
 
 		// Listen for snapshot requests (Tab Sleeping)
 		const unsubSnapshot = window.electronAPI.onTabRequestSnapshot(() => {
-			logger.info("Generating UI snapshot");
+			logger.debug("Generating UI snapshot");
 			const viewport = document.querySelector('[data-slot="scroll-area-viewport"]');
 			return {
 				scrollPosition: viewport?.scrollTop || 0,
@@ -91,7 +91,7 @@
 
 		// Listen for clear messages event from main process
 		const unsubClear = window.electronAPI.onTabClearMessages(({ tabId, threadId }) => {
-			logger.info("Received clear messages event:", { tabId, threadId });
+			logger.debug("Received clear messages event:", { tabId, threadId });
 			// Clear the in-memory chat state
 			chatState.clearMessages();
 		});
@@ -99,7 +99,7 @@
 		// Listen for generate title event from main process
 		const unsubGenerateTitle = window.electronAPI.onTabGenerateTitle(
 			async ({ tabId, threadId }) => {
-				logger.info("Received generate title event:", { tabId, threadId });
+				logger.debug("Received generate title event:", { tabId, threadId });
 				// Generate title for the current chat
 				await chatState.generateTitleManually();
 			},
@@ -108,7 +108,7 @@
 		// Listen for trigger send message event (for branch and send)
 		const unsubTriggerSend = window.electronAPI.onTriggerSendMessage(
 			async (data: { threadId: string }) => {
-				logger.info("Received trigger-send-message event:", data);
+				logger.debug("Received trigger-send-message event:", data);
 				// Only trigger send if this is the target thread
 				if (data.threadId === chatState.id) {
 					// Wait a moment to ensure state is fully loaded
@@ -124,7 +124,7 @@
 		// Listen for show toast event (from shell view, e.g. tab context menu)
 		const unsubShowToast = window.electronAPI.onShowToast(
 			(data: { type: string; message: string; threadId?: string }) => {
-				logger.info("Received show-toast event:", data);
+				logger.debug("Received show-toast event:", data);
 
 				// Only show toast if it's for this specific thread (or no threadId specified)
 				if (data.threadId && data.threadId !== chatState.id) {
@@ -153,7 +153,7 @@
 		// Listen for create skill summary event
 		const unsubCreateSkillSummary = window.electronAPI.onTriggerCreateSkillSummary(
 			async ({ threadId }: { threadId: string }) => {
-				logger.info("Received create-skill-summary event:", { threadId });
+				logger.debug("Received create-skill-summary event:", { threadId });
 
 				// Only process if this is the target thread
 				if (threadId === chatState.id) {
@@ -187,7 +187,7 @@
 				typeof threadData === "object" &&
 				(threadData as ThreadParmas).autoSendOnLoad === true
 			) {
-				logger.info("Auto-send on load detected for thread:", chatState.id);
+				logger.debug("Auto-send on load detected for thread:", chatState.id);
 
 				// Clear the flag immediately to prevent re-sending
 				await window.electronAPI.storageService.setItem(threadKey, {
@@ -202,7 +202,7 @@
 				// The user message is already in the message list, we just need to trigger AI response
 				const currentModel = chatState.selectedModel;
 				if (currentModel) {
-					logger.info("Triggering AI reply generation...");
+					logger.debug("Triggering AI reply generation...");
 					try {
 						// Directly call chat.sendMessage with undefined to trigger AI reply
 						// This won't add a new user message, just generate AI response
@@ -240,7 +240,7 @@
 
 	// $effect(() => {
 	// 	const sandBoxId = agentPreviewState.sandBoxId;
-	// 	logger.info("sandBoxIdsandBoxId", sandBoxId);
+	// 	logger.debug("sandBoxIdsandBoxId", sandBoxId);
 	// });
 
 	// Close preview panel when code agent mode is disabled (but not in skills-only mode)

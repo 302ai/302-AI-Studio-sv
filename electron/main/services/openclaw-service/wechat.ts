@@ -77,7 +77,7 @@ class WeChatChannel {
 				stderrFn(data.toString());
 			});
 			proc.once("close", (code) => {
-				logger.info(`openclaw: Child process exited with code ${code}`);
+				logger.debug(`openclaw: Child process exited with code ${code}`);
 				rl.close();
 				proc.stdout.removeAllListeners();
 				proc.stderr.removeAllListeners();

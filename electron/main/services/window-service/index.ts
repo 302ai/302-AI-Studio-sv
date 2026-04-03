@@ -93,13 +93,13 @@ export class WindowService {
 	async initShellWindows() {
 		// Prevent duplicate initialization
 		if (this.isInitializing) {
-			logger.info("Window initialization already in progress, skipping");
+			logger.debug("Window initialization already in progress, skipping");
 			return;
 		}
 
 		// Prevent re-initialization if windows already exist
 		if (this.windows.length > 0) {
-			logger.info("Windows already exist, skipping initialization");
+			logger.debug("Windows already exist, skipping initialization");
 			return;
 		}
 

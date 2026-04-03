@@ -55,7 +55,7 @@ export class TrayService {
 	 */
 	async init(): Promise<void> {
 		if (this.tray) {
-			logger.info("Tray already initialized");
+			logger.debug("Tray already initialized");
 			return;
 		}
 

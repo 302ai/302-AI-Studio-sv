@@ -190,7 +190,7 @@ export class PersistedState<T extends StorageValue> {
 	#store(value: T | undefined | null): void {
 		if (!this.#debounce) {
 			this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
-				logger.info("Value", value);
+				logger.debug("Value", value);
 				logger.error(
 					`Error when writing value from persisted store "${this.#key}" to Electron storage`,
 					error,
@@ -207,7 +207,7 @@ export class PersistedState<T extends StorageValue> {
 		this.#storeTimeoutId = setTimeout(() => {
 			const write = () => {
 				this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
-					logger.info("Value", value);
+					logger.debug("Value", value);
 					logger.error(
 						`Error when writing value from persisted store "${this.#key}" to Electron storage`,
 						error,

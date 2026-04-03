@@ -381,7 +381,7 @@ export class CodeAgentTaskboardState {
 					codeAgentState.sandboxId,
 					codeAgentState.currentWorkspacePath,
 				];
-				logger.info("Updating tasklist", path);
+				logger.debug("Updating tasklist", path);
 
 				const result = await updateTasklist(sandboxId, path, sortedTasklist);
 				if (!result.isOk) {
