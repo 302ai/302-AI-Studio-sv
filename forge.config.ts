@@ -56,7 +56,6 @@ const ensureNativePackagingDeps = (platform: NodeJS.Platform = process.platform)
 		try {
 			moduleDir = path.dirname(require.resolve(`${moduleName}/package.json`));
 		} catch (_error) {
-			// Optional dependency not installed (non-darwin platforms). Skip.
 			continue;
 		}
 
@@ -107,14 +106,16 @@ const getPackagerConfig = () => {
 			...baseConfig,
 			osxSign: {
 				identity: "Developer ID Application: SONIER PTE. LTD.",
-				"hardened-runtime": true,
-				"gatekeeper-assess": false,
+				hardenedRuntime: true,
+				gatekeeperAssess: false,
 				entitlements: "entitlements.plist",
-				"entitlements-inherit": "entitlements.plist",
+				entitlementsInherit: "entitlements.plist",
+				signatureFlags: ["restrict", "runtime"],
 			},
 		};
 
 		macConfig.osxNotarize = {
+			tool: "notarytool",
 			appleId: process.env.APPLE_ID,
 			appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
 			teamId: process.env.APPLE_TEAM_ID,
@@ -140,10 +141,6 @@ const config: ForgeConfig = {
 			},
 			["win32"],
 		),
-		// {
-		// 	name: "@electron-addons/electron-forge-maker-nsis",
-		// 	config: {},
-		// },
 		new MakerZIP({}, ["darwin", "win32"]),
 		new MakerDMG({
 			icon: "static/icon.icns",
@@ -165,7 +162,6 @@ const config: ForgeConfig = {
 			ensureNativePackagingDeps();
 		},
 	},
-	// TODO: Remove GitHub publisher after users migrate to new update server (updater.302.ai)
 	publishers: [
 		{
 			name: "@electron-forge/publisher-github",
@@ -180,12 +176,19 @@ const config: ForgeConfig = {
 		},
 	],
 	plugins: [
+		// FusesPlugin 必须在 VitePlugin 之前
+		new FusesPlugin({
+			version: FuseVersion.V1,
+			[FuseV1Options.RunAsNode]: false,
+			[FuseV1Options.EnableCookieEncryption]: true,
+			[FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
+			[FuseV1Options.EnableNodeCliInspectArguments]: false,
+			[FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
+			[FuseV1Options.OnlyLoadAppFromAsar]: true,
+		}),
 		new VitePlugin({
-			// `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
-			// If you are familiar with Vite configuration, it will look really familiar.
 			build: [
 				{
-					// `entry` is just an alias for `build.lib.entry` in the corresponding file of `config`.
 					entry: "electron/main/index.ts",
 					config: "vite.main.config.ts",
 					target: "main",
@@ -202,17 +205,6 @@ const config: ForgeConfig = {
 					config: "vite.config.ts",
 				},
 			],
-		}),
-		// Fuses are used to enable/disable various Electron functionality
-		// at package time, before code signing the application
-		new FusesPlugin({
-			version: FuseVersion.V1,
-			[FuseV1Options.RunAsNode]: false,
-			[FuseV1Options.EnableCookieEncryption]: true,
-			[FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
-			[FuseV1Options.EnableNodeCliInspectArguments]: false,
-			[FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
-			[FuseV1Options.OnlyLoadAppFromAsar]: true,
 		}),
 	],
 };
