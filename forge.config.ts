@@ -99,6 +99,31 @@ const getPackagerConfig = () => {
 		executableName: "302-ai-studio",
 		appBundleId: "com.302ai.302aistudio",
 		extraResource: ["static/docker-compose.yml"],
+		ignore: [
+			// 排除开发文档和配置文件
+			/^\/\.git/,
+			/^\/\.github/,
+			/^\/\.claude/,
+			/^\/\.agents/,
+			/^\/\.vscode/,
+			/^\/CLAUDE\.md$/,
+			/^\/AGENTS\.md$/,
+			/^\/README\.md$/,
+			/^\/\.gitignore$/,
+			/^\/\.eslintrc/,
+			/^\/\.prettierrc/,
+			// 排除测试和构建脚本
+			/^\/scripts/,
+			/^\/playwright\.config\.ts$/,
+			/^\/vitest/,
+			// 排除源码（已编译到 .vite）
+			/^\/src/,
+			/^\/electron\/main/,
+			/^\/electron\/preload/,
+			// 排除 vite 配置
+			/^\/vite\..*\.ts$/,
+			/^\/tsconfig/,
+		],
 	};
 
 	if (process.platform === "darwin" && process.env.NODE_ENV === "production") {
