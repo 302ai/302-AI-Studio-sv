@@ -12,7 +12,9 @@ type SerializedCustomTextNode = SerializedTextNode & { type: "custom-text" };
 export function isLexicalEditorState(text: string): boolean {
 	try {
 		const parsed = JSON.parse(text);
-		return parsed && typeof parsed === "object" && "root" in parsed && parsed.root?.type === "root";
+		return (
+			parsed && typeof parsed === "object" && "root" in parsed && parsed.root?.type === "root"
+		);
 	} catch {
 		return false;
 	}

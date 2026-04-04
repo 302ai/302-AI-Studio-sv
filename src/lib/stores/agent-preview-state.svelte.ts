@@ -1,9 +1,12 @@
 import type { SandboxFileInfo } from "$lib/api/sandbox-file";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
+import { createLogger } from "@shared/logger";
 import type { CodeAgentType } from "@shared/storage/code-agent";
 import { SvelteDate, SvelteSet } from "svelte/reactivity";
 import { codeAgentState } from "./code-agent";
+
+const logger = createLogger("state");
 
 /**
  * Get threadId from window.tab or default to "shell"
@@ -165,14 +168,14 @@ class SyncBus {
 			try {
 				this.channel.postMessage(envelope);
 			} catch (e) {
-				console.error("[SyncBus] Broadcast failed", e);
+				logger.error("Broadcast failed", e);
 			}
 		}
 
 		try {
 			localStorage.setItem(SYNC_STORAGE_KEY, JSON.stringify(envelope));
 		} catch (e) {
-			console.warn("[SyncBus] Storage sync failed", e);
+			logger.warn("Storage sync failed", e);
 		}
 	}
 
@@ -196,11 +199,13 @@ class SyncBus {
 	private initChannel() {
 		try {
 			this.channel = new BroadcastChannel("agent-preview-sync");
-			this.channel.onmessage = (event: MessageEvent<SyncEnvelope<AgentPreviewSyncMessage>>) => {
+			this.channel.onmessage = (
+				event: MessageEvent<SyncEnvelope<AgentPreviewSyncMessage>>,
+			) => {
 				this.deliver(event.data);
 			};
 		} catch (e) {
-			console.warn("[SyncBus] BroadcastChannel unavailable:", e);
+			logger.warn("BroadcastChannel unavailable:", e);
 			this.channel = null;
 		}
 	}
@@ -213,7 +218,7 @@ class SyncBus {
 			const parsed = JSON.parse(event.newValue) as SyncEnvelope<AgentPreviewSyncMessage>;
 			this.deliver(parsed, true);
 		} catch (e) {
-			console.warn("[SyncBus] Failed to parse storage message", e);
+			logger.warn("Failed to parse storage message", e);
 		}
 	};
 
@@ -232,7 +237,7 @@ class SyncBus {
 			try {
 				l(message);
 			} catch (e) {
-				console.error("[SyncBus] Listener error", e);
+				logger.error("Listener error", e);
 			}
 		}
 	}
@@ -305,7 +310,7 @@ export class AgentPreviewState {
 	private get storageMap(): AgentPreviewStorageMap {
 		const current = persistedAgentPreviewStorage.current;
 		if (!current) {
-			console.warn("[AgentPreviewState] persistedAgentPreviewStorage.current is null/undefined");
+			logger.warn("persistedAgentPreviewStorage.current is null/undefined");
 		}
 		return current || {};
 	}
@@ -357,7 +362,10 @@ export class AgentPreviewState {
 	/**
 	 * Load file list and contents from storage
 	 */
-	async loadFromStorage(sandboxId: string, sessionId: string): Promise<AgentPreviewStorage | null> {
+	async loadFromStorage(
+		sandboxId: string,
+		sessionId: string,
+	): Promise<AgentPreviewStorage | null> {
 		if (!sandboxId || !sessionId) {
 			return null;
 		}
@@ -431,7 +439,11 @@ export class AgentPreviewState {
 		}
 
 		// If file was modified after caching, cache is stale
-		if (currentModifiedTime && cached.modifiedTime && currentModifiedTime !== cached.modifiedTime) {
+		if (
+			currentModifiedTime &&
+			cached.modifiedTime &&
+			currentModifiedTime !== cached.modifiedTime
+		) {
 			return null; // Force reload from API
 		}
 
@@ -692,7 +704,11 @@ export class AgentPreviewState {
 	/**
 	 * Set selected file path for a sandbox session
 	 */
-	async setSelectedFilePath(sandboxId: string, sessionId: string, filePath: string): Promise<void> {
+	async setSelectedFilePath(
+		sandboxId: string,
+		sessionId: string,
+		filePath: string,
+	): Promise<void> {
 		if (!sandboxId || !sessionId) {
 			return;
 		}

@@ -5,24 +5,27 @@
  */
 
 import type {
-	InstalledPlugin,
-	PluginAPI,
-	PluginStorageAPI,
-	PluginHookAPI,
-	PluginUIAPI,
-	PluginLoggerAPI,
-	PluginHttpAPI,
-	PluginI18nAPI,
-	HookHandler,
 	DialogOptions,
 	DialogResult,
-	WindowOptions,
+	HookHandler,
+	InstalledPlugin,
+	PluginAPI,
+	PluginHookAPI,
+	PluginHttpAPI,
+	PluginI18nAPI,
+	PluginLoggerAPI,
+	PluginStorageAPI,
+	PluginUIAPI,
 	RequestOptions,
+	WindowOptions,
 } from "@302ai/studio-plugin-sdk";
-import type { IHookManager } from "./types";
-import { dialog, BrowserWindow, type IpcMainInvokeEvent } from "electron";
-import { storageService } from "../services/storage-service";
+import { createLogger } from "@shared/logger";
+import { BrowserWindow, dialog, type IpcMainInvokeEvent } from "electron";
 import { broadcastService } from "../services/broadcast-service";
+import { storageService } from "../services/storage-service";
+import type { IHookManager } from "./types";
+
+const logger = createLogger("plugin-manager");
 
 /**
  * Create a dummy IPC event for internal API calls
@@ -127,11 +130,13 @@ function createUIAPI(plugin: InstalledPlugin): PluginUIAPI {
 	return {
 		registerComponent(name: string, component: typeof import("svelte").SvelteComponent): void {
 			if (componentRegistry.has(name)) {
-				console.warn(`[PluginAPI] Component ${name} already registered, overwriting...`);
+				logger.debug(`[PluginAPI] Component ${name} already registered, overwriting...`);
 			}
 
 			componentRegistry.set(name, component);
-			console.log(`[PluginAPI] Registered component: ${name} for plugin ${plugin.metadata.id}`);
+			logger.debug(
+				`[PluginAPI] Registered component: ${name} for plugin ${plugin.metadata.id}`,
+			);
 		},
 
 		showNotification(
@@ -145,7 +150,9 @@ function createUIAPI(plugin: InstalledPlugin): PluginUIAPI {
 				message,
 				type,
 			});
-			console.log(`[PluginAPI] Notification from ${plugin.metadata.name}: [${type}] ${message}`);
+			logger.debug(
+				`[PluginAPI] Notification from ${plugin.metadata.name}: [${type}] ${message}`,
+			);
 		},
 
 		async showDialog(options: DialogOptions): Promise<DialogResult> {
@@ -190,19 +197,19 @@ function createLoggerAPI(plugin: InstalledPlugin): PluginLoggerAPI {
 
 	return {
 		debug(message: string, ...args: unknown[]): void {
-			console.debug(prefix, message, ...args);
+			logger.debug(prefix, message, ...args);
 		},
 
 		info(message: string, ...args: unknown[]): void {
-			console.log(prefix, message, ...args);
+			logger.debug(prefix, message, ...args);
 		},
 
 		warn(message: string, ...args: unknown[]): void {
-			console.warn(prefix, message, ...args);
+			logger.debug(prefix, message, ...args);
 		},
 
 		error(message: string, ...args: unknown[]): void {
-			console.error(prefix, message, ...args);
+			logger.error(prefix, message, ...args);
 		},
 	};
 }
@@ -323,7 +330,10 @@ function createI18nAPI(_plugin: InstalledPlugin): PluginI18nAPI {
 			// Replace params
 			if (params) {
 				for (const [paramKey, paramValue] of Object.entries(params)) {
-					message = message.replace(new RegExp(`\\{${paramKey}\\}`, "g"), String(paramValue));
+					message = message.replace(
+						new RegExp(`\\{${paramKey}\\}`, "g"),
+						String(paramValue),
+					);
 				}
 			}
 

@@ -10,6 +10,7 @@
 	import type { ChatMessage } from "$lib/types/chat";
 	import { cn } from "$lib/utils";
 	import { ArrowDown, ArrowUp } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import { domToPng } from "modern-screenshot";
 	import { onMount, tick } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -24,6 +25,8 @@
 		prepareMessageContent,
 	} from "./screenshot-helpers";
 	import UserMessage from "./user-message.svelte";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		messages: ChatMessage[];
@@ -112,7 +115,7 @@
 		try {
 			regex = new RegExp(`(${pattern})`, flags);
 		} catch (e) {
-			console.error("[highlightKeywordInDOM] Invalid regex pattern:", e);
+			logger.error("Invalid regex pattern:", e);
 			return;
 		}
 
@@ -133,7 +136,9 @@
 				let match;
 				while ((match = regex.exec(text)) !== null) {
 					if (match.index > lastIndex) {
-						fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+						fragment.appendChild(
+							document.createTextNode(text.slice(lastIndex, match.index)),
+						);
 					}
 					const mark = document.createElement("mark");
 					mark.className = "search-highlight";
@@ -153,42 +158,14 @@
 
 	function clearSearchHighlights(container: HTMLElement): void {
 		const highlights = container.querySelectorAll("mark.search-highlight");
-		console.log(highlights);
+		logger.debug("Search highlights found:", highlights.length);
 		for (const mark of highlights) {
 			const text = document.createTextNode(mark.textContent ?? "");
-			// const parent = mark.parentNode
-			// ?.normalize()
 			mark.replaceWith(text);
-			// console.log(parent);
 			if (messageBoxEl != null) {
 				messageBoxEl!.normalize();
 			}
 		}
-		/*
-		// Merge adjacent text nodes
-		const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT, null);
-		const nodesToMerge: Text[] = [];
-		let currentNode: Text | null;
-		let lastTextNode: Text | null = null;
-
-		while ((currentNode = walker.nextNode() as Text)) {
-			if (lastTextNode && currentNode.previousSibling === lastTextNode) {
-				nodesToMerge.push(lastTextNode);
-				nodesToMerge.push(currentNode);
-			}
-			lastTextNode = currentNode;
-		}
-
-		// Merge nodes in pairs
-		for (let i = 0; i < nodesToMerge.length - 1; i += 2) {
-			const node1 = nodesToMerge[i];
-			const node2 = nodesToMerge[i + 1];
-			if (node1 && node2 && node2.previousSibling === node1) {
-				node1.textContent = node1.textContent + node2.textContent;
-				node2.remove();
-			}
-		}
-		*/
 	}
 
 	const containerClass = $derived.by(() => {
@@ -502,7 +479,7 @@
 
 					toast.success(m.screenshot_success(), { id: loadingToast });
 				} catch (error) {
-					console.error("Screenshot failed:", error);
+					logger.error("Screenshot failed:", error);
 					toast.error(m.screenshot_failed(), { id: loadingToast });
 				} finally {
 					// 6. 确保清理 DOM

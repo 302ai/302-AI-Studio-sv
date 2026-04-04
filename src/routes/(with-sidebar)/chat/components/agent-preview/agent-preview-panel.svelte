@@ -39,6 +39,7 @@
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { Check, Copy, Download, FileWarning, Loader2, Pencil, Save, X } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { ModelProvider, Skill } from "@shared/types";
 	import { onDestroy, untrack } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -59,6 +60,8 @@
 	import SessionDeleted from "./session-deleted.svelte";
 	import Terminal from "./terminal.svelte";
 	import { handleError, isFileStillSelected } from "./utils";
+
+	const logger = createLogger("ui");
 
 	// --- Utils (Move strictly pure functions outside) ---
 	const LANGUAGE_MAP: Record<string, string> = {
@@ -149,13 +152,18 @@
 		if (VIDEO_EXTENSIONS.includes(ext)) return "video";
 		if (AUDIO_EXTENSIONS.includes(ext)) return "audio";
 		if (PDF_EXTENSIONS.includes(ext)) return "pdf";
-		if (TEXT_EXTENSIONS.includes(ext) || TEXT_EXTENSIONS.some((t) => nameWithoutExt.endsWith(t))) {
+		if (
+			TEXT_EXTENSIONS.includes(ext) ||
+			TEXT_EXTENSIONS.some((t) => nameWithoutExt.endsWith(t))
+		) {
 			return "text";
 		}
 
 		// For files without extension or unknown extensions, try to treat as text
 		// Common files without extensions
-		if (["makefile", "dockerfile", "gemfile", "rakefile", "procfile"].includes(nameWithoutExt)) {
+		if (
+			["makefile", "dockerfile", "gemfile", "rakefile", "procfile"].includes(nameWithoutExt)
+		) {
 			return "text";
 		}
 
@@ -402,7 +410,10 @@
 					if (syncDir) {
 						// We have directory context
 						const normalizeSyncDir = syncDir.endsWith("/") ? syncDir : `${syncDir}/`;
-						const normalizeFileDir = currentPath.substring(0, currentPath.lastIndexOf("/") + 1);
+						const normalizeFileDir = currentPath.substring(
+							0,
+							currentPath.lastIndexOf("/") + 1,
+						);
 						const isDirectChild = normalizeFileDir === normalizeSyncDir;
 
 						if (isDirectChild) {
@@ -411,11 +422,11 @@
 						}
 					} else {
 						// No context.
-						console.warn("[PreviewSync] Missing syncDir context, skipping clear check.");
+						logger.warn("Missing syncDir context, skipping clear check.");
 					}
 
 					if (shouldClear) {
-						console.log("[PreviewSync] Clearing preview");
+						logger.debug("Clearing preview");
 						// Clear preview state for deleted file
 						cleanupPreviewUrl();
 						fileViewer.selectedFile = null;
@@ -486,7 +497,8 @@
 					const currentlySelectedPath = fileViewer.selectedFile?.path;
 					const isAlreadySelected = currentlySelectedPath === savedPath;
 					const isModified =
-						isAlreadySelected && fileViewer.selectedFile?.modified_time !== file.modified_time;
+						isAlreadySelected &&
+						fileViewer.selectedFile?.modified_time !== file.modified_time;
 
 					// Only reload if:
 					// 1. File was modified (modified_time changed) - reload to show new content
@@ -501,7 +513,7 @@
 			// Mark as restored only after successful completion
 			lastRestoredKey = key;
 		} catch (e) {
-			console.warn("[AgentPreview] State restore failed (ignored):", e);
+			logger.warn("State restore failed (ignored):", e);
 		} finally {
 			isRestoringState = false;
 		}
@@ -541,7 +553,7 @@
 		// 类似于 React 的 usePrevious + useEffect 组合
 		if (previousStreamingState && !isStreaming) {
 			if (isAgentMode && agentPreviewState.isVisible && currentSandboxId) {
-				console.log("[AgentPreview] Task completed, triggering refresh");
+				logger.debug("Task completed, triggering refresh");
 				refreshTrigger++;
 
 				// Refresh sessions to get updated workspace_path after agent completes
@@ -561,7 +573,11 @@
 	$effect(() => {
 		const currentTab = activeTab;
 		// 当从其他 tab 切换到 code tab 时，刷新文件树和当前文件内容
-		if (previousActiveTab !== null && previousActiveTab !== TAB_CODE && currentTab === TAB_CODE) {
+		if (
+			previousActiveTab !== null &&
+			previousActiveTab !== TAB_CODE &&
+			currentTab === TAB_CODE
+		) {
 			if (isAgentMode && currentSandboxId && currentSessionId) {
 				// 1. 刷新文件树列表
 				refreshTrigger++;
@@ -570,10 +586,12 @@
 				if (fileViewer.selectedFile) {
 					const selectedFile = fileViewer.selectedFile;
 					// 清除所有文件内容缓存，确保获取最新内容
-					agentPreviewState.clearFileContents(currentSandboxId, currentSessionId).then(() => {
-						// 重新加载当前文件
-						handleFileSelect(selectedFile);
-					});
+					agentPreviewState
+						.clearFileContents(currentSandboxId, currentSessionId)
+						.then(() => {
+							// 重新加载当前文件
+							handleFileSelect(selectedFile);
+						});
 				}
 			}
 		}
@@ -601,7 +619,9 @@
 	// --- Handlers ---
 
 	const get302ApiKey = () => {
-		const provider = persistedProviderState.current.find((p) => p.name === "302.AI" && p.enabled);
+		const provider = persistedProviderState.current.find(
+			(p) => p.name === "302.AI" && p.enabled,
+		);
 		return provider?.apiKey || "";
 	};
 
@@ -650,7 +670,10 @@
 
 				if (signal.aborted) return;
 
-				if (cachedContent && isFileStillSelected(currentFilePath, fileViewer.selectedFile)) {
+				if (
+					cachedContent &&
+					isFileStillSelected(currentFilePath, fileViewer.selectedFile)
+				) {
 					await agentPreviewState.setSelectedFilePath(
 						currentSandboxId,
 						currentSessionId,
@@ -774,12 +797,16 @@
 			}
 			// For unsupported types, just update the selection without loading content
 			else if (isFileStillSelected(currentFilePath, fileViewer.selectedFile)) {
-				await agentPreviewState.setSelectedFilePath(currentSandboxId, currentSessionId, file.path);
+				await agentPreviewState.setSelectedFilePath(
+					currentSandboxId,
+					currentSessionId,
+					file.path,
+				);
 			}
 		} catch (e) {
 			if (!signal.aborted && isFileStillSelected(currentFilePath, fileViewer.selectedFile)) {
 				handleError(e, "Failed to load file content");
-				console.error("[AgentPreview] File load error:", e);
+				logger.error("File load error:", e);
 			}
 		} finally {
 			if (!signal.aborted) fileViewer.isLoading = false;
@@ -847,13 +874,13 @@
 				try {
 					await navigator.clipboard.writeText(result.data.url);
 				} catch (e) {
-					console.warn("Clipboard write failed:", e);
+					logger.warn("Clipboard write failed:", e);
 				}
 				toast.success(successMsg);
 			}
 			return result.data;
 		} catch (error) {
-			console.error("Deploy failed:", error);
+			logger.error("Deploy failed:", error);
 			const rawMessage = error instanceof Error ? error.message : "Unknown error";
 			const truncatedMessage =
 				rawMessage.length > 300 ? rawMessage.slice(0, 300) + "..." : rawMessage;
@@ -893,7 +920,7 @@
 					toast.error(m.openclaw_webui_failed_to_load());
 				}
 			} catch (error) {
-				console.error("[OpenClaw WebUI] Failed to open internal tab:", error);
+				logger.error("Failed to open internal tab:", error);
 				toast.error(m.openclaw_webui_failed_to_load());
 			}
 			return;
@@ -992,7 +1019,7 @@
 				lastModified: Date.now(),
 			});
 
-			console.log("[AgentPreview] Uploading file:", {
+			logger.debug("Uploading file:", {
 				path: filePath,
 				name: file.name,
 				size: file.size,
@@ -1017,7 +1044,7 @@
 				toast.success(m.toast_file_upload_success(), { id: loadingId });
 			}
 		} catch (e) {
-			console.error("Save edit failed:", e);
+			logger.error("Save edit failed:", e);
 			toast.error(m.toast_file_upload_failed(), { id: loadingId });
 		} finally {
 			isSaving = false;
@@ -1120,9 +1147,11 @@
 				link.click();
 				document.body.removeChild(link);
 			}
-			toast.success(m.toast_download_file_success({ fileName: fileViewer.selectedFile.name }));
+			toast.success(
+				m.toast_download_file_success({ fileName: fileViewer.selectedFile.name }),
+			);
 		} catch (e) {
-			console.error("Download failed:", e);
+			logger.error("Download failed:", e);
 			toast.error(m.toast_download_failed());
 		}
 	};
@@ -1184,10 +1213,16 @@
 						{#if activeTab === TAB_PREVIEW}
 							{#if isAgentMode}
 								{#if isRestoringState || agentPreviewState.isDeploying}
-									<div class="flex h-full flex-col gap-2 items-center justify-center">
-										<Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
+									<div
+										class="flex h-full flex-col gap-2 items-center justify-center"
+									>
+										<Loader2
+											class="h-6 w-6 animate-spin text-muted-foreground"
+										/>
 										{#if agentPreviewState.isDeploying}
-											<span class="text-sm text-muted-foreground">{m.text_deploying()}...</span>
+											<span class="text-sm text-muted-foreground"
+												>{m.text_deploying()}...</span
+											>
 										{/if}
 									</div>
 								{:else if deployment.url}
@@ -1199,7 +1234,8 @@
 											{#key iframeRefreshKey}
 												<iframe
 													bind:this={deploymentIframeRef}
-													class="w-full h-full border-0 {deviceMode === DEVICE_MODE_MOBILE
+													class="w-full h-full border-0 {deviceMode ===
+													DEVICE_MODE_MOBILE
 														? 'shadow-lg border-x border-border'
 														: ''}"
 													sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads"
@@ -1216,12 +1252,19 @@
 									<div
 										class="flex h-full flex-col items-center justify-center text-muted-foreground"
 									>
-										<img src={UnDeployedIcon} alt="Un deployed" class="h-40 w-40" />
-										<p class="text-sm font-medium">{m.empty_agent_preview_title()}</p>
+										<img
+											src={UnDeployedIcon}
+											alt="Un deployed"
+											class="h-40 w-40"
+										/>
+										<p class="text-sm font-medium">
+											{m.empty_agent_preview_title()}
+										</p>
 										<Button
 											class=" flex rounded-xs items-center gap-1.5 mt-3.5 bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
 											onclick={handleDeploySandbox}
-											disabled={agentPreviewState.isDeploying || chatState.isStreaming}
+											disabled={agentPreviewState.isDeploying ||
+												chatState.isStreaming}
 										>
 											{#if agentPreviewState.isDeploying}
 												<Loader2 class="h-4 w-4 animate-spin" />
@@ -1237,7 +1280,9 @@
 							{:else if codeAgentState.isDeleted}
 								<SessionDeleted />
 							{:else}
-								<div class="flex h-full items-center justify-center text-muted-foreground text-sm">
+								<div
+									class="flex h-full items-center justify-center text-muted-foreground text-sm"
+								>
 									{m.empty_html_preview_title()}
 								</div>
 							{/if}
@@ -1250,7 +1295,9 @@
 											class="flex items-center justify-between gap-2 border-b border-border bg-background px-3 py-2 min-w-0"
 										>
 											<!-- 左侧：文件路径 -->
-											<div class="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden">
+											<div
+												class="flex items-center gap-1.5 min-w-0 flex-1 overflow-hidden"
+											>
 												<span
 													class="text-xs text-muted-foreground truncate"
 													title={fileViewer.selectedFile?.path}
@@ -1274,12 +1321,19 @@
 														class="rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
 														onclick={handleSaveEdit}
 														disabled={isSaving}
-														title={isSaving ? m.text_button_saving() : m.text_button_save()}
+														title={isSaving
+															? m.text_button_saving()
+															: m.text_button_save()}
 													>
 														{#if isSaving}
-															<Loader2 class="h-4 w-4 flex-shrink-0 animate-spin" />
+															<Loader2
+																class="h-4 w-4 flex-shrink-0 animate-spin"
+															/>
 														{:else}
-															<Save class="h-4 w-4 flex-shrink-0" strokeWidth={1.25} />
+															<Save
+																class="h-4 w-4 flex-shrink-0"
+																strokeWidth={1.25}
+															/>
 														{/if}
 													</button>
 												{:else}
@@ -1287,7 +1341,8 @@
 													{#if fileViewer.previewType === "text" || fileViewer.previewType === "image"}
 														<button
 															class="relative rounded p-1 transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer h-6 w-6"
-															onclick={fileViewer.previewType === "image"
+															onclick={fileViewer.previewType ===
+															"image"
 																? handleCopyImage
 																: handleCopyContent}
 															title={m.title_copy()}
@@ -1312,7 +1367,10 @@
 														onclick={handleDownloadFile}
 														title={m.label_file_tree_download()}
 													>
-														<Download class="h-4 w-4" strokeWidth={1.25} />
+														<Download
+															class="h-4 w-4"
+															strokeWidth={1.25}
+														/>
 													</button>
 													<!-- Edit button - only for text files -->
 													{#if fileViewer.previewType === "text"}
@@ -1321,7 +1379,10 @@
 															onclick={handleStartEdit}
 															title={m.title_button_edit()}
 														>
-															<Pencil class="h-4 w-4" strokeWidth={1.25} />
+															<Pencil
+																class="h-4 w-4"
+																strokeWidth={1.25}
+															/>
 														</button>
 													{/if}
 												{/if}
@@ -1332,7 +1393,9 @@
 									<div class="flex-1 min-h-0">
 										{#if fileViewer.isLoading}
 											<div class="flex h-full items-center justify-center">
-												<Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
+												<Loader2
+													class="h-6 w-6 animate-spin text-muted-foreground"
+												/>
 											</div>
 										{:else if fileViewer.previewType === "text"}
 											<CodeMirrorEditor
@@ -1357,13 +1420,23 @@
 											<div
 												class="flex h-full w-full items-center justify-center overflow-auto bg-muted/30 p-4"
 											>
-												<video src={fileViewer.previewUrl} controls class="max-h-full max-w-full">
+												<video
+													src={fileViewer.previewUrl}
+													controls
+													class="max-h-full max-w-full"
+												>
 													<track kind="captions" />
 												</video>
 											</div>
 										{:else if fileViewer.previewType === "audio" && fileViewer.previewUrl}
-											<div class="flex h-full w-full items-center justify-center bg-muted/30 p-4">
-												<audio src={fileViewer.previewUrl} controls class="w-full max-w-md">
+											<div
+												class="flex h-full w-full items-center justify-center bg-muted/30 p-4"
+											>
+												<audio
+													src={fileViewer.previewUrl}
+													controls
+													class="w-full max-w-md"
+												>
 													Your browser does not support the audio element.
 												</audio>
 											</div>
@@ -1373,13 +1446,19 @@
 													data={fileViewer.previewUrl}
 													type="application/pdf"
 													class="h-full w-full"
-													title={fileViewer.selectedFile?.name || "PDF Preview"}
+													title={fileViewer.selectedFile?.name ||
+														"PDF Preview"}
 												>
 													<div
 														class="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground"
 													>
-														<FileWarning class="h-12 w-12" strokeWidth={1.25} />
-														<p class="text-sm">{m.document_viewer_cannot_preview()}</p>
+														<FileWarning
+															class="h-12 w-12"
+															strokeWidth={1.25}
+														/>
+														<p class="text-sm">
+															{m.document_viewer_cannot_preview()}
+														</p>
 														<a
 															href={fileViewer.previewUrl}
 															download={fileViewer.selectedFile?.name}
@@ -1395,7 +1474,9 @@
 												class="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground"
 											>
 												<FileWarning class="h-12 w-12" strokeWidth={1.25} />
-												<p class="text-sm">{m.document_viewer_cannot_preview()}</p>
+												<p class="text-sm">
+													{m.document_viewer_cannot_preview()}
+												</p>
 												<p class="text-xs text-muted-foreground/70">
 													{fileViewer.selectedFile?.name}
 												</p>
@@ -1404,7 +1485,9 @@
 									</div>
 								</div>
 							{:else}
-								<div class="flex h-full items-center justify-center text-muted-foreground text-sm">
+								<div
+									class="flex h-full items-center justify-center text-muted-foreground text-sm"
+								>
 									{m.empty_html_preview_title()}
 								</div>
 							{/if}
@@ -1412,9 +1495,14 @@
 							{#if codeAgentState.isDeleted}
 								<SessionDeleted />
 							{:else if currentSandboxId}
-								<Terminal sandboxId={currentSandboxId} sessionId={currentSessionId} />
+								<Terminal
+									sandboxId={currentSandboxId}
+									sessionId={currentSessionId}
+								/>
 							{:else}
-								<div class="flex h-full items-center justify-center text-muted-foreground text-sm">
+								<div
+									class="flex h-full items-center justify-center text-muted-foreground text-sm"
+								>
 									Sandbox not available
 								</div>
 							{/if}
@@ -1454,17 +1542,23 @@
 									{:else if skillsPanelState.currentView.type === "detail"}
 										<SkillDetailView
 											skillName={skillsPanelState.currentView.skillName}
-											skill={findSkill(skillsPanelState.currentView.skillName)}
+											skill={findSkill(
+												skillsPanelState.currentView.skillName,
+											)}
 										/>
 									{:else if skillsPanelState.currentView.type === "preview"}
 										<SkillPreviewView
 											skillName={skillsPanelState.currentView.skillName}
-											skill={findSkill(skillsPanelState.currentView.skillName)}
+											skill={findSkill(
+												skillsPanelState.currentView.skillName,
+											)}
 										/>
 									{:else if skillsPanelState.currentView.type === "edit"}
 										<SkillEditView
 											skillName={skillsPanelState.currentView.skillName}
-											skill={findSkill(skillsPanelState.currentView.skillName)}
+											skill={findSkill(
+												skillsPanelState.currentView.skillName,
+											)}
 											onRefresh={loadSkills}
 										/>
 									{:else if skillsPanelState.currentView.type === "create-select"}

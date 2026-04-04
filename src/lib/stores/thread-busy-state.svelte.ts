@@ -1,4 +1,7 @@
 import { SvelteMap } from "svelte/reactivity";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 
 class ThreadBusyState {
 	// Map to store thread busy state: threadId -> { isBusy: boolean, reason?: string }
@@ -12,22 +15,25 @@ class ThreadBusyState {
 		try {
 			// Get initial busy threads from main process
 			const initialBusyThreads = await window.electronAPI.threadStateService.getBusyThreads();
-			console.log("[ThreadBusyState] Initial busy threads:", initialBusyThreads);
+			logger.info("Initial busy threads:", initialBusyThreads);
 			if (initialBusyThreads) {
 				(
-					Object.entries(initialBusyThreads) as [string, { isBusy: boolean; reason?: string }][]
+					Object.entries(initialBusyThreads) as [
+						string,
+						{ isBusy: boolean; reason?: string },
+					][]
 				).forEach(([threadId, state]) => {
 					this.busyMap.set(threadId, state);
 				});
 			}
 		} catch (error) {
-			console.error("[ThreadBusyState] Failed to get initial busy threads:", error);
+			logger.error("Failed to get initial busy threads:", error);
 		}
 
 		// Listen for cross-process busy state changes
 		window.electronAPI.onThreadBusyStateChanged(
 			(event: { threadId: string; isBusy: boolean; reason?: string }) => {
-				console.log("[ThreadBusyState] Busy state changed:", event);
+				logger.info("Busy state changed:", event);
 				if (event.isBusy) {
 					this.busyMap.set(event.threadId, { isBusy: true, reason: event.reason });
 				} else {

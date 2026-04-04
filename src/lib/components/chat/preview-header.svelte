@@ -133,7 +133,9 @@
 
 	<!-- 顶部 B：部署和设备切换 -->
 	{#if activeTab === "preview"}
-		<div class="grid h-10 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2 min-w-0">
+		<div
+			class="grid h-10 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-2 min-w-0"
+		>
 			<!-- 左侧：部署按钮 -->
 			<div class="flex items-center gap-1 min-w-0">
 				{#if (!deployedUrl && !compactDeployButton && !isDeleted) || (isAgentMode && !isDeleted)}

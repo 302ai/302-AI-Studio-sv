@@ -8,6 +8,9 @@
 	import { Paperclip } from "@lucide/svelte";
 	import type { AttachmentFile } from "@shared/types";
 	import { nanoid } from "nanoid";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		disabled?: boolean;
@@ -58,7 +61,9 @@
 			// 异步生成预览或读取完整内容（不阻塞 UI）
 			const processFile = async () => {
 				const isAbsolutePath =
-					filePath.includes("/") || filePath.includes("\\") || /^[a-zA-Z]:/.test(filePath);
+					filePath.includes("/") ||
+					filePath.includes("\\") ||
+					/^[a-zA-Z]:/.test(filePath);
 
 				if (!isAbsolutePath) {
 					// 如果没有绝对路径，强制读取文件完整内容作为 preview
@@ -67,7 +72,7 @@
 						const content = await fileToBase64(file);
 						chatState.updateAttachment(attachmentId, { preview: content });
 					} catch (e) {
-						console.error("Failed to read file content:", e);
+						logger.error("Failed to read file content:", e);
 					}
 				} else {
 					// 正常的预览生成逻辑

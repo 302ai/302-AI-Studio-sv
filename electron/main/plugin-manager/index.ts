@@ -5,21 +5,24 @@
  * Exports all plugin-related modules and provides initialization
  */
 
+export * from "./hook-manager";
 export * from "./plugin-api";
 export * from "./plugin-loader";
 export * from "./plugin-registry";
-export * from "./hook-manager";
 export * from "./sandbox";
 
+import { createLogger } from "@shared/logger";
+import { hookManager } from "./hook-manager";
 import { pluginLoader } from "./plugin-loader";
 import { pluginRegistry } from "./plugin-registry";
-import { hookManager } from "./hook-manager";
+
+const logger = createLogger("plugin-manager");
 
 /**
  * Initialize the plugin system
  */
 export async function initializePluginSystem(): Promise<void> {
-	console.log("[PluginManager] Initializing plugin system...");
+	logger.debug("[PluginManager] Initializing plugin system...");
 
 	try {
 		// Load all plugins
@@ -28,12 +31,12 @@ export async function initializePluginSystem(): Promise<void> {
 		const loadedCount = pluginLoader.getLoadedPlugins().length;
 		const enabledCount = pluginRegistry.getEnabled().length;
 
-		console.log(
+		logger.debug(
 			`[PluginManager] Plugin system initialized successfully. ` +
 				`Loaded: ${loadedCount}, Enabled: ${enabledCount}`,
 		);
 	} catch (error) {
-		console.error("[PluginManager] Failed to initialize plugin system:", error);
+		logger.error("[PluginManager] Failed to initialize plugin system:", error);
 		throw error;
 	}
 }
@@ -42,7 +45,7 @@ export async function initializePluginSystem(): Promise<void> {
  * Shutdown the plugin system
  */
 export async function shutdownPluginSystem(): Promise<void> {
-	console.log("[PluginManager] Shutting down plugin system...");
+	logger.debug("[PluginManager] Shutting down plugin system...");
 
 	try {
 		// Unload all plugins
@@ -56,9 +59,9 @@ export async function shutdownPluginSystem(): Promise<void> {
 		// Clear registries
 		hookManager.clear();
 
-		console.log("[PluginManager] Plugin system shutdown complete");
+		logger.debug("[PluginManager] Plugin system shutdown complete");
 	} catch (error) {
-		console.error("[PluginManager] Error during plugin system shutdown:", error);
+		logger.error("[PluginManager] Error during plugin system shutdown:", error);
 	}
 }
 

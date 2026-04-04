@@ -80,7 +80,10 @@
 			<div class="flex flex-col gap-4 flex-1 min-h-0">
 				<div class="flex items-center gap-2">
 					<div class="flex-1">
-						<SettingSearchInput bind:value={searchTerm} placeholder={m.mcp_search_placeholder()} />
+						<SettingSearchInput
+							bind:value={searchTerm}
+							placeholder={m.mcp_search_placeholder()}
+						/>
 					</div>
 					<Button variant="outline" onclick={() => (currentView = "add")}>
 						<Plus class="h-4 w-4" />
@@ -101,7 +104,8 @@
 									{m.mcp_no_servers_empty_state()}<button
 										type="button"
 										class="text-primary hover:text-primary/80 cursor-pointer font-medium"
-										onclick={handleGoToMcpSettings}>{m.mcp_click_to_settings()}</button
+										onclick={handleGoToMcpSettings}
+										>{m.mcp_click_to_settings()}</button
 									>
 								</p>
 							</div>
@@ -126,18 +130,24 @@
 												{/if}
 											</div>
 											<div class="flex flex-col gap-1 flex-1 min-w-0">
-												<h3 class="text-setting-fg text-left text-sm font-medium truncate">
+												<h3
+													class="text-setting-fg text-left text-sm font-medium truncate"
+												>
 													{server.name || server.id}
 												</h3>
 												{#if server.description}
-													<p class="text-muted-fg text-left text-xs truncate">
+													<p
+														class="text-muted-fg text-left text-xs truncate"
+													>
 														{server.description}
 													</p>
 												{/if}
 											</div>
 										</div>
 										<div class="flex items-center flex-shrink-0">
-											<Checkbox checked={localSelectedIds.includes(server.id)} />
+											<Checkbox
+												checked={localSelectedIds.includes(server.id)}
+											/>
 										</div>
 									</div>
 								</button>
@@ -148,7 +158,11 @@
 			</div>
 		{:else if currentView === "add"}
 			<div class="flex-1 overflow-y-auto min-h-0">
-				<McpServerForm mode="add" onBack={handleBackToList} onSaveSuccess={handleServerAdded} />
+				<McpServerForm
+					mode="add"
+					onBack={handleBackToList}
+					onSaveSuccess={handleServerAdded}
+				/>
 			</div>
 		{/if}
 	</Dialog.Content>

@@ -154,6 +154,12 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 			botId: "",
 			secret: "",
 		},
+		discord: {
+			enabled: true,
+			token: "",
+			groupPolicy: "open",
+			streaming: "off",
+		},
 	},
 	gateway: {
 		port: 18789,

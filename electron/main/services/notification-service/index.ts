@@ -1,4 +1,7 @@
 import { BrowserWindow, Notification, type IpcMainInvokeEvent } from "electron";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { isNull, isUndefined } from "es-toolkit/predicate";
 import { tabStorage } from "../storage-service/tab-storage";
 import { tabService } from "../tab-service";
@@ -63,7 +66,7 @@ export class NotificationService {
 				}));
 				tabState[options.windowId] = { tabs: updatedTabs };
 				await tabStorage.setItemInternal("tab-bar-state", tabState);
-				console.log(
+				logger.info(
 					`[NotificationService] Activated tab ${options.tabId} in window ${options.windowId} via notification click`,
 				);
 			}

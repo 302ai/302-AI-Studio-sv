@@ -1,3 +1,7 @@
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("server");
+
 interface SSEData {
 	choices?: Array<{
 		delta?: {
@@ -39,12 +43,15 @@ export function createCitationsFetch(
 				// Add provider options directly to request body
 				Object.assign(bodyJson, providerOptions);
 
-				console.log("[302.AI] Adding provider options to request:", providerOptions);
-				console.log("[302.AI] Modified request body (full):", JSON.stringify(bodyJson, null, 2));
+				logger.info("[302.AI] Adding provider options to request:", providerOptions);
+				logger.info(
+					"[302.AI] Modified request body (full):",
+					JSON.stringify(bodyJson, null, 2),
+				);
 
 				options.body = JSON.stringify(bodyJson);
 			} catch (error) {
-				console.error("[302.AI] Failed to modify request body:", error);
+				logger.error("[302.AI] Failed to modify request body:", error);
 			}
 		}
 
@@ -191,7 +198,9 @@ class CitationsProcessor {
 	private shouldAddCitations(choice: Choice | undefined): boolean {
 		if (!choice) return false;
 
-		return choice.finish_reason === "stop" && this.citations.length > 0 && !this.hasAddedCitations;
+		return (
+			choice.finish_reason === "stop" && this.citations.length > 0 && !this.hasAddedCitations
+		);
 	}
 
 	private getFirstChoice(data: SSEData): Choice | undefined {
@@ -204,7 +213,9 @@ class CitationsProcessor {
 			return "";
 		}
 
-		const citationLines = this.citations.map((citation, index) => `- [${index + 1}] ${citation}`);
+		const citationLines = this.citations.map(
+			(citation, index) => `- [${index + 1}] ${citation}`,
+		);
 
 		return `\n\n${citationLines.join("\n")}\n`;
 	}

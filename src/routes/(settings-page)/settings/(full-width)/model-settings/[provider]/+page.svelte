@@ -13,8 +13,11 @@
 	import { userState } from "$lib/stores/user-state.svelte";
 	import { getFilteredModels } from "$lib/utils/model-filters.js";
 	import { Eye, EyeOff } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { Model, ModelCreateInput, ModelProvider } from "@shared/types";
 	import { toast } from "svelte-sonner";
+
+	const logger = createLogger("ui");
 
 	const apiTypes = [
 		{ value: "302ai", label: "302.AI" },
@@ -227,11 +230,11 @@
 		}
 	}
 
-	async function handleModelToggleCollected(model: Model) {
-		await providerState.toggleModelCollected(model.id);
+	function handleModelToggleCollected(model: Model) {
+		providerState.toggleModelCollected(model.id);
 	}
 
-	async function handleModelDuplicate(model: Model) {
+	function handleModelDuplicate(model: Model) {
 		if (!currentProvider) return;
 		let newId = `${model.id}_copy`;
 		let counter = 1;
@@ -239,8 +242,8 @@
 			newId = `${model.id}_copy_${counter}`;
 			counter++;
 		}
-		console.log(model.capabilities);
-		await providerState.addModel({
+		logger.debug("Model capabilities:", model.capabilities);
+		providerState.addModel({
 			id: newId,
 			name: `${model.name} (Copy)`,
 			remark: model.remark ? `${model.remark} (Copy)` : "",
@@ -312,10 +315,15 @@
 				<div class="flex items-end gap-4">
 					<div class="flex flex-col gap-2">
 						<Label class="text-sm font-normal">{m.text_label_provider_icon()}</Label>
-						<IconPicker value={formData.icon || formData.apiType} onChange={handleIconChange} />
+						<IconPicker
+							value={formData.icon || formData.apiType}
+							onChange={handleIconChange}
+						/>
 					</div>
 					<div class="flex flex-1 flex-col gap-2">
-						<Label for="name" class="text-sm font-medium">{m.text_label_provider_name()}</Label>
+						<Label for="name" class="text-sm font-medium"
+							>{m.text_label_provider_name()}</Label
+						>
 						<Input
 							id="name"
 							bind:value={formData.name}
@@ -379,7 +387,9 @@
 							class="text-primary hover:underline"
 							onclick={(e) => {
 								e.preventDefault();
-								window.electronAPI.externalLinkService.openExternalLink(formData.websites.apiKey);
+								window.electronAPI.externalLinkService.openExternalLink(
+									formData.websites.apiKey,
+								);
 							}}
 						>
 							{m.text_get_api_key()}
@@ -395,7 +405,10 @@
 									{m.text_use_account_api_key()}
 								</button>
 							{:else}
-								<a href="/settings/account-settings" class="text-primary hover:underline">
+								<a
+									href="/settings/account-settings"
+									class="text-primary hover:underline"
+								>
 									{m.text_login_to_get_api_key()}
 								</a>
 							{/if}
@@ -406,7 +419,9 @@
 
 			<!-- 自动更新模型 -->
 			<div class="space-y-2">
-				<Label class="text-sm font-normal">{m.text_label_provider_auto_update_models()}</Label>
+				<Label class="text-sm font-normal"
+					>{m.text_label_provider_auto_update_models()}</Label
+				>
 				<SettingSwitchItem
 					label={m.text_label_provider_auto_update_models_desc()}
 					checked={formData.autoUpdateModels}
@@ -445,9 +460,13 @@
 			<!-- 操作按钮 -->
 			<div class="@container flex flex-wrap items-center gap-3 pt-4">
 				<Button variant="default" onclick={handleGetModels} disabled={isLoadingModels}>
-					{isLoadingModels ? m.text_button_get_models_loading() : m.text_button_get_models()}
+					{isLoadingModels
+						? m.text_button_get_models_loading()
+						: m.text_button_get_models()}
 				</Button>
-				<Button variant="outline" onclick={handleAddModel}>{m.text_button_add_model()}</Button>
+				<Button variant="outline" onclick={handleAddModel}
+					>{m.text_button_add_model()}</Button
+				>
 				<Button
 					variant="destructive"
 					onclick={handleClearModels}

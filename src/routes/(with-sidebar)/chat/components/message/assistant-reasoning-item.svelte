@@ -33,7 +33,8 @@
 
 	// Sync with persisted state (handles updates from other windows)
 	$effect(() => {
-		const persisted = persistedChatUIState.current.reasoningState[messageId]?.[index.toString()];
+		const persisted =
+			persistedChatUIState.current.reasoningState[messageId]?.[index.toString()];
 		if (persisted !== undefined && persisted !== isExpanded) {
 			isExpanded = persisted;
 		}
@@ -89,11 +90,15 @@
 		<CollapsibleContent class="space-y-2">
 			<div class="pt-3">
 				{#if preferencesSettings.autoDisableMarkdown}
-					<div class="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
+					<div
+						class="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap break-all"
+					>
 						{text}
 					</div>
 				{:else}
-					<div class="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap break-all">
+					<div
+						class="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap break-all"
+					>
 						{text.replace(/\\n/g, "\n").replace(/</g, "&lt;").replace(/>/g, "&gt;")}
 					</div>
 				{/if}
@@ -105,7 +110,9 @@
 						type="dot-pulse"
 						size={16}
 						speed={1.2}
-						color={persistedThemeState.current.shouldUseDarkColors ? "#a1a1aa" : "#71717a"}
+						color={persistedThemeState.current.shouldUseDarkColors
+							? "#a1a1aa"
+							: "#71717a"}
 					/>
 					<span class="text-xs text-muted-foreground italic">
 						{m.title_thinking()}...

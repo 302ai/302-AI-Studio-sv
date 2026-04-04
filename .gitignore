@@ -1,3 +1,5 @@
+.idea/
+
 test-results
 node_modules
 
@@ -31,6 +33,8 @@ paraglide/
 
 storage
 !src/shared/storage
+
+logs
 
 dist
 

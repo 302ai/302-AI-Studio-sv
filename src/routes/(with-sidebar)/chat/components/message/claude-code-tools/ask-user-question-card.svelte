@@ -345,7 +345,12 @@
 												: "border-border hover:bg-muted/50",
 											isAnswered && "cursor-not-allowed opacity-60",
 										)}
-										onclick={() => handleOptionSelect(qIndex, option.label, question.multiSelect)}
+										onclick={() =>
+											handleOptionSelect(
+												qIndex,
+												option.label,
+												question.multiSelect,
+											)}
 										disabled={isAnswered}
 									>
 										{#if question.multiSelect}
@@ -353,11 +358,15 @@
 											<div
 												class={cn(
 													"mt-0.5 h-4 w-4 rounded border-2 flex items-center justify-center",
-													isSelected ? "border-primary bg-primary" : "border-muted-foreground",
+													isSelected
+														? "border-primary bg-primary"
+														: "border-muted-foreground",
 												)}
 											>
 												{#if isSelected}
-													<Check class="h-3 w-3 text-primary-foreground" />
+													<Check
+														class="h-3 w-3 text-primary-foreground"
+													/>
 												{/if}
 											</div>
 										{:else}
@@ -365,17 +374,25 @@
 											<div
 												class={cn(
 													"mt-0.5 h-4 w-4 rounded-full border-2 flex items-center justify-center",
-													isSelected ? "border-primary" : "border-muted-foreground",
+													isSelected
+														? "border-primary"
+														: "border-muted-foreground",
 												)}
 											>
 												{#if isSelected}
-													<div class="h-2 w-2 rounded-full bg-primary"></div>
+													<div
+														class="h-2 w-2 rounded-full bg-primary"
+													></div>
 												{/if}
 											</div>
 										{/if}
 										<div class="flex-1 min-w-0">
-											<p class="text-sm font-medium text-foreground">{option.label}</p>
-											<p class="text-xs text-muted-foreground">{option.description}</p>
+											<p class="text-sm font-medium text-foreground">
+												{option.label}
+											</p>
+											<p class="text-xs text-muted-foreground">
+												{option.description}
+											</p>
 										</div>
 									</button>
 								{/each}
@@ -397,7 +414,9 @@
 										<div
 											class={cn(
 												"h-4 w-4 rounded border-2 flex items-center justify-center",
-												isOtherActive ? "border-primary bg-primary" : "border-muted-foreground",
+												isOtherActive
+													? "border-primary bg-primary"
+													: "border-muted-foreground",
 											)}
 										>
 											{#if isOtherActive}
@@ -408,7 +427,9 @@
 										<div
 											class={cn(
 												"h-4 w-4 rounded-full border-2 flex items-center justify-center",
-												isOtherActive ? "border-primary" : "border-muted-foreground",
+												isOtherActive
+													? "border-primary"
+													: "border-muted-foreground",
 											)}
 										>
 											{#if isOtherActive}
@@ -416,7 +437,9 @@
 											{/if}
 										</div>
 									{/if}
-									<span class="text-sm text-foreground">{m.plan_mode_other_option()}</span>
+									<span class="text-sm text-foreground"
+										>{m.plan_mode_other_option()}</span
+									>
 								</button>
 
 								{#if showCustomInput.get(qIndex)}

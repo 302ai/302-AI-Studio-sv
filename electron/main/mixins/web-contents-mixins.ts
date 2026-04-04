@@ -95,7 +95,10 @@ export const withExternalLinkHandler = (view: WebContentsView): void => {
 		}
 
 		// Allow Firebase authentication popups
-		if (url.includes("firebaseapp.com/__/auth/handler") || url.includes("accounts.google.com")) {
+		if (
+			url.includes("firebaseapp.com/__/auth/handler") ||
+			url.includes("accounts.google.com")
+		) {
 			return { action: "allow" };
 		}
 

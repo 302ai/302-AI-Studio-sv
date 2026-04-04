@@ -64,7 +64,9 @@
 					});
 				} else if (serverConfig.command) {
 					const cmd = serverConfig.command as string;
-					const args = Array.isArray(serverConfig.args) ? (serverConfig.args as string[]) : [];
+					const args = Array.isArray(serverConfig.args)
+						? (serverConfig.args as string[])
+						: [];
 					const combinedCommand = args.length > 0 ? `${cmd} ${args.join(" ")}` : cmd;
 
 					servers.push({
@@ -108,7 +110,8 @@
 			toast.success(m.mcp_import_success({ count: importedServers.length.toString() }));
 			handleClose();
 		} catch (error) {
-			const errorMessage = error instanceof Error ? error.message : m.mcp_import_error_unknown();
+			const errorMessage =
+				error instanceof Error ? error.message : m.mcp_import_error_unknown();
 			toast.error(m.mcp_import_error({ error: errorMessage }));
 		} finally {
 			isProcessing = false;

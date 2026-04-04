@@ -57,7 +57,11 @@
 		const codeAgentId = codeAgentState.currentAgentId;
 		// 使用统一的过滤方法：只显示已启用且（isFeatured === true 或 isAddedByUser === true）的模型
 		// judge is Open Claw, Open Claw only supports viewing some models
-		const filteredModels = getFilteredModels(models, true, isVibe && codeAgentId == "open-claw");
+		const filteredModels = getFilteredModels(
+			models,
+			true,
+			isVibe && codeAgentId == "open-claw",
+		);
 
 		return filteredModels
 			.map((model): Model | null => {
@@ -332,13 +336,15 @@
 			case "ArrowDown":
 				event.preventDefault();
 				event.stopPropagation();
-				focusedModelIndex = focusedModelIndex < models.length - 1 ? focusedModelIndex + 1 : 0;
+				focusedModelIndex =
+					focusedModelIndex < models.length - 1 ? focusedModelIndex + 1 : 0;
 				handled = true;
 				break;
 			case "ArrowUp":
 				event.preventDefault();
 				event.stopPropagation();
-				focusedModelIndex = focusedModelIndex > 0 ? focusedModelIndex - 1 : models.length - 1;
+				focusedModelIndex =
+					focusedModelIndex > 0 ? focusedModelIndex - 1 : models.length - 1;
 				handled = true;
 				break;
 			case "Enter":
@@ -393,7 +399,8 @@
 				if (
 					models.some(
 						(model) =>
-							model.id === selectedModel.id && model.providerId === selectedModel.providerId,
+							model.id === selectedModel.id &&
+							model.providerId === selectedModel.providerId,
 					)
 				) {
 					collapsedProviders[provider] = false;
@@ -524,7 +531,8 @@
 					{#if !collapsedProviders[provider] || searchValue}
 						{#each models as model (`${model.providerId}-${model.id}`)}
 							{@const isSelected =
-								selectedModel?.id === model.id && selectedModel?.providerId === model.providerId}
+								selectedModel?.id === model.id &&
+								selectedModel?.providerId === model.providerId}
 							{@const modelIndex = flattenedModels.findIndex(
 								(m) => m.id === model.id && m.providerId === model.providerId,
 							)}
@@ -544,13 +552,16 @@
 								class={cn(
 									"relative my-1 h-12 overflow-hidden",
 									isSelected && "!bg-primary !text-primary-foreground",
-									!isSelected && (isHovered || isFocused) && "bg-accent text-accent-foreground",
+									!isSelected &&
+										(isHovered || isFocused) &&
+										"bg-accent text-accent-foreground",
 									!isSelected &&
 										!isHovered &&
 										!isFocused &&
 										"aria-selected:text-foreground aria-selected:bg-transparent",
 								)}
-								onmouseenter={() => handleItemMouseEnter(`${model.providerId}-${model.id}`)}
+								onmouseenter={() =>
+									handleItemMouseEnter(`${model.providerId}-${model.id}`)}
 								onmouseleave={handleItemMouseLeave}
 							>
 								<div class="flex w-full items-center gap-2 pl-2 pr-1">
@@ -584,10 +595,14 @@
 										size="icon"
 										class={cn(
 											"h-7 w-7 shrink-0 p-0",
-											isSelected ? "hover:bg-primary-foreground/10" : "hover:bg-accent/50",
+											isSelected
+												? "hover:bg-primary-foreground/10"
+												: "hover:bg-accent/50",
 										)}
 										onclick={(e) => handleToggleCollected(e, model.id)}
-										title={model.collected ? m.title_button_unstar() : m.title_button_star()}
+										title={model.collected
+											? m.title_button_unstar()
+											: m.title_button_star()}
 									>
 										<Star
 											class={cn(

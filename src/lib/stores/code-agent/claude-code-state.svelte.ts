@@ -6,6 +6,7 @@ import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
 import type { ChatMessage } from "$lib/types/chat";
 import { clone } from "$lib/utils/clone";
+import { createLogger } from "@shared/logger";
 import {
 	type CodeAgentMetadata,
 	type CodeAgentType,
@@ -18,6 +19,8 @@ import { persistedClaudeCodeSandboxState } from "./claude-code-sandbox-state.sve
 import { codeAgentState } from "./code-agent-state.svelte";
 import { BUILTIN_SKILLS } from "./constant";
 import { persistedLocalClaudeCodeSessionsState } from "./local-claude-code-sandbox-state.svelte";
+
+const logger = createLogger("state");
 
 export interface ClaudeCodeSandboxInfo {
 	sandboxId: string;
@@ -126,7 +129,8 @@ class ClaudeCodeAgentState {
 	}) {
 		if (!canDeploy || !lastMessage || lastMessage.role !== "assistant") return;
 
-		let deployInfo: DeploySandboxResponse | null = await this.handleActiveDeployment(lastMessage);
+		let deployInfo: DeploySandboxResponse | null =
+			await this.handleActiveDeployment(lastMessage);
 		const textDeployInfo = this.parseDeployInfoFromText(lastMessage);
 		if (textDeployInfo) {
 			deployInfo = textDeployInfo;
@@ -139,7 +143,8 @@ class ClaudeCodeAgentState {
 
 		// Deploy was attempted but failed — try auto-retry if possible
 		if (sendRetryMessage) {
-			const errorText = this.extractDeployErrorFromMessage(lastMessage) || this.#lastDeployApiError;
+			const errorText =
+				this.extractDeployErrorFromMessage(lastMessage) || this.#lastDeployApiError;
 			this.#lastDeployApiError = null;
 
 			if (errorText) {
@@ -155,7 +160,7 @@ class ClaudeCodeAgentState {
 		const metadata = message.metadata as any;
 		if (!metadata?.result?.preDeploy?.success) return null;
 
-		console.log("[ClaudeCodeAgentState] Pre-deploy check passed, triggering deployment...");
+		logger.info("Pre-deploy check passed, triggering deployment...");
 
 		if (!this.sandboxId) return null;
 
@@ -167,19 +172,19 @@ class ClaudeCodeAgentState {
 			});
 
 			if (result.success) {
-				console.log("[ClaudeCodeAgentState] Deployment successful:", result);
+				logger.info("Deployment successful:", result);
 				return result;
 			} else {
 				const errorMsg =
 					result.error || `Deploy API returned success=false (status: ${result.status})`;
-				console.error("[ClaudeCodeAgentState] Deployment failed:", result);
+				logger.error("Deployment failed:", result);
 				toast.error(`${m.toast_deploy_failed()}`);
 				this.#lastDeployApiError = errorMsg;
 				return null;
 			}
 		} catch (error) {
 			const errorMsg = String(error);
-			console.error("[ClaudeCodeAgentState] Deployment error:", error);
+			logger.error("Deployment error:", error);
 			toast.error(`${m.toast_deploy_failed()}: ${errorMsg}`);
 			this.#lastDeployApiError = errorMsg;
 			return null;
@@ -211,7 +216,7 @@ class ClaudeCodeAgentState {
 				url: match[4],
 				cover: match[5],
 			};
-			console.log("[ClaudeCodeAgentState] Parsed deploy info:", info);
+			logger.info("Parsed deploy info:", info);
 			return info;
 		}
 
@@ -225,7 +230,7 @@ class ClaudeCodeAgentState {
 			deployInfo.url,
 			deployInfo.id,
 		);
-		console.log("[ClaudeCodeAgentState] Deploy detected:", { isDeploy: true, deployInfo });
+		logger.info("Deploy detected:", { isDeploy: true, deployInfo });
 	}
 
 	/**
@@ -258,7 +263,9 @@ class ClaudeCodeAgentState {
 		errorText: string,
 		sendRetryMessage: (content: string) => Promise<void>,
 	): Promise<void> {
-		console.log(`[ClaudeCodeAgentState] Sending deploy error to model: ${errorText.slice(0, 200)}`);
+		logger.info(
+			`[ClaudeCodeAgentState] Sending deploy error to model: ${errorText.slice(0, 200)}`,
+		);
 
 		// Delay to let UI settle
 		await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -282,7 +289,9 @@ class ClaudeCodeAgentState {
 		// Remote 模式
 		const sandboxId = this.sandboxId;
 		const sessionId = this.currentSessionId;
-		const sandbox = persistedClaudeCodeSandboxState.current.find((s) => s.sandboxId === sandboxId);
+		const sandbox = persistedClaudeCodeSandboxState.current.find(
+			(s) => s.sandboxId === sandboxId,
+		);
 		if (!sandbox) return null;
 		const session = sandbox.sessionInfos.find((s) => s.sessionId === sessionId);
 		return session?.note ?? null;
@@ -337,8 +346,9 @@ class ClaudeCodeAgentState {
 
 		if (codeAgentState.type === "local") {
 			return (
-				persistedLocalClaudeCodeSessionsState.current.find((s) => s.session_id === sessionId)
-					?.workspace_path ?? ""
+				persistedLocalClaudeCodeSessionsState.current.find(
+					(s) => s.session_id === sessionId,
+				)?.workspace_path ?? ""
 			);
 		}
 
@@ -404,7 +414,9 @@ class ClaudeCodeAgentState {
 		sandboxInfo?: ClaudeCodeSandboxInfo;
 	}> {
 		if (this.agentMode === "existing") {
-			const { isOK, valid, sandboxInfo } = await checkClaudeCodeSandbox(this.selectedSandboxId);
+			const { isOK, valid, sandboxInfo } = await checkClaudeCodeSandbox(
+				this.selectedSandboxId,
+			);
 			if (!isOK || !valid) {
 				toast.error(m.error_verify_sandbox());
 				return { isOK: false };
@@ -448,7 +460,9 @@ class ClaudeCodeAgentState {
 
 				return { isOK: true, sandboxInfo };
 			} else {
-				const { isOK, valid, sandboxInfo } = await checkClaudeCodeSandbox(this.selectedSandboxId);
+				const { isOK, valid, sandboxInfo } = await checkClaudeCodeSandbox(
+					this.selectedSandboxId,
+				);
 				if (!isOK || !valid) {
 					toast.error(m.error_verify_sandbox());
 					return { isOK: false };
@@ -506,8 +520,12 @@ class ClaudeCodeAgentState {
 	}
 
 	async listClaudeCodeSkills(isInit: boolean): Promise<ListSkillsResponse> {
-		const [selectedSandboxId, selectedSessionId] = [this.selectedSandboxId, this.selectedSessionId];
-		const isListExistsSessionSkills = selectedSandboxId !== "auto" && selectedSessionId !== "new";
+		const [selectedSandboxId, selectedSessionId] = [
+			this.selectedSandboxId,
+			this.selectedSessionId,
+		];
+		const isListExistsSessionSkills =
+			selectedSandboxId !== "auto" && selectedSessionId !== "new";
 
 		const listSkillsResponse = await listSkills(
 			isListExistsSessionSkills
@@ -562,7 +580,9 @@ class ClaudeCodeAgentState {
 	}
 
 	handleSkillForceUseToggle(skillName: string, forceUse: boolean): void {
-		const updatedSkills = this.skills.map((s) => (s.name === skillName ? { ...s, forceUse } : s));
+		const updatedSkills = this.skills.map((s) =>
+			s.name === skillName ? { ...s, forceUse } : s,
+		);
 		this.updateSkills(updatedSkills);
 	}
 

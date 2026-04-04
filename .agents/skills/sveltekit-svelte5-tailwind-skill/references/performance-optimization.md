@@ -4,8 +4,8 @@ version_anchors: ["SvelteKit@2.x", "Svelte@5.x", "Tailwind@4.x"]
 authored: true
 origin: self
 adapted_from:
-  - "Web performance best practices and Core Web Vitals optimization patterns"
-  - "SvelteKit and Tailwind optimization strategies from production deployments"
+    - "Web performance best practices and Core Web Vitals optimization patterns"
+    - "SvelteKit and Tailwind optimization strategies from production deployments"
 last_reviewed: 2025-10-28
 summary: "Achieve excellent performance scores with bundle optimization, CSS purging, code splitting, image handling, lazy loading, and Core Web Vitals improvements for production deployments."
 ---
@@ -424,7 +424,9 @@ Optimize images for web delivery:
 
 	// Generate srcset for different sizes
 	const sizes = [400, 800, 1200, 1600];
-	const srcsetWebp = sizes.map((w) => `${src.replace(/\.[^.]+$/, "")}-${w}.webp ${w}w`).join(", ");
+	const srcsetWebp = sizes
+		.map((w) => `${src.replace(/\.[^.]+$/, "")}-${w}.webp ${w}w`)
+		.join(", ");
 	const srcsetJpg = sizes.map((w) => `${src.replace(/\.[^.]+$/, "")}-${w}.jpg ${w}w`).join(", ");
 
 	const loading = priority ? "eager" : "lazy";
@@ -534,7 +536,8 @@ Optimize web font loading:
 ```css
 /* tailwind.config.js or app.css @theme block */
 @theme {
-	--font-sans: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	--font-sans:
+		Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 	--font-display: "Playfair Display", Georgia, serif;
 }
 ```

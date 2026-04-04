@@ -1,12 +1,12 @@
 <script lang="ts">
-	import * as Resizable from "$lib/components/ui/resizable/index.js";
 	import { Button } from "$lib/components/ui/button";
 	import * as Dialog from "$lib/components/ui/dialog/index.js";
+	import * as Resizable from "$lib/components/ui/resizable/index.js";
 	import { m } from "$lib/paraglide/messages.js";
 	import { agentPreviewState } from "$lib/stores/agent-preview-state.svelte";
 	import { chat, chatState } from "$lib/stores/chat-state.svelte";
-	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { codeAgentSendMessageButtonState } from "$lib/stores/code-agent/code-agent-send-message-button-state.svelte";
+	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { codeAgentTaskboardState } from "$lib/stores/code-agent/code-agent-taskboard-state.svelte";
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
@@ -16,6 +16,7 @@
 	import { setupPanelResize } from "$lib/utils/panel-resize";
 	import { Eraser, History, MessageSquarePlus } from "@lucide/svelte";
 	import GripVerticalIcon from "@lucide/svelte/icons/grip-vertical";
+	import { createLogger } from "@shared/logger";
 	import type { AttachmentFile, Model, ThreadParmas } from "@shared/types";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -27,6 +28,8 @@
 	import { FileUploadOverlay } from "../components/file-upload-overlay";
 	import { HtmlPreviewPanel } from "../components/html-preview";
 	import { MessageList } from "../components/message";
+
+	const logger = createLogger("ui");
 
 	let isInputAreaHovered = $state(false);
 	let fileUploadOverlayRef: FileUploadOverlay | null = $state(null);
@@ -52,7 +55,7 @@
 		// Restore UI state if available (Tab Rehydration)
 		const uiState = window.tab?.uiState;
 		if (uiState) {
-			console.log("[Chat Page] Restoring UI state:", uiState);
+			logger.debug("Restoring UI state:", uiState);
 			if (uiState.inputValue) {
 				chatState.inputValue = uiState.inputValue;
 			}
@@ -63,7 +66,7 @@
 					const viewport = document.querySelector('[data-slot="scroll-area-viewport"]');
 					if (viewport) {
 						viewport.scrollTop = uiState.scrollPosition ?? 0;
-						console.log("[Chat Page] Restored scroll position:", uiState.scrollPosition);
+						logger.debug("Restored scroll position:", uiState.scrollPosition);
 					}
 				}, 100);
 			}
@@ -71,7 +74,7 @@
 
 		// Listen for snapshot requests (Tab Sleeping)
 		const unsubSnapshot = window.electronAPI.onTabRequestSnapshot(() => {
-			console.log("[Chat Page] Generating UI snapshot");
+			logger.debug("Generating UI snapshot");
 			const viewport = document.querySelector('[data-slot="scroll-area-viewport"]');
 			return {
 				scrollPosition: viewport?.scrollTop || 0,
@@ -88,7 +91,7 @@
 
 		// Listen for clear messages event from main process
 		const unsubClear = window.electronAPI.onTabClearMessages(({ tabId, threadId }) => {
-			console.log("[Chat Page] Received clear messages event:", { tabId, threadId });
+			logger.debug("Received clear messages event:", { tabId, threadId });
 			// Clear the in-memory chat state
 			chatState.clearMessages();
 		});
@@ -96,7 +99,7 @@
 		// Listen for generate title event from main process
 		const unsubGenerateTitle = window.electronAPI.onTabGenerateTitle(
 			async ({ tabId, threadId }) => {
-				console.log("[Chat Page] Received generate title event:", { tabId, threadId });
+				logger.debug("Received generate title event:", { tabId, threadId });
 				// Generate title for the current chat
 				await chatState.generateTitleManually();
 			},
@@ -105,7 +108,7 @@
 		// Listen for trigger send message event (for branch and send)
 		const unsubTriggerSend = window.electronAPI.onTriggerSendMessage(
 			async (data: { threadId: string }) => {
-				console.log("[Chat Page] Received trigger-send-message event:", data);
+				logger.debug("Received trigger-send-message event:", data);
 				// Only trigger send if this is the target thread
 				if (data.threadId === chatState.id) {
 					// Wait a moment to ensure state is fully loaded
@@ -121,7 +124,7 @@
 		// Listen for show toast event (from shell view, e.g. tab context menu)
 		const unsubShowToast = window.electronAPI.onShowToast(
 			(data: { type: string; message: string; threadId?: string }) => {
-				console.log("[Chat Page] Received show-toast event:", data);
+				logger.debug("Received show-toast event:", data);
 
 				// Only show toast if it's for this specific thread (or no threadId specified)
 				if (data.threadId && data.threadId !== chatState.id) {
@@ -150,7 +153,7 @@
 		// Listen for create skill summary event
 		const unsubCreateSkillSummary = window.electronAPI.onTriggerCreateSkillSummary(
 			async ({ threadId }: { threadId: string }) => {
-				console.log("[Chat Page] Received create-skill-summary event:", { threadId });
+				logger.debug("Received create-skill-summary event:", { threadId });
 
 				// Only process if this is the target thread
 				if (threadId === chatState.id) {
@@ -184,7 +187,7 @@
 				typeof threadData === "object" &&
 				(threadData as ThreadParmas).autoSendOnLoad === true
 			) {
-				console.log("[Chat Page] Auto-send on load detected for thread:", chatState.id);
+				logger.debug("Auto-send on load detected for thread:", chatState.id);
 
 				// Clear the flag immediately to prevent re-sending
 				await window.electronAPI.storageService.setItem(threadKey, {
@@ -199,22 +202,23 @@
 				// The user message is already in the message list, we just need to trigger AI response
 				const currentModel = chatState.selectedModel;
 				if (currentModel) {
-					console.log("[Chat Page] Triggering AI reply generation...");
+					logger.debug("Triggering AI reply generation...");
 					try {
 						// Directly call chat.sendMessage with undefined to trigger AI reply
 						// This won't add a new user message, just generate AI response
 						await chat.sendMessage(undefined, {
 							body: {
 								model: currentModel.id,
-								apiKey: persistedProviderState.current.find((p) => p.id === currentModel.providerId)
-									?.apiKey,
+								apiKey: persistedProviderState.current.find(
+									(p) => p.id === currentModel.providerId,
+								)?.apiKey,
 							},
 						});
 					} catch (error) {
-						console.error("[Chat Page] Failed to trigger AI reply:", error);
+						logger.error("Failed to trigger AI reply:", error);
 					}
 				} else {
-					console.warn("[Chat Page] Cannot auto-send: no model selected");
+					logger.warn("Cannot auto-send: no model selected");
 				}
 			}
 		};
@@ -236,7 +240,7 @@
 
 	// $effect(() => {
 	// 	const sandBoxId = agentPreviewState.sandBoxId;
-	// 	console.log("sandBoxIdsandBoxId", sandBoxId);
+	// 	logger.debug("sandBoxIdsandBoxId", sandBoxId);
 	// });
 
 	// Close preview panel when code agent mode is disabled (but not in skills-only mode)
@@ -357,13 +361,21 @@
 	<div class="flex h-full overflow-hidden relative">
 		{#if agentPreviewState.isPinned}
 			<Resizable.PaneGroup direction="horizontal" class="h-full">
-				<Resizable.Pane defaultSize={50} minSize={30} class="min-w-0" style="min-width: 450px;">
+				<Resizable.Pane
+					defaultSize={50}
+					minSize={30}
+					class="min-w-0"
+					style="min-width: 450px;"
+				>
 					<div class="flex h-full flex-col relative">
 						<PageHeader />
 						<div class="flex flex-1 flex-col items-center justify-center gap-y-6">
-							<div class="flex w-full flex-col items-center justify-center gap-chat-gap-y">
-								<span class="text-center text-chat-slogan" data-layoutid="chat-slogan"
-									>{m.app_slogan()}</span
+							<div
+								class="flex w-full flex-col items-center justify-center gap-chat-gap-y"
+							>
+								<span
+									class="text-center text-chat-slogan"
+									data-layoutid="chat-slogan">{m.app_slogan()}</span
 								>
 								<ChatInputBox />
 							</div>
@@ -399,7 +411,9 @@
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>
-					<div class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
+					<div
+						class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border"
+					>
 						<GripVerticalIcon class="size-2.5" />
 					</div>
 				</button>
@@ -411,7 +425,12 @@
 	<div class="flex h-full overflow-hidden relative">
 		{#if agentPreviewState.isPinned}
 			<Resizable.PaneGroup direction="horizontal" class="h-full">
-				<Resizable.Pane defaultSize={50} minSize={30} class="min-w-0" style="min-width: 450px;">
+				<Resizable.Pane
+					defaultSize={50}
+					minSize={30}
+					class="min-w-0"
+					style="min-width: 450px;"
+				>
 					<div class="flex h-full flex-col min-w-0">
 						<div class="flex-1 overflow-hidden relative">
 							<PageHeader />
@@ -443,7 +462,9 @@
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>
-					<div class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
+					<div
+						class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border"
+					>
 						<GripVerticalIcon class="size-2.5" />
 					</div>
 				</button>
@@ -455,7 +476,12 @@
 	<div class="flex h-full overflow-hidden relative">
 		{#if htmlPreviewState.isPinned}
 			<Resizable.PaneGroup direction="horizontal" class="h-full">
-				<Resizable.Pane defaultSize={50} minSize={30} class="min-w-0" style="min-width: 450px;">
+				<Resizable.Pane
+					defaultSize={50}
+					minSize={30}
+					class="min-w-0"
+					style="min-width: 450px;"
+				>
 					<div class="flex h-full flex-col min-w-0">
 						<div class="flex-1 overflow-hidden relative">
 							<PageHeader />
@@ -487,7 +513,9 @@
 					class="bg-border focus-visible:ring-ring absolute -left-px top-0 bottom-0 flex w-px cursor-col-resize items-center justify-center after:absolute after:inset-y-0 after:left-1/2 after:w-1 after:-translate-x-1/2 focus-visible:ring-1 focus-visible:ring-offset-1 focus-visible:outline-hidden"
 					onmousedown={setupPanelResize}
 				>
-					<div class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border">
+					<div
+						class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border"
+					>
 						<GripVerticalIcon class="size-2.5" />
 					</div>
 				</button>

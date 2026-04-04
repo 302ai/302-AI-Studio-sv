@@ -13,8 +13,8 @@
 		UNCATEGORIZED_SLUG,
 	} from "$lib/stores/skills-category-state.svelte";
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
-	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import { cn } from "$lib/utils";
+	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import {
 		ChevronRight,
 		FolderOpen,
@@ -29,13 +29,16 @@
 		X,
 		Zap,
 	} from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { Skill } from "@shared/types";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
+	import SkillCard from "../skill-card.svelte";
 	import { canFavoriteSkill } from "../skill-favorite-availability";
 	import { getOrderedSkillsByFavorite } from "../skill-favorite-order";
-	import SkillCard from "../skill-card.svelte";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		userSkills: Skill[];
@@ -171,13 +174,21 @@
 
 	$effect(() => {
 		const persistedFavoriteStates = new Map(
-			[...userSkills, ...builtinSkills].map((skill) => [skill.name, skill.is_favorite ?? false]),
+			[...userSkills, ...builtinSkills].map((skill) => [
+				skill.name,
+				skill.is_favorite ?? false,
+			]),
 		);
 		const persistedFavoriteAts = new Map(
-			[...userSkills, ...builtinSkills].map((skill) => [skill.name, skill.favorite_at ?? null]),
+			[...userSkills, ...builtinSkills].map((skill) => [
+				skill.name,
+				skill.favorite_at ?? null,
+			]),
 		);
 
-		for (const [skillName, optimisticFavorite] of Array.from(optimisticFavoriteStates.entries())) {
+		for (const [skillName, optimisticFavorite] of Array.from(
+			optimisticFavoriteStates.entries(),
+		)) {
 			if (!persistedFavoriteStates.has(skillName)) {
 				optimisticFavoriteStates.delete(skillName);
 				optimisticFavoriteAts.delete(skillName);
@@ -189,7 +200,9 @@
 			}
 		}
 
-		for (const [skillName, optimisticFavoriteAt] of Array.from(optimisticFavoriteAts.entries())) {
+		for (const [skillName, optimisticFavoriteAt] of Array.from(
+			optimisticFavoriteAts.entries(),
+		)) {
 			if (!persistedFavoriteAts.has(skillName)) {
 				optimisticFavoriteAts.delete(skillName);
 				optimisticFavoriteStates.delete(skillName);
@@ -246,7 +259,9 @@
 		selectedSkillsList.filter((s) => usedSkills.some((u) => u.name === s.name)),
 	);
 	const favoritableSelectedSkills = $derived(
-		selectedSkillsList.filter((s) => canFavoriteSkill(currentCodeAgentType, s.isBuiltin ?? false)),
+		selectedSkillsList.filter((s) =>
+			canFavoriteSkill(currentCodeAgentType, s.isBuiltin ?? false),
+		),
 	);
 	const anySelectedForceUsed = $derived(
 		selectedUsedSkills.some((s) => {
@@ -299,7 +314,7 @@
 			toast.dismiss(toastId);
 			toast.success(m.skills_download_success());
 		} catch (e) {
-			console.error("Failed to download skill:", e);
+			logger.error("Failed to download skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_download_failed());
 		} finally {
@@ -332,7 +347,7 @@
 			deletingSkill = null;
 			onRefresh?.();
 		} catch (e) {
-			console.error("Failed to delete skill:", e);
+			logger.error("Failed to delete skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_delete_failed());
 		} finally {
@@ -379,7 +394,7 @@
 		} catch (e) {
 			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
 			optimisticFavoriteAts.set(skill.name, previousFavoriteAt);
-			console.error("Failed to toggle skill favorite:", e);
+			logger.error("Failed to toggle skill favorite:", e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
 			favoritingSkills.delete(skill.name);
@@ -451,7 +466,7 @@
 			clearSelection();
 			onRefresh?.();
 		} catch (e) {
-			console.error("Failed to delete skills:", e);
+			logger.error("Failed to delete skills:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_delete_failed());
 		} finally {
@@ -519,7 +534,7 @@
 				optimisticFavoriteAts.set(previousState.name, previousState.favoriteAt);
 			}
 
-			console.error(`Failed to batch ${action} skill favorite:`, e);
+			logger.error(`Failed to batch ${action} skill favorite:`, e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
 			batchFavoriteAction = null;
@@ -551,7 +566,7 @@
 				toast.error(errorMsg);
 			}
 		} catch (e: unknown) {
-			console.error("Failed to sync skills:", e);
+			logger.error("Failed to sync skills:", e);
 			toast.dismiss(toastId);
 
 			// Try to extract error message from response
@@ -579,7 +594,9 @@
 	<div class={cn("shrink-0 px-6 py-4", showBorder && "border-b")}>
 		<div class="flex items-center gap-3">
 			<div class="relative flex-1">
-				<Search class="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+				<Search
+					class="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
+				/>
 				<Input
 					type="text"
 					placeholder={m.skills_search_placeholder()}
@@ -679,7 +696,9 @@
 						onclick={() => handleCategorySelect(UNCATEGORIZED_SLUG)}
 					>
 						{m.skills_category_uncategorized()}
-						<span class="ml-1 text-xs opacity-70">({categoryLocalCounts.uncategorizedCount})</span>
+						<span class="ml-1 text-xs opacity-70"
+							>({categoryLocalCounts.uncategorizedCount})</span
+						>
 					</button>
 				</div>
 			</ScrollArea>
@@ -698,13 +717,18 @@
 			{#if groups && groups.length > 0}
 				<div class="space-y-6">
 					{#each groups as [slug, group] (slug)}
-						{@const categoryName = group.category?.name ?? m.skills_category_uncategorized()}
+						{@const categoryName =
+							group.category?.name ?? m.skills_category_uncategorized()}
 						<div class="space-y-3">
 							<!-- Category Header -->
 							<div class="flex items-center gap-2">
 								<FolderOpen class="h-4 w-4 text-muted-foreground" />
-								<h3 class="text-sm font-semibold text-foreground">{categoryName}</h3>
-								<span class="text-xs text-muted-foreground">({group.skills.length})</span>
+								<h3 class="text-sm font-semibold text-foreground">
+									{categoryName}
+								</h3>
+								<span class="text-xs text-muted-foreground"
+									>({group.skills.length})</span
+								>
 								<button
 									type="button"
 									class="ml-auto flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer"
@@ -721,9 +745,15 @@
 									: 'grid-cols-1 @lg:grid-cols-2 @3xl:grid-cols-3'}"
 							>
 								{#each group.skills as item, index (`${item.name}-${item.isBuiltin ? "builtin" : "user"}-${index}`)}
-									{@const usedSkill = usedSkills.find((s) => s.name === item.name)}
+									{@const usedSkill = usedSkills.find(
+										(s) => s.name === item.name,
+									)}
 									{@const displaySkill = usedSkill
-										? { ...item, ...usedSkill, is_favorite: item.is_favorite ?? false }
+										? {
+												...item,
+												...usedSkill,
+												is_favorite: item.is_favorite ?? false,
+											}
 										: item}
 									<SkillCard
 										skill={displaySkill}
@@ -736,9 +766,13 @@
 										onSelectionChange={handleSelectionChange}
 										onUse={showUseButton ? handleUse : undefined}
 										onRemove={showUseButton ? handleRemove : undefined}
-										onEdit={isOpenClawBundledSkill(item) ? undefined : handleEdit}
+										onEdit={isOpenClawBundledSkill(item)
+											? undefined
+											: handleEdit}
 										onDownload={handleDownload}
-										onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
+										onDelete={isOpenClawBundledSkill(item)
+											? undefined
+											: handleDelete}
 										downloading={downloadingSkills.has(item.name)}
 										favoriteLoading={favoritingSkills.has(item.name)}
 										onFavoriteToggle={canFavoriteSkill(
@@ -747,7 +781,9 @@
 										)
 											? handleFavoriteToggle
 											: undefined}
-										onForceUseToggle={showUseButton ? handleForceUseToggle : undefined}
+										onForceUseToggle={showUseButton
+											? handleForceUseToggle
+											: undefined}
 									/>
 								{/each}
 							</div>
@@ -791,7 +827,10 @@
 						onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 						downloading={downloadingSkills.has(item.name)}
 						favoriteLoading={favoritingSkills.has(item.name)}
-						onFavoriteToggle={canFavoriteSkill(currentCodeAgentType, item.isBuiltin ?? false)
+						onFavoriteToggle={canFavoriteSkill(
+							currentCodeAgentType,
+							item.isBuiltin ?? false,
+						)
 							? handleFavoriteToggle
 							: undefined}
 						onForceUseToggle={showUseButton ? handleForceUseToggle : undefined}
@@ -826,7 +865,11 @@
 						: 'border-primary/50'}"
 				>
 					{#if isAllSelected}
-						<svg class="w-3 h-3 text-primary-foreground" viewBox="0 0 24 24" fill="none">
+						<svg
+							class="w-3 h-3 text-primary-foreground"
+							viewBox="0 0 24 24"
+							fill="none"
+						>
 							<path
 								d="M5 12l5 5L20 7"
 								stroke="currentColor"
@@ -955,7 +998,11 @@
 			{m.skills_confirm_delete_message({ name: deletingSkill?.name || "" })}
 		</Dialog.Description>
 		<Dialog.Footer>
-			<Button variant="outline" onclick={() => (deleteDialogOpen = false)} disabled={isDeleting}>
+			<Button
+				variant="outline"
+				onclick={() => (deleteDialogOpen = false)}
+				disabled={isDeleting}
+			>
 				{m.text_button_cancel()}
 			</Button>
 			<Button variant="destructive" onclick={confirmDelete} disabled={isDeleting}>

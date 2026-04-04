@@ -1,4 +1,7 @@
 import type { BackupInfo } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { app } from "electron";
 import fs from "fs";
 import path from "path";
@@ -31,11 +34,11 @@ export class UserDataManager {
 	}
 
 	private logPathInfo() {
-		console.log("========== 路径信息 ==========");
-		console.log("平台:", process.platform);
-		console.log("userData 路径:", app.getPath("userData"));
-		console.log("备份路径:", this.backupPath);
-		console.log("==============================");
+		logger.debug("========== 路径信息 ==========");
+		logger.debug("平台:", process.platform);
+		logger.debug("userData 路径:", app.getPath("userData"));
+		logger.debug("备份路径:", this.backupPath);
+		logger.debug("==============================");
 	}
 
 	/**
@@ -68,7 +71,10 @@ export class UserDataManager {
 
 				if (match) {
 					// Replace time separators: T10-30-45-123Z -> T10:30:45.123Z
-					const isoString = match[1].replace(/T(\d{2})-(\d{2})-(\d{2})-(\d{3})/, "T$1:$2:$3.$4");
+					const isoString = match[1].replace(
+						/T(\d{2})-(\d{2})-(\d{2})-(\d{3})/,
+						"T$1:$2:$3.$4",
+					);
 					timestamp = new Date(isoString);
 
 					// Fallback to mtime if parsing failed
@@ -127,7 +133,7 @@ export class UserDataManager {
 		// Remove older backups
 		for (let i = keepCount; i < backups.length; i++) {
 			fs.rmSync(backups[i].path, { recursive: true, force: true });
-			console.log(`Removed old backup: ${backups[i].path}`);
+			logger.debug(`Removed old backup: ${backups[i].path}`);
 		}
 	}
 }

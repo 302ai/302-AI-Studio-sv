@@ -11,6 +11,9 @@ import {
 	listCategories,
 } from "$lib/api/skills/skills-market-api";
 import { getLocale } from "$lib/paraglide/runtime";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import type { Skill } from "@shared/types";
 import { SvelteMap } from "svelte/reactivity";
 
@@ -57,7 +60,7 @@ class SkillsCategoryState {
 			this.categories = categories;
 			this.cachedLocale = currentLocale;
 		} catch (error) {
-			console.error("Failed to fetch categories:", error);
+			logger.error("Failed to fetch categories:", error);
 		} finally {
 			this.isLoadingCategories = false;
 		}
@@ -86,7 +89,7 @@ class SkillsCategoryState {
 				this.skillCategoryMap.set(info.skillName, info.category);
 			}
 		} catch (error) {
-			console.error("Failed to fetch skill categories:", error);
+			logger.error("Failed to fetch skill categories:", error);
 		} finally {
 			this.isLoadingSkillCategories = false;
 		}

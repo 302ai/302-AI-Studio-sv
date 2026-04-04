@@ -2,11 +2,15 @@ import { createStorage, type StorageMeta, type StorageValue } from "@302ai/unsto
 import fsDriver from "@302ai/unstorage/drivers/fs";
 import { isDev } from "@electron/main/constants";
 import type { MigrationConfig, StorageItem, StorageMetadata, StorageOptions } from "@shared/types";
+import { createLogger } from "@shared/logger";
 import type { IpcMainInvokeEvent } from "electron";
 import { join } from "path";
 import { userDataManager } from "../app-service/user-data-manager";
 import { emitter } from "../broadcast-service";
+import { GlobalStorageWatcher } from "./global-storage-watcher";
 import { getStorageVersion, setStorageVersion } from "./migration-utils";
+
+const logger = createLogger("services");
 
 export class StorageService<T extends StorageValue> {
 	protected storage;
@@ -18,11 +22,14 @@ export class StorageService<T extends StorageValue> {
 
 	/* eslint-disable @typescript-eslint/no-explicit-any */
 	private static migratableInstances: StorageService<any>[] = [];
+	private static globalWatcher: GlobalStorageWatcher | null = null;
+	private static storagePath: string;
 
 	constructor(migrationConfig?: MigrationConfig<T>) {
 		const storagePath = isDev
 			? join(process.cwd(), "storage")
 			: join(userDataManager.storagePath, "storage");
+		StorageService.storagePath = storagePath;
 		this.storage = createStorage<T>({
 			driver: fsDriver({
 				base: storagePath,
@@ -32,6 +39,11 @@ export class StorageService<T extends StorageValue> {
 
 		if (migrationConfig) {
 			StorageService.migratableInstances.push(this);
+		}
+
+		if (!StorageService.globalWatcher) {
+			StorageService.globalWatcher = new GlobalStorageWatcher(storagePath);
+			StorageService.globalWatcher.start();
 		}
 	}
 
@@ -65,7 +77,7 @@ export class StorageService<T extends StorageValue> {
 			const value = await this.storage.getItem<T>(this.ensureJsonExtension(key));
 			return await this.migrateIfNeeded(key, value);
 		} catch (error) {
-			console.error("Failed to get item from storage:", error);
+			logger.error("Failed to get item from storage:", error);
 			return null;
 		}
 	}
@@ -129,33 +141,24 @@ export class StorageService<T extends StorageValue> {
 		const jsonKey = this.ensureJsonExtension(watchKey);
 
 		if (this.watches.has(watchKey)) return;
-		const unwatch = await this.storage.watch(async (_event, key) => {
-			// Some drivers may report watched keys using "/" namespace separators (e.g. "TabStorage/tab-bar-state.json")
-			// while the app uses ":" separators (e.g. "TabStorage:tab-bar-state.json").
-			// Normalize to compare reliably, but always emit using the canonical watchKey (":" form).
-			const normalize = (k: string) => k.replaceAll("/", ":");
-			const normalizedKey = normalize(key);
-			const normalizedJsonKey = normalize(jsonKey);
 
-			if (normalizedKey === normalizedJsonKey) {
-				const sendKey = watchKey;
-				const sourceWebContentsId = this.lastUpdateSource.get(jsonKey) ?? -1;
+		const unsubscribe = StorageService.globalWatcher!.subscribe(jsonKey, async (_key) => {
+			const sendKey = watchKey;
+			const sourceWebContentsId = this.lastUpdateSource.get(jsonKey) ?? -1;
 
-				// Read using canonical watchKey to avoid driver-specific key formats
-				const syncValue = await this.getItemInternal(watchKey);
-				// Only emit sync if value is not null to prevent overwriting valid state with null
-				if (syncValue !== null) {
-					emitter.emit("persisted-state:sync", {
-						sendKey,
-						syncValue,
-						sourceWebContentsId,
-					});
-				}
-
-				this.lastUpdateSource.delete(jsonKey);
+			const syncValue = await this.getItemInternal(watchKey);
+			if (syncValue !== null) {
+				emitter.emit("persisted-state:sync", {
+					sendKey,
+					syncValue,
+					sourceWebContentsId,
+				});
 			}
+
+			this.lastUpdateSource.delete(jsonKey);
 		});
-		this.watches.set(watchKey, unwatch);
+
+		this.watches.set(watchKey, unsubscribe);
 	}
 
 	async unwatch(_event: IpcMainInvokeEvent, watchKey: string): Promise<void> {
@@ -178,7 +181,7 @@ export class StorageService<T extends StorageValue> {
 		} catch (error) {
 			// Handle JSON parsing errors from corrupted files
 			if (error instanceof SyntaxError) {
-				console.error(
+				logger.error(
 					`Failed to parse storage file "${key}": ${error.message}. The file may be corrupted.`,
 				);
 				return null;
@@ -219,9 +222,7 @@ export class StorageService<T extends StorageValue> {
 			}
 
 			if (this.migrationConfig.debug) {
-				console.log(
-					`[StorageService] Migrating from version ${persistedVersion} to ${currentVersion}`,
-				);
+				logger.debug(`Migrating from version ${persistedVersion} to ${currentVersion}`);
 			}
 
 			const migratedValue = this.migrationConfig.migrate(value, currentVersion);
@@ -230,14 +231,14 @@ export class StorageService<T extends StorageValue> {
 			if (migratedValue !== value) {
 				await this.storage.setItem(this.ensureJsonExtension(key), migratedValue);
 				if (this.migrationConfig.debug) {
-					console.log(`[StorageService] Migration completed and saved for key: ${key}`);
+					logger.info(`Migration completed and saved for key: ${key}`);
 				}
 			}
 
 			return migratedValue;
 		} catch (error) {
 			if (this.migrationConfig.debug) {
-				console.error("[StorageService] Migration failed:", error);
+				logger.error("Migration failed:", error);
 			}
 			return value;
 		}

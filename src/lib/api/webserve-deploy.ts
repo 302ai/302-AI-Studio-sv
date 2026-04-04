@@ -280,7 +280,9 @@ export async function deleteDeployedWebsite(
 	webId: string | number,
 ): Promise<DeleteWebserveResponse> {
 	try {
-		const data = await _302AIKy.post(`302/webserve/delete/${webId}`).json<DeleteWebserveResponse>();
+		const data = await _302AIKy
+			.post(`302/webserve/delete/${webId}`)
+			.json<DeleteWebserveResponse>();
 
 		const errorMessage = extractErrorMessage(data);
 		if (errorMessage) {

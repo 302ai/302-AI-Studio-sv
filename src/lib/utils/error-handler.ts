@@ -1,5 +1,8 @@
 import * as m from "$lib/paraglide/messages.js";
 import { toast } from "svelte-sonner";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export interface ErrorContext {
 	provider?: string;
@@ -62,7 +65,10 @@ export class ChatErrorHandler {
 				return ErrorType.API;
 			if (typeof errorObj.name === "string" && errorObj.name.includes("TooManyRequestsError"))
 				return ErrorType.RATE_LIMIT;
-			if (typeof errorObj.name === "string" && errorObj.name.includes("InvalidResponseDataError"))
+			if (
+				typeof errorObj.name === "string" &&
+				errorObj.name.includes("InvalidResponseDataError")
+			)
 				return ErrorType.API;
 		}
 
@@ -113,7 +119,10 @@ export class ChatErrorHandler {
 
 			case ErrorType.API:
 				if (chatError.statusCode) {
-					return m.error_api_with_code({ provider, statusCode: chatError.statusCode.toString() });
+					return m.error_api_with_code({
+						provider,
+						statusCode: chatError.statusCode.toString(),
+					});
 				}
 				return m.error_api_service({ provider });
 
@@ -152,7 +161,7 @@ export class ChatErrorHandler {
 		if (showNotification) {
 			this.showErrorNotification(chatError);
 		}
-		console.error("Chat error:", chatError);
+		logger.error("Chat error:", chatError);
 		return chatError;
 	}
 

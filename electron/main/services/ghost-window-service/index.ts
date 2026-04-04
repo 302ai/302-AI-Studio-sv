@@ -1,4 +1,7 @@
 import type { InsertTarget } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { BrowserWindow, screen, type IpcMainInvokeEvent } from "electron";
 import { TITLE_BAR_HEIGHT } from "../../constants";
 import { broadcastService } from "../broadcast-service";
@@ -10,7 +13,7 @@ export class GhostWindowService {
 	private currentInsertTarget: InsertTarget | null = null;
 
 	async startTracking(_event: IpcMainInvokeEvent): Promise<void> {
-		console.log("[GhostWindowService] Starting mouse tracking for drag operation");
+		logger.info("Starting mouse tracking for drag operation");
 
 		try {
 			// Get current cursor position
@@ -20,17 +23,17 @@ export class GhostWindowService {
 			// Start polling
 			this.startPolling();
 
-			console.log(
+			logger.info(
 				`[GhostWindowService] Mouse tracking started at (${cursorPos.x}, ${cursorPos.y})`,
 			);
 		} catch (error) {
-			console.error("[GhostWindowService] Failed to start tracking:", error);
+			logger.error("Failed to start tracking:", error);
 			throw error;
 		}
 	}
 
 	async stopTracking(_event: IpcMainInvokeEvent): Promise<void> {
-		console.log("[GhostWindowService] Stopping mouse tracking");
+		logger.info("Stopping mouse tracking");
 
 		this.stopPolling();
 
@@ -43,12 +46,12 @@ export class GhostWindowService {
 		this.currentHoveredWindowId = null;
 		this.currentInsertTarget = null;
 
-		console.log("[GhostWindowService] Mouse tracking stopped");
+		logger.info("Mouse tracking stopped");
 	}
 
 	async updateInsertIndex(_event: IpcMainInvokeEvent, target: InsertTarget): Promise<void> {
 		this.currentInsertTarget = target;
-		console.log(
+		logger.info(
 			`[GhostWindowService] Updated insert target to window ${target.windowId} at index ${target.insertIndex}`,
 		);
 	}
@@ -71,14 +74,14 @@ export class GhostWindowService {
 			this.updateMousePosition();
 		}, 1000 / 60);
 
-		console.log("[GhostWindowService] Started polling at 60Hz");
+		logger.info("Started polling at 60Hz");
 	}
 
 	private stopPolling(): void {
 		if (this.updateInterval) {
 			clearInterval(this.updateInterval);
 			this.updateInterval = null;
-			console.log("[GhostWindowService] Stopped polling");
+			logger.info("Stopped polling");
 		}
 	}
 
@@ -192,7 +195,10 @@ export class GhostWindowService {
 		const relativeY = y - bounds.y;
 
 		return (
-			relativeX >= 0 && relativeX <= bounds.width && relativeY >= 0 && relativeY <= TITLE_BAR_HEIGHT
+			relativeX >= 0 &&
+			relativeX <= bounds.width &&
+			relativeY >= 0 &&
+			relativeY <= TITLE_BAR_HEIGHT
 		);
 	}
 

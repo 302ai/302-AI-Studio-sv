@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { m } from "$lib/paraglide/messages.js";
 import pdf2md from "@opendocsg/pdf2md";
+import { createLogger } from "@shared/logger";
 import type { AttachmentFile } from "@shared/types";
 import type { FileUIPart } from "ai";
+import ExcelJS from "exceljs";
 import mammoth from "mammoth";
-import * as XLSX from "xlsx";
+import { toast } from "svelte-sonner";
 import { compressFile } from "./file-compressor";
 import { officeMimeTypes } from "./file-preview";
-import { toast } from "svelte-sonner";
+
+const logger = createLogger("ui");
 
 export type MessagePart = FileUIPart | { type: "text"; text: string };
 
@@ -143,7 +146,7 @@ async function readPdfFile(attachment: AttachmentFile): Promise<string> {
 		const markdown = await pdf2md(uint8Array);
 		return markdown;
 	} catch (error) {
-		console.error("Failed to parse PDF:", error);
+		logger.error("Failed to parse PDF:", error);
 		throw new Error(
 			`Failed to parse PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
 		);
@@ -185,29 +188,73 @@ async function readTextFile(attachment: AttachmentFile): Promise<string> {
 	throw new Error("No content available for text file");
 }
 
+/**
+ * Convert ExcelJS worksheet to CSV string
+ * Handles cell values, special characters, and proper CSV escaping
+ */
+function worksheetToCSV(worksheet: ExcelJS.Worksheet): string {
+	const rows: string[] = [];
+	const maxCol = worksheet.columnCount;
+
+	worksheet.eachRow((row: ExcelJS.Row) => {
+		const cells: string[] = [];
+		for (let colNum = 1; colNum <= maxCol; colNum++) {
+			const cell = row.getCell(colNum);
+			const value = cell.value;
+
+			// Handle different cell value types
+			let cellStr = "";
+			if (value === null || value === undefined) {
+				cellStr = "";
+			} else if (typeof value === "object" && "richText" in value) {
+				// Rich text - extract plain text
+				cellStr = (value as ExcelJS.CellRichTextValue).richText
+					.map((rt: ExcelJS.RichText) => rt.text)
+					.join("");
+			} else if (value instanceof Date) {
+				cellStr = value.toISOString();
+			} else if (typeof value === "number") {
+				cellStr = String(value);
+			} else if (typeof value === "boolean") {
+				cellStr = value ? "TRUE" : "FALSE";
+			} else {
+				cellStr = String(value);
+			}
+
+			// CSV escaping: quote if contains comma, quote, or newline
+			if (cellStr.includes(",") || cellStr.includes('"') || cellStr.includes("\n")) {
+				cellStr = `"${cellStr.replace(/"/g, '""')}"`;
+			}
+			cells.push(cellStr);
+		}
+		rows.push(cells.join(","));
+	});
+
+	return rows.join("\n");
+}
+
 async function readExcelFile(attachment: AttachmentFile): Promise<string> {
 	try {
 		const arrayBuffer = await getArrayBufferFromAttachment(attachment);
 
-		// Parse Excel file
-		const workbook = XLSX.read(arrayBuffer, { type: "array" });
+		// Parse Excel file using ExcelJS
+		const workbook = new ExcelJS.Workbook();
+		await workbook.xlsx.load(arrayBuffer);
 
 		let content = "";
 
 		// Process each sheet
-		workbook.SheetNames.forEach((sheetName, index) => {
-			const worksheet = workbook.Sheets[sheetName];
+		workbook.eachSheet((worksheet: ExcelJS.Worksheet, sheetId: number) => {
+			const sheetName = worksheet.name || `Sheet${sheetId}`;
+			const csv = worksheetToCSV(worksheet);
 
-			// Convert sheet to CSV format (more readable than JSON)
-			const csv = XLSX.utils.sheet_to_csv(worksheet);
-
-			if (index > 0) content += "\n\n";
+			if (sheetId > 1) content += "\n\n";
 			content += `[${m.attachment_sheet()}: ${sheetName}]\n${csv}`;
 		});
 
 		return content;
 	} catch (error) {
-		console.error("Failed to parse Excel file:", error);
+		logger.error("Failed to parse Excel file:", error);
 		throw new Error(
 			`Failed to parse Excel file: ${error instanceof Error ? error.message : "Unknown error"}`,
 		);
@@ -223,7 +270,7 @@ async function readWordFile(attachment: AttachmentFile): Promise<string> {
 
 		return result.value;
 	} catch (error) {
-		console.error("Failed to parse Word document:", error);
+		logger.error("Failed to parse Word document:", error);
 		throw new Error(
 			`Failed to parse Word document: ${error instanceof Error ? error.message : "Unknown error"}`,
 		);
@@ -269,7 +316,7 @@ export async function convertAttachmentToMessagePart(
 						reader.readAsDataURL(blob);
 					});
 				} catch (error) {
-					console.error("Failed to convert blob URL to data URL:", error);
+					logger.error("Failed to convert blob URL to data URL:", error);
 					// Fallback to filePath if blob fetch fails
 					url = await fileToDataURL(attachment.file, attachment.filePath);
 				}
@@ -282,7 +329,10 @@ export async function convertAttachmentToMessagePart(
 				try {
 					url = await compressFile(attachment.file);
 				} catch (error) {
-					console.error("[AttachmentConverter] Failed to compress image, using original:", error);
+					logger.error(
+						"[AttachmentConverter] Failed to compress image, using original:",
+						error,
+					);
 					url = await fileToDataURL(attachment.file, attachment.filePath);
 				}
 			} else {
@@ -296,7 +346,9 @@ export async function convertAttachmentToMessagePart(
 				type: "file",
 				mediaType:
 					attachment.type ||
-					(attachment.name.endsWith(".zip") ? "application/zip" : "application/octet-stream"),
+					(attachment.name.endsWith(".zip")
+						? "application/zip"
+						: "application/octet-stream"),
 				filename: attachment.name,
 				url,
 			},
@@ -327,7 +379,9 @@ export async function convertAttachmentToMessagePart(
 				// Generate preview for message history (only if not already present)
 				const preview =
 					attachment.preview ||
-					(attachment.file ? await fileToDataURL(attachment.file, attachment.filePath) : undefined);
+					(attachment.file
+						? await fileToDataURL(attachment.file, attachment.filePath)
+						: undefined);
 				return {
 					part: {
 						type: "text",
@@ -344,7 +398,9 @@ export async function convertAttachmentToMessagePart(
 				// Generate preview for message history (only if not already present)
 				const preview =
 					attachment.preview ||
-					(attachment.file ? await fileToDataURL(attachment.file, attachment.filePath) : undefined);
+					(attachment.file
+						? await fileToDataURL(attachment.file, attachment.filePath)
+						: undefined);
 				return {
 					part: {
 						type: "text",
@@ -381,7 +437,7 @@ export async function convertAttachmentToMessagePart(
 				};
 			}
 		} catch (error) {
-			console.error(`Failed to read Office document ${attachment.name}:`, error);
+			logger.error(`Failed to read Office document ${attachment.name}:`, error);
 			toast.error(m.toast_attachment_convert_failed({ fileName: attachment.name }));
 			// If parsing fails, return a description instead
 			const sizeInKB = (attachment.size / 1024).toFixed(2);
@@ -439,7 +495,7 @@ export async function convertAttachmentsToMessageParts(
 			parts.push(part);
 			metadataList.push(createAttachmentMetadata(attachment, textContent, preview));
 		} catch (error) {
-			console.error(`Failed to convert attachment ${attachment.name}:`, error);
+			logger.error(`Failed to convert attachment ${attachment.name}:`, error);
 			toast.error(m.toast_attachment_convert_failed({ fileName: attachment.name }));
 		}
 	}
@@ -476,7 +532,7 @@ async function fileToDataURL(file: File, filePath?: string): Promise<string> {
 
 			return `data:${type};base64,${base64}`;
 		} catch (e) {
-			console.error("Failed to read file from path:", filePath, e);
+			logger.error("Failed to read file from path:", filePath, e);
 		}
 	}
 

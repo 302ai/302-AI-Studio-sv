@@ -12,12 +12,15 @@
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
-	import { canFavoriteSkill } from "./skill-favorite-availability";
 	import SkillCard from "./skill-card.svelte";
 	import SkillCreateDialog from "./skill-create-dialog.svelte";
 	import SkillDetailDialog from "./skill-detail-dialog.svelte";
 	import SkillEditDialog from "./skill-edit-dialog.svelte";
+	import { canFavoriteSkill } from "./skill-favorite-availability";
 	import { getOrderedSkillsByFavorite } from "./skill-favorite-order";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		userSkills: Skill[];
@@ -85,7 +88,9 @@
 			]),
 		);
 
-		for (const [skillName, optimisticFavorite] of Array.from(optimisticFavoriteStates.entries())) {
+		for (const [skillName, optimisticFavorite] of Array.from(
+			optimisticFavoriteStates.entries(),
+		)) {
 			if (!persistedFavoriteStates.has(skillName)) {
 				optimisticFavoriteStates.delete(skillName);
 				optimisticFavoriteAts.delete(skillName);
@@ -97,7 +102,9 @@
 			}
 		}
 
-		for (const [skillName, optimisticFavoriteAt] of Array.from(optimisticFavoriteAts.entries())) {
+		for (const [skillName, optimisticFavoriteAt] of Array.from(
+			optimisticFavoriteAts.entries(),
+		)) {
 			if (!persistedFavoriteAts.has(skillName)) {
 				optimisticFavoriteAts.delete(skillName);
 				optimisticFavoriteStates.delete(skillName);
@@ -169,7 +176,7 @@
 			toast.dismiss(toastId);
 			toast.success(m.skills_download_success());
 		} catch (e) {
-			console.error("Failed to download skill:", e);
+			logger.error("Failed to download skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_download_failed());
 		} finally {
@@ -202,7 +209,7 @@
 			deletingSkill = null;
 			onRefresh?.();
 		} catch (e) {
-			console.error("Failed to delete skill:", e);
+			logger.error("Failed to delete skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_delete_failed());
 		} finally {
@@ -251,7 +258,7 @@
 		} catch (e) {
 			optimisticFavoriteStates.set(skill.name, previousFavoriteState);
 			optimisticFavoriteAts.set(skill.name, previousFavoriteAt);
-			console.error("Failed to toggle skill favorite:", e);
+			logger.error("Failed to toggle skill favorite:", e);
 			toast.error(e instanceof Error ? e.message : m.error_unexpected_occurred());
 		} finally {
 			favoritingSkills.delete(skill.name);
@@ -339,7 +346,10 @@
 					onDelete={isOpenClawBundledSkill(item) ? undefined : handleDelete}
 					downloading={downloadingSkills.has(item.name)}
 					favoriteLoading={favoritingSkills.has(item.name)}
-					onFavoriteToggle={canFavoriteSkill(currentCodeAgentType, item.isBuiltin ?? false)
+					onFavoriteToggle={canFavoriteSkill(
+						currentCodeAgentType,
+						item.isBuiltin ?? false,
+					)
 						? handleFavoriteToggle
 						: undefined}
 					{onForceUseToggle}
@@ -383,7 +393,11 @@
 			{m.skills_confirm_delete_message({ name: deletingSkill?.name || "" })}
 		</Dialog.Description>
 		<Dialog.Footer>
-			<Button variant="outline" onclick={() => (deleteDialogOpen = false)} disabled={isDeleting}>
+			<Button
+				variant="outline"
+				onclick={() => (deleteDialogOpen = false)}
+				disabled={isDeleting}
+			>
 				{m.text_button_cancel()}
 			</Button>
 			<Button variant="destructive" onclick={confirmDelete} disabled={isDeleting}>

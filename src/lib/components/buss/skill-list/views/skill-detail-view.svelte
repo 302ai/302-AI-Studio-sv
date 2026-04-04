@@ -8,6 +8,9 @@
 	import { Loader2, Zap } from "@lucide/svelte";
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		skillName: string;
@@ -57,7 +60,7 @@
 			toast.dismiss(toastId);
 			toast.success(m.skills_download_success());
 		} catch (e) {
-			console.error("Failed to download skill:", e);
+			logger.error("Failed to download skill:", e);
 			toast.dismiss(toastId);
 			toast.error(m.skills_download_failed());
 		} finally {
@@ -93,7 +96,12 @@
 	{#if !isOpenClawBundled}
 		<!-- Footer -->
 		<div class="flex gap-3 border-t px-6 py-4">
-			<Button variant="secondary" class="flex-1" onclick={handleDownload} disabled={downloading}>
+			<Button
+				variant="secondary"
+				class="flex-1"
+				onclick={handleDownload}
+				disabled={downloading}
+			>
 				{#if downloading}
 					<Loader2 class="mr-2 h-4 w-4 animate-spin" />
 				{/if}

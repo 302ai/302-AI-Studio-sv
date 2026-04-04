@@ -4,8 +4,8 @@ version_anchors: ["SvelteKit@2.x", "Svelte@5.x", "Tailwind@3.x→4.x"]
 authored: true
 origin: self
 adapted_from:
-  - "tailwindlabs/tailwindcss GitHub repository (v4 changelog and migration patterns)"
-  - "Community migration experiences from SvelteKit projects"
+    - "tailwindlabs/tailwindcss GitHub repository (v4 changelog and migration patterns)"
+    - "Community migration experiences from SvelteKit projects"
 last_reviewed: 2025-10-28
 summary: "Upgrade from Tailwind CSS v3 to v4 in SvelteKit projects with step-by-step migration, breaking changes checklist, and rollback strategy for production deployments."
 ---

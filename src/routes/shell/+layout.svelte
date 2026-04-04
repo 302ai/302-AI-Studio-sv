@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { m } from "$lib/paraglide/messages";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
+	import { createLogger } from "@shared/logger";
 	import type { ShortcutActionEvent } from "@shared/types/shortcut";
 	import { ModeWatcher } from "mode-watcher";
 	import { onMount } from "svelte";
@@ -8,10 +9,11 @@
 	import "../../app.css";
 	import TabBar from "./components/tab-bar/tab-bar.svelte";
 
+	const logger = createLogger("ui");
+
 	const { children } = $props();
 
 	onMount(() => {
-		console.log("ShortcutService: onShortcutAction");
 		const shortcutCleanup = window.electronAPI?.shortcut?.onShortcutAction?.(
 			(event: ShortcutActionEvent) => {
 				handleShortcutAction(event.action);
@@ -84,7 +86,7 @@
 				handleOpenSettings();
 				break;
 			default:
-				console.error("ShortcutService: Unknown action", action);
+				logger.error("ShortcutService: Unknown action", action);
 				// Other actions handled by chat-specific or sidebar-specific handlers
 				break;
 		}

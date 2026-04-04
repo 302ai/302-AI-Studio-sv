@@ -110,11 +110,15 @@
 			{#each todos() as todo, index (index)}
 				<div class="flex items-center gap-2.5">
 					{#if todo.status === "completed"}
-						<div class="flex h-5 w-5 items-center justify-center rounded-full bg-[#38B865]/10">
+						<div
+							class="flex h-5 w-5 items-center justify-center rounded-full bg-[#38B865]/10"
+						>
 							<Check class="h-3.5 w-3.5 text-[#38B865]" />
 						</div>
 					{:else if todo.status === "in_progress"}
-						<div class="flex h-5 w-5 items-center justify-center rounded-full bg-[#0056FE]/10">
+						<div
+							class="flex h-5 w-5 items-center justify-center rounded-full bg-[#0056FE]/10"
+						>
 							<ArrowRight class="h-3.5 w-3.5 text-[#0056FE]" />
 						</div>
 					{:else}

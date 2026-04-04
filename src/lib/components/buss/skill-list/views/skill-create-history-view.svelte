@@ -4,6 +4,9 @@
 	import { skillsPanelState } from "$lib/stores/skills-panel-state.svelte";
 	import { toast } from "svelte-sonner";
 	import SkillHistoryForm from "../skill-history-form.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let historyFormRef = $state<SkillHistoryForm | undefined>();
 	let isCreating = $state(false);
@@ -19,10 +22,11 @@
 			const { sandboxId, sessionId } = selected;
 
 			// 1. 根据 sessionId 查找 threadId
-			const { isOK, threadId } = await window.electronAPI.codeAgentService.getThreadIdBySessionId(
-				sandboxId,
-				sessionId,
-			);
+			const { isOK, threadId } =
+				await window.electronAPI.codeAgentService.getThreadIdBySessionId(
+					sandboxId,
+					sessionId,
+				);
 
 			if (!isOK || !threadId) {
 				toast.error(m.skills_history_thread_not_found());
@@ -49,7 +53,7 @@
 				toast.error(m.skills_history_navigate_failed());
 			}
 		} catch (error) {
-			console.error("Failed to navigate to history thread:", error);
+			logger.error("Failed to navigate to history thread:", error);
 			toast.error(m.skills_history_navigate_failed());
 		} finally {
 			isCreating = false;

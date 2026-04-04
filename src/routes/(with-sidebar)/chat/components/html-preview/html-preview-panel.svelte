@@ -8,11 +8,17 @@
 		htmlPreviewDeploymentsState,
 		type HtmlPreviewDeploymentRecord,
 	} from "$lib/stores/html-preview-deployments-state.svelte";
-	import { htmlPreviewState, type HtmlPreviewContext } from "$lib/stores/html-preview-state.svelte";
+	import {
+		htmlPreviewState,
+		type HtmlPreviewContext,
+	} from "$lib/stores/html-preview-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { toast } from "svelte-sonner";
 	import EditorPanel from "./editor-panel.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	const LANGUAGE_OPTIONS = [
 		{ label: "Markdown", value: "markdown" },
@@ -56,7 +62,8 @@
 	const _isDirty = $derived(
 		() =>
 			htmlPreviewState.editedHtml !== (htmlPreviewState.initialHtml ?? "") ||
-			(htmlPreviewState.selectedLanguage ?? null) !== (htmlPreviewState.initialLanguage ?? null),
+			(htmlPreviewState.selectedLanguage ?? null) !==
+				(htmlPreviewState.initialLanguage ?? null),
 	);
 
 	const handleModeSwitch = (mode: "preview" | "edit") => {
@@ -85,7 +92,9 @@
 			// 如果 selectedLanguage 为 null（用户选择了"自动识别"），传 undefined 以保留原语言
 			// 如果 selectedLanguage 有值，传该值以更新语言
 			const normalizedLanguage =
-				htmlPreviewState.selectedLanguage === null ? undefined : htmlPreviewState.selectedLanguage;
+				htmlPreviewState.selectedLanguage === null
+					? undefined
+					: htmlPreviewState.selectedLanguage;
 
 			const success = chatState.updateMessageCodeBlock(
 				messageId,
@@ -104,7 +113,7 @@
 			htmlPreviewState.commitChanges();
 			toast.success(m.toast_save_success());
 		} catch (error) {
-			console.error("保存 HTML 预览内容失败", error);
+			logger.error("保存 HTML 预览内容失败", error);
 			toast.error(m.toast_save_failed());
 		} finally {
 			_isSaving = false;
@@ -188,10 +197,10 @@
 				await navigator.clipboard.writeText(result.data.url);
 				// toast.success(m.toast_deploy_url_copied());
 			} catch (clipboardError) {
-				console.error("Failed to copy URL to clipboard:", clipboardError);
+				logger.error("Failed to copy URL to clipboard:", clipboardError);
 			}
 		} catch (error) {
-			console.error("Deploy HTML failed:", error);
+			logger.error("Deploy HTML failed:", error);
 			toast.error(m.toast_deploy_failed(), {
 				description: error instanceof Error ? error.message : "Unknown error",
 			});
@@ -230,7 +239,7 @@
 			await navigator.clipboard.writeText(latestDeployment.url);
 			toast.success(m.toast_deploy_url_copied());
 		} catch (error) {
-			console.error("Copy deployed url failed:", error);
+			logger.error("Copy deployed url failed:", error);
 			toast.error(m.toast_copied_failed());
 		}
 	};

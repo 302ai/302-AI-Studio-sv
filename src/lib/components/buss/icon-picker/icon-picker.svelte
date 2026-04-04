@@ -72,11 +72,16 @@
 						onclick={() => handleIconSelect(iconItem.key)}
 						class={cn(
 							"text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:ring-ring flex cursor-pointer flex-col items-center rounded p-2 transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-							value === iconItem.key && "bg-primary/10 text-primary ring-primary/20 ring-2",
+							value === iconItem.key &&
+								"bg-primary/10 text-primary ring-primary/20 ring-2",
 						)}
 						title={iconItem.name}
 					>
-						<ModelIcon modelName={iconItem.key} className="mb-1 h-8 w-8" forceApplyClassName />
+						<ModelIcon
+							modelName={iconItem.key}
+							className="mb-1 h-8 w-8"
+							forceApplyClassName
+						/>
 						<span class="w-full truncate text-center text-xs">
 							{iconItem.name}
 						</span>

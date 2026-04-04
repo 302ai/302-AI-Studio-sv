@@ -99,7 +99,9 @@ function validatePlugin(plugin, index) {
 	const requiredFields = ["downloadUrl", "repository"];
 	for (const field of requiredFields) {
 		if (!plugin[field]) {
-			errors.push(new ValidationError(`Missing required field: ${field}`, `${path}.${field}`));
+			errors.push(
+				new ValidationError(`Missing required field: ${field}`, `${path}.${field}`),
+			);
 		}
 	}
 
@@ -156,7 +158,10 @@ function validatePlugin(plugin, index) {
 	// Validate repository URL
 	if (plugin.repository && !validateUrl(plugin.repository, false)) {
 		errors.push(
-			new ValidationError(`Invalid repository URL: ${plugin.repository}`, `${path}.repository`),
+			new ValidationError(
+				`Invalid repository URL: ${plugin.repository}`,
+				`${path}.repository`,
+			),
 		);
 	}
 
@@ -191,7 +196,10 @@ function validatePlugin(plugin, index) {
 			plugin.screenshots.forEach((url, i) => {
 				if (!validateUrl(url, false)) {
 					errors.push(
-						new ValidationError(`Invalid screenshot URL: ${url}`, `${path}.screenshots[${i}]`),
+						new ValidationError(
+							`Invalid screenshot URL: ${url}`,
+							`${path}.screenshots[${i}]`,
+						),
 					);
 				}
 			});
@@ -204,7 +212,10 @@ function validatePlugin(plugin, index) {
 			errors.push(new ValidationError("tags must be an array", `${metadataPath}.tags`));
 		} else if (metadata.tags.length === 0) {
 			errors.push(
-				new ValidationError("tags array should not be empty if provided", `${metadataPath}.tags`),
+				new ValidationError(
+					"tags array should not be empty if provided",
+					`${metadataPath}.tags`,
+				),
 			);
 		}
 	}
@@ -223,7 +234,9 @@ function validatePlugin(plugin, index) {
 		plugin.rating !== undefined &&
 		(typeof plugin.rating !== "number" || plugin.rating < 0 || plugin.rating > 5)
 	) {
-		errors.push(new ValidationError(`rating must be a number between 0 and 5`, `${path}.rating`));
+		errors.push(
+			new ValidationError(`rating must be a number between 0 and 5`, `${path}.rating`),
+		);
 	}
 
 	if (
@@ -274,7 +287,9 @@ async function validateRegistry() {
 		} else {
 			const lastUpdated = new Date(registry.lastUpdated);
 			if (isNaN(lastUpdated.getTime())) {
-				errors.push(new ValidationError(`Invalid lastUpdated date: ${registry.lastUpdated}`));
+				errors.push(
+					new ValidationError(`Invalid lastUpdated date: ${registry.lastUpdated}`),
+				);
 			}
 		}
 

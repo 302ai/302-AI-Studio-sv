@@ -11,12 +11,16 @@
 	import { threadsState } from "$lib/stores/threads-state.svelte";
 	import { TIME_GROUP_ORDER, TimeGroup } from "$lib/types/time-group";
 	import { ChevronDown } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { CodeAgentConfigMetadata, CodeAgentMetadata } from "@shared/storage/code-agent";
+	import { isChatTab } from "@shared/storage/tab";
 	import { onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
 	import RenameDialog from "./rename-dialog.svelte";
 	import ThreadDeleteDialog from "./thread-delete-dialog.svelte";
 	import ThreadItem from "./thread-item.svelte";
+
+	const logger = createLogger("ui");
 
 	let searchInputElement: HTMLInputElement | null = $state(null);
 	let groupCollapsedState = $state<Record<TimeGroup, boolean>>({
@@ -133,11 +137,10 @@
 
 		(Object.keys(groups) as TimeGroup[]).forEach((groupKey) => {
 			groups[groupKey].sort(
-				(a, b) => new Date(b.thread.updatedAt).getTime() - new Date(a.thread.updatedAt).getTime(),
+				(a, b) =>
+					new Date(b.thread.updatedAt).getTime() - new Date(a.thread.updatedAt).getTime(),
 			);
 		});
-
-		console.log("Grouped threads:", groups);
 
 		return groups;
 	});
@@ -193,7 +196,9 @@
 						(s) => s.sandboxId === sandboxId,
 					);
 					if (sandbox) {
-						const session = sandbox.sessionInfos.find((s) => s.sessionId === currentSessionId);
+						const session = sandbox.sessionInfos.find(
+							(s) => s.sessionId === currentSessionId,
+						);
 						if (session) {
 							return {
 								isCodeAgent: true,
@@ -202,18 +207,18 @@
 							};
 						}
 						// Session not found in sessionInfos
-						// console.error(
+						// logger.error(
 						// 	`Session ${currentSessionId} not found in sandbox ${sandboxId} sessionInfos`,
 						// );
 						return { isCodeAgent: false };
 					}
 					// Sandbox not found in local state
-					// console.error(`Sandbox ${sandboxId} not found in local state`);
+					// logger.error(`Sandbox ${sandboxId} not found in local state`);
 					return { isCodeAgent: false };
 				}
 			}
 		} catch (error) {
-			console.error("Error checking code agent status:", error);
+			logger.error("Error checking code agent status:", error);
 		}
 
 		return { isCodeAgent: false };
@@ -239,10 +244,13 @@
 		if (existingTab) {
 			await tabBarState.handleActivateTab(existingTab.id);
 			if (searchData?.query) {
-				await window.electronAPI.broadcastService.broadcastToAll("sidebar-search-navigate", {
-					threadId,
-					query: searchData.query,
-				});
+				await window.electronAPI.broadcastService.broadcastToAll(
+					"sidebar-search-navigate",
+					{
+						threadId,
+						query: searchData.query,
+					},
+				);
 			}
 		} else {
 			// Pass search query and result IDs when creating new tab from search results
@@ -274,7 +282,7 @@
 		// Delete thread first (before closing tab, which broadcasts "thread-list-updated")
 		const success = await threadsState.deleteThread(threadId);
 		if (!success) {
-			console.error("Failed to delete thread:", threadId);
+			logger.error("Failed to delete thread:", threadId);
 			return;
 		}
 
@@ -339,9 +347,9 @@
 		if (agentInfo.isCodeAgent && agentInfo.sandboxId && agentInfo.sessionId) {
 			// Check if the session note was manually set by user
 			const claudeStateKey = `CodeAgentStorage:claude-code-agent-state-${renameTargetThreadId}`;
-			const claudeState = (await window.electronAPI.storageService.getItem(claudeStateKey)) as
-				| CodeAgentMetadata
-				| undefined;
+			const claudeState = (await window.electronAPI.storageService.getItem(
+				claudeStateKey,
+			)) as CodeAgentMetadata | undefined;
 			const isManualNote = claudeState?.isManualNote ?? false;
 
 			if (!isManualNote) {
@@ -361,7 +369,7 @@
 		const currentTabs = await tabBarState.getCurrentWindowTabs();
 		const relatedTab = currentTabs?.find((tab) => tab.threadId === threadId);
 
-		if (relatedTab?.type === "chat" && relatedTab.threadId) {
+		if (relatedTab && isChatTab(relatedTab.type) && relatedTab.threadId) {
 			const { tabService } = window.electronAPI;
 			await tabService.handleGenerateTabTitle(relatedTab.id, relatedTab.threadId);
 		}
@@ -372,7 +380,7 @@
 		const currentTabs = await tabBarState.getCurrentWindowTabs();
 		const relatedTab = currentTabs?.find((tab) => tab.threadId === threadId);
 
-		if (relatedTab?.type === "chat" && relatedTab.threadId) {
+		if (relatedTab && isChatTab(relatedTab.type) && relatedTab.threadId) {
 			const { tabService } = window.electronAPI;
 			await tabService.handleClearTabMessages(relatedTab.id, relatedTab.threadId);
 		}
@@ -419,7 +427,8 @@
 										sandboxId={agentInfo.sandboxId || ""}
 										sessionId={agentInfo.sessionId || ""}
 										onThreadClick={handleThreadClick}
-										onToggleFavorite={() => threadsState.toggleFavorite(threadId)}
+										onToggleFavorite={() =>
+											threadsState.toggleFavorite(threadId)}
 										onRenameThread={handleRenameThread}
 										onThreadGenerateTitle={handleThreadGenerateTitle}
 										onThreadClearMessages={handleThreadClearMessages}
@@ -459,7 +468,8 @@
 												sandboxId={agentInfo.sandboxId || ""}
 												sessionId={agentInfo.sessionId || ""}
 												onThreadClick={handleThreadClick}
-												onToggleFavorite={() => threadsState.toggleFavorite(threadId)}
+												onToggleFavorite={() =>
+													threadsState.toggleFavorite(threadId)}
 												onRenameThread={handleRenameThread}
 												onThreadGenerateTitle={handleThreadGenerateTitle}
 												onThreadClearMessages={handleThreadClearMessages}

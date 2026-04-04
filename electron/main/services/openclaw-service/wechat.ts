@@ -4,18 +4,19 @@
  *Date: 2026-03-26
  **/
 
+import { createLogger } from "@shared/logger";
 import type { OpenClawWeixinLoginMsg } from "@shared/types";
 import { spawn, type ChildProcessWithoutNullStreams } from "node:child_process";
 import { once } from "node:events";
 import * as readline from "node:readline";
-import { createLogger } from "../../utils/logger";
 import { broadcastService } from "../broadcast-service";
+
+const logger = createLogger("services");
 
 // "openclaw channels login --channel openclaw-weixin"
 // "openclaw channels list"
 // npx -y @tencent-weixin/openclaw-weixin-cli install
 class WeChatChannel {
-	private logger = createLogger(this);
 	private commandProcess: ChildProcessWithoutNullStreams | null = null;
 	private isConnecting = false;
 
@@ -65,7 +66,7 @@ class WeChatChannel {
 			});
 			this.commandProcess = proc;
 
-			this.logger.debug(`Started command "${command}" with PID ${proc.pid}`);
+			logger.debug(`Started command "${command}" with PID ${proc.pid}`);
 			const rl = readline.createInterface({
 				input: proc.stdout,
 				crlfDelay: Infinity,
@@ -76,7 +77,7 @@ class WeChatChannel {
 				stderrFn(data.toString());
 			});
 			proc.once("close", (code) => {
-				this.logger.info(`Child process exited with code ${code}`);
+				logger.debug(`openclaw: Child process exited with code ${code}`);
 				rl.close();
 				proc.stdout.removeAllListeners();
 				proc.stderr.removeAllListeners();
@@ -85,11 +86,11 @@ class WeChatChannel {
 					this.commandProcess = null;
 				}
 				if (code != 0) {
-					this.logger.error(`Child process failed with code ${code}`);
+					logger.error(`Child process failed with code ${code}`);
 				}
 			});
 		} catch (error) {
-			this.logger.error(`Failed to execute command "${command}":`, error);
+			logger.error("Failed to execute command:", error);
 		}
 	};
 
@@ -111,7 +112,7 @@ class WeChatChannel {
 			this.executeCommand(
 				command,
 				(line: string) => {
-					this.logger.debug(`WeChat login output: ${line}`);
+					logger.info("openclaw-weixin:login:", line);
 					let data: OpenClawWeixinLoginMsg = {
 						type: "unknown",
 						data: line,
@@ -131,7 +132,7 @@ class WeChatChannel {
 					broadcastService.broadcastChannelToAll("openclaw-weixin:login", data);
 				},
 				(err: string) => {
-					this.logger.error(`WeChat login error: ${err}`);
+					logger.error("openclaw-weixin:login:error", err);
 					broadcastService.broadcastChannelToAll("openclaw-weixin:login", {
 						type: "error",
 						data: err,
@@ -145,11 +146,7 @@ class WeChatChannel {
 				},
 			);
 		} catch (e) {
-			this.logger.error("Failed to start WeChat login flow:", e);
-			broadcastService.broadcastChannelToAll("openclaw-weixin:login", {
-				type: "error",
-				data: e,
-			});
+			logger.error("openclaw-weixin:login:error", e);
 		} finally {
 			this.isConnecting = false;
 		}
@@ -168,7 +165,7 @@ class WeChatChannel {
 				// Set a timeout for the installation process to prevent it from hanging indefinitely
 				timer = setTimeout(
 					() => {
-						this.logger.error("WeChat installation timed out");
+						logger.error("WeChat installation timed out");
 						reject("Installation timeout");
 					},
 					1000 * 60 * 2,
@@ -177,7 +174,7 @@ class WeChatChannel {
 				this.executeCommand(
 					command,
 					(line: string) => {
-						this.logger.debug(`WeChat install output: ${line}`);
+						logger.debug(`WeChat install output: ${line}`);
 						if (line.includes("https://liteapp.weixin.qq.com")) {
 							// install command is actually running, not just checking
 							resolve(true);
@@ -188,7 +185,7 @@ class WeChatChannel {
 						}
 					},
 					(err: string) => {
-						this.logger.error(`WeChat install error: ${err}`);
+						logger.error(`WeChat install error: ${err}`);
 						reject(err);
 					},
 					() => {
@@ -197,7 +194,7 @@ class WeChatChannel {
 				);
 			});
 		} catch (e) {
-			this.logger.error("Failed to start WeChat install flow:", e);
+			logger.error("Failed to start WeChat install flow:", e);
 			return false;
 		} finally {
 			if (timer) {

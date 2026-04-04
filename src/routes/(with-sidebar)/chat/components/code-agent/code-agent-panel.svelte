@@ -77,7 +77,9 @@
 				const currentSandbox = persistedClaudeCodeSandboxState.current.find(
 					(s) => s.sandboxId === sandboxId,
 				);
-				const currentSession = currentSandbox?.sessionInfos.find((s) => s.sessionId === sessionId);
+				const currentSession = currentSandbox?.sessionInfos.find(
+					(s) => s.sessionId === sessionId,
+				);
 				return currentSession?.note ?? currentSession?.sessionId ?? m.title_new_chat();
 			})
 			.with("local", () => {
@@ -190,7 +192,8 @@
 						<Button
 							variant="outline"
 							class="h-10 shrink-0"
-							disabled={codeAgentState.isUpdatingSandboxRemark || !isSandboxRemarkChanged}
+							disabled={codeAgentState.isUpdatingSandboxRemark ||
+								!isSandboxRemarkChanged}
 							onclick={handleUpdateSandboxRemark}
 						>
 							{#if codeAgentState.isUpdatingSandboxRemark}

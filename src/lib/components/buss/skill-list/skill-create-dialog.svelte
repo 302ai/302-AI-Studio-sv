@@ -10,6 +10,9 @@
 	import SkillHistoryForm from "./skill-history-form.svelte";
 	import SkillManualForm from "./skill-manual-form.svelte";
 	import SkillUploadForm from "./skill-upload-form.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	export type SkillCreateMethod = "manual" | "upload" | "github" | "history";
 
@@ -174,7 +177,7 @@ description:
 					}
 				}
 			} catch (error) {
-				console.error("Failed to create skill:", error);
+				logger.error("Failed to create skill:", error);
 				toast.error(m.skills_create_failed());
 			} finally {
 				isCreating = false;
@@ -206,7 +209,7 @@ description:
 					toast.error(m.skills_create_failed());
 				}
 			} catch (error) {
-				console.error("Failed to create skill from upload:", error);
+				logger.error("Failed to create skill from upload:", error);
 				toast.error(m.skills_create_failed());
 			} finally {
 				isCreating = false;
@@ -222,10 +225,11 @@ description:
 				const { sandboxId, sessionId } = selected;
 
 				// 1. 根据 sessionId 查找 threadId
-				const { isOK, threadId } = await window.electronAPI.codeAgentService.getThreadIdBySessionId(
-					sandboxId,
-					sessionId,
-				);
+				const { isOK, threadId } =
+					await window.electronAPI.codeAgentService.getThreadIdBySessionId(
+						sandboxId,
+						sessionId,
+					);
 
 				if (!isOK || !threadId) {
 					toast.error(m.skills_history_thread_not_found());
@@ -253,7 +257,7 @@ description:
 					toast.error(m.skills_history_navigate_failed());
 				}
 			} catch (error) {
-				console.error("Failed to navigate to history thread:", error);
+				logger.error("Failed to navigate to history thread:", error);
 				toast.error(m.skills_history_navigate_failed());
 			} finally {
 				isCreating = false;
@@ -275,7 +279,7 @@ description:
 					toast.error(m.skills_create_failed());
 				}
 			} catch (error) {
-				console.error("Failed to create skill from GitHub:", error);
+				logger.error("Failed to create skill from GitHub:", error);
 				toast.error(m.skills_create_failed());
 			} finally {
 				isCreating = false;
@@ -294,7 +298,9 @@ description:
 			<!-- Selection View -->
 			<div class="grid grid-cols-[1fr_auto_1fr] items-center border-b px-4 py-3">
 				<div></div>
-				<span class="text-foreground text-base font-semibold">{m.skills_create_title()}</span>
+				<span class="text-foreground text-base font-semibold"
+					>{m.skills_create_title()}</span
+				>
 				<div class="flex justify-end">
 					<Button variant="ghost" size="icon" class="h-8 w-8" onclick={handleClose}>
 						<X class="h-4 w-4" />
@@ -317,7 +323,9 @@ description:
 							>
 								<option.icon class="h-6 w-6" />
 							</div>
-							<span class="text-foreground text-sm font-semibold">{option.titleKey()}</span>
+							<span class="text-foreground text-sm font-semibold"
+								>{option.titleKey()}</span
+							>
 							<span class="text-muted-foreground text-xs">{option.descKey()}</span>
 						</button>
 					{/each}
@@ -328,7 +336,10 @@ description:
 				<Button variant="outline" class="flex-1" onclick={handleClose}>
 					{m.text_button_cancel()}
 				</Button>
-				<Button class="flex-1 bg-violet-500 hover:bg-violet-600" onclick={handleConfirmSelect}>
+				<Button
+					class="flex-1 bg-violet-500 hover:bg-violet-600"
+					onclick={handleConfirmSelect}
+				>
 					{m.text_button_confirm()}
 				</Button>
 			</div>
@@ -346,7 +357,9 @@ description:
 						{m.skills_back()}
 					</Button>
 				</div>
-				<span class="text-foreground text-base font-semibold">{m.skills_create_title()}</span>
+				<span class="text-foreground text-base font-semibold"
+					>{m.skills_create_title()}</span
+				>
 				<div class="flex justify-end">
 					<Button variant="ghost" size="icon" class="h-8 w-8" onclick={handleClose}>
 						<X class="h-4 w-4" />
@@ -385,7 +398,12 @@ description:
 			{/if}
 
 			<div class="flex gap-3 border-t px-6 py-4">
-				<Button variant="outline" class="flex-1" onclick={handleClose} disabled={isCreating}>
+				<Button
+					variant="outline"
+					class="flex-1"
+					onclick={handleClose}
+					disabled={isCreating}
+				>
 					{m.text_button_cancel()}
 				</Button>
 				<Button

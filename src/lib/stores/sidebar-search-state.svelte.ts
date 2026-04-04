@@ -3,6 +3,9 @@
  */
 
 import type { MessagePart } from "$lib/utils/attachment-converter";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import type { ThreadData } from "@shared/types";
 
 const SEARCH_QUERY_STORAGE_KEY = "SidebarSearch:current-query";
@@ -61,7 +64,7 @@ class SidebarSearchState {
 		// Check if tab has initial search query (from clicking a search result)
 		if (tab?.initialSearchQuery) {
 			this.#localSearchQuery = tab.initialSearchQuery;
-			console.log("[SidebarSearch] Initialized with search query:", tab.initialSearchQuery);
+			logger.info("Initialized with search query:", tab.initialSearchQuery);
 		}
 
 		// Check if tab has initial search results
@@ -74,8 +77,8 @@ class SidebarSearchState {
 				this.#hasCachedResults = true;
 				this.#cachedResultsUpdatedAt = Date.now();
 			}
-			console.log(
-				"[SidebarSearch] Initialized with search results:",
+			logger.info(
+				"Initialized with search results:",
 				tab.initialSearchResultIds.length,
 				"items",
 			);
@@ -100,7 +103,8 @@ class SidebarSearchState {
 	async #loadSearchQueryFromStorage(): Promise<void> {
 		try {
 			if (typeof window === "undefined" || !window.electronAPI?.storageService) return;
-			const stored = await window.electronAPI.storageService.getItem(SEARCH_QUERY_STORAGE_KEY);
+			const stored =
+				await window.electronAPI.storageService.getItem(SEARCH_QUERY_STORAGE_KEY);
 			if (typeof stored === "string" && stored.trim()) {
 				this.#isBroadcastUpdate = true;
 				this.#localSearchQuery = stored;
@@ -121,7 +125,8 @@ class SidebarSearchState {
 			const stored = (await window.electronAPI.storageService.getItem(
 				SEARCH_RESULTS_STORAGE_KEY,
 			)) as SidebarSearchResultsPayload | null;
-			if (!stored || typeof stored.query !== "string" || !Array.isArray(stored.resultIds)) return;
+			if (!stored || typeof stored.query !== "string" || !Array.isArray(stored.resultIds))
+				return;
 			const normalized = this.#normalizeQuery(stored.query);
 			if (!normalized) return;
 			this.#applySearchResults(normalized, stored.resultIds, {
@@ -245,10 +250,13 @@ class SidebarSearchState {
 
 	#broadcastSearchResults(query: string, resultIds: string[]): void {
 		if (typeof window !== "undefined" && window.electronAPI?.broadcastService) {
-			window.electronAPI.broadcastService.broadcastExcludeSource("sidebar-search-results-updated", {
-				query,
-				resultIds,
-			});
+			window.electronAPI.broadcastService.broadcastExcludeSource(
+				"sidebar-search-results-updated",
+				{
+					query,
+					resultIds,
+				},
+			);
 		}
 	}
 
@@ -340,7 +348,7 @@ class SidebarSearchState {
 				}
 			}
 		} catch (error) {
-			console.warn(`Failed to load messages for thread ${threadId}:`, error);
+			logger.warn(`Failed to load messages for thread ${threadId}:`, error);
 		}
 
 		return false;
@@ -381,7 +389,11 @@ class SidebarSearchState {
 			if (threadData.thread.title.toLowerCase().includes(searchTerm)) {
 				results.push(threadData);
 			} else {
-				const hasMatch = await this.#hasThreadMessageMatch(threadData.threadId, searchTerm, runId);
+				const hasMatch = await this.#hasThreadMessageMatch(
+					threadData.threadId,
+					searchTerm,
+					runId,
+				);
 				if (runId !== this.searchRunId) return results;
 				if (hasMatch) {
 					results.push(threadData);

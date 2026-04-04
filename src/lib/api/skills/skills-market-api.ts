@@ -9,6 +9,9 @@
  */
 
 import { type } from "arktype";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 const SKILLS_MARKET_BASE_URL = "https://api-skills.302.ai";
 
@@ -78,7 +81,7 @@ export async function listCategories(locale: "en" | "zh" = "en"): Promise<Catego
 		const data = await response.json();
 		return data as Category[];
 	} catch (error) {
-		console.error("Failed to list categories:", error);
+		logger.error("Failed to list categories:", error);
 		throw error;
 	}
 }
@@ -104,7 +107,9 @@ export async function getCategoriesByNames(
 			batches.push(names.slice(i, i + 100));
 		}
 
-		const results = await Promise.all(batches.map((batch) => getCategoriesByNames(batch, locale)));
+		const results = await Promise.all(
+			batches.map((batch) => getCategoriesByNames(batch, locale)),
+		);
 
 		return results.flat();
 	}
@@ -132,7 +137,7 @@ export async function getCategoriesByNames(
 		const data = await response.json();
 		return data as SkillCategoryInfo[];
 	} catch (error) {
-		console.error("Failed to get categories by names:", error);
+		logger.error("Failed to get categories by names:", error);
 		throw error;
 	}
 }
@@ -166,7 +171,7 @@ export async function getSkillByName(
 		const data = await response.json();
 		return data as SkillMarketDetail | null;
 	} catch (error) {
-		console.error("Failed to get skill by name:", error);
+		logger.error("Failed to get skill by name:", error);
 		throw error;
 	}
 }

@@ -139,7 +139,9 @@
 										<span class="font-medium text-sm">
 											{sandbox.sandboxRemark || sandbox.sandboxId}
 										</span>
-										<span class="text-xs text-muted-foreground">{sandbox.sandboxId}</span>
+										<span class="text-xs text-muted-foreground"
+											>{sandbox.sandboxId}</span
+										>
 									</div>
 									<div class="flex flex-col items-end gap-1">
 										<span class="text-xs text-muted-foreground">

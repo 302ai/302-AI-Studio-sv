@@ -4,9 +4,12 @@
  * Helper functions for executing provider plugin hooks in the main process
  */
 
+import { createLogger } from "@shared/logger";
 import type { Model, ModelProvider } from "@shared/types";
 import { hookManager } from "../plugin-manager/hook-manager";
 import { pluginRegistry } from "../plugin-manager/plugin-registry";
+
+const logger = createLogger("plugin-manager");
 
 /**
  * Execute provider authentication hook
@@ -43,7 +46,7 @@ export async function executeAuthenticationHook(
 
 		return result;
 	} catch (error) {
-		console.error("[ProviderPluginHelper] Authentication hook failed:", error);
+		logger.error("[ProviderPluginHelper] Authentication hook failed:", error);
 		return {
 			success: false,
 			error: error instanceof Error ? error.message : "Authentication failed",
@@ -72,20 +75,20 @@ export async function executeFetchModelsHook(provider: ModelProvider): Promise<M
 		});
 
 		if (!providerPlugin) {
-			console.warn(
+			logger.warn(
 				`[ProviderPluginHelper] No plugin found for provider ${provider.id}, using default behavior`,
 			);
 			return [];
 		}
 
 		// Execute fetch models hook
-		console.log(`[ProviderPluginHelper] Executing fetch models hook for ${provider.id}`);
+		logger.debug(`[ProviderPluginHelper] Executing fetch models hook for ${provider.id}`);
 		const models = await providerPlugin.instance.onFetchModels(provider);
 
-		console.log(`[ProviderPluginHelper] Fetched ${models.length} models for ${provider.id}`);
+		logger.debug(`[ProviderPluginHelper] Fetched ${models.length} models for ${provider.id}`);
 		return models;
 	} catch (error) {
-		console.error("[ProviderPluginHelper] Fetch models hook failed:", error);
+		logger.error("[ProviderPluginHelper] Fetch models hook failed:", error);
 		throw error;
 	}
 }
@@ -106,7 +109,7 @@ export async function executeBeforeSendMessageHook(context: {
 		const result = await hookManager.execute("provider:before-send-message", context);
 		return result;
 	} catch (error) {
-		console.error("[ProviderPluginHelper] Before send message hook failed:", error);
+		logger.error("[ProviderPluginHelper] Before send message hook failed:", error);
 		// Return original context on error
 		return context;
 	}
@@ -140,7 +143,7 @@ export async function executeAfterSendMessageHook(
 		// Execute hook through hook manager
 		await hookManager.execute("provider:after-send-message", { context, response });
 	} catch (error) {
-		console.error("[ProviderPluginHelper] After send message hook failed:", error);
+		logger.error("[ProviderPluginHelper] After send message hook failed:", error);
 		// Continue execution even if hook fails
 	}
 }
@@ -161,7 +164,7 @@ export async function executeStreamChunkHook(chunk: {
 		const result = await hookManager.execute("provider:stream-chunk", chunk);
 		return result;
 	} catch (error) {
-		console.error("[ProviderPluginHelper] Stream chunk hook failed:", error);
+		logger.error("[ProviderPluginHelper] Stream chunk hook failed:", error);
 		// Return original chunk on error
 		return chunk;
 	}
@@ -192,10 +195,15 @@ export async function executeErrorHook(
 		});
 
 		return result && typeof result === "object" && "handled" in result
-			? (result as { handled: boolean; retry?: boolean; retryDelay?: number; message?: string })
+			? (result as {
+					handled: boolean;
+					retry?: boolean;
+					retryDelay?: number;
+					message?: string;
+				})
 			: { handled: false };
 	} catch (hookError) {
-		console.error("[ProviderPluginHelper] Error hook failed:", hookError);
+		logger.error("[ProviderPluginHelper] Error hook failed:", hookError);
 		// Return not handled on error
 		return { handled: false };
 	}
@@ -226,7 +234,7 @@ export function getRegisteredProviderPlugins(): Array<{
 					providerName: resolvedDefinition.name || p.plugin.metadata.name,
 				};
 			} catch (error) {
-				console.error(
+				logger.error(
 					`[ProviderPluginHelper] Failed to get definition for plugin ${p.plugin.metadata.id}:`,
 					error,
 				);

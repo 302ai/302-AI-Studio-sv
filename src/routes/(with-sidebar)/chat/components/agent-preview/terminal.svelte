@@ -18,7 +18,9 @@
 
 	let commandInput = $state("");
 	let terminalState = $derived(
-		sandboxId && sessionId ? agentPreviewState.getReactiveState(sandboxId, sessionId) : undefined,
+		sandboxId && sessionId
+			? agentPreviewState.getReactiveState(sandboxId, sessionId)
+			: undefined,
 	);
 	let outputLines = $derived(terminalState?.terminalHistory || []);
 	let currentWorkingDirectory = $derived(
@@ -45,7 +47,9 @@
 
 	// Get 302.AI API key
 	const get302ApiKey = () => {
-		const provider = persistedProviderState.current.find((p) => p.name === "302.AI" && p.enabled);
+		const provider = persistedProviderState.current.find(
+			(p) => p.name === "302.AI" && p.enabled,
+		);
 		return provider?.apiKey || "";
 	};
 
@@ -174,7 +178,9 @@
 				throw new Error("302.AI API key not found");
 			}
 
-			const provider = persistedProviderState.current.find((p) => p.name === "302.AI" && p.enabled);
+			const provider = persistedProviderState.current.find(
+				(p) => p.name === "302.AI" && p.enabled,
+			);
 			if (!provider) {
 				throw new Error("302.AI provider not found");
 			}
@@ -328,7 +334,10 @@
 	onclick={(e) => {
 		// Only focus input if the user is clicking on the container background
 		// and not selecting text or interacting with specific elements
-		if (e.target === e.currentTarget || (e.target as HTMLElement).classList.contains("flex-1")) {
+		if (
+			e.target === e.currentTarget ||
+			(e.target as HTMLElement).classList.contains("flex-1")
+		) {
 			inputRef?.focus();
 		}
 	}}

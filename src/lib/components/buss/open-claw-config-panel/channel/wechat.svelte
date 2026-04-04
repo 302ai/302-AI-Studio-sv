@@ -1,16 +1,23 @@
 <script lang="ts">
-	import { AccordionContent, AccordionItem, AccordionTrigger } from "$lib/components/ui/accordion";
+	import {
+		AccordionContent,
+		AccordionItem,
+		AccordionTrigger,
+	} from "$lib/components/ui/accordion";
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
-	import weixinChannelState from "$lib/stores/code-agent/openclaw/channel/weixin-channel-state.svelte";
+	import weixinChannelState from "$lib/components/buss/open-claw-config-panel/channel/weixin-channel-state.svelte";
 	import { ArrowDownToLine, CircleAlert } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { OpenClawWeixinLoginMsg } from "@shared/types";
 	import QRCodeStyling from "qr-code-styling";
 	import { onMount, tick } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { LdrsLoader } from "../../ldrs-loader";
+
+	const logger = createLogger("ui");
 
 	let wechatElm = $state<HTMLDivElement | null>(null);
 	const qrCode = new QRCodeStyling();
@@ -70,7 +77,7 @@
 		[
 			"unknown",
 			(event: OpenClawWeixinLoginMsg) => {
-				console.log("unknown", event);
+				logger.info("unknown", event);
 			},
 		],
 		[
@@ -107,7 +114,7 @@
 			toast.error(m.code_agent_local_container_not_started());
 			return;
 		}
-		console.log("handleWechartTrigger", !wechatLoginState.installed);
+		logger.debug("handleWechartTrigger", !wechatLoginState.installed);
 		if (!wechatLoginState.installed) return;
 
 		if (wechatTriggerSignal >= 1) return;
@@ -134,9 +141,10 @@
 	};
 </script>
 
-<AccordionItem id="wechat" value="wechat" class="border-b-0 my-1">
-	<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline" onclick={handleWechartTrigger}>
-		<Label class=" font-normal no-underline cursor-pointer">{m.open_claw_channel_wechat()}</Label>
+<AccordionItem id="wechat" value="wechat" class="border-b-0 my-1" onclick={handleWechartTrigger}>
+	<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+		<Label class="font-normal no-underline cursor-pointer">{m.open_claw_channel_wechat()}</Label
+		>
 	</AccordionTrigger>
 	<AccordionContent class="pb-0 pt-2 space-y-2">
 		<div class="rounded-lg border p-4 space-y-4">
@@ -153,7 +161,9 @@
 							{#if wechatLoginState.loading}
 								<!-- <LoaderCircle class="h-8 w-8 animate-spin text-muted-foreground" /> -->
 								<LdrsLoader type="line-spinner" />
-								<span class="text-label-fg mt-1 text-xs">{m.changelog_loading()}</span>
+								<span class="text-label-fg mt-1 text-xs"
+									>{m.changelog_loading()}</span
+								>
 							{/if}
 							<div
 								bind:this={wechatElm}

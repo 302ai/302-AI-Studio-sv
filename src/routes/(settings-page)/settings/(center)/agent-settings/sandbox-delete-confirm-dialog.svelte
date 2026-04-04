@@ -147,17 +147,25 @@
 								<Loader2 class="h-6 w-6 animate-spin text-muted-foreground" />
 							</div>
 						{:else if sessions.length === 0}
-							<p class="text-sm text-muted-foreground text-center py-4">{m.no_sessions()}</p>
+							<p class="text-sm text-muted-foreground text-center py-4">
+								{m.no_sessions()}
+							</p>
 						{:else}
 							{#each sessions as session (session.sessionId)}
-								<div class="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+								<div
+									class="flex items-center justify-between p-4 rounded-xl bg-muted/50"
+								>
 									<div>
 										<p class="text-sm font-medium text-foreground">
 											{session.note || session.sessionId}
 										</p>
-										<p class="text-xs text-muted-foreground">{session.sessionId}</p>
+										<p class="text-xs text-muted-foreground">
+											{session.sessionId}
+										</p>
 									</div>
-									<span class="text-sm text-muted-foreground">{formatTime(session)}</span>
+									<span class="text-sm text-muted-foreground"
+										>{formatTime(session)}</span
+									>
 								</div>
 							{/each}
 						{/if}

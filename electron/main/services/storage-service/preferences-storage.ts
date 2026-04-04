@@ -40,7 +40,7 @@ const migrations = {
 
 const migrationConfig: MigrationConfig<PreferencesSettingsState> = {
 	version: 1,
-	migrate: createMigrate(migrations, { debug: true }),
+	migrate: createMigrate(migrations),
 	debug: true,
 };
 

@@ -1,10 +1,13 @@
 import type { ListSkillsResponse } from "$lib/api/skills/base-apis";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import { emitter, EventNames } from "$lib/event/emitter";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import * as m from "$lib/paraglide/messages";
 import { chatState } from "$lib/stores/chat-state.svelte";
 import { mcpState } from "$lib/stores/mcp-state.svelte";
-import { persistedTabState } from "$lib/stores/tab-bar-state.svelte";
+import { persistedTabState, tabBarState } from "$lib/stores/tab-bar-state.svelte";
 import type { ChatMessage } from "$lib/types/chat";
 import { clone } from "$lib/utils/clone";
 import type { Model } from "@302ai/studio-plugin-sdk";
@@ -17,6 +20,7 @@ import {
 	type Skill,
 	type ThinkingBudgetType,
 } from "@shared/storage/code-agent";
+import type { TabType } from "@shared/types";
 import { toast } from "svelte-sonner";
 import { match } from "ts-pattern";
 import { claudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
@@ -83,7 +87,8 @@ class CodeAgentState {
 		() => persistedCodeAgentConfigState.current?.currentAgentId ?? "claude-code",
 	);
 	codingAgentId = $derived.by(() =>
-		(persistedCodeAgentConfigState.current?.codingAgentId ?? this.currentAgentId === "open-claw")
+		(persistedCodeAgentConfigState.current?.codingAgentId ??
+		this.currentAgentId === "open-claw")
 			? "claude-code"
 			: this.currentAgentId,
 	);
@@ -107,7 +112,7 @@ class CodeAgentState {
 				this.localBaseUrl = url + "/api/v1";
 			}
 		} catch (error) {
-			console.error("[CodeAgentState] Failed to refresh local base URL:", error);
+			logger.error("Failed to refresh local base URL:", error);
 		}
 	}
 
@@ -384,7 +389,9 @@ class CodeAgentState {
 			(loading) => (this.isLoadingSkills = loading),
 			() =>
 				match(this.currentAgentId)
-					.with("claude-code", "open-claw", () => claudeCodeAgentState.listClaudeCodeSkills(isInit))
+					.with("claude-code", "open-claw", () =>
+						claudeCodeAgentState.listClaudeCodeSkills(isInit),
+					)
 					.otherwise(() => ({
 						success: false,
 						user_skills: [],
@@ -432,7 +439,10 @@ class CodeAgentState {
 			() =>
 				match(this.currentAgentId)
 					.with("claude-code", "open-claw", () =>
-						claudeCodeSandboxState.updateSandboxRemark(claudeCodeAgentState.sandboxId, remark),
+						claudeCodeSandboxState.updateSandboxRemark(
+							claudeCodeAgentState.sandboxId,
+							remark,
+						),
 					)
 					.otherwise(() => false),
 		);
@@ -649,6 +659,22 @@ $effect.root(() => {
 		if (codeAgentState.enabled && codeAgentState.type === "local") {
 			localEnvState.startSandboxListening();
 		}
+	});
+
+	// Sync Tab Type with Code Agent Mode
+	$effect(() => {
+		const tabId = window.tab?.id;
+		if (!tabId || tabId === "shell") return;
+
+		let targetType: TabType = "chat";
+		if (codeAgentState.enabled) {
+			targetType =
+				codeAgentState.currentAgentId === "open-claw"
+					? "chat-vibe-openclaw"
+					: "chat-vibe-claude";
+		}
+
+		tabBarState.updateTabType(tabId, targetType);
 	});
 
 	// Listen to local sandbox state changes, refresh baseUrl when sandbox is running

@@ -56,7 +56,6 @@ const ensureNativePackagingDeps = (platform: NodeJS.Platform = process.platform)
 		try {
 			moduleDir = path.dirname(require.resolve(`${moduleName}/package.json`));
 		} catch (_error) {
-			// Optional dependency not installed (non-darwin platforms). Skip.
 			continue;
 		}
 
@@ -100,6 +99,31 @@ const getPackagerConfig = () => {
 		executableName: "302-ai-studio",
 		appBundleId: "com.302ai.302aistudio",
 		extraResource: ["static/docker-compose.yml"],
+		ignore: [
+			// 排除开发文档和配置文件
+			/^\/\.git/,
+			/^\/\.github/,
+			/^\/\.claude/,
+			/^\/\.agents/,
+			/^\/\.vscode/,
+			/^\/CLAUDE\.md$/,
+			/^\/AGENTS\.md$/,
+			/^\/README\.md$/,
+			/^\/\.gitignore$/,
+			/^\/\.eslintrc/,
+			/^\/\.prettierrc/,
+			// 排除测试和构建脚本
+			/^\/scripts/,
+			/^\/playwright\.config\.ts$/,
+			/^\/vitest/,
+			// 排除源码（已编译到 .vite）
+			/^\/src/,
+			/^\/electron\/main/,
+			/^\/electron\/preload/,
+			// 排除 vite 配置
+			/^\/vite\..*\.ts$/,
+			/^\/tsconfig/,
+		],
 	};
 
 	if (process.platform === "darwin" && process.env.NODE_ENV === "production") {
@@ -107,14 +131,16 @@ const getPackagerConfig = () => {
 			...baseConfig,
 			osxSign: {
 				identity: "Developer ID Application: SONIER PTE. LTD.",
-				"hardened-runtime": true,
-				"gatekeeper-assess": false,
+				hardenedRuntime: true,
+				gatekeeperAssess: false,
 				entitlements: "entitlements.plist",
-				"entitlements-inherit": "entitlements.plist",
+				entitlementsInherit: "entitlements.plist",
+				signatureFlags: ["restrict", "runtime"],
 			},
 		};
 
 		macConfig.osxNotarize = {
+			tool: "notarytool",
 			appleId: process.env.APPLE_ID,
 			appleIdPassword: process.env.APPLE_APP_SPECIFIC_PASSWORD,
 			teamId: process.env.APPLE_TEAM_ID,
@@ -134,15 +160,12 @@ const config: ForgeConfig = {
 			{
 				name: "302-ai-studio",
 				setupIcon: "static/icon.ico",
-				iconUrl: "https://file.302.ai/gpt/playground/20250925/69b7db4b8f154fe7ad9397ba50f827b9.ico",
+				iconUrl:
+					"https://file.302.ai/gpt/playground/20250925/69b7db4b8f154fe7ad9397ba50f827b9.ico",
 				loadingGif: "static/icon.gif",
 			},
 			["win32"],
 		),
-		// {
-		// 	name: "@electron-addons/electron-forge-maker-nsis",
-		// 	config: {},
-		// },
 		new MakerZIP({}, ["darwin", "win32"]),
 		new MakerDMG({
 			icon: "static/icon.icns",
@@ -164,7 +187,6 @@ const config: ForgeConfig = {
 			ensureNativePackagingDeps();
 		},
 	},
-	// TODO: Remove GitHub publisher after users migrate to new update server (updater.302.ai)
 	publishers: [
 		{
 			name: "@electron-forge/publisher-github",
@@ -179,12 +201,19 @@ const config: ForgeConfig = {
 		},
 	],
 	plugins: [
+		// FusesPlugin 必须在 VitePlugin 之前
+		new FusesPlugin({
+			version: FuseVersion.V1,
+			[FuseV1Options.RunAsNode]: false,
+			[FuseV1Options.EnableCookieEncryption]: true,
+			[FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
+			[FuseV1Options.EnableNodeCliInspectArguments]: false,
+			[FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
+			[FuseV1Options.OnlyLoadAppFromAsar]: true,
+		}),
 		new VitePlugin({
-			// `build` can specify multiple entry builds, which can be Main process, Preload scripts, Worker process, etc.
-			// If you are familiar with Vite configuration, it will look really familiar.
 			build: [
 				{
-					// `entry` is just an alias for `build.lib.entry` in the corresponding file of `config`.
 					entry: "electron/main/index.ts",
 					config: "vite.main.config.ts",
 					target: "main",
@@ -201,17 +230,6 @@ const config: ForgeConfig = {
 					config: "vite.config.ts",
 				},
 			],
-		}),
-		// Fuses are used to enable/disable various Electron functionality
-		// at package time, before code signing the application
-		new FusesPlugin({
-			version: FuseVersion.V1,
-			[FuseV1Options.RunAsNode]: false,
-			[FuseV1Options.EnableCookieEncryption]: true,
-			[FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
-			[FuseV1Options.EnableNodeCliInspectArguments]: false,
-			[FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
-			[FuseV1Options.OnlyLoadAppFromAsar]: true,
 		}),
 	],
 };

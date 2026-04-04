@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { createLogger } from "@shared/logger";
 import type { LanguageCode } from "@shared/storage/general-settings";
 import type { BroadcastEvent } from "@shared/types";
 import type { IpcMainInvokeEvent, WebContents } from "electron";
 import { webContents } from "electron";
 import mitt from "mitt";
+
+const logger = createLogger("services");
 
 export const emitter = mitt<{
 	"persisted-state:sync": { sendKey: string; syncValue: any; sourceWebContentsId: number };
@@ -17,7 +20,6 @@ export class BroadcastService {
 	constructor() {
 		emitter.on("persisted-state:sync", ({ sendKey, syncValue, sourceWebContentsId }) => {
 			this.broadcastExcludeSourceWC(sendKey, syncValue, sourceWebContentsId);
-			// console.log("Broadcasting to all webContents ", sendKey, JSON.stringify(syncValue));
 		});
 	}
 
@@ -71,7 +73,7 @@ export class BroadcastService {
 				try {
 					wc.send(channel, data);
 				} catch (error) {
-					console.error(`Failed to broadcast ${channel} to webContents ${wc.id}:`, error);
+					logger.error(`Failed to broadcast ${channel} to webContents ${wc.id}:`, error);
 				}
 			}
 		});
@@ -90,7 +92,7 @@ export class BroadcastService {
 				sourceWebContentsId,
 			});
 		} catch (error) {
-			console.error(
+			logger.error(
 				`Failed to broadcast ${broadcastEvent} to webContents ${webContents.id}:`,
 				error,
 			);

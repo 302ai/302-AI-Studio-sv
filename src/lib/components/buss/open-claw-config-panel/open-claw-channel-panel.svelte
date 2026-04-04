@@ -42,7 +42,8 @@
 	<Accordion type="single" class="w-full rounded-settings-item">
 		<AccordionItem value="fei-shu" class="border-b-0">
 			<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-				<Label class="font-normal no-underline cursor-pointer">{m.open_claw_channel_feishu()}</Label
+				<Label class="font-normal no-underline cursor-pointer"
+					>{m.open_claw_channel_feishu()}</Label
 				>
 			</AccordionTrigger>
 			<AccordionContent class="pb-0 pt-2 space-y-2">
@@ -63,7 +64,8 @@
 							>{m.open_claw_channel_config_feishu()}</button
 						>
 						<button
-							onclick={() => handleNewSettingsTab("/settings/agent-settings?platform=local")}
+							onclick={() =>
+								handleNewSettingsTab("/settings/agent-settings?platform=local")}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_view_more_settings()}</button
 						>
@@ -100,7 +102,8 @@
 							>{m.open_claw_channel_config_telegram()}</button
 						>
 						<button
-							onclick={() => handleNewSettingsTab("/settings/agent-settings?platform=local")}
+							onclick={() =>
+								handleNewSettingsTab("/settings/agent-settings?platform=local")}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_view_more_settings()}</button
 						>
@@ -114,7 +117,8 @@
 <Accordion type="single" value="channel-settings" class="w-full m-0 ">
 	<AccordionItem value="channel-settings" class="border-b-0">
 		<AccordionTrigger class="py-2 hover:no-underline">
-			<Label class="text-label-fg cursor-pointer">{m.agent_framework_open_claw_set_channel()}</Label
+			<Label class="text-label-fg cursor-pointer"
+				>{m.agent_framework_open_claw_set_channel()}</Label
 			>
 		</AccordionTrigger>
 		<AccordionContent class="pb-1 pt-0 space-y-2">

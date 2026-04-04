@@ -24,11 +24,14 @@
 	import { animateButtonBounce } from "$lib/utils/animation";
 	import { isMac } from "$lib/utils/platform";
 	import { Plus } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import { onDestroy, onMount } from "svelte";
 	import { flip } from "svelte/animate";
 	import { Spring } from "svelte/motion";
 	import { scale } from "svelte/transition";
 	import TabItem from "./tab-item.svelte";
+
+	const logger = createLogger("ui");
 
 	let { class: className, autoStretch = false }: Props = $props();
 
@@ -107,14 +110,14 @@
 
 		// Start tracking for cross-window detection
 		window.electronAPI.ghostWindowService.startTracking().catch((error) => {
-			console.error("[TabBar] Failed to start tracking:", error);
+			logger.error("Failed to start tracking:", error);
 		});
 
 		// Activate the dragged tab and elevate shell view
 		tabBarState.handleActivateTab(tab.id);
 		tabBarState.handleGeneralOverlayChange(true);
 
-		console.log("[TabBar] Drag started for tab", tab.id);
+		logger.debug("Drag started for tab", tab.id);
 	}
 
 	function handleDragOver(e: DragEvent) {
@@ -172,7 +175,7 @@
 			const currentIndex = tabBarState.tabs.findIndex((t) => t.id === draggedTabId);
 			if (currentIndex === -1) {
 				// Tab not in current window - this is a cross-window drag, ignore
-				console.log("[TabBar] Drop ignored - tab not in current window");
+				logger.debug("Drop ignored - tab not in current window");
 				return;
 			}
 		} else {
@@ -180,7 +183,7 @@
 			return;
 		}
 
-		console.log("[TabBar] Drop occurred in same window");
+		logger.debug("Drop occurred in same window");
 		droppedInThisWindow = true;
 
 		// Finalize reorder now that the drag has completed
@@ -228,7 +231,7 @@
 		if (droppedInThisWindow) {
 			// Stop tracking and lower shell view
 			await window.electronAPI.ghostWindowService.stopTracking().catch((error) => {
-				console.error("[TabBar] Failed to stop tracking:", error);
+				logger.error("Failed to stop tracking:", error);
 			});
 			await tabBarState.handleGeneralOverlayChange(false);
 
@@ -236,7 +239,7 @@
 			pendingTargetIndex = null;
 			droppedInThisWindow = false;
 			insertIndicatorX = null;
-			console.log("[TabBar] Drag ended (handled by same-window drop)");
+			logger.debug("Drag ended (handled by same-window drop)");
 			return;
 		}
 
@@ -256,7 +259,9 @@
 						const newTabs = [...tabBarState.tabs];
 						const [removed] = newTabs.splice(currentIndex, 1);
 						const insertAt =
-							pendingTargetIndex > currentIndex ? pendingTargetIndex - 1 : pendingTargetIndex;
+							pendingTargetIndex > currentIndex
+								? pendingTargetIndex - 1
+								: pendingTargetIndex;
 						newTabs.splice(insertAt, 0, removed);
 						tabBarState.updatePersistedTabs(newTabs);
 					}
@@ -264,7 +269,7 @@
 
 				// Stop tracking and lower shell view
 				await window.electronAPI.ghostWindowService.stopTracking().catch((error) => {
-					console.error("[TabBar] Failed to stop tracking:", error);
+					logger.error("Failed to stop tracking:", error);
 				});
 				await tabBarState.handleGeneralOverlayChange(false);
 
@@ -272,7 +277,7 @@
 				pendingTargetIndex = null;
 				droppedInThisWindow = false;
 				insertIndicatorX = null;
-				console.log("[TabBar] Drag ended (treated as same-window drop by bounds)");
+				logger.debug("Drag ended (treated as same-window drop by bounds)");
 				return;
 			}
 		}
@@ -280,7 +285,7 @@
 		// Otherwise, treat as potential cross-window action only if no valid drop target
 		// IMPORTANT: Call handleDropAtPointer BEFORE stopTracking to preserve insertTarget
 		if (e.dataTransfer?.dropEffect === "none" && tabId) {
-			console.log("[TabBar] Tab dragged out of window, calling dropAtPointer");
+			logger.debug("Tab dragged out of window, calling dropAtPointer");
 
 			const result = await window.electronAPI.windowService.handleDropAtPointer(tabId, {
 				screenX: e.screenX,
@@ -289,11 +294,11 @@
 
 			if (result) {
 				if (result.action === "merged") {
-					console.log("[TabBar] Tab merged into window", result.targetWindowId);
+					logger.debug("Tab merged into window", result.targetWindowId);
 					// Backend has atomically updated storage
 					// Wait for PersistedState sync to update UI
 				} else if (result.action === "detached") {
-					console.log("[TabBar] Tab detached to new window", result.newWindowId);
+					logger.debug("Tab detached to new window", result.newWindowId);
 					// Backend has atomically updated storage
 					// Wait for PersistedState sync to update UI
 				}
@@ -302,7 +307,7 @@
 
 		// Stop tracking and lower shell view AFTER handling the drop
 		await window.electronAPI.ghostWindowService.stopTracking().catch((error) => {
-			console.error("[TabBar] Failed to stop tracking:", error);
+			logger.error("Failed to stop tracking:", error);
 		});
 		await tabBarState.handleGeneralOverlayChange(false);
 
@@ -310,7 +315,7 @@
 		pendingTargetIndex = null;
 		droppedInThisWindow = false;
 		insertIndicatorX = null;
-		console.log("[TabBar] Drag ended");
+		logger.debug("Drag ended");
 	}
 
 	function handleGhostHover(event: { clientX: number; clientY: number; draggedWidth: number }) {
@@ -336,7 +341,7 @@
 				insertIndex: newInsertIndex,
 			})
 			.catch((error) => {
-				console.error("[TabBar] Failed to update insert index:", error);
+				logger.error("Failed to update insert index:", error);
 			});
 	}
 
@@ -459,8 +464,8 @@
 
 		<div
 			class="flex shrink-0 items-center"
-			style="opacity: {buttonSpring.current.opacity}; transform: translateX({buttonSpring.current
-				.x + buttonBounceSpring.current.x}px);"
+			style="opacity: {buttonSpring.current.opacity}; transform: translateX({buttonSpring
+				.current.x + buttonBounceSpring.current.x}px);"
 		>
 			<Separator
 				orientation="vertical"

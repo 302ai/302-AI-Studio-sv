@@ -101,7 +101,9 @@
 		<div
 			class={cn(
 				"relative w-fit max-w-[calc(100vw-2rem)] rounded-lg border bg-overlay p-4 shadow-lg duration-200",
-				!isClosing ? "animate-in fade-in-0 zoom-in-95" : "animate-out fade-out-0 zoom-out-95",
+				!isClosing
+					? "animate-in fade-in-0 zoom-in-95"
+					: "animate-out fade-out-0 zoom-out-95",
 				className,
 			)}
 			onmousedown={(e) => e.stopPropagation()}

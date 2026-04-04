@@ -45,7 +45,9 @@
 		remark: model?.remark || "",
 		type: model?.type || ("language" as ModelType),
 		enabled: model?.enabled ?? true,
-		capabilities: model?.capabilities ? new Set(model.capabilities) : new Set<ModelCapability>(),
+		capabilities: model?.capabilities
+			? new Set(model.capabilities)
+			: new Set<ModelCapability>(),
 	});
 	$effect(() => {
 		if (model) {
@@ -326,14 +328,20 @@
 				<Label>{m.text_label_model_capabilities()}</Label>
 				<div class="flex flex-wrap gap-3">
 					{#each availableCapabilities as capability (capability.value)}
-						<div class="hover:bg-accent/10 flex items-center gap-2 rounded-md px-2 py-1">
+						<div
+							class="hover:bg-accent/10 flex items-center gap-2 rounded-md px-2 py-1"
+						>
 							<Checkbox
 								class="border-muted-foreground/40 cursor-pointer hover:border-muted-foreground/70 bg-transparent dark:border-white/30"
 								id={capability.value}
 								checked={formData.capabilities.has(capability.value)}
-								onCheckedChange={(checked) => toggleCapability(capability.value, !!checked)}
+								onCheckedChange={(checked) =>
+									toggleCapability(capability.value, !!checked)}
 							/>
-							<Label for={capability.value} class="cursor-pointer text-sm font-normal">
+							<Label
+								for={capability.value}
+								class="cursor-pointer text-sm font-normal"
+							>
 								{capability.label}
 							</Label>
 						</div>

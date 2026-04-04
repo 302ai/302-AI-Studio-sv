@@ -15,7 +15,9 @@
 	// Derived states from store
 	const isRunning = $derived(codeAgentTaskboardState.taskboardStatus === "running");
 	const isWaitingToStop = $derived(codeAgentTaskboardState.taskboardStatus === "waiting_to_stop");
-	const isWaitingForChat = $derived(codeAgentTaskboardState.taskboardStatus === "waiting_for_chat");
+	const isWaitingForChat = $derived(
+		codeAgentTaskboardState.taskboardStatus === "waiting_for_chat",
+	);
 	const currentTask = $derived(
 		codeAgentTaskboardState.tasklist.find((t) => t.status === "in_progress"),
 	);
@@ -88,7 +90,9 @@
 					if (chatState.hasMessages) {
 						chatState.sendMessage({ content: taskContent });
 					} else {
-						document.startViewTransition(() => chatState.sendMessage({ content: taskContent }));
+						document.startViewTransition(() =>
+							chatState.sendMessage({ content: taskContent }),
+						);
 					}
 					return true;
 				});
@@ -101,7 +105,8 @@
 		}
 		if (codeAgentState.enabled && codeAgentState.type === "local") {
 			// For local mode in non-fresh tabs, only ensure sandbox is running
-			const localSandboxResult = await codeAgentSendMessageButtonState.ensureLocalSandboxReady();
+			const localSandboxResult =
+				await codeAgentSendMessageButtonState.ensureLocalSandboxReady();
 			if (!localSandboxResult.isOk) {
 				toast.error(localSandboxResult.error ?? m.code_agent_local_sandbox_start_failed());
 				return false;

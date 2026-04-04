@@ -15,6 +15,9 @@
 	import WriteToolRenderer from "./code-agent/write-tool-renderer.svelte";
 	import CodeBlock from "./code-block.svelte";
 	import { DEFAULT_THEME, ensureHighlighter } from "./highlighter";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	type MarkdownItInstance = ReturnType<typeof markdownIt>;
 	type MarkdownEnvironment = Record<string, unknown>;
@@ -382,7 +385,9 @@
 						"activeForm" in todo &&
 						typeof (todo as { content: unknown }).content === "string" &&
 						typeof (todo as { activeForm: unknown }).activeForm === "string" &&
-						["pending", "in_progress", "completed"].includes((todo as { status: string }).status),
+						["pending", "in_progress", "completed"].includes(
+							(todo as { status: string }).status,
+						),
 				);
 
 				if (isValid && todos.length > 0) {
@@ -624,7 +629,7 @@
 
 	onMount(() => {
 		ensureHighlighter().catch((error) => {
-			console.error("Failed to warm up highlighter", error);
+			logger.error("Failed to warm up highlighter", error);
 		});
 	});
 

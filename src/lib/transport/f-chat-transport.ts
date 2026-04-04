@@ -110,7 +110,9 @@ export class FChatTransport<UI_MESSAGE extends ChatMessage> implements ChatTrans
 		const finalBody = preparedRequest?.body ?? mergedBody;
 
 		const resolvedHandler =
-			typeof this.handler === "function" ? (this.handler as () => HF)() : (this.handler as HF);
+			typeof this.handler === "function"
+				? (this.handler as () => HF)()
+				: (this.handler as HF);
 
 		return await resolvedHandler({
 			chatId: options.chatId,

@@ -56,7 +56,9 @@
 					sideOffset={10}
 				>
 					<p>{warningTooltip}</p>
-					<span class="pointer-events-none absolute top-full left-1/2 block -translate-x-1/2">
+					<span
+						class="pointer-events-none absolute top-full left-1/2 block -translate-x-1/2"
+					>
 						<span
 							class="absolute left-1/2 top-0 block h-0 w-0 -translate-x-1/2 border-x-[6px] border-t-[7px] border-x-transparent"
 							style="border-top-color: var(--border);"

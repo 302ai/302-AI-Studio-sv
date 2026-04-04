@@ -19,6 +19,7 @@ import {
 	dataService,
 	devLauncherService,
 	externalLinkService,
+	loggerService,
 	mcpService,
 	notificationService,
 	openClawService,
@@ -76,7 +77,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("storageService:removeMeta", (event, key) =>
 		storageService.removeMeta(event, key),
 	);
-	ipcMain.handle("storageService:getItems", (event, keys) => storageService.getItems(event, keys));
+	ipcMain.handle("storageService:getItems", (event, keys) =>
+		storageService.getItems(event, keys),
+	);
 	ipcMain.handle("storageService:setItems", (event, items) =>
 		storageService.setItems(event, items),
 	);
@@ -211,7 +214,9 @@ export function registerIpcHandlers() {
 		localVibeService.startPodmanHealthCheck(event),
 	);
 	ipcMain.handle("localVibeService:installWSL", (event) => localVibeService.installWSL(event));
-	ipcMain.handle("localVibeService:installScoop", (event) => localVibeService.installScoop(event));
+	ipcMain.handle("localVibeService:installScoop", (event) =>
+		localVibeService.installScoop(event),
+	);
 	ipcMain.handle("localVibeService:installHomebrew", (event) =>
 		localVibeService.installHomebrew(event),
 	);
@@ -263,12 +268,21 @@ export function registerIpcHandlers() {
 	ipcMain.handle(
 		"codeAgentService:updateClaudeCodeSandboxThinkingBudget",
 		(event, sandbox_id, maxThinkingToken) =>
-			codeAgentService.updateClaudeCodeSandboxThinkingBudget(event, sandbox_id, maxThinkingToken),
+			codeAgentService.updateClaudeCodeSandboxThinkingBudget(
+				event,
+				sandbox_id,
+				maxThinkingToken,
+			),
 	);
 	ipcMain.handle(
 		"codeAgentService:createClaudeCodeSandboxByIpc",
 		(event, threadId, sandboxName, maxThinkingToken) =>
-			codeAgentService.createClaudeCodeSandboxByIpc(event, threadId, sandboxName, maxThinkingToken),
+			codeAgentService.createClaudeCodeSandboxByIpc(
+				event,
+				threadId,
+				sandboxName,
+				maxThinkingToken,
+			),
 	);
 	ipcMain.handle("codeAgentService:deleteClaudeCodeSandboxByIpc", (event, sandbox_id) =>
 		codeAgentService.deleteClaudeCodeSandboxByIpc(event, sandbox_id),
@@ -284,7 +298,16 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle(
 		"codeAgentService:createThreadForSession",
-		(event, threadId, sandboxId, sessionId, sandboxRemark, llmModel, sessionNote, workspacePath) =>
+		(
+			event,
+			threadId,
+			sandboxId,
+			sessionId,
+			sandboxRemark,
+			llmModel,
+			sessionNote,
+			workspacePath,
+		) =>
 			codeAgentService.createThreadForSession(
 				event,
 				threadId,
@@ -330,7 +353,12 @@ export function registerIpcHandlers() {
 	ipcMain.handle(
 		"windowService:handleMoveTabIntoExistingWindow",
 		(event, triggerTabId, windowId, insertIndex) =>
-			windowService.handleMoveTabIntoExistingWindow(event, triggerTabId, windowId, insertIndex),
+			windowService.handleMoveTabIntoExistingWindow(
+				event,
+				triggerTabId,
+				windowId,
+				insertIndex,
+			),
 	);
 	ipcMain.handle("windowService:navigateToThread", (event, threadId, sourceWindowId) =>
 		windowService.navigateToThread(event, threadId, sourceWindowId),
@@ -353,6 +381,9 @@ export function registerIpcHandlers() {
 	);
 
 	// tabService service registration
+	ipcMain.handle("tabService:handleUpdateTabType", (event, tabId, type) =>
+		tabService.handleUpdateTabType(event, tabId, type),
+	);
 	ipcMain.handle(
 		"tabService:handleNewTabWithThread",
 		(event, threadId, title, type, active, initialSearchQuery, initialSearchResultIds) =>
@@ -438,7 +469,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("appService:scanDirectory", (event, dirPath) =>
 		appService.scanDirectory(event, dirPath),
 	);
-	ipcMain.handle("appService:readFile", (event, filePath) => appService.readFile(event, filePath));
+	ipcMain.handle("appService:readFile", (event, filePath) =>
+		appService.readFile(event, filePath),
+	);
 	ipcMain.handle("appService:readFileAsBuffer", (event, filePath) =>
 		appService.readFileAsBuffer(event, filePath),
 	);
@@ -509,6 +542,14 @@ export function registerIpcHandlers() {
 		externalLinkService.openExternalLink(event, url),
 	);
 
+	// loggerService service registration
+	ipcMain.handle("loggerService:log", (event, level, category, processType, message, args) =>
+		loggerService.log(event, level, category, processType, message, args),
+	);
+	ipcMain.handle("loggerService:exportLogs", (event, startDate, startHour, endDate, endHour) =>
+		loggerService.exportLogs(event, startDate, startHour, endDate, endHour),
+	);
+
 	// mcpService service registration
 	ipcMain.handle("mcpService:getToolsFromServer", (event, server) =>
 		mcpService.getToolsFromServer(event, server),
@@ -541,9 +582,15 @@ export function registerIpcHandlers() {
 	ipcMain.handle("openClawService:wechatInsalled", (event) =>
 		openClawService.wechatInsalled(event),
 	);
-	ipcMain.handle("openClawService:connectWechat", (event) => openClawService.connectWechat(event));
-	ipcMain.handle("openClawService:installWechat", (event) => openClawService.installWechat(event));
-	ipcMain.handle("openClawService:disposeWechat", (event) => openClawService.disposeWechat(event));
+	ipcMain.handle("openClawService:connectWechat", (event) =>
+		openClawService.connectWechat(event),
+	);
+	ipcMain.handle("openClawService:installWechat", (event) =>
+		openClawService.installWechat(event),
+	);
+	ipcMain.handle("openClawService:disposeWechat", (event) =>
+		openClawService.disposeWechat(event),
+	);
 
 	// providerService service registration
 	ipcMain.handle("providerService:handle302AIProviderChange", (event, apiKey) =>
@@ -584,7 +631,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("updaterService:checkForUpdatesManually", (event) =>
 		updaterService.checkForUpdatesManually(event),
 	);
-	ipcMain.handle("updaterService:quitAndInstall", (event) => updaterService.quitAndInstall(event));
+	ipcMain.handle("updaterService:quitAndInstall", (event) =>
+		updaterService.quitAndInstall(event),
+	);
 	ipcMain.handle("updaterService:isUpdateDownloaded", (event) =>
 		updaterService.isUpdateDownloaded(event),
 	);
@@ -703,6 +752,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("threadStateService:updateBusyState");
 	ipcMain.removeHandler("threadStateService:getBusyThreads");
 	ipcMain.removeHandler("threadStateService:getBusyLocalAgentThreads");
+	ipcMain.removeHandler("tabService:handleUpdateTabType");
 	ipcMain.removeHandler("tabService:handleNewTabWithThread");
 	ipcMain.removeHandler("tabService:handleNewTab");
 	ipcMain.removeHandler("tabService:handleActivateTab");
@@ -752,6 +802,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("devLauncherService:launchDevSandbox");
 	ipcMain.removeHandler("devLauncherService:stopDevSandbox");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
+	ipcMain.removeHandler("loggerService:log");
+	ipcMain.removeHandler("loggerService:exportLogs");
 	ipcMain.removeHandler("mcpService:getToolsFromServer");
 	ipcMain.removeHandler("mcpService:closeServer");
 	ipcMain.removeHandler("notificationService:notifyTaskCompleted");

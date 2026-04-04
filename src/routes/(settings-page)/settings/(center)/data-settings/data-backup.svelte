@@ -8,6 +8,9 @@
 	import type { BackupInfo } from "@shared/types";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let backups = $state<BackupInfo[]>([]);
 	let isLoading = $state(false);
@@ -24,7 +27,7 @@
 			const data = await window.electronAPI.dataService.listBackups();
 			backups = data;
 		} catch (error) {
-			console.error("Failed to load backups:", error);
+			logger.error("Failed to load backups:", error);
 			toast.error(m.settings_backupLoadFailed(), {
 				description: error instanceof Error ? error.message : String(error),
 			});
@@ -37,7 +40,7 @@
 		try {
 			await window.electronAPI.dataService.openBackupDirectory();
 		} catch (error) {
-			console.error("Failed to open backup directory:", error);
+			logger.error("Failed to open backup directory:", error);
 			toast.error(m.settings_backupOpenFailed(), {
 				description: error instanceof Error ? error.message : String(error),
 			});
@@ -56,7 +59,9 @@
 			restoreDialogOpen = false;
 			toast.info(m.settings_backupRestoring());
 
-			const result = await window.electronAPI.dataService.restoreFromBackup(selectedBackup.path);
+			const result = await window.electronAPI.dataService.restoreFromBackup(
+				selectedBackup.path,
+			);
 
 			if (result.success) {
 				toast.success(result.message, {
@@ -76,7 +81,7 @@
 				toast.error(result.message);
 			}
 		} catch (error) {
-			console.error("Failed to restore backup:", error);
+			logger.error("Failed to restore backup:", error);
 			toast.error(m.settings_backupRestoreFailed(), {
 				description: error instanceof Error ? error.message : String(error),
 			});
@@ -94,7 +99,7 @@
 				toast.error(m.settings_backupDeleteFailed());
 			}
 		} catch (error) {
-			console.error("Failed to delete backup:", error);
+			logger.error("Failed to delete backup:", error);
 			toast.error(m.settings_backupDeleteFailed(), {
 				description: error instanceof Error ? error.message : String(error),
 			});
@@ -184,7 +189,9 @@
 			{#if selectedBackup}
 				<div class="bg-muted rounded-md p-3">
 					<div class="text-sm font-medium">{formatDate(selectedBackup.timestamp)}</div>
-					<div class="text-muted-foreground text-xs">{formatBytes(selectedBackup.size)}</div>
+					<div class="text-muted-foreground text-xs">
+						{formatBytes(selectedBackup.size)}
+					</div>
 				</div>
 			{/if}
 

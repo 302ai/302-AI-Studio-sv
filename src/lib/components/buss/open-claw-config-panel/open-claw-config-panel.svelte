@@ -5,7 +5,11 @@
 </script>
 
 <script lang="ts">
-	import { AccordionContent, AccordionItem, AccordionTrigger } from "$lib/components/ui/accordion";
+	import {
+		AccordionContent,
+		AccordionItem,
+		AccordionTrigger,
+	} from "$lib/components/ui/accordion";
 	import Accordion from "$lib/components/ui/accordion/accordion.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/field";
@@ -43,6 +47,9 @@
 	let localTelegram = $state({
 		botToken: codeAgentGlobalConfigsState.telegram.accounts.default.botToken,
 	});
+	let localDiscord = $state({
+		botToken: codeAgentGlobalConfigsState.discord.token,
+	});
 
 	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
 		prepareAction: async () => {
@@ -57,6 +64,7 @@
 						default: { botToken: localTelegram.botToken },
 					},
 				})
+				.update("discord", { token: localDiscord.botToken })
 				.apply();
 			await window.electronAPI.openClawService.applyOpenClawChannelConfig();
 		},
@@ -80,7 +88,9 @@
 {#snippet feishu()}
 	<AccordionItem id="feishu" value="feishu" class="border-b-0 my-1">
 		<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-			<Label class=" font-normal no-underline cursor-pointer">{m.open_claw_channel_feishu()}</Label>
+			<Label class=" font-normal no-underline cursor-pointer"
+				>{m.open_claw_channel_feishu()}</Label
+			>
 		</AccordionTrigger>
 		<AccordionContent class="pb-0 pt-2 space-y-2">
 			<div class="rounded-lg border p-4 space-y-4">
@@ -104,7 +114,10 @@
 				/>
 				<div class="flex items-center justify-between">
 					<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-						<a href="https://open.feishu.cn/app?lang=zh-CN" class="text-primary hover:underline">
+						<a
+							href="https://open.feishu.cn/app?lang=zh-CN"
+							class="text-primary hover:underline"
+						>
 							{m.open_claw_feishu_get_id_and_secret()}</a
 						>
 						<div class="text-muted-foreground/50">|</div>
@@ -145,7 +158,9 @@
 				/>
 				<div class="flex items-center justify-between">
 					<div class=" text-muted-foreground flex items-center gap-2 text-xs">
-						<a href="https://open-dev.dingtalk.com/" class="text-primary hover:underline"
+						<a
+							href="https://open-dev.dingtalk.com/"
+							class="text-primary hover:underline"
 							>{m.open_claw_feishu_get_id_and_secret()}</a
 						>
 						<div class="text-muted-foreground/50">|</div>
@@ -164,7 +179,9 @@
 {#snippet qqbot()}
 	<AccordionItem id="qqbot" value="qqbot" class="border-b-0 my-1">
 		<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-			<Label class=" font-normal no-underline cursor-pointer">{m.open_claw_channel_qqbot()}</Label>
+			<Label class=" font-normal no-underline cursor-pointer"
+				>{m.open_claw_channel_qqbot()}</Label
+			>
 		</AccordionTrigger>
 		<AccordionContent class="pb-0 pt-2 space-y-2">
 			<div class="rounded-lg border p-4 space-y-4">
@@ -203,7 +220,9 @@
 {#snippet wecom()}
 	<AccordionItem id="wecom" value="wecom" class="border-b-0 my-1">
 		<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-			<Label class=" font-normal no-underline cursor-pointer">{m.open_claw_channel_wecom()}</Label>
+			<Label class=" font-normal no-underline cursor-pointer"
+				>{m.open_claw_channel_wecom()}</Label
+			>
 		</AccordionTrigger>
 		<AccordionContent class="pb-0 pt-2 space-y-2">
 			<div class="rounded-lg border p-4 space-y-4">
@@ -240,7 +259,7 @@
 {/snippet}
 
 {#snippet telegram()}
-	<AccordionItem id="telegram" value="telegram" class="border-b-0">
+	<AccordionItem id="telegram" value="telegram" class="border-b-0 my-1">
 		<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
 			<Label class=" font-normal no-underline cursor-pointer"
 				>{m.open_claw_channel_telegram()}</Label
@@ -272,10 +291,42 @@
 	</AccordionItem>
 {/snippet}
 
+{#snippet discord()}
+	<AccordionItem id="discord" value="discord" class="border-b-0 my-1">
+		<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
+			<Label class=" font-normal no-underline cursor-pointer">Discord</Label>
+		</AccordionTrigger>
+		<AccordionContent class="pb-0 pt-2 space-y-2">
+			<div class="rounded-lg border p-4 space-y-4">
+				<SettingInputField
+					label="Bot Token"
+					placeholder="请输入 Bot Token"
+					bind:value={localDiscord.botToken}
+					class="[&>label]:text-label-fg"
+				/>
+				<div class="flex items-center justify-between">
+					<div class=" text-muted-foreground flex items-center gap-2 text-xs">
+						<a href="https://t.me/BotFather" class="text-primary hover:underline"
+							>{m.open_claw_telegram_get_bot_token()}</a
+						>
+						<div class="text-muted-foreground/50">|</div>
+						<a
+							href="https://studio.302.ai/zh/docs/advanced/open-claw/telegram"
+							class="text-primary hover:underline"
+							>{m.open_claw_feishu_view_deployment_tutorial()}</a
+						>
+					</div>
+				</div>
+			</div>
+		</AccordionContent>
+	</AccordionItem>
+{/snippet}
+
 <Accordion type="single" value="channel-settings" class="w-full m-0 {className}">
 	<AccordionItem value="channel-settings" class="border-b-0">
 		<AccordionTrigger class="py-2 hover:no-underline">
-			<Label class="text-label-fg cursor-pointer">{m.agent_framework_open_claw_set_channel()}</Label
+			<Label class="text-label-fg cursor-pointer"
+				>{m.agent_framework_open_claw_set_channel()}</Label
 			>
 		</AccordionTrigger>
 		<AccordionContent class="pb-1 pt-0 space-y-2 relative">
@@ -286,6 +337,7 @@
 				{@render wecom()}
 				<Wechat />
 				{@render telegram()}
+				{@render discord()}
 			</Accordion>
 			<div class="flex flex-col items-end">
 				<Button class="w-fit" onclick={handleApplyBtn}>

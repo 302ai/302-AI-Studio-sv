@@ -33,6 +33,9 @@
 	import ChatInputBoxHeader from "./chat-input-box-header.svelte";
 	import SendMessageButton from "./code-agent/send-message-button.svelte";
 	import StreamingIndicator from "./streaming-indicator.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	// Get skills that have forceUse=true
 	const forcedSkills = $derived(codeAgentState.skills.filter((s) => s.forceUse));
@@ -220,7 +223,8 @@
 			await codeAgentSendMessageButtonState.handleCodeAgentFlow(fn);
 		} else if (codeAgentState.enabled && codeAgentState.type === "local") {
 			// For local mode in non-fresh tabs, only ensure sandbox is running
-			const localSandboxResult = await codeAgentSendMessageButtonState.ensureLocalSandboxReady();
+			const localSandboxResult =
+				await codeAgentSendMessageButtonState.ensureLocalSandboxReady();
 			if (!localSandboxResult.isOk) {
 				toast.error(localSandboxResult.error ?? m.code_agent_local_sandbox_start_failed());
 				return;
@@ -295,7 +299,9 @@
 
 			const processFile = async () => {
 				const isAbsolutePath =
-					filePath.includes("/") || filePath.includes("\\") || /^[a-zA-Z]:/.test(filePath);
+					filePath.includes("/") ||
+					filePath.includes("\\") ||
+					/^[a-zA-Z]:/.test(filePath);
 
 				if (!isAbsolutePath) {
 					// 如果没有绝对路径，强制读取文件完整内容作为 preview
@@ -304,7 +310,7 @@
 						const content = await fileToBase64(file);
 						chatState.updateAttachment(attachmentId, { preview: content });
 					} catch (e) {
-						console.error("Failed to read file content:", e);
+						logger.error("Failed to read file content:", e);
 					}
 				} else {
 					// 正常的预览生成逻辑
@@ -369,9 +375,6 @@
 
 	// Handle input to detect slash command trigger
 	function handleInput(e: Event) {
-		// Only trigger quick prompt in chat mode, not in vibe mode
-		if (codeAgentState.enabled) return;
-
 		const target = e.target as HTMLTextAreaElement;
 		const value = target.value;
 		const cursorPos = target.selectionStart ?? 0;
@@ -495,7 +498,8 @@
 			<!-- Forced Skills Display -->
 			{#if forcedSkills.length > 0}
 				<div class="flex items-start gap-1.5 border-t border-border/50 py-1.5">
-					<span class="mt-1 text-xs text-muted-foreground shrink-0">{m.skills_active_label()}:</span
+					<span class="mt-1 text-xs text-muted-foreground shrink-0"
+						>{m.skills_active_label()}:</span
 					>
 					<div class="max-h-14 flex-1 overflow-y-auto">
 						<div class="flex flex-wrap items-center gap-1.5">
@@ -507,7 +511,11 @@
 									<button
 										type="button"
 										class="ml-0.5 rounded hover:bg-primary/20 p-0.5"
-										onclick={() => codeAgentState.handleSkillForceUseToggle(skill.name, false)}
+										onclick={() =>
+											codeAgentState.handleSkillForceUseToggle(
+												skill.name,
+												false,
+											)}
 									>
 										<X class="h-3 w-3" />
 									</button>
@@ -572,7 +580,8 @@
 										<LdrsLoader type="line-spinner" size={16} />
 									{:else}
 										<p class="truncate">
-											{chatState.selectedModel?.name ?? m.text_button_select_model()}
+											{chatState.selectedModel?.name ??
+												m.text_button_select_model()}
 										</p>
 									{/if}
 								</Button>

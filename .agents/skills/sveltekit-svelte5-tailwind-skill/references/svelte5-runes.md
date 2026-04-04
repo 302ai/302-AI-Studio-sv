@@ -4,7 +4,7 @@ version_anchors: ["Svelte@5.x", "SvelteKit@2.x"]
 authored: true
 origin: self
 adapted_from:
-  - "sveltejs/svelte repository (Svelte 5 runes documentation)"
+    - "sveltejs/svelte repository (Svelte 5 runes documentation)"
 last_reviewed: 2025-10-28
 summary: "Master Svelte 5 runes ($state, $derived, $effect, $props) in SvelteKit with server-side rendering constraints, migration patterns, and common mistakes."
 ---
@@ -236,7 +236,8 @@ Use `$derived()` for computed values that automatically update when dependencies
 	let filtered = $derived.by(() => {
 		const term = searchTerm.toLowerCase();
 		return users.filter(
-			(user) => user.name.toLowerCase().includes(term) || user.email.toLowerCase().includes(term),
+			(user) =>
+				user.name.toLowerCase().includes(term) || user.email.toLowerCase().includes(term),
 		);
 	});
 </script>

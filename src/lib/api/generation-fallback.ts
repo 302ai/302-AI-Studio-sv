@@ -1,5 +1,8 @@
 import type { ModelProvider } from "@shared/storage/provider";
 import type { Model } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
 
 export interface FallbackModelConfig {
 	model: Model;
@@ -30,9 +33,9 @@ export async function withGenerationFallback<T>(args: {
 	} catch (error) {
 		// Aborts should never trigger fallback.
 		if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-		console.error(`${operation} failed with configured model:`, error);
+		logger.error(`${operation} failed with configured model:`, error);
 
-		console.log(`Retrying ${operation} after ${DEFAULT_FALLBACK_RETRY_DELAY_MS}ms...`);
+		logger.debug(`Retrying ${operation} after ${DEFAULT_FALLBACK_RETRY_DELAY_MS}ms...`);
 		await sleep(DEFAULT_FALLBACK_RETRY_DELAY_MS);
 		if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
 
@@ -44,24 +47,24 @@ export async function withGenerationFallback<T>(args: {
 			// Use provided fallback config (typically current chat model)
 			fallbackModelId = fallbackConfig.model.id;
 			fallbackProvider = fallbackConfig.provider;
-			console.log(`Using chat model as fallback: ${fallbackModelId}`);
+			logger.debug(`Using chat model as fallback: ${fallbackModelId}`);
 		} else {
 			// Use hardcoded default fallback model
 			fallbackModelId = DEFAULT_FALLBACK_MODEL_ID;
 			fallbackProvider = provider;
-			console.log(`Using default fallback model: ${fallbackModelId}`);
+			logger.debug(`Using default fallback model: ${fallbackModelId}`);
 		}
 
 		// If fallback is identical to the original, give up.
 		if (fallbackModelId === model.id && fallbackProvider?.id === provider?.id) {
-			console.error("Fallback model is same as original, giving up");
+			logger.error("Fallback model is same as original, giving up");
 			return null;
 		}
 
 		try {
 			return await request(fallbackModelId, fallbackProvider);
 		} catch (fallbackError) {
-			console.error(`${operation} failed with fallback model:`, fallbackError);
+			logger.error(`${operation} failed with fallback model:`, fallbackError);
 			return null;
 		}
 	}

@@ -4,7 +4,7 @@ version_anchors: ["Tailwind@4.x"]
 authored: true
 origin: self
 adapted_from:
-  - "tailwindlabs/tailwindcss#91694fb (Tailwind CSS v4 documentation and configuration)"
+    - "tailwindlabs/tailwindcss#91694fb (Tailwind CSS v4 documentation and configuration)"
 last_reviewed: 2025-10-28
 summary: "Complete configuration reference for Tailwind CSS v4 including CSS-first configuration, Vite plugin setup, content paths, theme customization, dark mode, and SvelteKit integration"
 ---
@@ -115,7 +115,11 @@ Specify where Tailwind should look for class names.
 ```js
 // tailwind.config.js
 export default {
-	content: ["./src/**/*.{html,js,svelte,ts}", "./src/**/*.svelte", "../shared-ui/src/**/*.svelte"],
+	content: [
+		"./src/**/*.{html,js,svelte,ts}",
+		"./src/**/*.svelte",
+		"../shared-ui/src/**/*.svelte",
+	],
 };
 ```
 
@@ -572,7 +576,11 @@ import autoprefixer from "autoprefixer";
 import cssnano from "cssnano";
 
 export default {
-	plugins: [tailwindcss, autoprefixer, ...(process.env.NODE_ENV === "production" ? [cssnano] : [])],
+	plugins: [
+		tailwindcss,
+		autoprefixer,
+		...(process.env.NODE_ENV === "production" ? [cssnano] : []),
+	],
 };
 ```
 

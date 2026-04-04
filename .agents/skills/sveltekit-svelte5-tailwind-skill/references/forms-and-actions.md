@@ -4,7 +4,7 @@ version_anchors: ["SvelteKit@2.x", "Svelte@5.x"]
 authored: true
 origin: self
 adapted_from:
-  - "sveltejs/kit repository (form actions documentation)"
+    - "sveltejs/kit repository (form actions documentation)"
 last_reviewed: 2025-10-28
 summary: "Build progressively enhanced forms with SvelteKit actions and Svelte 5 runes, handling validation, optimistic UI, file uploads, and maintaining reactivity."
 ---

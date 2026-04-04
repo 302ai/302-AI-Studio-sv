@@ -6,6 +6,9 @@
 	import { mode } from "mode-watcher";
 	import { onDestroy } from "svelte";
 	import SkillFileTree from "./skill-file-tree.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		rootPath: string;
@@ -68,7 +71,7 @@
 			const blob = new Blob([buffer], { type: mimeType });
 			documentUrl = URL.createObjectURL(blob);
 		} catch (error) {
-			console.error("Failed to load document:", error);
+			logger.error("Failed to load document:", error);
 			documentUrl = null;
 		}
 	}
@@ -166,7 +169,9 @@
 						<!-- Office documents cannot be displayed directly, show download option -->
 						<div class="flex h-full flex-col items-center justify-center gap-4 p-8">
 							<div class="text-muted-foreground text-center">
-								<p class="mb-2 text-lg font-medium">{m.document_viewer_cannot_preview()}</p>
+								<p class="mb-2 text-lg font-medium">
+									{m.document_viewer_cannot_preview()}
+								</p>
 								<p class="text-sm">{m.document_viewer_download_instruction()}</p>
 							</div>
 							<button
@@ -177,7 +182,9 @@
 								<span>{m.document_viewer_download_button()}</span>
 							</button>
 							<div class="text-muted-foreground mt-4 text-xs">
-								<p>{m.document_viewer_filename()}: {filePath.split(/[/\\]/).pop()}</p>
+								<p>
+									{m.document_viewer_filename()}: {filePath.split(/[/\\]/).pop()}
+								</p>
 							</div>
 						</div>
 					{:else if isDocument}

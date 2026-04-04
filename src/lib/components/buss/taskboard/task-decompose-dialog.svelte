@@ -100,7 +100,9 @@
 					getProviderForModel(model.id),
 				);
 				if (tasks.length > 0) {
-					toast.success(m.taskboard_auto_decompose_success({ count: tasks.length.toString() }));
+					toast.success(
+						m.taskboard_auto_decompose_success({ count: tasks.length.toString() }),
+					);
 					onDecompose?.(tasks);
 					open = false;
 					isDecomposing = false;

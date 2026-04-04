@@ -4,8 +4,8 @@ version_anchors: ["SvelteKit@2.x", "Svelte@5.x", "Tailwind@4.x"]
 authored: true
 origin: self
 adapted_from:
-  - "Community best practices from SvelteKit production deployments"
-  - "Official Svelte and SvelteKit documentation patterns"
+    - "Community best practices from SvelteKit production deployments"
+    - "Official Svelte and SvelteKit documentation patterns"
 last_reviewed: 2025-10-28
 summary: "Build production-ready applications with proven patterns for project organization, component architecture, state management, styling, performance, security, and testing strategies."
 ---
@@ -905,7 +905,11 @@ Build inclusive applications:
 
 <ul role="listbox" onkeydown={handleKeydown} tabindex="0">
 	{#each items as item, i}
-		<li role="option" aria-selected={i === selectedIndex} class:bg-blue-100={i === selectedIndex}>
+		<li
+			role="option"
+			aria-selected={i === selectedIndex}
+			class:bg-blue-100={i === selectedIndex}
+		>
 			{item}
 		</li>
 	{/each}

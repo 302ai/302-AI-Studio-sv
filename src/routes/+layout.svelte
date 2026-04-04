@@ -1,4 +1,10 @@
 <script lang="ts">
+	import { initRendererLogger } from "@shared/logger";
+	import log from "electron-log/renderer";
+
+	// Wire up electron-log/renderer so createLogger() works in renderer process
+	initRendererLogger((category) => log.scope(category));
+
 	import favicon from "$lib/assets/favicon.svg";
 	import { FpsDisplay } from "$lib/components/ui/fps-display";
 	import { Toaster } from "$lib/components/ui/sonner";

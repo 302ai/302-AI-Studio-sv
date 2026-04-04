@@ -4,7 +4,7 @@ version_anchors: ["Tailwind@4.x", "SvelteKit@2.x", "Svelte@5.x"]
 authored: true
 origin: self
 adapted_from:
-  - "tailwindlabs/tailwindcss repository (v4 documentation)"
+    - "tailwindlabs/tailwindcss repository (v4 documentation)"
 last_reviewed: 2025-10-28
 summary: "Complete Tailwind v4 integration patterns including CSS import strategies, content detection, component styling, dark mode, custom utilities, and common issues."
 ---

@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
-	import { McpImportModal, type ImportData } from "$lib/components/buss/mcp-import-modal/index.js";
+	import {
+		McpImportModal,
+		type ImportData,
+	} from "$lib/components/buss/mcp-import-modal/index.js";
 	import SettingSearchInput from "$lib/components/buss/settings/setting-search-input.svelte";
 	import Button from "$lib/components/ui/button/button.svelte";
 	import * as m from "$lib/paraglide/messages.js";
@@ -86,7 +89,9 @@
 				>
 					<div class="flex w-full items-center justify-between gap-x-10">
 						<div class="flex min-w-0 items-center gap-3">
-							<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+							<div
+								class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted"
+							>
 								{#if server.icon}
 									<span class="text-xl">{server.icon}</span>
 								{:else}
@@ -98,7 +103,10 @@
 									{server.name || server.id}
 								</h3>
 								{#if server.description}
-									<p class="text-muted-fg truncate text-left text-xs" title={server.description}>
+									<p
+										class="text-muted-fg truncate text-left text-xs"
+										title={server.description}
+									>
 										{server.description}
 									</p>
 								{/if}

@@ -1,5 +1,8 @@
+import { createLogger } from "@shared/logger";
 import type { UIMessage } from "ai";
 import { batchUploadFile } from "../apis/code-agent";
+
+const logger = createLogger("server");
 
 /**
  * Send an error message through SSE stream and close the controller.
@@ -119,9 +122,13 @@ function coerceToDataUrl(raw: string, mediaType?: string): string {
 
 function describeNonImageFilePart(part: AiSdkIntermediateFilePart): string {
 	const name =
-		typeof part.filename === "string" && part.filename.trim() ? part.filename.trim() : "(unnamed)";
+		typeof part.filename === "string" && part.filename.trim()
+			? part.filename.trim()
+			: "(unnamed)";
 	const mediaType =
-		typeof part.mediaType === "string" && part.mediaType.trim() ? part.mediaType.trim() : "unknown";
+		typeof part.mediaType === "string" && part.mediaType.trim()
+			? part.mediaType.trim()
+			: "unknown";
 	return `[File: ${name}, mediaType: ${mediaType}] (content omitted)`;
 }
 
@@ -184,7 +191,7 @@ export function createUIMessageStreamFromGenerator(
 					})}\n\n`,
 				),
 			);
-			console.log(
+			logger.info(
 				`[createUIMessageStreamFromGenerator] Sent immediate start event for model ${model}`,
 			);
 
@@ -270,15 +277,22 @@ export function createUIMessageStreamFromGenerator(
 
 				controller.close();
 			} catch (error) {
-				console.error(`[createUIMessageStreamFromGenerator] Error for model ${model}:`, error);
+				logger.error(
+					`[createUIMessageStreamFromGenerator] Error for model ${model}:`,
+					error,
+				);
 
 				// Send error as text-delta so user sees it
 				const errorId = `error-${Date.now()}`;
 				const errorMessage = error instanceof Error ? error.message : "Unknown error";
 
-				controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "start-step" })}\n\n`));
 				controller.enqueue(
-					encoder.encode(`data: ${JSON.stringify({ type: "text-start", id: errorId })}\n\n`),
+					encoder.encode(`data: ${JSON.stringify({ type: "start-step" })}\n\n`),
+				);
+				controller.enqueue(
+					encoder.encode(
+						`data: ${JSON.stringify({ type: "text-start", id: errorId })}\n\n`,
+					),
 				);
 				controller.enqueue(
 					encoder.encode(
@@ -286,9 +300,13 @@ export function createUIMessageStreamFromGenerator(
 					),
 				);
 				controller.enqueue(
-					encoder.encode(`data: ${JSON.stringify({ type: "text-end", id: errorId })}\n\n`),
+					encoder.encode(
+						`data: ${JSON.stringify({ type: "text-end", id: errorId })}\n\n`,
+					),
 				);
-				controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "finish-step" })}\n\n`));
+				controller.enqueue(
+					encoder.encode(`data: ${JSON.stringify({ type: "finish-step" })}\n\n`),
+				);
 				controller.enqueue(
 					encoder.encode(
 						`data: ${JSON.stringify({ type: "finish", finishReason: "error", messageMetadata })}\n\n`,
@@ -370,7 +388,7 @@ export function convertAiSdkMessagesToOpenAiMessages(messages: unknown): OpenAIC
 		const content = (message as AiSdkIntermediateMessage).content;
 
 		// Debug: Log message structure
-		console.log("[convertAiSdkMessagesToOpenAiMessages] Processing message:", {
+		logger.debug("[convertAiSdkMessagesToOpenAiMessages] Processing message:", {
 			role,
 			contentType: typeof content,
 			isArray: Array.isArray(content),
@@ -401,7 +419,7 @@ export function convertAiSdkMessagesToOpenAiMessages(messages: unknown): OpenAIC
 
 		// Check for tool-call parts (assistant message with tool calls)
 		const toolCallParts = content.filter((p): p is AiSdkToolCallPart => isToolCallPart(p));
-		console.log(
+		logger.info(
 			"[convertAiSdkMessagesToOpenAiMessages] toolCallParts found:",
 			toolCallParts.length,
 			"for role:",
@@ -413,7 +431,8 @@ export function convertAiSdkMessagesToOpenAiMessages(messages: unknown): OpenAIC
 				type: "function" as const,
 				function: {
 					name: part.toolName,
-					arguments: typeof part.args === "string" ? part.args : JSON.stringify(part.args),
+					arguments:
+						typeof part.args === "string" ? part.args : JSON.stringify(part.args),
 				},
 			}));
 
@@ -427,8 +446,10 @@ export function convertAiSdkMessagesToOpenAiMessages(messages: unknown): OpenAIC
 		}
 
 		// Check for tool-result parts (tool message with results)
-		const toolResultParts = content.filter((p): p is AiSdkToolResultPart => isToolResultPart(p));
-		console.log(
+		const toolResultParts = content.filter((p): p is AiSdkToolResultPart =>
+			isToolResultPart(p),
+		);
+		logger.info(
 			"[convertAiSdkMessagesToOpenAiMessages] toolResultParts found:",
 			toolResultParts.length,
 			"for role:",
@@ -459,7 +480,8 @@ export function convertAiSdkMessagesToOpenAiMessages(messages: unknown): OpenAIC
 
 			if ((part as AiSdkIntermediateFilePart).type === "file") {
 				const filePart = part as AiSdkIntermediateFilePart;
-				const mediaType = typeof filePart.mediaType === "string" ? filePart.mediaType : undefined;
+				const mediaType =
+					typeof filePart.mediaType === "string" ? filePart.mediaType : undefined;
 				const raw =
 					typeof filePart.url === "string"
 						? filePart.url
@@ -788,7 +810,11 @@ export function appendPromptToLastUserMessage(messages: any[], prompt: string): 
 				msg.content[0].type === "text"
 			) {
 				firstText = msg.content[0].text;
-			} else if (Array.isArray(msg.parts) && msg.parts.length > 0 && msg.parts[0].type === "text") {
+			} else if (
+				Array.isArray(msg.parts) &&
+				msg.parts.length > 0 &&
+				msg.parts[0].type === "text"
+			) {
 				firstText = msg.parts[0].text;
 			}
 
@@ -968,7 +994,7 @@ export async function uploadAttachmentsFromMessages(
 		return;
 	}
 
-	console.log(`[uploadAttachmentsFromMessages] Uploading ${attachments.length} attachments`);
+	logger.debug(`[uploadAttachmentsFromMessages] Uploading ${attachments.length} attachments`);
 
 	try {
 		const fileList = await Promise.all(
@@ -981,7 +1007,7 @@ export async function uploadAttachmentsFromMessages(
 				}
 
 				if (!base64Content) {
-					console.warn(
+					logger.warn(
 						`[uploadAttachmentsFromMessages] Attachment ${att.name} has no preview or filePath`,
 					);
 					return null;
@@ -1011,19 +1037,19 @@ export async function uploadAttachmentsFromMessages(
 
 			const failedUploads = uploadResponse.result.filter((r) => !r.success);
 			if (!uploadResponse.success || failedUploads.length > 0) {
-				console.error(
+				logger.error(
 					"[uploadAttachmentsFromMessages] Some attachments failed to upload:",
 					failedUploads.map((r) => r.error).join(", "),
 				);
 				// Continue anyway - partial upload is better than blocking
 			} else {
-				console.log(
+				logger.info(
 					`[uploadAttachmentsFromMessages] Successfully uploaded ${validFiles.length} attachments`,
 				);
 			}
 		}
 	} catch (error) {
-		console.error("[uploadAttachmentsFromMessages] Failed to upload attachments:", error);
+		logger.error("[uploadAttachmentsFromMessages] Failed to upload attachments:", error);
 		// Continue anyway - don't block message sending
 	}
 }
@@ -1056,7 +1082,9 @@ export function applyContextCompression(
 			: messages;
 
 	const summaryBlock = `[Context from earlier conversation]\n${contextSummary}\n[End of earlier context]`;
-	const augmentedSystemPrompt = systemPrompt ? `${summaryBlock}\n\n${systemPrompt}` : summaryBlock;
+	const augmentedSystemPrompt = systemPrompt
+		? `${summaryBlock}\n\n${systemPrompt}`
+		: summaryBlock;
 
 	return { messages: recentMessages, systemPrompt: augmentedSystemPrompt };
 }

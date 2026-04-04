@@ -11,6 +11,7 @@ import {
 	addAttachmentReference,
 	removeAttachmentReference,
 } from "$lib/utils/attachment-text-utils";
+import { createLogger } from "@shared/logger";
 import type { AttachmentFile, Task } from "@shared/types";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
@@ -19,6 +20,8 @@ import { chat, chatState } from "../chat-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
 import { shouldPauseAfterTaskRestore } from "./taskboard-auto-execution-policy";
 import { withLoadingState } from "./utils";
+
+const logger = createLogger("state");
 
 export class CodeAgentTaskboardState {
 	#currentRetryCount = 0;
@@ -144,7 +147,10 @@ export class CodeAgentTaskboardState {
 					id: nanoid(),
 					content: this.inputValue.trim(),
 					status: "pending",
-					number: Math.min(99, Math.max(1, Number.parseInt(`${this.repeatCount}`, 10) || 1)),
+					number: Math.min(
+						99,
+						Math.max(1, Number.parseInt(`${this.repeatCount}`, 10) || 1),
+					),
 					executedCount: 0,
 				};
 				const updatedTasklist = [...this.tasklist, newTask];
@@ -171,7 +177,9 @@ export class CodeAgentTaskboardState {
 		const ATTACHMENTS_DIR_PATH = ".302ai/attachments";
 		const attachmentRefs =
 			attachments.length > 0
-				? attachments.map((att) => `[Attachment: ${ATTACHMENTS_DIR_PATH}/${att.name}]`).join("\n")
+				? attachments
+						.map((att) => `[Attachment: ${ATTACHMENTS_DIR_PATH}/${att.name}]`)
+						.join("\n")
 				: "";
 		const taskContent = attachmentRefs
 			? trimmedContent
@@ -287,7 +295,7 @@ export class CodeAgentTaskboardState {
 				toast.error(m.taskboard_error_attachment_upload_failed());
 			}
 		} catch (error) {
-			console.error("Failed to upload pending attachments:", error);
+			logger.error("Failed to upload pending attachments:", error);
 			toast.error(m.taskboard_error_attachment_upload_failed());
 		} finally {
 			this.clearPendingAttachments();
@@ -320,7 +328,7 @@ export class CodeAgentTaskboardState {
 								if (tasks.length === 0 && this.tasklist.length > 0) {
 									// Remote is empty, but we have local data.
 									// Assume remote might be corrupted/reset, so we repair it with local data.
-									console.warn(
+									logger.warn(
 										"Remote tasklist is empty but local has data. Repairing remote with local data.",
 									);
 									await this.updateTasklist(this.tasklist);
@@ -328,6 +336,7 @@ export class CodeAgentTaskboardState {
 									// Remote has data, or both are empty. Trust remote.
 									const sortedTasks = this.#sortTasks(tasks);
 									this.tasklist = sortedTasks;
+									this.#reconcileWaitingForChatStatus(sortedTasks);
 
 									if (
 										shouldPauseAfterTaskRestore({
@@ -343,7 +352,9 @@ export class CodeAgentTaskboardState {
 								// Get failed completely.
 								// If we have local data, try to push it to remote to fix the issue.
 								if (this.tasklist.length > 0) {
-									console.warn("Failed to get tasklist. Attempting to restore from local state.");
+									logger.warn(
+										"Failed to get tasklist. Attempting to restore from local state.",
+									);
 									await this.updateTasklist(this.tasklist);
 								}
 							}
@@ -364,16 +375,22 @@ export class CodeAgentTaskboardState {
 		match(codeAgentState.isPristineSession)
 			.with(true, () => {
 				this.tasklist = sortedTasklist;
+				this.#reconcileWaitingForChatStatus(sortedTasklist);
 			})
 			.otherwise(async () => {
 				this.tasklist = sortedTasklist;
-				const [sandboxId, path] = [codeAgentState.sandboxId, codeAgentState.currentWorkspacePath];
-				console.log("Updating tasklist", path);
+				this.#reconcileWaitingForChatStatus(sortedTasklist);
+				const [sandboxId, path] = [
+					codeAgentState.sandboxId,
+					codeAgentState.currentWorkspacePath,
+				];
+				logger.debug("Updating tasklist", path);
 
 				const result = await updateTasklist(sandboxId, path, sortedTasklist);
 				if (!result.isOk) {
 					const { isOk, tasks } = await _getTasklist(sandboxId, path);
 					this.tasklist = isOk ? this.#sortTasks(tasks) : [];
+					this.#reconcileWaitingForChatStatus(this.tasklist);
 
 					toast.error(m.taskboard_update_failed());
 				}
@@ -498,7 +515,9 @@ export class CodeAgentTaskboardState {
 		try {
 			while (this.#currentRetryCount < this.#MAX_RETRY_COUNT) {
 				const message =
-					this.#currentRetryCount === 0 ? task.content : `${m.text_continue()}: ${task.content}`;
+					this.#currentRetryCount === 0
+						? task.content
+						: `${m.text_continue()}: ${task.content}`;
 
 				const waitPromise = this.#waitForChatFinished();
 				const didSend = await fn(message);
@@ -515,7 +534,10 @@ export class CodeAgentTaskboardState {
 				const success = await waitPromise;
 
 				if (success) {
-					const [sandboxId, path] = [codeAgentState.sandboxId, codeAgentState.currentWorkspacePath];
+					const [sandboxId, path] = [
+						codeAgentState.sandboxId,
+						codeAgentState.currentWorkspacePath,
+					];
 
 					let currentTaskList = this.tasklist;
 					const { isOk, tasks } = await _getTasklist(sandboxId, path);
@@ -523,7 +545,7 @@ export class CodeAgentTaskboardState {
 						currentTaskList = this.#sortTasks(tasks);
 						this.tasklist = currentTaskList;
 
-						console.log("[TaskBoard] Tasklist updated", currentTaskList);
+						logger.info("Tasklist updated", currentTaskList);
 					}
 
 					const updatedTask = currentTaskList.find((t) => t.id === task.id);
@@ -542,9 +564,13 @@ export class CodeAgentTaskboardState {
 				}
 
 				this.#currentRetryCount++;
-				console.log(`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`);
+				logger.info(
+					`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`,
+				);
 			}
-			console.log(`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`);
+			logger.info(
+				`[TaskBoard] Task retry ${this.#currentRetryCount}/${this.#MAX_RETRY_COUNT}`,
+			);
 
 			if (this.#currentRetryCount >= this.#MAX_RETRY_COUNT) {
 				this.retryExhausted = true;
@@ -604,7 +630,7 @@ export class CodeAgentTaskboardState {
 	 * Handles the chat finished event.
 	 */
 	#handleChatFinished = ({ lastMessage }: { lastMessage: ChatMessage }) => {
-		console.log("[TaskBoard] CHAT_FINISHED event received", {
+		logger.info("CHAT_FINISHED event received", {
 			hasTaskResolve: !!this.#taskResolve,
 			taskboardStatus: this.taskboardStatus,
 		});
@@ -614,14 +640,14 @@ export class CodeAgentTaskboardState {
 		// 🔧 open-claw 模式下直接认为成功，claude-code 模式检查 metadata.result
 		let success: boolean;
 		if (codeAgentState.currentAgentId === "open-claw") {
-			console.log("[TaskBoard] Open-claw mode: treating chat completion as task success");
+			logger.info("Open-claw mode: treating chat completion as task success");
 			success = true;
 		} else {
 			const result = lastMessage.metadata?.result;
 			success = !!result && result.is_error === false;
 		}
 
-		console.log("[TaskBoard] Resolving task with success:", success);
+		logger.info("Resolving task with success:", success);
 		this.#taskResolve(success);
 	};
 
@@ -635,6 +661,20 @@ export class CodeAgentTaskboardState {
 			const orderB = statusOrder[b.status] ?? 1;
 			return orderA - orderB;
 		});
+	}
+
+	/**
+	 * 当等待聊天期间任务已被清空时，回收过期状态，避免状态栏卡在等待中。
+	 */
+	#reconcileWaitingForChatStatus(tasklist: Task[]): void {
+		if (this.taskboardStatus !== "waiting_for_chat") return;
+
+		const hasExecutableTasks = tasklist.some(
+			(task) => task.status === "pending" || task.status === "in_progress",
+		);
+		if (!hasExecutableTasks) {
+			this.taskboardStatus = "idle";
+		}
 	}
 
 	/**

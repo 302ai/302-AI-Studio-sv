@@ -33,6 +33,7 @@
 		Volume2,
 		VolumeX,
 	} from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { DynamicToolUIPart } from "ai";
 	import { onDestroy } from "svelte";
 	import { toast } from "svelte-sonner";
@@ -57,6 +58,8 @@
 	import MessageContextMenu from "./message-context-menu.svelte";
 	import ToolCallModal from "./tool-call-modal.svelte";
 	import { formatTimeAgo, getAssistantMessageContent } from "./utils";
+
+	const logger = createLogger("ui");
 
 	let { message }: Props = $props();
 
@@ -183,7 +186,7 @@
 				const voices = window.speechSynthesis.getVoices();
 				if (voices.length > 0) {
 					speechSynthesisAvailable = true;
-					console.log("[ReadAloud] Speech synthesis available with", voices.length, "voices");
+					logger.debug("Speech synthesis available with", voices.length, "voices");
 				}
 			};
 
@@ -238,7 +241,7 @@
 				toast.error(m.toast_unknown_error());
 			}
 		} catch (error) {
-			console.error("Failed to create branch:", error);
+			logger.error("Failed to create branch:", error);
 			toast.error(m.toast_unknown_error());
 		}
 	}
@@ -255,7 +258,7 @@
 			await downloadImage(src);
 			toast.success(m.toast_download_file_success({ fileName: "image" }));
 		} catch (error) {
-			console.error("Failed to download image:", error);
+			logger.error("Failed to download image:", error);
 			toast.error(m.toast_download_failed());
 		}
 	}
@@ -265,7 +268,7 @@
 			await copyImageToClipboard(src);
 			toast.success(m.toast_copied_success());
 		} catch (error) {
-			console.error("Failed to copy image:", error);
+			logger.error("Failed to copy image:", error);
 			toast.error(m.toast_copied_failed());
 		}
 	}
@@ -300,11 +303,11 @@
 
 			// Get available voices - wait for them to load if necessary
 			let voices = window.speechSynthesis.getVoices();
-			console.log("[ReadAloud] Initial voices:", voices.length);
+			logger.debug("Initial voices:", voices.length);
 
 			if (voices.length === 0) {
 				// Wait for voices to load
-				console.log("[ReadAloud] Waiting for voices to load...");
+				logger.debug("Waiting for voices to load...");
 				voices = await new Promise<SpeechSynthesisVoice[]>((resolve) => {
 					let timeout: NodeJS.Timeout;
 
@@ -312,7 +315,7 @@
 						const loadedVoices = window.speechSynthesis.getVoices();
 						if (loadedVoices.length > 0) {
 							clearTimeout(timeout);
-							console.log("[ReadAloud] Voices loaded:", loadedVoices.length, loadedVoices);
+							logger.debug("Voices loaded:", loadedVoices.length, loadedVoices);
 							resolve(loadedVoices);
 						}
 					};
@@ -324,7 +327,7 @@
 
 					// Timeout after 3 seconds
 					timeout = setTimeout(() => {
-						console.log("[ReadAloud] Timeout waiting for voices");
+						logger.debug("Timeout waiting for voices");
 						resolve([]);
 					}, 3000);
 				});
@@ -338,12 +341,14 @@
 			const utterance = new SpeechSynthesisUtterance(textContent);
 
 			// Find a voice for the target language
-			let selectedVoice = voices.find((voice) => voice.lang.startsWith(targetLang.split("-")[0]));
+			let selectedVoice = voices.find((voice) =>
+				voice.lang.startsWith(targetLang.split("-")[0]),
+			);
 
 			// Fallback to any available voice
 			if (!selectedVoice) {
 				selectedVoice = voices[0];
-				console.log("[ReadAloud] Using fallback voice:", selectedVoice.name, selectedVoice.lang);
+				logger.debug("Using fallback voice:", selectedVoice.name, selectedVoice.lang);
 			}
 
 			utterance.voice = selectedVoice;
@@ -354,17 +359,17 @@
 
 			utterance.onstart = () => {
 				isReading = true;
-				console.log("[ReadAloud] Started reading");
+				logger.debug("Started reading");
 			};
 
 			utterance.onend = () => {
 				isReading = false;
 				_currentUtterance = null;
-				console.log("[ReadAloud] Finished reading");
+				logger.debug("Finished reading");
 			};
 
 			utterance.onerror = (event) => {
-				console.error("[ReadAloud] Error:", event);
+				logger.error("Error:", event);
 				isReading = false;
 				_currentUtterance = null;
 				if (!_isUserCancelled) {
@@ -377,8 +382,8 @@
 
 			// Start speaking
 			window.speechSynthesis.speak(utterance);
-			console.log(
-				"[ReadAloud] Speech synthesis started with voice:",
+			logger.debug(
+				"Speech synthesis started with voice:",
 				utterance.voice.name,
 				utterance.voice.lang,
 			);
@@ -543,7 +548,9 @@
 						<div class="flex w-full items-center justify-between gap-x-4">
 							<!-- Left: Tool Icon and Name -->
 							<div class="flex items-center gap-3">
-								<div class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+								<div
+									class="flex h-10 w-10 items-center justify-center rounded-lg bg-muted"
+								>
 									{#if getServerIcon(part.toolName)}
 										<span class="text-xl">{getServerIcon(part.toolName)}</span>
 									{:else}
@@ -556,24 +563,38 @@
 									<h3 class="text-sm font-medium text-foreground">
 										{getDisplayToolName(part.toolName)}
 									</h3>
-									<p class="text-xs text-muted-foreground">{getServerName(part.toolName)}</p>
+									<p class="text-xs text-muted-foreground">
+										{getServerName(part.toolName)}
+									</p>
 								</div>
 							</div>
 
 							<!-- Right: Status -->
 							<div class="flex items-center gap-2">
 								{#if part.state === "input-streaming"}
-									<div class="h-2 w-2 animate-pulse rounded-full bg-[#0056FE]"></div>
-									<span class="text-sm text-[#0056FE]">{m.tool_call_status_preparing()}</span>
+									<div
+										class="h-2 w-2 animate-pulse rounded-full bg-[#0056FE]"
+									></div>
+									<span class="text-sm text-[#0056FE]"
+										>{m.tool_call_status_preparing()}</span
+									>
 								{:else if part.state === "input-available"}
-									<div class="h-2 w-2 animate-pulse rounded-full bg-[#0056FE]"></div>
-									<span class="text-sm text-[#0056FE]">{m.tool_call_status_executing()}</span>
+									<div
+										class="h-2 w-2 animate-pulse rounded-full bg-[#0056FE]"
+									></div>
+									<span class="text-sm text-[#0056FE]"
+										>{m.tool_call_status_executing()}</span
+									>
 								{:else if part.state === "output-available"}
 									<div class="h-2 w-2 rounded-full bg-[#38B865]"></div>
-									<span class="text-sm text-[#38B865]">{m.tool_call_status_success()}</span>
+									<span class="text-sm text-[#38B865]"
+										>{m.tool_call_status_success()}</span
+									>
 								{:else if part.state === "output-error"}
 									<div class="h-2 w-2 rounded-full bg-[#D82525]"></div>
-									<span class="text-sm text-[#D82525]">{m.tool_call_status_error()}</span>
+									<span class="text-sm text-[#D82525]"
+										>{m.tool_call_status_error()}</span
+									>
 								{/if}
 							</div>
 						</div>
@@ -590,7 +611,11 @@
 				{#if toolName === "TodoWrite"}
 					<TodoWriteCard part={toolPart} messageId={message.id} />
 				{:else if toolName === "Write" || toolName === "Edit"}
-					<WriteCard part={toolPart} messageId={message.id} messagePartIndex={partIndex} />
+					<WriteCard
+						part={toolPart}
+						messageId={message.id}
+						messagePartIndex={partIndex}
+					/>
 				{:else if toolName === "Skill"}
 					<SkillCard part={toolPart} messageId={message.id} />
 				{:else if toolName === "AskUserQuestion"}
@@ -619,7 +644,9 @@
 						type="dot-pulse"
 						size={24}
 						speed={1.2}
-						color={persistedThemeState.current.shouldUseDarkColors ? "#a1a1aa" : "#71717a"}
+						color={persistedThemeState.current.shouldUseDarkColors
+							? "#a1a1aa"
+							: "#71717a"}
 					/>
 				</div>
 				<span class="text-sm text-muted-foreground italic">

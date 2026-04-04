@@ -25,3 +25,4 @@ yarn.lock
 # program running create ai302 directory
 ai302/
 
+.agents/

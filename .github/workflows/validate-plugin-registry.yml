@@ -1,108 +1,108 @@
 name: Validate Plugin Registry
 
 on:
-  # Allow manual trigger from GitHub Actions UI
-  workflow_dispatch:
-  pull_request:
-    paths:
-      - "packages/plugin-registry/registry.json"
-      - "packages/plugin-registry/schema.json"
-      - "packages/plugin-registry/scripts/validate.js"
-  push:
-    branches:
-      - main
-    paths:
-      - "packages/plugin-registry/registry.json"
+    # Allow manual trigger from GitHub Actions UI
+    workflow_dispatch:
+    pull_request:
+        paths:
+            - "packages/plugin-registry/registry.json"
+            - "packages/plugin-registry/schema.json"
+            - "packages/plugin-registry/scripts/validate.js"
+    push:
+        branches:
+            - main
+        paths:
+            - "packages/plugin-registry/registry.json"
 
 jobs:
-  validate:
-    runs-on: ubuntu-latest
+    validate:
+        runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: "pnpm"
+            - name: Setup Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: "pnpm"
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile --ignore-scripts
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile --ignore-scripts
 
-      - name: Validate registry
-        working-directory: packages/plugin-registry
-        run: pnpm run validate
+            - name: Validate registry
+              working-directory: packages/plugin-registry
+              run: pnpm run validate
 
-      - name: Check download URLs
-        working-directory: packages/plugin-registry
-        run: |
-          echo "Checking download URLs..."
-          node -e "
-            const fs = require('fs');
-            const registry = JSON.parse(fs.readFileSync('registry.json', 'utf-8'));
+            - name: Check download URLs
+              working-directory: packages/plugin-registry
+              run: |
+                  echo "Checking download URLs..."
+                  node -e "
+                    const fs = require('fs');
+                    const registry = JSON.parse(fs.readFileSync('registry.json', 'utf-8'));
 
-            let failed = false;
+                    let failed = false;
 
-            for (const plugin of registry.plugins) {
-              console.log(\`Checking \${plugin.id}...\`);
+                    for (const plugin of registry.plugins) {
+                      console.log(\`Checking \${plugin.id}...\`);
 
-              // Note: We don't actually download to avoid rate limits
-              // Just verify URL format
-              if (!plugin.downloadUrl.startsWith('https://')) {
-                console.error(\`❌ Plugin \${plugin.id}: downloadUrl must use HTTPS\`);
-                failed = true;
-              }
+                      // Note: We don't actually download to avoid rate limits
+                      // Just verify URL format
+                      if (!plugin.downloadUrl.startsWith('https://')) {
+                        console.error(\`❌ Plugin \${plugin.id}: downloadUrl must use HTTPS\`);
+                        failed = true;
+                      }
 
-              if (!plugin.downloadUrl.endsWith('.zip')) {
-                console.warn(\`⚠️  Plugin \${plugin.id}: downloadUrl should point to a .zip file\`);
-              }
-            }
+                      if (!plugin.downloadUrl.endsWith('.zip')) {
+                        console.warn(\`⚠️  Plugin \${plugin.id}: downloadUrl should point to a .zip file\`);
+                      }
+                    }
 
-            if (failed) {
-              process.exit(1);
-            }
+                    if (failed) {
+                      process.exit(1);
+                    }
 
-            console.log('✅ All download URLs passed format check');
-          "
+                    console.log('✅ All download URLs passed format check');
+                  "
 
-      - name: Lint JSON
-        working-directory: packages/plugin-registry
-        run: |
-          echo "Checking JSON formatting..."
-          # Check if registry.json is properly formatted with tabs
-          if ! git diff --exit-code registry.json; then
-            echo "⚠️  registry.json has uncommitted formatting changes"
-          fi
+            - name: Lint JSON
+              working-directory: packages/plugin-registry
+              run: |
+                  echo "Checking JSON formatting..."
+                  # Check if registry.json is properly formatted with tabs
+                  if ! git diff --exit-code registry.json; then
+                    echo "⚠️  registry.json has uncommitted formatting changes"
+                  fi
 
-      - name: Comment on PR
-        if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const registry = JSON.parse(fs.readFileSync('packages/plugin-registry/registry.json', 'utf-8'));
+            - name: Comment on PR
+              if: github.event_name == 'pull_request'
+              uses: actions/github-script@v7
+              with:
+                  script: |
+                      const fs = require('fs');
+                      const registry = JSON.parse(fs.readFileSync('packages/plugin-registry/registry.json', 'utf-8'));
 
-            // Find newly added plugins (simplified - just count)
-            const pluginCount = registry.plugins.length;
+                      // Find newly added plugins (simplified - just count)
+                      const pluginCount = registry.plugins.length;
 
-            const comment = `## ✅ Registry Validation Passed
+                      const comment = `## ✅ Registry Validation Passed
 
-            **Registry Statistics:**
-            - Total Plugins: ${pluginCount}
-            - Last Updated: ${registry.lastUpdated}
+                      **Registry Statistics:**
+                      - Total Plugins: ${pluginCount}
+                      - Last Updated: ${registry.lastUpdated}
 
-            Your plugin submission has passed automated validation!
+                      Your plugin submission has passed automated validation!
 
-            A maintainer will review your submission soon. Thank you for contributing to the 302 AI Studio plugin ecosystem! 🎉`;
+                      A maintainer will review your submission soon. Thank you for contributing to the 302 AI Studio plugin ecosystem! 🎉`;
 
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
+                      github.rest.issues.createComment({
+                        issue_number: context.issue.number,
+                        owner: context.repo.owner,
+                        repo: context.repo.repo,
+                        body: comment
+                      });

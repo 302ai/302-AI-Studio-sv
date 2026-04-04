@@ -1,3 +1,7 @@
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
+
 /**
  * Derive a printable character from `KeyboardEvent.code`.
  * This is IME-independent — works even when a Chinese/Japanese input method is active,
@@ -39,7 +43,7 @@ export function createDevSequenceDetector(
 	let timer: ReturnType<typeof setTimeout> | null = null;
 
 	function handleKeydown(e: KeyboardEvent) {
-		console.log("[DevKonami] keydown →", {
+		logger.debug("[DevKonami] keydown →", {
 			key: e.key,
 			code: e.code,
 			ctrlKey: e.ctrlKey,
@@ -50,21 +54,21 @@ export function createDevSequenceDetector(
 
 		// Ignore keypresses with active modifiers (Ctrl+C, Cmd+V, etc.)
 		if (e.ctrlKey || e.metaKey || e.altKey) {
-			console.log("[DevKonami] skipped (modifier active)");
+			logger.debug("[DevKonami] skipped (modifier active)");
 			return;
 		}
 
 		// Derive character from physical key code (IME-safe)
 		const ch = charFromCode(e.code);
 		if (!ch) {
-			console.log("[DevKonami] skipped (non-printable code:", e.code, ")");
+			logger.debug("[DevKonami] skipped (non-printable code:", e.code, ")");
 			return;
 		}
 
 		// Reset timeout
 		if (timer) clearTimeout(timer);
 		timer = setTimeout(() => {
-			console.log("[DevKonami] buffer reset (timeout)");
+			logger.debug("[DevKonami] buffer reset (timeout)");
 			buffer = "";
 		}, timeout);
 
@@ -75,7 +79,7 @@ export function createDevSequenceDetector(
 			buffer = buffer.slice(-sequence.length);
 		}
 
-		console.log(
+		logger.debug(
 			"[DevKonami] buffer:",
 			JSON.stringify(buffer),
 			"| target:",
@@ -88,7 +92,7 @@ export function createDevSequenceDetector(
 		if (buffer === sequence) {
 			buffer = "";
 			if (timer) clearTimeout(timer);
-			console.log("[DevKonami] ✅ MATCH! Triggering callback");
+			logger.debug("[DevKonami] ✅ MATCH! Triggering callback");
 			onMatch();
 		}
 	}

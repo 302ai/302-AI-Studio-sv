@@ -16,10 +16,14 @@ import {
 import { chatState } from "$lib/stores/chat-state.svelte";
 import { codeAgentState } from "$lib/stores/code-agent";
 import { persistedProviderState } from "$lib/stores/provider-state.svelte";
+import { getSandboxDownloadErrorMessage } from "$lib/utils/sandbox-download-error";
+import { createLogger } from "@shared/logger";
 import { toast } from "svelte-sonner";
 import { SvelteDate, SvelteMap, SvelteSet } from "svelte/reactivity";
 import { DEFAULT_WORKSPACE_PATH } from "./constants";
 import { handleError, validatePath, validateSandboxId } from "./utils";
+
+const logger = createLogger("ui");
 
 export interface TreeNode extends SandboxFileInfo {
 	children: TreeNode[];
@@ -180,7 +184,9 @@ export class FileTreeState {
 	 * Get 302.AI provider API key
 	 */
 	private get302ApiKey(): string {
-		const provider = persistedProviderState.current.find((p) => p.name === "302.AI" && p.enabled);
+		const provider = persistedProviderState.current.find(
+			(p) => p.name === "302.AI" && p.enabled,
+		);
 		const key = provider?.apiKey || "";
 		return key;
 	}
@@ -198,6 +204,88 @@ export class FileTreeState {
 			return m.toast_file_operation_network_error();
 		}
 		return error.message;
+	}
+
+	/**
+	 * Try to extract a more specific error message and HTTP status from ky HTTPError.
+	 * Some sandbox APIs return the real "path not found" reason in the response body
+	 * even when the thrown error message is only a generic 500/404 text.
+	 */
+	private async getErrorDetails(
+		error: unknown,
+	): Promise<{ message: string; status: number | null }> {
+		const fallbackMessage = this.getErrorMessage(error);
+
+		if (!error || typeof error !== "object" || !("response" in error)) {
+			return { message: fallbackMessage, status: null };
+		}
+
+		const response = (error as { response?: Response }).response;
+		const status = typeof response?.status === "number" ? response.status : null;
+
+		if (!response) {
+			return { message: fallbackMessage, status };
+		}
+
+		try {
+			const readableResponse =
+				typeof response.clone === "function" ? response.clone() : response;
+			const rawText = await readableResponse.text();
+			const parsedMessage = this.parseErrorResponseText(rawText);
+
+			if (parsedMessage) {
+				return { message: parsedMessage, status };
+			}
+		} catch {
+			// Ignore response parsing failures and fall back to the thrown error message.
+		}
+
+		return { message: fallbackMessage, status };
+	}
+
+	/**
+	 * Parse API error text and extract a user-facing message.
+	 */
+	private parseErrorResponseText(text: string): string | null {
+		const trimmedText = text.trim();
+		if (!trimmedText) {
+			return null;
+		}
+
+		try {
+			const parsed = JSON.parse(trimmedText) as {
+				error?: { message?: string };
+				message?: string;
+			};
+
+			if (parsed.error?.message) {
+				return parsed.error.message;
+			}
+
+			if (typeof parsed.message === "string" && parsed.message.trim()) {
+				return parsed.message;
+			}
+		} catch {
+			// Non-JSON response body, fall back to plain text below.
+		}
+
+		return trimmedText;
+	}
+
+	/**
+	 * Check whether the current load failure means the target directory no longer exists.
+	 */
+	private isDirectoryNotFoundError(errorMessage: string, status: number | null): boolean {
+		if (status === 404) {
+			return true;
+		}
+
+		return (
+			errorMessage.includes("path not found") ||
+			errorMessage.includes("no such file or directory") ||
+			errorMessage.includes("does not exist") ||
+			errorMessage.includes("Failed to list files")
+		);
 	}
 
 	/**
@@ -355,10 +443,10 @@ export class FileTreeState {
 				this.treeNodes = [];
 				this.loadedDirs = new SvelteSet();
 			} else {
-				console.log("[FileTree] No data in storage, keeping existing files");
+				logger.debug("No data in storage, keeping existing files");
 			}
 		} catch (e) {
-			console.error("[FileTree] Failed to load from storage:", e);
+			logger.error("Failed to load from storage:", e);
 			if (clearIfNotFound) {
 				this.files = [];
 				this.treeNodes = [];
@@ -378,7 +466,7 @@ export class FileTreeState {
 		merge: boolean = false,
 		force: boolean = false,
 	): Promise<void> {
-		console.log("[FileTree] loadFiles", { path, merge, force, isStreaming: this.isStreaming });
+		logger.debug("loadFiles", { path, merge, force, isStreaming: this.isStreaming });
 
 		if (!this.sandboxId) {
 			return;
@@ -396,7 +484,7 @@ export class FileTreeState {
 
 		// Do not load files while agent is streaming, unless forced (e.g. user initiated navigation)
 		if (this.isStreaming && !force) {
-			console.log("[FileTree] loadFiles skipped due to streaming");
+			logger.debug("loadFiles skipped due to streaming");
 			return;
 		}
 
@@ -426,7 +514,7 @@ export class FileTreeState {
 				return;
 			}
 
-			const response = await listSandboxFiles(this.sandboxId, path, 2);
+			const response = await listSandboxFiles(this.sandboxId, path, 1);
 
 			if (response.success && response.filelist) {
 				if (merge) {
@@ -467,7 +555,8 @@ export class FileTreeState {
 				}
 			}
 		} catch (e) {
-			this.error = this.getErrorMessage(e);
+			const { message, status } = await this.getErrorDetails(e);
+			this.error = message;
 			handleError(e, "Load sandbox files", false);
 			if (!merge) {
 				this.files = [];
@@ -478,16 +567,14 @@ export class FileTreeState {
 			// Recovery: if current directory was deleted, navigate to parent or root
 			// Detect directory deletion by checking error message patterns
 			const errorMsg = this.error || "";
-			const isDirectoryNotFound =
-				errorMsg.includes("path not found") ||
-				errorMsg.includes("no such file or directory") ||
-				errorMsg.includes("does not exist") ||
-				errorMsg.includes("Failed to list files");
+			const isDirectoryNotFound = this.isDirectoryNotFoundError(errorMsg, status);
 
 			if (isDirectoryNotFound && !isAtSystemRoot(this.currentDirectory)) {
 				// Try to navigate to parent directory
 				const parentPath = pathUtils.getParentDir(this.currentDirectory);
-				console.log(`[FileTree] Current directory deleted, navigating to parent: ${parentPath}`);
+				logger.debug(
+					`[FileTree] Current directory deleted, navigating to parent: ${parentPath}`,
+				);
 
 				// Update currentDirectory and try loading parent
 				this.currentDirectory = parentPath;
@@ -498,7 +585,9 @@ export class FileTreeState {
 				} catch (_retryError) {
 					// If parent also fails, fallback to workspace root
 					if (!isAtSystemRoot(parentPath)) {
-						console.log("[FileTree] Parent directory also invalid, falling back to workspace root");
+						logger.debug(
+							"Parent directory also invalid, falling back to workspace root",
+						);
 						this.currentDirectory = this.rootPath;
 						this.error = null;
 						await this.loadFiles(this.rootPath, false, true);
@@ -506,7 +595,7 @@ export class FileTreeState {
 				}
 			} else if (isDirectoryNotFound && isAtSystemRoot(this.currentDirectory)) {
 				// At system root and directory not found - reset to workspace path
-				console.log("[FileTree] At system root with error, resetting to workspace path");
+				logger.debug("At system root with error, resetting to workspace path");
 				this.currentDirectory = this.rootPath;
 				this.error = null;
 				await this.saveToStorage(); // Update storage with valid path
@@ -533,7 +622,7 @@ export class FileTreeState {
 	 * Sets currentDirectory to the target folder and loads its contents
 	 */
 	async navigateToFolder(folderPath: string): Promise<void> {
-		console.log("[FileTree] navigateToFolder", folderPath);
+		logger.debug("navigateToFolder", folderPath);
 		if (!folderPath) {
 			return;
 		}
@@ -547,7 +636,7 @@ export class FileTreeState {
 		try {
 			await this.loadFiles(folderPath, false, true);
 		} catch (error) {
-			console.error("[FileTree] Failed to load folder:", error);
+			logger.error("Failed to load folder:", error);
 			// If load fails, we might want to revert currentDirectory or handle error
 			// The loadFiles method already has recovery logic which updates currentDirectory if needed
 		}
@@ -566,7 +655,7 @@ export class FileTreeState {
 	 * Computes parent path and navigates to it, guarding against system root boundary
 	 */
 	async navigateToParent(): Promise<void> {
-		console.log("[FileTree] navigateToParent");
+		logger.debug("navigateToParent");
 		// Guard against navigating above system root
 		if (this.currentDirectory === "/" || this.currentDirectory === "") {
 			return;
@@ -712,7 +801,9 @@ export class FileTreeState {
 					stripWorkspace(newPath),
 				);
 				if (!result.success) {
-					toast.error(result.error || m.toast_file_rename_folder_failed(), { id: toastId });
+					toast.error(result.error || m.toast_file_rename_folder_failed(), {
+						id: toastId,
+					});
 					return false;
 				}
 			} else {
@@ -724,7 +815,9 @@ export class FileTreeState {
 				}
 				const response = await renameSandboxFile(this.sandboxId, oldPath, newPath);
 				if (!response.success) {
-					toast.error(response.error || m.toast_file_rename_folder_failed(), { id: toastId });
+					toast.error(response.error || m.toast_file_rename_folder_failed(), {
+						id: toastId,
+					});
 					return false;
 				}
 			}
@@ -822,11 +915,15 @@ export class FileTreeState {
 	 */
 	private generateUniqueName(targetDirPath: string, originalName: string): string {
 		// Normalize target directory path
-		const normalizedDir = targetDirPath.endsWith("/") ? targetDirPath.slice(0, -1) : targetDirPath;
+		const normalizedDir = targetDirPath.endsWith("/")
+			? targetDirPath.slice(0, -1)
+			: targetDirPath;
 
 		// Get all existing names in target directory
 		const existingNames = new SvelteSet(
-			this.files.filter((f) => pathUtils.getParentDir(f.path) === normalizedDir).map((f) => f.name),
+			this.files
+				.filter((f) => pathUtils.getParentDir(f.path) === normalizedDir)
+				.map((f) => f.name),
 		);
 
 		// If no conflict, return original name
@@ -1082,7 +1179,8 @@ export class FileTreeState {
 					return false;
 				}
 			} catch (e) {
-				const errorMsg = e instanceof Error ? e.message : m.toast_file_upload_folder_failed();
+				const errorMsg =
+					e instanceof Error ? e.message : m.toast_file_upload_folder_failed();
 				toast.error(errorMsg, { id: uploadToastId });
 				return false;
 			}
@@ -1254,7 +1352,7 @@ export class FileTreeState {
 				}
 			}
 		} catch (e) {
-			const errorMsg = e instanceof Error ? e.message : m.toast_download_failed();
+			const errorMsg = getSandboxDownloadErrorMessage(e);
 			toast.error(errorMsg, { id: downloadToastId });
 		} finally {
 			this.downloadingPaths = removeFromSet(this.downloadingPaths, file.path);
@@ -1301,7 +1399,7 @@ export class FileTreeState {
 					id: toastId,
 				});
 			} catch (e) {
-				console.error("[FileTree] Failed to download folder:", e);
+				logger.error("Failed to download folder:", e);
 				failCount++;
 
 				toast.loading(m.toast_downloading_folder(), {
@@ -1312,7 +1410,8 @@ export class FileTreeState {
 
 		// Show result
 		if (successCount > 0) {
-			const failedText = failCount > 0 ? m.toast_download_folder_success_failed({ failCount }) : "";
+			const failedText =
+				failCount > 0 ? m.toast_download_folder_success_failed({ failCount }) : "";
 			toast.success(
 				m.toast_download_folder_success({
 					count: successCount,
@@ -1379,7 +1478,9 @@ export class FileTreeState {
 				});
 				const fileResponse = await fetch(fileItem.upload_url);
 				if (!fileResponse.ok) {
-					throw new Error(m.toast_download_file_failed({ error: fileResponse.statusText }));
+					throw new Error(
+						m.toast_download_file_failed({ error: fileResponse.statusText }),
+					);
 				}
 				blob = await fileResponse.blob();
 			} else {
@@ -1396,7 +1497,7 @@ export class FileTreeState {
 				id: toastId,
 			});
 		} catch (e) {
-			const errorMsg = e instanceof Error ? e.message : m.toast_download_failed();
+			const errorMsg = getSandboxDownloadErrorMessage(e);
 			toast.error(errorMsg, { id: toastId });
 		}
 	}

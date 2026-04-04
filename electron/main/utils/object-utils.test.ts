@@ -157,7 +157,10 @@ describe("deepMergeWithOverride", () => {
 		};
 		const result = deepMergeWithOverride(target, source, ["gateway.auth"]);
 		// auth subtree should be overridden
-		expect(get(result, "gateway.auth")).toEqual({ mode: "template-mode", token: "template-token" });
+		expect(get(result, "gateway.auth")).toEqual({
+			mode: "template-mode",
+			token: "template-token",
+		});
 		// port should NOT be overridden (not in overridePaths)
 		expect(get(result, "gateway.port")).toBe(3000);
 	});

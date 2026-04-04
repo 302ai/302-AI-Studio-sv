@@ -1,4 +1,7 @@
 import type { FileNode, Theme } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import {
 	app,
 	BrowserWindow,
@@ -20,10 +23,10 @@ export class AppService {
 
 	async initFromStorage() {
 		const state = await themeStorage.getThemeState();
-		console.log(`state = ${JSON.stringify(state)}, ${typeof state}`);
+		logger.debug(`state = ${JSON.stringify(state)}, ${typeof state}`);
 
 		if (state === null) {
-			console.warn("Unable to load themeState from storage");
+			logger.warn("Unable to load themeState from storage");
 			return;
 		}
 
@@ -53,7 +56,7 @@ export class AppService {
 					);
 				} catch (_error) {
 					// Skip windows that don't have titleBarOverlay enabled (e.g., settings window)
-					console.debug(`Skipping titleBarOverlay for window "${window.getTitle()}"`);
+					logger.debug(`Skipping titleBarOverlay for window "${window.getTitle()}"`);
 				}
 			}
 
@@ -63,7 +66,9 @@ export class AppService {
 					const webContentsView = view as WebContentsView;
 					const url = webContentsView.webContents.getURL();
 					if (!url.includes("shell")) {
-						const backgroundColor = nativeTheme.shouldUseDarkColors ? "#121212" : "#F9F9F9";
+						const backgroundColor = nativeTheme.shouldUseDarkColors
+							? "#121212"
+							: "#F9F9F9";
 						webContentsView.setBackgroundColor(backgroundColor);
 					}
 					if (!webContentsView.webContents.isDestroyed()) {
@@ -104,7 +109,7 @@ export class AppService {
 		`;
 
 		webContents.insertCSS(themeCSS).catch((err) => {
-			console.warn("Failed to inject theme CSS:", err);
+			logger.warn("Failed to inject theme CSS:", err);
 		});
 
 		webContents
@@ -189,7 +194,7 @@ export class AppService {
 		`,
 			)
 			.catch((err) => {
-				console.warn("Failed to set color-scheme:", err);
+				logger.warn("Failed to set color-scheme:", err);
 			});
 	}
 
@@ -197,7 +202,7 @@ export class AppService {
 	 * Restart the entire Electron application
 	 */
 	async restartApp(_event: IpcMainInvokeEvent): Promise<void> {
-		console.log("Restarting application...");
+		logger.info("Restarting application...");
 		app.relaunch();
 		app.exit(0);
 	}
@@ -206,10 +211,10 @@ export class AppService {
 	 * Reset all application data and restart
 	 */
 	async resetAllData(_event: IpcMainInvokeEvent): Promise<void> {
-		console.log("Resetting all data...");
+		logger.info("Resetting all data...");
 		const { storageService } = await import("../storage-service");
 		await storageService.clear(_event);
-		console.log("All data cleared, restarting...");
+		logger.info("All data cleared, restarting...");
 		app.relaunch();
 		app.exit(0);
 	}
@@ -218,34 +223,34 @@ export class AppService {
 	 * Clear only chat history (threads and messages) but keep settings
 	 */
 	async clearChatHistory(_event: IpcMainInvokeEvent): Promise<void> {
-		console.log("Clearing chat history...");
+		logger.info("Clearing chat history...");
 		const { storageService } = await import("../storage-service");
 		const { tabStorage } = await import("../storage-service/tab-storage");
 
 		try {
 			// Get all storage keys
 			const allKeys = await storageService.getKeys(_event);
-			console.log("All storage keys:", allKeys);
+			logger.debug("All storage keys:", allKeys);
 
 			// Filter and delete chat messages and threads
 			const chatAndThreadKeys = allKeys.filter(
 				(key) => key.startsWith("app-chat-messages:") || key.startsWith("app-thread:"),
 			);
 
-			console.log("Deleting chat and thread keys:", chatAndThreadKeys);
+			logger.debug("Deleting chat and thread keys:", chatAndThreadKeys);
 			for (const key of chatAndThreadKeys) {
 				await storageService.removeItem(_event, key);
 			}
 
 			// Remove tab-bar-state file (will be recreated on restart with new initial tab)
-			console.log("Removing tab-bar-state...");
+			logger.debug("Removing tab-bar-state...");
 			await tabStorage.removeItem(_event, "tab-bar-state");
 
-			console.log("Chat history cleared, restarting...");
+			logger.info("Chat history cleared, restarting...");
 			app.relaunch();
 			app.exit(0);
 		} catch (error) {
-			console.error("Failed to clear chat history:", error);
+			logger.error("Failed to clear chat history:", error);
 			throw error;
 		}
 	}
@@ -274,16 +279,16 @@ export class AppService {
 			const zipPath = join(tempDir, zipFileName);
 			const extractPath = join(tempDir, baseName);
 
-			console.log(`[extractZipBlob] zipPath: ${zipPath}, extractPath: ${extractPath}`);
+			logger.debug(`[extractZipBlob] zipPath: ${zipPath}, extractPath: ${extractPath}`);
 
 			// Write zip file
 			await writeFile(zipPath, Buffer.from(zipData));
-			console.log(`[extractZipBlob] ZIP file written, size: ${zipData.byteLength} bytes`);
+			logger.debug(`[extractZipBlob] ZIP file written, size: ${zipData.byteLength} bytes`);
 
 			// Clean existing directory before extraction to avoid stale files
 			try {
 				await rm(extractPath, { recursive: true, force: true });
-				console.log(`[extractZipBlob] Cleaned existing directory`);
+				logger.debug(`[extractZipBlob] Cleaned existing directory`);
 			} catch {
 				// Directory might not exist, ignore error
 			}
@@ -293,14 +298,14 @@ export class AppService {
 
 			// Extract
 			await this.extractZip(zipPath, extractPath);
-			console.log(`[extractZipBlob] Extraction completed`);
+			logger.debug(`[extractZipBlob] Extraction completed`);
 
 			// Verify extraction by listing files
 			const extractedFiles = await readdir(extractPath);
-			console.log(`[extractZipBlob] Extracted files: ${extractedFiles.join(", ")}`);
+			logger.debug(`[extractZipBlob] Extracted files: ${extractedFiles.join(", ")}`);
 
 			if (extractedFiles.length === 0) {
-				console.warn(`[extractZipBlob] Warning: No files extracted to ${extractPath}`);
+				logger.warn(`[extractZipBlob] Warning: No files extracted to ${extractPath}`);
 			}
 
 			// Cleanup zip file
@@ -308,7 +313,7 @@ export class AppService {
 
 			return extractPath;
 		} catch (error) {
-			console.error("Failed to extract zip blob:", error);
+			logger.error("Failed to extract zip blob:", error);
 			throw error;
 		}
 	}
@@ -356,7 +361,7 @@ export class AppService {
 				children,
 			};
 		} catch (error) {
-			console.error("Failed to scan directory:", error);
+			logger.error("Failed to scan directory:", error);
 			throw error;
 		}
 	}
@@ -368,7 +373,7 @@ export class AppService {
 		try {
 			return await readFile(filePath, "utf-8");
 		} catch (error) {
-			console.error("Failed to read file:", error);
+			logger.error("Failed to read file:", error);
 			throw error;
 		}
 	}
@@ -384,7 +389,7 @@ export class AppService {
 				buffer.byteOffset + buffer.byteLength,
 			) as ArrayBuffer;
 		} catch (error) {
-			console.error("Failed to read file as buffer:", error);
+			logger.error("Failed to read file as buffer:", error);
 			throw error;
 		}
 	}
@@ -396,7 +401,7 @@ export class AppService {
 		try {
 			await writeFile(filePath, content, "utf-8");
 		} catch (error) {
-			console.error("Failed to write file:", error);
+			logger.error("Failed to write file:", error);
 			throw error;
 		}
 	}
@@ -408,7 +413,7 @@ export class AppService {
 		try {
 			await mkdir(dirPath, { recursive: true });
 		} catch (error) {
-			console.error("Failed to create directory:", error);
+			logger.error("Failed to create directory:", error);
 			throw error;
 		}
 	}
@@ -420,7 +425,7 @@ export class AppService {
 		try {
 			await rm(filePath, { force: true });
 		} catch (error) {
-			console.error("Failed to delete file:", error);
+			logger.error("Failed to delete file:", error);
 			throw error;
 		}
 	}
@@ -432,7 +437,7 @@ export class AppService {
 		try {
 			await rm(dirPath, { recursive: true, force: true });
 		} catch (error) {
-			console.error("Failed to delete directory:", error);
+			logger.error("Failed to delete directory:", error);
 			throw error;
 		}
 	}
@@ -450,7 +455,7 @@ export class AppService {
 			}
 			await rename(oldPath, newPath);
 		} catch (error) {
-			console.error("Failed to rename file:", error);
+			logger.error("Failed to rename file:", error);
 			throw error;
 		}
 	}
@@ -502,7 +507,7 @@ export class AppService {
 				zipBuffer.byteOffset + zipBuffer.byteLength,
 			);
 		} catch (error) {
-			console.error("Failed to zip directory:", error);
+			logger.error("Failed to zip directory:", error);
 			throw error;
 		}
 	}
@@ -514,10 +519,10 @@ export class AppService {
 		try {
 			// extract-zip requires absolute paths
 			const absoluteDestPath = resolve(destPath);
-			console.log(`[extractZip] Extracting to: ${absoluteDestPath}`);
+			logger.debug(`[extractZip] Extracting to: ${absoluteDestPath}`);
 			await extract(zipPath, { dir: absoluteDestPath });
 		} catch (error) {
-			console.error("Failed to extract zip:", error);
+			logger.error("Failed to extract zip:", error);
 			throw error;
 		}
 	}
@@ -539,32 +544,32 @@ export class AppService {
 			const rootPath = join(basePath, skillName || "new-skill");
 			const skillMdPath = join(rootPath, "SKILL.md");
 
-			console.log(`[createSkillTempDir] Creating directory: ${rootPath}`);
+			logger.debug(`[createSkillTempDir] Creating directory: ${rootPath}`);
 			await mkdir(rootPath, { recursive: true });
 
 			// Verify directory was created
 			const dirExists = await stat(rootPath)
 				.then(() => true)
 				.catch(() => false);
-			console.log(`[createSkillTempDir] Directory exists after mkdir: ${dirExists}`);
+			logger.debug(`[createSkillTempDir] Directory exists after mkdir: ${dirExists}`);
 
 			// Create empty SKILL.md file
-			console.log(`[createSkillTempDir] Creating SKILL.md: ${skillMdPath}`);
+			logger.debug(`[createSkillTempDir] Creating SKILL.md: ${skillMdPath}`);
 			await writeFile(skillMdPath, "", "utf-8");
 
 			// Verify file was created
 			const fileExists = await stat(skillMdPath)
 				.then(() => true)
 				.catch(() => false);
-			console.log(`[createSkillTempDir] SKILL.md exists after writeFile: ${fileExists}`);
+			logger.debug(`[createSkillTempDir] SKILL.md exists after writeFile: ${fileExists}`);
 
 			// List directory contents
 			const contents = await readdir(rootPath);
-			console.log(`[createSkillTempDir] Directory contents: ${contents.join(", ")}`);
+			logger.debug(`[createSkillTempDir] Directory contents: ${contents.join(", ")}`);
 
 			return { rootPath, skillMdPath };
 		} catch (error) {
-			console.error("Failed to create skill temp directory:", error);
+			logger.error("Failed to create skill temp directory:", error);
 			throw error;
 		}
 	}
@@ -588,7 +593,7 @@ export class AppService {
 			const basePath = join(dirPath, "..");
 			await rm(basePath, { recursive: true, force: true });
 		} catch (error) {
-			console.error("Failed to delete temp directory:", error);
+			logger.error("Failed to delete temp directory:", error);
 			// Don't throw - cleanup failures shouldn't block user
 		}
 	}

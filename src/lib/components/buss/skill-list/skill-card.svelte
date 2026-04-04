@@ -155,13 +155,17 @@
 					<div class="grid h-7 shrink-0 grid-cols-[1.75rem_1.75rem] items-center gap-1">
 						{#if showFavoriteButton}
 							<ButtonWithTooltip
-								tooltip={is_favorite ? m.title_button_unstar() : m.title_button_star()}
+								tooltip={is_favorite
+									? m.title_button_unstar()
+									: m.title_button_star()}
 								variant="ghost"
 								size="icon"
 								disabled={favoriteLoading}
 								class={cn(
 									"size-7 transition-opacity hover:!bg-transparent",
-									shouldShowFavoriteButton ? "opacity-100" : "opacity-0 group-hover:opacity-100",
+									shouldShowFavoriteButton
+										? "opacity-100"
+										: "opacity-0 group-hover:opacity-100",
 								)}
 								onclick={handleFavoriteClick}
 							>
@@ -213,7 +217,10 @@
 											</DropdownMenu.Item>
 										{/if}
 										{#if canDelete}
-											<DropdownMenu.Item class="text-destructive" onclick={() => onDelete?.(skill)}>
+											<DropdownMenu.Item
+												class="text-destructive"
+												onclick={() => onDelete?.(skill)}
+											>
 												{m.text_button_delete()}
 											</DropdownMenu.Item>
 										{/if}
@@ -229,7 +236,10 @@
 			{#if skillTags.length > 0}
 				<div class="flex flex-wrap items-center gap-1.5">
 					{#each skillTags as tag (tag)}
-						<Badge variant="secondary" class="w-fit px-1.5 py-0.5 text-[10px] font-medium">
+						<Badge
+							variant="secondary"
+							class="w-fit px-1.5 py-0.5 text-[10px] font-medium"
+						>
 							{tag}
 						</Badge>
 					{/each}

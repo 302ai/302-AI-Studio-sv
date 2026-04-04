@@ -6,6 +6,7 @@ import {
 	listClaudeCodeSessions,
 	updateClaudeCodeSandbox,
 } from "@electron/main/apis/code-agent";
+import { createLogger } from "@shared/logger";
 import type {
 	CodeAgentConfigMetadata,
 	CodeAgentCreateResult,
@@ -23,6 +24,8 @@ import {
 	claudeCodeStorage,
 	codeAgentStorage,
 } from "../storage-service/code-agent";
+
+const logger = createLogger("services");
 
 export class CodeAgentService {
 	constructor() {
@@ -44,7 +47,9 @@ export class CodeAgentService {
 			const keys = await claudeCodeStorage.getKeysInternal();
 			for (const key of keys) {
 				if (key.startsWith("claude-code-agent-state-")) {
-					const threadId = key.replace("claude-code-agent-state-", "").replace(".json", "");
+					const threadId = key
+						.replace("claude-code-agent-state-", "")
+						.replace(".json", "");
 					const state = await claudeCodeStorage.getItemInternal(key);
 					if (state && state.sandboxId === sandboxId) {
 						const configKey = `code-agent-config-state-${threadId}`;
@@ -57,7 +62,7 @@ export class CodeAgentService {
 				}
 			}
 		} catch (error) {
-			console.error("Error cleaning up threads for sandbox:", error);
+			logger.error("Error cleaning up threads for sandbox:", error);
 		}
 	}
 
@@ -66,9 +71,15 @@ export class CodeAgentService {
 			const keys = await claudeCodeStorage.getKeysInternal();
 			for (const key of keys) {
 				if (key.startsWith("claude-code-agent-state-")) {
-					const threadId = key.replace("claude-code-agent-state-", "").replace(".json", "");
+					const threadId = key
+						.replace("claude-code-agent-state-", "")
+						.replace(".json", "");
 					const state = await claudeCodeStorage.getItemInternal(key);
-					if (state && state.sandboxId === sandboxId && state.currentSessionId === sessionId) {
+					if (
+						state &&
+						state.sandboxId === sandboxId &&
+						state.currentSessionId === sessionId
+					) {
 						const configKey = `code-agent-config-state-${threadId}`;
 						const config = await codeAgentStorage.getItemInternal(configKey);
 						if (config) {
@@ -79,7 +90,7 @@ export class CodeAgentService {
 				}
 			}
 		} catch (error) {
-			console.error("Error cleaning up threads for session:", error);
+			logger.error("Error cleaning up threads for session:", error);
 		}
 	}
 
@@ -90,7 +101,10 @@ export class CodeAgentService {
 				const validList = response.list.filter((sandbox) => sandbox.status !== "killed");
 
 				const list = validList.map((sandbox) => {
-					const diskUsage = this.calculateDiskUsage(sandbox.disk_total, sandbox.disk_used);
+					const diskUsage = this.calculateDiskUsage(
+						sandbox.disk_total,
+						sandbox.disk_used,
+					);
 
 					return {
 						sandboxId: sandbox.sandbox_id,
@@ -115,10 +129,10 @@ export class CodeAgentService {
 
 				await claudeCodeSandboxStorage.setClaudeCodeSandboxes(list);
 
-				console.log("[CodeAgentService] Updated Claude code sandboxes, count: ", list.length);
+				logger.info("Updated Claude code sandboxes, count: ", list.length);
 			}
 		} catch (error) {
-			console.error("Error listing Claude code sandboxes:", error);
+			logger.error("Error listing Claude code sandboxes:", error);
 			await claudeCodeSandboxStorage.setClaudeCodeSandboxes([]);
 		}
 	}
@@ -174,7 +188,7 @@ export class CodeAgentService {
 			}
 			return { isOK: false, llm_model: "" };
 		} catch (error) {
-			console.error("Error updating Claude code sandbox:", error);
+			logger.error("Error updating Claude code sandbox:", error);
 			return { isOK: false, llm_model: "" };
 		}
 	}
@@ -212,7 +226,7 @@ export class CodeAgentService {
 				},
 			};
 		} catch (error) {
-			console.error("Error checking Claude code sandbox:", error);
+			logger.error("Error checking Claude code sandbox:", error);
 			return { isOK: false, valid: false };
 		}
 	}
@@ -222,7 +236,7 @@ export class CodeAgentService {
 			await this.updateClaudeCodeSandboxes();
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error updating Claude code sandboxes:", error);
+			logger.error("Error updating Claude code sandboxes:", error);
 			return { isOK: false };
 		}
 	}
@@ -245,7 +259,7 @@ export class CodeAgentService {
 			await claudeCodeSandboxStorage.setClaudeCodeSessions(sandboxId, list);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error updating Claude code sessions:", error);
+			logger.error("Error updating Claude code sessions:", error);
 			return { isOK: false };
 		}
 	}
@@ -259,7 +273,7 @@ export class CodeAgentService {
 			await claudeCodeStorage.updateClaudeCodeCurrentSessionIdByThreadId(threadId, sessionId);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error updating Claude code sessions:", error);
+			logger.error("Error updating Claude code sessions:", error);
 			return { isOK: false };
 		}
 	}
@@ -276,7 +290,7 @@ export class CodeAgentService {
 			}
 			return { isOK: false, remark: "" };
 		} catch (error) {
-			console.error("Error updating Claude code sandbox:", error);
+			logger.error("Error updating Claude code sandbox:", error);
 			return { isOK: false, remark: "" };
 		}
 	}
@@ -295,7 +309,7 @@ export class CodeAgentService {
 			);
 			return { isOK: response.success };
 		} catch (error) {
-			console.error("Error updating Claude code sandbox thinking budget:", error);
+			logger.error("Error updating Claude code sandbox thinking budget:", error);
 			return { isOK: false };
 		}
 	}
@@ -326,7 +340,7 @@ export class CodeAgentService {
 			}
 			return { isOK, sandboxId };
 		} catch (error) {
-			console.error("Error creating Claude code sandbox:", error);
+			logger.error("Error creating Claude code sandbox:", error);
 			return { isOK: false, sandboxId: "" };
 		}
 	}
@@ -357,7 +371,7 @@ export class CodeAgentService {
 			await this.cleanupThreadsForSession(sandbox_id, session_id);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error deleting Claude code session:", error);
+			logger.error("Error deleting Claude code session:", error);
 			return { isOK: false };
 		}
 	}
@@ -379,7 +393,8 @@ export class CodeAgentService {
 
 		const normalSandboxes = sandboxes.filter((sandbox) => sandbox.diskUsage === "normal");
 		if (normalSandboxes.length > 0) {
-			const randomSandbox = normalSandboxes[Math.floor(Math.random() * normalSandboxes.length)];
+			const randomSandbox =
+				normalSandboxes[Math.floor(Math.random() * normalSandboxes.length)];
 			return {
 				isOK: true,
 				sandboxInfo: {
@@ -428,7 +443,7 @@ export class CodeAgentService {
 			const result = await addClaudeCodeSandboxMCP(sandboxId, MCPInfos, mode);
 			return { isOK: result.success };
 		} catch (error) {
-			console.error("Error adding Claude code sandbox MCP:", error);
+			logger.error("Error adding Claude code sandbox MCP:", error);
 			return { isOK: false };
 		}
 	}
@@ -492,12 +507,14 @@ export class CodeAgentService {
 					createdAt: new Date(),
 					parts: [],
 				};
-				await storageService.setItemInternal("app-chat-messages:" + threadId, [initialMessage]);
+				await storageService.setItemInternal("app-chat-messages:" + threadId, [
+					initialMessage,
+				]);
 
 				const { threadStorage } = await import("../storage-service/thread-storage");
 				await threadStorage.addThread(threadId);
 
-				console.log("[createThreadForSession] Created thread data for:", threadId);
+				logger.info("Created thread data for:", threadId);
 			}
 
 			const stateKey = `claude-code-agent-state-${threadId}`;
@@ -527,10 +544,10 @@ export class CodeAgentService {
 			};
 			await codeAgentStorage.setItemInternal(configKey, config);
 
-			console.log("[createThreadForSession] Created complete setup for thread:", threadId);
+			logger.info("Created complete setup for thread:", threadId);
 			return { isOK: true };
 		} catch (error) {
-			console.error("Error creating thread for session:", error);
+			logger.error("Error creating thread for session:", error);
 			return { isOK: false };
 		}
 	}
@@ -544,16 +561,22 @@ export class CodeAgentService {
 			const keys = await claudeCodeStorage.getKeysInternal();
 			for (const key of keys) {
 				if (key.startsWith("claude-code-agent-state-")) {
-					const threadId = key.replace("claude-code-agent-state-", "").replace(".json", "");
+					const threadId = key
+						.replace("claude-code-agent-state-", "")
+						.replace(".json", "");
 					const state = await claudeCodeStorage.getItemInternal(key);
-					if (state && state.sandboxId === sandboxId && state.currentSessionId === sessionId) {
+					if (
+						state &&
+						state.sandboxId === sandboxId &&
+						state.currentSessionId === sessionId
+					) {
 						return { isOK: true, threadId };
 					}
 				}
 			}
 			return { isOK: false, threadId: "" };
 		} catch (error) {
-			console.error("Error finding thread by session:", error);
+			logger.error("Error finding thread by session:", error);
 			return { isOK: false, threadId: "" };
 		}
 	}
@@ -575,7 +598,11 @@ export class CodeAgentService {
 			for (const key of keys) {
 				if (key.startsWith("claude-code-agent-state-")) {
 					const state = await claudeCodeStorage.getItemInternal(key);
-					if (state && state.sandboxId === sandboxId && state.currentSessionId === sessionId) {
+					if (
+						state &&
+						state.sandboxId === sandboxId &&
+						state.currentSessionId === sessionId
+					) {
 						state.isManualNote = isManualNote;
 						await claudeCodeStorage.setItemInternal(key, state);
 						updatedCount++;
@@ -585,7 +612,7 @@ export class CodeAgentService {
 
 			return { isOK: true, updatedCount };
 		} catch (error) {
-			console.error("Error setting isManualNote by session:", error);
+			logger.error("Error setting isManualNote by session:", error);
 			return { isOK: false, updatedCount: 0 };
 		}
 	}
@@ -606,18 +633,18 @@ export class CodeAgentService {
 
 		// Safety: ensure targetDir is actually inside workspaceDir
 		if (!targetDir.startsWith(workspaceDir)) {
-			console.error("[CodeAgentService] Path traversal attempt blocked:", subPath);
+			logger.error("Path traversal attempt blocked:", subPath);
 			return { success: false, error: "Invalid path" };
 		}
 
 		try {
 			if (fs.existsSync(targetDir)) {
 				fs.rmSync(targetDir, { recursive: true, force: true });
-				console.log("[CodeAgentService] Deleted workspace directory:", targetDir);
+				logger.debug("Deleted workspace directory:", targetDir);
 			}
 			return { success: true };
 		} catch (error) {
-			console.error("[CodeAgentService] Failed to delete workspace directory:", error);
+			logger.error("Failed to delete workspace directory:", error);
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			return { success: false, error: errorMessage };
 		}
@@ -643,7 +670,7 @@ export class CodeAgentService {
 
 		// Safety: ensure both paths are inside workspaceDir
 		if (!oldDir.startsWith(workspaceDir) || !newDir.startsWith(workspaceDir)) {
-			console.error("[CodeAgentService] Path traversal attempt blocked:", oldSubPath, newSubPath);
+			logger.error("Path traversal attempt blocked:", oldSubPath, newSubPath);
 			return { success: false, error: "Invalid path" };
 		}
 
@@ -652,10 +679,10 @@ export class CodeAgentService {
 				return { success: false, error: "Source path not found" };
 			}
 			fs.renameSync(oldDir, newDir);
-			console.log("[CodeAgentService] Renamed workspace directory:", oldDir, "->", newDir);
+			logger.debug("Renamed workspace directory:", oldDir, "->", newDir);
 			return { success: true };
 		} catch (error) {
-			console.error("[CodeAgentService] Failed to rename workspace directory:", error);
+			logger.error("Failed to rename workspace directory:", error);
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			return { success: false, error: errorMessage };
 		}

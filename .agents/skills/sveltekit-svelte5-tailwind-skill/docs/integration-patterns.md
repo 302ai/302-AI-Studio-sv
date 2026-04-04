@@ -4,9 +4,9 @@ version_anchors: ["SvelteKit@2.x", "Svelte@5.x", "Tailwind@4.x"]
 authored: true
 origin: self
 adapted_from:
-  - "sveltejs/kit#4991df5 (SvelteKit documentation)"
-  - "sveltejs/svelte#1b2f7b0 (Svelte 5 documentation)"
-  - "tailwindlabs/tailwindcss#91694fb (Tailwind CSS v4 documentation)"
+    - "sveltejs/kit#4991df5 (SvelteKit documentation)"
+    - "sveltejs/svelte#1b2f7b0 (Svelte 5 documentation)"
+    - "tailwindlabs/tailwindcss#91694fb (Tailwind CSS v4 documentation)"
 last_reviewed: 2025-10-28
 summary: "Complete integration guide combining SvelteKit 2.x, Svelte 5 runes, and Tailwind CSS v4 including configuration strategies, component patterns, styling approaches, build optimization, and deployment"
 ---
@@ -447,7 +447,9 @@ export default {
 		</div>
 
 		<div>
-			<label for="message" class="block text-sm font-medium text-gray-700 mb-1"> Message </label>
+			<label for="message" class="block text-sm font-medium text-gray-700 mb-1">
+				Message
+			</label>
 			<textarea
 				id="message"
 				name="message"
@@ -601,7 +603,9 @@ export async function load({ params }) {
 
 	<div id="load-more-trigger" class="py-8 text-center">
 		{#if loading}
-			<div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+			<div
+				class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"
+			></div>
 		{:else}
 			<p class="text-gray-500">Scroll for more</p>
 		{/if}

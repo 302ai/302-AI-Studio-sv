@@ -191,7 +191,9 @@
 						<div
 							class="h-full rounded-lg border border-red-200 bg-red-50 p-4 overflow-y-auto dark:border-red-900 dark:bg-red-950"
 						>
-							<p class="text-sm font-medium text-[#D82525] mb-2">{m.tool_call_error_message()}</p>
+							<p class="text-sm font-medium text-[#D82525] mb-2">
+								{m.tool_call_error_message()}
+							</p>
 							<p class="text-xs text-red-900 dark:text-red-100 whitespace-pre-wrap">
 								{part.errorText}
 							</p>

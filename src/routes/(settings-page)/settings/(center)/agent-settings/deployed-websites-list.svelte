@@ -24,6 +24,9 @@
 	} from "@lucide/svelte";
 	import { untrack } from "svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let isOpen = $state(false);
 	let isLoading = $state(false);
@@ -44,7 +47,7 @@
 		try {
 			const validation = validate302Provider(persistedProviderState.current);
 			if (!validation.valid) {
-				console.error("Provider validation failed:", validation.error);
+				logger.error("Provider validation failed:", validation.error);
 				return;
 			}
 			const provider = validation.provider;
@@ -56,7 +59,7 @@
 					pagination = response.pagination;
 				}
 			} else {
-				console.error("Failed to fetch websites:", response.error);
+				logger.error("Failed to fetch websites:", response.error);
 			}
 		} finally {
 			isLoading = false;
@@ -93,7 +96,9 @@
 
 			const response = await deleteDeployedWebsite(provider, id);
 			if (response.success) {
-				toast.success(m.toast_delete_success ? m.toast_delete_success() : "Deleted successfully");
+				toast.success(
+					m.toast_delete_success ? m.toast_delete_success() : "Deleted successfully",
+				);
 				// Refresh current page
 				fetchWebsites(pagination.current_page);
 				// Close dialog and reset state only on success
@@ -106,7 +111,7 @@
 				);
 			}
 		} catch (error) {
-			console.error("Failed to delete website:", error);
+			logger.error("Failed to delete website:", error);
 			toast.error(m.toast_unknown_error());
 		} finally {
 			isDeleting = false;
@@ -141,7 +146,11 @@
 	<Dialog.Content class="min-w-2xl">
 		<Dialog.Header>
 			<Dialog.Title class="flex items-center relative">
-				<span>{m.title_deployed_websites ? m.title_deployed_websites() : "Deployed Websites"}</span>
+				<span
+					>{m.title_deployed_websites
+						? m.title_deployed_websites()
+						: "Deployed Websites"}</span
+				>
 				<ButtonWithTooltip
 					class="hover:!bg-chat-action-hover absolute left-[98px]"
 					tooltip={m.label_button_reload()}
@@ -162,7 +171,9 @@
 				<Empty.Root>
 					<Empty.Content class="h-[200px] flex flex-col items-center justify-center">
 						<Empty.Description>
-							{m.no_deployed_websites ? m.no_deployed_websites() : "No deployed websites found"}
+							{m.no_deployed_websites
+								? m.no_deployed_websites()
+								: "No deployed websites found"}
 						</Empty.Description>
 					</Empty.Content>
 				</Empty.Root>
@@ -250,7 +261,8 @@
 							variant="outline"
 							size="icon-sm"
 							class="h-7 w-7"
-							disabled={pagination.current_page >= pagination.total_pages || isLoading}
+							disabled={pagination.current_page >= pagination.total_pages ||
+								isLoading}
 							onclick={() => handlePageChange(pagination.current_page + 1)}
 						>
 							<ChevronRight class="h-3 w-3" />

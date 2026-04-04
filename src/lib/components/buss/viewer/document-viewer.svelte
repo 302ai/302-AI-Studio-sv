@@ -1,5 +1,8 @@
 <script lang="ts" module>
 	import type { AttachmentFile } from "@shared/types";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	export interface DocumentViewerProps {
 		attachment: AttachmentFile;
@@ -25,7 +28,8 @@
 		try {
 			// Check if it's a PDF file
 			isPdf =
-				attachment.type === "application/pdf" || attachment.name.toLowerCase().endsWith(".pdf");
+				attachment.type === "application/pdf" ||
+				attachment.name.toLowerCase().endsWith(".pdf");
 
 			// Check if it's an Office document (Excel, Word, PowerPoint)
 			const lowerName = attachment.name.toLowerCase();
@@ -57,7 +61,7 @@
 				}
 			};
 		} catch (error) {
-			console.error("Failed to create document preview:", error);
+			logger.error("Failed to create document preview:", error);
 			hasError = true;
 		}
 	});

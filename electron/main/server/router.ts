@@ -5,9 +5,11 @@ import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { serve } from "@hono/node-server";
+import { createLogger } from "@shared/logger";
 import type { CodeAgentType, CodingAgentClass } from "@shared/storage/code-agent";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { ChatMessage, McpServer, Skill, ThinkingBudgetType } from "@shared/types";
+import { parseGeneratedTitleContent } from "@shared/utils/title-generation";
 import {
 	ToolLoopAgent as Agent,
 	convertToModelMessages,
@@ -19,9 +21,9 @@ import {
 	wrapLanguageModel,
 	type UIMessage,
 } from "ai";
+import dedent from "dedent";
 import getPort from "get-port";
 import { Hono, type Context } from "hono";
-// import { getSkillContent, getSkillDetails } from "../apis/code-agent";
 import { codeAgentService, ssoService } from "../services";
 import { chatParametersService } from "../services/chat-parameters-service";
 import { mcpService } from "../services/mcp-service";
@@ -35,13 +37,13 @@ import {
 	appendPromptToSystemMessage,
 	applyContextCompression,
 	convertAiSdkMessagesToOpenAiMessages,
-	// createForcedSkillModelMessages,
 	createUIMessageStreamFromGenerator,
-	// injectForcedSkillModelMessages,
 	isStreamingSupported,
 	sendStreamError,
 	uploadAttachmentsFromMessages,
 } from "./utils";
+
+const logger = createLogger("server");
 
 export type RouterRequestBody = {
 	baseUrl?: string;
@@ -234,7 +236,8 @@ app.post("/chat/302ai", async (c) => {
 		contextSummary?: string;
 		compressedMessageCount?: number;
 	}>();
-	console.log(
+	logger.info(
+		"Router request params:",
 		baseUrl,
 		model,
 		apiKey,
@@ -291,15 +294,18 @@ app.post("/chat/302ai", async (c) => {
 		try {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
-				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
-				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+				mcpTools = await mcpService.getToolsFromServerIds(
+					mcpServerIds,
+					allServers as McpServer[],
+				);
+				logger.debug(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
-			console.error("Failed to load MCP tools:", error);
+			logger.error("Failed to load MCP tools:", error);
 		}
 	}
 	let resolvedMessages = messages;
-	console.log(
+	logger.info(
 		"Resolving user prompt template variables for thread - before:",
 		JSON.stringify(resolvedMessages, null, 2),
 	);
@@ -308,22 +314,24 @@ app.post("/chat/302ai", async (c) => {
 		// Find the last user message
 		const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user");
 		if (lastUserMessage) {
-			const prevResolvedMessages = await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
-				threadId,
-				model,
-				lastUserMessage.id, // Exclude last user message to avoid duplicate processing
-			);
+			const prevResolvedMessages =
+				await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
+					threadId,
+					model,
+					lastUserMessage.id, // Exclude last user message to avoid duplicate processing
+				);
 
-			const resolvedLastMessage = await chatParametersService.resolveLastUserTextByUserPromptTemp(
-				threadId,
-				lastUserMessage as ChatMessage,
-				model,
-			);
+			const resolvedLastMessage =
+				await chatParametersService.resolveLastUserTextByUserPromptTemp(
+					threadId,
+					lastUserMessage as ChatMessage,
+					model,
+				);
 			resolvedMessages = [...prevResolvedMessages, resolvedLastMessage];
 		}
 	}
 
-	console.log(
+	logger.info(
 		"Resolving user prompt template variables for thread - after:",
 		JSON.stringify(resolvedMessages, null, 2),
 	);
@@ -365,7 +373,7 @@ app.post("/chat/302ai", async (c) => {
 
 	// Check if model supports streaming (image generation models don't)
 	if (!isStreamingSupported(model)) {
-		console.log(`[302ai] Model ${model} does not support streaming, using generateText`);
+		logger.debug(`[302ai] Model ${model} does not support streaming, using generateText`);
 
 		const streamTextOptions = {
 			...baseConfig,
@@ -419,12 +427,12 @@ app.post("/chat/302ai", async (c) => {
 		}),
 	});
 
-	console.log("[302ai] Stream created successfully, returning response");
+	logger.debug("[302ai] Stream created successfully, returning response");
 
 	// 	const debugStream = stream.pipeThrough(
 	// 	new TransformStream({
 	// 		transform(chunk, controller) {
-	// 			console.debug("Stream chunk:", chunk);
+	// 			logger.debug("Stream chunk:", chunk);
 	// 			controller.enqueue(chunk);
 	// 		},
 	// 	}),
@@ -501,11 +509,14 @@ app.post("/chat/openai", async (c) => {
 		try {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
-				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
-				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+				mcpTools = await mcpService.getToolsFromServerIds(
+					mcpServerIds,
+					allServers as McpServer[],
+				);
+				logger.debug(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
-			console.error("Failed to load MCP tools:", error);
+			logger.error("Failed to load MCP tools:", error);
 		}
 	}
 
@@ -516,17 +527,19 @@ app.post("/chat/openai", async (c) => {
 		const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user");
 		if (lastUserMessage) {
 			// Resolve previous user messages (using metadata)
-			const prevResolvedMessages = await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
-				threadId,
-				model,
-				lastUserMessage.id, // Exclude last user message to avoid duplicate processing
-			);
+			const prevResolvedMessages =
+				await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
+					threadId,
+					model,
+					lastUserMessage.id, // Exclude last user message to avoid duplicate processing
+				);
 			// Resolve last user message (using storage)
-			const resolvedLastMessage = await chatParametersService.resolveLastUserTextByUserPromptTemp(
-				threadId,
-				lastUserMessage as ChatMessage,
-				model,
-			);
+			const resolvedLastMessage =
+				await chatParametersService.resolveLastUserTextByUserPromptTemp(
+					threadId,
+					lastUserMessage as ChatMessage,
+					model,
+				);
 			resolvedMessages = [...prevResolvedMessages, resolvedLastMessage];
 		}
 	}
@@ -566,7 +579,7 @@ app.post("/chat/openai", async (c) => {
 
 	// Check if model supports streaming (image generation models don't)
 	if (!isStreamingSupported(model)) {
-		console.log(`[openai] Model ${model} does not support streaming, using generateText`);
+		logger.debug(`[openai] Model ${model} does not support streaming, using generateText`);
 
 		// Use createUIMessageStreamFromGenerator for immediate start event and async content generation
 		const stream = createUIMessageStreamFromGenerator(
@@ -623,7 +636,7 @@ app.post("/chat/openai", async (c) => {
 		}),
 	});
 
-	console.log("[openai] Stream created successfully, returning response");
+	logger.debug("[openai] Stream created successfully, returning response");
 
 	// AI SDK's createUIMessageStreamResponse automatically handles:
 	// - controller.close() in all paths (success, error, abort)
@@ -694,11 +707,14 @@ app.post("/chat/anthropic", async (c) => {
 		try {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
-				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
-				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+				mcpTools = await mcpService.getToolsFromServerIds(
+					mcpServerIds,
+					allServers as McpServer[],
+				);
+				logger.debug(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
-			console.error("Failed to load MCP tools:", error);
+			logger.error("Failed to load MCP tools:", error);
 		}
 	}
 
@@ -709,17 +725,19 @@ app.post("/chat/anthropic", async (c) => {
 		const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user");
 		if (lastUserMessage) {
 			// Resolve previous user messages (using metadata)
-			const prevResolvedMessages = await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
-				threadId,
-				model,
-				lastUserMessage.id, // Exclude last user message to avoid duplicate processing
-			);
+			const prevResolvedMessages =
+				await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
+					threadId,
+					model,
+					lastUserMessage.id, // Exclude last user message to avoid duplicate processing
+				);
 			// Resolve last user message (using storage)
-			const resolvedLastMessage = await chatParametersService.resolveLastUserTextByUserPromptTemp(
-				threadId,
-				lastUserMessage as ChatMessage,
-				model,
-			);
+			const resolvedLastMessage =
+				await chatParametersService.resolveLastUserTextByUserPromptTemp(
+					threadId,
+					lastUserMessage as ChatMessage,
+					model,
+				);
 			resolvedMessages = [...prevResolvedMessages, resolvedLastMessage];
 		}
 	}
@@ -759,7 +777,7 @@ app.post("/chat/anthropic", async (c) => {
 
 	// Check if model supports streaming (image generation models don't)
 	if (!isStreamingSupported(model)) {
-		console.log(`[anthropic] Model ${model} does not support streaming, using generateText`);
+		logger.debug(`[anthropic] Model ${model} does not support streaming, using generateText`);
 
 		// Use createUIMessageStreamFromGenerator for immediate start event and async content generation
 		const stream = createUIMessageStreamFromGenerator(
@@ -816,7 +834,7 @@ app.post("/chat/anthropic", async (c) => {
 		}),
 	});
 
-	console.log("[anthropic] Stream created successfully, returning response");
+	logger.debug("[anthropic] Stream created successfully, returning response");
 
 	// AI SDK's createUIMessageStreamResponse automatically handles:
 	// - controller.close() in all paths (success, error, abort)
@@ -887,11 +905,14 @@ app.post("/chat/gemini", async (c) => {
 		try {
 			const allServers = await storageService.getItemInternal("app-mcp-servers");
 			if (allServers) {
-				mcpTools = await mcpService.getToolsFromServerIds(mcpServerIds, allServers as McpServer[]);
-				console.log(`Loaded ${mcpTools.length} tools from MCP servers`);
+				mcpTools = await mcpService.getToolsFromServerIds(
+					mcpServerIds,
+					allServers as McpServer[],
+				);
+				logger.debug(`Loaded ${mcpTools.length} tools from MCP servers`);
 			}
 		} catch (error) {
-			console.error("Failed to load MCP tools:", error);
+			logger.error("Failed to load MCP tools:", error);
 		}
 	}
 
@@ -901,17 +922,19 @@ app.post("/chat/gemini", async (c) => {
 		const lastUserMessage = [...messages].reverse().find((msg) => msg.role === "user");
 		if (lastUserMessage) {
 			// Resolve previous user messages (using metadata)
-			const prevResolvedMessages = await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
-				threadId,
-				model,
-				lastUserMessage.id, // Exclude last user message to avoid duplicate processing
-			);
+			const prevResolvedMessages =
+				await chatParametersService.resolvePrevUserMsgsByUserPromptTemp(
+					threadId,
+					model,
+					lastUserMessage.id, // Exclude last user message to avoid duplicate processing
+				);
 			// Resolve last user message (using storage)
-			const resolvedLastMessage = await chatParametersService.resolveLastUserTextByUserPromptTemp(
-				threadId,
-				lastUserMessage as ChatMessage,
-				model,
-			);
+			const resolvedLastMessage =
+				await chatParametersService.resolveLastUserTextByUserPromptTemp(
+					threadId,
+					lastUserMessage as ChatMessage,
+					model,
+				);
 			resolvedMessages = [...prevResolvedMessages, resolvedLastMessage];
 		}
 	}
@@ -951,7 +974,7 @@ app.post("/chat/gemini", async (c) => {
 
 	// Check if model supports streaming (image generation models don't)
 	if (!isStreamingSupported(model)) {
-		console.log(`[gemini] Model ${model} does not support streaming, using generateText`);
+		logger.debug(`[gemini] Model ${model} does not support streaming, using generateText`);
 
 		// Use createUIMessageStreamFromGenerator for immediate start event and async content generation
 		const stream = createUIMessageStreamFromGenerator(
@@ -1008,7 +1031,7 @@ app.post("/chat/gemini", async (c) => {
 		}),
 	});
 
-	console.log("[gemini] Stream created successfully, returning response");
+	logger.debug("[gemini] Stream created successfully, returning response");
 
 	// AI SDK's createUIMessageStreamResponse automatically handles:
 	// - controller.close() in all paths (success, error, abort)
@@ -1119,49 +1142,11 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
 			prompt,
 		});
 
-		// Parse JSON response with fallback handling
-		let title = "";
-		let summary = "";
-
-		try {
-			// Try to extract JSON from the response (handle potential markdown code blocks)
-			let jsonStr = text.trim();
-
-			// Strip thinking/reasoning blocks from model response (handles both closed and unclosed tags)
-			// Pattern 1: Complete thinking blocks with closing tags
-			jsonStr = jsonStr.replace(/<(think|thinking|reason|reasoning)>[\s\S]*?<\/\1>/gi, "");
-			// Pattern 2: Unclosed thinking blocks (tag at start without closing)
-			jsonStr = jsonStr.replace(/^<(think|thinking|reason|reasoning)>[\s\S]*?(?=\{)/i, "");
-			// Pattern 3: Any remaining opening thinking tags that might be at the start
-			jsonStr = jsonStr.replace(/^<(think|thinking|reason|reasoning)>[\s\S]*/i, "");
-
-			jsonStr = jsonStr.trim();
-
-			// Remove markdown code blocks if present
-			if (jsonStr.startsWith("```")) {
-				jsonStr = jsonStr.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
-			}
-			const parsed = JSON.parse(jsonStr);
-			title = parsed.title || "";
-			summary = parsed.summary || "";
-		} catch {
-			// Fallback: if JSON parsing fails, use the whole text as title
-			console.warn("Failed to parse title generation JSON response, using fallback");
-			// Strip any thinking tags from fallback text too
-			let fallbackText = text.trim();
-			fallbackText = fallbackText.replace(
-				/<(think|thinking|reason|reasoning)>[\s\S]*?<\/\1>/gi,
-				"",
-			);
-			fallbackText = fallbackText.replace(/<(think|thinking|reason|reasoning)>[\s\S]*/gi, "");
-			fallbackText = fallbackText.trim();
-			title = fallbackText.slice(0, 50);
-			summary = previousSummary || "";
-		}
+		const { title, summary } = parseGeneratedTitleContent(text, previousSummary || "");
 
 		return c.json({ title, summary });
 	} catch (error) {
-		console.error("Title generation error:", error);
+		logger.error("Title generation error:", error);
 		return c.json({ error: "Failed to generate title" }, 500);
 	}
 });
@@ -1304,7 +1289,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
 			summary = parsed.summary || "";
 		} catch {
 			// Fallback: if JSON parsing fails, use the raw text as summary
-			console.warn("Failed to parse context summary JSON response, using fallback");
+			logger.warn("Failed to parse context summary JSON response, using fallback");
 			// Strip any thinking tags from fallback text too
 			let fallbackText = text.trim();
 			fallbackText = fallbackText.replace(
@@ -1318,7 +1303,7 @@ Return ONLY a valid JSON object in this exact format (no markdown, no code block
 
 		return c.json({ summary });
 	} catch (error) {
-		console.error("Context summary generation error:", error);
+		logger.error("Context summary generation error:", error);
 		return c.json({ error: "Failed to generate context summary" }, 500);
 	}
 });
@@ -1382,8 +1367,10 @@ app.post("/generate-suggestions", async (c) => {
 	}
 
 	try {
-		console.log("[Suggestions] Starting to generate suggestions...");
-		const convertedMessages = await convertToModelMessages(enhanceMessagesWithFeedback(messages));
+		logger.debug("[Suggestions] Starting to generate suggestions...");
+		const convertedMessages = await convertToModelMessages(
+			enhanceMessagesWithFeedback(messages),
+		);
 		const { text } = await generateText({
 			model: languageModel,
 			messages: [
@@ -1395,7 +1382,7 @@ app.post("/generate-suggestions", async (c) => {
 			],
 		});
 
-		console.log("[Suggestions] Received text:", text);
+		logger.debug("[Suggestions] Received text:", text);
 
 		// Parse the JSON array
 		try {
@@ -1410,17 +1397,17 @@ app.post("/generate-suggestions", async (c) => {
 
 			const suggestions = JSON.parse(cleanText);
 			if (Array.isArray(suggestions)) {
-				console.log("[Suggestions] Parsed suggestions:", suggestions);
+				logger.debug("[Suggestions] Parsed suggestions:", suggestions);
 				return c.json({ suggestions: suggestions.slice(0, count) });
 			}
-			console.log("[Suggestions] Invalid suggestions format");
+			logger.info("[Suggestions] Invalid suggestions format");
 			return c.json({ error: "Invalid suggestions format" }, 500);
 		} catch (parseError) {
-			console.error("[Suggestions] Failed to parse JSON:", parseError);
+			logger.error("[Suggestions] Failed to parse JSON:", parseError);
 			return c.json({ error: "Failed to parse suggestions" }, 500);
 		}
 	} catch (error) {
-		console.error("[Suggestions] Failed to generate suggestions:", error);
+		logger.error("[Suggestions] Failed to generate suggestions:", error);
 		return c.json({ error: "Failed to generate suggestions" }, 500);
 	}
 });
@@ -1530,7 +1517,7 @@ app.post("/decompose-tasks", async (c) => {
 			],
 		});
 
-		console.log("[TaskDecompose] Received text:", text);
+		logger.debug("[TaskDecompose] Received text:", text);
 
 		// Parse the JSON response
 		let jsonStr = text.trim();
@@ -1544,20 +1531,20 @@ app.post("/decompose-tasks", async (c) => {
 
 		const parsed = JSON.parse(jsonStr);
 		if (parsed.tasks && Array.isArray(parsed.tasks)) {
-			console.log("[TaskDecompose] Parsed tasks:", parsed.tasks.length);
+			logger.debug("[TaskDecompose] Parsed tasks:", parsed.tasks.length);
 			return parsed.tasks;
 		} else {
-			console.log("[TaskDecompose] Invalid response format");
+			logger.debug("[TaskDecompose] Invalid response format");
 			return [];
 		}
 	};
 
 	try {
-		console.log("[TaskDecompose] Starting task decomposition with model:", model);
+		logger.debug("[TaskDecompose] Starting task decomposition with model:", model);
 		const tasks = await doDecompose(languageModel);
 		return c.json({ tasks });
 	} catch (error) {
-		console.error("[TaskDecompose] Model failed:", error);
+		logger.error("[TaskDecompose] Model failed:", error);
 		// Return error - let frontend handle retry with different model
 		return c.json({ error: "Failed to decompose tasks" }, 500);
 	}
@@ -1583,25 +1570,28 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		agentType,
 	} = await c.req.json<RouterRequestBody>();
 
-	// Persist lastVibeMode when it changes
 	const currentVibeMode = vibeMode ?? "remote";
-	const { data: globalConfigs } = await codeAgentGlobalConfigsStorage.getGlobalConfigs();
+
+	const [{ data: globalConfigs }, { data: codeAgentConfig }, { sandboxId }] = await Promise.all([
+		codeAgentGlobalConfigsStorage.getGlobalConfigs(),
+		codeAgentService.getCodeAgentConfig(threadId),
+		codeAgentService.getClaudeCodeSandboxId(threadId),
+	]);
+
+	// Persist lastVibeMode when it changes
 	if (globalConfigs.lastVibeMode !== currentVibeMode) {
 		await codeAgentGlobalConfigsStorage.setLastVibeMode(currentVibeMode);
-		console.log("[302ai-code-agent] Updated lastVibeMode to:", currentVibeMode);
+		logger.debug("[302ai-code-agent] Updated lastVibeMode to:", currentVibeMode);
 	}
-
-	const { data: codeAgentConfig } = await codeAgentService.getCodeAgentConfig(threadId);
-	const { sandboxId } = await codeAgentService.getClaudeCodeSandboxId(threadId);
 
 	// Persist lastAgentId when it changes
 	const currentAgentId = codeAgentConfig.currentAgentId as CodingAgentClass;
 	if (globalConfigs.lastAgentId !== currentAgentId) {
 		// await codeAgentGlobalConfigsStorage.setLastAgentId(currentAgentId);
-		console.log("[302ai-code-agent] Updated lastAgentId to:", currentAgentId);
+		logger.debug("[302ai-code-agent] Updated lastAgentId to:", currentAgentId);
 	}
 
-	console.log(
+	logger.info(
 		"[302ai-code-agent] Received request",
 		JSON.stringify({
 			baseUrl,
@@ -1635,8 +1625,8 @@ app.post("/chat/302ai-code-agent", async (c) => {
 			return acc;
 		}, []) ?? [];
 
-	// Collect forced skills for later injection (after message conversion)
-	// Using OpenCode-style forced tool call results instead of prompt injection
+	// Collect forced skills for native backend injection
+	// Using 302.AI's force_skill parameter instead of prompt injection
 	const forcedSkills = skills?.filter((skill) => skill.forceUse) ?? [];
 
 	if (inTaskOrchestrationMode) {
@@ -1651,64 +1641,64 @@ app.post("/chat/302ai-code-agent", async (c) => {
 	if (inPlanMode) {
 		const planModePrompt =
 			language === "zh"
-				? `
-<plan_mode_instructions>
+				? dedent`
+					<plan_mode_instructions>
 
-⚠️ 你处于计划模式 ⚠️
+					⚠️ 你处于计划模式 ⚠️
 
-关键规则：每轮只问一个问题 - 严格执行
-- 在计划模式下，每轮只能调用 AskUserQuestion 一次
-- 不要在本轮对话中调用 AskUserQuestion 之后再次调用 AskUserQuestion
-- 等待用户的实际回答后再继续
+					关键规则：每轮只问一个问题 - 严格执行
+					- 在计划模式下，每轮只能调用 AskUserQuestion 一次
+					- 不要在本轮对话中调用 AskUserQuestion 之后再次调用 AskUserQuestion
+					- 等待用户的实际回答后再继续
 
-工作流程：
-第1轮：调用 AskUserQuestion → 等待用户回答
-第2轮：处理用户回答 → 调用 AskUserQuestion（如需要）→ 等待用户回答
-第3轮：处理用户回答 → 创建计划 → 调用 ExitPlanMode
+					工作流程：
+					第1轮：调用 AskUserQuestion → 等待用户回答
+					第2轮：处理用户回答 → 调用 AskUserQuestion（如需要）→ 等待用户回答
+					第3轮：处理用户回答 → 创建计划 → 调用 ExitPlanMode
 
-重要提示：
-- 如果你看到输出 "Answer questions?"，这意味着工具正在工作
-- 等待用户的真实回答
-- 不要在同一轮中再次尝试调用 AskUserQuestion
+					重要提示：
+					- 如果你看到输出 "Answer questions?"，这意味着工具正在工作
+					- 等待用户的真实回答
+					- 不要在同一轮中再次尝试调用 AskUserQuestion
 
-每次行动前检查：
-□ 我在本轮中已经调用过 AskUserQuestion 了吗？ → 如果是：不要再次调用
-□ 我即将调用 AskUserQuestion 吗？ → 如果是：这将是本轮唯一一次调用
+					每次行动前检查：
+					□ 我在本轮中已经调用过 AskUserQuestion 了吗？ → 如果是：不要再次调用
+					□ 我即将调用 AskUserQuestion 吗？ → 如果是：这将是本轮唯一一次调用
 
-</plan_mode_instructions>
-`
-				: `
-<plan_mode_instructions>
+					</plan_mode_instructions>
+				`
+				: dedent`
+					<plan_mode_instructions>
 
-⚠️ YOU ARE IN PLAN MODE ⚠️
+					⚠️ YOU ARE IN PLAN MODE ⚠️
 
-CRITICAL RULE: ONE QUESTION PER TURN - STRICTLY ENFORCED
-- In plan mode, you can only call AskUserQuestion ONCE per turn
-- DO NOT call AskUserQuestion again after calling it in the same turn
-- Wait for the user's actual response before proceeding
+					CRITICAL RULE: ONE QUESTION PER TURN - STRICTLY ENFORCED
+					- In plan mode, you can only call AskUserQuestion ONCE per turn
+					- DO NOT call AskUserQuestion again after calling it in the same turn
+					- Wait for the user's actual response before proceeding
 
-WORKFLOW:
-Turn 1: Call AskUserQuestion → Wait for user response
-Turn 2: Process user's answer → Call AskUserQuestion (if needed) → Wait for user response
-Turn 3: Process user's answer → Create plan → Call ExitPlanMode
+					WORKFLOW:
+					Turn 1: Call AskUserQuestion → Wait for user response
+					Turn 2: Process user's answer → Call AskUserQuestion (if needed) → Wait for user response
+					Turn 3: Process user's answer → Create plan → Call ExitPlanMode
 
-IMPORTANT:
-- If you see output "Answer questions?", this means the tool is working
-- Wait for the user's real answer
-- Do NOT try to call AskUserQuestion again in the same turn
+					IMPORTANT:
+					- If you see output "Answer questions?", this means the tool is working
+					- Wait for the user's real answer
+					- Do NOT try to call AskUserQuestion again in the same turn
 
-CHECK BEFORE EVERY ACTION:
-□ Have I already called AskUserQuestion in this turn? → If YES: Do NOT call it again
-□ Am I about to call AskUserQuestion? → If YES: This will be my ONLY call this turn
+					CHECK BEFORE EVERY ACTION:
+					□ Have I already called AskUserQuestion in this turn? → If YES: Do NOT call it again
+					□ Am I about to call AskUserQuestion? → If YES: This will be my ONLY call this turn
 
-</plan_mode_instructions>
-`;
+					</plan_mode_instructions>
+				`;
 		appendPromptToSystemMessage(messages, planModePrompt);
 	}
 
 	// Build request body for 302.AI Claude Code API
 	const convertedMessages = await convertToModelMessages(enhanceMessagesWithFeedback(messages));
-	console.log(
+	logger.info(
 		"[302ai-code-agent] After convertToModelMessages:",
 		JSON.stringify(convertedMessages, null, 2),
 	);
@@ -1734,9 +1724,9 @@ CHECK BEFORE EVERY ACTION:
 		...(agentType !== undefined ? { agent_type: agentType } : {}),
 	};
 
-	console.log("[302ai-code-agent] Messages:", JSON.stringify(requestBody.messages));
-	console.log("[302ai-code-agent] Sending request to 302.AI...");
-	console.log("[302ai-code-agent] Request body:", JSON.stringify(requestBody, null, 2));
+	logger.debug("[302ai-code-agent] Messages:", JSON.stringify(requestBody.messages));
+	logger.debug("[302ai-code-agent] Sending request to 302.AI...");
+	logger.debug("[302ai-code-agent] Request body:", JSON.stringify(requestBody, null, 2));
 
 	// Create immediate start event for optimistic UI update
 	// Include messageMetadata with model and provider info so the UI shows correct icon/name
@@ -1751,21 +1741,6 @@ CHECK BEFORE EVERY ACTION:
 		},
 	})}\n\n`;
 
-	// Make the request using the custom fetch that transforms the response
-	const abortController = new AbortController();
-	const responsePromise = claudeCodeFetch(
-		`${baseUrl ?? "https://api.302.ai/v1"}/chat/completions`,
-		{
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${apiKey}`,
-			},
-			body: JSON.stringify(requestBody),
-			signal: abortController.signal,
-		},
-	);
-
 	// Create a combined stream that sends start immediately, then pipes upstream data
 	const combinedStream = new ReadableStream({
 		async start(controller) {
@@ -1777,7 +1752,7 @@ CHECK BEFORE EVERY ACTION:
 				if (!streamClosed) {
 					try {
 						controller.close();
-						console.log("[302ai-code-agent] Stream closed via safeClose");
+						logger.debug("[302ai-code-agent] Stream closed via safeClose");
 					} catch (_closeError) {
 						// Controller already closed, ignore
 					}
@@ -1787,19 +1762,11 @@ CHECK BEFORE EVERY ACTION:
 
 			// Send start event immediately for optimistic UI update
 			controller.enqueue(encoder.encode(immediateStartEvent));
-			console.log("[302ai-code-agent] Sent immediate start event");
+			logger.debug("[302ai-code-agent] Sent immediate start event");
 
 			// Upload attachments after sending start event (non-blocking UX)
 			// This allows the UI to show "AI is typing" immediately while upload happens in background
-			// if (sandboxId && workspacePath) {
-			// 	try {
-			// 		await uploadAttachmentsFromMessages(sandboxId, workspacePath, messages);
-			// 	} catch (uploadError) {
-			// 		console.error("[302ai-code-agent] Failed to upload attachments:", uploadError);
-			// 		sendStreamError(controller, "Failed to upload attachments");
-			// 		return;
-			// 	}
-			// }
+
 			try {
 				await uploadAttachmentsFromMessages(
 					sandboxId,
@@ -1808,42 +1775,68 @@ CHECK BEFORE EVERY ACTION:
 					messages,
 				);
 			} catch (uploadError) {
-				console.error("[302ai-code-agent] Failed to upload attachments:", uploadError);
+				logger.error("[302ai-code-agent] Failed to upload attachments:", uploadError);
 				sendStreamError(controller, "Failed to upload attachments");
 				streamClosed = true; // sendStreamError closes the controller
-				console.log("[302ai-code-agent] Error sent, stream closed via sendStreamError");
+				logger.debug("[302ai-code-agent] Error sent, stream closed via sendStreamError");
 				return;
 			}
 
+			// Make the request using the custom fetch that transforms the response
+			// after attachments have been successfully uploaded
+			const abortController = new AbortController();
+
 			try {
+				const responsePromise = claudeCodeFetch(
+					`${baseUrl ?? "https://api.302.ai/v1"}/chat/completions`,
+					{
+						method: "POST",
+						headers: {
+							"Content-Type": "application/json",
+							Authorization: `Bearer ${apiKey}`,
+						},
+						body: JSON.stringify(requestBody),
+						signal: abortController.signal,
+					},
+				);
 				const response = await responsePromise;
 
-				console.log("[302ai-code-agent] Response status:", response.status, response.statusText);
-				console.log(
+				logger.info(
+					"[302ai-code-agent] Response status:",
+					response.status,
+					response.statusText,
+				);
+				logger.info(
 					"[302ai-code-agent] Response headers:",
 					Object.fromEntries(response.headers.entries()),
 				);
 				if (!response.ok) {
 					const errorText = await response.text();
-					console.error("[302ai-code-agent] API error:", response.status, response.statusText);
-					console.error("[302ai-code-agent] Error response body:", errorText || "(empty)");
-					console.error("[302ai-code-agent] Request that caused error:");
-					console.error(JSON.stringify(requestBody, null, 2));
+					logger.error(
+						"[302ai-code-agent] API error:",
+						response.status,
+						response.statusText,
+					);
+					logger.error("[302ai-code-agent] Error response body:", errorText || "(empty)");
+					logger.error("[302ai-code-agent] Request that caused error:");
+					logger.error(JSON.stringify(requestBody, null, 2));
 					sendStreamError(
 						controller,
 						errorText || `HTTP ${response.status}: ${response.statusText}`,
 					);
 					streamClosed = true; // sendStreamError closes the controller
-					console.log("[302ai-code-agent] Error sent, stream closed via sendStreamError");
+					logger.debug(
+						"[302ai-code-agent] Error sent, stream closed via sendStreamError",
+					);
 					return;
 				}
 
-				console.log("[302ai-code-agent] Got response, streaming...");
+				logger.debug("[302ai-code-agent] Got response, streaming...");
 
 				// Pipe the transformed stream from ClaudeCodeProcessor
 				const reader = response.body?.getReader();
 				if (!reader) {
-					console.log("[302ai-code-agent] No reader available, closing stream");
+					logger.debug("[302ai-code-agent] No reader available, closing stream");
 					return; // finally block will call safeClose
 				}
 
@@ -1851,14 +1844,14 @@ CHECK BEFORE EVERY ACTION:
 					while (true) {
 						const { done, value } = await reader.read();
 						if (done) {
-							console.log("[302ai-code-agent] Reader done, stream complete");
+							logger.debug("[302ai-code-agent] Reader done, stream complete");
 							break; // finally block will call safeClose
 						}
 						try {
 							controller.enqueue(value);
 						} catch (_error) {
 							// Client disconnected or controller closed
-							console.log("[302ai-code-agent] Controller closed, stopping stream");
+							logger.debug("[302ai-code-agent] Controller closed, stopping stream");
 							reader.cancel();
 							abortController.abort();
 							streamClosed = true; // Controller was closed externally
@@ -1866,21 +1859,21 @@ CHECK BEFORE EVERY ACTION:
 						}
 					}
 				} catch (error) {
-					console.error("[302ai-code-agent] Reader error:", error);
+					logger.error("[302ai-code-agent] Reader error:", error);
 					reader.cancel().catch(() => {
 						// Ignore cancel errors
 					});
 					throw error; // Re-throw to be caught by outer catch
 				}
 			} catch (error) {
-				console.error("[302ai-code-agent] Stream error:", error);
+				logger.error("[302ai-code-agent] Stream error:", error);
 				const errorMessage = error instanceof Error ? error.message : "Unknown error";
 				sendStreamError(controller, errorMessage);
 				streamClosed = true; // sendStreamError closes the controller
-				console.log("[302ai-code-agent] Error sent, stream closed via sendStreamError");
+				logger.debug("[302ai-code-agent] Error sent, stream closed via sendStreamError");
 			} finally {
 				// CRITICAL: Guarantee stream closure in ALL code paths
-				console.log("[302ai-code-agent] Finally block reached, ensuring stream closure");
+				logger.info("[302ai-code-agent] Finally block reached, ensuring stream closure");
 				safeClose();
 			}
 		},
@@ -2031,7 +2024,7 @@ app.get("/sso/callback/:lang", async (c) => {
 	const username = c.req.query("username");
 	const lang = c.req.param("lang") || "zh"; // Get language from path param
 
-	console.log("[SSO Callback] Received:", {
+	logger.debug("[SSO Callback] Received:", {
 		apikey: apikey ? "exists" : "missing",
 		uid,
 		username,
@@ -2060,7 +2053,7 @@ app.get("/sso/callback", async (c) => {
 		}
 	}
 
-	console.log("[SSO Callback Legacy] Received:", {
+	logger.debug("[SSO Callback Legacy] Received:", {
 		apikey: apikey ? "exists" : "missing",
 		uid,
 		username,
@@ -2079,6 +2072,6 @@ export async function initServer(preferredPort = 8089): Promise<number> {
 		hostname: "localhost",
 	});
 
-	console.log(`Server started successfully on port ${port}`);
+	logger.debug(`Server started successfully on port ${port}`);
 	return port;
 }

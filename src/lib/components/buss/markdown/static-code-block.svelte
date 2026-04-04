@@ -8,6 +8,9 @@
 	import { onMount } from "svelte";
 	import type { ShikiHighlighter } from "./highlighter";
 	import { ensureHighlighter, ensureLanguageLoaded } from "./highlighter";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		code: string;
@@ -81,7 +84,9 @@
 		// Ensure language is loaded
 		await ensureLanguageLoaded(resolvedLanguage);
 
-		let theme = persistedThemeState.current.shouldUseDarkColors ? "vitesse-dark" : "vitesse-light";
+		let theme = persistedThemeState.current.shouldUseDarkColors
+			? "vitesse-dark"
+			: "vitesse-light";
 		if (props.theme?.trim()) {
 			try {
 				const loaded = highlighter.getInternalContext().getLoadedThemes();
@@ -98,7 +103,7 @@
 				theme: resolvedTheme,
 			});
 		} catch (e) {
-			console.warn("Failed to highlight code:", e);
+			logger.warn("Failed to highlight code:", e);
 			// Fallback to plaintext if highlighting fails
 			try {
 				highlightedHtml = highlighter.codeToHtml(props.code, {
@@ -160,7 +165,8 @@
 					{@html highlightedHtml}
 				</div>
 			{:else}
-				<pre class="shiki !m-0 !rounded-none !border-0"><code class="block w-max">{props.code}</code
+				<pre class="shiki !m-0 !rounded-none !border-0"><code class="block w-max"
+						>{props.code}</code
 					></pre>
 			{/if}
 		</div>

@@ -1,5 +1,8 @@
 import { type } from "arktype";
 import ky from "ky";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("apis");
 
 const ai302UserInfoSchema = type({
 	data: {
@@ -34,13 +37,13 @@ export async function fetch302AIUserInfo(apiKey: string): Promise<Ai302UserInfo>
 
 		const validated = ai302UserInfoSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate 302.AI user info:", validated.summary);
+			logger.error("Failed to validate 302.AI user info:", validated.summary);
 			throw new Error("Invalid response format from 302.AI user info API");
 		}
 
 		return validated;
 	} catch (error) {
-		console.error("Failed to fetch 302.AI user info:", error);
+		logger.error("Failed to fetch 302.AI user info:", error);
 		throw new Error("Failed to fetch 302.AI user info");
 	}
 }
@@ -91,13 +94,14 @@ export async function fetch302AIToolList(
 
 		const validated = ai302ToolListSchema(filteredResponse);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate 302.AI tools list:", validated.summary);
+			logger.error("Failed to validate 302.AI tools list:", validated.summary);
 			throw new Error("Invalid response format from 302.AI tools list API");
 		}
 
 		const drawingRobotData = {
 			tool_id: -1,
-			tool_name: lang === "cn" ? "绘画机器人" : lang === "jp" ? "描画ロボット" : "Drawing Robot",
+			tool_name:
+				lang === "cn" ? "绘画机器人" : lang === "jp" ? "描画ロボット" : "Drawing Robot",
 			tool_description:
 				lang === "cn"
 					? "支持Midjourney、Flux、SD、Ideogram、Recraft"
@@ -105,14 +109,19 @@ export async function fetch302AIToolList(
 						? "Midjourney、Flux、SD、Ideogram、Recraftをサポート"
 						: "Supports Midjourney, Flux, SD, Ideogram, Recraft",
 			enable: true,
-			category_name: lang === "cn" ? "图片处理" : lang === "jp" ? "画像処理" : "Image Processing",
+			category_name:
+				lang === "cn" ? "图片处理" : lang === "jp" ? "画像処理" : "Image Processing",
 			category_id: 4,
 		};
 		const newToolsNotFromApi = [
 			{
 				tool_id: 9997,
 				tool_name:
-					lang === "cn" ? "3D摄影棚" : lang === "jp" ? "3Dカメラスタジオ" : "3D Camera Studio",
+					lang === "cn"
+						? "3D摄影棚"
+						: lang === "jp"
+							? "3Dカメラスタジオ"
+							: "3D Camera Studio",
 				tool_description:
 					lang === "cn"
 						? "对图像进行多角度变换及背景融合处理"
@@ -120,7 +129,8 @@ export async function fetch302AIToolList(
 							? "画像を複数角度で変換し、背景を融合処理"
 							: "Transform images from multiple angles and fuse backgrounds",
 				enable: true,
-				category_name: lang === "cn" ? "图片处理" : lang === "jp" ? "画像処理" : "Image Processing",
+				category_name:
+					lang === "cn" ? "图片处理" : lang === "jp" ? "画像処理" : "Image Processing",
 				category_id: 4,
 			},
 			{
@@ -133,7 +143,8 @@ export async function fetch302AIToolList(
 							? "Nano-Bananaを使って記事に画像を自動で付ける"
 							: "Use Nano-Banana to automatically add images to articles",
 				enable: true,
-				category_name: lang === "cn" ? "工作效率" : lang === "jp" ? "効率化" : "Work Efficiency",
+				category_name:
+					lang === "cn" ? "工作效率" : lang === "jp" ? "効率化" : "Work Efficiency",
 				category_id: 1,
 			},
 			{
@@ -146,7 +157,8 @@ export async function fetch302AIToolList(
 							? "Nano-Bananaを使ってPPTを作成"
 							: "Use Nano-Banana to create PPT",
 				enable: true,
-				category_name: lang === "cn" ? "工作效率" : lang === "jp" ? "効率化" : "Work Efficiency",
+				category_name:
+					lang === "cn" ? "工作效率" : lang === "jp" ? "効率化" : "Work Efficiency",
 				category_id: 1,
 			},
 		];
@@ -154,7 +166,7 @@ export async function fetch302AIToolList(
 
 		return tools;
 	} catch (error) {
-		console.error("Failed to fetch 302.AI tools list:", error);
+		logger.error("Failed to fetch 302.AI tools list:", error);
 		throw new Error("Failed to fetch 302.AI tools list");
 	}
 }
@@ -184,13 +196,13 @@ export async function fetch302AIToolDetail(apiKey: string): Promise<Ai302ToolDet
 
 		const validated = ai302ToolDetailSchema(response);
 		if (validated instanceof type.errors) {
-			console.error("Failed to validate 302.AI tool detail:", validated.summary);
+			logger.error("Failed to validate 302.AI tool detail:", validated.summary);
 			throw new Error("Invalid response format from 302.AI tool detail API");
 		}
 
 		return validated;
 	} catch (error) {
-		console.error("Failed to fetch 302.AI tool detail:", error);
+		logger.error("Failed to fetch 302.AI tool detail:", error);
 		throw new Error("Failed to fetch 302.AI tool detail");
 	}
 }

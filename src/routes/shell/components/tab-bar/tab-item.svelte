@@ -26,6 +26,7 @@
 	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { threadBusyState } from "$lib/stores/thread-busy-state.svelte";
 	import { cn } from "$lib/utils";
+	import ClaudeCodeRaw from "@lobehub/icons-static-svg/icons/claudecode.svg?raw";
 	import {
 		Ghost,
 		HatGlasses,
@@ -38,8 +39,12 @@
 		ShoppingBag,
 		X,
 	} from "@lucide/svelte";
+	import { isChatTab } from "@shared/storage/tab";
 	import type { Tab } from "@shared/types";
 	import { onDestroy } from "svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	const { handleAiApplicationReloadIpc } = window.electronAPI.aiApplicationService;
 	const { openExternalLink } = window.electronAPI.externalLinkService;
@@ -87,7 +92,7 @@
 			ro.observe(triggerRef.parentElement);
 			return () => ro.disconnect();
 		} catch (error) {
-			console.warn("Error setting up ResizeObserver:", error);
+			logger.warn("Error setting up ResizeObserver:", error);
 			const width = triggerRef.parentElement.clientWidth;
 			isCompact = width < COMPACT_THRESHOLD_PX;
 			return;
@@ -99,7 +104,7 @@
 	});
 
 	const handleScreenshot = async () => {
-		if (tab.type === "chat" && tab.threadId) {
+		if (isChatTab(tab.type) && tab.threadId) {
 			await window.electronAPI?.broadcastService.broadcastToAll("trigger-screenshot", {
 				threadId: tab.threadId,
 			});
@@ -122,7 +127,7 @@
 
 {#snippet tabIcon()}
 	{@const tabType = tab.type}
-	{#if tabType === "chat" && threadBusyState.isBusy(tab.threadId)}
+	{#if isChatTab(tabType) && threadBusyState.isBusy(tab.threadId)}
 		<LoaderCircle class="animate-spin" />
 	{:else if tabType === "chat"}
 		{#if tab.incognitoMode}
@@ -130,6 +135,16 @@
 		{:else}
 			<MessageCircle />
 		{/if}
+	{:else if tabType === "chat-vibe-claude"}
+		<span class="flex h-4 w-4 items-center justify-center [&>svg]:h-full [&>svg]:w-full">
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html ClaudeCodeRaw}
+		</span>
+	{:else if tabType === "chat-vibe-openclaw"}
+		<span class="flex h-4 w-4 items-center justify-center [&>svg]:h-full [&>svg]:w-full">
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html OpenClawRaw}
+		</span>
 	{:else if tabType === "settings"}
 		<Settings />
 	{:else if tabType === "aiApplications"}
@@ -214,7 +229,7 @@
 
 		<ContextMenu.Separator />
 
-		{#if tab.type === "chat"}
+		{#if isChatTab(tab.type)}
 			<ContextMenu.Item onSelect={handleScreenshot} disabled={!isActive}>
 				{m.screenshot_action()}
 			</ContextMenu.Item>
@@ -248,7 +263,8 @@
 
 					{#each windowTabsInfo as { windowId, tabs, firstTabTitle } (windowId)}
 						<ContextMenu.Item
-							onSelect={() => tabBarState.handleMoveTab(tab.id, "existing-window", windowId)}
+							onSelect={() =>
+								tabBarState.handleMoveTab(tab.id, "existing-window", windowId)}
 						>
 							{tabs.length === 1
 								? firstTabTitle
@@ -275,7 +291,10 @@
 			{m.label_button_close()}
 		</ContextMenu.Item>
 
-		<ContextMenu.Item onSelect={() => onTabCloseOthers(tab.id)} disabled={!closable || isTabBusy}>
+		<ContextMenu.Item
+			onSelect={() => onTabCloseOthers(tab.id)}
+			disabled={!closable || isTabBusy}
+		>
 			{m.label_button_close_others()}
 		</ContextMenu.Item>
 

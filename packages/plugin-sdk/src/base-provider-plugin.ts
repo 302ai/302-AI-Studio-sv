@@ -63,14 +63,14 @@ export abstract class BaseProviderPlugin implements ProviderPlugin {
 	 */
 	async initialize(api: PluginAPI): Promise<void> {
 		this.api = api;
-		this.api.logger.info(`Initializing ${this.providerName} plugin`);
+		this.api.logger.debug(`Initializing ${this.providerName} plugin`);
 	}
 
 	/**
 	 * Cleanup plugin
 	 */
 	async cleanup(): Promise<void> {
-		this.api?.logger.info(`Cleaning up ${this.providerName} plugin`);
+		this.api?.logger.debug(`Cleaning up ${this.providerName} plugin`);
 	}
 
 	/**
@@ -368,7 +368,10 @@ export abstract class BaseProviderPlugin implements ProviderPlugin {
 	/**
 	 * Utility: Show notification
 	 */
-	protected notify(message: string, type: "info" | "success" | "warning" | "error" = "info"): void {
+	protected notify(
+		message: string,
+		type: "info" | "success" | "warning" | "error" = "info",
+	): void {
 		this.api?.ui.showNotification(message, type);
 	}
 }

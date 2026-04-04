@@ -1,4 +1,7 @@
 import { deleteLocalSession, listLocalSessions } from "$lib/api/sandbox-session";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
 import type { GroupedSelectData } from "$lib/components/buss/settings/setting-select.svelte";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
@@ -88,7 +91,9 @@ class LocalClaudeCodeSandboxState {
 					groupKey: g.workspacePath,
 					groupLabel: groupLabel,
 					items: g.items
-						.sort((a, b) => new Date(b.used_at).getTime() - new Date(a.used_at).getTime())
+						.sort(
+							(a, b) => new Date(b.used_at).getTime() - new Date(a.used_at).getTime(),
+						)
 						.map((s) => ({
 							value: s.session_id,
 							label: s.note || s.session_id,
@@ -118,7 +123,10 @@ class LocalClaudeCodeSandboxState {
 		for (const session of this.sessions) {
 			if (session.workspace_path && session.workspace_path !== "") {
 				if (!workspaceMap.has(session.workspace_path)) {
-					workspaceMap.set(session.workspace_path, { latestUsedAt: 0, relatedSessions: [] });
+					workspaceMap.set(session.workspace_path, {
+						latestUsedAt: 0,
+						relatedSessions: [],
+					});
 				}
 				const data = workspaceMap.get(session.workspace_path)!;
 				data.relatedSessions.push({ note: session.note, session_id: session.session_id });
@@ -198,7 +206,7 @@ class LocalClaudeCodeSandboxState {
 				persistedLocalClaudeCodeSessionsState.current = response.session_list;
 			}
 		} catch (error) {
-			console.error("[LocalClaudeCodeSandboxState] Failed to refresh sessions:", error);
+			logger.error("Failed to refresh sessions:", error);
 		} finally {
 			this.isLoading = false;
 		}
@@ -260,11 +268,7 @@ class LocalClaudeCodeSandboxState {
 					try {
 						await window.electronAPI.codeAgentService.deleteWorkspaceDirectory(subPath);
 					} catch (error) {
-						console.error(
-							"[LocalClaudeCodeSandboxState] Failed to delete workspace directory:",
-							subPath,
-							error,
-						);
+						logger.error("Failed to delete workspace directory:", subPath, error);
 					}
 				}
 			}

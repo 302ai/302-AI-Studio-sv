@@ -12,11 +12,13 @@
 	const editor = getEditor();
 
 	onMount(() => {
-		return editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, prevEditorState: _ }) => {
-			if (ignoreSelectionChange && dirtyElements.size === 0 && dirtyLeaves.size === 0) {
-				return;
-			}
-			onChange();
-		});
+		return editor.registerUpdateListener(
+			({ dirtyElements, dirtyLeaves, prevEditorState: _ }) => {
+				if (ignoreSelectionChange && dirtyElements.size === 0 && dirtyLeaves.size === 0) {
+					return;
+				}
+				onChange();
+			},
+		);
 	});
 </script>

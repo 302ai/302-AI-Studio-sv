@@ -460,7 +460,10 @@
 					if (mutation.type === "childList") {
 						shouldUpdate = true;
 						mutation.addedNodes.forEach((node) => {
-							if (node instanceof HTMLElement && node.hasAttribute("data-message-id")) {
+							if (
+								node instanceof HTMLElement &&
+								node.hasAttribute("data-message-id")
+							) {
 								resizeObserver.observe(node);
 							}
 						});
@@ -543,9 +546,13 @@
 							: "bg-gray-500/30 dark:bg-gray-600/25",
 						isHovered && "hover:brightness-110",
 					)}
-					style="height: {Math.max(height, 2)}px; top: {getMinimapY(metric.top, scaleFactor) +
-						PADDING_Y}px;"
-					title={metric.role === "user" ? m.title_user_message() : m.title_assistant_message()}
+					style="height: {Math.max(height, 2)}px; top: {getMinimapY(
+						metric.top,
+						scaleFactor,
+					) + PADDING_Y}px;"
+					title={metric.role === "user"
+						? m.title_user_message()
+						: m.title_assistant_message()}
 				></div>
 			{/each}
 		</div>

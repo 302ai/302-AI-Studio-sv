@@ -1,4 +1,7 @@
 import { isMac } from "@electron/main/constants";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import type { UpdateChannel } from "@shared/storage/general-settings";
 import { app, autoUpdater, dialog, type IpcMainInvokeEvent } from "electron";
 import { broadcastService } from "../broadcast-service";
@@ -27,7 +30,7 @@ export class UpdaterService {
 			this.initializeAutoCheck();
 		} else {
 			this.updateFeedUrl = "";
-			console.warn("Auto-update not supported on this platform");
+			logger.warn("Auto-update not supported on this platform");
 		}
 	}
 
@@ -51,7 +54,7 @@ export class UpdaterService {
 		this.currentChannel = channel;
 		this.updateFeedUrl = this.buildUpdateFeedUrl(channel);
 		autoUpdater.setFeedURL({ url: this.updateFeedUrl });
-		console.log(`Update feed URL set to: ${this.updateFeedUrl} (channel: ${channel})`);
+		logger.info(`Update feed URL set to: ${this.updateFeedUrl} (channel: ${channel})`);
 	}
 
 	// ******************************* Private Methods ******************************* //
@@ -75,24 +78,24 @@ export class UpdaterService {
 		autoUpdater.setFeedURL({ url: this.updateFeedUrl });
 
 		autoUpdater.on("checking-for-update", () => {
-			console.log("Checking for updates...");
+			logger.debug("Checking for updates...");
 			broadcastService.broadcastChannelToAll("updater:update-checking");
 		});
 
 		autoUpdater.on("update-available", () => {
-			console.log("Update available");
+			logger.info("Update available");
 			this.isChecking = false;
 			broadcastService.broadcastChannelToAll("updater:update-available");
 		});
 
 		autoUpdater.on("update-not-available", () => {
-			console.log("Update not available");
+			logger.info("Update not available");
 			this.isChecking = false;
 			broadcastService.broadcastChannelToAll("updater:update-not-available");
 		});
 
 		autoUpdater.on("update-downloaded", async (_event, releaseNotes, releaseName) => {
-			console.log("Update downloaded");
+			logger.info("Update downloaded");
 			this.updateDownloaded = true;
 			broadcastService.broadcastChannelToAll("updater:update-downloaded", {
 				releaseNotes,
@@ -104,7 +107,7 @@ export class UpdaterService {
 		});
 
 		autoUpdater.on("error", (error) => {
-			console.error("Update error:", error);
+			logger.error("Update error:", error);
 			this.isChecking = false;
 
 			// Check if this is a "no releases available" error (common on Windows)
@@ -117,10 +120,12 @@ export class UpdaterService {
 				errorMessage.includes("Not Found");
 
 			if (isNoReleasesError) {
-				console.log("No releases available on server, treating as no update available");
+				logger.info("No releases available on server, treating as no update available");
 				broadcastService.broadcastChannelToAll("updater:update-not-available");
 			} else {
-				broadcastService.broadcastChannelToAll("updater:update-error", { message: error.message });
+				broadcastService.broadcastChannelToAll("updater:update-error", {
+					message: error.message,
+				});
 			}
 		});
 	}
@@ -134,20 +139,20 @@ export class UpdaterService {
 			this.checkForUpdates();
 		}, UPDATE_CHECK_INTERVAL);
 
-		console.log("Auto-update check enabled");
+		logger.info("Auto-update check enabled");
 	}
 
 	private stopAutoCheck() {
 		if (this.checkInterval) {
 			clearInterval(this.checkInterval);
 			this.checkInterval = null;
-			console.log("Auto-update check disabled");
+			logger.info("Auto-update check disabled");
 		}
 	}
 
 	private checkForUpdates() {
 		if (this.isChecking) {
-			console.log("Update check already in progress, skipping...");
+			logger.debug("Update check already in progress, skipping...");
 			return;
 		}
 
@@ -156,7 +161,7 @@ export class UpdaterService {
 			autoUpdater.checkForUpdates();
 		} catch (error) {
 			this.isChecking = false;
-			console.error("Failed to check for updates:", error);
+			logger.error("Failed to check for updates:", error);
 		}
 	}
 
@@ -194,7 +199,7 @@ export class UpdaterService {
 				await this._quitAndInstall();
 			}
 		} catch (error) {
-			console.error("Failed to show update dialog:", error);
+			logger.error("Failed to show update dialog:", error);
 		}
 	}
 
@@ -204,11 +209,11 @@ export class UpdaterService {
 		UpdaterService.isInstallingUpdate = true;
 
 		try {
-			console.log("[Updater] Force stopping podman before update install...");
+			logger.info("Force stopping podman before update install...");
 			await localVibeService.forceStopPodman();
-			console.log("[Updater] Podman force stopped");
+			logger.info("Podman force stopped");
 		} catch (error) {
-			console.error("[Updater] forceStopPodman failed (proceeding):", error);
+			logger.error("forceStopPodman failed (proceeding):", error);
 		}
 
 		if (isMac) windowService.setCMDQ(true);

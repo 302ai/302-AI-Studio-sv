@@ -2,6 +2,9 @@
 	import PreviewPanel from "$lib/components/html-preview/preview-panel.svelte";
 	import * as m from "$lib/paraglide/messages";
 	import { persistedTabState } from "$lib/stores/tab-bar-state.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let deviceMode = $state<"desktop" | "mobile">("desktop");
 
@@ -32,7 +35,7 @@
 	$effect(() => {
 		const handleWindowIdChanged = (event: Event) => {
 			const customEvent = event as CustomEvent<{ newWindowId: string }>;
-			console.log("[HTML Preview] windowIdChanged event received:", customEvent.detail.newWindowId);
+			logger.info("windowIdChanged event received:", customEvent.detail.newWindowId);
 
 			windowId = customEvent.detail.newWindowId;
 

@@ -50,7 +50,8 @@
 
 <div class="w-full h-full flex items-start justify-center overflow-auto bg-muted/30">
 	<div
-		class="h-full w-full transition-all duration-300 ease-in-out mx-auto {deviceMode === 'mobile'
+		class="h-full w-full transition-all duration-300 ease-in-out mx-auto {deviceMode ===
+		'mobile'
 			? 'max-w-[375px]'
 			: ''}"
 	>

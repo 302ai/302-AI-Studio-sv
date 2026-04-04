@@ -15,6 +15,9 @@
 		stringifySkillFrontMatter,
 		updateSkillFrontMatterTextFields,
 	} from "./skill-frontmatter";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	export interface SkillFormData {
 		name: string;
@@ -63,7 +66,7 @@
 				manualSkillMdPath = result.skillMdPath;
 				manualChangedFiles = new SvelteMap([[result.skillMdPath, formData.content]]);
 			} catch (error) {
-				console.error("Failed to create temp directory:", error);
+				logger.error("Failed to create temp directory:", error);
 				toast.error(m.skills_create_temp_dir_failed());
 				return;
 			} finally {
@@ -102,7 +105,8 @@
 			manualSkillMdPath = newPath;
 		} else if (
 			manualSkillMdPath &&
-			(manualSkillMdPath.startsWith(oldPath + "/") || manualSkillMdPath.startsWith(oldPath + "\\"))
+			(manualSkillMdPath.startsWith(oldPath + "/") ||
+				manualSkillMdPath.startsWith(oldPath + "\\"))
 		) {
 			manualSkillMdPath = manualSkillMdPath.replace(oldPath, newPath);
 		}
@@ -153,7 +157,10 @@
 			const currentDirName = manualRootPath.split(/[/\\]/).pop() || "";
 			if (newName !== currentDirName) {
 				const oldRootPath = manualRootPath;
-				const parentPath = oldRootPath.substring(0, oldRootPath.length - currentDirName.length - 1);
+				const parentPath = oldRootPath.substring(
+					0,
+					oldRootPath.length - currentDirName.length - 1,
+				);
 				const newRootPath = `${parentPath}/${newName}`;
 
 				isRenaming = true;
@@ -162,7 +169,7 @@
 						await window.electronAPI.appService.renameFile(oldRootPath, newRootPath);
 						handleRootPathChange(newRootPath);
 					} catch (error) {
-						console.error("Failed to rename directory:", error);
+						logger.error("Failed to rename directory:", error);
 					} finally {
 						isRenaming = false;
 					}
@@ -176,7 +183,7 @@
 			try {
 				await window.electronAPI.appService.deleteTempDir(manualRootPath);
 			} catch (error) {
-				console.error("Failed to cleanup temp directory:", error);
+				logger.error("Failed to cleanup temp directory:", error);
 			}
 
 			manualRootPath = undefined;
@@ -374,7 +381,9 @@
 					defaultExpandAll={true}
 					changedFiles={effectiveChangedFiles}
 					onFileChange={rootPath ? onFileChange : handleManualFileChange}
-					onRootPathChange={rootPath && onRootPathChange ? onRootPathChange : handleRootPathChange}
+					onRootPathChange={rootPath && onRootPathChange
+						? onRootPathChange
+						: handleRootPathChange}
 					onFileRename={rootPath ? onFileRename : handleManualFileRename}
 				/>
 			</div>

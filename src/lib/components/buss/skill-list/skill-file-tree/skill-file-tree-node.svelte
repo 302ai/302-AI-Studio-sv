@@ -162,7 +162,10 @@
 				style="padding-left: {level * 12 + 8}px"
 			>
 				<ChevronRight
-					class={cn("size-4 shrink-0 transition-transform duration-200", isOpen && "rotate-90")}
+					class={cn(
+						"size-4 shrink-0 transition-transform duration-200",
+						isOpen && "rotate-90",
+					)}
 				/>
 				{#if isOpen}
 					<FolderOpen class="size-4 shrink-0 text-blue-500" />
@@ -194,7 +197,10 @@
 	{:else}
 		<ContextMenu.Root>
 			<ContextMenu.Trigger class="w-full">
-				<Collapsible.Root open={isOpen} onOpenChange={(open) => onToggleExpand?.(node.path, open)}>
+				<Collapsible.Root
+					open={isOpen}
+					onOpenChange={(open) => onToggleExpand?.(node.path, open)}
+				>
 					<Popover.Root open={isPopoverOpen} onOpenChange={handlePopoverOpenChange}>
 						<Popover.Trigger onclick={(e) => e.preventDefault()}>
 							{#snippet child({ props })}
@@ -224,11 +230,15 @@
 						</Popover.Trigger>
 						<Popover.Content class="w-64 p-3" align="start" side="bottom">
 							<div class="flex flex-col gap-3">
-								<span class="text-xs text-muted-foreground">{getPopoverTitle()}</span>
+								<span class="text-xs text-muted-foreground"
+									>{getPopoverTitle()}</span
+								>
 								<Input
 									bind:ref={popoverInputRef}
 									bind:value={popoverValue}
-									placeholder={popoverMode !== "rename" ? m.file_tree_name_placeholder() : ""}
+									placeholder={popoverMode !== "rename"
+										? m.file_tree_name_placeholder()
+										: ""}
 									class="h-8 dark:border-[#3d3d3d]"
 									onkeydown={handlePopoverKeydown}
 								/>
@@ -237,7 +247,9 @@
 										{m.common_cancel()}
 									</Button>
 									<Button size="sm" onclick={confirmPopover}>
-										{popoverMode === "rename" ? m.text_button_save() : m.text_button_confirm()}
+										{popoverMode === "rename"
+											? m.text_button_save()
+											: m.text_button_confirm()}
 									</Button>
 								</div>
 							</div>
@@ -279,7 +291,10 @@
 						<Pencil class="mr-2 h-4 w-4" />
 						{m.file_tree_rename()}
 					</ContextMenu.Item>
-					<ContextMenu.Item onclick={handleDelete} class="text-destructive focus:text-destructive">
+					<ContextMenu.Item
+						onclick={handleDelete}
+						class="text-destructive focus:text-destructive"
+					>
 						<Trash2 class="mr-2 h-4 w-4" />
 						{m.file_tree_delete()}
 					</ContextMenu.Item>
@@ -360,7 +375,10 @@
 				<Pencil class="mr-2 h-4 w-4" />
 				{m.file_tree_rename()}
 			</ContextMenu.Item>
-			<ContextMenu.Item onclick={handleDelete} class="text-destructive focus:text-destructive">
+			<ContextMenu.Item
+				onclick={handleDelete}
+				class="text-destructive focus:text-destructive"
+			>
 				<Trash2 class="mr-2 h-4 w-4" />
 				{m.file_tree_delete()}
 			</ContextMenu.Item>

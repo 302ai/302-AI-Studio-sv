@@ -45,7 +45,8 @@ export function setupPanelResize(e: MouseEvent, options: PanelResizeOptions = {}
 	if (!panelDiv) return;
 
 	const startWidth = panelDiv.getBoundingClientRect().width;
-	const containerWidth = panelDiv.parentElement?.getBoundingClientRect().width || window.innerWidth;
+	const containerWidth =
+		panelDiv.parentElement?.getBoundingClientRect().width || window.innerWidth;
 
 	// Create fullscreen transparent overlay to capture mouse events
 	const overlay = document.createElement("div");

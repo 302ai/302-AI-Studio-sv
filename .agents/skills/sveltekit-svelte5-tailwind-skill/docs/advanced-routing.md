@@ -4,7 +4,7 @@ version_anchors: ["SvelteKit@2.x"]
 authored: true
 origin: self
 adapted_from:
-  - "sveltejs/kit#4991df5 (SvelteKit advanced routing documentation)"
+    - "sveltejs/kit#4991df5 (SvelteKit advanced routing documentation)"
 last_reviewed: 2025-10-28
 summary: "Complete guide to advanced SvelteKit routing including rest parameters, optional parameters, matchers, route groups, layout breaking, encoding, and sorting"
 ---

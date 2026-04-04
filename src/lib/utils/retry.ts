@@ -1,3 +1,7 @@
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("ui");
+
 /**
  * Retry utility with exponential backoff
  * @param fn - Function to retry
@@ -21,7 +25,7 @@ export async function withRetry<T>(
 			lastError = error;
 			if (attempt < maxRetries - 1) {
 				const waitTime = Math.min(delay * Math.pow(2, attempt), maxDelay);
-				console.warn(
+				logger.warn(
 					`Retry attempt ${attempt + 1}/${maxRetries} failed, retrying in ${waitTime}ms`,
 					error,
 				);

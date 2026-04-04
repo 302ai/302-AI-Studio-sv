@@ -1,19 +1,37 @@
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("state");
+
 import type { StorageValue } from "@302ai/unstorage";
 import { isEqual } from "es-toolkit";
 import superjson from "superjson";
 import { createSubscriber } from "svelte/reactivity";
+import { batcher } from "./persisted-state-batcher";
 
 const { onPersistedStateSync } = window.electronAPI;
 
 class ElectronStorageAdapter<T extends StorageValue> {
 	private storageService = window.electronAPI.storageService;
+	private useBatching: boolean;
+
+	constructor(useBatching: boolean = true) {
+		this.useBatching = useBatching;
+	}
 
 	async getItemAsync(key: string): Promise<T | null> {
 		return (await this.storageService.getItem(key)) as T;
 	}
 
 	async setItemAsync(key: string, value: T | null): Promise<void> {
-		// Convert proxies to plain objects for serialization
+		const serializedValue = value ? (superjson.parse(superjson.stringify(value)) as T) : value;
+		if (this.useBatching) {
+			batcher.scheduleWrite(key, serializedValue);
+		} else {
+			await this.storageService.setItem(key, serializedValue);
+		}
+	}
+
+	async setItemDirectAsync(key: string, value: T | null): Promise<void> {
 		const serializedValue = value ? (superjson.parse(superjson.stringify(value)) as T) : value;
 		await this.storageService.setItem(key, serializedValue);
 	}
@@ -51,7 +69,14 @@ function proxy<T>(
 		p = new Proxy(value, {
 			get: (target, property) => {
 				subscribe?.();
-				return proxy(Reflect.get(target, property), root, proxies, subscribe, update, store);
+				return proxy(
+					Reflect.get(target, property),
+					root,
+					proxies,
+					subscribe,
+					update,
+					store,
+				);
 			},
 			set: (target, property, value) => {
 				update?.();
@@ -77,10 +102,16 @@ export class PersistedState<T extends StorageValue> {
 	#storeDebounceMs: number;
 	#debounce: boolean;
 
-	constructor(key: string, initialValue: T, debounce: boolean = false, debounceMs: number = 300) {
+	constructor(
+		key: string,
+		initialValue: T,
+		debounce: boolean = false,
+		debounceMs: number = 300,
+		useBatching: boolean = true,
+	) {
 		this.#current = initialValue;
 		this.#key = key;
-		this.#storage = new ElectronStorageAdapter<T>();
+		this.#storage = new ElectronStorageAdapter<T>(useBatching);
 		this.#storeDebounceMs = debounceMs;
 		this.#debounce = debounce;
 
@@ -89,12 +120,10 @@ export class PersistedState<T extends StorageValue> {
 		this.#subscribe = createSubscriber((update) => {
 			this.#update = update;
 
-			console.log("watching key:", key);
 			this.#storage?.watch(key);
 
 			const unsubscribe = onPersistedStateSync<T>(key, (newValue) => {
 				if (isEqual(newValue, this.#current)) return;
-				console.log("Synced key:", key, "Synced value:", newValue);
 				this.#current = newValue;
 				this.#update?.();
 			});
@@ -149,7 +178,10 @@ export class PersistedState<T extends StorageValue> {
 			}
 			this.#isHydrated = true;
 		} catch (error) {
-			console.error(`Error hydrate persisted state from Electron storage for key "${key}":`, error);
+			logger.error(
+				`Error hydrate persisted state from Electron storage for key "${key}":`,
+				error,
+			);
 			this.#current = initialValue;
 			this.#isHydrated = true;
 		}
@@ -158,8 +190,8 @@ export class PersistedState<T extends StorageValue> {
 	#store(value: T | undefined | null): void {
 		if (!this.#debounce) {
 			this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
-				console.log("Value", value);
-				console.error(
+				logger.debug("Value", value);
+				logger.error(
 					`Error when writing value from persisted store "${this.#key}" to Electron storage`,
 					error,
 				);
@@ -175,8 +207,8 @@ export class PersistedState<T extends StorageValue> {
 		this.#storeTimeoutId = setTimeout(() => {
 			const write = () => {
 				this.#storage?.setItemAsync(this.#key, value ?? null).catch((error) => {
-					console.log("Value", value);
-					console.error(
+					logger.debug("Value", value);
+					logger.error(
 						`Error when writing value from persisted store "${this.#key}" to Electron storage`,
 						error,
 					);
@@ -197,10 +229,11 @@ export class PersistedState<T extends StorageValue> {
 			clearTimeout(this.#storeTimeoutId);
 			this.#storeTimeoutId = null;
 		}
+		await batcher.flush();
 		try {
-			await this.#storage?.setItemAsync(this.#key, this.#current ?? null);
+			await this.#storage?.setItemDirectAsync(this.#key, this.#current ?? null);
 		} catch (error) {
-			console.error(
+			logger.error(
 				`Error when flushing persisted store "${this.#key}" to Electron storage`,
 				error,
 			);
@@ -216,7 +249,7 @@ export class PersistedState<T extends StorageValue> {
 				this.#update?.();
 			}
 		} catch (error) {
-			console.error(
+			logger.error(
 				`Error when refreshing persisted store "${this.#key}" from Electron storage`,
 				error,
 			);

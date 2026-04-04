@@ -111,7 +111,9 @@
 					if (chatState.hasMessages) {
 						chatState.sendMessage({ content: taskContent });
 					} else {
-						document.startViewTransition(() => chatState.sendMessage({ content: taskContent }));
+						document.startViewTransition(() =>
+							chatState.sendMessage({ content: taskContent }),
+						);
 					}
 					return true;
 				});
@@ -124,7 +126,8 @@
 		}
 		if (codeAgentState.enabled && codeAgentState.type === "local") {
 			// For local mode in non-fresh tabs, only ensure sandbox is running
-			const localSandboxResult = await codeAgentSendMessageButtonState.ensureLocalSandboxReady();
+			const localSandboxResult =
+				await codeAgentSendMessageButtonState.ensureLocalSandboxReady();
 			if (!localSandboxResult.isOk) {
 				toast.error(localSandboxResult.error ?? m.code_agent_local_sandbox_start_failed());
 				return false;
@@ -176,7 +179,9 @@
 			disabled={codeAgentTaskboardState.taskboardStatus !== "running" &&
 				codeAgentTaskboardState.taskboardStatus !== "waiting_to_stop" &&
 				codeAgentTaskboardState.taskboardStatus !== "waiting_for_chat" &&
-				(!codeAgentTaskboardState.canStart || codeAgentState.isChecking || isLocalSandboxStarting)}
+				(!codeAgentTaskboardState.canStart ||
+					codeAgentState.isChecking ||
+					isLocalSandboxStarting)}
 			onclick={handleRun}
 		>
 			{#if codeAgentTaskboardState.taskboardStatus === "running"}

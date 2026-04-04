@@ -1,5 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ImportResult } from "@shared/types";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 import { dialog } from "electron";
 import { readFile } from "fs/promises";
 import { storageService } from "../storage-service";
@@ -199,7 +202,7 @@ export async function importLegacyJson(): Promise<ImportResult> {
 			importedFiles: totalAdded,
 		};
 	} catch (error) {
-		console.error("Failed to import legacy JSON:", error);
+		logger.error("Failed to import legacy JSON:", error);
 		return {
 			success: false,
 			message: error instanceof Error ? error.message : "Unknown error occurred",
@@ -291,10 +294,13 @@ async function importProviders(
 		}
 
 		if (newProviders.length > 0 || updatedProviders.length !== existingProviders.length) {
-			await storageService.setItemInternal("app-providers", [...updatedProviders, ...newProviders]);
+			await storageService.setItemInternal("app-providers", [
+				...updatedProviders,
+				...newProviders,
+			]);
 		}
 	} catch (error) {
-		console.error("Failed to import providers:", error);
+		logger.error("Failed to import providers:", error);
 		stats.providers.failed++;
 	}
 
@@ -307,7 +313,8 @@ async function importModels(
 	stats: ImportStats,
 ): Promise<void> {
 	try {
-		const existingModels = ((await storageService.getItemInternal("app-models")) as any[]) || [];
+		const existingModels =
+			((await storageService.getItemInternal("app-models")) as any[]) || [];
 		const existingByNameAndProvider = new Map(
 			existingModels.map((m) => [`${m.name}:${m.providerId}`, m]),
 		);
@@ -354,7 +361,7 @@ async function importModels(
 			await storageService.setItemInternal("app-models", [...updatedModels, ...newModels]);
 		}
 	} catch (error) {
-		console.error("Failed to import models:", error);
+		logger.error("Failed to import models:", error);
 		stats.models.failed++;
 	}
 }
@@ -406,10 +413,13 @@ async function importMcpServers(legacyServers: any[], stats: ImportStats): Promi
 		}
 
 		if (newServers.length > 0 || updatedServers.length !== existingServers.length) {
-			await storageService.setItemInternal("app-mcp-servers", [...updatedServers, ...newServers]);
+			await storageService.setItemInternal("app-mcp-servers", [
+				...updatedServers,
+				...newServers,
+			]);
 		}
 	} catch (error) {
-		console.error("Failed to import MCP servers:", error);
+		logger.error("Failed to import MCP servers:", error);
 		stats.mcpServers.failed++;
 	}
 }
@@ -432,7 +442,8 @@ async function importThreads(
 		};
 		const existingThreadIds = new Set(existingMetadata.threadIds);
 
-		const importedModels = ((await storageService.getItemInternal("app-models")) as any[]) || [];
+		const importedModels =
+			((await storageService.getItemInternal("app-models")) as any[]) || [];
 
 		const legacyModelIdToName = new Map<string, string>();
 		for (const legacyModel of legacyModels) {
@@ -491,7 +502,9 @@ async function importThreads(
 					updatedAt: new Date(legacy.updatedAt),
 				};
 
-				batchOps.push(storageService.setItemInternal(`app-thread:${legacy.id}`, threadData));
+				batchOps.push(
+					storageService.setItemInternal(`app-thread:${legacy.id}`, threadData),
+				);
 
 				const threadMessages = legacyMessages.filter((m) => m.threadId === legacy.id);
 				if (threadMessages.length > 0) {
@@ -533,7 +546,10 @@ async function importThreads(
 					});
 
 					batchOps.push(
-						storageService.setItemInternal(`app-chat-messages:${legacy.id}`, convertedMessages),
+						storageService.setItemInternal(
+							`app-chat-messages:${legacy.id}`,
+							convertedMessages,
+						),
 					);
 					stats.messages.added += threadMessages.length;
 				}
@@ -555,7 +571,7 @@ async function importThreads(
 			});
 		}
 	} catch (error) {
-		console.error("Failed to import threads:", error);
+		logger.error("Failed to import threads:", error);
 		stats.threads.failed++;
 	}
 }
@@ -591,10 +607,12 @@ async function importSettings(
 
 		// Import Preferences Settings
 		const existingPreferencesSettings =
-			((await storageService.getItemInternal("PreferencesSettingsStorage:state")) as any) || {};
+			((await storageService.getItemInternal("PreferencesSettingsStorage:state")) as any) ||
+			{};
 
 		// Load the imported models from storage to match model IDs
-		const importedModels = ((await storageService.getItemInternal("app-models")) as any[]) || [];
+		const importedModels =
+			((await storageService.getItemInternal("app-models")) as any[]) || [];
 
 		// Create a map from legacy model ID to model name
 		const legacyModelIdToName = new Map<string, string>();
@@ -632,8 +650,10 @@ async function importSettings(
 
 		await storageService.setItemInternal("PreferencesSettingsStorage:state", {
 			...existingPreferencesSettings,
-			autoHideCode: legacy.collapseCodeBlock ?? existingPreferencesSettings.autoHideCode ?? false,
-			autoHideReason: legacy.hideReason ?? existingPreferencesSettings.autoHideReason ?? false,
+			autoHideCode:
+				legacy.collapseCodeBlock ?? existingPreferencesSettings.autoHideCode ?? false,
+			autoHideReason:
+				legacy.hideReason ?? existingPreferencesSettings.autoHideReason ?? false,
 			autoCollapseThink:
 				legacy.collapseThinkBlock ?? existingPreferencesSettings.autoCollapseThink ?? false,
 			autoDisableMarkdown:
@@ -641,11 +661,14 @@ async function importSettings(
 			enableSupermarket:
 				legacy.displayAppStore ?? existingPreferencesSettings.enableSupermarket ?? true,
 			newSessionModel: newSessionModel,
-			autoParseUrl: legacy.enableUrlParse ?? existingPreferencesSettings.autoParseUrl ?? false,
+			autoParseUrl:
+				legacy.enableUrlParse ?? existingPreferencesSettings.autoParseUrl ?? false,
 			searchProvider:
 				legacy.searchService || existingPreferencesSettings.searchProvider || "search1api",
 			streamOutputEnabled:
-				legacy.streamSmootherEnabled ?? existingPreferencesSettings.streamOutputEnabled ?? false,
+				legacy.streamSmootherEnabled ??
+				existingPreferencesSettings.streamOutputEnabled ??
+				false,
 			streamSpeed: legacy.streamSpeed || existingPreferencesSettings.streamSpeed || "normal",
 			titleGenerationModel: titleGenerationModel,
 			titleGenerationTiming: titleGenerationTiming,
@@ -653,7 +676,7 @@ async function importSettings(
 
 		stats.settings.updated++;
 	} catch (error) {
-		console.error("Failed to import settings:", error);
+		logger.error("Failed to import settings:", error);
 	}
 }
 
@@ -750,7 +773,7 @@ async function importShortcuts(legacyShortcuts: any[], stats: ImportStats): Prom
 			shortcuts: updatedShortcuts,
 		});
 	} catch (error) {
-		console.error("Failed to import shortcuts:", error);
+		logger.error("Failed to import shortcuts:", error);
 		stats.shortcuts.failed++;
 	}
 }

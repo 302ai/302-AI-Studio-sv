@@ -15,6 +15,9 @@
 	import LogDialog from "./log-dialog.svelte";
 	import PlatformServiceCard from "./platform-service-card.svelte";
 	import StatusIndicator from "./status-indicator.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let { isOpen = $bindable(true) }: { isOpen?: boolean } = $props();
 
@@ -99,7 +102,7 @@
 		try {
 			fileDirectory = await window.electronAPI.localVibeService.getComposeDirectory();
 		} catch (error) {
-			console.error("Failed to get compose directory:", error);
+			logger.error("Failed to get compose directory:", error);
 		}
 	});
 </script>
@@ -114,7 +117,9 @@
 				>
 				<StatusIndicator
 					status={sandboxRunning ? "green" : "gray"}
-					text={sandboxRunning ? m.local_platform_started() : m.local_platform_not_started()}
+					text={sandboxRunning
+						? m.local_platform_started()
+						: m.local_platform_not_started()}
 				/>
 			</div>
 			<!-- Health Status -->

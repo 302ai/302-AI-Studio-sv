@@ -99,19 +99,29 @@ export function parseModelCapabilities(
 	for (const keywordType of keywords) {
 		switch (keywordType) {
 			case "functionCall":
-				if (config.functionCall?.some((keyword) => lowerModelId.includes(keyword.toLowerCase()))) {
+				if (
+					config.functionCall?.some((keyword) =>
+						lowerModelId.includes(keyword.toLowerCase()),
+					)
+				) {
 					capabilities.add("function_call");
 				}
 				break;
 
 			case "reasoning":
-				if (config.reasoning?.some((keyword) => lowerModelId.includes(keyword.toLowerCase()))) {
+				if (
+					config.reasoning?.some((keyword) =>
+						lowerModelId.includes(keyword.toLowerCase()),
+					)
+				) {
 					capabilities.add("reasoning");
 				}
 				break;
 
 			case "vision":
-				if (config.vision?.some((keyword) => lowerModelId.includes(keyword.toLowerCase()))) {
+				if (
+					config.vision?.some((keyword) => lowerModelId.includes(keyword.toLowerCase()))
+				) {
 					capabilities.add("vision");
 				}
 				break;

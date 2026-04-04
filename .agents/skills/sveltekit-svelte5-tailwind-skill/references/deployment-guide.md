@@ -4,7 +4,7 @@ version_anchors: ["SvelteKit@2.x", "Svelte@5.x", "Tailwind@4.x"]
 authored: true
 origin: self
 adapted_from:
-  - "sveltejs/kit repository (adapter documentation)"
+    - "sveltejs/kit repository (adapter documentation)"
 last_reviewed: 2025-10-28
 summary: "Deploy to Vercel, Cloudflare Pages, Node servers, or static hosts with adapter configuration, environment variables, CSS build setup, and platform-specific optimizations."
 ---

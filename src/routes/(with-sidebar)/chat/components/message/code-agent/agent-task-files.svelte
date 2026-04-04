@@ -9,8 +9,12 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import { m } from "$lib/paraglide/messages";
 	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
+	import { getSandboxDownloadErrorMessage } from "$lib/utils/sandbox-download-error";
 	import { Download, FileIcon } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let { files }: Props = $props();
 
@@ -77,8 +81,8 @@
 
 			toast.success(m.toast_download_file_success({ fileName: filename }));
 		} catch (error) {
-			console.error("Failed to download file:", error);
-			toast.error(m.toast_download_failed());
+			logger.error("Failed to download file:", error);
+			toast.error(getSandboxDownloadErrorMessage(error));
 		} finally {
 			// Reset to undefined by removing key to keep state map clean.
 			const nextState = { ...isDownloading };
@@ -99,7 +103,9 @@
 				<div
 					class="flex items-center gap-2 px-3 py-1.5 rounded-full border bg-muted/30 hover:bg-muted/50 transition-colors"
 				>
-					<span class="text-xs truncate max-w-[200px]" title={item.file}>{item.fileName}</span>
+					<span class="text-xs truncate max-w-[200px]" title={item.file}
+						>{item.fileName}</span
+					>
 					{#if item.downloading}
 						<ButtonWithTooltip
 							tooltipSide="top"

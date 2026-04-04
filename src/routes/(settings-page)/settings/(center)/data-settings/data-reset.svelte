@@ -6,6 +6,9 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { Trash2 } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	let isResetting = $state(false);
 	let isClearingHistory = $state(false);
@@ -34,7 +37,7 @@
 			openResetDialog = false;
 			await window.electronAPI.appService.resetAllData();
 		} catch (error) {
-			console.error("Failed to reset data:", error);
+			logger.error("Failed to reset data:", error);
 			toast.error(m.settings_resetFailed(), {
 				description: error instanceof Error ? error.message : String(error),
 			});
@@ -48,7 +51,7 @@
 			openClearHistoryDialog = false;
 			await window.electronAPI.appService.clearChatHistory();
 		} catch (error) {
-			console.error("Failed to clear chat history:", error);
+			logger.error("Failed to clear chat history:", error);
 			toast.error(m.settings_clearChatHistoryFailed(), {
 				description: error instanceof Error ? error.message : String(error),
 			});
@@ -124,7 +127,9 @@
 					class="border-border text-foreground hover:bg-muted hover:text-foreground focus-visible:ring-ring dark:border-border dark:text-foreground dark:hover:bg-muted dark:hover:text-foreground border bg-transparent focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
 					variant="outline">{m.common_cancel()}</Button
 				>
-				<Button variant="destructive" onclick={handleReset}>{m.settings_resetConfirm()}</Button>
+				<Button variant="destructive" onclick={handleReset}
+					>{m.settings_resetConfirm()}</Button
+				>
 			</Dialog.Footer>
 		</Dialog.Content>
 	</Dialog.Root>

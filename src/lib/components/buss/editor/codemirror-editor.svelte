@@ -15,6 +15,9 @@
 	import { basicSetup, EditorView } from "codemirror";
 	import { onDestroy, onMount } from "svelte";
 	import { SvelteMap } from "svelte/reactivity";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	interface Props {
 		value: string;
@@ -72,7 +75,7 @@
 				{ dark: isDark },
 			);
 		} catch (error) {
-			console.warn("Failed to create theme from Shiki:", error);
+			logger.warn("Failed to create theme from Shiki:", error);
 			return null;
 		}
 	};
@@ -165,7 +168,10 @@
 				],
 
 				// Types
-				[["entity.name.type", "support.type", "support.class", "entity.name.class"], tags.typeName],
+				[
+					["entity.name.type", "support.type", "support.class", "entity.name.class"],
+					tags.typeName,
+				],
 
 				// Properties (CSS/JS/JSON) - most important for CSS
 				[
@@ -184,7 +190,10 @@
 				[["entity.name.tag", "meta.tag.sgml", "entity.name.tag.html"], tags.tagName],
 
 				// Attributes (HTML)
-				[["entity.other.attribute-name", "entity.other.attribute-name.html"], tags.attributeName],
+				[
+					["entity.other.attribute-name", "entity.other.attribute-name.html"],
+					tags.attributeName,
+				],
 
 				// Constants
 				[["constant", "constant.other", "variable.other.constant"], tags.literal],
@@ -214,7 +223,11 @@
 				[["markup.bold", "strong", "punctuation.definition.bold"], tags.strong, "bold"],
 
 				// Italic/Emphasis
-				[["markup.italic", "emphasis", "punctuation.definition.italic"], tags.emphasis, "italic"],
+				[
+					["markup.italic", "emphasis", "punctuation.definition.italic"],
+					tags.emphasis,
+					"italic",
+				],
 
 				// Links and URLs
 				[
@@ -225,7 +238,12 @@
 
 				// Inline code
 				[
-					["markup.inline.raw", "markup.raw", "markup.raw.inline", "markup.raw.inline.markdown"],
+					[
+						"markup.inline.raw",
+						"markup.raw",
+						"markup.raw.inline",
+						"markup.raw.inline.markdown",
+					],
 					tags.monospace,
 				],
 
@@ -255,23 +273,37 @@
 				],
 
 				// Strikethrough
-				[["markup.strikethrough", "punctuation.definition.strikethrough"], tags.strikethrough],
+				[
+					["markup.strikethrough", "punctuation.definition.strikethrough"],
+					tags.strikethrough,
+				],
 
 				// Code block info string (language identifier)
 				[
-					["fenced_code.block.language", "markup.fenced_code.block.language", "entity.name.label"],
+					[
+						"fenced_code.block.language",
+						"markup.fenced_code.block.language",
+						"entity.name.label",
+					],
 					tags.labelName,
 				],
 
 				// Horizontal rules / separators
-				[["meta.separator", "punctuation.definition.thematic-break"], tags.contentSeparator],
+				[
+					["meta.separator", "punctuation.definition.thematic-break"],
+					tags.contentSeparator,
+				],
 
 				// Escape characters
 				[["constant.character.escape", "punctuation.definition.constant"], tags.escape],
 
 				// Meta/frontmatter
 				[
-					["meta.embedded", "meta.separator.front-matter", "punctuation.definition.front-matter"],
+					[
+						"meta.embedded",
+						"meta.separator.front-matter",
+						"punctuation.definition.front-matter",
+					],
 					tags.meta,
 				],
 
@@ -305,7 +337,8 @@
 			const stringColor = colorMap.get("string") || (isDark ? "#CE9178" : "#A31515");
 			const commentColor = colorMap.get("comment") || (isDark ? "#6A9955" : "#008000");
 			const typeColor = colorMap.get("entity.name.type") || (isDark ? "#4FC1FF" : "#267F99");
-			const numberColor = colorMap.get("constant.numeric") || (isDark ? "#B5CEA8" : "#098658");
+			const numberColor =
+				colorMap.get("constant.numeric") || (isDark ? "#B5CEA8" : "#098658");
 			const metaColor = isDark ? "#808080" : "#999999";
 
 			// Default markdown fallback styles - comprehensive coverage
@@ -379,7 +412,10 @@
 			// Add markdown defaults only if not already defined
 			const existingTags = new Set(styleRules.map((r) => r.tag));
 			markdownDefaults.forEach((rule) => {
-				if (!existingTags.has(rule.tag) && (rule.color || rule.fontStyle || rule.fontWeight)) {
+				if (
+					!existingTags.has(rule.tag) &&
+					(rule.color || rule.fontStyle || rule.fontWeight)
+				) {
 					styleRules.push(rule as (typeof styleRules)[0]);
 				}
 			});
@@ -390,7 +426,7 @@
 					)
 				: null;
 		} catch (error) {
-			console.warn("Failed to create highlight style from Shiki:", error);
+			logger.warn("Failed to create highlight style from Shiki:", error);
 			return null;
 		}
 	};
@@ -531,7 +567,9 @@
 	const updateReadOnly = (readOnly: boolean | undefined) => {
 		if (view) {
 			view.dispatch({
-				effects: readOnlyCompartment.reconfigure(EditorState.readOnly.of(Boolean(readOnly))),
+				effects: readOnlyCompartment.reconfigure(
+					EditorState.readOnly.of(Boolean(readOnly)),
+				),
 			});
 		}
 	};

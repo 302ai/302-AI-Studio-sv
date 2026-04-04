@@ -23,6 +23,9 @@
 	import { SvelteSet } from "svelte/reactivity";
 	import ExportMessageList from "./export-message-list.svelte";
 	import { htmlExportUtils, KATEX_MACROS } from "./html-export-utils.svelte";
+	import { createLogger } from "@shared/logger";
+
+	const logger = createLogger("ui");
 
 	// ============================================================================
 	// Types
@@ -40,7 +43,11 @@
 	// Props & State
 	// ============================================================================
 
-	let { open = $bindable(), onOpenChange, startFromMessageId = null }: ExportDialogProps = $props();
+	let {
+		open = $bindable(),
+		onOpenChange,
+		startFromMessageId = null,
+	}: ExportDialogProps = $props();
 
 	let exportFormat = $state<ExportFormat>("markdown");
 	let selectedMessageIds = new SvelteSet<string>();
@@ -304,7 +311,10 @@
 					theme: theme ?? "vitesse-light",
 				});
 			} catch {
-				const escapedCode = code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+				const escapedCode = code
+					.replace(/&/g, "&amp;")
+					.replace(/</g, "&lt;")
+					.replace(/>/g, "&gt;");
 				highlightedCode = `<pre><code>${escapedCode}</code></pre>`;
 			}
 
@@ -510,7 +520,7 @@
 				open = false;
 			}
 		} catch (error) {
-			console.error("Export failed:", error);
+			logger.error("Export failed:", error);
 			toast.error(m.export_failed());
 		} finally {
 			isExporting = false;

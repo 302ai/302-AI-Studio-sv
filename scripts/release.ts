@@ -225,9 +225,10 @@ function ensureCleanGit(allowDirty: boolean) {
 	const { stdout } = run("git", ["status", "--porcelain"]);
 	if (stdout.trim() !== "") {
 		die(
-			["Working tree is not clean.", "Commit/stash your changes or rerun with --allow-dirty."].join(
-				"\n",
-			),
+			[
+				"Working tree is not clean.",
+				"Commit/stash your changes or rerun with --allow-dirty.",
+			].join("\n"),
 		);
 	}
 }
@@ -468,7 +469,9 @@ async function main() {
 			die(`Invalid --from version: ${options.from}`);
 		}
 		baseVersion = options.from;
-		console.log(`Using base version from --from: ${baseVersion} (package.json: ${packageVersion})`);
+		console.log(
+			`Using base version from --from: ${baseVersion} (package.json: ${packageVersion})`,
+		);
 	}
 
 	let appInfoMode: "manual" | "injected" | "unknown" = "unknown";
@@ -584,7 +587,11 @@ async function main() {
 	}
 
 	if (!finalOptions.noCommit && filesToAdd.length > 0) {
-		run("git", ["commit", "-m", `chore(release): ${tagName}`], { stdio: "inherit" });
+		const commitArgs = ["commit", "-m", `chore(release): ${tagName}`];
+		if (finalOptions.skipQuality) {
+			commitArgs.push("--no-verify");
+		}
+		run("git", commitArgs, { stdio: "inherit" });
 	}
 
 	if (!finalOptions.noTag) {
