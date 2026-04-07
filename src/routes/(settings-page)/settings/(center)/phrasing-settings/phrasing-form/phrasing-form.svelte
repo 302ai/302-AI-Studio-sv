@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
+	import { editorStateToText, PromptEditor } from "$lib/components/buss/prompt-editor";
 	import { UPDATE_CONTENT_COMMAND } from "$lib/components/buss/prompt-editor/plugins/external-update-plugin.svelte";
-	import { PromptEditor } from "$lib/components/buss/prompt-editor";
 	import { Button } from "$lib/components/ui/button";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
@@ -16,7 +16,8 @@
 		DEFAULT_USER_PHRASING,
 		EMPTY_PHRASING,
 	} from "$lib/stores/custom-presets-store.svelte";
-	import { ChevronLeft } from "@lucide/svelte";
+	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
+	import { ChevronLeft, Copy } from "@lucide/svelte";
 	import type { LexicalEditor } from "lexical";
 	import { toast } from "svelte-sonner";
 
@@ -120,6 +121,29 @@
 		goto(`/settings/phrasing-settings/phrasing-form/${newPreset.key}`);
 	}
 
+	function getEditorText(rawJson: string) {
+		try {
+			return editorStateToText(JSON.parse(rawJson)).trim();
+		} catch {
+			return "";
+		}
+	}
+
+	async function copyPromptText(rawJson: string) {
+		const text = getEditorText(rawJson);
+		if (!text) {
+			toast.error(m.toast_copied_failed());
+			return;
+		}
+
+		try {
+			await navigator.clipboard.writeText(text);
+			toast.success(m.toast_copied_success());
+		} catch {
+			toast.error(m.toast_copied_failed());
+		}
+	}
+
 	function handleSave() {
 		if (!name.trim()) {
 			toast.error(m.phrasing_name_required());
@@ -143,11 +167,34 @@
 
 	function handleDelete() {
 		if (mode !== "edit" || !presetId || isReadonlyBuiltinPreset) return;
+		if (preferencesSettings.defaultPhrasing === presetId) {
+			preferencesSettings.setDefaultPhrasing("empty");
+		}
 		customPresetsStore.deletePreset(presetId);
 		toast.success(m.phrasing_delete_success());
 		goto("/settings/phrasing-settings");
 	}
 </script>
+
+{#snippet systemCopyBtn()}
+	<button
+		type="button"
+		class="cursor-pointer rounded-sm p-1 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+		onclick={() => copyPromptText(systemPhrasing)}
+	>
+		<Copy size={12} />
+	</button>
+{/snippet}
+
+{#snippet userCopyBtn()}
+	<button
+		type="button"
+		class="cursor-pointer rounded-sm p-1 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground"
+		onclick={() => copyPromptText(userPhrasing)}
+	>
+		<Copy size={12} />
+	</button>
+{/snippet}
 
 <div class="flex justify-between items-center">
 	<button class="flex items-center cursor-pointer hover:text-primary" onclick={gotoBack}>
@@ -177,26 +224,32 @@
 	/>
 </div>
 
-<div class:opacity-70={isReadonlyBuiltinPreset} class:pointer-events-none={isReadonlyBuiltinPreset}>
+<div class:opacity-70={isReadonlyBuiltinPreset}>
 	<div class="gap-settings-gap flex flex-col">
 		<PromptEditor
-			class="min-h-[150px]"
+			tips="为本轮对话定全局规则和角色，如语气、身份、禁止事项等，对所有用户消息生效。"
 			label={m.text_system_prompt()}
+			readonly={isReadonlyBuiltinPreset}
+			class="min-h-[150px]"
 			onEditorReady={handleSystemEditorReady}
 			onchange={(_content, rawJson) => {
 				systemPhrasing = rawJson;
 			}}
+			right={systemCopyBtn}
 		/>
 	</div>
 
 	<div class="gap-settings-gap flex flex-col">
 		<PromptEditor
+			tips={`为每条用户输入套用统一格式或前后缀内容，可使用占位符（如 {{input}}）插入用户实际输入。`}
+			readonly={isReadonlyBuiltinPreset}
 			class="min-h-[150px]"
 			label={m.text_user_prompt_tempalte()}
 			onEditorReady={handleUserEditorReady}
 			onchange={(_content, rawJson) => {
 				userPhrasing = rawJson;
 			}}
+			right={userCopyBtn}
 		/>
 	</div>
 </div>
