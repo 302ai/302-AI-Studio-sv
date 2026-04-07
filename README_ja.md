@@ -1,5 +1,5 @@
 <h1 align="center">
-<img src='./docs/imgs/icon.svg' width='30'>
+<img src='./imgs/icon.svg' width='30'>
 <span>
     302 AI Studio
 </span>
@@ -9,7 +9,7 @@
 <em>Windows、Mac、Linux対応のクロスプラットフォームデスクトップAIアプリケーション。コード生成、ドキュメント要約、インテリジェントQ&Aなどの強力な汎用AI機能を提供し、生産性を総合的に向上させます。</em>
 </p>
 
-<p align="center"><a href="https://302.ai/" target="blank"><img src="docs/imgs/banner.png" /></a></p >
+<p align="center"><a href="https://302.ai/" target="blank"><img src="imgs/banner.png" /></a></p >
 
 <p align="center"><a href="README_zh.md">中文</a> | <a href="README.md">English</a> | <a href="README_ja.md">日本語</a></p>
 
@@ -26,27 +26,27 @@
 ### メインチャットインターフェース
 
 シンプルで直感的な会話インターフェース、マルチモデル切り替え、ファイルアップロード、ツール呼び出しなどをサポート
-<img src="./docs/imgs/302_AI_Studio_en_screenshot_01.png" >
+<img src="./imgs/302_AI_Studio_en_screenshot_01.png" >
 
 ### マルチタブ管理
 
 左側に会話リスト、右側にマルチタブ対話ウィンドウ、複数の会話スレッドを簡単に管理
-<img src="./docs/imgs/302_AI_Studio_en_screenshot_02.png" >
+<img src="./imgs/302_AI_Studio_en_screenshot_02.png" >
 
 ### AIアプリケーション統合
 
 302.AIツールボックス内蔵、ワンクリックで様々なAIアプリケーションを開く、ブラウザへの切り替え不要
-<img src="./docs/imgs/302_AI_Studio_en_screenshot_03.png" >
+<img src="./imgs/302_AI_Studio_en_screenshot_03.png" >
 
 ### 設定と構成
 
 独立した設定ウィンドウ、データ管理、Vibeモード、Skills、MCPサーバーなどの設定をサポート
-<img src="./docs/imgs/302_AI_Studio_en_screenshot_04.png" >
+<img src="./imgs/302_AI_Studio_en_screenshot_04.png" >
 
 ### Vibe Coding
 
 AI生成のフロントエンドコード効果のリアルタイムプレビューをサポート、WYSIWYG開発体験
-<img src="./docs/imgs/302_AI_Studio_en_screenshot_05.png" >
+<img src="./imgs/302_AI_Studio_en_screenshot_05.png" >
 
 ## 🌟 主な機能
 
