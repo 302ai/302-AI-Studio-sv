@@ -1,5 +1,5 @@
 <h1 align="center">
-<img src='./docs/imgs/icon.svg' width='30'>
+<img src='./imgs/icon.svg' width='30'>
 <span>
     302 AI Studio
 </span>
@@ -9,7 +9,7 @@
 <em>Your cross-platform desktop AI application for Windows, Mac, and Linux. Provides powerful general AI capabilities such as code generation, document summarization, and intelligent Q&A to comprehensively boost your productivity.</em>
 </p>
 
-<p align="center"><a href="https://302.ai/" target="blank"><img src="docs/imgs/banner.png" /></a></p >
+<p align="center"><a href="https://302.ai/" target="blank"><img src="imgs/banner.png" /></a></p >
 
 <p align="center"><a href="README_zh.md">中文</a> | <a href="README.md">English</a> | <a href="README_ja.md">日本語</a></p>
 
@@ -26,27 +26,27 @@
 ### Main Chat Interface
 
 Clean and intuitive conversation interface, supporting multi-model switching, file uploads, tool invocation, and more
-<img src="./docs/imgs/302_AI_Studio_en_screenshot_01.png" >
+<img src="./imgs/302_AI_Studio_en_screenshot_01.png" >
 
 ### Multi-Tab Management
 
 Conversation list on the left, multi-tab dialogue window on the right, easily manage multiple conversation threads
-<img src="./docs/imgs/302_AI_Studio_en_screenshot_02.png" >
+<img src="./imgs/302_AI_Studio_en_screenshot_02.png" >
 
 ### AI Application Integration
 
 Built-in 302.AI toolbox, quickly open various AI applications with one click, no need to switch to browser
-<img src="./docs/imgs/302_AI_Studio_en_screenshot_03.png" >
+<img src="./imgs/302_AI_Studio_en_screenshot_03.png" >
 
 ### Settings & Configuration
 
 Independent settings window, supporting data management, Vibe mode, Skills, MCP servers, and other configurations
-<img src="./docs/imgs/302_AI_Studio_en_screenshot_04.png" >
+<img src="./imgs/302_AI_Studio_en_screenshot_04.png" >
 
 ### Vibe Coding
 
 Support real-time preview of AI-generated front-end code effects, WYSIWYG development experience
-<img src="./docs/imgs/302_AI_Studio_en_screenshot_05.png" >
+<img src="./imgs/302_AI_Studio_en_screenshot_05.png" >
 
 ## 🌟 Key Features
 
