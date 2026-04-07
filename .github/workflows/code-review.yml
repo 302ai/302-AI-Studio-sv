@@ -52,8 +52,8 @@ jobs:
                   # 使用第三方 API 端点（如 302.AI 代理）
                   # 在 GitHub repo Settings → Secrets 中设置 ANTHROPIC_BASE_URL
                   claude_args: |
-                      --model cc-sonnet-4-6
-                      --max-turns 3
+                      --model glm-4.7-flashx
+                      --max-turns 25
                       --allowedTools "Read,Grep,Glob,Bash(pnpm check),Bash(pnpm lint),Bash(pnpm exec svelte-check)"
                       --disallowedTools "Edit,Write,Replace,NotebookEditCell"
                   # 审查 prompt - 引用项目审查标准
