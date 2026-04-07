@@ -1,5 +1,4 @@
 import { createLogger } from "@shared/logger";
-import ky from "ky";
 import { cloudModeKy } from "./core/cloud-mode-ky";
 
 const logger = createLogger("ui");
@@ -29,7 +28,7 @@ export async function getCloudSandboxHealth(
 		const userAgent = await getUserAgentFragment();
 		const apiKey = await get302AIApiKey();
 
-		const response = await ky
+		const response = await cloudModeKy
 			.get("302/claude-code/sandbox/health", {
 				prefixUrl: baseUrl,
 				timeout: 10000,

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import StatusIndicator from "$lib/components/buss/local-agent-panel/status-indicator.svelte";
 
 	import {
@@ -20,7 +21,8 @@
 		cloudEnvState,
 		type CloudHealthStatus,
 	} from "$lib/stores/code-agent/cloud-env-state.svelte";
-	import { LoaderCircle } from "@lucide/svelte";
+	import { cn } from "$lib/utils";
+	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
 
 	type StatusProps = { status: "green" | "red" | "gray"; text: string };
 
@@ -44,6 +46,36 @@
 	function formatDate(iso?: string): string {
 		if (!iso) return "--";
 		return new Date(iso).toLocaleDateString();
+	}
+
+	// --- Restart / Reboot ---
+	let isRestartingDocker = $state(false);
+	let isRebooting = $state(false);
+
+	async function handleRestartDockerAction() {
+		const instanceName = cloudEnvState.instanceInfo?.instance_name;
+		if (!instanceName) return;
+		isRestartingDocker = true;
+		try {
+			await restartDocker({ instance_name: instanceName });
+			// Refresh status after restart
+			await cloudEnvState.checkStatus();
+		} finally {
+			isRestartingDocker = false;
+		}
+	}
+
+	async function handleRebootAction() {
+		const instanceName = cloudEnvState.instanceInfo?.instance_name;
+		if (!instanceName) return;
+		isRebooting = true;
+		try {
+			await rebootInstance({ instance_name: instanceName });
+			// Refresh status after reboot
+			await cloudEnvState.checkStatus();
+		} finally {
+			isRebooting = false;
+		}
 	}
 
 	// --- Test section ---
@@ -214,7 +246,19 @@
 						<StatusIndicator
 							status={getHealthProps(cloudEnvState.instanceStatus).status}
 							text={getHealthProps(cloudEnvState.instanceStatus).text}
+							showWarning={cloudEnvState.instanceStatus === "unhealthy"}
+							warningTooltip={m.cloud_mode_try_restart()}
 						/>
+						{#if cloudEnvState.instanceStatus === "unhealthy" || isRebooting}
+							<ButtonWithTooltip
+								tooltip={m.cloud_mode_reboot_instance()}
+								class="hover:!bg-icon-btn-hover size-8"
+								onclick={handleRebootAction}
+								disabled={isRebooting}
+							>
+								<RefreshCw class={cn("h-4 w-4", isRebooting && "animate-spin")} />
+							</ButtonWithTooltip>
+						{/if}
 					</div>
 					<div class="flex items-center gap-3">
 						<Label class="text-muted-foreground min-w-18 font-normal"
@@ -241,7 +285,21 @@
 						<StatusIndicator
 							status={getHealthProps(cloudEnvState.openClawStatus).status}
 							text={getHealthProps(cloudEnvState.openClawStatus).text}
+							showWarning={cloudEnvState.openClawStatus === "unhealthy"}
+							warningTooltip={m.cloud_mode_try_restart()}
 						/>
+						{#if cloudEnvState.openClawStatus === "unhealthy" || isRestartingDocker}
+							<ButtonWithTooltip
+								tooltip={m.cloud_mode_restart_docker()}
+								class="hover:!bg-icon-btn-hover size-8"
+								onclick={handleRestartDockerAction}
+								disabled={isRestartingDocker}
+							>
+								<RefreshCw
+									class={cn("h-4 w-4", isRestartingDocker && "animate-spin")}
+								/>
+							</ButtonWithTooltip>
+						{/if}
 					</div>
 				</div>
 			</div>
@@ -265,14 +323,6 @@
 						{:else}
 							{m.cloud_mode_activate_button()}
 						{/if}
-					</Button>
-				{:else}
-					<Button
-						size="sm"
-						variant="secondary"
-						onclick={() => cloudEnvState.checkStatus()}
-					>
-						刷新状态
 					</Button>
 				{/if}
 			</div>
