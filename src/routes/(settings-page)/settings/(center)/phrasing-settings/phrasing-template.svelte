@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { editorStateToText } from "$lib/components/buss/prompt-editor";
+	import SettingSearchInput from "$lib/components/buss/settings/setting-search-input.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Empty from "$lib/components/ui/empty/index.js";
-	import { Input } from "$lib/components/ui/input";
 	import {
 		getBuiltinPresets,
 		isReadonlyBuiltinPresetKey,
@@ -12,8 +12,8 @@
 	} from "$lib/constants/preset-phrasing";
 	import { m } from "$lib/paraglide/messages";
 	import { customPresetsStore } from "$lib/stores/custom-presets-store.svelte";
+	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 	import { cn } from "$lib/utils";
-	import { Search } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 
 	let searchQuery = $state("");
@@ -35,6 +35,9 @@
 	};
 
 	const handleDelete = (key: string) => {
+		if (preferencesSettings.defaultPhrasing === key) {
+			preferencesSettings.setDefaultPhrasing("empty");
+		}
 		customPresetsStore.deletePreset(key);
 		toast.success(m.phrasing_delete_success());
 	};
@@ -71,16 +74,7 @@
 			</div>
 		</div>
 
-		<div class="relative">
-			<Search
-				class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-			/>
-			<Input
-				placeholder={m.placeholder_search_agent()}
-				class="pl-9 bg-muted/50 border-transparent focus-visible:ring-0 focus-visible:bg-background"
-				bind:value={searchQuery}
-			/>
-		</div>
+		<SettingSearchInput bind:value={searchQuery} placeholder={m.placeholder_search_agent()} />
 
 		<div class={cn("p-2", allPresets.length > 0 && "rounded-lg border bg-muted/20")}>
 			{#if allPresets.length === 0}
