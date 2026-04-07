@@ -34,6 +34,7 @@
 		topBar?: import("svelte").Snippet;
 		right?: import("svelte").Snippet;
 		readonly?: boolean;
+		resize?: boolean;
 	}
 
 	let {
@@ -52,6 +53,7 @@
 		topBar,
 		right,
 		readonly = false,
+		resize = false,
 	}: Props = $props();
 
 	let composer: Composer | undefined = $state();
@@ -177,6 +179,7 @@
 					"h-[150px] w-full",
 					"[&_p]:m-0 [&_p]:min-h-[1.5em] overflow-auto",
 					className,
+					resize && "resize-y",
 				)}
 			>
 				<ContentEditable
