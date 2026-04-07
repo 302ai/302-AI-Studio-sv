@@ -170,14 +170,9 @@
 
 			{#if displayType === "remote"}
 				<ClaudeCodePanel {onClose} />
-			{/if}
-			{#if displayType === "local"}
-				<!-- max-h-[500px] overflow-y-auto -->
-				<div class="pr-2">
-					<LocalModePanel {onClose} />
-				</div>
-			{/if}
-			{#if displayType === "cloud"}
+			{:else if displayType === "local"}
+				<LocalModePanel {onClose} />
+			{:else if displayType === "cloud"}
 				<CloudModePanel {onClose} />
 			{/if}
 		</div>

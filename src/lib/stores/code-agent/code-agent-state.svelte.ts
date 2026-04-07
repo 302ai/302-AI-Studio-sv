@@ -25,6 +25,7 @@ import { toast } from "svelte-sonner";
 import { match } from "ts-pattern";
 import { claudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
 import { claudeCodeAgentState, type ClaudeCodeSandboxInfo } from "./claude-code-state.svelte";
+import { cloudEnvState } from "./cloud-env-state.svelte";
 import { codeAgentGlobalConfigsState } from "./code-agent-global-configs-state.svelte";
 import { codeAgentSendMessageButtonState } from "./code-agent-send-message-button-state.svelte";
 import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
@@ -117,11 +118,17 @@ class CodeAgentState {
 	}
 
 	sandboxStatus = $derived.by<CodeAgentSandboxStatus>(() => {
-		return match(this.currentAgentId)
-			.with("claude-code", () =>
-				claudeCodeAgentState.sandboxId === "" ? "waiting-for-sandbox" : "sandbox-created",
+		return match(this.type)
+			.with("local", () => "sandbox-created" as const)
+			.with("cloud", () =>
+				cloudEnvState.running ? ("sandbox-created" as const) : ("waiting-for-sandbox" as const),
 			)
-			.otherwise(() => "waiting-for-sandbox");
+			.with("remote", () =>
+				claudeCodeAgentState.sandboxId === ""
+					? ("waiting-for-sandbox" as const)
+					: ("sandbox-created" as const),
+			)
+			.exhaustive();
 	});
 
 	handleChatFinished = async (event: { canDeploy: boolean; lastMessage: ChatMessage }) => {
@@ -152,6 +159,8 @@ class CodeAgentState {
 			await claudeCodeAgentState.handleThreadTitleUpdated(event);
 			if (this.type === "local") {
 				await localClaudeCodeSandboxState.refreshSessions();
+			} else if (this.type === "cloud") {
+				logger.info("[CodeAgentState] handleThreadTitleUpdated: cloud mode placeholder");
 			}
 		}
 	};
@@ -265,8 +274,8 @@ class CodeAgentState {
 	updateType(type: CodeAgentType): void {
 		const updates: Partial<CodeAgentConfigMetadata> = { type };
 
-		// 切换到远程模式时，重置 currentAgentId 为 claude-code
-		// 因为远程模式目前只支持 claude-code
+		// Reset currentAgentId to claude-code when switching to remote mode,
+		// as remote mode currently only supports claude-code
 		if (type === "remote") {
 			updates.currentAgentId = "claude-code";
 			updates.codingAgentId = "claude-code";
@@ -274,9 +283,9 @@ class CodeAgentState {
 
 		this.updateState(updates);
 
-		// 切换模式时重置 session 和 sandbox ID，避免配置混乱和竞态问题
+		// Reset session and sandbox ID when switching modes to avoid configuration confusion and race conditions
 		claudeCodeAgentState.resetSessionAndSandbox(type);
-		// 重置 local session 选择
+		// Reset local session selection
 		localClaudeCodeSandboxState.reset();
 	}
 
@@ -296,15 +305,21 @@ class CodeAgentState {
 	}
 
 	async executeCodeAgentMode(): Promise<{ isOK: boolean; sandboxInfo?: ClaudeCodeSandboxInfo }> {
-		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
-			// Local mode: skip sandbox verification, return virtual sandboxInfo
-			if (this.type === "local") {
-				return claudeCodeAgentState.handleLocalModeExecute();
-			}
-			// Remote mode: verify sandbox and return real sandboxInfo
-			return claudeCodeAgentState.handleAgentModeExecute();
+		if (this.currentAgentId !== "claude-code" && this.currentAgentId !== "open-claw") {
+			return { isOK: false };
 		}
-		return { isOK: false };
+
+		return match(this.type)
+			.with("local", () => claudeCodeAgentState.handleLocalModeExecute())
+			.with("cloud", () => {
+				if (!cloudEnvState.running) {
+					logger.info("[CodeAgentState] executeCodeAgentMode: Cloud not running");
+					// Future: add logic to prompt user to start cloud environment
+				}
+				return claudeCodeAgentState.handleLocalModeExecute();
+			})
+			.with("remote", () => claudeCodeAgentState.handleAgentModeExecute())
+			.exhaustive();
 	}
 
 	updateCurrentSessionId(sessionId: string): void {
@@ -316,16 +331,23 @@ class CodeAgentState {
 	get codeAgentCfgs(): CodeAgentCfgs {
 		return match(this.currentAgentId)
 			.with("claude-code", "open-claw", () => {
-				if (this.type === "local") {
-					return {
+				return match(this.type)
+					.with("local", () => ({
 						baseUrl: this.localBaseUrl,
 						model: claudeCodeAgentState.model,
-					};
-				}
-				return {
-					baseUrl: claudeCodeAgentState.baseUrl,
-					model: claudeCodeAgentState.sandboxId,
-				};
+					}))
+					.with("cloud", () => {
+						logger.info("[CodeAgentState] codeAgentCfgs: cloud mode placeholder");
+						return {
+							baseUrl: claudeCodeAgentState.baseUrl,
+							model: claudeCodeAgentState.model,
+						};
+					})
+					.with("remote", () => ({
+						baseUrl: claudeCodeAgentState.baseUrl,
+						model: claudeCodeAgentState.sandboxId,
+					}))
+					.exhaustive();
 			})
 			.otherwise(() => ({ baseUrl: "", model: "" }));
 	}
@@ -458,8 +480,12 @@ class CodeAgentState {
 					)
 					.otherwise(() => false);
 
-				if (isOK && this.type === "local") {
-					await localClaudeCodeSandboxState.refreshSessions();
+				if (isOK) {
+					if (this.type === "local") {
+						await localClaudeCodeSandboxState.refreshSessions();
+					} else if (this.type === "cloud") {
+						logger.info("[CodeAgentState] updateSessionRemark: cloud mode placeholder");
+					}
 				}
 
 				return isOK;
@@ -500,6 +526,8 @@ class CodeAgentState {
 			claudeCodeAgentState.init();
 			if (this.type === "local") {
 				localClaudeCodeSandboxState.init(this.currentSessionId, this.currentWorkspacePath);
+			} else if (this.type === "cloud") {
+				logger.info("[CodeAgentState] init: cloud mode placeholder");
 			}
 		}
 	}
@@ -513,6 +541,12 @@ class CodeAgentState {
 	handleLocalEnabled(sessionId: string, workspacePath: string): void {
 		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			claudeCodeAgentState.handleLocalEnabled(sessionId, workspacePath);
+		}
+	}
+
+	handleCloudEnabled(sessionId: string, workspacePath: string): void {
+		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
+			claudeCodeAgentState.handleCloudEnabled(sessionId, workspacePath);
 		}
 	}
 
@@ -531,13 +565,19 @@ class CodeAgentState {
 			}
 		}
 
-		if (this.type === "local") {
-			const sessionId = localClaudeCodeSandboxState.selectedSessionId;
-			const workspacePath = localClaudeCodeSandboxState.selectedWorkspacePath;
-			this.handleLocalEnabled(sessionId, workspacePath);
-		} else {
-			this.handleEnabled();
-		}
+		match(this.type)
+			.with("local", () => {
+				const sessionId = localClaudeCodeSandboxState.selectedSessionId;
+				const workspacePath = localClaudeCodeSandboxState.selectedWorkspacePath;
+				this.handleLocalEnabled(sessionId, workspacePath);
+			})
+			.with("cloud", () => {
+				this.handleCloudEnabled("new", "new");
+			})
+			.with("remote", () => {
+				this.handleEnabled();
+			})
+			.exhaustive();
 
 		this.updateEnabled(true, false);
 	}
