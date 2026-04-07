@@ -1187,7 +1187,7 @@
 	"text_user_prompt_tempalte_tips": "User Prompt Template",
 	"text_custom_type": "Custom",
 	"text_302_default_type": "302 Default",
-	"text_empty_type": "Empty",
+	"text_empty_type": "Disabled",
 	"text_universal_type": "Universal Type",
 	"text_terse_and_effective_type": "Terse and Effective Type",
 	"text_deep_thinking_type": "Deep Thinking Type",
