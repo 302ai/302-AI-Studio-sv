@@ -1,6 +1,11 @@
 {
 	"version": 1,
 	"skills": {
+		"create-github-pull-request-from-specification": {
+			"source": "github/awesome-copilot",
+			"sourceType": "github",
+			"computedHash": "2693885db375a1e4a21f66ac69761a86db30911c0a2a9fcb8bac5d9dd05eeb5c"
+		},
 		"electron": {
 			"source": "teachingai/full-stack-skills",
 			"sourceType": "github",
