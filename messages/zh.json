@@ -1190,7 +1190,7 @@
 	"text_user_prompt_tempalte_tips": "用户消息模板",
 	"text_custom_type": "自定义",
 	"text_302_default_type": "302默认",
-	"text_empty_type": "空",
+	"text_empty_type": "不启用",
 	"text_universal_type": "广泛通用型",
 	"text_terse_and_effective_type": "简洁高效型",
 	"text_deep_thinking_type": "深度思考型",

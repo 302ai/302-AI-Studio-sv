@@ -60,7 +60,7 @@ const getDefaults = (): PreferencesSettingsState => ({
 	contextCompressionEnabled: true,
 	contextCompressionLimit: 20,
 	// Default phrasing
-	defaultPhrasing: "universal-type",
+	defaultPhrasing: "empty",
 });
 
 const persistedPreferencesSettings = new PersistedState<PreferencesSettingsState>(
@@ -69,6 +69,10 @@ const persistedPreferencesSettings = new PersistedState<PreferencesSettingsState
 );
 
 class PreferencesSettingsManager {
+	get isHydrated(): boolean {
+		return persistedPreferencesSettings.isHydrated;
+	}
+
 	get state(): PreferencesSettingsState {
 		return persistedPreferencesSettings.current;
 	}
