@@ -12,65 +12,84 @@ permissions:
 
 env:
     UPDATE_SERVER_URL: https://updater.302.ai
+    NODE_OPTIONS: --max-old-space-size=8192
 
 jobs:
-    # Job 1: Create release on update server (runs first)
-    create-update-server-release:
+    # Job 1: Preparation - Parse version, quality checks, create Draft Release
+    prepare:
         runs-on: ubuntu-latest
         outputs:
             version: ${{ steps.version.outputs.version }}
             channel: ${{ steps.version.outputs.channel }}
         steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v5
+              with:
+                  node-version: 22
+                  cache: "pnpm"
+
             - name: Parse version and channel
               id: version
               run: |
-                  # Extract version from tag (remove 'v' prefix)
                   VERSION=${GITHUB_REF#refs/tags/v}
                   echo "version=${VERSION}" >> $GITHUB_OUTPUT
-
-                  # Determine channel based on version
                   if [[ "$VERSION" == *"-beta"* ]]; then
                     echo "channel=beta" >> $GITHUB_OUTPUT
-                    echo "Detected beta release: ${VERSION}"
                   else
                     echo "channel=stable" >> $GITHUB_OUTPUT
-                    echo "Detected stable release: ${VERSION}"
                   fi
 
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile --ignore-scripts
+
+            - name: Generate paraglide files
+              run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
+
+            # Ensure code quality before starting expensive builds
+            - name: Run quality checks
+              run: |
+                  npx eslint electron/main/
+                  pnpm run check
+
+            # Create GitHub Release early to avoid duplicate creation across platforms
+            - name: Create GitHub release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  VERSION=${GITHUB_REF#refs/tags/}
+                  PRERELEASE_FLAG=""
+                  [[ "$VERSION" == *"-beta"* ]] && PRERELEASE_FLAG="--prerelease"
+                  if ! gh release view "$VERSION" >/dev/null 2>&1; then
+                    gh release create "$VERSION" --title "$VERSION" --notes "Release $VERSION" $PRERELEASE_FLAG
+                  fi
+
+            # Create release record on the update server
             - name: Create release on update server
               run: |
-                  VERSION="${{ steps.version.outputs.version }}"
-                  CHANNEL="${{ steps.version.outputs.channel }}"
-
-                  echo "Creating release ${VERSION} on channel ${CHANNEL}..."
-
-                  curl -v -sfk -X POST "${UPDATE_SERVER_URL}/api/channels/${CHANNEL}/releases" \
+                  curl -vk --fail-with-body -X POST "${UPDATE_SERVER_URL}/api/channels/${{ steps.version.outputs.channel }}/releases" \
                     -H "X-API-Key: ${{ secrets.UPDATE_API_KEY }}" \
                     -H "Content-Type: application/json" \
-                    -d "{\"version\": \"${VERSION}\", \"notes\": \"Release ${VERSION}\"}"
+                    -d "{\"version\": \"${{ steps.version.outputs.version }}\", \"notes\": \"Release ${{ steps.version.outputs.version }}\"}"
 
-                  echo "Release created successfully on update server"
-
-    # Job 2: Build, publish to GitHub, and upload to update server
+    # Job 2: Build and Upload - Parallel execution across platforms
     release:
-        needs: create-update-server-release
+        needs: prepare
         runs-on: ${{ matrix.os }}
-
         strategy:
             matrix:
                 include:
-                    # macOS ARM64 (Apple Silicon) - xlarge for faster builds
                     - os: macos-latest-xlarge
                       arch: arm64
-                    # macOS Intel x64 - large for faster builds
                     - os: macos-15-large
                       arch: x64
-                    # - os: macos-latest
-                    #   arch: universal
-                    # Linux
                     - os: ubuntu-latest
                       arch: x64
-                    # Windows
                     - os: windows-latest
                       arch: x64
 
@@ -96,8 +115,6 @@ jobs:
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile --ignore-scripts
-              env:
-                  NODE_OPTIONS: --max-old-space-size=8192
 
             - name: Rebuild Windows native modules
               if: startsWith(matrix.os, 'windows')
@@ -106,218 +123,89 @@ jobs:
             - name: Generate paraglide files
               run: npx @inlang/paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide
 
-            - name: Build workspace packages
+            - name: Build shared packages
               run: pnpm --filter @302ai/studio-plugin-sdk run build
 
-            - name: Run quality checks
-              env:
-                  NODE_OPTIONS: --max-old-space-size=8192
-              run: |
-                  npx eslint electron/main/
-                  pnpm run check
-                  pnpm run build
+            # Only perform build, quality checks already completed in the prepare Job
+            - name: Build Project
+              run: pnpm run build
 
-            # TODO: Remove GitHub release step after users migrate to new update server
-            - name: Create GitHub release (Ubuntu only)
-              if: startsWith(matrix.os, 'ubuntu')
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: |
-                  # Extract version from tag
-                  VERSION=${GITHUB_REF#refs/tags/}
-
-                  # Determine if this is a beta release
-                  IS_BETA=false
-                  PRERELEASE_FLAG="--prerelease"
-                  if [[ "$VERSION" == *"-beta"* ]]; then
-                    IS_BETA=true
-                    echo "This is a beta release"
-                  fi
-
-                  # Create release if it doesn't exist
-                  if ! gh release view "$VERSION" >/dev/null 2>&1; then
-                    if [ "$IS_BETA" = true ]; then
-                      gh release create "$VERSION" --title "$VERSION (Beta)" --notes "Beta Release $VERSION" $PRERELEASE_FLAG
-                    else
-                      gh release create "$VERSION" --title "$VERSION" --notes "Release $VERSION" $PRERELEASE_FLAG
-                    fi
-                  fi
-
-            # TODO: Remove GitHub publish after users migrate to new update server
             - name: Build and publish to GitHub
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NODE_ENV: production
-                  NODE_OPTIONS: --max-old-space-size=8192
                   APPLE_ID: ${{ secrets.APPLE_ID }}
                   APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
                   APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
               run: pnpm run publish
 
-            # Upload macOS artifacts to update server
-            - name: Upload macOS artifacts to update server
+            # Upload to update server - Enhanced error handling and explicit type specification
+            - name: Upload macOS artifacts
               if: startsWith(matrix.os, 'macos')
               run: |
-                  VERSION="${{ needs.create-update-server-release.outputs.version }}"
-                  CHANNEL="${{ needs.create-update-server-release.outputs.channel }}"
-                  ARCH="${{ matrix.arch }}"
-
-                  echo "Uploading macOS artifacts for ${ARCH} to update server..."
-
-                  # Upload ZIP file
                   ZIP_FILE=$(find out/make/zip/darwin -name "*.zip" -type f | head -1)
-                  if [ -z "$ZIP_FILE" ]; then
-                    echo "Error: No ZIP file found"
-                    exit 1
+                  if [ -n "$ZIP_FILE" ]; then
+                    curl -vk --fail-with-body -X POST "${UPDATE_SERVER_URL}/api/channels/${{ needs.prepare.outputs.channel }}/releases/${{ needs.prepare.outputs.version }}/upload" \
+                      -H "X-API-Key: ${{ secrets.UPDATE_API_KEY }}" \
+                      -F "file=@${ZIP_FILE}" -F "platform=darwin" -F "arch=${{ matrix.arch }}" -F "artifact_type=zip"
                   fi
-                  echo "Found ZIP: ${ZIP_FILE}"
-
-                  curl -v -sfk -X POST "${UPDATE_SERVER_URL}/api/channels/${CHANNEL}/releases/${VERSION}/upload" \
-                    -H "X-API-Key: ${{ secrets.UPDATE_API_KEY }}" \
-                    -F "file=@${ZIP_FILE}" \
-                    -F "platform=darwin" \
-                    -F "arch=${ARCH}"
-
-                  echo "macOS ZIP uploaded successfully"
-
-                  # Upload DMG file
                   DMG_FILE=$(find out/make -maxdepth 1 -name "*.dmg" -type f | head -1)
                   if [ -n "$DMG_FILE" ]; then
-                    echo "Found DMG: ${DMG_FILE}"
-                    curl -v -sfk -X POST "${UPDATE_SERVER_URL}/api/channels/${CHANNEL}/releases/${VERSION}/upload" \
+                    curl -vk --fail-with-body -X POST "${UPDATE_SERVER_URL}/api/channels/${{ needs.prepare.outputs.channel }}/releases/${{ needs.prepare.outputs.version }}/upload" \
                       -H "X-API-Key: ${{ secrets.UPDATE_API_KEY }}" \
-                      -F "file=@${DMG_FILE}" \
-                      -F "platform=darwin" \
-                      -F "arch=${ARCH}"
-                    echo "macOS DMG uploaded successfully"
-                  else
-                    echo "Warning: No DMG file found"
+                      -F "file=@${DMG_FILE}" -F "platform=darwin" -F "arch=${{ matrix.arch }}" -F "artifact_type=dmg"
                   fi
 
-                  echo "macOS artifacts uploaded successfully to update server"
-
-            # Upload Windows artifacts to update server
-            - name: Upload Windows artifacts to update server
+            - name: Upload Windows artifacts
               if: startsWith(matrix.os, 'windows')
               shell: bash
               run: |
-                  VERSION="${{ needs.create-update-server-release.outputs.version }}"
-                  CHANNEL="${{ needs.create-update-server-release.outputs.channel }}"
-                  ARCH="${{ matrix.arch }}"
-
-                  echo "Uploading Windows artifacts for ${ARCH} to update server..."
-
-                  # Upload Setup.exe
                   SETUP_FILE=$(find out/make/squirrel.windows -name "*Setup.exe" -type f | head -1)
                   if [ -n "$SETUP_FILE" ]; then
-                    echo "Found Setup.exe: ${SETUP_FILE}"
-                    curl -v -sfk -X POST "${UPDATE_SERVER_URL}/api/channels/${CHANNEL}/releases/${VERSION}/upload" \
+                    curl -vk --fail-with-body -X POST "${UPDATE_SERVER_URL}/api/channels/${{ needs.prepare.outputs.channel }}/releases/${{ needs.prepare.outputs.version }}/upload" \
                       -H "X-API-Key: ${{ secrets.UPDATE_API_KEY }}" \
-                      -F "file=@${SETUP_FILE}" \
-                      -F "platform=win32" \
-                      -F "arch=${ARCH}"
-                    echo "Setup.exe uploaded successfully"
+                      -F "file=@${SETUP_FILE}" -F "platform=win32" -F "arch=${{ matrix.arch }}" -F "artifact_type=exe"
                   fi
-
-                  # Upload nupkg for Squirrel delta updates
                   NUPKG_FILE=$(find out/make/squirrel.windows -name "*-full.nupkg" -type f | head -1)
                   if [ -n "$NUPKG_FILE" ]; then
-                    echo "Found nupkg: ${NUPKG_FILE}"
-                    curl -v -sfk -X POST "${UPDATE_SERVER_URL}/api/channels/${CHANNEL}/releases/${VERSION}/upload" \
+                    curl -vk --fail-with-body -X POST "${UPDATE_SERVER_URL}/api/channels/${{ needs.prepare.outputs.channel }}/releases/${{ needs.prepare.outputs.version }}/upload" \
                       -H "X-API-Key: ${{ secrets.UPDATE_API_KEY }}" \
-                      -F "file=@${NUPKG_FILE}" \
-                      -F "platform=win32" \
-                      -F "arch=${ARCH}"
-                    echo "nupkg uploaded successfully"
+                      -F "file=@${NUPKG_FILE}" -F "platform=win32" -F "arch=${{ matrix.arch }}" -F "artifact_type=nupkg"
                   fi
 
-                  echo "Windows artifacts uploaded successfully to update server"
-
-            # Upload Linux artifacts to update server
-            - name: Upload Linux artifacts to update server
+            - name: Upload Linux artifacts
               if: startsWith(matrix.os, 'ubuntu')
               run: |
-                  VERSION="${{ needs.create-update-server-release.outputs.version }}"
-                  CHANNEL="${{ needs.create-update-server-release.outputs.channel }}"
-                  ARCH="${{ matrix.arch }}"
-
-                  echo "Uploading Linux artifacts for ${ARCH} to update server..."
-
-                  # Upload deb package
                   DEB_FILE=$(find out/make/deb -name "*.deb" -type f | head -1)
                   if [ -n "$DEB_FILE" ]; then
-                    echo "Found deb: ${DEB_FILE}"
-                    curl -v -sfk -X POST "${UPDATE_SERVER_URL}/api/channels/${CHANNEL}/releases/${VERSION}/upload" \
+                    curl -vk --fail-with-body -X POST "${UPDATE_SERVER_URL}/api/channels/${{ needs.prepare.outputs.channel }}/releases/${{ needs.prepare.outputs.version }}/upload" \
                       -H "X-API-Key: ${{ secrets.UPDATE_API_KEY }}" \
-                      -F "file=@${DEB_FILE}" \
-                      -F "platform=linux" \
-                      -F "arch=${ARCH}"
-                    echo "deb package uploaded successfully"
-                  else
-                    echo "Warning: No deb file found"
+                      -F "file=@${DEB_FILE}" -F "platform=linux" -F "arch=${{ matrix.arch }}" -F "artifact_type=deb"
                   fi
-
-                  # Upload rpm package
                   RPM_FILE=$(find out/make/rpm -name "*.rpm" -type f | head -1)
                   if [ -n "$RPM_FILE" ]; then
-                    echo "Found rpm: ${RPM_FILE}"
-                    curl -v -sfk -X POST "${UPDATE_SERVER_URL}/api/channels/${CHANNEL}/releases/${VERSION}/upload" \
+                    curl -vk --fail-with-body -X POST "${UPDATE_SERVER_URL}/api/channels/${{ needs.prepare.outputs.channel }}/releases/${{ needs.prepare.outputs.version }}/upload" \
                       -H "X-API-Key: ${{ secrets.UPDATE_API_KEY }}" \
-                      -F "file=@${RPM_FILE}" \
-                      -F "platform=linux" \
-                      -F "arch=${ARCH}"
-                    echo "rpm package uploaded successfully"
-                  else
-                    echo "Warning: No rpm file found"
+                      -F "file=@${RPM_FILE}" -F "platform=linux" -F "arch=${{ matrix.arch }}" -F "artifact_type=rpm"
                   fi
 
-                  echo "Linux artifacts uploaded successfully to update server"
-
-            # Save artifacts for debugging/manual download
-            - name: Upload artifacts (Windows)
-              if: startsWith(matrix.os, 'windows')
+            # Upload artifacts to GitHub Job (for backup/debugging)
+            - name: Upload artifacts to GitHub
               uses: actions/upload-artifact@v4
               with:
-                  name: windows-artifacts
+                  name: ${{ matrix.os }}-${{ matrix.arch }}-artifacts
                   path: |
-                      out/make/squirrel.windows/**/*
-                      out/make/zip/win32/**/*
-
-            - name: Upload artifacts (macOS)
-              if: startsWith(matrix.os, 'macos')
-              uses: actions/upload-artifact@v4
-              with:
-                  name: macos-${{ matrix.arch }}-artifacts
-                  path: |
-                      out/make/*.dmg
+                      out/make/**/*
                       out/make/zip/**/*
 
-            - name: Upload artifacts (Linux)
-              if: startsWith(matrix.os, 'ubuntu')
-              uses: actions/upload-artifact@v4
-              with:
-                  name: linux-artifacts
-                  path: |
-                      out/make/deb/**/*
-                      out/make/rpm/**/*
-
-    # Job 3: Publish release on update server after all uploads complete
-    publish-update-server-release:
-        needs: [create-update-server-release, release]
+    # Job 3: Publication - Switch release status after all uploads are complete
+    publish:
+        needs: [prepare, release]
         runs-on: ubuntu-latest
         steps:
             - name: Publish release on update server
               run: |
-                  VERSION="${{ needs.create-update-server-release.outputs.version }}"
-                  CHANNEL="${{ needs.create-update-server-release.outputs.channel }}"
-
-                  echo "Publishing release ${VERSION} on channel ${CHANNEL}..."
-
-                  curl -v -sfk -X POST "${UPDATE_SERVER_URL}/api/channels/${CHANNEL}/releases/${VERSION}/publish" \
+                  curl -vk --fail-with-body -X POST "${UPDATE_SERVER_URL}/api/channels/${{ needs.prepare.outputs.channel }}/releases/${{ needs.prepare.outputs.version }}/publish" \
                     -H "X-API-Key: ${{ secrets.UPDATE_API_KEY }}"
 
                   echo "Release published successfully on update server!"
-                  echo ""
-                  echo "Update URLs:"
-                  echo "  GitHub (legacy): https://github.com/302ai/302-AI-Studio-sv/releases"
-                  echo "  Update Server:   ${UPDATE_SERVER_URL}/update/302-ai-studio/${CHANNEL}"

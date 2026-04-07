@@ -18,20 +18,22 @@ const threadId =
 		: "shell";
 
 const VALID_BUILTIN_TYPES = [
-	"302-default",
 	"empty",
 	"universal-type",
 	"terse-and-effective-type",
 	"deep-thinking-type",
 ];
 
-const DEFAULT_PRESET_MARKER = "__use_global_default__";
+const getInitialSystemPromptPresetType = (): string => {
+	const fallback = preferencesSettings.defaultPhrasing;
+	return isValidPresetType(fallback) ? fallback : "empty";
+};
 
 const initialChatParameters: ChatParametersType = {
 	systemPromptVariables: [],
 	systemPromptMap: {},
 	systemPromptContent: "",
-	systemPromptPresetType: DEFAULT_PRESET_MARKER,
+	systemPromptPresetType: getInitialSystemPromptPresetType(),
 	systemPromptRawJson:
 		'{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0,"textStyle":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
 	userPromptTemplateVariables: ["input"],
@@ -65,12 +67,7 @@ class ChatParameters {
 	);
 	systemPromptPresetType = $derived.by(() => {
 		const type = persistedChatParametersState.current.systemPromptPresetType;
-
-		if (type === DEFAULT_PRESET_MARKER || !isValidPresetType(type)) {
-			const fallback = preferencesSettings.defaultPhrasing;
-			return isValidPresetType(fallback) ? fallback : "universal-type";
-		}
-		return type;
+		return isValidPresetType(type) ? type : "empty";
 	});
 	systemPromptRawJson = $derived.by(
 		() => persistedChatParametersState.current.systemPromptRawJson,
