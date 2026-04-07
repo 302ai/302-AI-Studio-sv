@@ -203,6 +203,18 @@
 
 <div class="text-muted-foreground text-sm mt-4">
 	<p>{m.phrasing_supported_variables()}</p>
-	<p>{m.phrasing_supported_variables_desc_1()}</p>
-	<p>{m.phrasing_supported_variables_desc_2()}</p>
+	<p>
+		{m.phrasing_supported_variables_desc_1({
+			input: "{input}",
+			date: "{date}",
+			time: "{time}",
+		})}
+	</p>
+	<p>
+		{m.phrasing_supported_variables_desc_2({
+			datetime: "{datetime}",
+			now: "{now}",
+			model_id: "{model_id}",
+		})}
+	</p>
 </div>
