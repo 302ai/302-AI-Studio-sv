@@ -326,9 +326,9 @@
 					</Button>
 				{/if}
 			</div>
-			{#if cloudEnvState.instanceInfo}
-				<div class="flex justify-between items-end">
-					<div class="space-y-1">
+			<div class="flex justify-between items-end">
+				<div class="space-y-1">
+					{#if cloudEnvState.instanceInfo}
 						<p class="text-sm text-muted-foreground">
 							IP：{cloudEnvState.instanceInfo.public_ip || "--"}
 						</p>
@@ -338,27 +338,19 @@
 						<p class="text-sm text-muted-foreground">
 							到期日期：{formatDate(cloudEnvState.instanceInfo.expired_at)}
 						</p>
-					</div>
-					<div class="flex items-center">
-						<Switch
-							class="data-[state=unchecked]:border-settings-switch-border cursor-pointer"
-						/>
-						<span class="text-sm text-muted-foreground ml-2"> 自动续费 </span>
-					</div>
-				</div>
-			{:else}
-				<div class="flex justify-between items-end">
-					<div class="space-y-1">
+					{:else}
 						<p class="text-sm text-muted-foreground">暂无实例</p>
-					</div>
+					{/if}
+				</div>
+				{#if !cloudEnvState.activated}
 					<div class="flex items-center">
 						<Switch
 							class="data-[state=unchecked]:border-settings-switch-border cursor-pointer"
 						/>
 						<span class="text-sm text-muted-foreground ml-2"> 自动续费 </span>
 					</div>
-				</div>
-			{/if}
+				{/if}
+			</div>
 		</div>
 	</div>
 
