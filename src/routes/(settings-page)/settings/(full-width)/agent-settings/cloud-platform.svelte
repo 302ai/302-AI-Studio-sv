@@ -51,6 +51,7 @@
 	// --- Restart / Reboot ---
 	let isRestartingDocker = $state(false);
 	let isRebooting = $state(false);
+	let isAutoRenew = $state(false);
 
 	async function handleRestartDockerAction() {
 		const instanceName = cloudEnvState.instanceInfo?.instance_name;
@@ -316,7 +317,7 @@
 					<Button
 						size="sm"
 						disabled={cloudEnvState.starting}
-						onclick={() => cloudEnvState.startCloud()}
+						onclick={() => cloudEnvState.startCloud({ isAutoRenew })}
 					>
 						{#if cloudEnvState.starting}
 							<LoaderCircle class="h-4 w-4 animate-spin" />
@@ -345,6 +346,7 @@
 				{#if !cloudEnvState.activated}
 					<div class="flex items-center">
 						<Switch
+							bind:checked={isAutoRenew}
 							class="data-[state=unchecked]:border-settings-switch-border cursor-pointer"
 						/>
 						<span class="text-sm text-muted-foreground ml-2"> 自动续费 </span>

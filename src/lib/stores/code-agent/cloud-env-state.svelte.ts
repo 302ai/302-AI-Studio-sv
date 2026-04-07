@@ -138,10 +138,16 @@ class CloudEnvState {
 	/**
 	 * Start cloud sandbox by creating a compute instance.
 	 */
-	async startCloud(): Promise<boolean> {
+	async startCloud(options?: { isAutoRenew?: boolean }): Promise<boolean> {
 		this.starting = true;
 		try {
-			const response = await createInstance({ is_dev: true });
+			const request: import("$lib/api/cloud-instance").CreateInstanceRequest = {
+				is_dev: true,
+			};
+			if (options?.isAutoRenew !== undefined) {
+				request.is_auto_renew = options.isAutoRenew;
+			}
+			const response = await createInstance(request);
 
 			if (response.success && response.instance) {
 				this.instanceInfo = response.instance;
