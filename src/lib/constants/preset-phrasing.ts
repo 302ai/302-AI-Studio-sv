@@ -16,8 +16,9 @@ export const PRESET_SYSTEM_PROMPT_KEYS = [
 
 export const READONLY_BUILTIN_PRESET_KEYS = ["302-default", "empty"] as const;
 
+// TODO: 302-default Current empty
 export const BUILTIN_SYSTEM_PHRASING_MAP: Record<string, string> = {
-	"302-default": textJsonToEditorState("待完善") ?? EMPTY_PHRASING,
+	"302-default": textJsonToEditorState("") ?? EMPTY_PHRASING,
 	empty: EMPTY_PHRASING,
 	"universal-type": JSON.stringify(universalType),
 	"terse-and-effective-type": JSON.stringify(terseAndEffectiveType),
