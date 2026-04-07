@@ -2,13 +2,18 @@
 	export const platformOptions = [
 		{
 			key: "remote",
-			label: m.title_remote(),
-			description: m.title_remote_platform_description(),
+			label: m.platform_remote_label(),
+			description: m.platform_remote_description(),
+		},
+		{
+			key: "cloud",
+			label: m.platform_cloud_label(),
+			description: m.platform_cloud_description(),
 		},
 		{
 			key: "local",
-			label: m.title_local(),
-			description: m.title_local_platform_description(),
+			label: m.platform_local_label(),
+			description: m.platform_local_description(),
 		},
 	];
 	export const options: SelectOption[] = [
@@ -52,6 +57,7 @@
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
 	import ClaudeCodePanel from "./claude-code-panel.svelte";
+	import CloudModePanel from "./cloud-mode-panel.svelte";
 	import LocalModePanel from "./local-mode-panel.svelte";
 
 	let { onClose }: Props = $props();
@@ -83,6 +89,13 @@
 				return currentSession?.note ?? currentSession?.sessionId ?? m.title_new_chat();
 			})
 			.with("local", () => {
+				const sessionId = codeAgentState.currentSessionId;
+				const currentSession = localClaudeCodeSandboxState.sessions.find(
+					(s) => s.session_id === sessionId,
+				);
+				return currentSession?.note ?? currentSession?.session_id ?? m.title_new_chat();
+			})
+			.with("cloud", () => {
 				const sessionId = codeAgentState.currentSessionId;
 				const currentSession = localClaudeCodeSandboxState.sessions.find(
 					(s) => s.session_id === sessionId,
@@ -163,6 +176,9 @@
 				<div class="pr-2">
 					<LocalModePanel {onClose} />
 				</div>
+			{/if}
+			{#if displayType === "cloud"}
+				<CloudModePanel {onClose} />
 			{/if}
 		</div>
 	</div>

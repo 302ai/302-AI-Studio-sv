@@ -2,16 +2,17 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import PodmanCard from "$lib/components/buss/local-agent-panel/podman-card.svelte";
 	import SandboxCard from "$lib/components/buss/local-agent-panel/sandbox-card.svelte";
+	import OpenClawConfigPanel from "$lib/components/buss/open-claw-config-panel/open-claw-config-panel.svelte";
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Empty from "$lib/components/ui/empty/index.js";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
-	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import {
 		localClaudeCodeSandboxState,
 		persistedLocalClaudeCodeSessionsState,
 	} from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
+	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { cn } from "$lib/utils";
 	import { RotateCw, Search } from "@lucide/svelte";
 	import type { LocalSessionInfo } from "@shared/storage/code-agent";
@@ -62,6 +63,10 @@
 </script>
 
 <div class="gap-settings-gap flex flex-col">
+	<section class="space-y-4">
+		<OpenClawConfigPanel />
+	</section>
+
 	<!-- Section 1: Environment Monitoring -->
 	<section class="space-y-4">
 		<Label class="text-label-fg font-normal">{m.local_platform_environment_monitoring()}</Label>
@@ -76,29 +81,30 @@
 	<!-- Section 2: Local Session List -->
 	<section class="space-y-4 mt-6">
 		<div class="flex items-center justify-between">
-			<h2 class="text-base font-medium">{m.title_local_session_list()}</h2>
-			<div class="flex gap-1">
-				<ButtonWithTooltip
-					class="hover:!bg-chat-action-hover"
-					tooltip={m.label_button_reload()}
-					onclick={handleRefresh}
-					disabled={isLoading}
-				>
-					<RotateCw class={cn("h-4 w-4", isLoading ? "animate-spin" : "")} />
-				</ButtonWithTooltip>
+			<div class="flex items-center">
+				<h2 class="text-base font-medium">{m.title_local_session_list()}</h2>
+				<div class="flex gap-1">
+					<ButtonWithTooltip
+						class="hover:!bg-chat-action-hover"
+						tooltip={m.label_button_reload()}
+						onclick={handleRefresh}
+						disabled={isLoading}
+					>
+						<RotateCw class={cn("h-4 w-4", isLoading ? "animate-spin" : "")} />
+					</ButtonWithTooltip>
+				</div>
 			</div>
-		</div>
-
-		<!-- Search -->
-		<div class="relative">
-			<Search
-				class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-			/>
-			<Input
-				placeholder={m.placeholder_search_session()}
-				class="pl-9 bg-muted/50 border-transparent focus-visible:ring-0 focus-visible:bg-background"
-				bind:value={searchQuery}
-			/>
+			<!-- Search -->
+			<div class="relative">
+				<Search
+					class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+				/>
+				<Input
+					placeholder={m.placeholder_search_session()}
+					class="pl-9 bg-muted/50 border-transparent focus-visible:ring-0 focus-visible:bg-background"
+					bind:value={searchQuery}
+				/>
+			</div>
 		</div>
 
 		<!-- Session List -->

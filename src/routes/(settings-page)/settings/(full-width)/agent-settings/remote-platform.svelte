@@ -84,35 +84,43 @@
 </script>
 
 <!-- Agent Sandbox List Section -->
-<div class="space-y-3">
+<div class="flex flex-col gap-3 h-full">
 	<div class="flex items-center justify-between">
-		<h2 class="text-base font-medium">{m.title_agent_sandbox_list()}</h2>
-		<div class="flex gap-1">
-			<ButtonWithTooltip
-				class="hover:!bg-chat-action-hover"
-				tooltip={m.label_button_reload()}
-				onclick={handleRefresh}
-				disabled={isLoading}
-			>
-				<RotateCw class={cn("h-4 w-4", isLoading ? "animate-spin" : "")} />
-			</ButtonWithTooltip>
+		<div class="flex items-center">
+			<h2 class="text-base font-medium">{m.title_agent_sandbox_list()}</h2>
+			<div class="flex gap-1">
+				<ButtonWithTooltip
+					class="hover:!bg-chat-action-hover"
+					tooltip={m.label_button_reload()}
+					onclick={handleRefresh}
+					disabled={isLoading}
+				>
+					<RotateCw class={cn("h-4 w-4", isLoading ? "animate-spin" : "")} />
+				</ButtonWithTooltip>
 
-			<!-- {@render remoteModeSettings()} -->
+				<!-- {@render remoteModeSettings()} -->
+			</div>
+		</div>
+		<!-- Search -->
+		<div class="relative">
+			<Search
+				class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+			/>
+			<Input
+				placeholder={m.placeholder_search_agent()}
+				class="pl-9 bg-muted/50 border-transparent focus-visible:ring-0 focus-visible:bg-background"
+				bind:value={searchQuery}
+			/>
 		</div>
 	</div>
 
-	<!-- Search -->
-	<div class="relative">
-		<Search class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-		<Input
-			placeholder={m.placeholder_search_agent()}
-			class="pl-9 bg-muted/50 border-transparent focus-visible:ring-0 focus-visible:bg-background"
-			bind:value={searchQuery}
-		/>
-	</div>
-
 	<!-- Sandbox List -->
-	<div class={cn("p-2", filteredSandboxes.length > 0 && "rounded-lg border bg-muted/20")}>
+	<div
+		class={cn(
+			"p-2 flex-1 min-h-0",
+			filteredSandboxes.length > 0 && "rounded-lg border bg-muted/20",
+		)}
+	>
 		{#if filteredSandboxes.length === 0}
 			<Empty.Root>
 				<Empty.Content class="h-[200px] flex flex-col items-center justify-start pt-8">
@@ -122,7 +130,7 @@
 				</Empty.Content>
 			</Empty.Root>
 		{:else}
-			<div class="max-h-[360px] overflow-y-auto pr-1">
+			<div class="overflow-y-auto h-full pr-1">
 				<div class="flex flex-col gap-2">
 					{#each filteredSandboxes as sandbox (sandbox.sandboxId)}
 						<!-- svelte-ignore a11y_click_events_have_key_events -->
