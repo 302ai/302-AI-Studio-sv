@@ -6,10 +6,10 @@
 		type WebserveListResponse,
 	} from "$lib/api/webserve-deploy";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
-	import SettingInfoItem from "$lib/components/buss/settings/setting-info-item.svelte";
 	import { Button } from "$lib/components/ui/button";
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Empty from "$lib/components/ui/empty";
+	import { Input } from "$lib/components/ui/input";
 	import { m } from "$lib/paraglide/messages";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
@@ -17,17 +17,18 @@
 		ChevronLeft,
 		ChevronRight,
 		ExternalLink,
-		List,
 		Loader2,
 		RotateCw,
+		Search,
 		Trash2,
 	} from "@lucide/svelte";
-	import { untrack } from "svelte";
+	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { createLogger } from "@shared/logger";
 
 	const logger = createLogger("ui");
 
+	let searchQuery = $state("");
 	let isOpen = $state(false);
 	let isLoading = $state(false);
 	let websiteList = $state<NonNullable<WebserveListResponse["data"]>>([]);
@@ -118,29 +119,116 @@
 		}
 	}
 
-	// Fetch when dialog opens
-	$effect(() => {
-		if (isOpen) {
-			untrack(() => {
-				fetchWebsites();
-			});
-		}
+	onMount(() => {
+		fetchWebsites();
 	});
 </script>
 
-{#snippet viewWebsitesButton()}
-	<Button variant="outline" size="sm" class="gap-2" onclick={() => (isOpen = true)}>
-		<List class="h-4 w-4" />
-		{m.text_button_view_deployed_websites
-			? m.text_button_view_deployed_websites()
-			: "View Deployed Websites"}
-	</Button>
-{/snippet}
+<div class="space-y-3">
+	<div class="flex items-center justify-between">
+		<div class="flex items-center">
+			<h2 class="text-base font-medium">
+				{m.title_deployed_websites ? m.title_deployed_websites() : "Deployed Websites"}
+			</h2>
+			<div class="flex gap-1">
+				<ButtonWithTooltip
+					class="hover:!bg-chat-action-hover"
+					tooltip={m.label_button_reload()}
+					onclick={handleRefresh}
+					disabled={isLoading}
+				>
+					<RotateCw class={cn("h-4 w-4", isLoading ? "animate-spin" : "")} />
+				</ButtonWithTooltip>
 
-<SettingInfoItem
-	label={m.title_deployed_websites ? m.title_deployed_websites() : "Deployed Websites"}
-	action={viewWebsitesButton}
-/>
+				<!-- {@render remoteModeSettings()} -->
+			</div>
+		</div>
+		<!-- Search -->
+		<div class="relative">
+			<Search
+				class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+			/>
+			<Input
+				placeholder={m.placeholder_search_agent()}
+				bind:value={searchQuery}
+				class="pl-9 bg-muted/50 border-transparent focus-visible:ring-0 focus-visible:bg-background"
+			/>
+		</div>
+	</div>
+
+	<div class="max-h-[450px] overflow-y-auto">
+		{#if isLoading}
+			<div class="flex h-full min-h-[300px] w-full items-center justify-center">
+				<Loader2 class="h-8 w-8 animate-spin text-muted-foreground" />
+			</div>
+		{:else if websiteList.length === 0}
+			<Empty.Root>
+				<Empty.Content class="h-[200px] flex flex-col items-center justify-center">
+					<Empty.Description>
+						{m.no_deployed_websites
+							? m.no_deployed_websites()
+							: "No deployed websites found"}
+					</Empty.Description>
+				</Empty.Content>
+			</Empty.Root>
+		{:else}
+			<div class="grid grid-cols-1 gap-3">
+				{#each websiteList.filter( (site) => site.url.includes(searchQuery), ) as site (site.id)}
+					<div
+						class="group flex items-center justify-between gap-3 rounded-lg border bg-card p-3 shadow-sm transition-all hover:bg-muted/50"
+					>
+						<div class="min-w-0 flex-1">
+							<a
+								href={site.url}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="block truncate text-sm font-medium text-primary hover:underline hover:underline-offset-2"
+							>
+								{site.url}
+							</a>
+							{#if site.status !== undefined}
+								<span
+									class={cn(
+										"inline-block text-xs px-2 py-1 rounded mt-1",
+										site.status === 1
+											? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+											: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400",
+									)}
+								>
+									{site.status === 1
+										? m.title_button_deployed_websites_active()
+										: m.title_button_deployed_websites_inactive()}
+								</span>
+							{/if}
+						</div>
+
+						<div class="flex items-center gap-1 flex-shrink-0">
+							<ButtonWithTooltip
+								tooltip={m.tooltip_open_website()}
+								variant="ghost"
+								size="icon-sm"
+								class="opacity-0 group-hover:opacity-100 transition-opacity"
+								onclick={() => window.open(site.url, "_blank")}
+							>
+								<ExternalLink class="h-4 w-4" />
+							</ButtonWithTooltip>
+
+							<ButtonWithTooltip
+								tooltip={m.tooltip_delete_website()}
+								variant="ghost"
+								size="icon-sm"
+								class="opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+								onclick={() => openDeleteConfirm(site.id)}
+							>
+								<Trash2 class="h-4 w-4" />
+							</ButtonWithTooltip>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+	</div>
+</div>
 
 <Dialog.Root bind:open={isOpen}>
 	<Dialog.Content class="min-w-2xl">
@@ -161,7 +249,6 @@
 				</ButtonWithTooltip>
 			</Dialog.Title>
 		</Dialog.Header>
-
 		<div class="min-h-[300px] max-h-[500px] overflow-y-auto py-4">
 			{#if isLoading}
 				<div class="flex h-full min-h-[300px] w-full items-center justify-center">
@@ -234,7 +321,6 @@
 				</div>
 			{/if}
 		</div>
-
 		<Dialog.Footer class="flex flex-row items-center !justify-between">
 			<div class="text-xs text-muted-foreground">
 				{m.label_total_items

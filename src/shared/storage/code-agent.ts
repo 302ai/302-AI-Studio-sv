@@ -1,6 +1,6 @@
 import { type } from "arktype";
 
-export const codeAgentType = type("'local' | 'remote'");
+export const codeAgentType = type("'local' | 'remote' | 'cloud'");
 export type CodeAgentType = typeof codeAgentType.infer;
 export const agentClass = type("'claude-code' | 'open-claw'");
 export type AgentClass = typeof agentClass.infer;
