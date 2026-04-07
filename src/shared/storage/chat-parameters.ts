@@ -4,7 +4,7 @@ export const ChatVariable = type("'input' | 'date' | 'time' | 'datetime' | 'now'
 export type ChatVariable = typeof ChatVariable.infer;
 
 export const SystemPromptPresetType = type(
-	"'302-default' | 'empty' | 'universal-type' | 'terse-and-effective-type' | 'deep-thinking-type'",
+	"'empty' | 'universal-type' | 'terse-and-effective-type' | 'deep-thinking-type'",
 );
 export type SystemPromptPresetType = typeof SystemPromptPresetType.infer;
 

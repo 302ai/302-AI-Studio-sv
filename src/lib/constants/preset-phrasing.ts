@@ -1,4 +1,3 @@
-import { textJsonToEditorState } from "$lib/components/buss/prompt-editor";
 import { m } from "$lib/paraglide/messages";
 import { DEFAULT_USER_PHRASING, EMPTY_PHRASING } from "$lib/stores/custom-presets-store.svelte";
 import type { CustomPreset } from "@shared/storage/chat-parameters";
@@ -7,18 +6,20 @@ import terseAndEffectiveType from "../../routes/(with-sidebar)/chat/components/c
 import universalType from "../../routes/(with-sidebar)/chat/components/chat-input/parameter/preset-prompt-templates/universal-type.json";
 
 export const PRESET_SYSTEM_PROMPT_KEYS = [
-	"302-default",
 	"empty",
 	"universal-type",
 	"terse-and-effective-type",
 	"deep-thinking-type",
 ] as const;
 
-export const READONLY_BUILTIN_PRESET_KEYS = ["302-default", "empty"] as const;
+export const READONLY_BUILTIN_PRESET_KEYS = [
+	"empty",
+	"universal-type",
+	"terse-and-effective-type",
+	"deep-thinking-type",
+] as const;
 
-// TODO: 302-default Current empty
 export const BUILTIN_SYSTEM_PHRASING_MAP: Record<string, string> = {
-	"302-default": textJsonToEditorState("") ?? EMPTY_PHRASING,
 	empty: EMPTY_PHRASING,
 	"universal-type": JSON.stringify(universalType),
 	"terse-and-effective-type": JSON.stringify(terseAndEffectiveType),
@@ -37,12 +38,6 @@ export function isReadonlyBuiltinPresetKey(key: string) {
 
 export function getBuiltinPresets(): CustomPreset[] {
 	return [
-		{
-			key: "302-default",
-			name: m.text_302_default_type(),
-			systemPhrasing: BUILTIN_SYSTEM_PHRASING_MAP["302-default"],
-			userPhrasing: DEFAULT_USER_PHRASING,
-		},
 		{
 			key: "empty",
 			name: m.text_empty_type(),
