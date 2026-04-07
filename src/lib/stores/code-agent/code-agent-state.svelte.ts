@@ -121,7 +121,9 @@ class CodeAgentState {
 		return match(this.type)
 			.with("local", () => "sandbox-created" as const)
 			.with("cloud", () =>
-				cloudEnvState.running ? ("sandbox-created" as const) : ("waiting-for-sandbox" as const),
+				cloudEnvState.running
+					? ("sandbox-created" as const)
+					: ("waiting-for-sandbox" as const),
 			)
 			.with("remote", () =>
 				claudeCodeAgentState.sandboxId === ""

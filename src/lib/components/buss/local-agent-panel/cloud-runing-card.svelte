@@ -11,20 +11,28 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
-	import { cloudEnvState } from "$lib/stores/code-agent/cloud-env-state.svelte";
+	import {
+		cloudEnvState,
+		type CloudHealthStatus,
+	} from "$lib/stores/code-agent/cloud-env-state.svelte";
+
+	type StatusProps = { status: "green" | "red" | "gray"; text: string };
+
+	function getHealthProps(s: CloudHealthStatus): StatusProps {
+		switch (s) {
+			case "healthy":
+				return { status: "green", text: m.cloud_mode_healthy() };
+			case "unhealthy":
+				return { status: "red", text: m.cloud_mode_unhealthy() };
+			default:
+				return { status: "gray", text: m.cloud_mode_unknown() };
+		}
+	}
 
 	function handleActivate() {
 		window.electronAPI.windowService.handleOpenSettingsWindow(
 			"/settings/agent-settings/platform?platform=cloud",
 		);
-	}
-
-	async function handleStart() {
-		await cloudEnvState.startCloud();
-	}
-
-	async function handleStop() {
-		await cloudEnvState.stopCloud();
 	}
 </script>
 
@@ -55,10 +63,8 @@
 				>{m.cloud_mode_health_status()}</Label
 			>
 			<StatusIndicator
-				status={cloudEnvState.healthStatus === "healthy" ? "green" : "gray"}
-				text={cloudEnvState.healthStatus === "healthy"
-					? m.cloud_mode_healthy()
-					: m.cloud_mode_unknown()}
+				status={getHealthProps(cloudEnvState.healthStatus).status}
+				text={getHealthProps(cloudEnvState.healthStatus).text}
 			/>
 		</div>
 		<div class="flex items-center gap-3">
@@ -66,29 +72,14 @@
 				>{m.cloud_mode_openclaw_status()}</Label
 			>
 			<StatusIndicator
-				status={cloudEnvState.openClawStatus === "healthy" ? "green" : "gray"}
-				text={cloudEnvState.openClawStatus === "healthy"
-					? m.cloud_mode_running()
-					: m.cloud_mode_unknown()}
+				status={getHealthProps(cloudEnvState.openClawStatus).status}
+				text={getHealthProps(cloudEnvState.openClawStatus).text}
 			/>
 		</div>
 	</div>
 	{#if !cloudEnvState.activated}
 		<Button size="sm" onclick={handleActivate}>
 			{m.cloud_mode_activate_button()}
-		</Button>
-	{:else if cloudEnvState.running}
-		<Button
-			size="sm"
-			variant="destructive"
-			disabled={cloudEnvState.starting}
-			onclick={handleStop}
-		>
-			{m.cloud_mode_not_started()}
-		</Button>
-	{:else}
-		<Button size="sm" disabled={cloudEnvState.starting} onclick={handleStart}>
-			{m.cloud_mode_started()}
 		</Button>
 	{/if}
 </div>

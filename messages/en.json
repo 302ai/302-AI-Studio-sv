@@ -930,6 +930,7 @@
 	"cloud_mode_health_status": "Health Status",
 	"cloud_mode_healthy": "Healthy",
 	"cloud_mode_unknown": "Unknown",
+	"cloud_mode_unhealthy": "Unhealthy",
 	"cloud_mode_openclaw_status": "OpenClaw",
 	"cloud_mode_running": "Running",
 	"cloud_mode_activate_button": "Activate",

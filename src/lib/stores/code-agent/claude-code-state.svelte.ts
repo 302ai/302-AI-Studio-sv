@@ -179,7 +179,8 @@ class ClaudeCodeAgentState {
 						return result;
 					} else {
 						const errorMsg =
-							result.error || `Deploy API returned success=false (status: ${result.status})`;
+							result.error ||
+							`Deploy API returned success=false (status: ${result.status})`;
 						logger.error("Deployment failed:", result);
 						toast.error(`${m.toast_deploy_failed()}`);
 						this.#lastDeployApiError = errorMsg;
@@ -552,7 +553,9 @@ class ClaudeCodeAgentState {
 					sessionId: selectedSessionId,
 				}))
 				.with({ type: "cloud" }, () => {
-					logger.info("[ClaudeCodeAgentState] listClaudeCodeSkills: cloud mode placeholder");
+					logger.info(
+						"[ClaudeCodeAgentState] listClaudeCodeSkills: cloud mode placeholder",
+					);
 					return {};
 				})
 				.otherwise(() => ({})),

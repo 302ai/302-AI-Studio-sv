@@ -933,6 +933,7 @@
 	"cloud_mode_health_status": "健康状态",
 	"cloud_mode_healthy": "健康",
 	"cloud_mode_unknown": "未知",
+	"cloud_mode_unhealthy": "异常",
 	"cloud_mode_openclaw_status": "OpenClaw",
 	"cloud_mode_running": "运行中",
 	"cloud_mode_activate_button": "开通",
