@@ -9,7 +9,7 @@ const { get302AIApiKey } = window.electronAPI.providerService;
  */
 export const cloudModeKy = ky.create({
 	timeout: 60000,
-	prefixUrl: "http://192.168.199.37:8001/api/v1",
+	prefixUrl: "http://192.168.199.37:8001",
 	headers: {
 		"HTTP-Referer": "https://studio.302.ai/",
 		"X-Title": "302.AI Studio",

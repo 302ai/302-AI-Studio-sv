@@ -181,38 +181,6 @@ function extractErrorMessage(response: any): string | undefined {
 	return undefined;
 }
 
-/**
- * Generic POST wrapper: post JSON, handle errors, return typed response.
- */
-async function postJson<T>(
-	path: string,
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	body: Record<string, any>,
-): Promise<T> {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const response: any = await cloudModeKy.post(path, { json: body }).json();
-
-	if (response?.success === false) {
-		return { success: false, error: extractErrorMessage(response) ?? "Unknown error" } as T;
-	}
-
-	return response as T;
-}
-
-/**
- * Generic GET wrapper: handle errors, return typed response.
- */
-async function getJson<T>(path: string): Promise<T> {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const response: any = await cloudModeKy.get(path).json();
-
-	if (response?.success === false) {
-		return { success: false, error: extractErrorMessage(response) ?? "Unknown error" } as T;
-	}
-
-	return response as T;
-}
-
 function wrapError(error: unknown): string {
 	if (error && typeof error === "object" && "response" in error) {
 		try {
@@ -233,7 +201,13 @@ function wrapError(error: unknown): string {
  */
 export async function listInstances(): Promise<ListInstancesResponse> {
 	try {
-		return await getJson<ListInstancesResponse>("instances");
+		const response = await cloudModeKy.get("api/v1/instances").json<ListInstancesResponse>();
+
+		if (response?.success === false) {
+			return { success: false, error: extractErrorMessage(response) ?? "Unknown error" };
+		}
+
+		return response;
 	} catch (error) {
 		logger.error("Failed to list instances:", error);
 		return { success: false, error: wrapError(error) };
@@ -248,7 +222,15 @@ export async function createInstance(
 	request: CreateInstanceRequest = {},
 ): Promise<CreateInstanceResponse> {
 	try {
-		return await postJson<CreateInstanceResponse>("instances", request);
+		const response = await cloudModeKy
+			.post("api/v1/instances", { json: request })
+			.json<CreateInstanceResponse>();
+
+		if (response?.success === false) {
+			return { success: false, error: extractErrorMessage(response) ?? "Unknown error" };
+		}
+
+		return response;
 	} catch (error) {
 		logger.error("Failed to create instance:", error);
 
@@ -276,9 +258,15 @@ export async function createInstance(
  */
 export async function getInstanceStatus(instanceName: string): Promise<InstanceStatusResponse> {
 	try {
-		return await getJson<InstanceStatusResponse>(
-			`instances/status?instance_name=${encodeURIComponent(instanceName)}`,
-		);
+		const response = await cloudModeKy
+			.get(`api/v1/instances/status?instance_name=${encodeURIComponent(instanceName)}`)
+			.json<InstanceStatusResponse>();
+
+		if (response?.success === false) {
+			return { success: false, error: extractErrorMessage(response) ?? "Unknown error" };
+		}
+
+		return response;
 	} catch (error) {
 		logger.error("Failed to get instance status:", error);
 		return { success: false, error: wrapError(error) };
@@ -291,7 +279,15 @@ export async function getInstanceStatus(instanceName: string): Promise<InstanceS
  */
 export async function restartDocker(request: RestartDockerRequest): Promise<RestartDockerResponse> {
 	try {
-		return await postJson<RestartDockerResponse>("instances/openclaw/restart", request);
+		const response = await cloudModeKy
+			.post("api/v1/instances/openclaw/restart", { json: request })
+			.json<RestartDockerResponse>();
+
+		if (response?.success === false) {
+			return { success: false, error: extractErrorMessage(response) ?? "Unknown error" };
+		}
+
+		return response;
 	} catch (error) {
 		logger.error("Failed to restart docker:", error);
 		return { success: false, error: wrapError(error) };
@@ -306,7 +302,15 @@ export async function rebootInstance(
 	request: RebootInstanceRequest,
 ): Promise<RebootInstanceResponse> {
 	try {
-		return await postJson<RebootInstanceResponse>("instances/reboot", request);
+		const response = await cloudModeKy
+			.post("api/v1/instances/reboot", { json: request })
+			.json<RebootInstanceResponse>();
+
+		if (response?.success === false) {
+			return { success: false, error: extractErrorMessage(response) ?? "Unknown error" };
+		}
+
+		return response;
 	} catch (error) {
 		logger.error("Failed to reboot instance:", error);
 		return { success: false, error: wrapError(error) };
@@ -319,7 +323,15 @@ export async function rebootInstance(
  */
 export async function readInstanceFiles(request: ReadFilesRequest): Promise<ReadFilesResponse> {
 	try {
-		return await postJson<ReadFilesResponse>("instances/files/read", request);
+		const response = await cloudModeKy
+			.post("api/v1/instances/files/read", { json: request })
+			.json<ReadFilesResponse>();
+
+		if (response?.success === false) {
+			return { success: false, error: extractErrorMessage(response) ?? "Unknown error" };
+		}
+
+		return response;
 	} catch (error) {
 		logger.error("Failed to read instance files:", error);
 		return { success: false, error: wrapError(error) };
@@ -332,7 +344,15 @@ export async function readInstanceFiles(request: ReadFilesRequest): Promise<Read
  */
 export async function writeInstanceFiles(request: WriteFilesRequest): Promise<WriteFilesResponse> {
 	try {
-		return await postJson<WriteFilesResponse>("instances/files/write", request);
+		const response = await cloudModeKy
+			.post("api/v1/instances/files/write", { json: request })
+			.json<WriteFilesResponse>();
+
+		if (response?.success === false) {
+			return { success: false, error: extractErrorMessage(response) ?? "Unknown error" };
+		}
+
+		return response;
 	} catch (error) {
 		logger.error("Failed to write instance files:", error);
 		return { success: false, error: wrapError(error) };
@@ -347,7 +367,15 @@ export async function execInstanceCommand(
 	request: ExecCommandRequest,
 ): Promise<ExecCommandResponse> {
 	try {
-		return await postJson<ExecCommandResponse>("instances/commands/exec", request);
+		const response = await cloudModeKy
+			.post("api/v1/instances/commands/exec", { json: request })
+			.json<ExecCommandResponse>();
+
+		if (response?.success === false) {
+			return { success: false, error: extractErrorMessage(response) ?? "Unknown error" };
+		}
+
+		return response;
 	} catch (error) {
 		logger.error("Failed to exec instance command:", error);
 		return { success: false, error: wrapError(error) };
