@@ -135,6 +135,10 @@
 
 		toast.success(m.system_prompt_save_success());
 	}
+
+	async function handleNewSettingsTab(route: string) {
+		await window.electronAPI.windowService.handleOpenSettingsWindow(route);
+	}
 </script>
 
 {#snippet topBar()}
@@ -184,8 +188,14 @@
 {/snippet}
 
 {#snippet right()}
-	<span class="text-primary cursor-pointer hover:underline text-sm"
-		>{m.system_prompt_manage_templates()}</span
+	<!-- svelte-ignore a11y_invalid_attribute -->
+	<a
+		href="javascript:void(0);"
+		class="text-primary cursor-pointer hover:underline text-sm"
+		onclick={(e) => {
+			e.preventDefault();
+			handleNewSettingsTab("/settings/phrasing-settings");
+		}}>{m.system_prompt_manage_templates()}</a
 	>
 {/snippet}
 
