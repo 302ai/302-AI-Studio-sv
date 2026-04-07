@@ -23,7 +23,9 @@
 	const allPresets = $derived.by(() => {
 		const builtinKeys = new Set<string>(PRESET_SYSTEM_PROMPT_KEYS);
 		const customOnly = customPresetsStore.presets.filter((p) => !builtinKeys.has(p.key));
-		return [...builtinPresets, ...customOnly].filter((p) => p.name.includes(searchQuery));
+		return [...builtinPresets, ...customOnly]
+			.filter((p) => p.name.includes(searchQuery))
+			.filter((p) => p.key !== "empty");
 	});
 
 	const handleAdd = () => {

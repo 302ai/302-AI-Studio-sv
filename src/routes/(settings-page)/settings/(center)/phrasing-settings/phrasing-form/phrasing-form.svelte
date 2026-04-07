@@ -236,6 +236,7 @@
 				systemPhrasing = rawJson;
 			}}
 			right={systemCopyBtn}
+			resize={true}
 		/>
 	</div>
 
@@ -250,6 +251,7 @@
 				userPhrasing = rawJson;
 			}}
 			right={userCopyBtn}
+			resize={true}
 		/>
 	</div>
 </div>
