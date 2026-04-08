@@ -5,14 +5,14 @@
  * Polls the compute gateway API every 30s to keep status up-to-date.
  */
 
-import { createLogger } from "@shared/logger";
 import {
 	createInstance,
-	listInstances,
-	getInstanceStatus,
 	getCloudSandboxHealth,
-	type InstanceInfo,
-} from "$lib/api/cloud-instance";
+	getInstanceStatus,
+	listInstances,
+} from "$lib/api/cloud-mode/base-apis";
+import { createLogger } from "@shared/logger";
+import type { InstanceInfo } from "@shared/storage/cloud-mode";
 
 export type CloudHealthStatus = "unknown" | "healthy" | "unhealthy";
 
@@ -101,9 +101,9 @@ class CloudEnvState {
 			this.activated = true;
 
 			// Query aliyun running status
-			const statusRes = await getInstanceStatus(info.instance_name);
+			const statusRes = await getInstanceStatus(info.instanceName);
 			if (statusRes.success && statusRes.instance) {
-				this.running = statusRes.instance.instance_status === "Running";
+				this.running = statusRes.instance.instanceStatus === "Running";
 				this.instanceStatus = this.running ? "healthy" : "unhealthy";
 			} else {
 				this.running = false;
@@ -111,11 +111,11 @@ class CloudEnvState {
 			}
 
 			// Hit sandbox health endpoint (same as local mode, but on cloud instance IP)
-			if (info.public_ip && info.api_port) {
-				const healthRes = await getCloudSandboxHealth(info.public_ip, info.api_port);
+			if (info.publicIp && info.apiPort) {
+				const healthRes = await getCloudSandboxHealth(info.publicIp, info.apiPort);
 				if (healthRes.success) {
 					this.healthStatus = healthRes.status === "ok" ? "healthy" : "unhealthy";
-					this.openClawStatus = healthRes.oc_status === "ok" ? "healthy" : "unhealthy";
+					this.openClawStatus = healthRes.ocStatus === "ok" ? "healthy" : "unhealthy";
 					this.apiStatus = "healthy";
 				} else {
 					this.healthStatus = "unhealthy";
@@ -138,34 +138,18 @@ class CloudEnvState {
 	/**
 	 * Start cloud sandbox by creating a compute instance.
 	 */
-	async startCloud(options?: { isAutoRenew?: boolean }): Promise<boolean> {
+	async startCloud(isDev: boolean, isAutoRenew: boolean): Promise<boolean> {
 		this.starting = true;
 		try {
-			const request: import("$lib/api/cloud-instance").CreateInstanceRequest = {
-				is_dev: true,
-			};
-			if (options?.isAutoRenew !== undefined) {
-				request.is_auto_renew = options.isAutoRenew;
-			}
-			const response = await createInstance(request);
+			const response = await createInstance({ isDev, isAutoRenew });
 
-			if (response.success && response.instance) {
-				this.instanceInfo = response.instance;
-				this.activated = true;
-				this.running = true;
-				this.instanceStatus = "healthy";
-				this.apiStatus = "healthy";
-				return true;
-			}
+			this.instanceInfo = response.instance;
+			this.activated = true;
+			this.running = true;
+			this.instanceStatus = "healthy";
+			this.apiStatus = "healthy";
 
-			// Instance already exists — treat as activated, refresh status
-			if (response.error?.includes("APIKEY_INSTANCE_EXISTS")) {
-				await this.checkStatus();
-				return true;
-			}
-
-			console.error("[CloudEnvState] Failed to create instance:", response.error);
-			return false;
+			return true;
 		} catch (error) {
 			console.error("[CloudEnvState] Failed to start cloud:", error);
 			return false;

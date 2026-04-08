@@ -11,7 +11,7 @@
 		rebootInstance,
 		restartDocker,
 		writeInstanceFiles,
-	} from "$lib/api/cloud-instance";
+	} from "$lib/api/cloud-mode/base-apis";
 	import { Button } from "$lib/components/ui/button";
 	import { Card } from "$lib/components/ui/card";
 	import { Label } from "$lib/components/ui/label";
@@ -54,11 +54,11 @@
 	let isAutoRenew = $state(false);
 
 	async function handleRestartDockerAction() {
-		const instanceName = cloudEnvState.instanceInfo?.instance_name;
+		const instanceName = cloudEnvState.instanceInfo?.instanceName;
 		if (!instanceName) return;
 		isRestartingDocker = true;
 		try {
-			await restartDocker({ instance_name: instanceName });
+			await restartDocker({ instanceName: instanceName });
 			// Refresh status after restart
 			await cloudEnvState.checkStatus();
 		} finally {
@@ -67,11 +67,11 @@
 	}
 
 	async function handleRebootAction() {
-		const instanceName = cloudEnvState.instanceInfo?.instance_name;
+		const instanceName = cloudEnvState.instanceInfo?.instanceName;
 		if (!instanceName) return;
 		isRebooting = true;
 		try {
-			await rebootInstance({ instance_name: instanceName });
+			await rebootInstance({ instanceName: instanceName });
 			// Refresh status after reboot
 			await cloudEnvState.checkStatus();
 		} finally {
@@ -107,7 +107,7 @@
 		testLoading = true;
 		testResult = "";
 		try {
-			setResult(await createInstance({ is_dev: true }));
+			setResult(await createInstance({ isDev: true, isAutoRenew: false }));
 		} catch (e) {
 			handleError(e);
 		} finally {
@@ -121,10 +121,10 @@
 		try {
 			const list = await listInstances();
 			if (!list.instances?.length) {
-				testResult = "No instances found";
+				testResult = m.cloud_mode_no_instances_found();
 				return;
 			}
-			setResult(await getInstanceStatus(list.instances[0].instance_name));
+			setResult(await getInstanceStatus(list.instances[0].instanceName));
 		} catch (e) {
 			handleError(e);
 		} finally {
@@ -138,10 +138,10 @@
 		try {
 			const list = await listInstances();
 			if (!list.instances?.length) {
-				testResult = "No instances found";
+				testResult = m.cloud_mode_no_instances_found();
 				return;
 			}
-			setResult(await restartDocker({ instance_name: list.instances[0].instance_name }));
+			setResult(await restartDocker({ instanceName: list.instances[0].instanceName }));
 		} catch (e) {
 			handleError(e);
 		} finally {
@@ -155,10 +155,10 @@
 		try {
 			const list = await listInstances();
 			if (!list.instances?.length) {
-				testResult = "No instances found";
+				testResult = m.cloud_mode_no_instances_found();
 				return;
 			}
-			setResult(await rebootInstance({ instance_name: list.instances[0].instance_name }));
+			setResult(await rebootInstance({ instanceName: list.instances[0].instanceName }));
 		} catch (e) {
 			handleError(e);
 		} finally {
@@ -172,13 +172,13 @@
 		try {
 			const list = await listInstances();
 			if (!list.instances?.length) {
-				testResult = "No instances found";
+				testResult = m.cloud_mode_no_instances_found();
 				return;
 			}
 			setResult(
 				await readInstanceFiles({
-					instance_name: list.instances[0].instance_name,
-					file_paths: ["/etc/hostname"],
+					instanceName: list.instances[0].instanceName,
+					filePaths: ["/etc/hostname"],
 				}),
 			);
 		} catch (e) {
@@ -194,13 +194,13 @@
 		try {
 			const list = await listInstances();
 			if (!list.instances?.length) {
-				testResult = "No instances found";
+				testResult = m.cloud_mode_no_instances_found();
 				return;
 			}
 			setResult(
 				await writeInstanceFiles({
-					instance_name: list.instances[0].instance_name,
-					files: [{ file_path: "/tmp/test.txt", file_content: "hello from 302 studio" }],
+					instanceName: list.instances[0].instanceName,
+					files: [{ filePath: "/tmp/test.txt", fileContent: "hello from 302 studio" }],
 				}),
 			);
 		} catch (e) {
@@ -216,13 +216,14 @@
 		try {
 			const list = await listInstances();
 			if (!list.instances?.length) {
-				testResult = "No instances found";
+				testResult = m.cloud_mode_no_instances_found();
 				return;
 			}
 			setResult(
 				await execInstanceCommand({
-					instance_name: list.instances[0].instance_name,
-					cmd: "ls /tmp",
+					instanceName: list.instances[0].instanceName,
+					cmd: "ls",
+					cwd: "/tmp",
 				}),
 			);
 		} catch (e) {
@@ -248,7 +249,7 @@
 							status={getHealthProps(cloudEnvState.instanceStatus).status}
 							text={getHealthProps(cloudEnvState.instanceStatus).text}
 							showWarning={cloudEnvState.instanceStatus === "unhealthy"}
-							warningTooltip={m.cloud_mode_try_restart()}
+							warningTooltip={m.cloud_mode_unhealthy()}
 						/>
 						{#if cloudEnvState.instanceStatus === "unhealthy" || isRebooting}
 							<ButtonWithTooltip
@@ -287,7 +288,7 @@
 							status={getHealthProps(cloudEnvState.openClawStatus).status}
 							text={getHealthProps(cloudEnvState.openClawStatus).text}
 							showWarning={cloudEnvState.openClawStatus === "unhealthy"}
-							warningTooltip={m.cloud_mode_try_restart()}
+							warningTooltip={m.cloud_mode_unhealthy()}
 						/>
 						{#if cloudEnvState.openClawStatus === "unhealthy" || isRestartingDocker}
 							<ButtonWithTooltip
@@ -312,12 +313,12 @@
 		<h2 class="text-sm font-medium">订阅信息</h2>
 		<div class="rounded-lg border p-5 space-y-5">
 			<div class="flex justify-between items-center w-full">
-				<h3 class="text-base font-semibold">云主机</h3>
+				<h3 class="text-base font-semibold">{m.cloud_mode_instance()}</h3>
 				{#if !cloudEnvState.activated}
 					<Button
 						size="sm"
 						disabled={cloudEnvState.starting}
-						onclick={() => cloudEnvState.startCloud({ isAutoRenew })}
+						onclick={() => cloudEnvState.startCloud(false, isAutoRenew)}
 					>
 						{#if cloudEnvState.starting}
 							<LoaderCircle class="h-4 w-4 animate-spin" />
@@ -331,16 +332,16 @@
 				<div class="space-y-1">
 					{#if cloudEnvState.instanceInfo}
 						<p class="text-sm text-muted-foreground">
-							IP：{cloudEnvState.instanceInfo.public_ip || "--"}
+							IP：{cloudEnvState.instanceInfo.publicIp || "--"}
 						</p>
 						<p class="text-sm text-muted-foreground">
-							生效日期：{formatDate(cloudEnvState.instanceInfo.created_at)}
+							{m.cloud_mode_created_at()}：{formatDate(cloudEnvState.instanceInfo.createdAt)}
 						</p>
 						<p class="text-sm text-muted-foreground">
-							到期日期：{formatDate(cloudEnvState.instanceInfo.expired_at)}
+							{m.cloud_mode_expired_at()}：{formatDate(cloudEnvState.instanceInfo.expiredAt)}
 						</p>
 					{:else}
-						<p class="text-sm text-muted-foreground">暂无实例</p>
+						<p class="text-sm text-muted-foreground">{m.cloud_mode_no_instance()}</p>
 					{/if}
 				</div>
 				{#if !cloudEnvState.activated}
@@ -349,7 +350,7 @@
 							bind:checked={isAutoRenew}
 							class="data-[state=unchecked]:border-settings-switch-border cursor-pointer"
 						/>
-						<span class="text-sm text-muted-foreground ml-2"> 自动续费 </span>
+						<span class="text-sm text-muted-foreground ml-2">{m.cloud_mode_auto_renew()}</span>
 					</div>
 				{/if}
 			</div>
@@ -358,7 +359,7 @@
 
 	<!-- API Test Section (TODO: remove after testing) -->
 	<div class="space-y-2">
-		<h2 class="text-sm font-medium">API Test (调试用)</h2>
+		<h2 class="text-sm font-medium">{m.cloud_mode_api_test()}</h2>
 		<Card class="p-4 space-y-3">
 			<div class="flex flex-wrap gap-2">
 				<Button size="sm" onclick={handleList} disabled={testLoading}>GET /instances</Button
