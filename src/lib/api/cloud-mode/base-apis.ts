@@ -1,5 +1,7 @@
 import { createLogger } from "@shared/logger";
 import {
+	createInstanceRequestSchema,
+	createInstanceResponseSchema,
 	execCommandRequestSchema,
 	execCommandResponseSchema,
 	readFilesRequestSchema,
@@ -11,6 +13,8 @@ import {
 	writeFilesRequestSchema,
 	writeFilesResponseSchema,
 	type CloudSandboxHealthResponse,
+	type CreateInstanceRequest,
+	type CreateInstanceResponse,
 	type ExecCommandRequest,
 	type ExecCommandResponse,
 	type ReadFilesRequest,
@@ -24,6 +28,7 @@ import {
 } from "@shared/storage/cloud-mode";
 import { type } from "arktype";
 import { cloudModeKy } from "../core/cloud-mode-ky";
+import { testKy } from "../core/test-ky";
 
 const logger = createLogger("apis");
 
@@ -41,6 +46,35 @@ export async function getCloudSandboxHealth(
 		status: "ok",
 		ocStatus: "ok",
 	};
+}
+
+/**
+ * Create a cloud compute instance
+ * @error 400 - APIKEY_INSTANCE_EXISTS: one apikey can only bind one master instance
+ * @error 500 - CREATE_INSTANCE_FAILED: failed to create instance
+ * @returns Created instance information
+ */
+export async function createInstance(
+	request: CreateInstanceRequest,
+): Promise<CreateInstanceResponse> {
+	try {
+		const requestBody = createInstanceRequestSchema(request);
+		if (requestBody instanceof type.errors) {
+			logger.error("Failed to validate create instance request:", requestBody.summary);
+			throw new Error("Invalid request format for create instance");
+		}
+		const response = await testKy.post("api/v1/instances", { json: requestBody }).json();
+
+		const validated = createInstanceResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate create instance response:", validated.summary);
+			throw new Error("Invalid response format from create instance API");
+		}
+		return validated;
+	} catch (error) {
+		logger.error("Failed to create instance:", error);
+		throw error;
+	}
 }
 
 /**

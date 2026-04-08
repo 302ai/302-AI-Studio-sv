@@ -5,21 +5,13 @@
  * Polls the compute gateway API every 30s to keep status up-to-date.
  */
 
-import {
-	createInstance,
-	getCloudSandboxHealth,
-	getInstanceStatus,
-	listInstances,
-} from "$lib/api/cloud-mode/base-apis";
+import { createInstance } from "$lib/api/cloud-mode/base-apis";
 import { createLogger } from "@shared/logger";
 import type { InstanceInfo } from "@shared/storage/cloud-mode";
 
 export type CloudHealthStatus = "unknown" | "healthy" | "unhealthy";
 
 const console = createLogger("ui");
-
-/** Default polling interval: 30 seconds */
-const POLL_INTERVAL_MS = 30_000;
 
 class CloudEnvState {
 	// Activation status (开通状态)
@@ -53,87 +45,66 @@ class CloudEnvState {
 	private pollingTimer: ReturnType<typeof setInterval> | null = null;
 
 	/**
-	 * Start periodic status polling.
-	 * If already polling, this is a no-op.
-	 */
-	startPolling(intervalMs: number = POLL_INTERVAL_MS): void {
-		if (this.pollingTimer) return;
-		// Initial check immediately
-		this.checkStatus();
-		this.pollingTimer = setInterval(() => this.checkStatus(), intervalMs);
-	}
-
-	/**
-	 * Stop periodic status polling.
-	 */
-	stopPolling(): void {
-		if (this.pollingTimer) {
-			clearInterval(this.pollingTimer);
-			this.pollingTimer = null;
-		}
-	}
-
-	/**
 	 * Check cloud mode status.
 	 * 1. List instances → determine if activated
 	 * 2. Get instance status → determine if running
 	 * 3. Hit sandbox health endpoint → determine healthStatus + openClawStatus
 	 */
-	async checkStatus(): Promise<void> {
-		this.checking = true;
-		try {
-			const listRes = await listInstances();
+	// async checkStatus(): Promise<void> {
+	// 	this.checking = true;
+	// 	try {
+	// 		const listRes = await listInstances();
 
-			// No instances → not activated
-			if (!listRes.success || !listRes.instances?.length) {
-				this.activated = false;
-				this.running = false;
-				this.instanceInfo = null;
-				this.instanceStatus = "unknown";
-				this.healthStatus = "unknown";
-				this.openClawStatus = "unknown";
-				this.apiStatus = "unknown";
-				return;
-			}
+	// 		// No instances → not activated
+	// 		if (!listRes.success || !listRes.instances?.length) {
+	// 			this.activated = false;
+	// 			this.running = false;
+	// 			this.instanceInfo = null;
+	// 			this.instanceStatus = "unknown";
+	// 			this.healthStatus = "unknown";
+	// 			this.openClawStatus = "unknown";
+	// 			this.apiStatus = "unknown";
+	// 			return;
+	// 		}
 
-			const info = listRes.instances[0];
-			this.instanceInfo = info;
-			this.activated = true;
+	// 		const info = listRes.instances[0];
+	// 		this.instanceInfo = info;
+	// 		this.activated = true;
 
-			// Query aliyun running status
-			const statusRes = await getInstanceStatus(info.instanceName);
-			if (statusRes.success && statusRes.instance) {
-				this.running = statusRes.instance.instanceStatus === "Running";
-				this.instanceStatus = this.running ? "healthy" : "unhealthy";
-			} else {
-				this.running = false;
-				this.instanceStatus = "unknown";
-			}
+	// 		// Query aliyun running status
+	// 		const statusRes = await getInstanceStatus(info.instanceName);
+	// 		if (statusRes.success && statusRes.instance) {
+	// 			this.running = statusRes.instance.instanceStatus === "Running";
+	// 			this.instanceStatus = this.running ? "healthy" : "unhealthy";
+	// 		} else {
+	// 			this.running = false;
+	// 			this.instanceStatus = "unknown";
+	// 		}
 
-			// Hit sandbox health endpoint (same as local mode, but on cloud instance IP)
-			if (info.publicIp && info.apiPort) {
-				const healthRes = await getCloudSandboxHealth(info.publicIp, info.apiPort);
-				if (healthRes.success) {
-					this.healthStatus = healthRes.status === "ok" ? "healthy" : "unhealthy";
-					this.openClawStatus = healthRes.ocStatus === "ok" ? "healthy" : "unhealthy";
-					this.apiStatus = "healthy";
-				} else {
-					this.healthStatus = "unhealthy";
-					this.openClawStatus = "unknown";
-					this.apiStatus = "unhealthy";
-				}
-			} else {
-				this.healthStatus = "unknown";
-				this.openClawStatus = "unknown";
-				this.apiStatus = "unknown";
-			}
-		} catch (error) {
-			console.error("[CloudEnvState] Failed to check cloud status:", error);
-			this.apiStatus = "unhealthy";
-		} finally {
-			this.checking = false;
-		}
-	}
+	// 		// Hit sandbox health endpoint (same as local mode, but on cloud instance IP)
+	// 		if (info.publicIp && info.apiPort) {
+	// 			const healthRes = await getCloudSandboxHealth(info.publicIp, info.apiPort);
+	// 			if (healthRes.success) {
+	// 				this.healthStatus = healthRes.status === "ok" ? "healthy" : "unhealthy";
+	// 				this.openClawStatus = healthRes.ocStatus === "ok" ? "healthy" : "unhealthy";
+	// 				this.apiStatus = "healthy";
+	// 			} else {
+	// 				this.healthStatus = "unhealthy";
+	// 				this.openClawStatus = "unknown";
+	// 				this.apiStatus = "unhealthy";
+	// 			}
+	// 		} else {
+	// 			this.healthStatus = "unknown";
+	// 			this.openClawStatus = "unknown";
+	// 			this.apiStatus = "unknown";
+	// 		}
+	// 	} catch (error) {
+	// 		console.error("[CloudEnvState] Failed to check cloud status:", error);
+	// 		this.apiStatus = "unhealthy";
+	// 	} finally {
+	// 		this.checking = false;
+	// 	}
+	// }
 
 	/**
 	 * Start cloud sandbox by creating a compute instance.
@@ -159,10 +130,9 @@ class CloudEnvState {
 	}
 
 	/**
-	 * Reset state and stop polling.
+	 * Reset state.
 	 */
 	reset(): void {
-		this.stopPolling();
 		this.activated = false;
 		this.running = false;
 		this.starting = false;

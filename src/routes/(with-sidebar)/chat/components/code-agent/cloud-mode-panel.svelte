@@ -9,14 +9,8 @@
 
 	import { Button } from "$lib/components/ui/button";
 	import { m } from "$lib/paraglide/messages";
-	import { cloudEnvState } from "$lib/stores/code-agent/cloud-env-state.svelte";
 
 	let { onClose }: Props = $props();
-
-	// Sync cloud status when panel opens
-	$effect(() => {
-		cloudEnvState.checkStatus();
-	});
 
 	function handleLocalModeConfirm() {
 		onClose?.();

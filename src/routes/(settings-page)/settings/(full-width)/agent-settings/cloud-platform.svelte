@@ -2,18 +2,8 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import StatusIndicator from "$lib/components/buss/local-agent-panel/status-indicator.svelte";
 
-	import {
-		createInstance,
-		execInstanceCommand,
-		getInstanceStatus,
-		listInstances,
-		readInstanceFiles,
-		rebootInstance,
-		restartDocker,
-		writeInstanceFiles,
-	} from "$lib/api/cloud-mode/base-apis";
+	import { rebootInstance, restartDocker } from "$lib/api/cloud-mode/base-apis";
 	import { Button } from "$lib/components/ui/button";
-	import { Card } from "$lib/components/ui/card";
 	import { Label } from "$lib/components/ui/label";
 	import { Switch } from "$lib/components/ui/switch";
 	import { m } from "$lib/paraglide/messages";
@@ -37,12 +27,6 @@
 		}
 	}
 
-	// Start polling on mount, stop on unmount
-	$effect(() => {
-		cloudEnvState.startPolling();
-		return () => cloudEnvState.stopPolling();
-	});
-
 	function formatDate(iso?: string): string {
 		if (!iso) return "--";
 		return new Date(iso).toLocaleDateString();
@@ -60,7 +44,7 @@
 		try {
 			await restartDocker({ instanceName: instanceName });
 			// Refresh status after restart
-			await cloudEnvState.checkStatus();
+			// await cloudEnvState.checkStatus();
 		} finally {
 			isRestartingDocker = false;
 		}
@@ -73,163 +57,9 @@
 		try {
 			await rebootInstance({ instanceName: instanceName });
 			// Refresh status after reboot
-			await cloudEnvState.checkStatus();
+			// await cloudEnvState.checkStatus();
 		} finally {
 			isRebooting = false;
-		}
-	}
-
-	// --- Test section ---
-	let testLoading = $state(false);
-	let testResult = $state<string>("");
-
-	function setResult(data: unknown) {
-		testResult = JSON.stringify(data, null, 2);
-	}
-
-	function handleError(error: unknown) {
-		testResult = `Error: ${error instanceof Error ? error.message : String(error)}`;
-	}
-
-	async function handleList() {
-		testLoading = true;
-		testResult = "";
-		try {
-			setResult(await listInstances());
-		} catch (e) {
-			handleError(e);
-		} finally {
-			testLoading = false;
-		}
-	}
-
-	async function handleCreate() {
-		testLoading = true;
-		testResult = "";
-		try {
-			setResult(await createInstance({ isDev: true, isAutoRenew: false }));
-		} catch (e) {
-			handleError(e);
-		} finally {
-			testLoading = false;
-		}
-	}
-
-	async function handleStatus() {
-		testLoading = true;
-		testResult = "";
-		try {
-			const list = await listInstances();
-			if (!list.instances?.length) {
-				testResult = m.cloud_mode_no_instances_found();
-				return;
-			}
-			setResult(await getInstanceStatus(list.instances[0].instanceName));
-		} catch (e) {
-			handleError(e);
-		} finally {
-			testLoading = false;
-		}
-	}
-
-	async function handleRestartDocker() {
-		testLoading = true;
-		testResult = "";
-		try {
-			const list = await listInstances();
-			if (!list.instances?.length) {
-				testResult = m.cloud_mode_no_instances_found();
-				return;
-			}
-			setResult(await restartDocker({ instanceName: list.instances[0].instanceName }));
-		} catch (e) {
-			handleError(e);
-		} finally {
-			testLoading = false;
-		}
-	}
-
-	async function handleReboot() {
-		testLoading = true;
-		testResult = "";
-		try {
-			const list = await listInstances();
-			if (!list.instances?.length) {
-				testResult = m.cloud_mode_no_instances_found();
-				return;
-			}
-			setResult(await rebootInstance({ instanceName: list.instances[0].instanceName }));
-		} catch (e) {
-			handleError(e);
-		} finally {
-			testLoading = false;
-		}
-	}
-
-	async function handleReadFiles() {
-		testLoading = true;
-		testResult = "";
-		try {
-			const list = await listInstances();
-			if (!list.instances?.length) {
-				testResult = m.cloud_mode_no_instances_found();
-				return;
-			}
-			setResult(
-				await readInstanceFiles({
-					instanceName: list.instances[0].instanceName,
-					filePaths: ["/etc/hostname"],
-				}),
-			);
-		} catch (e) {
-			handleError(e);
-		} finally {
-			testLoading = false;
-		}
-	}
-
-	async function handleWriteFiles() {
-		testLoading = true;
-		testResult = "";
-		try {
-			const list = await listInstances();
-			if (!list.instances?.length) {
-				testResult = m.cloud_mode_no_instances_found();
-				return;
-			}
-			setResult(
-				await writeInstanceFiles({
-					instanceName: list.instances[0].instanceName,
-					files: [{ filePath: "/tmp/test.txt", fileContent: "hello from 302 studio" }],
-				}),
-			);
-		} catch (e) {
-			handleError(e);
-		} finally {
-			testLoading = false;
-		}
-	}
-
-	async function handleExec() {
-		testLoading = true;
-		testResult = "";
-		try {
-			const list = await listInstances();
-			if (!list.instances?.length) {
-				testResult = m.cloud_mode_no_instances_found();
-				return;
-			}
-			setResult(
-				await execInstanceCommand({
-					instanceName: list.instances[0].instanceName,
-					cmd: "ls",
-					cwd: "/tmp",
-				}),
-			);
-		} catch (e) {
-			handleError(e);
-		} finally {
-			testLoading = false;
 		}
 	}
 </script>
@@ -335,10 +165,14 @@
 							IP：{cloudEnvState.instanceInfo.publicIp || "--"}
 						</p>
 						<p class="text-sm text-muted-foreground">
-							{m.cloud_mode_created_at()}：{formatDate(cloudEnvState.instanceInfo.createdAt)}
+							{m.cloud_mode_created_at()}：{formatDate(
+								cloudEnvState.instanceInfo.createdAt,
+							)}
 						</p>
 						<p class="text-sm text-muted-foreground">
-							{m.cloud_mode_expired_at()}：{formatDate(cloudEnvState.instanceInfo.expiredAt)}
+							{m.cloud_mode_expired_at()}：{formatDate(
+								cloudEnvState.instanceInfo.expiredAt,
+							)}
 						</p>
 					{:else}
 						<p class="text-sm text-muted-foreground">{m.cloud_mode_no_instance()}</p>
@@ -350,7 +184,9 @@
 							bind:checked={isAutoRenew}
 							class="data-[state=unchecked]:border-settings-switch-border cursor-pointer"
 						/>
-						<span class="text-sm text-muted-foreground ml-2">{m.cloud_mode_auto_renew()}</span>
+						<span class="text-sm text-muted-foreground ml-2"
+							>{m.cloud_mode_auto_renew()}</span
+						>
 					</div>
 				{/if}
 			</div>
@@ -358,7 +194,7 @@
 	</div>
 
 	<!-- API Test Section (TODO: remove after testing) -->
-	<div class="space-y-2">
+	<!-- <div class="space-y-2">
 		<h2 class="text-sm font-medium">{m.cloud_mode_api_test()}</h2>
 		<Card class="p-4 space-y-3">
 			<div class="flex flex-wrap gap-2">
@@ -388,5 +224,5 @@
 					class="text-xs whitespace-pre-wrap break-all bg-muted p-3 rounded">{testResult}</pre>
 			{/if}
 		</Card>
-	</div>
+	</div> -->
 </div>
