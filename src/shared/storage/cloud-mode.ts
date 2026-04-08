@@ -13,6 +13,7 @@ export type CloudSandboxHealthResponse = typeof cloudSandboxHealthResponseSchema
 
 export const instanceInfoSchema = type({
 	instance_name: "string",
+	status: '"waiting_init" | "rebooting" | "rebooted" | "running"',
 	public_ip: "string",
 	created_at: "string",
 	expired_at: "string",

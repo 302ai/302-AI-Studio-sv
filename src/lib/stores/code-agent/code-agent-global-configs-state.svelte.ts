@@ -16,6 +16,7 @@ function getInitialData() {
 		notificationsEnabled: false,
 		lastVibeMode: "remote" as CodeAgentType,
 		lastAgentId: "claude-code" as CodingAgentClass,
+		autoRenewal: true,
 		feishu: { appId: "", appSecret: "" },
 		dingtalk: { clientId: "", clientSecret: "" },
 		qqbot: { appId: "", clientSecret: "" },
