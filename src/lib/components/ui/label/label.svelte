@@ -1,12 +1,16 @@
 <script lang="ts">
 	import { Label as LabelPrimitive } from "bits-ui";
 	import { cn } from "$lib/utils.js";
+	import type { Snippet } from "svelte";
 
 	let {
 		ref = $bindable(null),
 		class: className,
+		children,
 		...restProps
-	}: LabelPrimitive.RootProps = $props();
+	}: LabelPrimitive.RootProps & {
+		children?: Snippet;
+	} = $props();
 </script>
 
 <LabelPrimitive.Root
@@ -17,4 +21,6 @@
 		className,
 	)}
 	{...restProps}
-/>
+>
+	{@render children?.()}
+</LabelPrimitive.Root>
