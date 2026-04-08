@@ -1,112 +1,166 @@
-# Gemini Context: 302 AI Studio
+# AI Agent Development Guide
 
-This document provides a comprehensive overview of the 302 AI Studio project, its structure, and development conventions to be used as a context for Gemini.
+> **For all AI coding assistants**: Claude Code, Gemini CLI, Codex, Copilot CLI, and other AI development tools.
+
+## 🚀 Global Mandate: Activate Skills First
+
+Before you perform any research or implementation, you **MUST** activate the relevant skills to ensure you follow the project's specific Svelte 5, Tailwind v4, and Electron 38 patterns.
+
+```bash
+# For UI, Stores, and Frontend Logic:
+activate_skill sveltekit-svelte5-tailwind-skill
+
+# For Main Process, IPC, and Native Features:
+activate_skill electron
+```
+
+**Why this is mandatory**: This project uses Svelte 5 Runes and Tailwind v4, which differ significantly from older versions in your training data. Use the skill's `Stage 0-4` research methodology before writing any code.
 
 ## Project Overview
 
-302 AI Studio is a cross-platform desktop application for Windows, Mac, and Linux that serves as a client for various Large Language Model (LLM) service providers like OpenAI, Anthropic, and Google. It is built using a modern web technology stack.
+**302-AI-Studio** is an Electron desktop AI chat application with multi-provider support, Code Agent (Claude Code sandbox), MCP integration, plugin system, and multi-tab architecture.
 
-- **Core Functionality:** The application provides a multi-tab chat interface, allowing users to interact with different AI models. It supports advanced features like parameter control, document and image analysis, code syntax highlighting, and an "Agent Mode" for intelligent task automation.
-    - **Architecture:** The project is a monorepo-like structure with a clear separation between the Electron main process and the SvelteKit renderer process.
-        - **Electron Main Process (`/electron`):** Handles window management, native OS integration, and backend services exposed to the renderer via IPC.
-        - **SvelteKit Renderer Process (`/src`):** Contains the entire user interface, built as a SvelteKit application. It communicates with the Electron main process for native functionalities.
+- **License**: AGPL-3.0
+- **Repository**: https://github.com/302ai/302-AI-Studio-sv
+- **Version**: v25.53.2-beta.2
 
-    ### Multi-Window & Multi-WebContents Architecture
-
-    The application employs a sophisticated hybrid architecture to manage its windows and tabs, leveraging modern Electron features for efficiency.
-    - **`BrowserWindow` for Top-Level Windows:** The application creates distinct `BrowserWindow` instances for different types of top-level windows:
-        - **Shell Windows:** These are the main application windows that house the tabbed user interface. Multiple shell windows can exist.
-        - **Settings Window:** A single, separate `BrowserWindow` is used to display the settings page, which has a standard OS-level title bar.
-        - **Plugin Windows:** Plugins have the capability to create their own `BrowserWindow` instances.
-
-    - **`WebContentsView` for Tabs:** Instead of creating a new `BrowserWindow` for each tab (which is resource-intensive), the application uses `WebContentsView`. A single "Shell Window" (`BrowserWindow`) acts as a host for multiple `WebContentsView` instances.
-        - One `WebContentsView` is used for the window's main UI (the "shell," including the tab bar), loaded from the `/shell/:windowId` route.
-        - Each individual tab (e.g., a chat session) is rendered in its own separate `WebContentsView`. The `TabService` manages showing and hiding these views as the user navigates between tabs.
-
-    - **Core Management Services:**
-        - **`WindowService` (`electron/main/services/window-service/index.ts`):** The central controller for all `BrowserWindow` instances. It handles creating, tracking, and destroying windows. It also orchestrates complex interactions like splitting a tab into a new window or merging tabs between existing windows.
-        - **`TabService` (`electron/main/services/tab-service/index.ts`):** Manages the entire lifecycle of tabs within each Shell Window. It keeps track of which `WebContentsView` belongs to which tab and which window, and orchestrates switching between them.
-        - **`WebContentsFactory` (`electron/main/factories/web-contents-factory.ts`):** A factory that centralizes the creation and configuration of all `WebContentsView`s (for shells, tabs, and AI applications). This ensures consistent settings, preload scripts, and context for each view.
-
-    ### State Management & Persistence
-
-    The application handles state persistence and synchronization across windows/tabs using a custom reactive solution.
-    - **`PersistedState` Class (`src/lib/hooks/persisted-state.svelte.ts`):** This is the core utility for managing persistent state.
-        - **Reactivity:** Built on Svelte 5 Runes (`$state`), it provides a reactive `current` property. Changes to this property automatically trigger UI updates in Svelte components.
-        - **Persistence:** It communicates with the Electron main process via `window.electronAPI.storageService` to save state to disk (using `unstorage` in the backend).
-        - **Synchronization:** It listens for `onPersistedStateSync` IPC events. This ensures that if a state changes in one window (e.g., settings update), it is automatically reflected in all other open windows or tabs that use the same state key.
-        - **Debouncing:** Writes to storage are debounced by default to prevent performance bottlenecks during rapid state changes.
-
-    - **Global Stores:** Most application-wide state is defined in `src/lib/stores` using `PersistedState`. Examples include:
-        - `persistedThemeState`: Manages the application theme.
-        - `persistedUserState`: Stores user session and profile info.
-        - `persistedChatParametersState`: Saves chat configuration preferences.
-
-- **Key Technologies:**
-    - **Framework:** SvelteKit 5 - **Desktop:** Electron 38
-    - **Language:** TypeScript
-    - **UI:** Svelte 5 Runes, Shadcn-Svelte, TailwindCSS 4.x
-    - **State Management:** Svelte 5 Runes (`$state`, `$derived`)
-    - **Build Tool:** Vite with Electron Forge
-    - **Testing:** Playwright for E2E tests and Vitest for unit tests.
-    - **Package Manager:** pnpm (mandatory)
-
-## Building and Running
-
-The project uses `pnpm` for package management. All commands should be run from the root of the project.
-
-### Development
-
-To start the application in development mode with hot-reloading:
+## Quick Start
 
 ```bash
-pnpm dev
+pnpm install              # Install dependencies (REQUIRED: pnpm only)
+pnpm dev                  # Start development
+pnpm quality              # Run all quality checks
+pnpm generate:ipc         # Regenerate IPC bindings
+pnpm gen:service <Name>   # Generate IPC service
+pnpm gen:state <Name>     # Generate Svelte store
 ```
 
-### Production Build
+**Tech Stack**: SvelteKit 2.39 + Svelte 5.38 + Electron 38.1 + TypeScript 5.9 + Hono 4.9
 
-To build and package the application for production:
+## Repository Map
 
-```bash
-# 1. Build the SvelteKit app and Electron main process
-pnpm build
+### Architecture
 
-# 2. Package the application for the current OS (output to /out)
-pnpm package
+Start here to understand system design:
 
-# 3. Create a distributable installer
-pnpm make
+- **Overview**: [docs/architecture/index.md](docs/architecture/index.md)
+- Main Process: [docs/architecture/electron-main.md](docs/architecture/electron-main.md)
+- Renderer: [docs/architecture/renderer.md](docs/architecture/renderer.md)
+- IPC System: [docs/architecture/ipc-system.md](docs/architecture/ipc-system.md)
+- State Management: [docs/architecture/state-management.md](docs/architecture/state-management.md)
+
+### Development Workflows
+
+Step-by-step guides for common tasks:
+
+- **Index**: [docs/workflows/index.md](docs/workflows/index.md)
+- Add IPC Service: [docs/workflows/adding-ipc-service.md](docs/workflows/adding-ipc-service.md)
+- Add Svelte Store: [docs/workflows/adding-store.md](docs/workflows/adding-store.md)
+- Add Component: [docs/workflows/adding-component.md](docs/workflows/adding-component.md)
+- Debugging: [docs/workflows/debugging.md](docs/workflows/debugging.md)
+
+### Decision Trees
+
+When you need to make architectural choices:
+
+- **Code Location**: [docs/decision-trees/code-location.md](docs/decision-trees/code-location.md)
+- State Management: [docs/decision-trees/state-management.md](docs/decision-trees/state-management.md)
+- AI Provider Integration: [docs/decision-trees/ai-provider-integration.md](docs/decision-trees/ai-provider-integration.md)
+
+### Quality Standards
+
+Before every commit:
+
+- **Quality Gates**: [docs/quality/quality-gates.md](docs/quality/quality-gates.md)
+- Testing Standards: [docs/quality/testing-standards.md](docs/quality/testing-standards.md)
+- Code Review: [docs/quality/code-review-checklist.md](docs/quality/code-review-checklist.md)
+
+### Code Patterns
+
+Copy-paste templates:
+
+- IPC Service: [docs/patterns/ipc-service-template.md](docs/patterns/ipc-service-template.md)
+- Svelte Store: [docs/patterns/store-template.md](docs/patterns/store-template.md)
+- UI Component: [docs/patterns/component-template.md](docs/patterns/component-template.md)
+
+### Reference Documentation
+
+Deep technical details:
+
+- **Tech Stack**: [docs/references/tech-stack.md](docs/references/tech-stack.md)
+- Plugin Development: [docs/references/plugin-development-guide.md](docs/references/plugin-development-guide.md)
+- Logging System: [docs/references/logging-guide.md](docs/references/logging-guide.md)
+- Code Generation: [docs/references/code-generation-guide.md](docs/references/code-generation-guide.md)
+
+## Core Principles
+
+1. **Use Code Generators First**: `pnpm gen:service` and `pnpm gen:state` for scaffolding
+2. **Type Safety**: TypeScript strict mode, no `any` types
+3. **Quality Gates**: All checks must pass before commit
+4. **IPC Pattern**: Service classes with auto-generated bindings
+5. **State Pattern**: Svelte 5 runes with singleton instances
+6. **No Console.log**: Use `createLogger()` from `@shared/logger`
+7. **Conventional Commits**: `feat:`, `fix:`, `chore:`, etc.
+8. **pnpm Only**: Project has patches, npm/yarn will break
+
+## Repository Structure
+
+```
+src/
+├── lib/
+│   ├── components/ui/      # Shadcn-Svelte components (60+)
+│   ├── components/buss/    # Business components
+│   ├── stores/             # Svelte 5 state (20+ stores)
+│   └── api/                # Frontend API layer
+├── routes/                 # SvelteKit routes
+└── shared/                 # Shared types/utils
+
+electron/main/
+├── services/               # IPC services (22+)
+├── server/                 # Hono backend (port 8089)
+├── plugin-manager/         # Plugin system
+└── generated/              # Auto-generated IPC bindings
+
+docs/                       # Documentation (you are here)
+packages/plugin-sdk/        # Plugin SDK workspace
 ```
 
-### Testing
+## When You're Stuck
 
-The project has both unit and end-to-end tests.
+1. **Where should this code live?** → [docs/decision-trees/code-location.md](docs/decision-trees/code-location.md)
+2. **How do I add X?** → [docs/workflows/index.md](docs/workflows/index.md)
+3. **Quality check failed?** → [docs/quality/quality-gates.md](docs/quality/quality-gates.md)
+4. **Need a code template?** → [docs/patterns/](docs/patterns/)
+5. **Architecture question?** → [docs/architecture/index.md](docs/architecture/index.md)
 
-```bash
-# Run unit tests
-pnpm test:unit
+## Tool-Specific Notes
 
-# Run end-to-end tests
-pnpm test:e2e
+### For Claude Code Users
 
-# Run all tests
-pnpm test
-```
+- This file (AGENTS.md) is your entry point
+- Use `Skill` tool to invoke skills when available
+- Follow workflows in `docs/workflows/` for step-by-step guidance
 
-## Development Conventions
+### For Gemini CLI Users
 
-- **Package Manager:** `pnpm` must be used. This is enforced partly due to patches applied to dependencies (e.g., `@sveltejs/kit`).
-- **Code Style:** The project uses Prettier for code formatting and ESLint for linting.
-    - To format all files: `pnpm format`
-    - To lint all files: `pnpm lint`
-- **Type Checking:** TypeScript is used throughout the project. To run the type checker: `pnpm check`
-- **IPC Services:** The project uses a custom script to generate IPC service bindings between the Electron main process and the renderer. This ensures type safety across the IPC boundary. The generation script is `scripts/generate-ipc.ts`.
-- **Commits:** The project uses conventional commits. A `pre-commit` hook is installed via `postinstall` to enforce this.
-- **Directory Structure:**
-    - `electron/`: Contains all code for the Electron main and preload processes.
-        - `electron/main/services/`: Defines IPC services that can be called from the renderer process.
-    - `src/`: Contains all code for the SvelteKit renderer process (the UI).
-        - `src/lib/components/`: Reusable Svelte components.
-        - `src/routes/`: Application pages and layouts.
-        - `src/shared/`: Code shared between the main and renderer processes.
-    - `packages/`: Contains local packages, like the `plugin-sdk`.
+- Use `activate_skill` tool for skills
+- Tool mappings available in GEMINI.md if present
+- Same workflow documents apply
+
+### For Codex Users
+
+- Follow OpenAI "Harness Engineering" patterns
+- Repository knowledge is in `docs/` structure
+- Use code generators for scaffolding
+
+### For All Agents
+
+- Start with [docs/architecture/index.md](docs/architecture/index.md) for system understanding
+- Use decision trees when making architectural choices
+- Run `pnpm quality` before requesting review
+- Check existing code for patterns before creating new ones
+
+---
+
+**Last Updated**: 2026-04-03
+**Maintained By**: 302.AI Team

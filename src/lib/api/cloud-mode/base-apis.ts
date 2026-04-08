@@ -1,12 +1,7 @@
 import { createLogger } from "@shared/logger";
 import {
-	cloudSandboxHealthResponseSchema,
-	createInstanceRequestSchema,
-	createInstanceResponseSchema,
 	execCommandRequestSchema,
 	execCommandResponseSchema,
-	instanceStatusResponseSchema,
-	listInstancesResponseSchema,
 	readFilesRequestSchema,
 	readFilesResponseSchema,
 	rebootInstanceRequestSchema,
@@ -16,12 +11,8 @@ import {
 	writeFilesRequestSchema,
 	writeFilesResponseSchema,
 	type CloudSandboxHealthResponse,
-	type CreateInstanceRequest,
-	type CreateInstanceResponse,
 	type ExecCommandRequest,
 	type ExecCommandResponse,
-	type InstanceStatusResponse,
-	type ListInstancesResponse,
 	type ReadFilesRequest,
 	type ReadFilesResponse,
 	type RebootInstanceRequest,
@@ -50,78 +41,6 @@ export async function getCloudSandboxHealth(
 		status: "ok",
 		ocStatus: "ok",
 	};
-}
-
-/**
- * Get available instance list for Apikey
- * @returns List of available instances
- */
-export async function listInstances(): Promise<ListInstancesResponse> {
-	try {
-		const response = await cloudModeKy.get("api/v1/instances").json();
-
-		const validated = listInstancesResponseSchema(response);
-		if (validated instanceof type.errors) {
-			logger.error("Failed to validate list instances response:", validated.summary);
-			throw new Error("Invalid response format from list instances API");
-		}
-		return validated;
-	} catch (error) {
-		logger.error("Failed to list instances:", error);
-		throw error;
-	}
-}
-
-/**
- * Create a cloud compute instance
- * @error 400 - APIKEY_INSTANCE_EXISTS: one apikey can only bind one master instance
- * @error 500 - CREATE_INSTANCE_FAILED: failed to create instance
- * @returns Created instance information
- */
-export async function createInstance(
-	request: CreateInstanceRequest,
-): Promise<CreateInstanceResponse> {
-	try {
-		const requestBody = createInstanceRequestSchema(request);
-		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate create instance request:", requestBody.summary);
-			throw new Error("Invalid request format for create instance");
-		}
-		const response = await cloudModeKy.post("api/v1/instances", { json: requestBody }).json();
-
-		const validated = createInstanceResponseSchema(response);
-		if (validated instanceof type.errors) {
-			logger.error("Failed to validate create instance response:", validated.summary);
-			throw new Error("Invalid response format from create instance API");
-		}
-		return validated;
-	} catch (error) {
-		logger.error("Failed to create instance:", error);
-		throw error;
-	}
-}
-
-/**
- * Get instance running status.
- * @param instanceName
- * @returns Instance status
- */
-export async function getInstanceStatus(instanceName: string): Promise<InstanceStatusResponse> {
-	try {
-		const response = await cloudModeKy
-			.get(`api/v1/instances/status?instance_name=${encodeURIComponent(instanceName)}`)
-			.json();
-
-		const validated = instanceStatusResponseSchema(response);
-		if (validated instanceof type.errors) {
-			logger.error("Failed to validate instance status response:", validated.summary);
-			throw new Error("Invalid response format from instance status API");
-		}
-		return validated;
-	} catch (error) {
-		logger.error("Failed to get instance status:", error);
-		throw error;
-	}
 }
 
 /**
