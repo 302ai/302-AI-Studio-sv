@@ -44,13 +44,14 @@
 	let canvasEl = $state<HTMLCanvasElement | null>(null);
 	let wrapperEl = $state<HTMLDivElement | null>(null);
 	let chart: Chart<"bar"> | null = null;
+	let themeObserver: MutationObserver | null = null;
 
 	function renderChart() {
 		if (!canvasEl || !wrapperEl) return;
 		const tokens = getChartThemeTokens(wrapperEl);
 		const data: ChartData<"bar"> = {
 			labels,
-			datasets: buildBarDatasets(datasets, tokens),
+			datasets: buildBarDatasets(datasets, tokens, wrapperEl),
 		};
 		const options = buildCartesianOptions(tokens, showLegend, {
 			scales: {
@@ -65,7 +66,23 @@
 
 	onMount(() => {
 		renderChart();
-		return () => chart?.destroy();
+
+		themeObserver = new MutationObserver(() => {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					renderChart();
+				});
+			});
+		});
+		themeObserver.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ["class", "style"],
+		});
+
+		return () => {
+			themeObserver?.disconnect();
+			chart?.destroy();
+		};
 	});
 
 	$effect(() => {
