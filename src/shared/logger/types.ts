@@ -17,7 +17,8 @@ export type RendererProcessCategory =
 	| "provider"
 	| "theme"
 	| "marketplace"
-	| "session";
+	| "session"
+	| "apis";
 
 export type LogCategory = MainProcessCategory | RendererProcessCategory;
 

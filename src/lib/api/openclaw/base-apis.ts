@@ -1,8 +1,8 @@
+import { createLogger } from "@shared/logger";
 import { type } from "arktype";
 import { getCodeAgentKy } from "../utils";
-import { createLogger } from "@shared/logger";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 export const openclawCronJobResultResponseSchema = type({
 	success: "boolean",

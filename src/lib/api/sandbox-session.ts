@@ -4,6 +4,7 @@
  */
 
 import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
+import { createLogger } from "@shared/logger";
 import {
 	listLocalClaudeCodeSessionsResponse,
 	type ListLocalClaudeCodeSessionsResponse,
@@ -11,9 +12,8 @@ import {
 import { type } from "arktype";
 import { createLocalCodeAgentKy } from "./core/local-code-agent-ky";
 import { getCodeAgentKy } from "./utils";
-import { createLogger } from "@shared/logger";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 

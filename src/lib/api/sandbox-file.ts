@@ -4,10 +4,10 @@
  */
 
 import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
-import { getCodeAgentKy } from "./utils";
 import { createLogger } from "@shared/logger";
+import { getCodeAgentKy } from "./utils";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 export interface SandboxFileInfo {
 	name: string;

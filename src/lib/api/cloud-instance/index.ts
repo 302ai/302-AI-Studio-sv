@@ -2,7 +2,7 @@ import { createLogger } from "@shared/logger";
 import { type } from "arktype";
 import { cloudModeKy } from "../core/cloud-mode-ky";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 const { getUserAgentFragment } = window.electronAPI.appService;
 const { get302AIApiKey } = window.electronAPI.providerService;

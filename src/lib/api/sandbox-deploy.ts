@@ -1,9 +1,9 @@
 import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
+import { createLogger } from "@shared/logger";
 import { type } from "arktype";
 import { getCodeAgentKy } from "./utils";
-import { createLogger } from "@shared/logger";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 export const deploySandboxRequestSchema = type({
 	sandbox_id: "string",

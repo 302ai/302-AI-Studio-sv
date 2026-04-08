@@ -4,7 +4,7 @@ import { skill } from "@shared/types";
 import { type } from "arktype";
 import { getCodeAgentKy } from "../utils";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 function normalizeSkillRecord(value: unknown) {
 	if (!value || typeof value !== "object") {
