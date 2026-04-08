@@ -44,6 +44,7 @@
 	let canvasEl = $state<HTMLCanvasElement | null>(null);
 	let wrapperEl = $state<HTMLDivElement | null>(null);
 	let chart: Chart<"doughnut", number[], string> | Chart<"pie", number[], string> | null = null;
+	let themeObserver: MutationObserver | null = null;
 
 	function renderChart() {
 		if (!canvasEl || !wrapperEl) return;
@@ -68,7 +69,23 @@
 
 	onMount(() => {
 		renderChart();
-		return () => chart?.destroy();
+
+		themeObserver = new MutationObserver(() => {
+			requestAnimationFrame(() => {
+				requestAnimationFrame(() => {
+					renderChart();
+				});
+			});
+		});
+		themeObserver.observe(document.documentElement, {
+			attributes: true,
+			attributeFilter: ["class", "style"],
+		});
+
+		return () => {
+			themeObserver?.disconnect();
+			chart?.destroy();
+		};
 	});
 
 	$effect(() => {
