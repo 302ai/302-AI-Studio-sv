@@ -12,9 +12,9 @@
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import {
-		cloudEnvState,
+		cloudModeState,
 		type CloudHealthStatus,
-	} from "$lib/stores/code-agent/cloud-env-state.svelte";
+	} from "$lib/stores/code-agent/cloud-mode-state.svelte";
 
 	type StatusProps = { status: "green" | "red" | "gray"; text: string };
 
@@ -34,6 +34,11 @@
 			"/settings/agent-settings/platform?platform=cloud",
 		);
 	}
+
+	$effect(() => {
+		cloudModeState.startPolling();
+		return () => cloudModeState.stopPolling();
+	});
 </script>
 
 <div class="flex items-start justify-between gap-4">
@@ -43,8 +48,8 @@
 				>{m.cloud_mode_activation_status()}</Label
 			>
 			<StatusIndicator
-				status={cloudEnvState.activated ? "green" : "gray"}
-				text={cloudEnvState.activated
+				status={cloudModeState.activated ? "green" : "gray"}
+				text={cloudModeState.activated
 					? m.cloud_mode_activated()
 					: m.cloud_mode_not_activated()}
 			/>
@@ -54,8 +59,8 @@
 				>{m.cloud_mode_startup_status()}</Label
 			>
 			<StatusIndicator
-				status={cloudEnvState.running ? "green" : "gray"}
-				text={cloudEnvState.running ? m.cloud_mode_started() : m.cloud_mode_not_started()}
+				status={cloudModeState.running ? "green" : "gray"}
+				text={cloudModeState.running ? m.cloud_mode_started() : m.cloud_mode_not_started()}
 			/>
 		</div>
 		<div class="flex items-center gap-3">
@@ -63,8 +68,8 @@
 				>{m.cloud_mode_health_status()}</Label
 			>
 			<StatusIndicator
-				status={getHealthProps(cloudEnvState.healthStatus).status}
-				text={getHealthProps(cloudEnvState.healthStatus).text}
+				status={getHealthProps(cloudModeState.healthStatus).status}
+				text={getHealthProps(cloudModeState.healthStatus).text}
 			/>
 		</div>
 		<div class="flex items-center gap-3">
@@ -72,12 +77,12 @@
 				>{m.cloud_mode_openclaw_status()}</Label
 			>
 			<StatusIndicator
-				status={getHealthProps(cloudEnvState.openClawStatus).status}
-				text={getHealthProps(cloudEnvState.openClawStatus).text}
+				status={getHealthProps(cloudModeState.openClawStatus).status}
+				text={getHealthProps(cloudModeState.openClawStatus).text}
 			/>
 		</div>
 	</div>
-	{#if !cloudEnvState.activated}
+	{#if !cloudModeState.activated}
 		<Button size="sm" onclick={handleActivate}>
 			{m.cloud_mode_activate_button()}
 		</Button>

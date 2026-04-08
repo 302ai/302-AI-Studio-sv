@@ -25,7 +25,7 @@ import { toast } from "svelte-sonner";
 import { match } from "ts-pattern";
 import { claudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
 import { claudeCodeAgentState, type ClaudeCodeSandboxInfo } from "./claude-code-state.svelte";
-import { cloudEnvState } from "./cloud-env-state.svelte";
+import { cloudModeState } from "./cloud-mode-state.svelte";
 import { codeAgentGlobalConfigsState } from "./code-agent-global-configs-state.svelte";
 import { codeAgentSendMessageButtonState } from "./code-agent-send-message-button-state.svelte";
 import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
@@ -121,7 +121,7 @@ class CodeAgentState {
 		return match(this.type)
 			.with("local", () => "sandbox-created" as const)
 			.with("cloud", () =>
-				cloudEnvState.running
+				cloudModeState.running
 					? ("sandbox-created" as const)
 					: ("waiting-for-sandbox" as const),
 			)
@@ -314,7 +314,7 @@ class CodeAgentState {
 		return match(this.type)
 			.with("local", () => claudeCodeAgentState.handleLocalModeExecute())
 			.with("cloud", () => {
-				if (!cloudEnvState.running) {
+				if (!cloudModeState.running) {
 					logger.info("[CodeAgentState] executeCodeAgentMode: Cloud not running");
 					// Future: add logic to prompt user to start cloud environment
 				}

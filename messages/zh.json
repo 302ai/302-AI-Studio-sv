@@ -938,7 +938,6 @@
 	"cloud_mode_running": "运行中",
 	"cloud_mode_activate_button": "开通",
 	"cloud_mode_cloud": "云端",
-	"cloud_mode_api_status": "接口状态",
 	"cloud_mode_cloud_description": "远程运行，托管运行",
 	"cloud_mode_restart_docker": "重启 OpenClaw",
 	"cloud_mode_reboot_instance": "重启实例",

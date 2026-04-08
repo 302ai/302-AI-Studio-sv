@@ -4,6 +4,8 @@ import {
 	createInstanceResponseSchema,
 	execCommandRequestSchema,
 	execCommandResponseSchema,
+	instanceStatusResponseSchema,
+	listInstancesResponseSchema,
 	readFilesRequestSchema,
 	readFilesResponseSchema,
 	rebootInstanceRequestSchema,
@@ -17,6 +19,8 @@ import {
 	type CreateInstanceResponse,
 	type ExecCommandRequest,
 	type ExecCommandResponse,
+	type InstanceStatusResponse,
+	type ListInstancesResponse,
 	type ReadFilesRequest,
 	type ReadFilesResponse,
 	type RebootInstanceRequest,
@@ -46,6 +50,50 @@ export async function getCloudSandboxHealth(
 		status: "ok",
 		ocStatus: "ok",
 	};
+}
+
+/**
+ * Get available instance list for Apikey
+ * @returns List of available instances
+ */
+export async function listInstances(): Promise<ListInstancesResponse> {
+	try {
+		const response = await testKy.get("api/v1/instances").json();
+
+		const validated = listInstancesResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate list instances response:", validated.summary);
+			throw new Error("Invalid response format from list instances API");
+		}
+		return validated;
+	} catch (error) {
+		logger.error("Failed to list instances:", error);
+		throw error;
+	}
+}
+
+/**
+ * Get instance running status.
+ * @param instanceName
+ * @returns Instance status
+ */
+export async function getInstanceStatus(instanceName: string): Promise<InstanceStatusResponse> {
+	try {
+		const kyInstance = await createCloudModeKy();
+		const response = await kyInstance
+			.get(`api/v1/instances/status?instance_name=${encodeURIComponent(instanceName)}`)
+			.json();
+
+		const validated = instanceStatusResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate instance status response:", validated.summary);
+			throw new Error("Invalid response format from instance status API");
+		}
+		return validated;
+	} catch (error) {
+		logger.error("Failed to get instance status:", error);
+		throw error;
+	}
 }
 
 /**

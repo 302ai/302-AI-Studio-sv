@@ -48,14 +48,14 @@ export class CloudModeService {
 	public async getCloudModeInstanceBaseUrl(
 		_event: IpcMainInvokeEvent,
 	): Promise<{ isOk: boolean; baseUrl: string }> {
-		const [error, instance] = await attemptAsync(cloudModeStorage.getCloudModeInstance);
+		const [error, instance] = await attemptAsync(() => cloudModeStorage.getCloudModeInstance());
 
 		if (error || isNull(instance)) {
 			logger.error("[CloudModeService] Error getting cloud mode instance:", error);
 			return { isOk: false, baseUrl: "" };
 		}
 
-		return { isOk: true, baseUrl: instance.publicIp + ":" + instance.apiPort };
+		return { isOk: true, baseUrl: `http://${instance.publicIp}:${instance.apiPort}` };
 	}
 }
 

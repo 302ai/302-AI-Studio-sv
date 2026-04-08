@@ -2,15 +2,14 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import StatusIndicator from "$lib/components/buss/local-agent-panel/status-indicator.svelte";
 
-	import { rebootInstance, restartDocker } from "$lib/api/cloud-mode/base-apis";
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { Switch } from "$lib/components/ui/switch";
 	import { m } from "$lib/paraglide/messages";
 	import {
-		cloudEnvState,
+		cloudModeState,
 		type CloudHealthStatus,
-	} from "$lib/stores/code-agent/cloud-env-state.svelte";
+	} from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { cn } from "$lib/utils";
 	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
 
@@ -32,32 +31,29 @@
 		return new Date(iso).toLocaleDateString();
 	}
 
+	$effect(() => {
+		cloudModeState.startPolling();
+		return () => cloudModeState.stopPolling();
+	});
+
 	// --- Restart / Reboot ---
 	let isRestartingDocker = $state(false);
 	let isRebooting = $state(false);
 	let isAutoRenew = $state(false);
 
 	async function handleRestartDockerAction() {
-		const instanceName = cloudEnvState.instanceInfo?.instanceName;
-		if (!instanceName) return;
 		isRestartingDocker = true;
 		try {
-			await restartDocker({ instanceName: instanceName });
-			// Refresh status after restart
-			// await cloudEnvState.checkStatus();
+			await cloudModeState.restartDocker();
 		} finally {
 			isRestartingDocker = false;
 		}
 	}
 
 	async function handleRebootAction() {
-		const instanceName = cloudEnvState.instanceInfo?.instanceName;
-		if (!instanceName) return;
 		isRebooting = true;
 		try {
-			await rebootInstance({ instanceName: instanceName });
-			// Refresh status after reboot
-			// await cloudEnvState.checkStatus();
+			await cloudModeState.rebootInstance();
 		} finally {
 			isRebooting = false;
 		}
@@ -76,12 +72,12 @@
 							>{m.agent_settings_instance_status()}</Label
 						>
 						<StatusIndicator
-							status={getHealthProps(cloudEnvState.instanceStatus).status}
-							text={getHealthProps(cloudEnvState.instanceStatus).text}
-							showWarning={cloudEnvState.instanceStatus === "unhealthy"}
+							status={getHealthProps(cloudModeState.instanceStatus).status}
+							text={getHealthProps(cloudModeState.instanceStatus).text}
+							showWarning={cloudModeState.instanceStatus === "unhealthy"}
 							warningTooltip={m.cloud_mode_unhealthy()}
 						/>
-						{#if cloudEnvState.instanceStatus === "unhealthy" || isRebooting}
+						{#if cloudModeState.instanceStatus === "unhealthy" || isRebooting}
 							<ButtonWithTooltip
 								tooltip={m.cloud_mode_reboot_instance()}
 								class="hover:!bg-icon-btn-hover size-8"
@@ -94,20 +90,11 @@
 					</div>
 					<div class="flex items-center gap-3">
 						<Label class="text-muted-foreground min-w-18 font-normal"
-							>{m.cloud_mode_api_status()}</Label
-						>
-						<StatusIndicator
-							status={getHealthProps(cloudEnvState.apiStatus).status}
-							text={getHealthProps(cloudEnvState.apiStatus).text}
-						/>
-					</div>
-					<div class="flex items-center gap-3">
-						<Label class="text-muted-foreground min-w-18 font-normal"
 							>{m.cloud_mode_health_status()}</Label
 						>
 						<StatusIndicator
-							status={getHealthProps(cloudEnvState.healthStatus).status}
-							text={getHealthProps(cloudEnvState.healthStatus).text}
+							status={getHealthProps(cloudModeState.healthStatus).status}
+							text={getHealthProps(cloudModeState.healthStatus).text}
 						/>
 					</div>
 					<div class="flex items-center gap-3">
@@ -115,12 +102,12 @@
 							>{m.cloud_mode_openclaw_status()}</Label
 						>
 						<StatusIndicator
-							status={getHealthProps(cloudEnvState.openClawStatus).status}
-							text={getHealthProps(cloudEnvState.openClawStatus).text}
-							showWarning={cloudEnvState.openClawStatus === "unhealthy"}
+							status={getHealthProps(cloudModeState.openClawStatus).status}
+							text={getHealthProps(cloudModeState.openClawStatus).text}
+							showWarning={cloudModeState.openClawStatus === "unhealthy"}
 							warningTooltip={m.cloud_mode_unhealthy()}
 						/>
-						{#if cloudEnvState.openClawStatus === "unhealthy" || isRestartingDocker}
+						{#if cloudModeState.openClawStatus === "unhealthy" || isRestartingDocker}
 							<ButtonWithTooltip
 								tooltip={m.cloud_mode_restart_docker()}
 								class="hover:!bg-icon-btn-hover size-8"
@@ -144,13 +131,13 @@
 		<div class="rounded-lg border p-5 space-y-5">
 			<div class="flex justify-between items-center w-full">
 				<h3 class="text-base font-semibold">{m.cloud_mode_instance()}</h3>
-				{#if !cloudEnvState.activated}
+				{#if !cloudModeState.activated}
 					<Button
 						size="sm"
-						disabled={cloudEnvState.starting}
-						onclick={() => cloudEnvState.startCloud(false, isAutoRenew)}
+						disabled={cloudModeState.starting}
+						onclick={() => cloudModeState.startCloud(false, isAutoRenew)}
 					>
-						{#if cloudEnvState.starting}
+						{#if cloudModeState.starting}
 							<LoaderCircle class="h-4 w-4 animate-spin" />
 						{:else}
 							{m.cloud_mode_activate_button()}
@@ -160,25 +147,25 @@
 			</div>
 			<div class="flex justify-between items-end">
 				<div class="space-y-1">
-					{#if cloudEnvState.instanceInfo}
+					{#if cloudModeState.instanceInfo}
 						<p class="text-sm text-muted-foreground">
-							IP：{cloudEnvState.instanceInfo.publicIp || "--"}
+							IP：{cloudModeState.instanceInfo.publicIp || "--"}
 						</p>
 						<p class="text-sm text-muted-foreground">
 							{m.cloud_mode_created_at()}：{formatDate(
-								cloudEnvState.instanceInfo.createdAt,
+								cloudModeState.instanceInfo.createdAt,
 							)}
 						</p>
 						<p class="text-sm text-muted-foreground">
 							{m.cloud_mode_expired_at()}：{formatDate(
-								cloudEnvState.instanceInfo.expiredAt,
+								cloudModeState.instanceInfo.expiredAt,
 							)}
 						</p>
 					{:else}
 						<p class="text-sm text-muted-foreground">{m.cloud_mode_no_instance()}</p>
 					{/if}
 				</div>
-				{#if !cloudEnvState.activated}
+				{#if !cloudModeState.activated}
 					<div class="flex items-center">
 						<Switch
 							bind:checked={isAutoRenew}
