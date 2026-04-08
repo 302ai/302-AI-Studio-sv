@@ -73,6 +73,7 @@
 
 	function handleEditorReady(editor: LexicalEditor) {
 		chatParameters.setSystemPromptEditorRef(editor);
+		chatParameters.ensureInitialized();
 
 		if (isInitialized) return;
 		isInitialized = true;
@@ -152,7 +153,7 @@
 				value={chatParameters.systemPromptPresetType}
 				onValueChange={handlePresetChange}
 			>
-				<Select.Trigger class="w-full"
+				<Select.Trigger class="w-full bg-input"
 					>{allPresets.find((item) => item.key === chatParameters.systemPromptPresetType)
 						?.name}
 				</Select.Trigger>

@@ -24,16 +24,16 @@ const VALID_BUILTIN_TYPES = [
 	"deep-thinking-type",
 ];
 
-const getInitialSystemPromptPresetType = (): string => {
+const getDefaultSystemPromptPresetType = (): string => {
 	const fallback = preferencesSettings.defaultPhrasing;
 	return isValidPresetType(fallback) ? fallback : "empty";
 };
 
-const initialChatParameters: ChatParametersType = {
+const createInitialChatParameters = (): ChatParametersType => ({
 	systemPromptVariables: [],
 	systemPromptMap: {},
 	systemPromptContent: "",
-	systemPromptPresetType: getInitialSystemPromptPresetType(),
+	systemPromptPresetType: "",
 	systemPromptRawJson:
 		'{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0,"textStyle":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
 	userPromptTemplateVariables: ["input"],
@@ -41,11 +41,11 @@ const initialChatParameters: ChatParametersType = {
 	userPromptTemplateContent: "{{#input#}}",
 	userPromptTemplateRawJson:
 		'{"root":{"children":[{"children":[{"type":"variable-value","version":1,"variable":"input"}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0,"textStyle":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
-};
+});
 
 export const persistedChatParametersState = new PersistedState<ChatParametersType>(
 	"app-chat-parameters:" + threadId,
-	initialChatParameters,
+	createInitialChatParameters(),
 );
 
 function isValidPresetType(type: string): boolean {
@@ -54,6 +54,7 @@ function isValidPresetType(type: string): boolean {
 
 class ChatParameters {
 	#isPresetUpdate = $state(false);
+	#hasEnsuredInitialization = false;
 
 	systemPromptEditorRef = $state<LexicalEditor | null>(null);
 	userPromptTemplateEditorRef = $state<LexicalEditor | null>(null);
@@ -91,6 +92,26 @@ class ChatParameters {
 			...persistedChatParametersState.current,
 			...partial,
 		};
+	}
+
+	ensureInitialized() {
+		if (this.#hasEnsuredInitialization) return;
+		if (!persistedChatParametersState.isHydrated || !preferencesSettings.isHydrated) return;
+
+		const current = persistedChatParametersState.current;
+		const hasPreset = Boolean(current.systemPromptPresetType);
+		const hasContent = Boolean(current.systemPromptContent);
+		const hasVariables = current.systemPromptVariables.length > 0;
+
+		if (hasPreset || hasContent || hasVariables) {
+			this.#hasEnsuredInitialization = true;
+			return;
+		}
+
+		this.#updateState({
+			systemPromptPresetType: getDefaultSystemPromptPresetType(),
+		});
+		this.#hasEnsuredInitialization = true;
 	}
 
 	setSystemPromptEditorRef(editor: LexicalEditor | null) {
