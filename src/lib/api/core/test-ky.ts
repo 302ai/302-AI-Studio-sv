@@ -5,7 +5,7 @@ const { get302AIApiKey } = window.electronAPI.providerService;
 
 export const testKy = ky.create({
 	timeout: 60000,
-	prefixUrl: "http://192.168.199.116:8001",
+	prefixUrl: "http://192.168.199.49:8001",
 	headers: {
 		"HTTP-Referer": "https://studio.302.ai/",
 		"X-Title": "302.AI Studio",

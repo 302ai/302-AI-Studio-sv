@@ -17,9 +17,15 @@ export async function listInstances(): Promise<ListInstancesResponse> {
 
 		const validated = listInstancesResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate list instances response:", validated.summary);
+			logger.error(
+				"Failed to validate list instances response:",
+				validated.summary,
+				JSON.stringify(response),
+			);
 			throw new Error("Invalid response format from list instances API");
 		}
+
+		logger.debug("List instances response:", JSON.stringify(validated));
 		return validated;
 	} catch (error) {
 		logger.error("Failed to list instances:", error);

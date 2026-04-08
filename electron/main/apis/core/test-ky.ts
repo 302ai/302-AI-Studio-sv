@@ -6,7 +6,7 @@ const userAgent = getCustomUserAgentFragment();
 
 export const testKy = ky.create({
 	timeout: 60000,
-	prefixUrl: "http://192.168.199.116:8001",
+	prefixUrl: "http://192.168.199.49:8001",
 	headers: {
 		"User-Agent": userAgent,
 		"HTTP-Referer": "https://studio.302.ai/",
