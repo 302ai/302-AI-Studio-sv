@@ -6,6 +6,7 @@ import { createLogger } from "@shared/logger";
 import { testKy } from "./core/test-ky";
 
 const logger = createLogger("apis");
+
 /**
  * Get available instance list for Apikey
  * @returns List of available instances

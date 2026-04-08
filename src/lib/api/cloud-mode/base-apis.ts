@@ -27,7 +27,7 @@ import {
 	type WriteFilesResponse,
 } from "@shared/storage/cloud-mode";
 import { type } from "arktype";
-import { cloudModeKy } from "../core/cloud-mode-ky";
+import { createCloudModeKy } from "../core/cloud-mode-ky";
 import { testKy } from "../core/test-ky";
 
 const logger = createLogger("apis");
@@ -89,7 +89,8 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 			logger.error("Failed to validate restart docker request:", requestBody.summary);
 			throw new Error("Invalid request format for restart docker");
 		}
-		const response = await cloudModeKy
+		const kyInstance = await createCloudModeKy();
+		const response = kyInstance
 			.post("api/v1/instances/openclaw/restart", { json: requestBody })
 			.json();
 
@@ -119,9 +120,8 @@ export async function rebootInstance(
 			logger.error("Failed to validate reboot instance request:", requestBody.summary);
 			throw new Error("Invalid request format for reboot instance");
 		}
-		const response = await cloudModeKy
-			.post("api/v1/instances/reboot", { json: requestBody })
-			.json();
+		const kyInstance = await createCloudModeKy();
+		const response = kyInstance.post("api/v1/instances/reboot", { json: requestBody }).json();
 
 		const validated = rebootInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -147,7 +147,8 @@ export async function readInstanceFiles(request: ReadFilesRequest): Promise<Read
 			logger.error("Failed to validate read files request:", requestBody.summary);
 			throw new Error("Invalid request format for read files");
 		}
-		const response = await cloudModeKy
+		const kyInstance = await createCloudModeKy();
+		const response = kyInstance
 			.post("api/v1/instances/files/read", { json: requestBody })
 			.json();
 
@@ -175,7 +176,8 @@ export async function writeInstanceFiles(request: WriteFilesRequest): Promise<Wr
 			logger.error("Failed to validate write files request:", requestBody.summary);
 			throw new Error("Invalid request format for write files");
 		}
-		const response = await cloudModeKy
+		const kyInstance = await createCloudModeKy();
+		const response = kyInstance
 			.post("api/v1/instances/files/write", { json: requestBody })
 			.json();
 
@@ -200,7 +202,8 @@ export async function execInstanceCommand(
 			logger.error("Failed to validate exec command request:", requestBody.summary);
 			throw new Error("Invalid request format for exec command");
 		}
-		const response = await cloudModeKy
+		const kyInstance = await createCloudModeKy();
+		const response = kyInstance
 			.post("api/v1/instances/commands/exec", { json: requestBody })
 			.json();
 

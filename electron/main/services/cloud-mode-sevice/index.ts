@@ -1,27 +1,17 @@
 import { listInstances } from "@electron/main/apis/cloud-mode";
 import { cloudModeStorage } from "@electron/main/services/storage-service/cloud-mode/cloud-mode-storage";
 import { createLogger } from "@shared/logger";
+import type { IpcMainInvokeEvent } from "electron";
+import { attemptAsync, isNull } from "es-toolkit";
 
 const logger = createLogger("services");
 
-/**
- * CloudMode Service
- * Handles business logic related to cloud mode management.
- */
 export class CloudModeService {
 	constructor() {
-		// Automatically sync cloud instances to local storage on service initialization
-		this.syncCloudInstanceToLocal().catch((error) => {
-			logger.error("[CloudModeService] Failed to sync cloud instance on init:", error);
-		});
+		this.syncCloudInstanceToLocal();
 	}
 
-	/**
-	 * Synchronizes the remote cloud instance list to local persistent storage.
-	 * If instances exist on the cloud, the first one is used as the active instance locally.
-	 * If no instances exist or the request fails, the local storage remains unchanged.
-	 */
-	public async syncCloudInstanceToLocal(): Promise<void> {
+	private async syncCloudInstanceToLocal(): Promise<void> {
 		try {
 			logger.info("[CloudModeService] Syncing cloud instances to local storage...");
 			const response = await listInstances();
@@ -34,16 +24,38 @@ export class CloudModeService {
 				);
 				await cloudModeStorage.setCloudModeInstance(activeInstance);
 			} else {
-				// We do NOT reset local data if the remote list is empty or the request failed
-				// This preserves local data for offline use or intermittent API issues
 				logger.info(
 					"[CloudModeService] No cloud instances found or request was unsuccessful. Keeping existing local data.",
 				);
 			}
 		} catch (error) {
 			logger.error("[CloudModeService] Error during cloud instance sync:", error);
-			// Do not re-throw to prevent initialization crashes, existing local data is preserved
 		}
+	}
+
+	public async syncCloudInstanceToLocalByIpc(
+		_event: IpcMainInvokeEvent,
+	): Promise<{ isOk: boolean }> {
+		try {
+			await this.syncCloudInstanceToLocal();
+			return { isOk: true };
+		} catch (error) {
+			logger.error("[CloudModeService] Error during cloud instance sync:", error);
+			return { isOk: false };
+		}
+	}
+
+	public async getCloudModeInstanceBaseUrl(
+		_event: IpcMainInvokeEvent,
+	): Promise<{ isOk: boolean; baseUrl: string }> {
+		const [error, instance] = await attemptAsync(cloudModeStorage.getCloudModeInstance);
+
+		if (error || isNull(instance)) {
+			logger.error("[CloudModeService] Error getting cloud mode instance:", error);
+			return { isOk: false, baseUrl: "" };
+		}
+
+		return { isOk: true, baseUrl: instance.publicIp + ":" + instance.apiPort };
 	}
 }
 

@@ -13,6 +13,7 @@
 ### Task 1: Refactor `CodeAgentState` core logic using pattern matching
 
 **Files:**
+
 - Modify: `src/lib/stores/code-agent/code-agent-state.svelte.ts`
 
 - [x] **Step 1: Rewrite `sandboxStatus` derived logic**
@@ -23,11 +24,20 @@ Use `ts-pattern` to explicitly determine sandbox/environment status based on `ty
 // src/lib/stores/code-agent/code-agent-state.svelte.ts
 
 sandboxStatus = $derived.by<CodeAgentSandboxStatus>(() => {
-    return match(this.type)
-        .with("local", () => "sandbox-created" as const)
-        .with("cloud", () => (cloudEnvState.running ? "sandbox-created" : "waiting-for-sandbox") as const)
-        .with("remote", () => (claudeCodeAgentState.sandboxId === "" ? "waiting-for-sandbox" : "sandbox-created") as const)
-        .exhaustive();
+	return match(this.type)
+		.with("local", () => "sandbox-created" as const)
+		.with(
+			"cloud",
+			() => (cloudEnvState.running ? "sandbox-created" : "waiting-for-sandbox") as const,
+		)
+		.with(
+			"remote",
+			() =>
+				(claudeCodeAgentState.sandboxId === ""
+					? "waiting-for-sandbox"
+					: "sandbox-created") as const,
+		)
+		.exhaustive();
 });
 ```
 
@@ -94,6 +104,7 @@ get codeAgentCfgs(): CodeAgentCfgs {
 ### Task 2: Optimize `ClaudeCodeAgentState` internal logic
 
 **Files:**
+
 - Modify: `src/lib/stores/code-agent/claude-code-state.svelte.ts`
 
 - [x] **Step 1: Optimize `handleActiveDeployment` (Isolate deployment logic)**
@@ -140,6 +151,7 @@ async listClaudeCodeSkills(isInit: boolean): Promise<ListSkillsResponse> {
 ### Task 3: Complete activation link and persistence adaptation
 
 **Files:**
+
 - Modify: `src/lib/stores/code-agent/code-agent-state.svelte.ts`
 
 - [x] **Step 1: Refactor `handleConfirmEnabled` branch logic**
@@ -174,8 +186,8 @@ handleConfirmEnabled(): void {
 ### Task 4: Link verification (Verification)
 
 - [ ] **Step 1: State verification (State Sync)**
-Disconnect cloud running status (`cloudEnvState.running = false`), confirm send button status correctly switches.
+      Disconnect cloud running status (`cloudEnvState.running = false`), confirm send button status correctly switches.
 - [ ] **Step 2: Configuration verification (Config Accuracy)**
-Confirm `codeAgentCfgs` returns correct `model` field meaning in all three modes.
+      Confirm `codeAgentCfgs` returns correct `model` field meaning in all three modes.
 - [ ] **Step 3: Persistence verification (Persistence)**
-Refresh page, confirm `sandboxId` is the correct placeholder (`"cloud"` or `"local"`).
+      Refresh page, confirm `sandboxId` is the correct placeholder (`"cloud"` or `"local"`).

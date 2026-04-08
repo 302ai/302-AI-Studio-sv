@@ -16,6 +16,7 @@ import {
 	tabService,
 	aiApplicationService,
 	appService,
+	cloudModeService,
 	dataService,
 	devLauncherService,
 	externalLinkService,
@@ -500,6 +501,14 @@ export function registerIpcHandlers() {
 		appService.deleteTempDir(event, dirPath),
 	);
 
+	// cloudModeService service registration
+	ipcMain.handle("cloudModeService:syncCloudInstanceToLocalByIpc", (event) =>
+		cloudModeService.syncCloudInstanceToLocalByIpc(event),
+	);
+	ipcMain.handle("cloudModeService:getCloudModeInstanceBaseUrl", (event) =>
+		cloudModeService.getCloudModeInstanceBaseUrl(event),
+	);
+
 	// dataService service registration
 	ipcMain.handle("dataService:importLegacyJson", (event) => dataService.importLegacyJson(event));
 	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
@@ -788,6 +797,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:zipDirectory");
 	ipcMain.removeHandler("appService:createSkillTempDir");
 	ipcMain.removeHandler("appService:deleteTempDir");
+	ipcMain.removeHandler("cloudModeService:syncCloudInstanceToLocalByIpc");
+	ipcMain.removeHandler("cloudModeService:getCloudModeInstanceBaseUrl");
 	ipcMain.removeHandler("dataService:importLegacyJson");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("dataService:importStorage");

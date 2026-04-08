@@ -13,41 +13,34 @@ repos:
     - repo: local
       hooks:
           # Complete quality check (equivalent to `pnpm quality`)
-          # DISABLED: 改为使用增量检查以提高 commit 速度
-          # - id: quality-check
-          #   name: quality-check (check + lint + format:check)
-          #   entry: bash -c 'pnpm exec svelte-kit sync && pnpm exec svelte-check --tsconfig ./tsconfig.json && pnpm exec eslint . && pnpm exec prettier --check .'
-          #   language: system
-          #   pass_filenames: false
-          #   always_run: true
-
-          # Individual hooks for incremental checks
-          - id: svelte-check
-            name: svelte-check
-            entry: bash -c 'pnpm exec svelte-kit sync && pnpm exec svelte-check --tsconfig ./tsconfig.json'
+          - id: quality-check
+            name: quality-check (check + lint + format:check)
+            entry: bash -c 'pnpm exec svelte-kit sync && pnpm exec svelte-check --tsconfig ./tsconfig.json && pnpm exec eslint . && pnpm exec prettier --check .'
             language: system
             pass_filenames: false
-            files: \.(svelte|ts)$
+            always_run: true
 
-          - id: prettier
-            name: prettier
-            entry: bash -c 'pnpm exec prettier --write "$@"' --
-            language: system
-            files: \.(js|ts|svelte|json|yaml|yml|html|css|scss)$
-            exclude: '^(pnpm-lock\.yaml|src/lib/paraglide/.*|src/routes/demo/.*|\.svelte-kit/.*|build/.*|node_modules/.*)$'
+          #   # Individual hooks for incremental checks
+          #   - id: svelte-check
+          #     name: svelte-check
+          #     entry: bash -c 'pnpm exec svelte-kit sync && pnpm exec svelte-check --tsconfig ./tsconfig.json'
+          #     language: system
+          #     pass_filenames: false
+          #     files: \.(svelte|ts)$
 
-          - id: eslint
-            name: eslint
-            entry: bash -c 'pnpm exec eslint --fix "$@"' --
-            language: system
-            files: \.(js|ts|svelte)$
-            exclude: '^(src/lib/paraglide/.*|\.svelte-kit/.*|build/.*|node_modules/.*)$'
+          #   - id: prettier
+          #     name: prettier
+          #     entry: bash -c 'pnpm exec prettier --write "$@"' --
+          #     language: system
+          #     files: \.(js|ts|svelte|json|yaml|yml|html|css|scss)$
+          #     exclude: '^(pnpm-lock\.yaml|src/lib/paraglide/.*|src/routes/demo/.*|\.svelte-kit/.*|build/.*|node_modules/.*)$'
 
-          # - id: sort-messages
-          #   name: sort-messages
-          #   entry: node scripts/sort-messages.js
-          #   language: system
-          #   files: ^messages/.*\.json$
+          #   - id: eslint
+          #     name: eslint
+          #     entry: bash -c 'pnpm exec eslint --fix "$@"' --
+          #     language: system
+          #     files: \.(js|ts|svelte)$
+          #     exclude: '^(src/lib/paraglide/.*|\.svelte-kit/.*|build/.*|node_modules/.*)$'
 
     - repo: https://github.com/compilerla/conventional-pre-commit
       rev: v4.2.0
