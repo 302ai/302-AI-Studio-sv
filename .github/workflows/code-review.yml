@@ -55,8 +55,6 @@ jobs:
                   claude_args: |
                       --model cc-sonnet-4-6
                       --max-turns 25
-                      --allowedTools "Read,Grep,Glob,Bash(pnpm check),Bash(pnpm lint),Bash(pnpm exec svelte-check)"
-                      --disallowedTools "Edit,Write,Replace,NotebookEditCell"
                   # Use /review command - it will automatically read CLAUDE.md for project standards
                   prompt: "/review"
               env:
