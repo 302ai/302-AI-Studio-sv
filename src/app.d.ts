@@ -136,6 +136,9 @@ declare global {
 					callback: (event: OpenClawWeixinLoginMsg) => void,
 				) => () => void;
 			};
+			cloudMode: {
+				onTimedBroadcaster: (callback: () => void) => () => void;
+			};
 		};
 		windowId: string;
 		tab: Tab;

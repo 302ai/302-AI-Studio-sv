@@ -1,7 +1,7 @@
 import {
 	getSandboxHealthStatus,
 	listInstances,
-	rebootInstance,
+	restartDocker,
 	updateInstanceAutoRenew,
 } from "$lib/api/cloud-mode/base-apis";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
@@ -55,6 +55,12 @@ class CloudModeStateManager {
 		autoRenew: false,
 	});
 
+	constructor() {
+		window.electronAPI.cloudMode.onTimedBroadcaster(() => {
+			this.loadStatus();
+		});
+	}
+
 	#updateState(partial: Partial<InstanceInfo>): void {
 		logger.debug("[CloudModeStateManager] updateState", partial);
 		persistedCloudModeState.current = {
@@ -86,33 +92,40 @@ class CloudModeStateManager {
 	}
 
 	async initStatus() {
+		this.registerTimed();
 		await this.loadingCommand("init", async () => {
 			await this.loadStatus();
 		})();
 	}
 
+	dispose() {
+		this.unregisterTimed();
+	}
+
+	async loadInstances() {
+		const res = await listInstances();
+		if (!res.success && res.instances.length <= 0) {
+			throw new Error("Failed to load cloud instance status");
+		}
+		const instance = res.instances[0];
+		this.#updateState({
+			instanceName: instance.instanceName,
+			publicIp: instance.publicIp,
+			createdAt: instance.createdAt,
+			expiredAt: instance.expiredAt,
+			expired: instance.expired,
+			apiPort: instance.apiPort,
+			ocPort: instance.ocPort,
+			status: instance.status,
+			autoRenew: instance.autoRenew,
+		});
+	}
+
 	async loadStatus() {
 		await this.loadingCommand("status", async () => {
-			const res = await listInstances();
-			if (!res.success && res.instances.length <= 0) {
-				throw new Error("Failed to load cloud instance status");
-			}
-			const instance = res.instances[0];
-			this.#updateState({
-				instanceName: instance.instanceName,
-				publicIp: instance.publicIp,
-				createdAt: instance.createdAt,
-				expiredAt: instance.expiredAt,
-				expired: instance.expired,
-				apiPort: instance.apiPort,
-				ocPort: instance.ocPort,
-				status: instance.status,
-				autoRenew: instance.autoRenew,
-			});
-
 			const openclawResponse = await getSandboxHealthStatus(
-				instance.publicIp,
-				instance.apiPort,
+				this.state.publicIp,
+				this.state.apiPort,
 			);
 			if (!openclawResponse.success) {
 				logger.error("Failed to get openclaw health status");
@@ -129,7 +142,10 @@ class CloudModeStateManager {
 
 	async restartMachine() {
 		await this.loadingCommand("restart", async () => {
-			const res = await rebootInstance({ instanceName: this.state.instanceName });
+			const res = await restartDocker({
+				instanceName: this.state.instanceName,
+				openclawConfigContent: "",
+			});
 			if (!res.success) {
 				throw new Error("Failed to restart instance");
 			}
@@ -152,6 +168,14 @@ class CloudModeStateManager {
 			this.#updateState({ autoRenew });
 			logger.info("Auto-renew setting updated successfully");
 		})();
+	}
+
+	private async registerTimed() {
+		window.electronAPI.cloudModeService.registerBroadcasterTimed();
+	}
+
+	private async unregisterTimed() {
+		window.electronAPI.cloudModeService.unregisterBroadcasterTimed();
 	}
 }
 

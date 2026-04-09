@@ -11,12 +11,10 @@
 	import { cn } from "$lib/utils";
 	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
 	import { format, parseISO } from "date-fns";
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
-	let state = $derived(cloudModeState.state);
-	let openClaw = $derived(cloudModeState.openClaw);
-	let loading = $derived(cloudModeState.loading);
+	let { state, openClaw, loading } = $derived(cloudModeState);
 
 	type StatusProps = { status: "green" | "red" | "gray"; text: string };
 
@@ -46,6 +44,10 @@
 		} catch (e) {
 			toast.error("云端环境状态加载失败，请稍后重试" + e);
 		}
+	});
+
+	onDestroy(() => {
+		cloudModeState.dispose();
 	});
 
 	async function handleAutoRenewChange(checked: boolean) {
@@ -109,15 +111,6 @@
 								text={getHealthProps(state.status).text}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
-							<ButtonWithTooltip
-								onclick={() => cloudModeState.restartMachine()}
-								tooltip={m.cloud_mode_reboot_instance()}
-								class="hover:!bg-icon-btn-hover size-8"
-							>
-								<RefreshCw
-									class={cn("h-4 w-4", loading.restart && "animate-spin")}
-								/>
-							</ButtonWithTooltip>
 						</div>
 						<div class="flex items-center gap-3">
 							<Label class="text-muted-foreground min-w-18 font-normal"
@@ -130,6 +123,15 @@
 									: m.cloud_mode_unhealthy()}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
+							<ButtonWithTooltip
+								onclick={() => cloudModeState.restartMachine()}
+								tooltip={m.cloud_mode_reboot_instance()}
+								class="hover:!bg-icon-btn-hover size-8"
+							>
+								<RefreshCw
+									class={cn("h-4 w-4", loading.restart && "animate-spin")}
+								/>
+							</ButtonWithTooltip>
 							<!-- {#if state.openClawStatus === "unhealthy" || isRestartingDocker}
 							// showWarning={state.openClawStatus === "unhealthy"}
 								<ButtonWithTooltip

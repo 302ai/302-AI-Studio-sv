@@ -1,5 +1,5 @@
-import { Cron } from "croner";
 import { createLogger } from "@shared/logger";
+import { Cron } from "croner";
 
 const logger = createLogger("services");
 
@@ -29,7 +29,12 @@ export const CRON_EXPRESSION = {
 export class SchedulerService {
 	private jobs = new Map<string, Cron>();
 
-	addTask(name: string, cronExpression: string, callback: () => void | Promise<void>): boolean {
+	addTask(
+		name: string,
+		cronExpression: string,
+		callback: () => void | Promise<void>,
+		timezone?: string,
+	): boolean {
 		// Stop and remove existing job with same name
 		if (this.jobs.has(name)) {
 			this.removeTask(name);
@@ -37,13 +42,19 @@ export class SchedulerService {
 
 		try {
 			// Create and start new cron job
-			const job = new Cron(cronExpression, async () => {
-				try {
-					await callback();
-				} catch (error) {
-					logger.error(`[Scheduler] Task "${name}" failed:`, error);
-				}
-			});
+			const job = new Cron(
+				cronExpression,
+				{
+					timezone,
+				},
+				async () => {
+					try {
+						await callback();
+					} catch (error) {
+						logger.error(`[Scheduler] Task "${name}" failed:`, error);
+					}
+				},
+			);
 
 			this.jobs.set(name, job);
 			logger.info(`[Scheduler] Task "${name}" scheduled with expression: ${cronExpression}`);

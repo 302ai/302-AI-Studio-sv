@@ -3,12 +3,20 @@ import { cloudModeStorage } from "@electron/main/services/storage-service/cloud-
 import { createLogger } from "@shared/logger";
 import type { IpcMainInvokeEvent } from "electron";
 import { attemptAsync, isNull } from "es-toolkit";
+import { broadcastService } from "../broadcast-service";
+import { CRON_EXPRESSION, schedulerService } from "../scheduler-service";
 
 const logger = createLogger("services");
 
 export class CloudModeService {
 	constructor() {
-		this.syncCloudInstanceToLocal();
+		schedulerService.addTask(CloudModeService.schedulerName, "0 5 0 * * *", async () => {
+			logger.info(
+				"[CloudModeService] Running scheduled task to sync cloud instances and broadcast...",
+			);
+			// 广播
+			this.syncCloudInstanceToLocal();
+		});
 	}
 
 	private async syncCloudInstanceToLocal(): Promise<void> {
@@ -56,6 +64,23 @@ export class CloudModeService {
 		}
 
 		return { isOk: true, baseUrl: `http://${instance.publicIp}:${instance.apiPort}` };
+	}
+
+	static schedulerName = "cloud-mode-timed-broadcaster";
+
+	public async registerBroadcasterTimed(_event: IpcMainInvokeEvent) {
+		schedulerService.addTask(
+			CloudModeService.schedulerName,
+			CRON_EXPRESSION.EVERY_60_SECONDS,
+			async () => {
+				// 广播
+				broadcastService.broadcastChannelToAll("cloud-mode:timed");
+			},
+		);
+	}
+
+	public async unregisterBroadcasterTimed(_event: IpcMainInvokeEvent) {
+		schedulerService.removeTask(CloudModeService.schedulerName);
 	}
 }
 

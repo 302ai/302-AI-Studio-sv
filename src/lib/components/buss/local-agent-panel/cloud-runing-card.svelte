@@ -14,14 +14,12 @@
 	import { m } from "$lib/paraglide/messages";
 	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
-	import { onMount } from "svelte";
+	import { onDestroy, onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import { cn } from "tailwind-variants";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 
-	let state = $derived(cloudModeState.state);
-	let openClaw = $derived(cloudModeState.openClaw);
-	let loading = $derived(cloudModeState.loading);
+	let { state, openClaw, loading } = $derived(cloudModeState);
 
 	type StatusProps = { status: "green" | "red" | "gray"; text: string };
 
@@ -52,6 +50,10 @@
 		} catch (e) {
 			toast.error("云端环境状态加载失败，请稍后重试" + e);
 		}
+	});
+
+	onDestroy(() => {
+		cloudModeState.dispose();
 	});
 </script>
 
