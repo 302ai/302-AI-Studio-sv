@@ -20,7 +20,6 @@ export const instanceInfoSchema = type({
 	expired_at: "string",
 	api_port: "number",
 	oc_port: "number",
-	openclaw_gateway_token: "string",
 	auto_renew: "boolean",
 	destroyed_at: "string?",
 }).pipe((data) => ({
@@ -32,7 +31,6 @@ export const instanceInfoSchema = type({
 	expired: data.expired,
 	apiPort: data.api_port,
 	ocPort: data.oc_port,
-	openclawGatewayToken: data.openclaw_gateway_token,
 	autoRenew: data.auto_renew,
 	destroyedAt: data.destroyed_at,
 }));
@@ -265,3 +263,18 @@ export const execCommandResponseSchema = type({
 	stderr: data.stderr,
 }));
 export type ExecCommandResponse = typeof execCommandResponseSchema.infer;
+
+export const sandboxHealthResponseSchema = type({
+	"success?": "boolean",
+	"status?": "string",
+	"oc_status?": "string",
+});
+export type SandboxHealthResponseSchema = typeof sandboxHealthResponseSchema.infer;
+
+export const sandboxHealthResponse = type({
+	"success?": "boolean",
+	"status?": "string",
+	"oc_status?": "string",
+});
+
+export type SandboxHealthResponse = typeof sandboxHealthResponse.infer;

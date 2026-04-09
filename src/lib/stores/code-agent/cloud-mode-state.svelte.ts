@@ -1,10 +1,7 @@
 import {
-	createInstance,
-	getCloudSandboxHealth,
-	getInstanceStatus,
+	getSandboxHealthStatus,
 	listInstances,
 	rebootInstance,
-	restartDocker,
 	updateInstanceAutoRenew,
 } from "$lib/api/cloud-mode/base-apis";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
@@ -12,9 +9,6 @@ import { createLogger } from "@shared/logger";
 import type { InstanceInfo } from "@shared/storage/cloud-mode";
 
 const logger = createLogger("state");
-const POLL_INTERVAL_MS = 30_000;
-
-export type CloudHealthStatus = "unknown" | "healthy" | "unhealthy";
 
 export const getDefaultInstanceInfo = (): InstanceInfo => ({
 	instanceName: "",
@@ -25,7 +19,6 @@ export const getDefaultInstanceInfo = (): InstanceInfo => ({
 	apiPort: 0,
 	ocPort: 0,
 	status: "waiting_init",
-	openclawGatewayToken: "",
 	autoRenew: true,
 	destroyedAt: undefined,
 });
@@ -36,34 +29,31 @@ export const persistedCloudModeState = new PersistedState<InstanceInfo>(
 );
 
 class CloudModeStateManager {
-	activated = $state(false);
-	running = $state(false);
-	starting = $state(false);
-	healthStatus = $state<CloudHealthStatus>("unknown");
-	instanceStatus = $state<CloudHealthStatus>("unknown");
-	openClawStatus = $state<CloudHealthStatus>("unknown");
-	instanceInfo = $derived.by(() => {
-		const info = persistedCloudModeState.current;
-		return info.instanceName ? info : null;
+	// cloud state
+	state = $derived({
+		instanceName: persistedCloudModeState.current?.instanceName ?? "",
+		status: persistedCloudModeState.current?.status ?? "waiting_init",
+		expired: persistedCloudModeState.current?.expired ?? false,
+		publicIp: persistedCloudModeState.current?.publicIp ?? "",
+		createdAt: persistedCloudModeState.current?.createdAt ?? "",
+		expiredAt: persistedCloudModeState.current?.expiredAt ?? "",
+		apiPort: persistedCloudModeState.current?.apiPort ?? 0,
+		ocPort: persistedCloudModeState.current?.ocPort ?? 0,
+		autoRenew: persistedCloudModeState.current?.autoRenew ?? false,
 	});
-	checking = $state(false);
-	isUpdatingAutoRenew = $state(false);
 
-	instanceName = $derived(persistedCloudModeState.current?.instanceName ?? "");
-	publicIp = $derived(persistedCloudModeState.current?.publicIp ?? "");
-	status = $derived(persistedCloudModeState.current?.status ?? "waiting_init");
-	createdAt = $derived(persistedCloudModeState.current?.createdAt ?? "");
-	expiredAt = $derived(persistedCloudModeState.current?.expiredAt ?? "");
-	apiPort = $derived(persistedCloudModeState.current?.apiPort ?? 0);
-	ocPort = $derived(persistedCloudModeState.current?.ocPort ?? 0);
-	openclawGatewayToken = $derived(persistedCloudModeState.current?.openclawGatewayToken ?? "");
-	autoRenew = $derived(persistedCloudModeState.current?.autoRenew ?? false);
+	openClaw = $state({
+		status: false,
+		api_status: false,
+	});
 
-	private pollingTimer: ReturnType<typeof setInterval> | null = null;
-	private pollingSubscriberCount = 0;
-	private ocStartupGraceUntil = 0;
-	private lastConfirmedAutoRenew = persistedCloudModeState.current?.autoRenew ?? false;
-	private readonly OC_STARTUP_GRACE_PERIOD_MS = 60_000;
+	loading = $state({
+		init: false,
+		status: false,
+		restart: false,
+		startVip: false,
+		autoRenew: false,
+	});
 
 	#updateState(partial: Partial<InstanceInfo>): void {
 		logger.debug("[CloudModeStateManager] updateState", partial);
@@ -73,262 +63,95 @@ class CloudModeStateManager {
 		};
 	}
 
-	updateInstanceInfo(info: InstanceInfo): void {
-		this.#updateState(info);
-	}
-
-	#resetRuntimeState(): void {
-		this.stopPolling();
-		this.pollingSubscriberCount = 0;
-		this.activated = false;
-		this.running = false;
-		this.starting = false;
-		this.healthStatus = "unknown";
-		this.instanceStatus = "unknown";
-		this.openClawStatus = "unknown";
-		this.checking = false;
-		this.ocStartupGraceUntil = 0;
-	}
-
-	#startOpenClawGracePeriod(): void {
-		this.ocStartupGraceUntil = Date.now() + this.OC_STARTUP_GRACE_PERIOD_MS;
-	}
-
-	#clearOpenClawGracePeriod(): void {
-		this.ocStartupGraceUntil = 0;
-	}
-
-	#resetServiceHealthState(): void {
-		this.healthStatus = "unknown";
-		this.openClawStatus = "unknown";
-	}
-
-	#applyHealthStatus(status: string, ocStatus: string): void {
-		this.healthStatus = status === "ok" ? "healthy" : "unhealthy";
-
-		if (ocStatus === "ok") {
-			this.openClawStatus = "healthy";
-			this.#clearOpenClawGracePeriod();
-			return;
-		}
-
-		if (this.starting || Date.now() < this.ocStartupGraceUntil) {
-			this.openClawStatus = "unknown";
-			return;
-		}
-
-		this.openClawStatus = "unhealthy";
-	}
-
-	async #createInstance(isDev: boolean, isAutoRenew: boolean) {
-		return createInstance({ isDev, isAutoRenew });
-	}
-
-	async #listInstances() {
-		return listInstances();
-	}
-
-	async #getInstanceStatus(instanceName: string) {
-		return getInstanceStatus(instanceName);
-	}
-
-	async #getCloudSandboxHealth(publicIp: string, apiPort: number) {
-		return getCloudSandboxHealth(publicIp, apiPort);
-	}
-
-	async #restartDocker(instanceName: string) {
-		return restartDocker({ instanceName });
-	}
-
-	async #rebootInstance(instanceName: string) {
-		return rebootInstance({ instanceName });
-	}
-
-	async #updateAutoRenew(instanceName: string, isAutoRenew: boolean) {
-		return updateInstanceAutoRenew({ instanceName, isAutoRenew });
-	}
-
-	async updateAutoRenew(isAutoRenew: boolean): Promise<boolean> {
-		this.isUpdatingAutoRenew = true;
-		this.#updateState({ autoRenew: isAutoRenew });
-		if (!this.instanceInfo?.instanceName) {
-			this.lastConfirmedAutoRenew = isAutoRenew;
-			this.isUpdatingAutoRenew = false;
-			return true;
-		}
-		try {
-			const response = await this.#updateAutoRenew(
-				this.instanceInfo.instanceName,
-				isAutoRenew,
-			);
-			this.lastConfirmedAutoRenew = response.instance.autoRenew;
-			this.#updateState({ autoRenew: response.instance.autoRenew });
-			return true;
-		} catch (error) {
-			logger.error("[CloudModeStateManager] Failed to update auto renew:", error);
-			this.#updateState({ autoRenew: this.lastConfirmedAutoRenew });
-			return false;
-		} finally {
-			this.isUpdatingAutoRenew = false;
-		}
-	}
-
-	startPolling(intervalMs: number = POLL_INTERVAL_MS): void {
-		this.pollingSubscriberCount += 1;
-		if (this.pollingTimer) {
-			return;
-		}
-
-		void this.checkStatus();
-		this.pollingTimer = setInterval(() => {
-			void this.checkStatus();
-		}, intervalMs);
-	}
-
-	stopPolling(): void {
-		if (this.pollingSubscriberCount > 0) {
-			this.pollingSubscriberCount -= 1;
-		}
-		if (this.pollingSubscriberCount > 0) {
-			return;
-		}
-		if (this.pollingTimer) {
-			clearInterval(this.pollingTimer);
-			this.pollingTimer = null;
-		}
-	}
-
-	async checkStatus(): Promise<void> {
-		this.checking = true;
-		try {
-			const listRes = await this.#listInstances();
-			if (!listRes.success || !listRes.instances?.length) {
-				this.activated = false;
-				this.running = false;
-				persistedCloudModeState.current = getDefaultInstanceInfo();
-				this.lastConfirmedAutoRenew = false;
-				this.instanceStatus = "unknown";
-
-				this.#resetServiceHealthState();
-				this.#clearOpenClawGracePeriod();
-				return;
-			}
-
-			const info = listRes.instances[0];
-			this.#updateState(info);
-			this.lastConfirmedAutoRenew = info.autoRenew;
-			this.activated = true;
-
+	private loadingCommand(
+		key: keyof CloudModeStateManager["loading"],
+		fn: () => Promise<void>,
+	): () => Promise<boolean> {
+		return async () => {
+			this.loading[key] = true;
+			logger.debug(`[CloudModeStateManager] Executing command: ${key}=>${this.loading[key]}`);
 			try {
-				const statusRes = await this.#getInstanceStatus(info.instanceName);
-				if (statusRes.success && statusRes.instance) {
-					const wasRunning = this.running;
-					this.running = statusRes.instance.instanceStatus === "Running";
-					this.instanceStatus = this.running ? "healthy" : "unhealthy";
-					if (this.running && !wasRunning) {
-						this.#startOpenClawGracePeriod();
-					}
-				} else {
-					this.running = false;
-					this.instanceStatus = "unknown";
-				}
-			} catch (error) {
-				logger.error("[CloudModeStateManager] Failed to get instance status:", error);
-				this.running = false;
-				this.instanceStatus = "unhealthy";
-				this.#resetServiceHealthState();
-				this.#clearOpenClawGracePeriod();
-				return;
+				await fn();
+			} catch (e) {
+				logger.error(`[CloudModeStateManager] Error in ${key} command:`, e);
+				return false;
+			} finally {
+				this.loading[key] = false;
+				logger.debug(
+					`[CloudModeStateManager] Executing command: ${key}=>${this.loading[key]}`,
+				);
 			}
+			return true;
+		};
+	}
 
-			if (!this.running) {
-				this.#resetServiceHealthState();
-				this.#clearOpenClawGracePeriod();
-				return;
+	async initStatus() {
+		await this.loadingCommand("init", async () => {
+			await this.loadStatus();
+		})();
+	}
+
+	async loadStatus() {
+		await this.loadingCommand("status", async () => {
+			const res = await listInstances();
+			if (!res.success && res.instances.length <= 0) {
+				throw new Error("Failed to load cloud instance status");
 			}
+			const instance = res.instances[0];
+			this.#updateState({
+				instanceName: instance.instanceName,
+				publicIp: instance.publicIp,
+				createdAt: instance.createdAt,
+				expiredAt: instance.expiredAt,
+				expired: instance.expired,
+				apiPort: instance.apiPort,
+				ocPort: instance.ocPort,
+				status: instance.status,
+				autoRenew: instance.autoRenew,
+			});
 
-			if (info.publicIp && info.apiPort) {
-				try {
-					const healthRes = await this.#getCloudSandboxHealth(
-						info.publicIp,
-						info.apiPort,
-					);
-					if (healthRes.success) {
-						this.#applyHealthStatus(healthRes.status, healthRes.ocStatus);
-					} else {
-						this.#resetServiceHealthState();
-						this.#clearOpenClawGracePeriod();
-					}
-				} catch (error) {
-					logger.error("[CloudModeStateManager] Failed to get sandbox health:", error);
-					this.#resetServiceHealthState();
-					this.#clearOpenClawGracePeriod();
-				}
-			} else {
-				this.#resetServiceHealthState();
+			const openclawResponse = await getSandboxHealthStatus(
+				instance.publicIp,
+				instance.apiPort,
+			);
+			if (!openclawResponse.success) {
+				logger.error("Failed to get openclaw health status");
+				throw new Error("Failed to get openclaw health status");
 			}
-		} catch (error) {
-			logger.error("[CloudModeStateManager] Failed to check cloud status:", error);
-		} finally {
-			this.checking = false;
-		}
+			this.openClaw.status = openclawResponse.oc_status === "ok";
+			this.openClaw.api_status = openclawResponse.status === "ok";
+			logger.debug("Cloud instance status loaded successfully", {
+				instance: this.state,
+				openClawStatus: this.openClaw.status,
+			});
+		})();
 	}
 
-	async startCloud(isDev: boolean, isAutoRenew: boolean): Promise<boolean> {
-		this.starting = true;
-		try {
-			const response = await this.#createInstance(isDev, isAutoRenew);
-			this.#updateState(response.instance);
-			this.lastConfirmedAutoRenew = response.instance.autoRenew;
-			this.activated = true;
-			this.running = true;
-			this.instanceStatus = "unknown";
-			this.#resetServiceHealthState();
-			this.#startOpenClawGracePeriod();
-			return true;
-		} catch (error) {
-			logger.error("[CloudModeStateManager] Failed to start cloud:", error);
-			return false;
-		} finally {
-			this.starting = false;
-		}
+	async restartMachine() {
+		await this.loadingCommand("restart", async () => {
+			const res = await rebootInstance({ instanceName: this.state.instanceName });
+			if (!res.success) {
+				throw new Error("Failed to restart instance");
+			}
+			await this.loadStatus();
+			logger.info("Instance restarted successfully");
+		})();
 	}
 
-	async restartDocker(): Promise<boolean> {
-		if (!this.instanceInfo?.instanceName) {
-			return false;
-		}
-		try {
-			this.#resetServiceHealthState();
-			this.#startOpenClawGracePeriod();
-			await this.#restartDocker(this.instanceInfo.instanceName);
-			await this.checkStatus();
-			return true;
-		} catch (error) {
-			logger.error("[CloudModeStateManager] Failed to restart docker:", error);
-			return false;
-		}
-	}
-
-	async rebootInstance(): Promise<boolean> {
-		if (!this.instanceInfo?.instanceName) {
-			return false;
-		}
-		try {
-			this.#resetServiceHealthState();
-			this.#startOpenClawGracePeriod();
-			await this.#rebootInstance(this.instanceInfo.instanceName);
-			await this.checkStatus();
-			return true;
-		} catch (error) {
-			logger.error("[CloudModeStateManager] Failed to reboot instance:", error);
-			return false;
-		}
-	}
-
-	reset(): void {
-		this.#resetRuntimeState();
-		this.#updateState(getDefaultInstanceInfo());
+	async updateAutoRenew(autoRenew: boolean) {
+		await this.loadingCommand("autoRenew", async () => {
+			this.#updateState({ autoRenew });
+			const res = await updateInstanceAutoRenew({
+				instanceName: this.state.instanceName,
+				isAutoRenew: autoRenew,
+			});
+			if (!res.success) {
+				this.#updateState({ autoRenew: !autoRenew });
+				throw new Error("Failed to update auto-renew setting");
+			}
+			this.#updateState({ autoRenew });
+			logger.info("Auto-renew setting updated successfully");
+		})();
 	}
 }
 

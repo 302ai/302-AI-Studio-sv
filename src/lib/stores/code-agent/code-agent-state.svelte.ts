@@ -298,7 +298,7 @@ class CodeAgentState {
 		return match(this.type)
 			.with("local", () => claudeCodeAgentState.handleLocalModeExecute())
 			.with("cloud", () => {
-				if (!cloudModeState.running) {
+				if (cloudModeState.state.status !== "running") {
 					logger.info("[CodeAgentState] executeCodeAgentMode: Cloud not running");
 					// Future: add logic to prompt user to start cloud environment
 				}

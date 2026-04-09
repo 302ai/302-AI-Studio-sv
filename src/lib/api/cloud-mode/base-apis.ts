@@ -6,7 +6,6 @@ import {
 	execCommandResponseSchema,
 	initInstanceRequestSchema,
 	initInstanceResponseSchema,
-	instanceStatusResponseSchema,
 	listInstancesResponseSchema,
 	readFilesRequestSchema,
 	readFilesResponseSchema,
@@ -14,6 +13,7 @@ import {
 	rebootInstanceResponseSchema,
 	restartDockerRequestSchema,
 	restartDockerResponseSchema,
+	sandboxHealthResponseSchema,
 	updateAutoRenewRequestSchema,
 	updateAutoRenewResponseSchema,
 	updateInstanceAutoRenewRequestSchema,
@@ -27,7 +27,6 @@ import {
 	type ExecCommandResponse,
 	type InitInstanceRequest,
 	type InitInstanceResponse,
-	type InstanceStatusResponse,
 	type ListInstancesResponse,
 	type ReadFilesRequest,
 	type ReadFilesResponse,
@@ -35,6 +34,7 @@ import {
 	type RebootInstanceResponse,
 	type RestartDockerRequest,
 	type RestartDockerResponse,
+	type SandboxHealthResponse,
 	type UpdateAutoRenewRequest,
 	type UpdateAutoRenewResponse,
 	type UpdateInstanceAutoRenewRequest,
@@ -143,7 +143,7 @@ export async function initInstance(request: InitInstanceRequest): Promise<InitIn
  * @param instanceName
  * @returns Instance status
  */
-export async function getInstanceStatus(instanceName: string): Promise<InstanceStatusResponse> {
+/* export async function getInstanceStatus(instanceName: string): Promise<InstanceStatusResponse> {
 	try {
 		const response = await testKy
 			.get(`api/v1/instances/status?instance_name=${encodeURIComponent(instanceName)}`)
@@ -159,7 +159,7 @@ export async function getInstanceStatus(instanceName: string): Promise<InstanceS
 		logger.error("Failed to get instance status:", error);
 		throw error;
 	}
-}
+} */
 
 /**
  * Restart Docker image (optionally update openclaw config first).
@@ -231,7 +231,7 @@ export async function rebootInstance(
 			logger.error("Failed to validate reboot instance request:", requestBody.summary);
 			throw new Error("Invalid request format for reboot instance");
 		}
-		const response = testKy.post("api/v1/instances/reboot", { json: requestBody }).json();
+		const response = await testKy.post("api/v1/instances/reboot", { json: requestBody }).json();
 
 		const validated = rebootInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -260,7 +260,7 @@ export async function updateInstanceAutoRenew(
 			throw new Error("Invalid request format for update auto renew");
 		}
 		// const kyInstance = await testKy();
-		const response = testKy("api/v1/instances/auto-renew", {
+		const response = await testKy("api/v1/instances/auto-renew", {
 			method: "POST",
 			json: requestBody,
 		}).json();
@@ -350,6 +350,39 @@ export async function execInstanceCommand(
 		return validated;
 	} catch (error) {
 		logger.error("Failed to exec instance command:", error);
+		throw error;
+	}
+}
+
+export async function getSandboxHealthStatus(
+	ip: string,
+	port: number,
+): Promise<SandboxHealthResponse> {
+	try {
+		const response = await testKy(
+			new URL(`http://${ip}:${port}/302/claude-code/sandbox/health`),
+		).json();
+		logger.debug("[getSandboxHealthStatus] Health check response:", response);
+		const validated = sandboxHealthResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate health check response:", validated.summary);
+			throw new Error(`Invalid health check response: ${validated.summary}`);
+		}
+		return validated;
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		const lowerMsg = errorMessage.toLowerCase();
+		const isExpectedConnectionError =
+			lowerMsg.includes("fetch failed") ||
+			lowerMsg.includes("failed to fetch") ||
+			lowerMsg.includes("econnrefused") ||
+			lowerMsg.includes("connection refused") ||
+			lowerMsg.includes("etimedout") ||
+			lowerMsg.includes("timed out");
+
+		if (!isExpectedConnectionError) {
+			logger.error("[getSandboxHealthStatus] Health check failed:", error);
+		}
 		throw error;
 	}
 }
