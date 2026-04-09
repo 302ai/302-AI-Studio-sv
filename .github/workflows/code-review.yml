@@ -89,48 +89,33 @@ jobs:
                       const logPath = '/home/runner/work/_temp/claude-execution-output.json';
 
                       let reviewContent = '';
-                      let foundContent = false;
 
                       try {
-                          if (fs.existsSync(logPath)) {
-                              const logData = fs.readFileSync(logPath, 'utf8');
+                          const logData = fs.readFileSync(logPath, 'utf8');
+                          const messages = JSON.parse(logData);
 
-                              // Parse as JSON array (not JSONL)
-                              const messages = JSON.parse(logData);
+                          // Find the result message with review content
+                          const resultMsg = messages.find(msg =>
+                              msg.type === 'result' &&
+                              msg.subtype === 'success' &&
+                              msg.result
+                          );
 
-                              if (!Array.isArray(messages)) {
-                                  reviewContent = '❌ Log file is not a JSON array';
-                              } else {
-                                  // Find the result message
-                                  for (const msg of messages) {
-                                      if (msg.type === 'result' &&
-                                          msg.subtype === 'success' &&
-                                          msg.result &&
-                                          typeof msg.result === 'string' &&
-                                          msg.result.length > 50) {
-                                          reviewContent = msg.result;
-                                          foundContent = true;
-                                          break;
-                                      }
-                                  }
-
-                                  if (!foundContent) {
-                                      reviewContent = `⚠️ No review content found in ${messages.length} messages`;
-                                  }
-                              }
+                          if (resultMsg) {
+                              reviewContent = resultMsg.result;
                           } else {
-                              reviewContent = `❌ Log file not found: ${logPath}`;
+                              reviewContent = '⚠️ No review content found';
                           }
                       } catch (error) {
-                          reviewContent = `❌ Failed to read review results\n\nError: ${error.message}`;
+                          reviewContent = `❌ Failed to read review results: ${error.message}`;
                       }
 
-                      // Add header if not already present
+                      // Add header if not present
                       const finalContent = reviewContent.includes('🤖 AI Code Review')
                           ? reviewContent
                           : '## 🤖 AI Code Review\n\n' + reviewContent;
 
-                      // Post the comment
+                      // Post comment
                       await github.rest.issues.createComment({
                           owner: context.repo.owner,
                           repo: context.repo.repo,
