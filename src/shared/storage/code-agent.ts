@@ -124,7 +124,6 @@ export const codeAgentGlobalConfigs = type({
 	notificationsEnabled: "boolean",
 	lastVibeMode: codeAgentType,
 	lastAgentId: agentClass,
-	autoRenewal: "boolean",
 	feishu: type({ appId: "string", appSecret: "string" }),
 	dingtalk: type({ clientId: "string", clientSecret: "string" }),
 	qqbot: type({ appId: "string", clientSecret: "string" }),

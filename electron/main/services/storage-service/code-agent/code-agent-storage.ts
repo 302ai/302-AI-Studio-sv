@@ -55,18 +55,10 @@ const migrations = {
 			},
 		};
 	},
-	1: (state: any): CodeAgentGlobalConfigs => {
-		// Migration from version 1 to 2:
-		// Add autoRenewal default to true
-		return {
-			...state,
-			autoRenewal: true,
-		};
-	},
 };
 
 const globalConfigsMigrationConfig: MigrationConfig<CodeAgentGlobalConfigs> = {
-	version: 2,
+	version: 1,
 	migrate: createMigrate(migrations),
 	debug: true,
 };
@@ -86,7 +78,6 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 			notificationsEnabled: false,
 			lastVibeMode: "remote" as CodeAgentType,
 			lastAgentId: "claude-code" as CodingAgentClass,
-			autoRenewal: true,
 			feishu: {
 				appId: "",
 				appSecret: "",
