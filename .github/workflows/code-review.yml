@@ -88,38 +88,56 @@ jobs:
                       const fs = require('fs');
                       const logPath = '/home/runner/work/_temp/claude-execution-output.json';
 
-                      let reviewContent = '## 🤖 AI Code Review\n\n';
+                      let reviewContent = '';
+                      let foundContent = false;
 
                       try {
                           if (fs.existsSync(logPath)) {
                               const logData = fs.readFileSync(logPath, 'utf8');
                               const lines = logData.trim().split('\n');
 
-                              // Find the result message with the review content
+                              // Find the last result message with review content
                               for (const line of lines) {
                                   try {
                                       const msg = JSON.parse(line);
+
+                                      // Check for assistant messages with text content
                                       if (msg.type === 'assistant' && msg.message?.content) {
                                           for (const content of msg.message.content) {
-                                              if (content.type === 'text' && content.text) {
-                                                  reviewContent += content.text + '\n\n';
+                                              if (content.type === 'text' && content.text && content.text.trim().length > 10) {
+                                                  reviewContent = content.text;
+                                                  foundContent = true;
                                               }
                                           }
+                                      }
+
+                                      // Also check for result type with review content
+                                      if (msg.type === 'result' && msg.result && msg.result.length > 10) {
+                                          reviewContent = msg.result;
+                                          foundContent = true;
                                       }
                                   } catch (e) {
                                       // Skip invalid JSON lines
                                   }
                               }
+                          } else {
+                              reviewContent = '❌ 日志文件不存在: ' + logPath;
                           }
                       } catch (error) {
-                          reviewContent += '❌ 无法读取审查结果\n\n';
-                          reviewContent += `错误: ${error.message}`;
+                          reviewContent = '❌ 无法读取审查结果\n\n错误: ' + error.message;
                       }
+
+                      if (!foundContent) {
+                          reviewContent = '⚠️ 未找到审查内容\n\n请检查 Claude Code 是否成功完成审查。';
+                      }
+
+                      // Add header
+                      const finalContent = '## 🤖 AI Code Review\n\n' + reviewContent;
 
                       // Post the comment
                       await github.rest.issues.createComment({
                           owner: context.repo.owner,
                           repo: context.repo.repo,
                           issue_number: context.issue.number,
-                          body: reviewContent
+                          body: finalContent
                       });
