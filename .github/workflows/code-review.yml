@@ -46,6 +46,7 @@ jobs:
                   NODE_OPTIONS: --max-old-space-size=8192
 
             - name: Run AI Code Review
+              id: claude_review
               uses: anthropics/claude-code-action@v1
               with:
                   anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -57,22 +58,68 @@ jobs:
                       --max-turns 25
                   show_full_output: true
                   prompt: |
-                      You are a code reviewer for the 302-AI-Studio project. Review this PR and post your findings as GitHub review comments.
+                      You are a code reviewer for the 302-AI-Studio project. Review this PR.
 
                       ## Review Process
-                      1. Read the PR diff to understand what changed
+                      1. Read the PR diff: git diff HEAD~1 HEAD
                       2. Read CLAUDE.md for project standards
                       3. Check for issues in these categories:
                          - 🔴 Blockers: Security vulnerabilities, type safety issues, architecture violations
                          - 🟡 Major: Svelte 5 patterns, IPC patterns, error handling
                          - 🟢 Minor: Code quality, naming conventions
 
-                      ## How to Post Comments
-                      Use the GitHub API tools available to you to post review comments directly on the PR.
-                      - Post inline comments on specific lines with issues
-                      - Post a summary comment with overall assessment
+                      ## Output Format
+                      Provide your review in markdown format with:
+                      - Summary of changes
+                      - Issues found (categorized by severity)
+                      - Recommendations
                       - Use Chinese for all output
 
-                      Start the review now.
+                      Your output will be posted as a PR comment automatically.
               env:
                   ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+
+            - name: Post Review Comment
+              if: always()
+              uses: actions/github-script@v7
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  script: |
+                      const fs = require('fs');
+                      const logPath = '/home/runner/work/_temp/claude-execution-output.json';
+
+                      let reviewContent = '## 🤖 AI Code Review\n\n';
+
+                      try {
+                          if (fs.existsSync(logPath)) {
+                              const logData = fs.readFileSync(logPath, 'utf8');
+                              const lines = logData.trim().split('\n');
+
+                              // Find the result message with the review content
+                              for (const line of lines) {
+                                  try {
+                                      const msg = JSON.parse(line);
+                                      if (msg.type === 'assistant' && msg.message?.content) {
+                                          for (const content of msg.message.content) {
+                                              if (content.type === 'text' && content.text) {
+                                                  reviewContent += content.text + '\n\n';
+                                              }
+                                          }
+                                      }
+                                  } catch (e) {
+                                      // Skip invalid JSON lines
+                                  }
+                              }
+                          }
+                      } catch (error) {
+                          reviewContent += '❌ 无法读取审查结果\n\n';
+                          reviewContent += `错误: ${error.message}`;
+                      }
+
+                      // Post the comment
+                      await github.rest.issues.createComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: context.issue.number,
+                          body: reviewContent
+                      });
