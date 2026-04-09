@@ -20,9 +20,13 @@ export const getDefaultInstanceInfo = (): InstanceInfo => ({
 	publicIp: "",
 	createdAt: "",
 	expiredAt: "",
+	expired: false,
 	apiPort: 0,
 	ocPort: 0,
 	openclawGatewayToken: "",
+	autoRenew: true,
+	destroyedAt: undefined,
+	status: "waiting_init",
 });
 
 export const persistedCloudModeState = new PersistedState<InstanceInfo>(
@@ -50,6 +54,10 @@ class CloudModeStateManager {
 	apiPort = $derived(persistedCloudModeState.current?.apiPort ?? 0);
 	ocPort = $derived(persistedCloudModeState.current?.ocPort ?? 0);
 	openclawGatewayToken = $derived(persistedCloudModeState.current?.openclawGatewayToken ?? "");
+	status = $derived(persistedCloudModeState.current?.status ?? "waiting_init");
+	expired = $derived(persistedCloudModeState.current?.expired ?? false);
+	autoRenew = $derived(persistedCloudModeState.current?.autoRenew ?? true);
+	destroyedAt = $derived(persistedCloudModeState.current?.destroyedAt ?? undefined);
 
 	private pollingTimer: ReturnType<typeof setInterval> | null = null;
 	private pollingSubscriberCount = 0;

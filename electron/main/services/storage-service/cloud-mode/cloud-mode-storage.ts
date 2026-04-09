@@ -11,9 +11,13 @@ const getDefaultInstanceInfo = (): InstanceInfo => ({
 	publicIp: "",
 	createdAt: "",
 	expiredAt: "",
+	expired: false,
 	apiPort: 0,
 	ocPort: 0,
 	openclawGatewayToken: "",
+	autoRenew: true,
+	destroyedAt: undefined,
+	status: "waiting_init",
 });
 
 /**

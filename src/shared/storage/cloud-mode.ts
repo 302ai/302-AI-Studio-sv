@@ -14,20 +14,27 @@ export type CloudSandboxHealthResponse = typeof cloudSandboxHealthResponseSchema
 export const instanceInfoSchema = type({
 	instance_name: "string",
 	status: '"waiting_init" | "rebooting" | "rebooted" | "running"',
+	expired: "boolean",
 	public_ip: "string",
 	created_at: "string",
 	expired_at: "string",
 	api_port: "number",
 	oc_port: "number",
 	openclaw_gateway_token: "string",
+	auto_renew: "boolean",
+	destroyed_at: "string?",
 }).pipe((data) => ({
 	instanceName: data.instance_name,
+	status: data.status,
 	publicIp: data.public_ip,
 	createdAt: data.created_at,
 	expiredAt: data.expired_at,
+	expired: data.expired,
 	apiPort: data.api_port,
 	ocPort: data.oc_port,
 	openclawGatewayToken: data.openclaw_gateway_token,
+	autoRenew: data.auto_renew,
+	destroyedAt: data.destroyed_at,
 }));
 export type InstanceInfo = typeof instanceInfoSchema.infer;
 export const listInstancesResponseSchema = type({
@@ -47,9 +54,49 @@ export type CreateInstanceRequest = typeof createInstanceRequestSchema.inferIn;
 
 export const createInstanceResponseSchema = type({
 	success: "boolean",
-	instance: instanceInfoSchema,
-});
+	instance: type({
+		instance_name: "string",
+		status: '"waiting_init" | "rebooting" | "rebooted" | "running"',
+	}),
+}).pipe((data) => ({
+	success: data.success,
+	instance: {
+		instanceName: data.instance.instance_name,
+		status: data.instance.status,
+	},
+}));
 export type CreateInstanceResponse = typeof createInstanceResponseSchema.infer;
+
+export const initInstanceRequestSchema = type({
+	instanceName: "string",
+	isDev: "boolean",
+}).pipe((data) => ({
+	instance_name: data.instanceName,
+	is_dev: data.isDev,
+}));
+export type InitInstanceRequest = typeof initInstanceRequestSchema.infer;
+export const initInstanceResponseSchema = type({
+	success: "boolean",
+	instance: type({
+		instance_name: "string",
+		public_ip: "string",
+		expired_at: "string",
+		api_port: "number",
+		oc_port: "number",
+		status: '"waiting_init" | "rebooting" | "rebooted" | "running"',
+	}),
+}).pipe((data) => ({
+	success: data.success,
+	instance: {
+		instanceName: data.instance.instance_name,
+		publicIp: data.instance.public_ip,
+		expiredAt: data.instance.expired_at,
+		apiPort: data.instance.api_port,
+		ocPort: data.instance.oc_port,
+		status: data.instance.status,
+	},
+}));
+export type InitInstanceResponse = typeof initInstanceResponseSchema.infer;
 
 export const instanceStatusResponseSchema = type({
 	success: "boolean",
@@ -83,6 +130,29 @@ export const restartDockerResponseSchema = type({
 	instanceName: data.instance_name,
 }));
 export type RestartDockerResponse = typeof restartDockerResponseSchema.infer;
+
+export const updateAutoRenewRequestSchema = type({
+	instanceName: "string",
+	isAutoRenew: "boolean",
+}).pipe((data) => ({
+	instance_name: data.instanceName,
+	is_auto_renew: data.isAutoRenew,
+}));
+export type UpdateAutoRenewRequest = typeof updateAutoRenewRequestSchema.inferIn;
+export const updateAutoRenewResponseSchema = type({
+	success: "boolean",
+	instance: type({
+		instance_name: "string",
+		auto_renew: "boolean",
+	}),
+}).pipe((data) => ({
+	success: data.success,
+	instance: {
+		instanceName: data.instance.instance_name,
+		autoRenew: data.instance.auto_renew,
+	},
+}));
+export type UpdateAutoRenewResponse = typeof updateAutoRenewResponseSchema.infer;
 
 export const rebootInstanceRequestSchema = type({
 	instanceName: "string",

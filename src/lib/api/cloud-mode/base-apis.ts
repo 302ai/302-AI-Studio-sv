@@ -4,6 +4,8 @@ import {
 	createInstanceResponseSchema,
 	execCommandRequestSchema,
 	execCommandResponseSchema,
+	initInstanceRequestSchema,
+	initInstanceResponseSchema,
 	instanceStatusResponseSchema,
 	listInstancesResponseSchema,
 	readFilesRequestSchema,
@@ -12,6 +14,8 @@ import {
 	rebootInstanceResponseSchema,
 	restartDockerRequestSchema,
 	restartDockerResponseSchema,
+	updateAutoRenewRequestSchema,
+	updateAutoRenewResponseSchema,
 	writeFilesRequestSchema,
 	writeFilesResponseSchema,
 	type CloudSandboxHealthResponse,
@@ -19,6 +23,8 @@ import {
 	type CreateInstanceResponse,
 	type ExecCommandRequest,
 	type ExecCommandResponse,
+	type InitInstanceRequest,
+	type InitInstanceResponse,
 	type InstanceStatusResponse,
 	type ListInstancesResponse,
 	type ReadFilesRequest,
@@ -27,6 +33,8 @@ import {
 	type RebootInstanceResponse,
 	type RestartDockerRequest,
 	type RestartDockerResponse,
+	type UpdateAutoRenewRequest,
+	type UpdateAutoRenewResponse,
 	type WriteFilesRequest,
 	type WriteFilesResponse,
 } from "@shared/storage/cloud-mode";
@@ -73,30 +81,6 @@ export async function listInstances(): Promise<ListInstancesResponse> {
 }
 
 /**
- * Get instance running status.
- * @param instanceName
- * @returns Instance status
- */
-export async function getInstanceStatus(instanceName: string): Promise<InstanceStatusResponse> {
-	try {
-		const kyInstance = await createCloudModeKy();
-		const response = await kyInstance
-			.get(`api/v1/instances/status?instance_name=${encodeURIComponent(instanceName)}`)
-			.json();
-
-		const validated = instanceStatusResponseSchema(response);
-		if (validated instanceof type.errors) {
-			logger.error("Failed to validate instance status response:", validated.summary);
-			throw new Error("Invalid response format from instance status API");
-		}
-		return validated;
-	} catch (error) {
-		logger.error("Failed to get instance status:", error);
-		throw error;
-	}
-}
-
-/**
  * Create a cloud compute instance
  * @error 400 - APIKEY_INSTANCE_EXISTS: one apikey can only bind one master instance
  * @error 500 - CREATE_INSTANCE_FAILED: failed to create instance
@@ -126,6 +110,56 @@ export async function createInstance(
 }
 
 /**
+ * Initialize a cloud instance with the specified configuration.
+ * @param request - Instance initialization parameters
+ * @returns Initialization response with instance details
+ */
+export async function initInstance(request: InitInstanceRequest): Promise<InitInstanceResponse> {
+	try {
+		const requestBody = initInstanceRequestSchema(request);
+		if (requestBody instanceof type.errors) {
+			logger.error("Failed to validate init instance request:", requestBody.summary);
+			throw new Error("Invalid request format for init instance");
+		}
+		const response = await testKy.post("api/v1/instances/init", { json: requestBody }).json();
+
+		const validated = initInstanceResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate init instance response:", validated.summary);
+			throw new Error("Invalid response format from init instance API");
+		}
+		return validated;
+	} catch (error) {
+		logger.error("Failed to init instance:", error);
+		throw error;
+	}
+}
+
+/**
+ * Get instance running status.
+ * @param instanceName
+ * @returns Instance status
+ */
+export async function getInstanceStatus(instanceName: string): Promise<InstanceStatusResponse> {
+	try {
+		const kyInstance = await createCloudModeKy();
+		const response = await kyInstance
+			.get(`api/v1/instances/status?instance_name=${encodeURIComponent(instanceName)}`)
+			.json();
+
+		const validated = instanceStatusResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate instance status response:", validated.summary);
+			throw new Error("Invalid response format from instance status API");
+		}
+		return validated;
+	} catch (error) {
+		logger.error("Failed to get instance status:", error);
+		throw error;
+	}
+}
+
+/**
  * Restart Docker image (optionally update openclaw config first).
  * @param request
  * @returns Restart docker response
@@ -150,6 +184,37 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 		return validated;
 	} catch (error) {
 		logger.error("Failed to restart docker:", error);
+		throw error;
+	}
+}
+
+/**
+ * Update auto-renew settings for a cloud instance.
+ * @param request - Auto-renew configuration parameters
+ * @returns Update response with new auto-renew status
+ */
+export async function updateAutoRenew(
+	request: UpdateAutoRenewRequest,
+): Promise<UpdateAutoRenewResponse> {
+	try {
+		const requestBody = updateAutoRenewRequestSchema(request);
+		if (requestBody instanceof type.errors) {
+			logger.error("Failed to validate update auto renew request:", requestBody.summary);
+			throw new Error("Invalid request format for update auto renew");
+		}
+		const kyInstance = await createCloudModeKy();
+		const response = kyInstance
+			.post("api/v1/instances/auto-renew", { json: requestBody })
+			.json();
+
+		const validated = updateAutoRenewResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate update auto renew response:", validated.summary);
+			throw new Error("Invalid response format from update auto renew API");
+		}
+		return validated;
+	} catch (error) {
+		logger.error("Failed to update auto renew:", error);
 		throw error;
 	}
 }
@@ -241,6 +306,11 @@ export async function writeInstanceFiles(request: WriteFilesRequest): Promise<Wr
 	}
 }
 
+/**
+ * Execute a shell command on a cloud instance.
+ * @param request - Command execution parameters including instance name and command
+ * @returns Command execution response with output and exit code
+ */
 export async function execInstanceCommand(
 	request: ExecCommandRequest,
 ): Promise<ExecCommandResponse> {
