@@ -73,7 +73,7 @@ jobs:
                       - Summary of changes
                       - Issues found (categorized by severity)
                       - Recommendations
-                      - Use Chinese for all output
+                      - Use English for all output
 
                       Your output will be posted as a PR comment automatically.
               env:
@@ -96,43 +96,40 @@ jobs:
                               const logData = fs.readFileSync(logPath, 'utf8');
                               const lines = logData.trim().split('\n');
 
-                              // Find the last result message with review content
+                              // Parse all lines and look for result type only
                               for (const line of lines) {
                                   try {
                                       const msg = JSON.parse(line);
 
-                                      // Check for assistant messages with text content
-                                      if (msg.type === 'assistant' && msg.message?.content) {
-                                          for (const content of msg.message.content) {
-                                              if (content.type === 'text' && content.text && content.text.trim().length > 10) {
-                                                  reviewContent = content.text;
-                                                  foundContent = true;
-                                              }
-                                          }
-                                      }
-
-                                      // Also check for result type with review content
-                                      if (msg.type === 'result' && msg.result && msg.result.length > 10) {
+                                      // Check for result type (final output)
+                                      if (msg.type === 'result' &&
+                                          msg.subtype === 'success' &&
+                                          msg.result &&
+                                          typeof msg.result === 'string' &&
+                                          msg.result.length > 50) {
                                           reviewContent = msg.result;
                                           foundContent = true;
+                                          break; // Found the final result, stop searching
                                       }
                                   } catch (e) {
                                       // Skip invalid JSON lines
                                   }
                               }
                           } else {
-                              reviewContent = '❌ 日志文件不存在: ' + logPath;
+                              reviewContent = `❌ Log file not found: ${logPath}`;
                           }
                       } catch (error) {
-                          reviewContent = '❌ 无法读取审查结果\n\n错误: ' + error.message;
+                          reviewContent = `❌ Failed to read review results\n\nError: ${error.message}`;
                       }
 
                       if (!foundContent) {
-                          reviewContent = '⚠️ 未找到审查内容\n\n请检查 Claude Code 是否成功完成审查。';
+                          reviewContent = '⚠️ No review content found\n\nPlease check if Claude Code completed the review successfully.\n\nDebug info: Log file path ' + logPath;
                       }
 
-                      // Add header
-                      const finalContent = '## 🤖 AI Code Review\n\n' + reviewContent;
+                      // Add header if not already present
+                      const finalContent = reviewContent.includes('🤖 AI Code Review')
+                          ? reviewContent
+                          : '## 🤖 AI Code Review\n\n' + reviewContent;
 
                       // Post the comment
                       await github.rest.issues.createComment({
