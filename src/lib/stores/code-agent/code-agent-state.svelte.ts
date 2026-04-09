@@ -1,7 +1,4 @@
 import type { ListSkillsResponse } from "$lib/api/skills/base-apis";
-import { createLogger } from "@shared/logger";
-
-const logger = createLogger("state");
 import { emitter, EventNames } from "$lib/event/emitter";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import * as m from "$lib/paraglide/messages";
@@ -11,11 +8,11 @@ import { persistedTabState, tabBarState } from "$lib/stores/tab-bar-state.svelte
 import type { ChatMessage } from "$lib/types/chat";
 import { clone } from "$lib/utils/clone";
 import type { Model } from "@302ai/studio-plugin-sdk";
+import { createLogger } from "@shared/logger";
 import {
 	type AgentClass,
 	type CodeAgentCfgs,
 	type CodeAgentConfigMetadata,
-	type CodeAgentSandboxStatus,
 	type CodeAgentType,
 	type Skill,
 	type ThinkingBudgetType,
@@ -25,6 +22,7 @@ import { toast } from "svelte-sonner";
 import { match } from "ts-pattern";
 import { claudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
 import { claudeCodeAgentState, type ClaudeCodeSandboxInfo } from "./claude-code-state.svelte";
+import { cloudModeSessionsState } from "./cloud-mode-sessions-state.svelte";
 import { cloudModeState } from "./cloud-mode-state.svelte";
 import { codeAgentGlobalConfigsState } from "./code-agent-global-configs-state.svelte";
 import { codeAgentSendMessageButtonState } from "./code-agent-send-message-button-state.svelte";
@@ -32,6 +30,8 @@ import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
 import { localClaudeCodeSandboxState } from "./local-claude-code-sandbox-state.svelte";
 import { localEnvState } from "./local-env-state.svelte";
 import { withLoadingState } from "./utils";
+
+const logger = createLogger("state");
 
 const tab = window.tab ?? null;
 const threadId =
@@ -117,22 +117,6 @@ class CodeAgentState {
 		}
 	}
 
-	sandboxStatus = $derived.by<CodeAgentSandboxStatus>(() => {
-		return match(this.type)
-			.with("local", () => "sandbox-created" as const)
-			.with("cloud", () =>
-				cloudModeState.running
-					? ("sandbox-created" as const)
-					: ("waiting-for-sandbox" as const),
-			)
-			.with("remote", () =>
-				claudeCodeAgentState.sandboxId === ""
-					? ("waiting-for-sandbox" as const)
-					: ("sandbox-created" as const),
-			)
-			.exhaustive();
-	});
-
 	handleChatFinished = async (event: { canDeploy: boolean; lastMessage: ChatMessage }) => {
 		// Skip deployment if taskboard is still running - deployment will be triggered when all tasks complete
 		if (codeAgentTaskboardState.isRunning) {
@@ -160,9 +144,9 @@ class CodeAgentState {
 		if (this.currentAgentId === "claude-code" || this.currentAgentId === "open-claw") {
 			await claudeCodeAgentState.handleThreadTitleUpdated(event);
 			if (this.type === "local") {
-				await localClaudeCodeSandboxState.refreshSessions();
+				await codeAgentState.refreshSessions();
 			} else if (this.type === "cloud") {
-				logger.info("[CodeAgentState] handleThreadTitleUpdated: cloud mode placeholder");
+				await cloudModeSessionsState.refreshSessions();
 			}
 		}
 	};
@@ -484,7 +468,7 @@ class CodeAgentState {
 
 				if (isOK) {
 					if (this.type === "local") {
-						await localClaudeCodeSandboxState.refreshSessions();
+						await codeAgentState.refreshSessions();
 					} else if (this.type === "cloud") {
 						logger.info("[CodeAgentState] updateSessionRemark: cloud mode placeholder");
 					}
@@ -582,6 +566,18 @@ class CodeAgentState {
 			.exhaustive();
 
 		this.updateEnabled(true, false);
+	}
+
+	async refreshSessions(sandboxId?: string): Promise<void> {
+		if (this.type === "local") {
+			await localClaudeCodeSandboxState.refreshSessions();
+		} else if (this.type === "cloud") {
+			await cloudModeSessionsState.refreshSessions();
+		} else if (this.type === "remote") {
+			if (sandboxId) {
+				await claudeCodeSandboxState.refreshSessions(sandboxId);
+			}
+		}
 	}
 
 	async handleCreateNewSandbox(): Promise<boolean> {

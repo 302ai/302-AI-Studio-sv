@@ -5,6 +5,8 @@
 </script>
 
 <script lang="ts">
+	import AgentWorkspaceConfig from "$lib/components/buss/local-agent-panel/agent-workspace-config.svelte";
+
 	import CloudRuningCard from "$lib/components/buss/local-agent-panel/cloud-runing-card.svelte";
 
 	import { Button } from "$lib/components/ui/button";
@@ -24,6 +26,10 @@
 		<div class="rounded-lg border p-4 space-y-4">
 			<CloudRuningCard />
 		</div>
+	</section>
+
+	<section class="space-y-4 mt-2">
+		<AgentWorkspaceConfig />
 	</section>
 
 	<!-- Footer with Cancel/Confirm buttons -->

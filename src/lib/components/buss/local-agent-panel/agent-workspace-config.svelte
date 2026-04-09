@@ -25,7 +25,7 @@
 	];
 
 	async function handleRefresh() {
-		await localClaudeCodeSandboxState.refreshSessions();
+		await codeAgentState.refreshSessions();
 	}
 
 	function handleCodeAgentSelected(codeAgentId: string) {
@@ -35,7 +35,7 @@
 	}
 
 	onMount(async () => {
-		await localClaudeCodeSandboxState.refreshSessions();
+		await codeAgentState.refreshSessions();
 	});
 </script>
 

@@ -103,7 +103,7 @@
 
 	onMount(async () => {
 		if (codeAgentState.type === "local" && localClaudeCodeSandboxState.sessions.length === 0) {
-			await localClaudeCodeSandboxState.refreshSessions();
+			await codeAgentState.refreshSessions();
 		}
 	});
 

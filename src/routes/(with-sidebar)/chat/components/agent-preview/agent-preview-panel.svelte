@@ -30,9 +30,7 @@
 		type AgentPreviewSyncEnvelope,
 	} from "$lib/stores/agent-preview-state.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
-	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 
 	import { TaskboardPanel } from "$lib/components/buss/taskboard";
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
@@ -472,13 +470,7 @@
 		isRestoringState = true;
 
 		try {
-			// Then refresh sessions to get workspace_path for the current session
-			// This ensures the file tree has the correct workspace path before loading
-			if (codeAgentState.type === "local") {
-				await localClaudeCodeSandboxState.refreshSessions();
-			} else {
-				await claudeCodeSandboxState.refreshSessions(sandboxId);
-			}
+			await codeAgentState.refreshSessions(sandboxId);
 
 			const [info, savedPath] = await Promise.all([
 				agentPreviewState.getDeploymentInfo(sandboxId, sessionId),
@@ -559,9 +551,9 @@
 				// Refresh sessions to get updated workspace_path after agent completes
 				// This is important because session/workspace is created after agent's first response
 				if (codeAgentState.type === "local") {
-					localClaudeCodeSandboxState.refreshSessions();
+					codeAgentState.refreshSessions();
 				} else {
-					claudeCodeSandboxState.refreshSessions(currentSandboxId);
+					codeAgentState.refreshSessions(currentSandboxId);
 				}
 			}
 		}

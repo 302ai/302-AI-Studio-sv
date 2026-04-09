@@ -10,7 +10,6 @@ import {
 	type ListLocalClaudeCodeSessionsResponse,
 } from "@shared/types";
 import { type } from "arktype";
-import { createLocalCodeAgentKy } from "./core/local-code-agent-ky";
 import { getCodeAgentKy } from "./utils";
 
 const logger = createLogger("apis");
@@ -179,7 +178,7 @@ export async function deleteSession(request: DeleteSessionRequest): Promise<Dele
  */
 export async function deleteLocalSession(sessionId: string): Promise<DeleteSessionResult> {
 	try {
-		const kyInstance = await createLocalCodeAgentKy();
+		const kyInstance = await getCodeAgentKy();
 
 		const data = (await kyInstance
 			.delete("302/claude-code/sandbox/session", {
@@ -210,7 +209,7 @@ export async function deleteLocalSession(sessionId: string): Promise<DeleteSessi
  */
 export async function listLocalSessions(): Promise<ListLocalClaudeCodeSessionsResponse> {
 	try {
-		const kyInstance = await createLocalCodeAgentKy();
+		const kyInstance = await getCodeAgentKy();
 		const response = await kyInstance.get("302/claude-code/sandbox/session").json();
 
 		const validated = listLocalClaudeCodeSessionsResponse(response);

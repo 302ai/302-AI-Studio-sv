@@ -1453,7 +1453,6 @@
 	"local_platform_stopping": "停止中",
 	"local_platform_close": "关闭",
 	"local_platform_one_click_start": "一键启动",
-	"local_platform_agent_framework": "Agent框架",
 	"local_platform_select_session": "选择会话",
 	"local_platform_work_directory": "工作目录",
 	"local_platform_new_session": "新会话",

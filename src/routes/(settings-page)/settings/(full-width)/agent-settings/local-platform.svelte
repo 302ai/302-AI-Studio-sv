@@ -8,10 +8,8 @@
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
-	import {
-		localClaudeCodeSandboxState,
-		persistedLocalClaudeCodeSessionsState,
-	} from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
+	import { codeAgentState } from "$lib/stores/code-agent";
+	import { persistedLocalClaudeCodeSessionsState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { cn } from "$lib/utils";
 	import { RotateCw, Search } from "@lucide/svelte";
@@ -41,7 +39,7 @@
 	async function handleRefresh() {
 		isLoading = true;
 		try {
-			await localClaudeCodeSandboxState.refreshSessions();
+			await codeAgentState.refreshSessions();
 		} finally {
 			isLoading = false;
 		}

@@ -1450,7 +1450,6 @@
 	"local_platform_stopping": "Stopping",
 	"local_platform_close": "Close",
 	"local_platform_one_click_start": "One-Click Start",
-	"local_platform_agent_framework": "Agent Framework",
 	"local_platform_select_session": "Select Session",
 	"local_platform_work_directory": "Work Directory",
 	"local_platform_new_session": "New Session",

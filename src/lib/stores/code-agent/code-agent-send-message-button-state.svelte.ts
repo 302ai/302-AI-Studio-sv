@@ -7,7 +7,6 @@ import { chatState } from "../chat-state.svelte";
 import { mcpState } from "../mcp-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
 import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
-import { localClaudeCodeSandboxState } from "./local-claude-code-sandbox-state.svelte";
 import { localEnvState } from "./local-env-state.svelte";
 import { openclawConfigState } from "./openclaw/openclaw-config-state.svelte";
 import { extractAgentIdFromWorkspacePath, fileToBase64 } from "./utils";
@@ -210,7 +209,7 @@ class CodeAgentSendMessageButtonState {
 
 						// Refresh sessions to sync the new workspace_path to local storage
 						if (codeAgentState.type === "local") {
-							await localClaudeCodeSandboxState.refreshSessions();
+							await codeAgentState.refreshSessions();
 						} else {
 							await window.electronAPI.codeAgentService.updateClaudeCodeSessions(
 								sandboxInfo.sandboxId,
