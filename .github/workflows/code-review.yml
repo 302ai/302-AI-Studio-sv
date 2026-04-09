@@ -90,33 +90,19 @@ jobs:
 
                       let reviewContent = '';
                       let foundContent = false;
-                      let debugInfo = [];
-                      let messageTypes = {};
-                      let parseErrors = 0;
 
                       try {
                           if (fs.existsSync(logPath)) {
                               const logData = fs.readFileSync(logPath, 'utf8');
-                              const lines = logData.trim().split('\n');
-                              debugInfo.push(`Total lines: ${lines.length}`);
 
-                              // Show first few lines for debugging
-                              debugInfo.push(`\nFirst 3 lines sample:`);
-                              for (let i = 0; i < Math.min(3, lines.length); i++) {
-                                  debugInfo.push(`Line ${i + 1}: ${lines[i].substring(0, 100)}...`);
-                              }
+                              // Parse as JSON array (not JSONL)
+                              const messages = JSON.parse(logData);
 
-                              // Parse all lines
-                              for (const line of lines) {
-                                  try {
-                                      const msg = JSON.parse(line);
-
-                                      // Count message types
-                                      if (msg.type) {
-                                          messageTypes[msg.type] = (messageTypes[msg.type] || 0) + 1;
-                                      }
-
-                                      // Check for result type
+                              if (!Array.isArray(messages)) {
+                                  reviewContent = '❌ Log file is not a JSON array';
+                              } else {
+                                  // Find the result message
+                                  for (const msg of messages) {
                                       if (msg.type === 'result' &&
                                           msg.subtype === 'success' &&
                                           msg.result &&
@@ -126,22 +112,17 @@ jobs:
                                           foundContent = true;
                                           break;
                                       }
-                                  } catch (e) {
-                                      parseErrors++;
+                                  }
+
+                                  if (!foundContent) {
+                                      reviewContent = `⚠️ No review content found in ${messages.length} messages`;
                                   }
                               }
-
-                              debugInfo.push(`\nParse errors: ${parseErrors}`);
-                              debugInfo.push(`Message types: ${JSON.stringify(messageTypes)}`);
                           } else {
                               reviewContent = `❌ Log file not found: ${logPath}`;
                           }
                       } catch (error) {
                           reviewContent = `❌ Failed to read review results\n\nError: ${error.message}`;
-                      }
-
-                      if (!foundContent) {
-                          reviewContent = `⚠️ No review content found\n\n**Debug info:**\n${debugInfo.join('\n')}\n\nLog path: ${logPath}`;
                       }
 
                       // Add header if not already present
