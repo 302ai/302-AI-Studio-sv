@@ -466,12 +466,8 @@ class CodeAgentState {
 					)
 					.otherwise(() => false);
 
-				if (isOK) {
-					if (this.type === "local") {
-						await codeAgentState.refreshSessions();
-					} else if (this.type === "cloud") {
-						logger.info("[CodeAgentState] updateSessionRemark: cloud mode placeholder");
-					}
+				if (isOK && (this.type === "local" || this.type === "cloud")) {
+					await codeAgentState.refreshSessions();
 				}
 
 				return isOK;
@@ -513,7 +509,7 @@ class CodeAgentState {
 			if (this.type === "local") {
 				localClaudeCodeSandboxState.init(this.currentSessionId, this.currentWorkspacePath);
 			} else if (this.type === "cloud") {
-				logger.info("[CodeAgentState] init: cloud mode placeholder");
+				cloudModeSessionsState.init(this.currentSessionId, this.currentWorkspacePath);
 			}
 		}
 	}
