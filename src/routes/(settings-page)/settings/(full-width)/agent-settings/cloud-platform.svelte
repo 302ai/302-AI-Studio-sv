@@ -186,13 +186,16 @@
 					{/if}
 				</div>
 				<div class="flex items-center">
+					<!-- 写一个loading -->
+					{#if renewLoading}
+						<LoaderCircle class="h-4 w-4 animate-spin" />
+					{/if}
 					<Switch
 						disabled={renewLoading}
 						bind:checked={cloudModeState.autoRenew}
 						onCheckedChange={handleAutoRenewChange}
-						class="data-[state=unchecked]:border-settings-switch-border cursor-pointer"
+						class="data-[state=checked]:bg-primary cursor-pointer"
 					/>
-
 					<span class="text-sm text-muted-foreground ml-2"
 						>{m.cloud_mode_auto_renew()}</span
 					>

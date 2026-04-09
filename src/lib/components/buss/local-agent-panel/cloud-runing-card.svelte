@@ -45,22 +45,13 @@
 	<div class="flex-1 space-y-2">
 		<div class="flex items-center gap-3">
 			<Label class="text-muted-foreground min-w-18 font-normal"
-				>{m.cloud_mode_activation_status()}</Label
+				>{m.agent_settings_instance_status()}</Label
 			>
 			<StatusIndicator
-				status={cloudModeState.activated ? "green" : "gray"}
-				text={cloudModeState.activated
-					? m.cloud_mode_activated()
-					: m.cloud_mode_not_activated()}
-			/>
-		</div>
-		<div class="flex items-center gap-3">
-			<Label class="text-muted-foreground min-w-18 font-normal"
-				>{m.cloud_mode_startup_status()}</Label
-			>
-			<StatusIndicator
-				status={cloudModeState.running ? "green" : "gray"}
-				text={cloudModeState.running ? m.cloud_mode_started() : m.cloud_mode_not_started()}
+				status={getHealthProps(cloudModeState.instanceStatus).status}
+				text={getHealthProps(cloudModeState.instanceStatus).text}
+				showWarning={cloudModeState.instanceStatus === "unhealthy"}
+				warningTooltip={m.cloud_mode_unhealthy()}
 			/>
 		</div>
 		<div class="flex items-center gap-3">
