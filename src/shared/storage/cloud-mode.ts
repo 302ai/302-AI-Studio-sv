@@ -56,13 +56,13 @@ export const createInstanceResponseSchema = type({
 	success: "boolean",
 	instance: type({
 		instance_name: "string",
-		status: '"waiting_init" | "rebooting" | "rebooted" | "running"',
+		auto_renew: "boolean",
 	}),
 }).pipe((data) => ({
 	success: data.success,
 	instance: {
 		instanceName: data.instance.instance_name,
-		status: data.instance.status,
+		autoRenew: data.instance.auto_renew,
 	},
 }));
 export type CreateInstanceResponse = typeof createInstanceResponseSchema.infer;
@@ -166,6 +166,30 @@ export const rebootInstanceResponseSchema = type({
 	message: "string",
 });
 export type RebootInstanceResponse = typeof rebootInstanceResponseSchema.infer;
+
+export const updateInstanceAutoRenewRequestSchema = type({
+	instanceName: "string",
+	isAutoRenew: "boolean",
+}).pipe((data) => ({
+	instance_name: data.instanceName,
+	is_auto_renew: data.isAutoRenew,
+}));
+export type UpdateInstanceAutoRenewRequest = typeof updateInstanceAutoRenewRequestSchema.inferIn;
+
+export const updateInstanceAutoRenewResponseSchema = type({
+	success: "boolean",
+	instance: {
+		instance_name: "string",
+		auto_renew: "boolean",
+	},
+}).pipe((data) => ({
+	success: data.success,
+	instance: {
+		instanceName: data.instance.instance_name,
+		autoRenew: data.instance.auto_renew,
+	},
+}));
+export type UpdateInstanceAutoRenewResponse = typeof updateInstanceAutoRenewResponseSchema.infer;
 
 export const readFilesRequestSchema = type({
 	instanceName: "string",

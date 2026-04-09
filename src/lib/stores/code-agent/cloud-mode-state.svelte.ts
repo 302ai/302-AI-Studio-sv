@@ -5,6 +5,7 @@ import {
 	listInstances,
 	rebootInstance,
 	restartDocker,
+	updateInstanceAutoRenew,
 } from "$lib/api/cloud-mode/base-apis";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { createLogger } from "@shared/logger";
@@ -23,10 +24,10 @@ export const getDefaultInstanceInfo = (): InstanceInfo => ({
 	expired: false,
 	apiPort: 0,
 	ocPort: 0,
+	status: "waiting_init",
 	openclawGatewayToken: "",
 	autoRenew: true,
 	destroyedAt: undefined,
-	status: "waiting_init",
 });
 
 export const persistedCloudModeState = new PersistedState<InstanceInfo>(
@@ -46,22 +47,22 @@ class CloudModeStateManager {
 		return info.instanceName ? info : null;
 	});
 	checking = $state(false);
+	isUpdatingAutoRenew = $state(false);
 
 	instanceName = $derived(persistedCloudModeState.current?.instanceName ?? "");
 	publicIp = $derived(persistedCloudModeState.current?.publicIp ?? "");
+	status = $derived(persistedCloudModeState.current?.status ?? "waiting_init");
 	createdAt = $derived(persistedCloudModeState.current?.createdAt ?? "");
 	expiredAt = $derived(persistedCloudModeState.current?.expiredAt ?? "");
 	apiPort = $derived(persistedCloudModeState.current?.apiPort ?? 0);
 	ocPort = $derived(persistedCloudModeState.current?.ocPort ?? 0);
 	openclawGatewayToken = $derived(persistedCloudModeState.current?.openclawGatewayToken ?? "");
-	status = $derived(persistedCloudModeState.current?.status ?? "waiting_init");
-	expired = $derived(persistedCloudModeState.current?.expired ?? false);
-	autoRenew = $derived(persistedCloudModeState.current?.autoRenew ?? true);
-	destroyedAt = $derived(persistedCloudModeState.current?.destroyedAt ?? undefined);
+	autoRenew = $derived(persistedCloudModeState.current?.autoRenew ?? false);
 
 	private pollingTimer: ReturnType<typeof setInterval> | null = null;
 	private pollingSubscriberCount = 0;
 	private ocStartupGraceUntil = 0;
+	private lastConfirmedAutoRenew = persistedCloudModeState.current?.autoRenew ?? false;
 	private readonly OC_STARTUP_GRACE_PERIOD_MS = 60_000;
 
 	#updateState(partial: Partial<InstanceInfo>): void {
@@ -143,6 +144,35 @@ class CloudModeStateManager {
 		return rebootInstance({ instanceName });
 	}
 
+	async #updateAutoRenew(instanceName: string, isAutoRenew: boolean) {
+		return updateInstanceAutoRenew({ instanceName, isAutoRenew });
+	}
+
+	async updateAutoRenew(isAutoRenew: boolean): Promise<boolean> {
+		this.isUpdatingAutoRenew = true;
+		this.#updateState({ autoRenew: isAutoRenew });
+		if (!this.instanceInfo?.instanceName) {
+			this.lastConfirmedAutoRenew = isAutoRenew;
+			this.isUpdatingAutoRenew = false;
+			return true;
+		}
+		try {
+			const response = await this.#updateAutoRenew(
+				this.instanceInfo.instanceName,
+				isAutoRenew,
+			);
+			this.lastConfirmedAutoRenew = response.instance.autoRenew;
+			this.#updateState({ autoRenew: response.instance.autoRenew });
+			return true;
+		} catch (error) {
+			logger.error("[CloudModeStateManager] Failed to update auto renew:", error);
+			this.#updateState({ autoRenew: this.lastConfirmedAutoRenew });
+			return false;
+		} finally {
+			this.isUpdatingAutoRenew = false;
+		}
+	}
+
 	startPolling(intervalMs: number = POLL_INTERVAL_MS): void {
 		this.pollingSubscriberCount += 1;
 		if (this.pollingTimer) {
@@ -176,7 +206,9 @@ class CloudModeStateManager {
 				this.activated = false;
 				this.running = false;
 				persistedCloudModeState.current = getDefaultInstanceInfo();
+				this.lastConfirmedAutoRenew = false;
 				this.instanceStatus = "unknown";
+
 				this.#resetServiceHealthState();
 				this.#clearOpenClawGracePeriod();
 				return;
@@ -184,6 +216,7 @@ class CloudModeStateManager {
 
 			const info = listRes.instances[0];
 			this.#updateState(info);
+			this.lastConfirmedAutoRenew = info.autoRenew;
 			this.activated = true;
 
 			try {
@@ -246,6 +279,7 @@ class CloudModeStateManager {
 		try {
 			const response = await this.#createInstance(isDev, isAutoRenew);
 			this.#updateState(response.instance);
+			this.lastConfirmedAutoRenew = response.instance.autoRenew;
 			this.activated = true;
 			this.running = true;
 			this.instanceStatus = "unknown";

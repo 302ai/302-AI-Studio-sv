@@ -14,10 +14,10 @@ const getDefaultInstanceInfo = (): InstanceInfo => ({
 	expired: false,
 	apiPort: 0,
 	ocPort: 0,
+	status: "waiting_init",
 	openclawGatewayToken: "",
 	autoRenew: true,
 	destroyedAt: undefined,
-	status: "waiting_init",
 });
 
 /**

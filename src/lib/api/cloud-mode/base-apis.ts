@@ -16,6 +16,8 @@ import {
 	restartDockerResponseSchema,
 	updateAutoRenewRequestSchema,
 	updateAutoRenewResponseSchema,
+	updateInstanceAutoRenewRequestSchema,
+	updateInstanceAutoRenewResponseSchema,
 	writeFilesRequestSchema,
 	writeFilesResponseSchema,
 	type CloudSandboxHealthResponse,
@@ -35,6 +37,8 @@ import {
 	type RestartDockerResponse,
 	type UpdateAutoRenewRequest,
 	type UpdateAutoRenewResponse,
+	type UpdateInstanceAutoRenewRequest,
+	type UpdateInstanceAutoRenewResponse,
 	type WriteFilesRequest,
 	type WriteFilesResponse,
 } from "@shared/storage/cloud-mode";
@@ -253,6 +257,33 @@ export async function rebootInstance(
  * @param request
  * @returns Read files response
  */
+export async function updateInstanceAutoRenew(
+	request: UpdateInstanceAutoRenewRequest,
+): Promise<UpdateInstanceAutoRenewResponse> {
+	try {
+		const requestBody = updateInstanceAutoRenewRequestSchema(request);
+		if (requestBody instanceof type.errors) {
+			logger.error("Failed to validate update auto renew request:", requestBody.summary);
+			throw new Error("Invalid request format for update auto renew");
+		}
+		// const kyInstance = await testKy();
+		const response = testKy("api/v1/instances/auto-renew", {
+			method: "POST",
+			json: requestBody,
+		}).json();
+
+		const validated = updateInstanceAutoRenewResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate update auto renew response:", validated.summary);
+			throw new Error("Invalid response format from update auto renew API");
+		}
+		return validated;
+	} catch (error) {
+		logger.error("Failed to update instance auto renew:", error);
+		throw error;
+	}
+}
+
 export async function readInstanceFiles(request: ReadFilesRequest): Promise<ReadFilesResponse> {
 	try {
 		const requestBody = readFilesRequestSchema(request);

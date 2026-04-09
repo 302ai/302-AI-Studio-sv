@@ -39,7 +39,6 @@
 	// --- Restart / Reboot ---
 	let isRestartingDocker = $state(false);
 	let isRebooting = $state(false);
-	let isAutoRenew = $state(false);
 
 	async function handleRestartDockerAction() {
 		isRestartingDocker = true;
@@ -56,6 +55,17 @@
 			await cloudModeState.rebootInstance();
 		} finally {
 			isRebooting = false;
+		}
+	}
+
+	let renewLoading = $state(false);
+
+	async function handleAutoRenewChange(checked: boolean) {
+		renewLoading = true;
+		try {
+			await cloudModeState.updateAutoRenew(checked);
+		} finally {
+			renewLoading = false;
 		}
 	}
 </script>
@@ -127,15 +137,15 @@
 
 	<!-- 订阅信息 -->
 	<div class="space-y-2">
-		<h2 class="text-sm font-medium">订阅信息</h2>
+		<h2 class="text-sm font-medium">{m.cloud_mode_subscription_info()}</h2>
 		<div class="rounded-lg border p-5 space-y-5">
 			<div class="flex justify-between items-center w-full">
-				<h3 class="text-base font-semibold">{m.cloud_mode_instance()}</h3>
+				<h3 class="text-base font-semibold">{cloudModeState.instanceName}</h3>
 				{#if !cloudModeState.activated}
 					<Button
 						size="sm"
 						disabled={cloudModeState.starting}
-						onclick={() => cloudModeState.startCloud(false, isAutoRenew)}
+						onclick={() => cloudModeState.startCloud(false, cloudModeState.autoRenew)}
 					>
 						{#if cloudModeState.starting}
 							<LoaderCircle class="h-4 w-4 animate-spin" />
@@ -143,14 +153,24 @@
 							{m.cloud_mode_activate_button()}
 						{/if}
 					</Button>
+				{:else if !cloudModeState.autoRenew}
+					<Button size="sm" onclick={() => {}}>
+						{#if cloudModeState.starting}
+							<LoaderCircle class="h-4 w-4 animate-spin" />
+						{:else}
+							{m.cloud_mode_renew_button()}
+						{/if}
+					</Button>
+				{:else}
+					<span class="text-primary text-sm"> {m.cloud_mode_activated()} </span>
 				{/if}
 			</div>
 			<div class="flex justify-between items-end">
 				<div class="space-y-1">
 					{#if cloudModeState.instanceInfo}
-						<p class="text-sm text-muted-foreground">
+						<!-- <p class="text-sm text-muted-foreground">
 							IP：{cloudModeState.instanceInfo.publicIp || "--"}
-						</p>
+						</p> -->
 						<p class="text-sm text-muted-foreground">
 							{m.cloud_mode_created_at()}：{formatDate(
 								cloudModeState.instanceInfo.createdAt,
@@ -165,17 +185,18 @@
 						<p class="text-sm text-muted-foreground">{m.cloud_mode_no_instance()}</p>
 					{/if}
 				</div>
-				{#if !cloudModeState.activated}
-					<div class="flex items-center">
-						<Switch
-							bind:checked={isAutoRenew}
-							class="data-[state=unchecked]:border-settings-switch-border cursor-pointer"
-						/>
-						<span class="text-sm text-muted-foreground ml-2"
-							>{m.cloud_mode_auto_renew()}</span
-						>
-					</div>
-				{/if}
+				<div class="flex items-center">
+					<Switch
+						disabled={renewLoading}
+						bind:checked={cloudModeState.autoRenew}
+						onCheckedChange={handleAutoRenewChange}
+						class="data-[state=unchecked]:border-settings-switch-border cursor-pointer"
+					/>
+
+					<span class="text-sm text-muted-foreground ml-2"
+						>{m.cloud_mode_auto_renew()}</span
+					>
+				</div>
 			</div>
 		</div>
 	</div>
