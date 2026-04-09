@@ -30,12 +30,10 @@
 		["open-claw", "Open Claw"],
 	]);
 	const description = $derived.by(() => {
-		// TODO: 支持远程 Open Claw 之后，移除由于当前远程仅支持 claude-code 的硬编码逻辑，恢复使用下面注释掉的获取逻辑
 		const agentIdLabe =
-			codeAgentState.type === "local"
+			codeAgentState.type === "local" || codeAgentState.type === "cloud"
 				? agentIdLabelMap.get(codeAgentState.currentAgentId)
 				: agentIdLabelMap.get("claude-code");
-		// const agentIdLabe = agentIdLabelMap.get(codeAgentState.currentAgentId);
 
 		return selectedMode === "chat"
 			? m.title_chat_mode_description()
@@ -43,9 +41,13 @@
 				? m.title_local_mode_description({
 						type: `<span class="text-primary">${m.title_local()}${agentIdLabe}</span>`,
 					})
-				: m.title_code_agent_description({
-						type: `<span class="text-primary">${m.title_remote()}${agentIdLabe}</span>`,
-					});
+				: codeAgentState.type === "cloud"
+					? m.title_code_agent_description({
+							type: `<span class="text-primary">${m.cloud_mode_cloud()}${agentIdLabe}</span>`,
+						})
+					: m.title_code_agent_description({
+							type: `<span class="text-primary">${m.title_remote()}${agentIdLabe}</span>`,
+						});
 	});
 
 	function handleModeSelect(key: string) {
@@ -106,7 +108,11 @@
 			<Badge variant="secondary" class="bg-primary/20 text-primary font-light">
 				{selectedMode === "vibe"
 					? `${m.title_code_agent()}-${
-							codeAgentState.type === "local" ? m.title_local() : m.title_remote()
+							codeAgentState.type === "local"
+								? m.title_local()
+								: codeAgentState.type === "cloud"
+									? m.cloud_mode_cloud()
+									: m.title_remote()
 						}`
 					: m.title_chat_mode()}
 			</Badge>

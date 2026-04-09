@@ -951,7 +951,6 @@
 	"cloud_mode_expired_at": "到期日期",
 	"cloud_mode_auto_renew": "自动续费",
 	"cloud_mode_renew_button": "续费",
-	"cloud_mode_activated": "已开通",
 	"cloud_mode_api_test": "API 测试（调试用）",
 	"cloud_mode_no_instances_found": "未找到实例",
 	"toast_code_agent_model_change_failed": "更换沙盒模型失败",
