@@ -91,6 +91,7 @@ jobs:
                       let reviewContent = '';
                       let foundContent = false;
                       let debugInfo = [];
+                      let messageTypes = {};
 
                       try {
                           if (fs.existsSync(logPath)) {
@@ -98,14 +99,19 @@ jobs:
                               const lines = logData.trim().split('\n');
                               debugInfo.push(`Total lines: ${lines.length}`);
 
-                              // Parse all lines and look for result type only
+                              // Parse all lines and collect message types
                               for (const line of lines) {
                                   try {
                                       const msg = JSON.parse(line);
 
-                                      // Debug: log message types found
+                                      // Count message types
+                                      if (msg.type) {
+                                          messageTypes[msg.type] = (messageTypes[msg.type] || 0) + 1;
+                                      }
+
+                                      // Debug: log result messages in detail
                                       if (msg.type === 'result') {
-                                          debugInfo.push(`Found result type, subtype: ${msg.subtype}, has result: ${!!msg.result}, result type: ${typeof msg.result}, length: ${msg.result?.length || 0}`);
+                                          debugInfo.push(`Found result: subtype=${msg.subtype}, has result=${!!msg.result}, type=${typeof msg.result}, length=${msg.result?.length || 0}`);
                                       }
 
                                       // Check for result type (final output)
@@ -116,13 +122,15 @@ jobs:
                                           msg.result.length > 50) {
                                           reviewContent = msg.result;
                                           foundContent = true;
-                                          debugInfo.push('Successfully extracted review content');
-                                          break; // Found the final result, stop searching
+                                          debugInfo.push('✓ Successfully extracted review content');
+                                          break;
                                       }
                                   } catch (e) {
                                       // Skip invalid JSON lines
                                   }
                               }
+
+                              debugInfo.push(`Message types found: ${JSON.stringify(messageTypes)}`);
                           } else {
                               reviewContent = `❌ Log file not found: ${logPath}`;
                           }
@@ -131,7 +139,7 @@ jobs:
                       }
 
                       if (!foundContent) {
-                          reviewContent = `⚠️ No review content found\n\nPlease check if Claude Code completed the review successfully.\n\nDebug info:\n${debugInfo.join('\n')}\nLog file path: ${logPath}`;
+                          reviewContent = `⚠️ No review content found\n\nPlease check if Claude Code completed the review successfully.\n\n**Debug info:**\n${debugInfo.join('\n')}\n\nLog file path: ${logPath}`;
                       }
 
                       // Add header if not already present
