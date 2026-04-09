@@ -90,16 +90,23 @@ jobs:
 
                       let reviewContent = '';
                       let foundContent = false;
+                      let debugInfo = [];
 
                       try {
                           if (fs.existsSync(logPath)) {
                               const logData = fs.readFileSync(logPath, 'utf8');
                               const lines = logData.trim().split('\n');
+                              debugInfo.push(`Total lines: ${lines.length}`);
 
                               // Parse all lines and look for result type only
                               for (const line of lines) {
                                   try {
                                       const msg = JSON.parse(line);
+
+                                      // Debug: log message types found
+                                      if (msg.type === 'result') {
+                                          debugInfo.push(`Found result type, subtype: ${msg.subtype}, has result: ${!!msg.result}, result type: ${typeof msg.result}, length: ${msg.result?.length || 0}`);
+                                      }
 
                                       // Check for result type (final output)
                                       if (msg.type === 'result' &&
@@ -109,6 +116,7 @@ jobs:
                                           msg.result.length > 50) {
                                           reviewContent = msg.result;
                                           foundContent = true;
+                                          debugInfo.push('Successfully extracted review content');
                                           break; // Found the final result, stop searching
                                       }
                                   } catch (e) {
@@ -123,7 +131,7 @@ jobs:
                       }
 
                       if (!foundContent) {
-                          reviewContent = '⚠️ No review content found\n\nPlease check if Claude Code completed the review successfully.\n\nDebug info: Log file path ' + logPath;
+                          reviewContent = `⚠️ No review content found\n\nPlease check if Claude Code completed the review successfully.\n\nDebug info:\n${debugInfo.join('\n')}\nLog file path: ${logPath}`;
                       }
 
                       // Add header if not already present
