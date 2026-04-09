@@ -505,8 +505,8 @@ export function registerIpcHandlers() {
 	ipcMain.handle("cloudModeService:syncCloudInstanceToLocalByIpc", (event) =>
 		cloudModeService.syncCloudInstanceToLocalByIpc(event),
 	);
-	ipcMain.handle("cloudModeService:getCloudModeInstanceBaseUrl", (event) =>
-		cloudModeService.getCloudModeInstanceBaseUrl(event),
+	ipcMain.handle("cloudModeService:getCloudModeInstanceBaseUrlByIpc", (event) =>
+		cloudModeService.getCloudModeInstanceBaseUrlByIpc(event),
 	);
 
 	// dataService service registration
@@ -798,7 +798,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:createSkillTempDir");
 	ipcMain.removeHandler("appService:deleteTempDir");
 	ipcMain.removeHandler("cloudModeService:syncCloudInstanceToLocalByIpc");
-	ipcMain.removeHandler("cloudModeService:getCloudModeInstanceBaseUrl");
+	ipcMain.removeHandler("cloudModeService:getCloudModeInstanceBaseUrlByIpc");
 	ipcMain.removeHandler("dataService:importLegacyJson");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("dataService:importStorage");

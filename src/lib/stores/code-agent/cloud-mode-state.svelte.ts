@@ -39,7 +39,7 @@ class CloudModeStateManager {
 		expiredAt: persistedCloudModeState.current?.expiredAt ?? "",
 		apiPort: persistedCloudModeState.current?.apiPort ?? 0,
 		ocPort: persistedCloudModeState.current?.ocPort ?? 0,
-		autoRenew: persistedCloudModeState.current?.autoRenew ?? false,
+		autoRenew: persistedCloudModeState.current?.autoRenew ?? true,
 	});
 
 	openClaw = $state({

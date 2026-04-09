@@ -1508,5 +1508,6 @@
 	"agent_settings_tab_platform": "Platform",
 	"agent_settings_tab_other": "Other",
 	"agent_settings_notifications_section": "Notifications",
-	"agent_settings_deploy_section": "Deploy"
+	"agent_settings_deploy_section": "Deploy",
+	"code_agent_cloud_instance_not_running": "The cloud machine instance is not ready yet"
 }

@@ -45,9 +45,7 @@ export class CloudModeService {
 		}
 	}
 
-	public async getCloudModeInstanceBaseUrl(
-		_event: IpcMainInvokeEvent,
-	): Promise<{ isOk: boolean; baseUrl: string }> {
+	public async getCloudModeInstanceBaseUrl(): Promise<{ isOk: boolean; baseUrl: string }> {
 		const [error, instance] = await attemptAsync(() => cloudModeStorage.getCloudModeInstance());
 
 		if (error || isNull(instance)) {
@@ -56,6 +54,12 @@ export class CloudModeService {
 		}
 
 		return { isOk: true, baseUrl: `http://${instance.publicIp}:${instance.apiPort}` };
+	}
+
+	public async getCloudModeInstanceBaseUrlByIpc(
+		_event: IpcMainInvokeEvent,
+	): Promise<{ isOk: boolean; baseUrl: string }> {
+		return this.getCloudModeInstanceBaseUrl();
 	}
 }
 

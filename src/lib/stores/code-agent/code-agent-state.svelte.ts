@@ -78,6 +78,7 @@ class CodeAgentState {
 	isUpdatingSandboxRemark = $state(false);
 	isUpdatingSessionRemark = $state(false);
 	localBaseUrl = $state("");
+	cloudBaseUrl = $state("");
 
 	enabled = $derived.by(() => persistedCodeAgentConfigState.current?.enabled ?? false);
 	type = $derived.by(() => {
@@ -323,9 +324,8 @@ class CodeAgentState {
 						model: claudeCodeAgentState.model,
 					}))
 					.with("cloud", () => {
-						logger.info("[CodeAgentState] codeAgentCfgs: cloud mode placeholder");
 						return {
-							baseUrl: claudeCodeAgentState.baseUrl,
+							baseUrl: this.cloudBaseUrl,
 							model: claudeCodeAgentState.model,
 						};
 					})
