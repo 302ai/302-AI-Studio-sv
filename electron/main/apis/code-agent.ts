@@ -10,6 +10,7 @@ import { type } from "arktype";
 import JSZip from "jszip";
 import ky from "ky";
 import { _302AIKy } from "./core/_302ai-ky";
+import { cloudModeKy } from "./core/cloud-mode-ky";
 import { localCodeAgentKy } from "./core/code-agent-ky";
 
 const logger = createLogger("apis");
@@ -77,7 +78,13 @@ export async function updateClaudeCodeSandbox(
 	max_thinking_token?: number,
 ): Promise<UpdateClaudeCodeSandboxResponse> {
 	try {
-		const response = await (sandbox_id === "local" ? localCodeAgentKy : _302AIKy)
+		const kyInstance =
+			sandbox_id === "local"
+				? localCodeAgentKy
+				: sandbox_id === "cloud"
+					? cloudModeKy
+					: _302AIKy;
+		const response = await kyInstance
 			.post("302/claude-code/sandbox/reset", {
 				json: {
 					sandbox_id,

@@ -35,6 +35,7 @@ import { chatParameters } from "$lib/stores/chat-paramters/chat-parameters.svelt
 
 import { resolvePrompt } from "@shared/utils/chat-parameters";
 import { codeAgentGlobalConfigsState, codeAgentState } from "./code-agent";
+import { cloudModeState } from "./code-agent/cloud-mode-state.svelte";
 import { codeAgentTaskboardState } from "./code-agent/code-agent-taskboard-state.svelte";
 import { localEnvState } from "./code-agent/local-env-state.svelte";
 import { generalSettings } from "./general-settings.state.svelte";
@@ -975,19 +976,29 @@ class ChatState {
 		}
 
 		// For local mode, ensure sandbox is running before regenerating
-		if (codeAgentState.enabled && codeAgentState.type === "local") {
-			const result = await localEnvState.ensureSandboxRunning();
-			if (!result.isOk) {
-				toast.error(result.error ?? m.code_agent_local_sandbox_start_failed());
-				return;
-			}
-			// Update localBaseUrl with the port
-			if (result.port) {
-				codeAgentState.localBaseUrl = `http://localhost:${result.port}/api/v1`;
-			}
-			// Show success toast only when actually started (not already running)
-			if (!result.wasAlreadyRunning) {
-				toast.success(m.code_agent_local_sandbox_started());
+		if (codeAgentState.enabled) {
+			if (codeAgentState.type === "local") {
+				const result = await localEnvState.ensureSandboxRunning();
+				if (!result.isOk) {
+					toast.error(result.error ?? m.code_agent_local_sandbox_start_failed());
+					return;
+				}
+				// Update localBaseUrl with the port
+				if (result.port) {
+					codeAgentState.localBaseUrl = `http://localhost:${result.port}/api/v1`;
+				}
+				// Show success toast only when actually started (not already running)
+				if (!result.wasAlreadyRunning) {
+					toast.success(m.code_agent_local_sandbox_started());
+				}
+			} else if (codeAgentState.type === "cloud") {
+				if (cloudModeState.state.status === "running") {
+					const { baseUrl } =
+						await window.electronAPI.cloudModeService.getCloudModeInstanceBaseUrlByIpc();
+					codeAgentState.cloudBaseUrl = baseUrl + "/api/v1";
+				} else {
+					toast.error(m.code_agent_cloud_instance_not_running());
+				}
 			}
 		}
 

@@ -10,6 +10,7 @@
 	import type { QuickPrompt } from "$lib/datas/quick-prompts";
 	import { m } from "$lib/paraglide/messages.js";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { codeAgentSendMessageButtonState } from "$lib/stores/code-agent/code-agent-send-message-button-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { codeAgentTaskboardState } from "$lib/stores/code-agent/code-agent-taskboard-state.svelte";
@@ -23,6 +24,7 @@
 	import { generateFilePreview, MAX_ATTACHMENT_COUNT } from "$lib/utils/file-preview";
 	import { isMac } from "$lib/utils/platform";
 	import { X } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { AttachmentFile, Model } from "@shared/types";
 	import { nanoid } from "nanoid";
 	import { onMount } from "svelte";
@@ -33,7 +35,6 @@
 	import ChatInputBoxHeader from "./chat-input-box-header.svelte";
 	import SendMessageButton from "./code-agent/send-message-button.svelte";
 	import StreamingIndicator from "./streaming-indicator.svelte";
-	import { createLogger } from "@shared/logger";
 
 	const logger = createLogger("ui");
 
@@ -221,14 +222,27 @@
 
 		if (codeAgentState.enabled && codeAgentState.isFreshTab) {
 			await codeAgentSendMessageButtonState.handleCodeAgentFlow(fn);
-		} else if (codeAgentState.enabled && codeAgentState.type === "local") {
+		} else if (codeAgentState.enabled) {
 			// For local mode in non-fresh tabs, only ensure sandbox is running
-			const localSandboxResult =
-				await codeAgentSendMessageButtonState.ensureLocalSandboxReady();
-			if (!localSandboxResult.isOk) {
-				toast.error(localSandboxResult.error ?? m.code_agent_local_sandbox_start_failed());
-				return;
+			if (codeAgentState.type === "local") {
+				const localSandboxResult =
+					await codeAgentSendMessageButtonState.ensureLocalSandboxReady();
+				if (!localSandboxResult.isOk) {
+					toast.error(
+						localSandboxResult.error ?? m.code_agent_local_sandbox_start_failed(),
+					);
+					return;
+				}
+			} else if (codeAgentState.type === "cloud") {
+				if (cloudModeState.state.status === "running") {
+					const { baseUrl } =
+						await window.electronAPI.cloudModeService.getCloudModeInstanceBaseUrlByIpc();
+					codeAgentState.cloudBaseUrl = baseUrl + "/api/v1";
+				} else {
+					toast.error(m.code_agent_cloud_instance_not_running());
+				}
 			}
+
 			fn();
 		} else {
 			fn();
