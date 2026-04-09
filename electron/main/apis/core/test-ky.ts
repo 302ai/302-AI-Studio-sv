@@ -6,7 +6,7 @@ const userAgent = getCustomUserAgentFragment();
 
 export const testKy = ky.create({
 	timeout: 60000,
-	prefixUrl: "http://192.168.199.65:8001",
+	prefixUrl: import.meta.env.VITE_TEST_API_URL ?? "",
 	headers: {
 		"User-Agent": userAgent,
 		"HTTP-Referer": "https://studio.302.ai/",

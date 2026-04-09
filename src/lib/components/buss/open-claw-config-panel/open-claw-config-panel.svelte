@@ -311,7 +311,7 @@
 						>
 						<div class="text-muted-foreground/50">|</div>
 						<a
-							href="https://studio.302.ai/zh/docs/advanced/open-claw/telegram"
+							href="https://studio.302.ai/zh/docs/advanced/open-claw/discord"
 							class="text-primary hover:underline"
 							>{m.open_claw_feishu_view_deployment_tutorial()}</a
 						>
