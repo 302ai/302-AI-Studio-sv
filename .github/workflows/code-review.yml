@@ -55,7 +55,24 @@ jobs:
                   claude_args: |
                       --model cc-sonnet-4-6
                       --max-turns 25
-                  # Use /review command - it will automatically read CLAUDE.md for project standards
-                  prompt: "/review"
+                  show_full_output: true
+                  prompt: |
+                      You are a code reviewer for the 302-AI-Studio project. Review this PR and post your findings as GitHub review comments.
+
+                      ## Review Process
+                      1. Read the PR diff to understand what changed
+                      2. Read CLAUDE.md for project standards
+                      3. Check for issues in these categories:
+                         - 🔴 Blockers: Security vulnerabilities, type safety issues, architecture violations
+                         - 🟡 Major: Svelte 5 patterns, IPC patterns, error handling
+                         - 🟢 Minor: Code quality, naming conventions
+
+                      ## How to Post Comments
+                      Use the GitHub API tools available to you to post review comments directly on the PR.
+                      - Post inline comments on specific lines with issues
+                      - Post a summary comment with overall assessment
+                      - Use Chinese for all output
+
+                      Start the review now.
               env:
                   ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
