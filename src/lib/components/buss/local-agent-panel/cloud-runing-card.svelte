@@ -17,23 +17,18 @@
 	import { cn } from "tailwind-variants";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 
-	let { state, openClaw, loading } = $derived(cloudModeState.init());
+	let { state, openClaw, loading, healthProps } = $derived(cloudModeState.init());
 
-	type StatusProps = { status: "green" | "red" | "gray"; text: string };
+	function resolveOpenClawStatus(v: boolean | null): "green" | "red" | "gray" {
+		return v == null ? "gray" : v ? "green" : "red";
+	}
 
-	function getHealthProps(s: "running" | "waiting_init" | "rebooting" | "rebooted"): StatusProps {
-		switch (s) {
-			case "running":
-				return { status: "green", text: m.cloud_mode_healthy() };
-			case "waiting_init":
-				return { status: "gray", text: "初始化中..." };
-			case "rebooting":
-				return { status: "gray", text: "重启中..." };
-			case "rebooted":
-				return { status: "green", text: "重启完成" };
-			default:
-				return { status: "gray", text: m.cloud_mode_unknown() };
-		}
+	function resolveOpenClawText(v: boolean | null): string {
+		return v == null
+			? m.cloud_mode_unknown()
+			: v
+				? m.cloud_mode_healthy()
+				: m.cloud_mode_unhealthy();
 	}
 
 	function handleActivate() {
@@ -69,8 +64,8 @@
 					>{m.agent_settings_instance_status()}</Label
 				>
 				<StatusIndicator
-					status={getHealthProps(state.status).status}
-					text={getHealthProps(state.status).text}
+					status={healthProps.status}
+					text={healthProps.text}
 					warningTooltip={m.cloud_mode_unhealthy()}
 				/>
 				<ButtonWithTooltip
@@ -86,23 +81,27 @@
 					>{m.cloud_mode_openclaw_status()}</Label
 				>
 				<StatusIndicator
-					status={openClaw.status ? "green" : "red"}
-					text={openClaw.status ? m.cloud_mode_healthy() : m.cloud_mode_unhealthy()}
+					status={resolveOpenClawStatus(openClaw.status)}
+					text={resolveOpenClawText(openClaw.status)}
 					warningTooltip={m.cloud_mode_unhealthy()}
 				/>
 			</div>
 			<div class="flex items-center gap-3">
 				<Label class="text-muted-foreground min-w-18 font-normal">接口状态</Label>
 				<StatusIndicator
-					status={openClaw.api_status ? "green" : "red"}
-					text={openClaw.api_status ? m.cloud_mode_healthy() : m.cloud_mode_unhealthy()}
+					status={resolveOpenClawStatus(openClaw.api_status)}
+					text={resolveOpenClawText(openClaw.api_status)}
 					warningTooltip={m.cloud_mode_unhealthy()}
 				/>
 			</div>
 		</div>
-		{#if state.expired}
+		{#if state.instanceName === ""}
 			<Button size="sm" onclick={handleActivate}>
 				{m.cloud_mode_activate_button()}
+			</Button>
+		{:else if state.expired}
+			<Button size="sm" onclick={handleActivate}>
+				{m.cloud_mode_renew_button()}
 			</Button>
 		{/if}
 	</div>
