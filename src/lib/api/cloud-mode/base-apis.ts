@@ -7,6 +7,8 @@ import {
 	initInstanceRequestSchema,
 	initInstanceResponseSchema,
 	listInstancesResponseSchema,
+	manualRenewRequestSchema,
+	manualRenewResponseSchema,
 	readFilesRequestSchema,
 	readFilesResponseSchema,
 	rebootInstanceRequestSchema,
@@ -25,9 +27,12 @@ import {
 	type CreateInstanceResponse,
 	type ExecCommandRequest,
 	type ExecCommandResponse,
+	type GetManualRenewChargeResponse,
 	type InitInstanceRequest,
 	type InitInstanceResponse,
 	type ListInstancesResponse,
+	type ManualRenewRequest,
+	type ManualRenewResponse,
 	type ReadFilesRequest,
 	type ReadFilesResponse,
 	type RebootInstanceRequest,
@@ -216,6 +221,106 @@ export async function updateAutoRenew(
 		throw error;
 	}
 }
+
+/**
+ * Manually renew a cloud instance.
+ * @throws 400 INSTANCE_RENEW_EXPIRED: Instance has been expired for more than 15 days and cannot be renewed
+ * @throws 409 INSTANCE_LOCKED: The same instance is being operated by another request
+ * @throws 500 SWAS_RENEW_INSTANCE_FAILED: Failed to renew the instance
+ * @throws 500 MANUAL_RENEW_FAILED: Failed to manually renew the instance
+ * @param request - Manual renew configuration parameters
+ * @returns Manual renew response
+ */
+export async function manualRenew(request: ManualRenewRequest): Promise<ManualRenewResponse> {
+	try {
+		const requestBody = manualRenewRequestSchema(request);
+		if (requestBody instanceof type.errors) {
+			logger.error("Failed to validate manual renew request:", requestBody.summary);
+			throw new Error("Invalid request format for manual renew");
+		}
+		const response = testKy.post("api/v1/instances/manual-renew", { json: requestBody }).json();
+
+		const validated = manualRenewResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate manual renew response:", validated.summary);
+			throw new Error("Invalid response format from manual renew API");
+		}
+		return validated;
+	} catch (error) {
+		logger.error("Failed to manual renew:", error);
+		throw error;
+	}
+}
+
+/**
+ * Query manual renewal charge records for a cloud instance.
+ * @param instanceName - Name of the instance to query
+ * @param page - Page number for pagination (default: 1)
+ * @param pageSize - Number of records per page (default: 20)
+ * @returns Paginated list of manual renewal charges
+ */
+export async function getManualRenewCharge(
+	instanceName: string,
+	page = 1,
+	pageSize = 20,
+): Promise<GetManualRenewChargeResponse> {
+	// Mock implementation for testing UI with large amount of data
+	await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network latency
+
+	const total = 45; // Total records
+	const totalPages = Math.ceil(total / pageSize);
+	const charges: GetManualRenewChargeResponse["charges"] = [];
+
+	const start = (page - 1) * pageSize;
+	const end = Math.min(start + pageSize, total);
+
+	for (let i = start; i < end; i++) {
+		const date = new Date();
+		date.setDate(date.getDate() - i);
+		charges.push({
+			amountCent: 1000 + i * 100, // Varying amount
+			chargedAt: date.toISOString(),
+			instanceName: `${instanceName}_${i}`,
+		});
+	}
+
+	return {
+		success: true,
+		pagination: {
+			page,
+			pageSize,
+			total,
+			totalPages,
+		},
+		charges,
+	};
+}
+
+/*
+export async function getManualRenewCharge(
+	instanceName: string,
+	page = 1,
+	pageSize = 20,
+): Promise<GetManualRenewChargeResponse> {
+	try {
+		const response = await testKy
+			.get(
+				`api/v1/instances/manual-renew/charges?instance_name=${encodeURIComponent(instanceName)}&page=${page}&page_size=${pageSize}`,
+			)
+			.json();
+
+		const validated = getManualRenewChargeResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate get manual renew charges response:", validated.summary);
+			throw new Error("Invalid response format from manual renew charges API");
+		}
+		return validated;
+	} catch (error) {
+		logger.error("Failed to get manual renew charges:", error);
+		throw error;
+	}
+}
+*/
 
 /**
  * Danger: Reboot the instance server (use sparingly).

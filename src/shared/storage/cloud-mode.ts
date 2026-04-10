@@ -173,7 +173,6 @@ export const updateInstanceAutoRenewRequestSchema = type({
 	is_auto_renew: data.isAutoRenew,
 }));
 export type UpdateInstanceAutoRenewRequest = typeof updateInstanceAutoRenewRequestSchema.inferIn;
-
 export const updateInstanceAutoRenewResponseSchema = type({
 	success: "boolean",
 	instance: {
@@ -188,6 +187,60 @@ export const updateInstanceAutoRenewResponseSchema = type({
 	},
 }));
 export type UpdateInstanceAutoRenewResponse = typeof updateInstanceAutoRenewResponseSchema.infer;
+
+export const manualRenewRequestSchema = type({
+	instanceName: "string",
+	isDev: "boolean",
+}).pipe((data) => ({
+	instance_name: data.instanceName,
+	is_dev: data.isDev,
+}));
+export type ManualRenewRequest = typeof manualRenewRequestSchema.inferIn;
+export const manualRenewResponseSchema = type({
+	success: "boolean",
+	instance: {
+		instance_name: "string",
+	},
+}).pipe((data) => ({
+	success: data.success,
+	instance: {
+		instanceName: data.instance.instance_name,
+	},
+}));
+export type ManualRenewResponse = typeof manualRenewResponseSchema.infer;
+
+export const manualRenewChargeItemSchema = type({
+	amount_cent: "number",
+	charged_at: "string",
+	instance_name: "string",
+}).pipe((data) => ({
+	amountCent: data.amount_cent,
+	chargedAt: data.charged_at,
+	instanceName: data.instance_name,
+}));
+
+export const manualRenewChargePaginationSchema = type({
+	page: "number",
+	page_size: "number",
+	total: "number",
+	total_pages: "number",
+}).pipe((data) => ({
+	page: data.page,
+	pageSize: data.page_size,
+	total: data.total,
+	totalPages: data.total_pages,
+}));
+
+export const getManualRenewChargeResponseSchema = type({
+	success: "boolean",
+	pagination: manualRenewChargePaginationSchema,
+	charges: manualRenewChargeItemSchema.array(),
+}).pipe((data) => ({
+	success: data.success,
+	pagination: data.pagination,
+	charges: data.charges,
+}));
+export type GetManualRenewChargeResponse = typeof getManualRenewChargeResponseSchema.infer;
 
 export const readFilesRequestSchema = type({
 	instanceName: "string",
