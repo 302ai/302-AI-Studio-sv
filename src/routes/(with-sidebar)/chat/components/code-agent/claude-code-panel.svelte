@@ -215,7 +215,7 @@
 						class="text-primary hover:underline hover:underline-offset-2 cursor-pointer"
 						onclick={() => {
 							windowService.handleOpenSettingsWindow(
-								"/settings/agent-settings/platform",
+								"/settings/agent-settings/openclaw",
 							);
 						}}
 						>{m.link_manage_sandbox()}

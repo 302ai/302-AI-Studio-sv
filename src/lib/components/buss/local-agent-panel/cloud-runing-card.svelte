@@ -38,7 +38,7 @@
 
 	function handleActivate() {
 		window.electronAPI.windowService.handleOpenSettingsWindow(
-			"/settings/agent-settings/platform?platform=cloud",
+			"/settings/agent-settings/openclaw?platform=cloud",
 		);
 	}
 </script>

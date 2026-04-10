@@ -3,6 +3,6 @@
 	import { onMount } from "svelte";
 
 	onMount(() => {
-		goto("/settings/agent-settings/platform");
+		goto("/settings/agent-settings/openclaw");
 	});
 </script>

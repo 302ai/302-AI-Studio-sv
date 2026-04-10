@@ -25,6 +25,8 @@ import {
 	type CreateInstanceResponse,
 	type ExecCommandRequest,
 	type ExecCommandResponse,
+	type ExecStreamEvent,
+	type ExecStreamRequest,
 	type InitInstanceRequest,
 	type InitInstanceResponse,
 	type ListInstancesResponse,
@@ -384,5 +386,94 @@ export async function getSandboxHealthStatus(
 			logger.error("[getSandboxHealthStatus] Health check failed:", error);
 		}
 		throw error;
+	}
+}
+
+/**
+ * Execute a command on a cloud instance with streaming output.
+ * Server sends NDJSON lines: {"event": "output", "run_id": ..., "text": ...}
+ *
+ * @param publicInfo - Instance public IP and port
+ * @param request - Command execution parameters
+ * @param onEvent - Callback invoked for each streaming event
+ * @param options.signal - Optional AbortSignal to cancel the stream mid-flight
+ * @param options.onDone - Optional callback when stream finishes naturally
+ * @param options.onError - Optional callback on stream error
+ */
+export async function execCommandStream(
+	publicInfo: { ip: string; port: number },
+	request: ExecStreamRequest,
+	onEvent: (event: ExecStreamEvent) => void,
+	options?: {
+		signal?: AbortSignal;
+		onDone?: () => void;
+		onError?: (error: Error) => void;
+	},
+): Promise<void> {
+	try {
+		const response = await testKy(
+			new URL(`http://${publicInfo.ip}:${publicInfo.port}/302/claude-code/commands/stream`),
+			{
+				method: "POST",
+				json: request,
+				timeout: false,
+				signal: options?.signal,
+			},
+		);
+
+		const reader = response.body?.getReader();
+		if (!reader) throw new Error("No response body stream");
+
+		const decoder = new TextDecoder();
+		let buffer = "";
+
+		try {
+			while (true) {
+				const { done, value } = await reader.read();
+				if (done) break;
+
+				buffer += decoder.decode(value, { stream: true });
+
+				const lines = buffer.split("\n");
+				buffer = lines.pop() ?? "";
+
+				for (const line of lines) {
+					const trimmed = line.trim().replace(/^data:\s*/, "");
+					if (!trimmed) continue;
+
+					try {
+						const event = JSON.parse(trimmed) as ExecStreamEvent;
+						onEvent(event);
+					} catch (_parseError) {
+						logger.warn("[execCommandStream] Failed to parse line:", trimmed);
+					}
+				}
+			}
+
+			// Process any remaining data in the buffer
+			if (buffer.trim()) {
+				try {
+					const event = JSON.parse(buffer.trim()) as ExecStreamEvent;
+					onEvent(event);
+				} catch {
+					logger.warn("[execCommandStream] Failed to parse final buffer:", buffer);
+				}
+			}
+
+			options?.onDone?.();
+		} finally {
+			reader.releaseLock();
+		}
+	} catch (error) {
+		if (error instanceof DOMException && error.name === "AbortError") {
+			logger.debug("[execCommandStream] Stream aborted by user");
+			options?.onDone?.();
+			return;
+		}
+
+		const err = error instanceof Error ? error : new Error(String(error));
+		logger.error("[execCommandStream] Stream error:", err);
+		options?.onError?.(err);
+		throw err;
 	}
 }

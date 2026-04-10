@@ -1,13 +1,14 @@
-import { isWin } from "@electron/main/constants";
 import { createLogger } from "@shared/logger";
 
-import { SUPPORTED_CHANNELS, WIN_SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
+import { readInstanceFiles, restartDocker } from "@electron/main/apis/cloud-mode";
+import { SUPPORTED_CHANNELS } from "@shared/storage/code-agent";
 import { type IpcMainInvokeEvent } from "electron";
 import { isNil } from "es-toolkit";
 import { get, isUndefined, merge, pick, set } from "es-toolkit/compat";
 import fs from "fs/promises";
 import { getOpenClawConfigPath, getRuntimeComposeDir } from "../../utils/local-vibe-utils";
 import { localVibeService } from "../local-vibe-service";
+import { cloudModeStorage } from "../storage-service/cloud-mode/cloud-mode-storage";
 import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent";
 import { openClawConfigStorage } from "../storage-service/openclaw/openclaw-config-storage";
 import { tabService } from "../tab-service";
@@ -116,12 +117,35 @@ export class OpenClawService {
 			this.getOpenClawConfig("channels"),
 		]);
 
-		const filteredData = pick(
-			configs.data,
-			isWin ? WIN_SUPPORTED_CHANNELS : SUPPORTED_CHANNELS,
-		);
+		const filteredData = pick(configs.data, SUPPORTED_CHANNELS);
 
 		await this.setOpenClawConfig("channels", merge(channels, filteredData));
+	}
+
+	async applyCloudClawChannelConfig(_event: IpcMainInvokeEvent) {
+		const { instanceName } = await cloudModeStorage.getCloudModeInstance();
+		const [config, res] = await Promise.all([
+			codeAgentGlobalConfigsStorage.getGlobalConfigs(),
+			readInstanceFiles({
+				instanceName,
+				filePaths: ["/home/user/.openclaw/openclaw.json"],
+			}),
+		]);
+
+		if (!res.success) {
+			return;
+		}
+
+		const { fileContent: cloudFile } = res.files[0];
+		const cloudConfig = JSON.parse(cloudFile) as Record<string, unknown>;
+
+		const filteredData = pick(config.data, SUPPORTED_CHANNELS);
+
+		cloudConfig["channels"] = merge(cloudConfig["channels"], filteredData);
+		await restartDocker({
+			instanceName,
+			openclawConfigContent: JSON.stringify(cloudConfig),
+		});
 	}
 
 	/**

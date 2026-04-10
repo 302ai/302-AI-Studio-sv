@@ -5,16 +5,14 @@
 	let {
 		confirmDialogOpen = $bindable(false),
 		applyConfigLoading = $bindable(false),
-		handleConfirmDialogOk,
+		handleLocalConfirmDialogOk = undefined,
+		handleCloudConfirmDialogOk = undefined,
 	}: {
 		confirmDialogOpen: boolean;
 		applyConfigLoading: boolean;
-		handleConfirmDialogOk: () => void;
+		handleLocalConfirmDialogOk?: () => void;
+		handleCloudConfirmDialogOk?: () => void;
 	} = $props();
-
-	const handleDialogOk = () => {
-		handleConfirmDialogOk();
-	};
 </script>
 
 <AlertDialog.Root bind:open={confirmDialogOpen}>
@@ -28,12 +26,28 @@
 
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
-			<AlertDialog.Action onclick={handleDialogOk} disabled={applyConfigLoading}>
-				{#if applyConfigLoading}
-					<LoaderCircle class="h-4 w-4 animate-spin" />
-				{/if}
-				{m.open_claw_update()}
-			</AlertDialog.Action>
+			{#if handleLocalConfirmDialogOk}
+				<AlertDialog.Action
+					onclick={handleLocalConfirmDialogOk}
+					disabled={applyConfigLoading}
+				>
+					{#if applyConfigLoading}
+						<LoaderCircle class="h-4 w-4 animate-spin" />
+					{/if}
+					{m.open_claw_update()}本地
+				</AlertDialog.Action>
+			{/if}
+			{#if handleLocalConfirmDialogOk}
+				<AlertDialog.Action
+					onclick={handleCloudConfirmDialogOk}
+					disabled={applyConfigLoading}
+				>
+					{#if applyConfigLoading}
+						<LoaderCircle class="h-4 w-4 animate-spin" />
+					{/if}
+					{m.open_claw_update()}云主机
+				</AlertDialog.Action>
+			{/if}
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

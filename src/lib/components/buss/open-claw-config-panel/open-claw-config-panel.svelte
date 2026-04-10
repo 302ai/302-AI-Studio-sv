@@ -19,7 +19,7 @@
 	import { RefreshCw } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import SettingInputField from "../settings/setting-input-field.svelte";
-	import Wechat from "./channel/wechat.svelte";
+	import Wechat from "./channel/wechat/wechat.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
 	import { ApplyOpenClawChannelConfigConfirm } from "./hooks";
 
@@ -51,7 +51,7 @@
 		botToken: codeAgentGlobalConfigsState.discord.token,
 	});
 
-	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
+	let { handleConfirmDialogOk: handleLocalConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
 		prepareAction: async () => {
 			await codeAgentGlobalConfigsState
 				.batchUpdater()
@@ -67,6 +67,27 @@
 				.update("discord", { token: localDiscord.botToken })
 				.apply();
 			await window.electronAPI.openClawService.applyOpenClawChannelConfig();
+		},
+		open: (v) => (confirmDialogOpen = v),
+		loading: (v) => (applyConfigLoading = v),
+	});
+
+	let { handleConfirmDialogOk: handleCloudConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
+		prepareAction: async () => {
+			await codeAgentGlobalConfigsState
+				.batchUpdater()
+				.update("feishu", localFeishu)
+				.update("dingtalk", localDingtalk)
+				.update("qqbot", localQqbot)
+				.update("wecom", localWecom)
+				.update("telegram", {
+					accounts: {
+						default: { botToken: localTelegram.botToken },
+					},
+				})
+				.update("discord", { token: localDiscord.botToken })
+				.apply();
+			await window.electronAPI.openClawService.applyCloudClawChannelConfig();
 		},
 		open: (v) => (confirmDialogOpen = v),
 		loading: (v) => (applyConfigLoading = v),
@@ -349,4 +370,9 @@
 	</AccordionItem>
 </Accordion>
 
-<ConfirmDialog bind:confirmDialogOpen bind:applyConfigLoading {handleConfirmDialogOk} />
+<ConfirmDialog
+	bind:confirmDialogOpen
+	bind:applyConfigLoading
+	{handleLocalConfirmDialogOk}
+	{handleCloudConfirmDialogOk}
+/>

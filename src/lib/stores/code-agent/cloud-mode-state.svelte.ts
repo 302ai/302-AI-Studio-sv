@@ -137,6 +137,18 @@ class CloudModeStateManager {
 			status: instance.status,
 			autoRenew: instance.autoRenew,
 		});
+
+		return {
+			instanceName: instance.instanceName,
+			publicIp: instance.publicIp,
+			createdAt: instance.createdAt,
+			expiredAt: instance.expiredAt,
+			expired: instance.expired,
+			apiPort: instance.apiPort,
+			ocPort: instance.ocPort,
+			status: instance.status,
+			autoRenew: instance.autoRenew,
+		};
 	}
 
 	async loadStatus() {

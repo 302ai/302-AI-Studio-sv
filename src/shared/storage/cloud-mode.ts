@@ -278,3 +278,21 @@ export const sandboxHealthResponse = type({
 });
 
 export type SandboxHealthResponse = typeof sandboxHealthResponse.infer;
+
+/** A single streaming event from execCommandStream */
+export const execStreamEvent = type({
+	"event?": "string",
+	run_id: "string",
+	text: "string",
+});
+
+export type ExecStreamEvent = typeof execStreamEvent.infer;
+
+/** Request body for execCommandStream, mirrors the server's CommandRequest model */
+export const execStreamRequest = type({
+	command: "string",
+	cwd: "string?",
+	env: "Record<string, string>?",
+	timeout: "number?",
+});
+export type ExecStreamRequest = typeof execStreamRequest.infer;

@@ -152,4 +152,8 @@
 	</AccordionItem>
 </Accordion>
 
-<ConfirmDialog bind:confirmDialogOpen bind:applyConfigLoading {handleConfirmDialogOk} />
+<ConfirmDialog
+	bind:confirmDialogOpen
+	bind:applyConfigLoading
+	handleLocalConfirmDialogOk={() => handleConfirmDialogOk}
+/>

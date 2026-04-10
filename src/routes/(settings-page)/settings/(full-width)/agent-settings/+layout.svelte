@@ -20,6 +20,12 @@
 			label: m.agent_settings_tab_platform(),
 		},
 		{
+			id: "openclaw",
+			name: "openclaw",
+			href: "/settings/agent-settings/openclaw",
+			label: "Open Claw配置",
+		},
+		{
 			id: "other",
 			name: "other",
 			href: "/settings/agent-settings/other",
