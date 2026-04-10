@@ -11,10 +11,9 @@
 	import { cn } from "$lib/utils";
 	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
 	import { format, parseISO } from "date-fns";
-	import { onDestroy, onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
-	let { state, openClaw, loading } = $derived(cloudModeState);
+	let { state, openClaw, loading } = $derived(cloudModeState.init());
 
 	type StatusProps = { status: "green" | "red" | "gray"; text: string };
 
@@ -37,18 +36,6 @@
 		if (!iso) return "--";
 		return format(parseISO(iso), "yyyy-MM-dd");
 	}
-
-	onMount(() => {
-		try {
-			cloudModeState.initStatus();
-		} catch (e) {
-			toast.error("云端环境状态加载失败，请稍后重试" + e);
-		}
-	});
-
-	onDestroy(() => {
-		cloudModeState.dispose();
-	});
 
 	async function handleAutoRenewChange(checked: boolean) {
 		try {

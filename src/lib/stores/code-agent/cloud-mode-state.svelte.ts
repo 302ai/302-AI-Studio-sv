@@ -7,6 +7,8 @@ import {
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { createLogger } from "@shared/logger";
 import type { InstanceInfo } from "@shared/storage/cloud-mode";
+import { onDestroy, onMount } from "svelte";
+import { toast } from "svelte-sonner";
 
 const logger = createLogger("state");
 
@@ -59,6 +61,22 @@ class CloudModeStateManager {
 		window.electronAPI.cloudMode.onTimedBroadcaster(() => {
 			this.loadStatus();
 		});
+	}
+
+	init() {
+		onMount(() => {
+			try {
+				cloudModeState.initStatus();
+			} catch (e) {
+				toast.error("云端环境状态加载失败，请稍后重试" + e);
+			}
+		});
+
+		onDestroy(() => {
+			cloudModeState.dispose();
+		});
+
+		return this;
 	}
 
 	#updateState(partial: Partial<InstanceInfo>): void {
