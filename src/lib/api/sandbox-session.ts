@@ -20,7 +20,7 @@ const logger = createLogger("apis");
  * Strip `sandbox_id` in local mode (local sandbox doesn't use it).
  */
 function buildParams<T extends { sandbox_id: string }>(params: T): Omit<T, "sandbox_id"> | T {
-	if (codeAgentState.type === "local") {
+	if (["local", "cloud"].includes(codeAgentState.type)) {
 		const { sandbox_id: _, ...rest } = params;
 		return rest;
 	}

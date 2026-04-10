@@ -1494,6 +1494,8 @@
 	"open_claw_wechat_qrcode_fetch_failed": "获取微信二维码失败",
 	"open_claw_channel_wechat": "微信",
 	"open_claw_wechat_scan_qrcode_hint": "使用微信扫描二维码",
+	"open_claw_wechat_scan_qrcode_hint_local": "使用微信扫描二维码-本地",
+	"open_claw_wechat_scan_qrcode_hint_cloud": "使用微信扫描二维码-云主机",
 	"open_claw_wechat_install_plugin": "安装插件",
 	"open_claw_wechat_install_restart_gateway": "安装插件将会重启网关",
 	"open_claw_wechat_install_failed_retry": "微信插件安装失败，请重试",

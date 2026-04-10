@@ -2,7 +2,6 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import PodmanCard from "$lib/components/buss/local-agent-panel/podman-card.svelte";
 	import SandboxCard from "$lib/components/buss/local-agent-panel/sandbox-card.svelte";
-	import OpenClawConfigPanel from "$lib/components/buss/open-claw-config-panel/open-claw-config-panel.svelte";
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Empty from "$lib/components/ui/empty/index.js";
 	import { Input } from "$lib/components/ui/input";
@@ -61,10 +60,6 @@
 </script>
 
 <div class="gap-settings-gap flex flex-col">
-	<section class="space-y-4">
-		<OpenClawConfigPanel />
-	</section>
-
 	<!-- Section 1: Environment Monitoring -->
 	<section class="space-y-4">
 		<Label class="text-label-fg font-normal">{m.local_platform_environment_monitoring()}</Label>

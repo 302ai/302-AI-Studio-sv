@@ -18,11 +18,11 @@
 	</AccordionTrigger>
 	<AccordionContent class="pb-0 pt-2 space-y-2">
 		<ChannelQrLoginPanel
-			label={m.open_claw_wechat_scan_qrcode_hint() + "-本地"}
+			label={m.open_claw_wechat_scan_qrcode_hint_local()}
 			service={localChannelService}
 		/>
 		<ChannelQrLoginPanel
-			label={m.open_claw_wechat_scan_qrcode_hint() + "-云主机"}
+			label={m.open_claw_wechat_scan_qrcode_hint_cloud()}
 			service={cloudChannelService}
 		/>
 	</AccordionContent>

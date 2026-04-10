@@ -1492,6 +1492,8 @@
 	"open_claw_wechat_qrcode_fetch_failed": "Failed to get WeChat QR code",
 	"open_claw_channel_wechat": "WeChat",
 	"open_claw_wechat_scan_qrcode_hint": "Scan the QR code with WeChat",
+	"open_claw_wechat_scan_qrcode_hint_local": "Scan the QR code with WeChat - Local",
+	"open_claw_wechat_scan_qrcode_hint_cloud": "Scan the QR code with WeChat - Cloud",
 	"open_claw_wechat_install_plugin": "Install plugin",
 	"open_claw_wechat_install_restart_gateway": "Installing the plugin will restart the gateway",
 	"open_claw_wechat_install_failed_retry": "WeChat plugin installation failed, please try again",

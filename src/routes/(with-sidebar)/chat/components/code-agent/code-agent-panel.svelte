@@ -54,6 +54,7 @@
 	import { type CodeAgentType } from "@shared/storage/code-agent";
 
 	import OpenClawChannelPanel from "$lib/components/buss/open-claw-config-panel/open-claw-channel-panel.svelte";
+	import { cloudModeSessionsState } from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
 	import ClaudeCodePanel from "./claude-code-panel.svelte";
@@ -97,7 +98,7 @@
 			})
 			.with("cloud", () => {
 				const sessionId = codeAgentState.currentSessionId;
-				const currentSession = localClaudeCodeSandboxState.sessions.find(
+				const currentSession = cloudModeSessionsState.sessions.find(
 					(s) => s.session_id === sessionId,
 				);
 				return currentSession?.note ?? currentSession?.session_id ?? m.title_new_chat();
