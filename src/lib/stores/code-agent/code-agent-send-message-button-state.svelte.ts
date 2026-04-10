@@ -5,6 +5,7 @@ import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
 import { chatState } from "../chat-state.svelte";
 import { mcpState } from "../mcp-state.svelte";
+import { cloudModeState } from "./cloud-mode-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
 import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
 import { localEnvState } from "./local-env-state.svelte";
@@ -170,6 +171,23 @@ class CodeAgentSendMessageButtonState {
 			if (!localSandboxResult.isOk) {
 				toast.error(m.code_agent_local_sandbox_start_failed());
 				return;
+			}
+
+			// Ensure cloud base URL is initialized if in cloud mode
+			if (codeAgentState.type === "cloud") {
+				if (cloudModeState.state.status === "running") {
+					const { isOk, baseUrl } =
+						await window.electronAPI.cloudModeService.getCloudModeInstanceBaseUrlByIpc();
+					if (isOk && baseUrl) {
+						codeAgentState.cloudBaseUrl = baseUrl + "/api/v1";
+					} else {
+						toast.error(m.code_agent_cloud_instance_not_running());
+						return;
+					}
+				} else {
+					toast.error(m.code_agent_cloud_instance_not_running());
+					return;
+				}
 			}
 
 			if (

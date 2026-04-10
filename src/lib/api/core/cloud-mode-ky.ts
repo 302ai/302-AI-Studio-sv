@@ -7,7 +7,7 @@ export async function createCloudModeKy() {
 	const { baseUrl } =
 		await window.electronAPI.cloudModeService.getCloudModeInstanceBaseUrlByIpc();
 	return ky.create({
-		timeout: 60000,
+		timeout: 180000,
 		prefixUrl: baseUrl,
 		headers: {
 			"HTTP-Referer": "https://studio.302.ai/",

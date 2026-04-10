@@ -6,7 +6,7 @@ import ky from "ky";
 const userAgent = getCustomUserAgentFragment();
 
 export const cloudModeKy = ky.create({
-	timeout: 60000,
+	timeout: 180000,
 	prefixUrl: "http://placeholder:3000",
 	headers: {
 		"User-Agent": userAgent,
