@@ -2,6 +2,7 @@
 	import { getManualRenewCharge } from "$lib/api/cloud-mode/base-apis";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import StatusIndicator from "$lib/components/buss/local-agent-panel/status-indicator.svelte";
+	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import * as Pagination from "$lib/components/ui/pagination/index.js";
@@ -19,7 +20,7 @@
 
 	const logger = createLogger("ui");
 
-	let { state: cloudState, openClaw, loading } = $derived(cloudModeState.init());
+	let { state: cloudState, openClaw, loading, healthProps } = $derived(cloudModeState.init());
 
 	let charges: GetManualRenewChargeResponse["charges"] = $state([]);
 	let chargesPagination: GetManualRenewChargeResponse["pagination"] = $state({
@@ -30,16 +31,15 @@
 	});
 	let isLoadingCharges = $state(false);
 	let hasInitialized = $state(false);
+	let showConfirmDialog = $state(false);
+
+	let isRenewal = $derived(!!cloudState.instanceName);
 
 	async function fetchCharges(p1 = 1) {
 		if (!cloudState.instanceName) return;
 		isLoadingCharges = true;
 		try {
-			const res = await getManualRenewCharge(
-				cloudState.instanceName,
-				p1,
-				chargesPagination.pageSize,
-			);
+			const res = await getManualRenewCharge(p1, chargesPagination.pageSize);
 			charges = res.charges;
 			chargesPagination = res.pagination;
 		} catch (e) {
@@ -91,10 +91,22 @@
 	}
 
 	async function handleAutoRenewChange(checked: boolean) {
+		if (!cloudState.instanceName || cloudState.expired) return;
 		try {
 			await cloudModeState.updateAutoRenew(checked);
 		} catch (e) {
 			toast.error(m.cloud_mode_auto_renew_error() + e);
+		}
+	}
+
+	async function handleConfirmCreateOrRenew() {
+		try {
+			await cloudModeState.createInstance();
+			showConfirmDialog = false;
+		} catch (e) {
+			toast.error(
+				(isRenewal ? m.cloud_mode_renew_failed() : m.cloud_mode_create_failed()) + e,
+			);
 		}
 	}
 </script>
@@ -150,8 +162,8 @@
 								>{m.agent_settings_instance_status()}</Label
 							>
 							<StatusIndicator
-								status={getHealthProps(cloudState.status).status}
-								text={getHealthProps(cloudState.status).text}
+								status={healthProps.status}
+								text={healthProps.text}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 						</div>
@@ -207,53 +219,49 @@
 		{:else}
 			<h2 class="text-sm font-medium">{m.cloud_mode_subscription_info()}</h2>
 			<div class="rounded-lg border p-5 space-y-5">
-				<div class="flex justify-between items-center w-full">
-					<h3 class="text-base font-semibold">{cloudState.instanceName}</h3>
-					{#if cloudState.expired}
-						<Button size="sm" onclick={() => void 0}>
-							{#if loading.startVip}
-								<LoaderCircle class="h-4 w-4 animate-spin" />
-							{/if}
-							{m.cloud_mode_activate_button()}
-						</Button>
-					{:else}
-						<Button size="sm" onclick={() => {}}>
-							{#if loading.startVip}
-								<LoaderCircle class="h-4 w-4 animate-spin" />
-							{:else}
-								{m.cloud_mode_renew_button()}
-							{/if}
-						</Button>
-					{/if}
-				</div>
-				<div class="flex justify-between items-end">
+				<div class="flex justify-between items-end w-full">
 					<div class="space-y-1">
-						{#if !cloudState.expired}
-							<p class="text-sm text-muted-foreground">
-								{m.cloud_mode_created_at()}：{formatDate(cloudState.createdAt)}
-							</p>
-							<p class="text-sm text-muted-foreground">
-								{m.cloud_mode_expired_at()}：{formatDate(cloudState.expiredAt)}
-							</p>
-						{:else}
-							<p class="text-sm text-muted-foreground">
-								{m.cloud_mode_no_instance()}
-							</p>
-						{/if}
+						<p class="text-sm text-muted-foreground">
+							{m.cloud_mode_instance_name()}：{cloudState.instanceName
+								? cloudState.expired
+									? m.cloud_mode_expired()
+									: cloudState.instanceName
+								: m.cloud_mode_not_activated()}
+						</p>
+						<p class="text-sm text-muted-foreground">
+							{m.cloud_mode_created_at()}：{cloudState.createdAt
+								? formatDate(cloudState.createdAt)
+								: m.cloud_mode_unknown()}
+						</p>
+						<p class="text-sm text-muted-foreground">
+							{m.cloud_mode_expired_at()}：{cloudState.expiredAt
+								? formatDate(cloudState.expiredAt)
+								: m.cloud_mode_unknown()}
+						</p>
 					</div>
-					<div class="flex items-center">
-						{#if loading.autoRenew}
-							<LoaderCircle class="h-4 w-4 animate-spin" />
-						{/if}
-						<Switch
-							disabled={loading.autoRenew}
-							checked={cloudState.autoRenew}
-							onCheckedChange={handleAutoRenewChange}
-							class="data-[state=checked]:bg-primary cursor-pointer"
-						/>
-						<span class="text-sm text-muted-foreground ml-2"
-							>{m.cloud_mode_auto_renew()}</span
-						>
+					<div class="flex flex-col items-end gap-3">
+						<Button size="sm" onclick={() => (showConfirmDialog = true)}>
+							{#if loading.createOrRenew}
+								<LoaderCircle class="h-4 w-4 animate-spin" />
+							{/if}
+							{isRenewal
+								? m.cloud_mode_renew_button()
+								: m.cloud_mode_activate_button()}
+						</Button>
+						<div class="flex items-center gap-2">
+							<Switch
+								disabled={loading.autoRenew}
+								checked={cloudState.autoRenew}
+								onCheckedChange={handleAutoRenewChange}
+								class="data-[state=checked]:bg-primary cursor-pointer"
+							/>
+							<span class="text-sm text-muted-foreground flex items-center gap-2">
+								{m.cloud_mode_auto_renew()}
+								{#if loading.autoRenew}
+									<LoaderCircle class="h-4 w-4 animate-spin" />
+								{/if}
+							</span>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -352,3 +360,29 @@
 		</div>
 	</div>
 </div>
+
+<AlertDialog.Root bind:open={showConfirmDialog}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>
+				{isRenewal
+					? m.cloud_mode_renew_confirm_title()
+					: m.cloud_mode_activate_confirm_title()}
+			</AlertDialog.Title>
+			<AlertDialog.Description>
+				{isRenewal
+					? m.cloud_mode_renew_confirm_desc()
+					: m.cloud_mode_activate_confirm_desc()}
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
+			<AlertDialog.Action onclick={handleConfirmCreateOrRenew}>
+				{#if loading.createOrRenew}
+					<LoaderCircle class="h-4 w-4 animate-spin" />
+				{/if}
+				{m.cloud_mode_confirm()}
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>

@@ -958,6 +958,13 @@
 	"cloud_mode_expired_at": "Expires",
 	"cloud_mode_auto_renew": "Auto Renew",
 	"cloud_mode_renew_button": "Renew",
+	"cloud_mode_activate_confirm_title": "Activate Cloud Instance",
+	"cloud_mode_renew_confirm_title": "Renew Cloud Instance",
+	"cloud_mode_activate_confirm_desc": "Confirm activating cloud instance? Cost: 20ptc.",
+	"cloud_mode_renew_confirm_desc": "Confirm renewing cloud instance? Cost: 20ptc.",
+	"cloud_mode_confirm": "Confirm",
+	"cloud_mode_create_failed": "Activation failed: ",
+	"cloud_mode_renew_failed": "Renewal failed: ",
 	"cloud_mode_api_test": "API Test (Debug)",
 	"cloud_mode_no_instances_found": "No instances found",
 	"toast_code_agent_model_change_failed": "Failed to replace sandbox model",
@@ -1520,5 +1527,7 @@
 	"agent_settings_tab_other": "Other",
 	"agent_settings_notifications_section": "Notifications",
 	"agent_settings_deploy_section": "Deploy",
-	"code_agent_cloud_instance_not_running": "The cloud machine instance is not ready yet"
+	"code_agent_cloud_instance_not_running": "The cloud machine instance is not ready yet",
+	"cloud_mode_expired": "Expired",
+	"cloud_mode_instance_name": "Instance Name"
 }

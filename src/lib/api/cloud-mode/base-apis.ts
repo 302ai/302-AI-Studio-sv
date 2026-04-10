@@ -4,6 +4,7 @@ import {
 	createInstanceResponseSchema,
 	execCommandRequestSchema,
 	execCommandResponseSchema,
+	getManualRenewChargeResponseSchema,
 	initInstanceRequestSchema,
 	initInstanceResponseSchema,
 	listInstancesResponseSchema,
@@ -252,6 +253,43 @@ export async function manualRenew(request: ManualRenewRequest): Promise<ManualRe
 	}
 }
 
+// export async function getManualRenewCharge(
+// 	instanceName: string,
+// 	page = 1,
+// 	pageSize = 20,
+// ): Promise<GetManualRenewChargeResponse> {
+// 	// Mock implementation for testing UI with large amount of data
+// 	await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network latency
+
+// 	const total = 45; // Total records
+// 	const totalPages = Math.ceil(total / pageSize);
+// 	const charges: GetManualRenewChargeResponse["charges"] = [];
+
+// 	const start = (page - 1) * pageSize;
+// 	const end = Math.min(start + pageSize, total);
+
+// 	for (let i = start; i < end; i++) {
+// 		const date = new Date();
+// 		date.setDate(date.getDate() - i);
+// 		charges.push({
+// 			amountCent: 1000 + i * 100, // Varying amount
+// 			chargedAt: date.toISOString(),
+// 			instanceName: `${instanceName}_${i}`,
+// 		});
+// 	}
+
+// 	return {
+// 		success: true,
+// 		pagination: {
+// 			page,
+// 			pageSize,
+// 			total,
+// 			totalPages,
+// 		},
+// 		charges,
+// 	};
+// }
+
 /**
  * Query manual renewal charge records for a cloud instance.
  * @param instanceName - Name of the instance to query
@@ -260,58 +298,20 @@ export async function manualRenew(request: ManualRenewRequest): Promise<ManualRe
  * @returns Paginated list of manual renewal charges
  */
 export async function getManualRenewCharge(
-	instanceName: string,
-	page = 1,
-	pageSize = 20,
-): Promise<GetManualRenewChargeResponse> {
-	// Mock implementation for testing UI with large amount of data
-	await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate network latency
-
-	const total = 45; // Total records
-	const totalPages = Math.ceil(total / pageSize);
-	const charges: GetManualRenewChargeResponse["charges"] = [];
-
-	const start = (page - 1) * pageSize;
-	const end = Math.min(start + pageSize, total);
-
-	for (let i = start; i < end; i++) {
-		const date = new Date();
-		date.setDate(date.getDate() - i);
-		charges.push({
-			amountCent: 1000 + i * 100, // Varying amount
-			chargedAt: date.toISOString(),
-			instanceName: `${instanceName}_${i}`,
-		});
-	}
-
-	return {
-		success: true,
-		pagination: {
-			page,
-			pageSize,
-			total,
-			totalPages,
-		},
-		charges,
-	};
-}
-
-/*
-export async function getManualRenewCharge(
-	instanceName: string,
 	page = 1,
 	pageSize = 20,
 ): Promise<GetManualRenewChargeResponse> {
 	try {
 		const response = await testKy
-			.get(
-				`api/v1/instances/manual-renew/charges?instance_name=${encodeURIComponent(instanceName)}&page=${page}&page_size=${pageSize}`,
-			)
+			.get(`api/v1/instances/manual-renew/charges?page=${page}&page_size=${pageSize}`)
 			.json();
 
 		const validated = getManualRenewChargeResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate get manual renew charges response:", validated.summary);
+			logger.error(
+				"Failed to validate get manual renew charges response:",
+				validated.summary,
+			);
 			throw new Error("Invalid response format from manual renew charges API");
 		}
 		return validated;
@@ -320,7 +320,6 @@ export async function getManualRenewCharge(
 		throw error;
 	}
 }
-*/
 
 /**
  * Danger: Reboot the instance server (use sparingly).
@@ -364,7 +363,6 @@ export async function updateInstanceAutoRenew(
 			logger.error("Failed to validate update auto renew request:", requestBody.summary);
 			throw new Error("Invalid request format for update auto renew");
 		}
-		// const kyInstance = await testKy();
 		const response = await testKy("api/v1/instances/auto-renew", {
 			method: "POST",
 			json: requestBody,

@@ -17,24 +17,7 @@
 	import { cn } from "tailwind-variants";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 
-	let { state, openClaw, loading } = $derived(cloudModeState.init());
-
-	type StatusProps = { status: "green" | "red" | "gray"; text: string };
-
-	function getHealthProps(s: "running" | "waiting_init" | "rebooting" | "rebooted"): StatusProps {
-		switch (s) {
-			case "running":
-				return { status: "green", text: m.cloud_mode_healthy() };
-			case "waiting_init":
-				return { status: "gray", text: "初始化中..." };
-			case "rebooting":
-				return { status: "gray", text: "重启中..." };
-			case "rebooted":
-				return { status: "green", text: "重启完成" };
-			default:
-				return { status: "gray", text: m.cloud_mode_unknown() };
-		}
-	}
+	let { state, openClaw, loading, healthProps } = $derived(cloudModeState.init());
 
 	function resolveOpenClawStatus(v: boolean | null): "green" | "red" | "gray" {
 		return v == null ? "gray" : v ? "green" : "red";
@@ -81,8 +64,8 @@
 					>{m.agent_settings_instance_status()}</Label
 				>
 				<StatusIndicator
-					status={getHealthProps(state.status).status}
-					text={getHealthProps(state.status).text}
+					status={healthProps.status}
+					text={healthProps.text}
 					warningTooltip={m.cloud_mode_unhealthy()}
 				/>
 				<ButtonWithTooltip
@@ -112,9 +95,13 @@
 				/>
 			</div>
 		</div>
-		{#if state.expired}
+		{#if state.instanceName === ""}
 			<Button size="sm" onclick={handleActivate}>
 				{m.cloud_mode_activate_button()}
+			</Button>
+		{:else if state.expired}
+			<Button size="sm" onclick={handleActivate}>
+				{m.cloud_mode_renew_button()}
 			</Button>
 		{/if}
 	</div>

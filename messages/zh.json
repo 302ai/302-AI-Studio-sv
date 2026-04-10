@@ -936,7 +936,6 @@
 	"cloud_mode_unhealthy": "异常",
 	"cloud_mode_openclaw_status": "OpenClaw",
 	"cloud_mode_running": "运行中",
-	"cloud_mode_activate_button": "开通",
 	"cloud_mode_cloud": "云端",
 	"cloud_mode_cloud_description": "远程运行，托管运行",
 	"cloud_mode_restart_docker": "重启 OpenClaw",
@@ -961,6 +960,14 @@
 	"cloud_mode_expired_at": "到期日期",
 	"cloud_mode_auto_renew": "自动续费",
 	"cloud_mode_renew_button": "续费",
+	"cloud_mode_activate_button": "开通",
+	"cloud_mode_activate_confirm_title": "开通云主机",
+	"cloud_mode_renew_confirm_title": "续费云主机",
+	"cloud_mode_activate_confirm_desc": "确认开通云主机实例？费用：20ptc。",
+	"cloud_mode_renew_confirm_desc": "确认续费云主机实例？续费后将延长使用期限。",
+	"cloud_mode_confirm": "确认",
+	"cloud_mode_create_failed": "开通失败：",
+	"cloud_mode_renew_failed": "续费失败：",
 	"cloud_mode_api_test": "API 测试（调试用）",
 	"cloud_mode_no_instances_found": "未找到实例",
 	"toast_code_agent_model_change_failed": "更换沙盒模型失败",
@@ -1520,5 +1527,7 @@
 	"about_export_logs_failed": "日志导出失败",
 	"about_export_logs_no_logs": "所选时间范围内没有日志文件",
 	"about_export_logs_description": "导出日志，仅用于排查问题，可能包含对话记录、设备信息等数据",
-	"code_agent_cloud_instance_not_running": "云端机器实例还未就绪"
+	"code_agent_cloud_instance_not_running": "云端机器实例还未就绪",
+	"cloud_mode_expired": "已过期",
+	"cloud_mode_instance_name": "实例名"
 }

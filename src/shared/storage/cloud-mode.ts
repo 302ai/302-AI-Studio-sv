@@ -32,7 +32,7 @@ export const instanceInfoSchema = type({
 	apiPort: data.api_port,
 	ocPort: data.oc_port,
 	autoRenew: data.auto_renew,
-	destroyedAt: data.destroyed_at,
+	destroyedAt: data.destroyed_at ?? undefined,
 }));
 export type InstanceInfo = typeof instanceInfoSchema.infer;
 export const listInstancesResponseSchema = type({

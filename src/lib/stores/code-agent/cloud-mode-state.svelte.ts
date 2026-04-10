@@ -1,10 +1,13 @@
 import {
+	createInstance as createInstanceAPI,
 	getSandboxHealthStatus,
 	listInstances,
+	manualRenew,
 	restartDocker,
 	updateInstanceAutoRenew,
 } from "$lib/api/cloud-mode/base-apis";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { m } from "$lib/paraglide/messages";
 import { createLogger } from "@shared/logger";
 import type { InstanceInfo } from "@shared/storage/cloud-mode";
 import { onDestroy, onMount } from "svelte";
@@ -49,12 +52,32 @@ class CloudModeStateManager {
 		api_status: null as boolean | null,
 	});
 
+	healthProps = $derived.by(() => {
+		const { status, expired, instanceName } = this.state;
+		if (!instanceName || expired) {
+			return { status: "gray" as const, text: m.cloud_mode_unknown() };
+		}
+		switch (status) {
+			case "running":
+				return { status: "green" as const, text: m.cloud_mode_healthy() };
+			case "waiting_init":
+				return { status: "gray" as const, text: m.cloud_mode_initializing() };
+			case "rebooting":
+				return { status: "gray" as const, text: m.cloud_mode_rebooting() };
+			case "rebooted":
+				return { status: "green" as const, text: m.cloud_mode_rebooted() };
+			default:
+				return { status: "gray" as const, text: m.cloud_mode_unknown() };
+		}
+	});
+
 	loading = $state({
 		init: false,
 		status: false,
 		restart: false,
 		startVip: false,
 		autoRenew: false,
+		createOrRenew: false,
 	});
 
 	#isPolling = false;
@@ -197,17 +220,21 @@ class CloudModeStateManager {
 
 	async updateAutoRenew(autoRenew: boolean) {
 		await this.loadingCommand("autoRenew", async () => {
+			const originalAutoRenew = this.state.autoRenew;
 			this.#updateState({ autoRenew });
-			const res = await updateInstanceAutoRenew({
-				instanceName: this.state.instanceName,
-				isAutoRenew: autoRenew,
-			});
-			if (!res.success) {
-				this.#updateState({ autoRenew: !autoRenew });
-				throw new Error("Failed to update auto-renew setting");
+			try {
+				const res = await updateInstanceAutoRenew({
+					instanceName: this.state.instanceName,
+					isAutoRenew: autoRenew,
+				});
+				if (!res.success) {
+					throw new Error("Failed to update auto-renew setting");
+				}
+				logger.info("Auto-renew setting updated successfully");
+			} catch (e) {
+				this.#updateState({ autoRenew: originalAutoRenew });
+				throw e;
 			}
-			this.#updateState({ autoRenew });
-			logger.info("Auto-renew setting updated successfully");
 		})();
 	}
 
@@ -217,6 +244,34 @@ class CloudModeStateManager {
 
 	private async unregisterTimed() {
 		window.electronAPI.cloudModeService.unregisterBroadcasterTimed();
+	}
+
+	async createInstance() {
+		await this.loadingCommand("createOrRenew", async () => {
+			const isRenewal = !!this.state.instanceName;
+
+			if (isRenewal) {
+				const res = await manualRenew({
+					instanceName: this.state.instanceName,
+					isDev: true,
+				});
+				if (!res.success) {
+					throw new Error("Failed to renew instance");
+				}
+				logger.info("Instance renewed successfully");
+			} else {
+				const res = await createInstanceAPI({
+					isDev: true,
+					isAutoRenew: this.state.autoRenew,
+				});
+				if (!res.success) {
+					throw new Error("Failed to create instance");
+				}
+				logger.info("Instance created successfully");
+			}
+
+			await this.loadInstances();
+		})();
 	}
 }
 
