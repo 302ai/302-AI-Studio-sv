@@ -25,6 +25,8 @@
 	]);
 
 	const isVibeLocal = $derived(codeAgentState.enabled && codeAgentState.type === "local");
+	const isVibeCloud = $derived(codeAgentState.enabled && codeAgentState.type === "cloud");
+	const showAgentToggle = $derived((isVibeLocal || isVibeCloud) && chatState.hasMessages);
 	const agentIdLabelMap = new Map<"claude-code" | "open-claw", string>([
 		["claude-code", "Claude Code"],
 		["open-claw", "Open Claw"],
@@ -139,7 +141,7 @@
 	</div>
 
 	<div class="flex items-center gap-2">
-		{#if isVibeLocal && chatState.hasMessages}
+		{#if showAgentToggle}
 			<AgentClassToggle />
 		{/if}
 		{#if !chatState.hasMessages}
