@@ -30,6 +30,7 @@
 		type AgentPreviewSyncEnvelope,
 	} from "$lib/stores/agent-preview-state.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 
 	import { TaskboardPanel } from "$lib/components/buss/taskboard";
@@ -905,7 +906,12 @@
 	const handleOpenInNewTab = async () => {
 		if (activeTab === TAB_OPENCLAW_WEBUI) {
 			try {
-				const url = await window.electronAPI.openClawService.getOpenClawWebUiUrl();
+				const isCloud =
+					codeAgentState.currentAgentId === "open-claw" &&
+					codeAgentState.type === "cloud";
+				const url = isCloud
+					? await cloudModeState.getOpenClawWebUiUrl()
+					: await window.electronAPI.openClawService.getOpenClawWebUiUrl();
 				if (url) {
 					await tabBarState.handleNewTab("OpenClaw", "openClawWebUi", true, url);
 				} else {

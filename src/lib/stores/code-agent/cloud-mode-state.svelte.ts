@@ -6,6 +6,7 @@ import {
 	restartDocker,
 	updateInstanceAutoRenew,
 } from "$lib/api/cloud-mode/base-apis";
+import { testKy } from "$lib/api/core/test-ky";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
 import { createLogger } from "@shared/logger";
@@ -256,6 +257,32 @@ class CloudModeStateManager {
 
 	private async unregisterTimed() {
 		window.electronAPI.cloudModeService.unregisterBroadcasterTimed();
+	}
+
+	async getOpenClawWebUiUrl(): Promise<string | null> {
+		const { publicIp, ocPort, instanceName } = this.state;
+		if (!publicIp || !ocPort || !instanceName) return null;
+
+		try {
+			const response = (await testKy
+				.post("api/v1/instances/files/read", {
+					json: {
+						instance_name: instanceName,
+						file_paths: ["/home/user/.openclaw/openclaw.json"],
+					},
+				})
+				.json()) as { files: Array<{ file_content: string }> };
+
+			const fileContent = response.files[0].file_content;
+			const config = JSON.parse(fileContent) as {
+				gateway?: { auth?: { token?: string } };
+			};
+			const token = config?.gateway?.auth?.token || "";
+			return `http://${publicIp}:${ocPort}/#token=${token}`;
+		} catch (e) {
+			logger.error("Failed to get cloud OpenClaw WebUI URL:", e);
+			return null;
+		}
 	}
 
 	async createInstance() {
