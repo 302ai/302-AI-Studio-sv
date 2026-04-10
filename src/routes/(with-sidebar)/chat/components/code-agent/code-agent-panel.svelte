@@ -151,6 +151,10 @@
 		relativePath = relativePath.startsWith("/") ? relativePath.slice(1) : relativePath;
 		await window.electronAPI.localVibeService.openWorkspaceDirectory(relativePath);
 	}
+
+	const isLocalCloud = $derived(
+		codeAgentState.type === "local" || codeAgentState.type === "cloud",
+	);
 </script>
 
 {#snippet initializePanel()}
@@ -184,7 +188,7 @@
 		<div
 			class="flex flex-col gap-y-4 rounded-[10px] bg-background p-4 max-h-[500px] overflow-y-auto"
 		>
-			{#if codeAgentState.type === "local"}
+			{#if isLocalCloud}
 				<div class="rounded-lg border p-4 space-y-4">
 					<PodmanCard isOpen={false} onInstall={handleInstall} />
 					<SandboxCard isOpen={false} />
@@ -246,7 +250,7 @@
 				{/if}
 			</div>
 
-			{#if codeAgentState.type === "local" && !codeAgentState.isFreshTab}
+			{#if isLocalCloud && !codeAgentState.isFreshTab}
 				<div class="flex flex-row items-center gap-4">
 					<Label class="text-label-fg">{m.local_platform_work_directory()}</Label>
 					<button
