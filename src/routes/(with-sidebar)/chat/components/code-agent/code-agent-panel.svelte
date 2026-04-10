@@ -251,7 +251,7 @@
 				{/if}
 			</div>
 
-			{#if isLocalCloud && !codeAgentState.isFreshTab}
+			{#if codeAgentState.type === "local" && !codeAgentState.isFreshTab}
 				<div class="flex flex-row items-center gap-4">
 					<Label class="text-label-fg">{m.local_platform_work_directory()}</Label>
 					<button

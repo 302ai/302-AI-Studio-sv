@@ -70,6 +70,16 @@
 		},
 		open: (v) => (confirmDialogOpen = v),
 		loading: (v) => (applyConfigLoading = v),
+		error: (_) => {
+			toast.error(m.code_agent_local_container_not_started(), {
+				action: {
+					label: m.toast_button_start_sandbox(),
+					onClick: async () => {
+						await localEnvState.startSandbox();
+					},
+				},
+			});
+		},
 	});
 
 	let { handleConfirmDialogOk: handleCloudConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
@@ -91,6 +101,16 @@
 		},
 		open: (v) => (confirmDialogOpen = v),
 		loading: (v) => (applyConfigLoading = v),
+		error: (_) => {
+			toast.error(m.code_agent_local_container_not_started(), {
+				action: {
+					label: m.toast_button_start_sandbox(),
+					onClick: async () => {
+						await localEnvState.startSandbox();
+					},
+				},
+			});
+		},
 	});
 
 	const url = new URL(window.location.href);
@@ -98,10 +118,6 @@
 	let channelAccordion = $state(queryChannel || "");
 
 	const handleApplyBtn = () => {
-		if (!localEnvState.sandboxRunning) {
-			toast.error(m.code_agent_local_container_not_started());
-			return;
-		}
 		confirmDialogOpen = true;
 	};
 </script>

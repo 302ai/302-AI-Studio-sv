@@ -31,6 +31,7 @@
 		},
 		open: (v) => (confirmDialogOpen = v),
 		loading: (v) => (applyConfigLoading = v),
+		error: (_) => {},
 	});
 
 	async function handleNewSettingsTab(route: string) {
