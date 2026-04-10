@@ -45,8 +45,8 @@ class CloudModeStateManager {
 	});
 
 	openClaw = $state({
-		status: false,
-		api_status: false,
+		status: null as boolean | null,
+		api_status: null as boolean | null,
 	});
 
 	loading = $state({
@@ -57,10 +57,25 @@ class CloudModeStateManager {
 		autoRenew: false,
 	});
 
+	#isPolling = false;
+
 	constructor() {
 		window.electronAPI.cloudMode.onTimedBroadcaster(() => {
 			this.loadStatus();
 		});
+	}
+
+	#syncPollingState() {
+		const shouldPoll = this.state.instanceName !== "" && !this.state.expired;
+		if (shouldPoll && !this.#isPolling) {
+			this.registerTimed();
+			this.#isPolling = true;
+			logger.info("[CloudModeStateManager] Started health polling");
+		} else if (!shouldPoll && this.#isPolling) {
+			this.unregisterTimed();
+			this.#isPolling = false;
+			logger.info("[CloudModeStateManager] Stopped health polling");
+		}
 	}
 
 	init() {
@@ -110,14 +125,17 @@ class CloudModeStateManager {
 	}
 
 	async initStatus() {
-		this.registerTimed();
 		await this.loadingCommand("init", async () => {
-			await this.loadStatus();
+			await this.loadInstances();
 		})();
+		this.#syncPollingState();
 	}
 
 	dispose() {
-		this.unregisterTimed();
+		if (this.#isPolling) {
+			this.unregisterTimed();
+			this.#isPolling = false;
+		}
 	}
 
 	async loadInstances() {
@@ -137,9 +155,14 @@ class CloudModeStateManager {
 			status: instance.status,
 			autoRenew: instance.autoRenew,
 		});
+		this.#syncPollingState();
 	}
 
 	async loadStatus() {
+		if (!this.state.instanceName || this.state.expired) {
+			logger.debug("[CloudModeStateManager] Skipping health check — no valid instance");
+			return;
+		}
 		await this.loadingCommand("status", async () => {
 			const openclawResponse = await getSandboxHealthStatus(
 				this.state.publicIp,

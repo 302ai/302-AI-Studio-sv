@@ -73,6 +73,18 @@
 		}
 	}
 
+	function resolveOpenClawStatus(v: boolean | null): "green" | "red" | "gray" {
+		return v == null ? "gray" : v ? "green" : "red";
+	}
+
+	function resolveOpenClawText(v: boolean | null): string {
+		return v == null
+			? m.cloud_mode_unknown()
+			: v
+				? m.cloud_mode_healthy()
+				: m.cloud_mode_unhealthy();
+	}
+
 	function formatDate(iso?: string): string {
 		if (!iso) return "--";
 		return format(parseISO(iso), "yyyy-MM-dd");
@@ -148,10 +160,8 @@
 								>{m.cloud_mode_openclaw_status()}</Label
 							>
 							<StatusIndicator
-								status={openClaw.status ? "green" : "red"}
-								text={openClaw.status
-									? m.cloud_mode_healthy()
-									: m.cloud_mode_unhealthy()}
+								status={resolveOpenClawStatus(openClaw.status)}
+								text={resolveOpenClawText(openClaw.status)}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 							<ButtonWithTooltip
@@ -169,10 +179,8 @@
 								>{m.cloud_mode_api_status()}</Label
 							>
 							<StatusIndicator
-								status={openClaw.api_status ? "green" : "red"}
-								text={openClaw.api_status
-									? m.cloud_mode_healthy()
-									: m.cloud_mode_unhealthy()}
+								status={resolveOpenClawStatus(openClaw.api_status)}
+								text={resolveOpenClawText(openClaw.api_status)}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 						</div>
