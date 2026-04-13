@@ -18,10 +18,12 @@
 	import { m } from "$lib/paraglide/messages.js";
 	import { agentPreviewState } from "$lib/stores/agent-preview-state.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { codeAgentTaskboardState } from "$lib/stores/code-agent/code-agent-taskboard-state.svelte";
 	import { mcpState } from "$lib/stores/mcp-state.svelte";
 	import { quickPromptState } from "$lib/stores/quick-prompt-state.svelte";
+	import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 	import { cn } from "$lib/utils";
 	import mcpIcon from "@lobehub/icons-static-svg/icons/mcp.svg";
 	import {
@@ -103,7 +105,21 @@
 		}
 	}
 
-	function handleOpenClawWebUiToggle() {
+	async function handleOpenClawWebUiToggle() {
+		if (codeAgentState.currentAgentId === "open-claw" && codeAgentState.type === "cloud") {
+			try {
+				const url = await cloudModeState.getOpenClawWebUiUrl();
+				if (url) {
+					await tabBarState.handleNewTab("OpenClaw", "openClawWebUi", true, url);
+				} else {
+					toast.error(m.openclaw_webui_failed_to_load());
+				}
+			} catch (_error) {
+				toast.error(m.openclaw_webui_failed_to_load());
+			}
+			return;
+		}
+
 		agentPreviewState.openOpenClawWebUiTab();
 	}
 
