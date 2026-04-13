@@ -508,11 +508,11 @@ export function registerIpcHandlers() {
 	ipcMain.handle("cloudModeService:getCloudModeInstanceBaseUrlByIpc", (event) =>
 		cloudModeService.getCloudModeInstanceBaseUrlByIpc(event),
 	);
-	ipcMain.handle("cloudModeService:registerBroadcasterTimed", (event) =>
-		cloudModeService.registerBroadcasterTimed(event),
+	ipcMain.handle("cloudModeService:getHealthStatusByIpc", (event) =>
+		cloudModeService.getHealthStatusByIpc(event),
 	);
-	ipcMain.handle("cloudModeService:unregisterBroadcasterTimed", (event) =>
-		cloudModeService.unregisterBroadcasterTimed(event),
+	ipcMain.handle("cloudModeService:refreshHealthByIpc", (event) =>
+		cloudModeService.refreshHealthByIpc(event),
 	);
 
 	// dataService service registration
@@ -808,8 +808,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:deleteTempDir");
 	ipcMain.removeHandler("cloudModeService:syncCloudInstanceToLocalByIpc");
 	ipcMain.removeHandler("cloudModeService:getCloudModeInstanceBaseUrlByIpc");
-	ipcMain.removeHandler("cloudModeService:registerBroadcasterTimed");
-	ipcMain.removeHandler("cloudModeService:unregisterBroadcasterTimed");
+	ipcMain.removeHandler("cloudModeService:getHealthStatusByIpc");
+	ipcMain.removeHandler("cloudModeService:refreshHealthByIpc");
 	ipcMain.removeHandler("dataService:importLegacyJson");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("dataService:importStorage");

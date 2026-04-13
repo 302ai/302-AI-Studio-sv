@@ -1,6 +1,7 @@
-import { listInstances } from "@electron/main/apis/cloud-mode";
+import { getSandboxHealthStatus, listInstances } from "@electron/main/apis/cloud-mode";
 import { cloudModeStorage } from "@electron/main/services/storage-service/cloud-mode/cloud-mode-storage";
 import { createLogger } from "@shared/logger";
+import type { SandboxHealthResponse } from "@shared/storage/cloud-mode";
 import type { IpcMainInvokeEvent } from "electron";
 import { attemptAsync, isNull } from "es-toolkit";
 import { broadcastService } from "../broadcast-service";
@@ -9,15 +10,60 @@ import { CRON_EXPRESSION, schedulerService } from "../scheduler-service";
 const logger = createLogger("services");
 
 export class CloudModeService {
+	/** Health status memory cache. The rendering process can directly query it through IPC. */
+	#healthCache: SandboxHealthResponse | null = null;
+
 	constructor() {
-		schedulerService.addTask(CloudModeService.schedulerName, "0 5 0 * * *", async () => {
-			logger.info(
-				"[CloudModeService] Running scheduled task to sync cloud instances and broadcast...",
-			);
-			// 广播
+		// Sync instance information daily to local storage
+		schedulerService.addTask("cloud-mode-daily-sync", "0 5 0 * * *", async () => {
+			logger.info("[CloudModeService] Running daily sync task...");
 			this.syncCloudInstanceToLocal();
 		});
+
+		// 60-second health check (managed uniformly by the main process, no need for the rendering process to register)
+		schedulerService.addTask(
+			"cloud-mode-health-polling",
+			CRON_EXPRESSION.EVERY_60_SECONDS,
+			async () => {
+				await this.fetchAndBroadcastHealth();
+			},
+		);
+
+		// Perform a health check immediately upon startup
+		this.fetchAndBroadcastHealth();
 	}
+
+	/**
+	 * Unified health check logic: Request → Update cache → Broadcast to all rendering processes
+	 */
+	private async fetchAndBroadcastHealth(): Promise<void> {
+		const [storageError, instance] = await attemptAsync(() =>
+			cloudModeStorage.getCloudModeInstance(),
+		);
+
+		if (storageError || isNull(instance)) {
+			this.#healthCache = null;
+			broadcastService.broadcastChannelToAll("cloud-mode:timed", null);
+			return;
+		}
+
+		if (!instance.publicIp || !instance.apiPort || instance.expired) {
+			this.#healthCache = null;
+			broadcastService.broadcastChannelToAll("cloud-mode:timed", null);
+			return;
+		}
+
+		try {
+			const healthData = await getSandboxHealthStatus(instance.publicIp, instance.apiPort);
+			this.#healthCache = healthData;
+			broadcastService.broadcastChannelToAll("cloud-mode:timed", healthData);
+		} catch {
+			this.#healthCache = null;
+			broadcastService.broadcastChannelToAll("cloud-mode:timed", null);
+		}
+	}
+
+	// ── Instance synchronization ──────────────────────────────────────────────
 
 	private async syncCloudInstanceToLocal(): Promise<void> {
 		try {
@@ -53,6 +99,8 @@ export class CloudModeService {
 		}
 	}
 
+	// ── Example URL ──────────────────────────────────────────────
+
 	public async getCloudModeInstanceBaseUrl(): Promise<{ isOk: boolean; baseUrl: string }> {
 		const [error, instance] = await attemptAsync(() => cloudModeStorage.getCloudModeInstance());
 
@@ -70,21 +118,26 @@ export class CloudModeService {
 		return this.getCloudModeInstanceBaseUrl();
 	}
 
-	static schedulerName = "cloud-mode-timed-broadcaster";
+	// ── Health status IPC ──────────────────────────────────────────
 
-	public async registerBroadcasterTimed(_event: IpcMainInvokeEvent) {
-		schedulerService.addTask(
-			CloudModeService.schedulerName,
-			CRON_EXPRESSION.EVERY_60_SECONDS,
-			async () => {
-				// 广播
-				broadcastService.broadcastChannelToAll("cloud-mode:timed");
-			},
-		);
+	/**
+	 * Query the health status of the rendering process cache (without initiating new requests)
+	 */
+	public async getHealthStatusByIpc(
+		_event: IpcMainInvokeEvent,
+	): Promise<SandboxHealthResponse | null> {
+		return this.#healthCache;
 	}
 
-	public async unregisterBroadcasterTimed(_event: IpcMainInvokeEvent) {
-		schedulerService.removeTask(CloudModeService.schedulerName);
+	/**
+	 * The rendering process initiates a health check actively (for scenarios such as restarting containers)
+	 * After the request is completed, the cache is updated and broadcast to all tabs
+	 */
+	public async refreshHealthByIpc(
+		_event: IpcMainInvokeEvent,
+	): Promise<SandboxHealthResponse | null> {
+		await this.fetchAndBroadcastHealth();
+		return this.#healthCache;
 	}
 }
 

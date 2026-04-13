@@ -426,8 +426,8 @@ if (process.contextIsolated) {
 				},
 			},
 			cloudMode: {
-				onTimedBroadcaster: (callback: (event: void) => void) => {
-					const listener = (_: unknown) => callback();
+				onTimedBroadcaster: (callback: (data: unknown) => void) => {
+					const listener = (_: unknown, data: unknown) => callback(data ?? null);
 					ipcRenderer.on("cloud-mode:timed", listener);
 					return () => ipcRenderer.removeListener("cloud-mode:timed", listener);
 				},

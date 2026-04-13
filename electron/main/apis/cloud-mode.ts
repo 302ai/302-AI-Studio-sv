@@ -4,6 +4,7 @@ import type {
 	ReadFilesResponse,
 	RestartDockerRequest,
 	RestartDockerResponse,
+	SandboxHealthResponse,
 } from "@shared/storage/cloud-mode";
 import {
 	listInstancesResponseSchema,
@@ -11,6 +12,7 @@ import {
 	readFilesResponseSchema,
 	restartDockerRequestSchema,
 	restartDockerResponseSchema,
+	sandboxHealthResponseSchema,
 } from "@shared/storage/cloud-mode";
 import { type } from "arktype";
 
@@ -113,6 +115,45 @@ export async function readInstanceFiles(request: ReadFilesRequest): Promise<Read
 		return validated;
 	} catch (error) {
 		logger.error("Failed to read instance files:", error);
+		throw error;
+	}
+}
+
+/**
+ * Get sandbox health status directly from the instance.
+ * @param ip - Instance public IP
+ * @param port - Instance API port
+ * @returns Sandbox health response
+ */
+export async function getSandboxHealthStatus(
+	ip: string,
+	port: number,
+): Promise<SandboxHealthResponse> {
+	try {
+		const response = await testKy(
+			new URL(`http://${ip}:${port}/302/claude-code/sandbox/health`),
+		).json();
+		logger.debug("[getSandboxHealthStatus] Health check response:", response);
+		const validated = sandboxHealthResponseSchema(response);
+		if (validated instanceof type.errors) {
+			logger.error("Failed to validate health check response:", validated.summary);
+			throw new Error(`Invalid health check response: ${validated.summary}`);
+		}
+		return validated;
+	} catch (error) {
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		const lowerMsg = errorMessage.toLowerCase();
+		const isExpectedConnectionError =
+			lowerMsg.includes("fetch failed") ||
+			lowerMsg.includes("failed to fetch") ||
+			lowerMsg.includes("econnrefused") ||
+			lowerMsg.includes("connection refused") ||
+			lowerMsg.includes("etimedout") ||
+			lowerMsg.includes("timed out");
+
+		if (!isExpectedConnectionError) {
+			logger.error("[getSandboxHealthStatus] Health check failed:", error);
+		}
 		throw error;
 	}
 }

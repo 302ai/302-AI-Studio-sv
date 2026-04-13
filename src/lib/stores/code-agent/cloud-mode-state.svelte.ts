@@ -1,6 +1,5 @@
 import {
 	createInstance as createInstanceAPI,
-	getSandboxHealthStatus,
 	listInstances,
 	manualRenew,
 	restartDocker,
@@ -81,25 +80,17 @@ class CloudModeStateManager {
 		createOrRenew: false,
 	});
 
-	#isPolling = false;
-
 	constructor() {
-		window.electronAPI.cloudMode.onTimedBroadcaster(() => {
-			this.loadStatus();
+		window.electronAPI.cloudMode.onTimedBroadcaster((healthData) => {
+			if (healthData) {
+				this.openClaw.status = healthData.oc_status === "ok";
+				this.openClaw.api_status = healthData.status === "ok";
+				logger.debug("Cloud instance health updated from broadcast", {
+					openClawStatus: this.openClaw.status,
+					apiStatus: this.openClaw.api_status,
+				});
+			}
 		});
-	}
-
-	#syncPollingState() {
-		const shouldPoll = this.state.instanceName !== "" && !this.state.expired;
-		if (shouldPoll && !this.#isPolling) {
-			this.registerTimed();
-			this.#isPolling = true;
-			logger.info("[CloudModeStateManager] Started health polling");
-		} else if (!shouldPoll && this.#isPolling) {
-			this.unregisterTimed();
-			this.#isPolling = false;
-			logger.info("[CloudModeStateManager] Stopped health polling");
-		}
 	}
 
 	init() {
@@ -152,14 +143,24 @@ class CloudModeStateManager {
 		await this.loadingCommand("init", async () => {
 			await this.loadInstances();
 		})();
-		this.#syncPollingState();
+
+		// 从主进程缓存中立刻获取一次健康状态，不等 60 秒轮询
+		try {
+			const cached = await window.electronAPI.cloudModeService.getHealthStatusByIpc();
+			if (cached) {
+				this.openClaw.status = cached.oc_status === "ok";
+				this.openClaw.api_status = cached.status === "ok";
+				logger.debug(
+					"[CloudModeStateManager] Loaded cached health status from main process",
+				);
+			}
+		} catch (e) {
+			logger.debug("[CloudModeStateManager] Failed to get cached health status", e);
+		}
 	}
 
 	dispose() {
-		if (this.#isPolling) {
-			this.unregisterTimed();
-			this.#isPolling = false;
-		}
+		// 定时器由主进程统一管理，渲染进程无需清理
 	}
 
 	async loadInstances() {
@@ -179,7 +180,6 @@ class CloudModeStateManager {
 			status: instance.status,
 			autoRenew: instance.autoRenew,
 		});
-		this.#syncPollingState();
 
 		return {
 			instanceName: instance.instanceName,
@@ -194,29 +194,6 @@ class CloudModeStateManager {
 		};
 	}
 
-	async loadStatus() {
-		if (!this.state.instanceName || this.state.expired) {
-			logger.debug("[CloudModeStateManager] Skipping health check — no valid instance");
-			return;
-		}
-		await this.loadingCommand("status", async () => {
-			const openclawResponse = await getSandboxHealthStatus(
-				this.state.publicIp,
-				this.state.apiPort,
-			);
-			if (!openclawResponse.success) {
-				logger.error("Failed to get openclaw health status");
-				throw new Error("Failed to get openclaw health status");
-			}
-			this.openClaw.status = openclawResponse.oc_status === "ok";
-			this.openClaw.api_status = openclawResponse.status === "ok";
-			logger.debug("Cloud instance status loaded successfully", {
-				instance: this.state,
-				openClawStatus: this.openClaw.status,
-			});
-		})();
-	}
-
 	async restartMachine() {
 		await this.loadingCommand("restart", async () => {
 			const res = await restartDocker({
@@ -226,7 +203,12 @@ class CloudModeStateManager {
 			if (!res.success) {
 				throw new Error("Failed to restart instance");
 			}
-			await this.loadStatus();
+			// 通过主进程统一刷新健康状态并广播给所有标签页
+			const healthData = await window.electronAPI.cloudModeService.refreshHealthByIpc();
+			if (healthData) {
+				this.openClaw.status = healthData.oc_status === "ok";
+				this.openClaw.api_status = healthData.status === "ok";
+			}
 			logger.info("Instance restarted successfully");
 		})();
 	}
@@ -249,14 +231,6 @@ class CloudModeStateManager {
 				throw e;
 			}
 		})();
-	}
-
-	private async registerTimed() {
-		window.electronAPI.cloudModeService.registerBroadcasterTimed();
-	}
-
-	private async unregisterTimed() {
-		window.electronAPI.cloudModeService.unregisterBroadcasterTimed();
 	}
 
 	async getOpenClawWebUiUrl(): Promise<string | null> {
