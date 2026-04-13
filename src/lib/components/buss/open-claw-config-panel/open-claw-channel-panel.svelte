@@ -20,23 +20,49 @@
 	let telegramBotId = $state(openclawConfigState.telegramBotId);
 	let hasConfigs = $derived(trim(feishuSessionId) !== "" || trim(telegramBotId) !== "");
 
-	const { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
-		action: async () => {
-			await openclawConfigState
-				.batchUpdater()
-				.update("feishuSessionId", feishuSessionId)
-				.update("telegramBotId", telegramBotId)
-				.apply();
+	const { handleConfirmDialogOk: handleLocalConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm(
+		{
+			action: async () => {
+				await openclawConfigState
+					.batchUpdater()
+					.update("feishuSessionId", feishuSessionId)
+					.update("telegramBotId", telegramBotId)
+					.apply();
 
-			await openclawConfigState.updateOCBindings(openclawConfigState.currentOcAgentId);
+				await openclawConfigState.updateOCBindings(openclawConfigState.currentOcAgentId);
+			},
+			open: (v) => (confirmDialogOpen = v),
+			loading: (v) => (applyConfigLoading = v),
+			error: (_) => {},
+			succeed: () => {
+				toast.success(m.open_claw_config_update_success());
+			},
 		},
-		open: (v) => (confirmDialogOpen = v),
-		loading: (v) => (applyConfigLoading = v),
-		error: (_) => {},
-		succeed: () => {
-			toast.success(m.open_claw_config_update_success());
+	);
+
+	const { handleConfirmDialogOk: handleCloudConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm(
+		{
+			action: async () => {
+				await openclawConfigState
+					.batchUpdater()
+					.update("feishuSessionId", feishuSessionId)
+					.update("telegramBotId", telegramBotId)
+					.apply();
+
+				await openclawConfigState.updateOCBindingsCloud(
+					openclawConfigState.currentOcAgentId,
+				);
+			},
+			open: (v) => (confirmDialogOpen = v),
+			loading: (v) => (applyConfigLoading = v),
+			error: (_) => {
+				toast.error(m.open_claw_cloud_host_error());
+			},
+			succeed: () => {
+				toast.success(m.open_claw_config_update_success());
+			},
 		},
-	});
+	);
 
 	async function handleNewSettingsTab(route: string) {
 		await window.electronAPI.windowService.handleOpenSettingsWindow(route);
@@ -140,7 +166,7 @@
 						class="w-fit"
 						onclick={() => {
 							if (codeAgentState.isPristineSession) {
-								handleConfirmDialogOk();
+								handleLocalConfirmDialogOk();
 								return;
 							}
 
@@ -160,5 +186,6 @@
 <ConfirmDialog
 	bind:confirmDialogOpen
 	bind:applyConfigLoading
-	handleLocalConfirmDialogOk={() => handleConfirmDialogOk}
+	{handleLocalConfirmDialogOk}
+	{handleCloudConfirmDialogOk}
 />

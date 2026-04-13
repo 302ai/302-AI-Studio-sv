@@ -3,6 +3,7 @@ import {
 	initInstance,
 	listInstances,
 	manualRenew,
+	rebootInstance,
 	restartDocker,
 	updateInstanceAutoRenew,
 } from "$lib/api/cloud-mode/base-apis";
@@ -76,6 +77,7 @@ class CloudModeStateManager {
 		init: false,
 		status: false,
 		restart: false,
+		restartOpenClaw: false,
 		startVip: false,
 		autoRenew: false,
 		createOrRenew: false,
@@ -209,6 +211,24 @@ class CloudModeStateManager {
 
 	async restartMachine() {
 		await this.loadingCommand("restart", async () => {
+			const res = await rebootInstance({
+				instanceName: this.state.instanceName,
+			});
+			if (!res.success) {
+				throw new Error("Failed to restart instance");
+			}
+			// 通过主进程统一刷新健康状态并广播给所有标签页
+			const healthData = await window.electronAPI.cloudModeService.refreshHealthByIpc();
+			if (healthData) {
+				this.openClaw.status = healthData.oc_status === "ok";
+				this.openClaw.api_status = healthData.status === "ok";
+			}
+			logger.info("Instance restarted successfully");
+		})();
+	}
+
+	async restartOpenClaw() {
+		await this.loadingCommand("restartOpenClaw", async () => {
 			const res = await restartDocker({
 				instanceName: this.state.instanceName,
 			});

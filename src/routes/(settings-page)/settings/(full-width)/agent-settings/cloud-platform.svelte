@@ -194,6 +194,15 @@
 								text={healthProps.text}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
+							<ButtonWithTooltip
+								onclick={() => cloudModeState.restartMachine()}
+								tooltip={m.cloud_mode_reboot_instance()}
+								class="hover:!bg-icon-btn-hover size-8"
+							>
+								<RefreshCw
+									class={cn("h-4 w-4", loading.restart && "animate-spin")}
+								/>
+							</ButtonWithTooltip>
 						</div>
 						<div class="flex items-center gap-3">
 							<Label class="text-muted-foreground min-w-18 font-normal"
@@ -205,12 +214,12 @@
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 							<ButtonWithTooltip
-								onclick={() => cloudModeState.restartMachine()}
-								tooltip={m.cloud_mode_reboot_instance()}
+								onclick={() => cloudModeState.restartOpenClaw()}
+								tooltip={m.cloud_mode_restart_docker()}
 								class="hover:!bg-icon-btn-hover size-8"
 							>
 								<RefreshCw
-									class={cn("h-4 w-4", loading.restart && "animate-spin")}
+									class={cn("h-4 w-4", loading.restartOpenClaw && "animate-spin")}
 								/>
 							</ButtonWithTooltip>
 						</div>

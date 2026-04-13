@@ -37,7 +37,7 @@
 					{m.open_claw_update()}{m.title_local()}
 				</AlertDialog.Action>
 			{/if}
-			{#if handleLocalConfirmDialogOk}
+			{#if handleCloudConfirmDialogOk}
 				<AlertDialog.Action
 					onclick={handleCloudConfirmDialogOk}
 					disabled={applyConfigLoading}

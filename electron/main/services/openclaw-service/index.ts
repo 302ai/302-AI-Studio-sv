@@ -240,6 +240,109 @@ export class OpenClawService {
 		await this.setOpenClawConfig("bindings", nextBindings);
 	}
 
+	/**
+	 * Apply channel bindings configurations to cloud OpenClaw instance
+	 * @param _event Electron IPC event
+	 * @param threadId Thread ID to apply bindings for
+	 */
+	async applyCloudClawBindingsConfig(_event: IpcMainInvokeEvent, threadId: string) {
+		const config = await openClawConfigStorage.getOpenClawConfig(threadId);
+		if (!config.isOK) {
+			logger.error("Failed to get thread config:", threadId);
+			return;
+		}
+
+		const { instanceName } = await cloudModeStorage.getCloudModeInstance();
+		const res = await readInstanceFiles({
+			instanceName,
+			filePaths: ["/home/user/.openclaw/openclaw.json"],
+		});
+
+		if (!res.success) {
+			logger.error("Failed to read cloud openclaw.json");
+			return;
+		}
+
+		const { fileContent: cloudFile } = res.files[0];
+		const cloudConfig = JSON.parse(cloudFile) as Record<string, unknown>;
+
+		const { agentId, feishuSessionId, telegramBotId } = config.data;
+		const desiredBindings: OpenClawBindingConfig[] = [];
+
+		if (feishuSessionId) {
+			desiredBindings.push({
+				agentId,
+				match: {
+					channel: "feishu",
+					peer: {
+						kind: "group",
+						id: feishuSessionId,
+					},
+				},
+			});
+		}
+
+		if (telegramBotId) {
+			const accountId = `${agentId}_302ai`;
+			desiredBindings.push({
+				agentId,
+				match: {
+					channel: "telegram",
+					accountId: accountId,
+				},
+			});
+
+			// Deal channels.telegram.accounts.`any`
+			const tmpAccount = {
+				enabled: true,
+				dmPolicy: "open",
+				botToken: telegramBotId,
+				groupPolicy: "open",
+			};
+			const tgAccounts: {
+				default: OpenClawAccountsConfig;
+				[key: string]: OpenClawAccountsConfig;
+			} = (get(cloudConfig, "channels.telegram.accounts") as {
+				default: OpenClawAccountsConfig;
+				[key: string]: OpenClawAccountsConfig;
+			}) || {
+				default: tmpAccount,
+			};
+			for (const key in tgAccounts) {
+				if (
+					key != accountId &&
+					tgAccounts[key].botToken == telegramBotId &&
+					key != "default"
+				) {
+					delete tgAccounts[key];
+				}
+			}
+			tgAccounts[accountId] = tmpAccount;
+			set(cloudConfig, "channels.telegram.accounts", tgAccounts);
+		}
+
+		const bindings: OpenClawBindingConfig[] =
+			(cloudConfig["bindings"] as OpenClawBindingConfig[]) ?? [];
+
+		const nextBindings = bindings.reduce<OpenClawBindingConfig[]>((acc, b) => {
+			if (b.agentId === agentId) return acc;
+			const isConflict = desiredBindings.some(
+				(d) => d.match.channel === b.match.channel && d.match.peer?.id === b.match.peer?.id,
+			);
+			if (isConflict) return acc;
+			acc.push(b);
+			return acc;
+		}, []);
+
+		nextBindings.push(...desiredBindings);
+		cloudConfig["bindings"] = nextBindings;
+
+		await restartDocker({
+			instanceName,
+			openclawConfigContent: JSON.stringify(cloudConfig),
+		});
+	}
+
 	async handleOpenClawWebUiReloadIpc(_event: IpcMainInvokeEvent, tabId: string) {
 		const tabView = tabService.getTabView(tabId);
 		if (isUndefined(tabView)) return;
