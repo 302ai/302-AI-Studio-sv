@@ -250,7 +250,7 @@ class CloudModeSessionsState {
 	 * Delete a local session
 	 */
 	async deleteSession(sessionId: string): Promise<boolean> {
-		const result = await deleteLocalSession(sessionId);
+		const result = await deleteLocalSession(sessionId, "cloud");
 
 		if (result.success) {
 			await this.refreshSessions();

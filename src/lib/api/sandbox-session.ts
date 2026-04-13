@@ -6,6 +6,7 @@
 import { createLogger } from "@shared/logger";
 import {
 	listLocalClaudeCodeSessionsResponse,
+	type CodeAgentType,
 	type ListLocalClaudeCodeSessionsResponse,
 } from "@shared/types";
 import { type } from "arktype";
@@ -175,9 +176,12 @@ export async function deleteSession(request: DeleteSessionRequest): Promise<Dele
  *
  * 删除本地对话（始终使用本地 ky 实例，不依赖全局状态）
  */
-export async function deleteLocalSession(sessionId: string): Promise<DeleteSessionResult> {
+export async function deleteLocalSession(
+	sessionId: string,
+	mode: CodeAgentType,
+): Promise<DeleteSessionResult> {
 	try {
-		const kyInstance = await getCodeAgentKy();
+		const kyInstance = await getCodeAgentKy(mode);
 
 		const data = (await kyInstance
 			.delete("302/claude-code/sandbox/session", {
