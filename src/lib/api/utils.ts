@@ -1,5 +1,5 @@
 import { codeAgentState } from "$lib/stores/code-agent";
-import type { ModelProvider } from "@shared/types";
+import type { CodeAgentType, ModelProvider } from "@shared/types";
 import { match } from "ts-pattern";
 import { _302AIKy } from "./core/_302ai-ky";
 import { createCloudModeKy } from "./core/cloud-mode-ky";
@@ -19,8 +19,9 @@ export function getApiKeyByProviderKey(apiKey: string): string {
 /**
  * Get the appropriate ky instance based on code agent mode
  */
-export async function getCodeAgentKy() {
-	return await match(codeAgentState.type)
+export async function getCodeAgentKy(mode?: CodeAgentType) {
+	const currentMode = mode ?? codeAgentState.type;
+	return await match(currentMode)
 		.with("local", () => createLocalCodeAgentKy())
 		.with("cloud", () => createCloudModeKy())
 		.with("remote", () => _302AIKy)
