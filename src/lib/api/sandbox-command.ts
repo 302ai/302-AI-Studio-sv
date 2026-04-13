@@ -3,8 +3,7 @@
  * 302.AI 沙盒命令执行 API
  */
 
-import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
-import { getCodeAgentKy } from "./utils";
+import { getCodeAgentKy, isLocalOrCloudMode } from "./utils";
 
 export interface ExecuteCommandRequest {
 	sandbox_id: string;
@@ -41,14 +40,13 @@ export async function executeSandboxCommand(
 		const kyInstance = await getCodeAgentKy();
 
 		// Local mode logic for request body
-		const requestBody =
-			codeAgentState.type === "local"
-				? {
-						session_id: request.session_id,
-						command: request.command,
-						cwd: request.cwd,
-					}
-				: request;
+		const requestBody = isLocalOrCloudMode()
+			? {
+					session_id: request.session_id,
+					command: request.command,
+					cwd: request.cwd,
+				}
+			: request;
 
 		const response = await kyInstance.post("302/claude-code/commands", {
 			json: requestBody,

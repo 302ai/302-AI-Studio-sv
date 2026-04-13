@@ -551,10 +551,10 @@
 
 				// Refresh sessions to get updated workspace_path after agent completes
 				// This is important because session/workspace is created after agent's first response
-				if (codeAgentState.type === "local") {
-					codeAgentState.refreshSessions();
-				} else {
+				if (codeAgentState.type === "remote") {
 					codeAgentState.refreshSessions(currentSandboxId);
+				} else {
+					codeAgentState.refreshSessions();
 				}
 			}
 		}

@@ -168,29 +168,41 @@ class CloudModeStateManager {
 		if (!res.success && res.instances.length <= 0) {
 			throw new Error("Failed to load cloud instance status");
 		}
-		const instance = res.instances[0];
+
+		const {
+			instanceName,
+			publicIp,
+			createdAt,
+			expiredAt,
+			expired,
+			apiPort,
+			ocPort,
+			status,
+			autoRenew,
+		} = res.instances[0];
+
 		this.#updateState({
-			instanceName: instance.instanceName,
-			publicIp: instance.publicIp,
-			createdAt: instance.createdAt,
-			expiredAt: instance.expiredAt,
-			expired: instance.expired,
-			apiPort: instance.apiPort,
-			ocPort: instance.ocPort,
-			status: instance.status,
-			autoRenew: instance.autoRenew,
+			instanceName,
+			publicIp,
+			createdAt,
+			expiredAt,
+			expired,
+			apiPort,
+			ocPort,
+			status,
+			autoRenew,
 		});
 
 		return {
-			instanceName: instance.instanceName,
-			publicIp: instance.publicIp,
-			createdAt: instance.createdAt,
-			expiredAt: instance.expiredAt,
-			expired: instance.expired,
-			apiPort: instance.apiPort,
-			ocPort: instance.ocPort,
-			status: instance.status,
-			autoRenew: instance.autoRenew,
+			instanceName,
+			publicIp,
+			createdAt,
+			expiredAt,
+			expired,
+			apiPort,
+			ocPort,
+			status,
+			autoRenew,
 		};
 	}
 

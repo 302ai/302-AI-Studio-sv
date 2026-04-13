@@ -58,7 +58,7 @@
 			agentPreviewState.closePreview();
 		} else {
 			if (codeAgentState.currentAgentId === "open-claw") {
-				agentPreviewState.openPreview("local");
+				agentPreviewState.openPreview(codeAgentState.type);
 			} else {
 				const sandboxId = codeAgentState.sandboxId;
 				if (sandboxId) {

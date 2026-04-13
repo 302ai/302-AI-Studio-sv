@@ -46,6 +46,10 @@
 	const isLocalSandboxStarting = $derived(
 		codeAgentState.type === "local" && localEnvState.sandboxStarting,
 	);
+	const isCloudModeRunning = $derived(
+		codeAgentState.type === "cloud" && cloudModeState.state.status === "running",
+	);
+
 	let isVibe = $state(false);
 
 	const { onShortcutAction } = window.electronAPI.shortcut;
@@ -71,13 +75,6 @@
 			codeAgentState.inCodeAgentMode &&
 			(chatState.isStreaming || chatState.isSubmitted),
 	);
-
-	// Button should be enabled for taskboard redirection even during streaming
-	// const canSendOrRedirect = $derived(
-	// 	chatState.sendMessageEnabled ||
-	// 		(shouldRedirectToTaskboard &&
-	// 			(chatState.inputValue.trim() !== "" || chatState.attachments.length > 0)),
-	// );
 
 	function isInCompositionCooldown(): boolean {
 		return Date.now() - compositionEndTime < COMPOSITION_COOLDOWN_MS;
@@ -469,7 +466,7 @@
 
 	<!-- Quick Prompt Panel Popover -->
 	<Popover.Root bind:open={quickPromptState.isOpen}>
-		<Popover.Trigger class="sr-only">Quick Prompt Trigger</Popover.Trigger>
+		<Popover.Trigger class="sr-only">{m.quick_prompt_trigger()}</Popover.Trigger>
 		<Popover.Content
 			class="w-auto p-0 border-0 shadow-none bg-transparent"
 			side="top"
@@ -614,6 +611,7 @@
 						{:else}
 							<button
 								disabled={!chatState.sendMessageEnabled ||
+									!isCloudModeRunning ||
 									isLocalSandboxStarting ||
 									codeAgentSendMessageButtonState.isChecking ||
 									codeAgentSendMessageButtonState.isOpenClawSendDisabled}
@@ -624,7 +622,7 @@
 								)}
 								onclick={handleSendMessage}
 							>
-								{#if isLocalSandboxStarting || codeAgentSendMessageButtonState.isChecking}
+								{#if isLocalSandboxStarting || !isCloudModeRunning || codeAgentSendMessageButtonState.isChecking}
 									<LdrsLoader type="line-spinner" size={18} />
 								{:else}
 									<img src={sendMessageIcon} alt="plane" class="size-5" />

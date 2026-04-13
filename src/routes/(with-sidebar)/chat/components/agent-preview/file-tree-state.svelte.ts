@@ -807,7 +807,6 @@ export class FileTreeState {
 					return false;
 				}
 			} else {
-				// Remote mode: HTTP sandbox API
 				const apiKey = this.get302ApiKey();
 				if (!apiKey) {
 					toast.error(m.toast_file_operation_api_key_not_found(), { id: toastId });

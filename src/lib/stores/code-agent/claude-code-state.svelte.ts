@@ -513,7 +513,7 @@ class ClaudeCodeAgentState {
 	 * Local mode doesn't need sandbox verification - it returns a virtual sandboxInfo
 	 * with "local" sandboxId since local mode runs on the user's machine.
 	 */
-	handleLocalModeExecute(): { isOK: boolean; sandboxInfo: ClaudeCodeSandboxInfo } {
+	handleLocalOrCloudModeExecute(): { isOK: boolean; sandboxInfo: ClaudeCodeSandboxInfo } {
 		const sandboxInfo: ClaudeCodeSandboxInfo = {
 			sandboxId: codeAgentState.type, // "local" or "cloud"
 			sandboxRemark: "",

@@ -1,7 +1,7 @@
 import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 import { createLogger } from "@shared/logger";
 import { type } from "arktype";
-import { getCodeAgentKy } from "../utils";
+import { getCodeAgentKy, isLocalOrCloudMode } from "../utils";
 
 const logger = createLogger("apis");
 
@@ -35,15 +35,14 @@ export async function executeCommand(
 		const kyInstance = await getCodeAgentKy();
 
 		// Local mode doesn't need sandbox_id
-		const requestBody =
-			codeAgentState.type === "local"
-				? {
-						command: request.command,
-					}
-				: {
-						sandbox_id: request.sandboxId,
-						command: request.command,
-					};
+		const requestBody = isLocalOrCloudMode()
+			? {
+					command: request.command,
+				}
+			: {
+					sandbox_id: request.sandboxId,
+					command: request.command,
+				};
 
 		const response = await kyInstance
 			.post("302/claude-code/commands", {
@@ -93,7 +92,7 @@ export async function uploadFileToSandbox(
 		const formData = new FormData();
 
 		// Local mode doesn't need sandbox_id
-		if (codeAgentState.type !== "local") {
+		if (codeAgentState.type === "remote") {
 			formData.append("sandbox_id", sandboxId);
 		}
 		formData.append("path", path);
@@ -139,19 +138,18 @@ export async function initProject(request: InitProjectRequest): Promise<InitProj
 		const isClawMode = codeAgentState.currentAgentId === "open-claw";
 
 		// Local mode only needs session_id + workspace_path, remote mode needs sandbox_id too
-		const requestBody =
-			codeAgentState.type === "local"
-				? {
-						session_id: request.sessionId,
-						workspace_path: request.workspacePath,
-						agent_type: Number(isClawMode),
-					}
-				: {
-						sandbox_id: request.sandboxId,
-						session_id: request.sessionId,
-						workspace_path: request.workspacePath,
-						agent_type: Number(isClawMode),
-					};
+		const requestBody = isLocalOrCloudMode()
+			? {
+					session_id: request.sessionId,
+					workspace_path: request.workspacePath,
+					agent_type: Number(isClawMode),
+				}
+			: {
+					sandbox_id: request.sandboxId,
+					session_id: request.sessionId,
+					workspace_path: request.workspacePath,
+					agent_type: Number(isClawMode),
+				};
 
 		const kyInstance = await getCodeAgentKy();
 		const response = await kyInstance
@@ -207,12 +205,11 @@ export async function batchUploadFile(
 		const kyInstance = await getCodeAgentKy();
 
 		// Local mode doesn't need sandbox_id
-		const requestBody =
-			codeAgentState.type === "local"
-				? {
-						file_list: request.file_list,
-					}
-				: request;
+		const requestBody = isLocalOrCloudMode()
+			? {
+					file_list: request.file_list,
+				}
+			: request;
 
 		const response = await kyInstance
 			.post("302/claude-code/sandbox/file/upload/batch", {
@@ -265,17 +262,16 @@ export async function downloadFilesFromSandbox(
 		const kyInstance = await getCodeAgentKy();
 
 		// Local mode doesn't need sandbox_id
-		const requestBody =
-			codeAgentState.type === "local"
-				? {
-						path,
-						format,
-					}
-				: {
-						sandbox_id: sandboxId,
-						path,
-						format,
-					};
+		const requestBody = isLocalOrCloudMode()
+			? {
+					path,
+					format,
+				}
+			: {
+					sandbox_id: sandboxId,
+					path,
+					format,
+				};
 
 		const response = await kyInstance
 			.post("302/claude-code/sandbox/file/download", {

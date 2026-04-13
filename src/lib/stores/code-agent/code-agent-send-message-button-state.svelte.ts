@@ -3,6 +3,7 @@ import { m } from "$lib/paraglide/messages";
 import { createLogger } from "@shared/logger";
 import { nanoid } from "nanoid";
 import { toast } from "svelte-sonner";
+import { match } from "ts-pattern";
 import { chatState } from "../chat-state.svelte";
 import { mcpState } from "../mcp-state.svelte";
 import { cloudModeState } from "./cloud-mode-state.svelte";
@@ -24,12 +25,16 @@ class CodeAgentSendMessageButtonState {
 	showBusyLocalAgentDialog = $state(false);
 	isChecking = $state(false);
 
-	isOpenClawSendDisabled = $derived.by(
-		() =>
-			codeAgentState.type === "local" &&
-			codeAgentState.currentAgentId === "open-claw" &&
-			localEnvState.openClawHealthStatus === "unhealthy",
-	);
+	isOpenClawSendDisabled = $derived.by(() => {
+		if (codeAgentState.currentAgentId !== "open-claw") {
+			return false;
+		}
+
+		return match(codeAgentState.type)
+			.with("local", () => localEnvState.openClawHealthStatus === "unhealthy")
+			.with("cloud", () => cloudModeState.openClaw.status === false)
+			.otherwise(() => false);
+	});
 
 	/**
 	 * Ensures the local sandbox is ready for use in local mode
@@ -211,7 +216,7 @@ class CodeAgentSendMessageButtonState {
 						? nanoid()
 						: codeAgentState.sessionId;
 					const shouldSkipInitProject =
-						codeAgentState.type === "local" && !isSessionIdEmpty;
+						["local", "cloud"].includes(codeAgentState.type) && !isSessionIdEmpty;
 
 					if (!shouldSkipInitProject) {
 						const { workspace_path } = await initProject({
@@ -225,14 +230,7 @@ class CodeAgentSendMessageButtonState {
 						// Update currentWorkspacePath with the actual path from server
 						codeAgentState.updateCurrentWorkspacePath(workspace_path);
 
-						// Refresh sessions to sync the new workspace_path to local storage
-						if (codeAgentState.type === "local") {
-							await codeAgentState.refreshSessions();
-						} else {
-							await window.electronAPI.codeAgentService.updateClaudeCodeSessions(
-								sandboxInfo.sandboxId,
-							);
-						}
+						await codeAgentState.refreshSessions();
 					}
 
 					// Collect all files to upload in a single batch request

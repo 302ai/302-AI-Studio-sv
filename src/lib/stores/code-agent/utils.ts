@@ -32,3 +32,7 @@ export function fileToBase64(file: File): Promise<string> {
 export function extractAgentIdFromWorkspacePath(workspacePath: string): string {
 	return workspacePath.replace(WORKSPACE_PATH_PREFIX, "");
 }
+
+export function isClaudeCodeOrOpenClaw(agentId: string): boolean {
+	return ["claude-code", "open-claw"].includes(agentId);
+}

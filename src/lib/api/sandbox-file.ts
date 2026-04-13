@@ -5,7 +5,7 @@
 
 import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 import { createLogger } from "@shared/logger";
-import { getCodeAgentKy } from "./utils";
+import { getCodeAgentKy, isLocalOrCloudMode } from "./utils";
 
 const logger = createLogger("apis");
 
@@ -122,15 +122,14 @@ export async function downloadSandboxFile(
 ): Promise<SandboxFileDownloadResponse> {
 	try {
 		const kyInstance = await getCodeAgentKy();
-		const requestBody =
-			codeAgentState.type === "local"
-				? {
-						path,
-					}
-				: {
-						sandbox_id: sandboxId,
-						path,
-					};
+		const requestBody = isLocalOrCloudMode()
+			? {
+					path,
+				}
+			: {
+					sandbox_id: sandboxId,
+					path,
+				};
 
 		const response = await kyInstance.post("302/claude-code/sandbox/file/download", {
 			json: requestBody,
@@ -196,15 +195,14 @@ export async function writeSandboxFile(
 ): Promise<{ result: string }> {
 	try {
 		const kyInstance = await getCodeAgentKy();
-		const requestBody =
-			codeAgentState.type === "local"
-				? {
-						file_list: fileList,
-					}
-				: {
-						sandbox_id: sandboxId,
-						file_list: fileList,
-					};
+		const requestBody = isLocalOrCloudMode()
+			? {
+					file_list: fileList,
+				}
+			: {
+					sandbox_id: sandboxId,
+					file_list: fileList,
+				};
 
 		const response = await kyInstance.post("302/claude-code/sandbox/file/write", {
 			json: requestBody,
@@ -229,15 +227,14 @@ export async function getFileContent(
 	signal?: AbortSignal,
 ): Promise<string> {
 	const kyInstance = await getCodeAgentKy();
-	const requestBody =
-		codeAgentState.type === "local"
-			? {
-					path: filePath,
-				}
-			: {
-					sandbox_id: sandboxId,
-					path: filePath,
-				};
+	const requestBody = isLocalOrCloudMode()
+		? {
+				path: filePath,
+			}
+		: {
+				sandbox_id: sandboxId,
+				path: filePath,
+			};
 
 	try {
 		// 直接调用下载 API，它会返回文件内容
@@ -328,7 +325,7 @@ async function sandboxFileOperation(
 			original_path: originalPath,
 		};
 
-		if (codeAgentState.type !== "local") {
+		if (!isLocalOrCloudMode()) {
 			requestBody.sandbox_id = sandboxId;
 		}
 
@@ -405,7 +402,7 @@ export async function uploadSandboxFile(
 ): Promise<SandboxFileOperationResponse> {
 	try {
 		// Optimize for local mode: bypass HTTP upload if file path is available
-		if (codeAgentState.type === "local") {
+		if (isLocalOrCloudMode()) {
 			// Cast to any to access .path property which is available in Electron but not standard File API
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			const filePath = (file as any).path;
@@ -430,7 +427,7 @@ export async function uploadSandboxFile(
 
 		const kyInstance = await getCodeAgentKy();
 		const formData = new FormData();
-		if (codeAgentState.type !== "local") {
+		if (!isLocalOrCloudMode()) {
 			formData.append("sandbox_id", sandboxId);
 		}
 		formData.append("path", path);

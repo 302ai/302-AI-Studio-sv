@@ -1536,5 +1536,6 @@
 	"about_export_logs_description": "导出日志，仅用于排查问题，可能包含对话记录、设备信息等数据",
 	"code_agent_cloud_instance_not_running": "云端机器实例还未就绪",
 	"cloud_mode_expired": "已过期",
-	"cloud_mode_instance_name": "实例名"
+	"cloud_mode_instance_name": "实例名",
+	"quick_prompt_trigger": "快捷 Prompt"
 }

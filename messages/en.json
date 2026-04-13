@@ -1536,5 +1536,6 @@
 	"agent_settings_deploy_section": "Deploy",
 	"code_agent_cloud_instance_not_running": "The cloud machine instance is not ready yet",
 	"cloud_mode_expired": "Expired",
-	"cloud_mode_instance_name": "Instance Name"
+	"cloud_mode_instance_name": "Instance Name",
+	"quick_prompt_trigger": "Quick Prompt"
 }

@@ -26,3 +26,7 @@ export async function getCodeAgentKy() {
 		.with("remote", () => _302AIKy)
 		.exhaustive();
 }
+
+export function isLocalOrCloudMode() {
+	return ["local", "cloud"].includes(codeAgentState.type);
+}
