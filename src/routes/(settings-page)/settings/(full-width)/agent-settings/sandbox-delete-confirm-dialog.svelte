@@ -78,6 +78,16 @@
 				}
 				await localClaudeCodeSandboxState.deleteSession(session.session_id);
 			} else if (mode === "remote") {
+				if (!sandbox) return;
+				if (session) {
+					await claudeCodeSandboxState.deleteSession(
+						sandbox.sandboxId,
+						session.session_id,
+					);
+				} else {
+					await claudeCodeSandboxState.deleteSandbox(sandbox.sandboxId);
+				}
+			} else if (mode === "cloud") {
 				if (!session) return;
 				if (cloudModeState.state.status !== "running") {
 					toast.error(m.code_agent_cloud_instance_not_running());

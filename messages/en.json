@@ -1141,6 +1141,7 @@
 	"placeholder_input_sandbox_remark": "Please enter a sandbox name...",
 	"title_agent_sandbox_list": "Agent Sandbox List",
 	"title_local_session_list": "Local Session List",
+	"title_cloud_session_list": "Cloud Session List",
 	"label_agent_sandbox_count": "{count} sessions",
 	"placeholder_search_agent": "Search",
 	"placeholder_search_session": "Search sessions",

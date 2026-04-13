@@ -1144,6 +1144,7 @@
 	"placeholder_input_sandbox_remark": "请输入沙盒名称...",
 	"title_agent_sandbox_list": "Agent沙盒列表",
 	"title_local_session_list": "本地会话列表",
+	"title_cloud_session_list": "云主机会话列表",
 	"label_agent_sandbox_count": "{count}个会话",
 	"placeholder_search_agent": "搜索",
 	"placeholder_search_session": "搜索会话",

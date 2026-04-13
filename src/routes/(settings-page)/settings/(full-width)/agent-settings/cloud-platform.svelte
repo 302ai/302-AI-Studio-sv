@@ -4,19 +4,28 @@
 	import StatusIndicator from "$lib/components/buss/local-agent-panel/status-indicator.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
+	import * as ContextMenu from "$lib/components/ui/context-menu";
+	import * as Empty from "$lib/components/ui/empty/index.js";
+	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import * as Pagination from "$lib/components/ui/pagination/index.js";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { Switch } from "$lib/components/ui/switch";
 	import * as Table from "$lib/components/ui/table/index.js";
 	import { m } from "$lib/paraglide/messages";
+	import {
+		cloudModeSessionsState,
+		persistedCloudModeSessionsState,
+	} from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
 	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { cn } from "$lib/utils";
-	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
+	import { LoaderCircle, RefreshCw, RotateCw, Search } from "@lucide/svelte";
 	import { createLogger } from "@shared/logger";
 	import type { GetManualRenewChargeResponse } from "@shared/storage/cloud-mode";
+	import type { LocalSessionInfo } from "@shared/storage/code-agent";
 	import { format, parseISO } from "date-fns";
 	import { toast } from "svelte-sonner";
+	import SandboxDeleteConfirmDialog from "./sandbox-delete-confirm-dialog.svelte";
 
 	const logger = createLogger("ui");
 
@@ -32,6 +41,26 @@
 	let isLoadingCharges = $state(false);
 	let hasInitialized = $state(false);
 	let showConfirmDialog = $state(false);
+
+	// Session list state
+	let searchQuery = $state("");
+	let isSessionLoading = $state(false);
+	let targetSession = $state<LocalSessionInfo | null>(null);
+	let isDeleteDialogOpen = $state(false);
+
+	// Filter sessions based on search query
+	const filteredSessions = $derived.by(() => {
+		const sessions = persistedCloudModeSessionsState.current;
+		if (!searchQuery.trim()) return sessions;
+
+		const query = searchQuery.toLowerCase();
+		return sessions.filter(
+			(session) =>
+				session.session_id.toLowerCase().includes(query) ||
+				(session.note?.toLowerCase().includes(query) ?? false) ||
+				(session.workspace_path?.toLowerCase().includes(query) ?? false),
+		);
+	});
 
 	let isRenewal = $derived(!!cloudState.instanceName);
 
@@ -91,6 +120,20 @@
 				(isRenewal ? m.cloud_mode_renew_failed() : m.cloud_mode_create_failed()) + e,
 			);
 		}
+	}
+
+	async function handleSessionRefresh() {
+		isSessionLoading = true;
+		try {
+			await cloudModeSessionsState.refreshSessions();
+		} finally {
+			isSessionLoading = false;
+		}
+	}
+
+	function handleDeleteClick(session: LocalSessionInfo) {
+		targetSession = session;
+		isDeleteDialogOpen = true;
 	}
 </script>
 
@@ -251,6 +294,87 @@
 		{/if}
 	</div>
 
+	<!-- Section 3: Cloud Session List -->
+	<div class="space-y-2">
+		<div class="flex items-center justify-between">
+			<div class="flex items-center">
+				<h2 class="text-sm font-medium">{m.title_cloud_session_list()}</h2>
+				<div class="flex gap-1">
+					<ButtonWithTooltip
+						class="hover:!bg-chat-action-hover"
+						tooltip={m.label_button_reload()}
+						onclick={handleSessionRefresh}
+						disabled={isSessionLoading}
+					>
+						<RotateCw class={cn("h-4 w-4", isSessionLoading ? "animate-spin" : "")} />
+					</ButtonWithTooltip>
+				</div>
+			</div>
+			<!-- Search -->
+			<div class="relative">
+				<Search
+					class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+				/>
+				<Input
+					placeholder={m.placeholder_search_session()}
+					class="pl-9 bg-muted/50 border-transparent focus-visible:ring-0 focus-visible:bg-background"
+					bind:value={searchQuery}
+				/>
+			</div>
+		</div>
+
+		<!-- Session List -->
+		<div class={cn("p-2", filteredSessions.length > 0 && "rounded-lg border bg-muted/20")}>
+			{#if filteredSessions.length === 0}
+				<Empty.Root>
+					<Empty.Content class="h-[200px] flex flex-col items-center justify-start pt-8">
+						<Empty.Description>
+							{searchQuery ? m.no_search_results() : m.no_sessions()}
+						</Empty.Description>
+					</Empty.Content>
+				</Empty.Root>
+			{:else}
+				<div class="max-h-[360px] overflow-y-auto pr-1">
+					<div class="flex flex-col gap-2">
+						{#each filteredSessions as session (session.session_id)}
+							<ContextMenu.Root>
+								<ContextMenu.Trigger>
+									<div
+										class="flex cursor-pointer items-center justify-between rounded-lg bg-muted/50 p-4 transition-colors hover:bg-muted/70"
+									>
+										<div class="flex flex-col gap-1">
+											<span class="font-medium text-sm">
+												{session.note || session.session_id}
+											</span>
+											<span class="text-xs text-muted-foreground"
+												>{session.session_id}</span
+											>
+										</div>
+										{#if session.workspace_path}
+											<div class="flex flex-col items-end gap-1">
+												<span class="text-xs text-muted-foreground">
+													{session.workspace_path}
+												</span>
+											</div>
+										{/if}
+									</div>
+								</ContextMenu.Trigger>
+								<ContextMenu.Content>
+									<ContextMenu.Item
+										class="text-destructive focus:text-destructive"
+										onclick={() => handleDeleteClick(session)}
+									>
+										{m.text_button_delete ? m.text_button_delete() : "Delete"}
+									</ContextMenu.Item>
+								</ContextMenu.Content>
+							</ContextMenu.Root>
+						{/each}
+					</div>
+				</div>
+			{/if}
+		</div>
+	</div>
+
 	<div class="space-y-2">
 		<div class="flex justify-between items-center">
 			<h2 class="text-sm font-medium">{m.cloud_mode_subscription_history()}</h2>
@@ -369,3 +493,5 @@
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>
+
+<SandboxDeleteConfirmDialog bind:open={isDeleteDialogOpen} mode="cloud" session={targetSession} />
