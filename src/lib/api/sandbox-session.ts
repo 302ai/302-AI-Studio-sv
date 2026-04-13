@@ -210,9 +210,11 @@ export async function deleteLocalSession(
  *
  * 列出本地会话（始终使用本地 ky 实例）
  */
-export async function listLocalSessions(): Promise<ListLocalClaudeCodeSessionsResponse> {
+export async function listLocalSessions(
+	mode: CodeAgentType,
+): Promise<ListLocalClaudeCodeSessionsResponse> {
 	try {
-		const kyInstance = await getCodeAgentKy();
+		const kyInstance = await getCodeAgentKy(mode);
 		const response = await kyInstance.get("302/claude-code/sandbox/session").json();
 
 		const validated = listLocalClaudeCodeSessionsResponse(response);

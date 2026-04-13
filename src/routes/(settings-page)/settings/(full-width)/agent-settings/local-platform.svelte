@@ -38,7 +38,7 @@
 	async function handleRefresh() {
 		isLoading = true;
 		try {
-			await codeAgentState.refreshSessions();
+			await codeAgentState.refreshSessions(undefined, "local");
 		} finally {
 			isLoading = false;
 		}

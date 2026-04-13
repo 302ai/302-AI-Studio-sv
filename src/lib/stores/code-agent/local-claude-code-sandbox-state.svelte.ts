@@ -201,7 +201,7 @@ class LocalClaudeCodeSandboxState {
 	async refreshSessions(): Promise<void> {
 		this.isLoading = true;
 		try {
-			const response = await listLocalSessions();
+			const response = await listLocalSessions("local");
 			if (response.success) {
 				persistedLocalClaudeCodeSessionsState.current = response.session_list;
 			}
