@@ -22,6 +22,7 @@ import type {
 	Tab,
 	Theme,
 	FileNode,
+	SandboxHealthResponse,
 	ImportResult,
 	BackupInfo,
 	LogLevel,
@@ -30,7 +31,6 @@ import type {
 	ThreadData,
 	UpdateChannel,
 } from "@shared/types";
-import type { SandboxHealthResponse } from "@shared/storage/cloud-mode";
 
 /**
  * Auto-generated IPC service interfaces

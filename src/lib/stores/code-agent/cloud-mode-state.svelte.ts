@@ -198,7 +198,6 @@ class CloudModeStateManager {
 		await this.loadingCommand("restart", async () => {
 			const res = await restartDocker({
 				instanceName: this.state.instanceName,
-				openclawConfigContent: "",
 			});
 			if (!res.success) {
 				throw new Error("Failed to restart instance");

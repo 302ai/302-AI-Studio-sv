@@ -181,9 +181,11 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 			logger.error("Failed to validate restart docker request:", requestBody.summary);
 			throw new Error("Invalid request format for restart docker");
 		}
-		const response = testKy
+		const response = await testKy
 			.post("api/v1/instances/openclaw/restart", { json: requestBody })
 			.json();
+
+		logger.debug("Restart docker actual response:", response);
 
 		const validated = restartDockerResponseSchema(response);
 		if (validated instanceof type.errors) {
