@@ -566,12 +566,13 @@ class CodeAgentState {
 		this.updateEnabled(true, false);
 	}
 
-	async refreshSessions(sandboxId?: string): Promise<void> {
-		if (this.type === "local") {
+	async refreshSessions(sandboxId?: string, mode?: CodeAgentType): Promise<void> {
+		const targetMode: CodeAgentType = mode ?? this.type;
+		if (targetMode === "local") {
 			await localClaudeCodeSandboxState.refreshSessions();
-		} else if (this.type === "cloud") {
+		} else if (targetMode === "cloud") {
 			await cloudModeSessionsState.refreshSessions();
-		} else if (this.type === "remote") {
+		} else if (targetMode === "remote") {
 			if (sandboxId) {
 				await claudeCodeSandboxState.refreshSessions(sandboxId);
 			}

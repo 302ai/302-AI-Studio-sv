@@ -201,7 +201,7 @@ class CloudModeSessionsState {
 	async refreshSessions(): Promise<void> {
 		this.isLoading = true;
 		try {
-			const response = await listLocalSessions();
+			const response = await listLocalSessions("cloud");
 			if (response.success) {
 				persistedCloudModeSessionsState.current = response.session_list;
 			}
