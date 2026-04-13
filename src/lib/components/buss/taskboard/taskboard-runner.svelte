@@ -29,8 +29,8 @@
 	const isLocalSandboxStarting = $derived(
 		codeAgentState.type === "local" && localEnvState.sandboxStarting,
 	);
-	const isCloudModeRunning = $derived(
-		codeAgentState.type === "cloud" && cloudModeState.state.status === "running",
+	const isCloudModeNotRunning = $derived(
+		codeAgentState.type === "cloud" && cloudModeState.state.status !== "running",
 	);
 
 	const hasConfiguredProviders = $derived(() => {
@@ -119,7 +119,7 @@
 				}
 				return trySend(content);
 			} else if (codeAgentState.type === "cloud") {
-				if (!isCloudModeRunning) {
+				if (isCloudModeNotRunning) {
 					toast.error(m.code_agent_cloud_instance_not_running());
 					return false;
 				}
@@ -193,7 +193,7 @@
 							!isWaitingForChat &&
 							(codeAgentState.isChecking ||
 								isLocalSandboxStarting ||
-								!isCloudModeRunning))}
+								isCloudModeNotRunning))}
 					onclick={handleRun}
 				>
 					{buttonText}

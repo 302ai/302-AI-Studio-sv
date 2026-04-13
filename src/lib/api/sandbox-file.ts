@@ -3,7 +3,6 @@
  * 302.AI 沙盒文件系统 API
  */
 
-import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 import { createLogger } from "@shared/logger";
 import { getCodeAgentKy, isLocalOrCloudMode } from "./utils";
 
@@ -54,17 +53,16 @@ export async function listSandboxFiles(
 ): Promise<SandboxFileListResponse> {
 	try {
 		const kyInstance = await getCodeAgentKy();
-		const requestBody =
-			codeAgentState.type === "local"
-				? {
-						path,
-						depth,
-					}
-				: {
-						sandbox_id: sandboxId,
-						path,
-						depth,
-					};
+		const requestBody = isLocalOrCloudMode()
+			? {
+					path,
+					depth,
+				}
+			: {
+					sandbox_id: sandboxId,
+					path,
+					depth,
+				};
 
 		const response = await kyInstance.post("302/claude-code/sandbox/file/list", {
 			json: requestBody,

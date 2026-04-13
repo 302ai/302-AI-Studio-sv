@@ -46,8 +46,8 @@
 	const isLocalSandboxStarting = $derived(
 		codeAgentState.type === "local" && localEnvState.sandboxStarting,
 	);
-	const isCloudModeRunning = $derived(
-		codeAgentState.type === "cloud" && cloudModeState.state.status === "running",
+	const isCloudModeNotRunning = $derived(
+		codeAgentState.type === "cloud" && cloudModeState.state.status !== "running",
 	);
 
 	let isVibe = $state(false);
@@ -611,7 +611,7 @@
 						{:else}
 							<button
 								disabled={!chatState.sendMessageEnabled ||
-									!isCloudModeRunning ||
+									isCloudModeNotRunning ||
 									isLocalSandboxStarting ||
 									codeAgentSendMessageButtonState.isChecking ||
 									codeAgentSendMessageButtonState.isOpenClawSendDisabled}
@@ -622,7 +622,7 @@
 								)}
 								onclick={handleSendMessage}
 							>
-								{#if isLocalSandboxStarting || !isCloudModeRunning || codeAgentSendMessageButtonState.isChecking}
+								{#if isLocalSandboxStarting || isCloudModeNotRunning || codeAgentSendMessageButtonState.isChecking}
 									<LdrsLoader type="line-spinner" size={18} />
 								{:else}
 									<img src={sendMessageIcon} alt="plane" class="size-5" />
