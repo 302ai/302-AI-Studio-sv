@@ -17,7 +17,7 @@ import {
 import { type } from "arktype";
 
 import { createLogger } from "@shared/logger";
-import { testKy } from "./core/test-ky";
+import { _302AIKy } from "./core/_302ai-ky";
 
 const logger = createLogger("apis");
 
@@ -27,7 +27,7 @@ const logger = createLogger("apis");
  */
 export async function listInstances(): Promise<ListInstancesResponse> {
 	try {
-		const response = await testKy.get("api/v1/instances").json();
+		const response = await _302AIKy.get("302/swas/instances").json();
 
 		const validated = listInstancesResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -49,7 +49,7 @@ export async function listInstances(): Promise<ListInstancesResponse> {
 
 /**
  * Restart Docker image (optionally update openclaw config first).
- * Method: POST /api/v1/instances/openclaw/restart
+ * Method: POST /302/swas/instances/openclaw/restart
  * @param request - Instance name and optional openclaw config content
  * @returns Restart docker response with instance name
  */
@@ -61,8 +61,8 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 			throw new Error("Invalid request format for restart docker");
 		}
 
-		const response = await testKy
-			.post("api/v1/instances/openclaw/restart", { json: requestBody })
+		const response = await _302AIKy
+			.post("302/swas/instances/openclaw/restart", { json: requestBody })
 			.json();
 
 		const validated = restartDockerResponseSchema(response);
@@ -85,7 +85,7 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 
 /**
  * Read text files from the instance.
- * Method: POST /api/v1/instances/files/read
+ * Method: POST /302/swas/instances/files/read
  * @param request - Instance name and file paths to read
  * @returns Read files response with file contents
  */
@@ -97,8 +97,8 @@ export async function readInstanceFiles(request: ReadFilesRequest): Promise<Read
 			throw new Error("Invalid request format for read files");
 		}
 
-		const response = await testKy
-			.post("api/v1/instances/files/read", { json: requestBody })
+		const response = await _302AIKy
+			.post("302/swas/instances/files/read", { json: requestBody })
 			.json();
 
 		const validated = readFilesResponseSchema(response);
@@ -130,7 +130,7 @@ export async function getSandboxHealthStatus(
 	port: number,
 ): Promise<SandboxHealthResponse> {
 	try {
-		const response = await testKy(
+		const response = await _302AIKy(
 			new URL(`http://${ip}:${port}/302/claude-code/sandbox/health`),
 		).json();
 		logger.debug("[getSandboxHealthStatus] Health check response:", response);

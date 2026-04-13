@@ -72,7 +72,7 @@ export const initInstanceRequestSchema = type({
 	instance_name: data.instanceName,
 	is_dev: data.isDev,
 }));
-export type InitInstanceRequest = typeof initInstanceRequestSchema.infer;
+export type InitInstanceRequest = typeof initInstanceRequestSchema.inferIn;
 export const initInstanceResponseSchema = type({
 	success: "boolean",
 	instance: type({

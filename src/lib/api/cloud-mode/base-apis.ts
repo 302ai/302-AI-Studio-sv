@@ -28,9 +28,9 @@ import {
 	type CreateInstanceResponse,
 	type ExecCommandRequest,
 	type ExecCommandResponse,
-	type GetManualRenewChargeResponse,
 	type ExecStreamEvent,
 	type ExecStreamRequest,
+	type GetManualRenewChargeResponse,
 	type InitInstanceRequest,
 	type InitInstanceResponse,
 	type ListInstancesResponse,
@@ -51,7 +51,7 @@ import {
 	type WriteFilesResponse,
 } from "@shared/storage/cloud-mode";
 import { type } from "arktype";
-import { testKy } from "../core/test-ky";
+import { _302AIKy } from "../core/_302ai-ky";
 
 const logger = createLogger("apis");
 
@@ -77,7 +77,7 @@ export async function getCloudSandboxHealth(
  */
 export async function listInstances(): Promise<ListInstancesResponse> {
 	try {
-		const response = await testKy.get("api/v1/instances").json();
+		const response = await _302AIKy.get("302/swas/instances").json();
 
 		const validated = listInstancesResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -106,7 +106,7 @@ export async function createInstance(
 			logger.error("Failed to validate create instance request:", requestBody.summary);
 			throw new Error("Invalid request format for create instance");
 		}
-		const response = await testKy.post("api/v1/instances", { json: requestBody }).json();
+		const response = await _302AIKy.post("302/swas/instances", { json: requestBody }).json();
 
 		const validated = createInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -132,7 +132,9 @@ export async function initInstance(request: InitInstanceRequest): Promise<InitIn
 			logger.error("Failed to validate init instance request:", requestBody.summary);
 			throw new Error("Invalid request format for init instance");
 		}
-		const response = await testKy.post("api/v1/instances/init", { json: requestBody }).json();
+		const response = await _302AIKy
+			.post("302/swas/instances/init", { json: requestBody })
+			.json();
 
 		const validated = initInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -153,8 +155,8 @@ export async function initInstance(request: InitInstanceRequest): Promise<InitIn
  */
 /* export async function getInstanceStatus(instanceName: string): Promise<InstanceStatusResponse> {
 	try {
-		const response = await testKy
-			.get(`api/v1/instances/status?instance_name=${encodeURIComponent(instanceName)}`)
+		const response = await _302AIKy
+			.get(`302/swas/instances/status?instance_name=${encodeURIComponent(instanceName)}`)
 			.json();
 
 		const validated = instanceStatusResponseSchema(response);
@@ -181,8 +183,8 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 			logger.error("Failed to validate restart docker request:", requestBody.summary);
 			throw new Error("Invalid request format for restart docker");
 		}
-		const response = await testKy
-			.post("api/v1/instances/openclaw/restart", { json: requestBody })
+		const response = await _302AIKy
+			.post("302/swas/instances/openclaw/restart", { json: requestBody })
 			.json();
 
 		logger.debug("Restart docker actual response:", response);
@@ -213,7 +215,9 @@ export async function updateAutoRenew(
 			logger.error("Failed to validate update auto renew request:", requestBody.summary);
 			throw new Error("Invalid request format for update auto renew");
 		}
-		const response = testKy.post("api/v1/instances/auto-renew", { json: requestBody }).json();
+		const response = _302AIKy
+			.post("302/swas/instances/auto-renew", { json: requestBody })
+			.json();
 
 		const validated = updateAutoRenewResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -243,7 +247,9 @@ export async function manualRenew(request: ManualRenewRequest): Promise<ManualRe
 			logger.error("Failed to validate manual renew request:", requestBody.summary);
 			throw new Error("Invalid request format for manual renew");
 		}
-		const response = testKy.post("api/v1/instances/manual-renew", { json: requestBody }).json();
+		const response = _302AIKy
+			.post("302/swas/instances/manual-renew", { json: requestBody })
+			.json();
 
 		const validated = manualRenewResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -306,8 +312,8 @@ export async function getManualRenewCharge(
 	pageSize = 20,
 ): Promise<GetManualRenewChargeResponse> {
 	try {
-		const response = await testKy
-			.get(`api/v1/instances/manual-renew/charges?page=${page}&page_size=${pageSize}`)
+		const response = await _302AIKy
+			.get(`302/swas/instances/manual-renew/charges?page=${page}&page_size=${pageSize}`)
 			.json();
 
 		const validated = getManualRenewChargeResponseSchema(response);
@@ -339,7 +345,9 @@ export async function rebootInstance(
 			logger.error("Failed to validate reboot instance request:", requestBody.summary);
 			throw new Error("Invalid request format for reboot instance");
 		}
-		const response = await testKy.post("api/v1/instances/reboot", { json: requestBody }).json();
+		const response = await _302AIKy
+			.post("302/swas/instances/reboot", { json: requestBody })
+			.json();
 
 		const validated = rebootInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -367,7 +375,7 @@ export async function updateInstanceAutoRenew(
 			logger.error("Failed to validate update auto renew request:", requestBody.summary);
 			throw new Error("Invalid request format for update auto renew");
 		}
-		const response = await testKy("api/v1/instances/auto-renew", {
+		const response = await _302AIKy("302/swas/instances/auto-renew", {
 			method: "POST",
 			json: requestBody,
 		}).json();
@@ -391,7 +399,9 @@ export async function readInstanceFiles(request: ReadFilesRequest): Promise<Read
 			logger.error("Failed to validate read files request:", requestBody.summary);
 			throw new Error("Invalid request format for read files");
 		}
-		const response = testKy.post("api/v1/instances/files/read", { json: requestBody }).json();
+		const response = _302AIKy
+			.post("302/swas/instances/files/read", { json: requestBody })
+			.json();
 
 		const validated = readFilesResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -417,7 +427,9 @@ export async function writeInstanceFiles(request: WriteFilesRequest): Promise<Wr
 			logger.error("Failed to validate write files request:", requestBody.summary);
 			throw new Error("Invalid request format for write files");
 		}
-		const response = testKy.post("api/v1/instances/files/write", { json: requestBody }).json();
+		const response = _302AIKy
+			.post("302/swas/instances/files/write", { json: requestBody })
+			.json();
 
 		const validated = writeFilesResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -445,8 +457,8 @@ export async function execInstanceCommand(
 			logger.error("Failed to validate exec command request:", requestBody.summary);
 			throw new Error("Invalid request format for exec command");
 		}
-		const response = testKy
-			.post("api/v1/instances/commands/exec", { json: requestBody })
+		const response = _302AIKy
+			.post("302/swas/instances/commands/exec", { json: requestBody })
 			.json();
 
 		const validated = execCommandResponseSchema(response);
@@ -466,7 +478,7 @@ export async function getSandboxHealthStatus(
 	port: number,
 ): Promise<SandboxHealthResponse> {
 	try {
-		const response = await testKy(
+		const response = await _302AIKy(
 			new URL(`http://${ip}:${port}/302/claude-code/sandbox/health`),
 		).json();
 		logger.debug("[getSandboxHealthStatus] Health check response:", response);
@@ -516,7 +528,7 @@ export async function execCommandStream(
 	},
 ): Promise<void> {
 	try {
-		const response = await testKy(
+		const response = await _302AIKy(
 			new URL(`http://${publicInfo.ip}:${publicInfo.port}/302/claude-code/commands/stream`),
 			{
 				method: "POST",

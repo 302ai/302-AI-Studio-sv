@@ -1,11 +1,12 @@
 import {
-	createInstance as createInstanceAPI,
+	createInstance,
+	initInstance,
 	listInstances,
 	manualRenew,
 	restartDocker,
 	updateInstanceAutoRenew,
 } from "$lib/api/cloud-mode/base-apis";
-import { testKy } from "$lib/api/core/test-ky";
+import { _302AIKy } from "$lib/api/core/_302ai-ky";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
 import { createLogger } from "@shared/logger";
@@ -249,8 +250,8 @@ class CloudModeStateManager {
 		if (!publicIp || !ocPort || !instanceName) return null;
 
 		try {
-			const response = (await testKy
-				.post("api/v1/instances/files/read", {
+			const response = (await _302AIKy
+				.post("302/swas/instances/files/read", {
 					json: {
 						instance_name: instanceName,
 						file_paths: ["/home/user/.openclaw/openclaw.json"],
@@ -277,15 +278,15 @@ class CloudModeStateManager {
 			if (isRenewal) {
 				const res = await manualRenew({
 					instanceName: this.state.instanceName,
-					isDev: true,
+					isDev: true, // TODO: remove this when ready
 				});
 				if (!res.success) {
 					throw new Error("Failed to renew instance");
 				}
 				logger.info("Instance renewed successfully");
 			} else {
-				const res = await createInstanceAPI({
-					isDev: true,
+				const res = await createInstance({
+					isDev: true, // TODO: remove this when ready
 					isAutoRenew: this.state.autoRenew,
 				});
 				if (!res.success) {
@@ -293,6 +294,11 @@ class CloudModeStateManager {
 				}
 				logger.info("Instance created successfully");
 			}
+
+			await initInstance({
+				instanceName: this.state.instanceName,
+				isDev: true, // TODO: remove this when ready
+			});
 
 			await this.loadInstances();
 		})();

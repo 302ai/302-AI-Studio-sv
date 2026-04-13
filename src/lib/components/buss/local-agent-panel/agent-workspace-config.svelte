@@ -1,17 +1,5 @@
-<script lang="ts">
-	import { SegButton, SettingSelect } from "$lib/components/buss/settings";
-	import { Label } from "$lib/components/ui/label";
-	import { m } from "$lib/paraglide/messages";
-	import { codeAgentState } from "$lib/stores/code-agent";
-	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
-	import { cn } from "$lib/utils";
-	import { RefreshCcw } from "@lucide/svelte";
-	import { agentClass } from "@shared/storage/code-agent";
-	import { onMount } from "svelte";
-	import { ButtonWithTooltip } from "../button-with-tooltip";
-	import OpenClawChannelPanel from "../open-claw-config-panel/open-claw-channel-panel.svelte";
-
-	const frameworkOptions = [
+<script lang="ts" module>
+	export const frameworkOptions = [
 		{
 			key: "claude-code",
 			label: m.agent_framework_claude_code_label(),
@@ -23,6 +11,25 @@
 			description: m.agent_framework_open_claw_description(),
 		},
 	];
+</script>
+
+<script lang="ts">
+	import { SegButton, SettingSelect } from "$lib/components/buss/settings";
+	import { Label } from "$lib/components/ui/label";
+	import { m } from "$lib/paraglide/messages";
+	import { codeAgentState } from "$lib/stores/code-agent";
+	import { cloudModeSessionsState } from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
+	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
+	import { cn } from "$lib/utils";
+	import { RefreshCcw } from "@lucide/svelte";
+	import { agentClass } from "@shared/storage/code-agent";
+	import { onMount } from "svelte";
+	import { ButtonWithTooltip } from "../button-with-tooltip";
+	import OpenClawChannelPanel from "../open-claw-config-panel/open-claw-channel-panel.svelte";
+
+	const sessionStore = $derived(
+		codeAgentState.type === "local" ? localClaudeCodeSandboxState : cloudModeSessionsState,
+	);
 
 	async function handleRefresh() {
 		await codeAgentState.refreshSessions();
@@ -35,7 +42,7 @@
 	}
 
 	onMount(async () => {
-		await codeAgentState.refreshSessions();
+		await sessionStore.refreshSessions();
 	});
 </script>
 
@@ -66,24 +73,17 @@
 				class="hover:!bg-chat-action-hover"
 				tooltip={m.label_button_reload()}
 				onclick={handleRefresh}
-				disabled={localClaudeCodeSandboxState.isLoading}
+				disabled={sessionStore.isLoading}
 			>
-				<RefreshCcw
-					class={cn(
-						"h-4 w-4",
-						localClaudeCodeSandboxState.isLoading ? "animate-spin" : "",
-					)}
-				/>
+				<RefreshCcw class={cn("h-4 w-4", sessionStore.isLoading ? "animate-spin" : "")} />
 			</ButtonWithTooltip>
 		</div>
 		<SettingSelect
 			name="Select Session"
-			value={localClaudeCodeSandboxState.selectedSessionId}
-			groupedOptions={localClaudeCodeSandboxState.sessionOptions}
+			value={sessionStore.selectedSessionId}
+			groupedOptions={sessionStore.sessionOptions}
 			placeholder={m.local_platform_new_session_placeholder()}
-			onValueChange={localClaudeCodeSandboxState.handleSessionSelected.bind(
-				localClaudeCodeSandboxState,
-			)}
+			onValueChange={sessionStore.handleSessionSelected.bind(sessionStore)}
 			contentClass="w-[var(--bits-select-anchor-width)]"
 		/>
 	</div>
@@ -93,12 +93,10 @@
 		<Label class="text-label-fg font-normal">{m.local_platform_work_directory()}</Label>
 		<SettingSelect
 			name="Work Directory"
-			value={localClaudeCodeSandboxState.selectedWorkspacePath}
-			groupedOptions={localClaudeCodeSandboxState.workspaceOptions}
+			value={sessionStore.selectedWorkspacePath}
+			groupedOptions={sessionStore.workspaceOptions}
 			placeholder={m.local_platform_new_work_directory_placeholder()}
-			onValueChange={localClaudeCodeSandboxState.handleWorkspaceSelected.bind(
-				localClaudeCodeSandboxState,
-			)}
+			onValueChange={sessionStore.handleWorkspaceSelected.bind(sessionStore)}
 			contentClass="w-[var(--bits-select-anchor-width)]"
 		/>
 	</div>

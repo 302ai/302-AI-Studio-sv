@@ -5,7 +5,7 @@ import ky from "ky";
 const userAgent = getCustomUserAgentFragment();
 
 export const _302AIKy = ky.create({
-	timeout: 60000,
+	timeout: 180000,
 	prefixUrl: "https://api.302.ai",
 	headers: {
 		"User-Agent": userAgent,

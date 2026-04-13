@@ -392,6 +392,21 @@ class CodeAgentState {
 			.otherwise(() => false);
 	}
 
+	// get sessions() {
+	// 	return match(this.type)
+	// 		.with("local", () => localClaudeCodeSandboxState.sessions)
+	// 		.with("cloud", () => cloudModeSessionsState.sessions)
+	// 		.otherwise(() => []);
+	// }
+
+	// get selectedSessionId() {
+	// 	return match(this.type)
+	// 		.with("local", () => localClaudeCodeSandboxState.selectedSessionId)
+	// 		.with("cloud", () => cloudModeSessionsState.selectedSessionId)
+	// 		.with("remote", () => claudeCodeAgentState.selectedSessionId)
+	// 		.exhaustive();
+	// }
+
 	async getSkillList(isInit: boolean): Promise<ListSkillsResponse> {
 		return withLoadingState(
 			(loading) => (this.isLoadingSkills = loading),
