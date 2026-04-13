@@ -3,36 +3,31 @@
  *Author: Leessmin
  *Date: 2026-03-23
  **/
-import { codeAgentState } from "$lib/stores/code-agent";
-import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 import { createLogger } from "@shared/logger";
 
 const logger = createLogger("ui");
 
 // hooks
 export function ApplyOpenClawChannelConfigConfirm({
-	prepareAction,
+	action,
 	finishAction,
 	open,
 	loading,
+	succeed,
 	error,
 }: {
-	prepareAction?: () => Promise<void>;
+	action?: () => Promise<void>;
 	finishAction?: () => Promise<void>;
 	open: (arg: boolean) => void;
 	loading: (arg: boolean) => void;
+	succeed: () => void;
 	error: (err: unknown) => void;
 }) {
 	const handleConfirmDialogOk = async () => {
 		loading(true);
 		try {
-			await prepareAction?.();
-			if (
-				!codeAgentState.isPristineSession &&
-				localEnvState.openClawHealthStatus !== "unknown"
-			) {
-				await window.electronAPI.localVibeService.restartPodmanMachine();
-			}
+			await action?.();
+			succeed();
 		} catch (e) {
 			error(e);
 			logger.warn("OpenClaw config panel error:", e);

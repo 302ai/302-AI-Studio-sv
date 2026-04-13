@@ -9,6 +9,7 @@
 	import { openclawConfigState } from "$lib/stores/code-agent/openclaw/openclaw-config-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
 	import { trim } from "es-toolkit/string";
+	import { toast } from "svelte-sonner";
 	import SettingInputField from "../settings/setting-input-field.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
 	import { ApplyOpenClawChannelConfigConfirm } from "./hooks";
@@ -20,7 +21,7 @@
 	let hasConfigs = $derived(trim(feishuSessionId) !== "" || trim(telegramBotId) !== "");
 
 	const { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
-		prepareAction: async () => {
+		action: async () => {
 			await openclawConfigState
 				.batchUpdater()
 				.update("feishuSessionId", feishuSessionId)
@@ -32,6 +33,9 @@
 		open: (v) => (confirmDialogOpen = v),
 		loading: (v) => (applyConfigLoading = v),
 		error: (_) => {},
+		succeed: () => {
+			toast.success(m.open_claw_config_update_success());
+		},
 	});
 
 	async function handleNewSettingsTab(route: string) {

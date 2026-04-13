@@ -34,7 +34,7 @@
 					{#if applyConfigLoading}
 						<LoaderCircle class="h-4 w-4 animate-spin" />
 					{/if}
-					{m.open_claw_update()}本地
+					{m.open_claw_update()}{m.title_local()}
 				</AlertDialog.Action>
 			{/if}
 			{#if handleLocalConfirmDialogOk}
@@ -45,7 +45,7 @@
 					{#if applyConfigLoading}
 						<LoaderCircle class="h-4 w-4 animate-spin" />
 					{/if}
-					{m.open_claw_update()}云主机
+					{m.open_claw_update()}{m.cloud_mode_instance()}
 				</AlertDialog.Action>
 			{/if}
 		</AlertDialog.Footer>
