@@ -3,6 +3,7 @@
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Empty from "$lib/components/ui/empty/index.js";
 	import { Input } from "$lib/components/ui/input";
+	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import {
 		claudeCodeSandboxState,
@@ -87,7 +88,7 @@
 <div class="flex flex-col gap-3 h-full">
 	<div class="flex items-center justify-between">
 		<div class="flex items-center">
-			<h2 class="text-base font-medium">{m.title_agent_sandbox_list()}</h2>
+			<Label class="text-label-fg font-normal">{m.title_agent_sandbox_list()}</Label>
 			<div class="flex gap-1">
 				<ButtonWithTooltip
 					class="hover:!bg-chat-action-hover"

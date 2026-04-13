@@ -179,7 +179,9 @@
 				</div>
 			</div>
 		{:else}
-			<h2 class="text-sm font-medium">{m.local_platform_environment_monitoring()}</h2>
+			<Label class="text-label-fg font-normal"
+				>{m.local_platform_environment_monitoring()}</Label
+			>
 			<div class="rounded-lg border p-5 space-y-5">
 				<div class="flex items-start justify-between gap-4">
 					<div class="flex-1 space-y-3">
@@ -243,7 +245,7 @@
 				</div>
 			</div>
 		{:else}
-			<h2 class="text-sm font-medium">{m.cloud_mode_subscription_info()}</h2>
+			<Label class="text-label-fg font-normal">{m.cloud_mode_subscription_info()}</Label>
 			<div class="rounded-lg border p-5 space-y-5">
 				<div class="flex justify-between items-end w-full">
 					<div class="space-y-1">
@@ -298,7 +300,7 @@
 	<div class="space-y-2">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center">
-				<h2 class="text-sm font-medium">{m.title_cloud_session_list()}</h2>
+				<Label class="text-label-fg font-normal">{m.title_cloud_session_list()}</Label>
 				<div class="flex gap-1">
 					<ButtonWithTooltip
 						class="hover:!bg-chat-action-hover"
@@ -377,7 +379,7 @@
 
 	<div class="space-y-2">
 		<div class="flex justify-between items-center">
-			<h2 class="text-sm font-medium">{m.cloud_mode_subscription_history()}</h2>
+			<Label class="text-label-fg font-normal">{m.cloud_mode_subscription_history()}</Label>
 			<ButtonWithTooltip
 				onclick={() => fetchCharges(chargesPagination.page)}
 				tooltip={m.refresh()}

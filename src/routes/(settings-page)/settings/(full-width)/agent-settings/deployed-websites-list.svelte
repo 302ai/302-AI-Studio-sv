@@ -10,6 +10,7 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import * as Empty from "$lib/components/ui/empty";
 	import { Input } from "$lib/components/ui/input";
+	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 	import { cn } from "$lib/utils";
@@ -22,9 +23,9 @@
 		Search,
 		Trash2,
 	} from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
-	import { createLogger } from "@shared/logger";
 
 	const logger = createLogger("ui");
 
@@ -127,9 +128,11 @@
 <div class="space-y-3">
 	<div class="flex items-center justify-between">
 		<div class="flex items-center">
-			<h2 class="text-base font-medium">
-				{m.title_deployed_websites ? m.title_deployed_websites() : "Deployed Websites"}
-			</h2>
+			<Label class="text-label-fg font-normal"
+				>{m.title_deployed_websites
+					? m.title_deployed_websites()
+					: "Deployed Websites"}</Label
+			>
 			<div class="flex gap-1">
 				<ButtonWithTooltip
 					class="hover:!bg-chat-action-hover"

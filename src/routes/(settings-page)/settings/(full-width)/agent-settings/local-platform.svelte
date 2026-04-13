@@ -75,7 +75,7 @@
 	<section class="space-y-4 mt-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center">
-				<h2 class="text-base font-medium">{m.title_local_session_list()}</h2>
+				<Label class="text-label-fg font-normal">{m.title_local_session_list()}</Label>
 				<div class="flex gap-1">
 					<ButtonWithTooltip
 						class="hover:!bg-chat-action-hover"
