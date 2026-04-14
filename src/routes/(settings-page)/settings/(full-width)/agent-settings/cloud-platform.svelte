@@ -231,15 +231,20 @@
 								text={resolveOpenClawText(openClaw.status)}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
-							<ButtonWithTooltip
-								onclick={() => (showRestartOpenClawDialog = true)}
-								tooltip={m.cloud_mode_restart_docker()}
-								class="hover:!bg-icon-btn-hover size-8"
-							>
-								<RefreshCw
-									class={cn("h-4 w-4", loading.restartOpenClaw && "animate-spin")}
-								/>
-							</ButtonWithTooltip>
+							{#if !openClaw.status}
+								<ButtonWithTooltip
+									onclick={() => (showRestartOpenClawDialog = true)}
+									tooltip={m.cloud_mode_restart_docker()}
+									class="hover:!bg-icon-btn-hover size-8"
+								>
+									<RefreshCw
+										class={cn(
+											"h-4 w-4",
+											loading.restartOpenClaw && "animate-spin",
+										)}
+									/>
+								</ButtonWithTooltip>
+							{/if}
 						</div>
 						<div class="flex items-center gap-3">
 							<Label class="text-muted-foreground min-w-18 font-normal"
