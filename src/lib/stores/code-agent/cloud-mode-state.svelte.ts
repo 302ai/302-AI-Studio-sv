@@ -288,7 +288,7 @@ class CloudModeStateManager {
 				}
 
 				await initInstance({
-					instanceName: this.state.instanceName,
+					instanceName: res.instance.instanceName,
 					isDev: true, // TODO: remove this when ready
 				});
 
