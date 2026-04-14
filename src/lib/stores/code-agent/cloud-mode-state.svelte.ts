@@ -293,10 +293,6 @@ class CloudModeStateManager {
 				});
 
 				logger.info("Instance created successfully");
-				await initInstance({
-					instanceName: this.state.instanceName,
-					isDev: true, // TODO: remove this when ready
-				});
 			}
 
 			// Unified handler: sync + start polling
