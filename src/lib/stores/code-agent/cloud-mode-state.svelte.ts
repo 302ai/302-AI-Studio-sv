@@ -329,12 +329,11 @@ class CloudModeStateManager {
 					throw new Error("Failed to create instance");
 				}
 				logger.info("Instance created successfully");
+				await initInstance({
+					instanceName: this.state.instanceName,
+					isDev: true, // TODO: remove this when ready
+				});
 			}
-
-			await initInstance({
-				instanceName: this.state.instanceName,
-				isDev: true, // TODO: remove this when ready
-			});
 
 			await this.loadInstances();
 		})();

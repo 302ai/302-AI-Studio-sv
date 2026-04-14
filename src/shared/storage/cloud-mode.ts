@@ -54,13 +54,13 @@ export const createInstanceResponseSchema = type({
 	success: "boolean",
 	instance: type({
 		instance_name: "string",
-		auto_renew: "boolean",
+		status: "string",
 	}),
 }).pipe((data) => ({
 	success: data.success,
 	instance: {
 		instanceName: data.instance.instance_name,
-		autoRenew: data.instance.auto_renew,
+		status: data.instance.status,
 	},
 }));
 export type CreateInstanceResponse = typeof createInstanceResponseSchema.infer;
