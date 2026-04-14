@@ -68,6 +68,18 @@ class CloudModeStateManager {
 				return { status: "gray" as const, text: m.cloud_mode_rebooting() };
 			case "rebooted":
 				return { status: "green" as const, text: m.cloud_mode_rebooted() };
+			case "pending":
+				return { status: "gray" as const, text: m.cloud_mode_pending() };
+			case "starting":
+				return { status: "gray" as const, text: m.cloud_mode_starting() };
+			case "stopping":
+				return { status: "gray" as const, text: m.cloud_mode_stopping() };
+			case "resetting":
+				return { status: "gray" as const, text: m.cloud_mode_resetting() };
+			case "upgrading":
+				return { status: "gray" as const, text: m.cloud_mode_upgrading() };
+			case "disabled":
+				return { status: "red" as const, text: m.cloud_mode_disabled() };
 			default:
 				return { status: "gray" as const, text: m.cloud_mode_unknown() };
 		}
@@ -101,7 +113,7 @@ class CloudModeStateManager {
 			try {
 				cloudModeState.initStatus();
 			} catch (e) {
-				toast.error("云端环境状态加载失败，请稍后重试" + e);
+				toast.error("Failed to load cloud instance status, please retry later" + e);
 			}
 		});
 
@@ -147,7 +159,7 @@ class CloudModeStateManager {
 			await this.loadInstances();
 		})();
 
-		// 从主进程缓存中立刻获取一次健康状态，不等 60 秒轮询
+		// Immediately get health status from main process cache without waiting for 60s polling
 		try {
 			const cached = await window.electronAPI.cloudModeService.getHealthStatusByIpc();
 			if (cached) {
@@ -163,13 +175,20 @@ class CloudModeStateManager {
 	}
 
 	dispose() {
-		// 定时器由主进程统一管理，渲染进程无需清理
+		// Timer is managed by main process, renderer doesn't need cleanup
 	}
 
 	async loadInstances() {
 		const res = await listInstances();
-		if (!res.success && res.instances.length <= 0) {
+		if (!res.success) {
 			throw new Error("Failed to load cloud instance status");
+		}
+
+		if (res.instances.length <= 0) {
+			const _state = getDefaultInstanceInfo();
+			this.#updateState(_state);
+
+			return _state;
 		}
 
 		const {
@@ -217,7 +236,7 @@ class CloudModeStateManager {
 			if (!res.success) {
 				throw new Error("Failed to restart instance");
 			}
-			// 通过主进程统一刷新健康状态并广播给所有标签页
+			// Refresh health status via main process and broadcast to all tabs
 			const healthData = await window.electronAPI.cloudModeService.refreshHealthByIpc();
 			if (healthData) {
 				this.openClaw.status = healthData.oc_status === "ok";
@@ -235,7 +254,7 @@ class CloudModeStateManager {
 			if (!res.success) {
 				throw new Error("Failed to restart instance");
 			}
-			// 通过主进程统一刷新健康状态并广播给所有标签页
+			// Refresh health status via main process and broadcast to all tabs
 			const healthData = await window.electronAPI.cloudModeService.refreshHealthByIpc();
 			if (healthData) {
 				this.openClaw.status = healthData.oc_status === "ok";
