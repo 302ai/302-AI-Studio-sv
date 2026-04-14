@@ -131,7 +131,7 @@ class CloudModeStateManager {
 				await fn();
 			} catch (e) {
 				logger.error(`[CloudModeStateManager] Error in ${key} command:`, e);
-				return false;
+				throw e;
 			} finally {
 				this.loading[key] = false;
 				logger.debug(

@@ -135,6 +135,22 @@
 		targetSession = session;
 		isDeleteDialogOpen = true;
 	}
+
+	async function handleRestartOpenClaw() {
+		try {
+			await cloudModeState.restartOpenClaw();
+		} catch (e) {
+			toast.error(m.cloud_mode_openclaw_restart_failed() + e);
+		}
+	}
+
+	async function handleRestartMachine() {
+		try {
+			await cloudModeState.restartMachine();
+		} catch (e) {
+			toast.error(m.cloud_mode_instance_restart_failed() + e);
+		}
+	}
 </script>
 
 {#snippet tableHeader()}
@@ -195,7 +211,7 @@
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 							<ButtonWithTooltip
-								onclick={() => cloudModeState.restartMachine()}
+								onclick={() => handleRestartMachine()}
 								tooltip={m.cloud_mode_reboot_instance()}
 								class="hover:!bg-icon-btn-hover size-8"
 							>
@@ -214,7 +230,7 @@
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 							<ButtonWithTooltip
-								onclick={() => cloudModeState.restartOpenClaw()}
+								onclick={() => handleRestartOpenClaw()}
 								tooltip={m.cloud_mode_restart_docker()}
 								class="hover:!bg-icon-btn-hover size-8"
 							>
@@ -375,7 +391,7 @@
 										class="text-destructive focus:text-destructive"
 										onclick={() => handleDeleteClick(session)}
 									>
-										{m.text_button_delete ? m.text_button_delete() : "Delete"}
+										{m.text_button_delete()}
 									</ContextMenu.Item>
 								</ContextMenu.Content>
 							</ContextMenu.Root>
