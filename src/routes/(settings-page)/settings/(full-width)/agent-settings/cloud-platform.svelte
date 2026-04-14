@@ -24,6 +24,7 @@
 	import type { GetManualRenewChargeResponse } from "@shared/storage/cloud-mode";
 	import type { LocalSessionInfo } from "@shared/storage/code-agent";
 	import { format, parseISO } from "date-fns";
+	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import SandboxDeleteConfirmDialog from "./sandbox-delete-confirm-dialog.svelte";
 
@@ -153,6 +154,10 @@
 			toast.error(m.cloud_mode_instance_restart_failed() + e);
 		}
 	}
+
+	onMount(() => {
+		handleSessionRefresh();
+	});
 </script>
 
 {#snippet tableHeader()}
@@ -369,8 +374,23 @@
 		</div>
 
 		<!-- Session List -->
-		<div class={cn("p-2", filteredSessions.length > 0 && "rounded-lg border bg-muted/20")}>
-			{#if filteredSessions.length === 0}
+		<div
+			class={cn(
+				"p-2",
+				(filteredSessions.length > 0 || isSessionLoading) &&
+					"rounded-lg border bg-muted/20",
+			)}
+		>
+			{#if isSessionLoading}
+				<div class="flex flex-col gap-2">
+					{#each Array(5) as _, i (i)}
+						<div class="rounded-lg bg-muted/50 p-4 animate-pulse">
+							<Skeleton class="h-4 w-32 mb-2" />
+							<Skeleton class="h-3 w-48" />
+						</div>
+					{/each}
+				</div>
+			{:else if filteredSessions.length === 0}
 				<Empty.Root>
 					<Empty.Content class="h-[200px] flex flex-col items-center justify-start pt-8">
 						<Empty.Description>

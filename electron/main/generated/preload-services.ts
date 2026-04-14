@@ -23,7 +23,6 @@ import type {
 	Tab,
 	Theme,
 	FileNode,
-	InstanceInfo,
 	SandboxHealthResponse,
 	ImportResult,
 	BackupInfo,
@@ -32,6 +31,7 @@ import type {
 	McpServer,
 	ThreadData,
 	UpdateChannel,
+	InstanceInfo,
 } from "@shared/types";
 
 /**
