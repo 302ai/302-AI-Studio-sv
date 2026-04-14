@@ -41,6 +41,8 @@
 	let isLoadingCharges = $state(false);
 	let hasInitialized = $state(false);
 	let showConfirmDialog = $state(false);
+	let showRestartMachineDialog = $state(false);
+	let showRestartOpenClawDialog = $state(false);
 
 	// Session list state
 	let searchQuery = $state("");
@@ -211,7 +213,7 @@
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 							<ButtonWithTooltip
-								onclick={() => handleRestartMachine()}
+								onclick={() => (showRestartMachineDialog = true)}
 								tooltip={m.cloud_mode_reboot_instance()}
 								class="hover:!bg-icon-btn-hover size-8"
 							>
@@ -230,7 +232,7 @@
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 							<ButtonWithTooltip
-								onclick={() => handleRestartOpenClaw()}
+								onclick={() => (showRestartOpenClawDialog = true)}
 								tooltip={m.cloud_mode_restart_docker()}
 								class="hover:!bg-icon-btn-hover size-8"
 							>
@@ -513,6 +515,46 @@
 			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
 			<AlertDialog.Action onclick={handleConfirmCreateOrRenew}>
 				{#if loading.createOrRenew}
+					<LoaderCircle class="h-4 w-4 animate-spin" />
+				{/if}
+				{m.cloud_mode_confirm()}
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
+
+<AlertDialog.Root bind:open={showRestartMachineDialog}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>{m.cloud_mode_restart_machine_confirm_title()}</AlertDialog.Title>
+			<AlertDialog.Description>
+				{m.cloud_mode_restart_machine_confirm_desc()}
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
+			<AlertDialog.Action onclick={handleRestartMachine}>
+				{#if loading.restart}
+					<LoaderCircle class="h-4 w-4 animate-spin" />
+				{/if}
+				{m.cloud_mode_confirm()}
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
+
+<AlertDialog.Root bind:open={showRestartOpenClawDialog}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>{m.cloud_mode_restart_openclaw_confirm_title()}</AlertDialog.Title>
+			<AlertDialog.Description>
+				{m.cloud_mode_restart_openclaw_confirm_desc()}
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
+			<AlertDialog.Action onclick={handleRestartOpenClaw}>
+				{#if loading.restartOpenClaw}
 					<LoaderCircle class="h-4 w-4 animate-spin" />
 				{/if}
 				{m.cloud_mode_confirm()}
