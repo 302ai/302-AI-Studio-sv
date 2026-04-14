@@ -25,7 +25,7 @@ export const getDefaultInstanceInfo = (): InstanceInfo => ({
 	expired: true,
 	apiPort: 0,
 	ocPort: 0,
-	status: "waiting_init",
+	status: "disabled",
 	autoRenew: true,
 	destroyedAt: undefined,
 });
@@ -39,7 +39,7 @@ class CloudModeStateManager {
 	// cloud state
 	state = $derived({
 		instanceName: persistedCloudModeState.current?.instanceName ?? "",
-		status: persistedCloudModeState.current?.status ?? "waiting_init",
+		status: persistedCloudModeState.current?.status ?? "disabled",
 		expired: persistedCloudModeState.current?.expired ?? true,
 		publicIp: persistedCloudModeState.current?.publicIp ?? "",
 		createdAt: persistedCloudModeState.current?.createdAt ?? "",
@@ -55,10 +55,7 @@ class CloudModeStateManager {
 	});
 
 	healthProps = $derived.by(() => {
-		const { status, expired, instanceName } = this.state;
-		if (!instanceName || expired) {
-			return { status: "gray" as const, text: m.cloud_mode_unknown() };
-		}
+		const { status } = this.state;
 		switch (status) {
 			case "running":
 				return { status: "green" as const, text: m.cloud_mode_healthy() };
@@ -79,7 +76,7 @@ class CloudModeStateManager {
 			case "upgrading":
 				return { status: "gray" as const, text: m.cloud_mode_upgrading() };
 			case "disabled":
-				return { status: "red" as const, text: m.cloud_mode_disabled() };
+				return { status: "red" as const, text: m.cloud_mode_disabled(), tt: status };
 			default:
 				return { status: "gray" as const, text: m.cloud_mode_unknown() };
 		}
