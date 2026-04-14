@@ -150,7 +150,7 @@ export class CloudModeService {
 		const [error, data] = await attemptAsync(() => this.syncCloudInstanceToLocal());
 
 		if (error || !data) {
-			logger.error("[CloudModeService] Error during cloud instance sync:", error);
+			logger.error("[CloudModeService] Error during cloud instance sync by IPC:", error);
 			return { isOk: false, data: [] };
 		}
 
