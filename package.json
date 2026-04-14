@@ -36,8 +36,8 @@
 		"preview": "vite preview",
 		"check": "pnpm -C packages/plugin-sdk build && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "pnpm -C packages/plugin-sdk build && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
-		"lint": "eslint .",
-		"lint:fix": "eslint . --fix",
+		"lint": "eslint . --cache",
+		"lint:fix": "eslint . --fix --cache",
 		"format": "prettier --write .",
 		"format:check": "prettier --check .",
 		"quality": "npm run check && npm run lint && npm run format:check",
@@ -161,6 +161,7 @@
 		"electron-window-state": "^5.0.3",
 		"emoji-picker-element": "^1.27.0",
 		"es-toolkit": "^1.45.1",
+		"exceljs": "^4.4.0",
 		"extract-zip": "^2.0.1",
 		"fix-path": "^5.0.0",
 		"get-port": "^7.1.0",
@@ -185,8 +186,7 @@
 		"svelte-dnd-action": "^0.9.65",
 		"svelte-image-viewer": "^5.0.0",
 		"svelte-lexical": "^0.6.3",
-		"ts-pattern": "^5.9.0",
-		"exceljs": "^4.4.0"
+		"ts-pattern": "^5.9.0"
 	},
 	"packageManager": "pnpm@10.18.3+sha512.bbd16e6d7286fd7e01f6b3c0b3c932cda2965c06a908328f74663f10a9aea51f1129eea615134bf992831b009eabe167ecb7008b597f40ff9bc75946aadfb08d",
 	"pnpm": {

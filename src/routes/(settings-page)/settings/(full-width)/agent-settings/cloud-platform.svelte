@@ -553,7 +553,10 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
-			<AlertDialog.Action disabled={loading.createOrRenew} onclick={handleConfirmCreateOrRenew}>
+			<AlertDialog.Action
+				disabled={loading.createOrRenew}
+				onclick={handleConfirmCreateOrRenew}
+			>
 				{#if loading.createOrRenew}
 					<LoaderCircle class="h-4 w-4 animate-spin" />
 				{/if}
