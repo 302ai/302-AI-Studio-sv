@@ -198,23 +198,25 @@
 			{#if !isCompact}
 				<span class="max-w-tab-title min-w-0 flex-1 truncate text-xs">{displayTitle}</span>
 			{/if}
-			<Button
-				title={isCompact ? displayTitle : m.label_button_close()}
-				variant="ghost"
-				size="icon"
-				class={cn(
-					"p-tab-close h-auto w-auto shrink-0 rounded bg-transparent transition-colors",
-					isActive
-						? "hover:bg-tab-btn-hover-active dark:hover:bg-tab-btn-hover-active"
-						: "hover:bg-tab-btn-hover-inactive dark:hover:bg-tab-btn-hover-inactive hover:text-tab-btn-hover-fg dark:hover:text-tab-btn-hover-fg",
-				)}
-				onclick={(e) => {
-					e.stopPropagation();
-					onTabClose(tab.id);
-				}}
-			>
-				<X class="size-tab-close-icon" />
-			</Button>
+			{#if closable}
+				<Button
+					title={isCompact ? displayTitle : m.label_button_close()}
+					variant="ghost"
+					size="icon"
+					class={cn(
+						"p-tab-close h-auto w-auto shrink-0 rounded bg-transparent transition-colors",
+						isActive
+							? "hover:bg-tab-btn-hover-active dark:hover:bg-tab-btn-hover-active"
+							: "hover:bg-tab-btn-hover-inactive dark:hover:bg-tab-btn-hover-inactive hover:text-tab-btn-hover-fg dark:hover:text-tab-btn-hover-fg",
+					)}
+					onclick={(e) => {
+						e.stopPropagation();
+						onTabClose(tab.id);
+					}}
+				>
+					<X class="size-tab-close-icon" />
+				</Button>
+			{/if}
 		</div>
 	</ContextMenu.Trigger>
 	<ContextMenu.Content class="min-w-48">
@@ -282,7 +284,7 @@
 
 		<ContextMenu.Separator />
 
-		<ContextMenu.Item onSelect={() => onTabClose(tab.id)}>
+		<ContextMenu.Item onSelect={() => onTabClose(tab.id)} disabled={!closable}>
 			{m.label_button_close()}
 		</ContextMenu.Item>
 
