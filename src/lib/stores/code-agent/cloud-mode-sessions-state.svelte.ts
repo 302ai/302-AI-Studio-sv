@@ -204,9 +204,12 @@ class CloudModeSessionsState {
 			const response = await listLocalSessions("cloud");
 			if (response.success) {
 				persistedCloudModeSessionsState.current = response.session_list;
+			} else {
+				persistedCloudModeSessionsState.current = [];
 			}
 		} catch (error) {
 			logger.error("Failed to refresh sessions:", error);
+			persistedCloudModeSessionsState.current = [];
 		} finally {
 			this.isLoading = false;
 		}

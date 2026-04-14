@@ -14,7 +14,7 @@ export const getDefaultInstanceInfo = (): InstanceInfo => ({
 	expired: false,
 	apiPort: 0,
 	ocPort: 0,
-	status: "waiting_init",
+	status: "disabled",
 	autoRenew: true,
 	destroyedAt: undefined,
 });

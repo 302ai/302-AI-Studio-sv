@@ -124,7 +124,7 @@ export class CloudModeService {
 		const [error, response] = await attemptAsync(() => listInstances());
 
 		if (error || !response?.success) {
-			logger.error("[CloudModeService] Error during cloud instance sync:", error);
+			logger.error("[CloudModeService] Error during cloud instance sync:", error, response);
 			throw error || new Error("Request was unsuccessful. Keeping existing local data.");
 		}
 

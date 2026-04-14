@@ -75,7 +75,7 @@ class CloudModeStateManager {
 			case "upgrading":
 				return { status: "gray" as const, text: m.cloud_mode_upgrading() };
 			case "disabled":
-				return { status: "red" as const, text: m.cloud_mode_disabled(), tt: status };
+				return { status: "gray" as const, text: m.cloud_mode_disabled() };
 			default:
 				return { status: "gray" as const, text: m.cloud_mode_unknown() };
 		}

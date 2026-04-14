@@ -217,17 +217,19 @@
 								text={healthProps.text}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
-							{#if !cloudState.expired}
-								<ButtonWithTooltip
-									onclick={() => (showRestartMachineDialog = true)}
-									tooltip={m.cloud_mode_reboot_instance()}
-									class="hover:!bg-icon-btn-hover size-8"
-								>
-									<RefreshCw
-										class={cn("h-4 w-4", loading.restart && "animate-spin")}
-									/>
-								</ButtonWithTooltip>
-							{/if}
+							<div class="relative size-5">
+								{#if !cloudState.expired}
+									<ButtonWithTooltip
+										onclick={() => (showRestartMachineDialog = true)}
+										tooltip={m.cloud_mode_reboot_instance()}
+										class="hover:!bg-icon-btn-hover size-8 absolute top-[-30%] left-0"
+									>
+										<RefreshCw
+											class={cn("size-4", loading.restart && "animate-spin")}
+										/>
+									</ButtonWithTooltip>
+								{/if}
+							</div>
 						</div>
 						<div class="flex items-center gap-3">
 							<Label class="text-muted-foreground min-w-18 font-normal"
@@ -238,20 +240,22 @@
 								text={resolveOpenClawText(openClaw.status)}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
-							{#if !openClaw.status && !cloudState.expired}
-								<ButtonWithTooltip
-									onclick={() => (showRestartOpenClawDialog = true)}
-									tooltip={m.cloud_mode_restart_docker()}
-									class="hover:!bg-icon-btn-hover size-8"
-								>
-									<RefreshCw
-										class={cn(
-											"h-4 w-4",
-											loading.restartOpenClaw && "animate-spin",
-										)}
-									/>
-								</ButtonWithTooltip>
-							{/if}
+							<div class="relative size-5">
+								{#if !openClaw.status && !cloudState.expired}
+									<ButtonWithTooltip
+										onclick={() => (showRestartOpenClawDialog = true)}
+										tooltip={m.cloud_mode_restart_docker()}
+										class="hover:!bg-icon-btn-hover size-8 absolute top-[-30%] left-0"
+									>
+										<RefreshCw
+											class={cn(
+												"size-4",
+												loading.restartOpenClaw && "animate-spin",
+											)}
+										/>
+									</ButtonWithTooltip>
+								{/if}
+							</div>
 						</div>
 						<div class="flex items-center gap-3">
 							<Label class="text-muted-foreground min-w-18 font-normal"
