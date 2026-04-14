@@ -505,6 +505,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("cloudModeService:syncCloudInstanceToLocalByIpc", (event) =>
 		cloudModeService.syncCloudInstanceToLocalByIpc(event),
 	);
+	ipcMain.handle("cloudModeService:syncAndStartPollingByIpc", (event) =>
+		cloudModeService.syncAndStartPollingByIpc(event),
+	);
 	ipcMain.handle("cloudModeService:getCloudModeInstanceBaseUrlByIpc", (event) =>
 		cloudModeService.getCloudModeInstanceBaseUrlByIpc(event),
 	);
@@ -810,6 +813,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:createSkillTempDir");
 	ipcMain.removeHandler("appService:deleteTempDir");
 	ipcMain.removeHandler("cloudModeService:syncCloudInstanceToLocalByIpc");
+	ipcMain.removeHandler("cloudModeService:syncAndStartPollingByIpc");
 	ipcMain.removeHandler("cloudModeService:getCloudModeInstanceBaseUrlByIpc");
 	ipcMain.removeHandler("cloudModeService:getHealthStatusByIpc");
 	ipcMain.removeHandler("cloudModeService:refreshHealthByIpc");

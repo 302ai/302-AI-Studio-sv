@@ -7,7 +7,6 @@ import {
 	getManualRenewChargeResponseSchema,
 	initInstanceRequestSchema,
 	initInstanceResponseSchema,
-	listInstancesResponseSchema,
 	manualRenewRequestSchema,
 	manualRenewResponseSchema,
 	readFilesRequestSchema,
@@ -33,7 +32,6 @@ import {
 	type GetManualRenewChargeResponse,
 	type InitInstanceRequest,
 	type InitInstanceResponse,
-	type ListInstancesResponse,
 	type ManualRenewRequest,
 	type ManualRenewResponse,
 	type ReadFilesRequest,
@@ -75,21 +73,21 @@ export async function getCloudSandboxHealth(
  * Get available instance list for Apikey
  * @returns List of available instances
  */
-export async function listInstances(): Promise<ListInstancesResponse> {
-	try {
-		const response = await _302AIKy.get("302/swas/instances").json();
+// export async function listInstances(): Promise<ListInstancesResponse> {
+// 	try {
+// 		const response = await _302AIKy.get("302/swas/instances").json();
 
-		const validated = listInstancesResponseSchema(response);
-		if (validated instanceof type.errors) {
-			logger.error("Failed to validate list instances response:", validated.summary);
-			throw new Error("Invalid response format from list instances API");
-		}
-		return validated;
-	} catch (error) {
-		logger.error("Failed to list instances:", error);
-		throw error;
-	}
-}
+// 		const validated = listInstancesResponseSchema(response);
+// 		if (validated instanceof type.errors) {
+// 			logger.error("Failed to validate list instances response:", validated.summary);
+// 			throw new Error("Invalid response format from list instances API");
+// 		}
+// 		return validated;
+// 	} catch (error) {
+// 		logger.error("Failed to list instances:", error);
+// 		throw error;
+// 	}
+// }
 
 /**
  * Create a cloud compute instance

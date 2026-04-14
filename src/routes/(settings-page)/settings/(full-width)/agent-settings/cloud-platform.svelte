@@ -284,11 +284,20 @@
 				<div class="flex justify-between items-end w-full">
 					<div class="space-y-1">
 						<p class="text-sm text-muted-foreground">
-							{m.cloud_mode_instance_name()}：{cloudState.instanceName
-								? cloudState.expired
-									? m.cloud_mode_expired()
-									: cloudState.instanceName
-								: m.cloud_mode_not_activated()}
+							{m.cloud_mode_instance_name()}：{#if cloudState.instanceName}
+								<span
+									class={cn(
+										"font-medium",
+										cloudState.expired ? "text-destructive" : "text-primary",
+									)}
+								>
+									{cloudState.expired
+										? m.cloud_mode_expired()
+										: cloudState.instanceName}
+								</span>
+							{:else}
+								{m.cloud_mode_not_activated()}
+							{/if}
 						</p>
 						<p class="text-sm text-muted-foreground">
 							{m.cloud_mode_created_at()}：{cloudState.createdAt
@@ -433,7 +442,7 @@
 						{#each charges as charge (charge.chargedAt + charge.instanceName)}
 							<Table.Row class="h-[49px]">
 								<Table.Cell
-									class="font-medium w-[40%] overflow-hidden text-ellipsis whitespace-nowrap"
+									class="font-medium text-primary w-[40%] overflow-hidden text-ellipsis whitespace-nowrap"
 									>{charge.instanceName}</Table.Cell
 								>
 								<Table.Cell class="w-[35%]"

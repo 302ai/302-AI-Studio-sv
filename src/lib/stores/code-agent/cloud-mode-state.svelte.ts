@@ -1,7 +1,6 @@
 import {
 	createInstance,
 	initInstance,
-	listInstances,
 	manualRenew,
 	rebootInstance,
 	restartDocker,
@@ -12,7 +11,7 @@ import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
 import { createLogger } from "@shared/logger";
 import type { InstanceInfo } from "@shared/storage/cloud-mode";
-import { onDestroy, onMount } from "svelte";
+import { onMount } from "svelte";
 import { toast } from "svelte-sonner";
 
 const logger = createLogger("state");
@@ -105,6 +104,24 @@ class CloudModeStateManager {
 		});
 	}
 
+	/**
+	 * Unified post-operation handler: Sync + Start polling + Refresh health
+	 */
+	private async afterInstanceOperation(): Promise<void> {
+		try {
+			// 1. Sync instance info and start polling
+			const res = await window.electronAPI.cloudModeService.syncAndStartPollingByIpc();
+			if (!res.isOk) {
+				logger.warn("[CloudModeStateManager] Sync after operation failed");
+			}
+
+			// 2. Immediately refresh health status (don't wait for 30s polling)
+			await window.electronAPI.cloudModeService.refreshHealthByIpc();
+		} catch (e) {
+			logger.error("[CloudModeStateManager] afterInstanceOperation failed:", e);
+		}
+	}
+
 	init() {
 		onMount(() => {
 			try {
@@ -112,10 +129,6 @@ class CloudModeStateManager {
 			} catch (e) {
 				toast.error("Failed to load cloud instance status, please retry later" + e);
 			}
-		});
-
-		onDestroy(() => {
-			cloudModeState.dispose();
 		});
 
 		return this;
@@ -171,58 +184,11 @@ class CloudModeStateManager {
 		}
 	}
 
-	dispose() {
-		// Timer is managed by main process, renderer doesn't need cleanup
-	}
-
 	async loadInstances() {
-		const res = await listInstances();
-		if (!res.success) {
+		const res = await window.electronAPI.cloudModeService.syncCloudInstanceToLocalByIpc();
+		if (!res.isOk) {
 			throw new Error("Failed to load cloud instance status");
 		}
-
-		if (res.instances.length <= 0) {
-			const _state = getDefaultInstanceInfo();
-			this.#updateState(_state);
-
-			return _state;
-		}
-
-		const {
-			instanceName,
-			publicIp,
-			createdAt,
-			expiredAt,
-			expired,
-			apiPort,
-			ocPort,
-			status,
-			autoRenew,
-		} = res.instances[0];
-
-		this.#updateState({
-			instanceName,
-			publicIp,
-			createdAt,
-			expiredAt,
-			expired,
-			apiPort,
-			ocPort,
-			status,
-			autoRenew,
-		});
-
-		return {
-			instanceName,
-			publicIp,
-			createdAt,
-			expiredAt,
-			expired,
-			apiPort,
-			ocPort,
-			status,
-			autoRenew,
-		};
 	}
 
 	async restartMachine() {
@@ -233,13 +199,9 @@ class CloudModeStateManager {
 			if (!res.success) {
 				throw new Error("Failed to restart instance");
 			}
-			// Refresh health status via main process and broadcast to all tabs
-			const healthData = await window.electronAPI.cloudModeService.refreshHealthByIpc();
-			if (healthData) {
-				this.openClaw.status = healthData.oc_status === "ok";
-				this.openClaw.api_status = healthData.status === "ok";
-			}
-			logger.info("Instance restarted successfully");
+
+			// Unified handler: sync + start polling
+			await this.afterInstanceOperation();
 		})();
 	}
 
@@ -249,15 +211,11 @@ class CloudModeStateManager {
 				instanceName: this.state.instanceName,
 			});
 			if (!res.success) {
-				throw new Error("Failed to restart instance");
+				throw new Error("Failed to restart OpenClaw");
 			}
-			// Refresh health status via main process and broadcast to all tabs
-			const healthData = await window.electronAPI.cloudModeService.refreshHealthByIpc();
-			if (healthData) {
-				this.openClaw.status = healthData.oc_status === "ok";
-				this.openClaw.api_status = healthData.status === "ok";
-			}
-			logger.info("Instance restarted successfully");
+
+			// Unified handler: sync + start polling
+			await this.afterInstanceOperation();
 		})();
 	}
 
@@ -328,6 +286,12 @@ class CloudModeStateManager {
 				if (!res.success) {
 					throw new Error("Failed to create instance");
 				}
+
+				await initInstance({
+					instanceName: this.state.instanceName,
+					isDev: true, // TODO: remove this when ready
+				});
+
 				logger.info("Instance created successfully");
 				await initInstance({
 					instanceName: this.state.instanceName,
@@ -335,7 +299,8 @@ class CloudModeStateManager {
 				});
 			}
 
-			await this.loadInstances();
+			// Unified handler: sync + start polling
+			await this.afterInstanceOperation();
 		})();
 	}
 }

@@ -6,7 +6,7 @@ import { StorageService } from "..";
 /**
  * Returns default instance info if no data exists in storage.
  */
-const getDefaultInstanceInfo = (): InstanceInfo => ({
+export const getDefaultInstanceInfo = (): InstanceInfo => ({
 	instanceName: "",
 	publicIp: "",
 	createdAt: "",
