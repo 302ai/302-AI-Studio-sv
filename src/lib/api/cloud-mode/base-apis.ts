@@ -1,4 +1,4 @@
-import { createLogger } from "@shared/logger";
+import { CloudModeApiError, parseCloudModeError } from "@shared/storage/cloud-mode-errors";
 import {
 	createInstanceRequestSchema,
 	createInstanceResponseSchema,
@@ -51,8 +51,6 @@ import {
 import { type } from "arktype";
 import { _302AIKy } from "../core/_302ai-ky";
 
-const logger = createLogger("apis");
-
 /**
  * Get cloud sandbox health status (mock implementation)
  * TODO: Implement actual health check endpoint
@@ -61,7 +59,6 @@ export async function getCloudSandboxHealth(
 	_publicIp: string,
 	_apiPort: number,
 ): Promise<CloudSandboxHealthResponse> {
-	logger.warn("getCloudSandboxHealth is a mock implementation");
 	return {
 		success: true,
 		status: "ok",
@@ -91,8 +88,9 @@ export async function getCloudSandboxHealth(
 
 /**
  * Create a cloud compute instance
- * @error 400 - APIKEY_INSTANCE_EXISTS: one apikey can only bind one master instance
- * @error 500 - CREATE_INSTANCE_FAILED: failed to create instance
+ * @throws {CloudModeApiError} AI302_INSUFFICIENT_BALANCE - Insufficient balance
+ * @throws {CloudModeApiError} APIKEY_INSTANCE_EXISTS - API key already has an instance
+ * @throws {CloudModeApiError} CREATE_INSTANCE_FAILED - Failed to create instance
  * @returns Created instance information
  */
 export async function createInstance(
@@ -101,25 +99,36 @@ export async function createInstance(
 	try {
 		const requestBody = createInstanceRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate create instance request:", requestBody.summary);
-			throw new Error("Invalid request format for create instance");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
+
 		const response = await _302AIKy.post("302/swas/instances", { json: requestBody }).json();
+
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "CREATE_INSTANCE_FAILED",
+					errorObj.message || "Failed to create instance",
+				);
+			}
+		}
 
 		const validated = createInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate create instance response:", validated.summary);
-			throw new Error("Invalid response format from create instance API");
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to create instance:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
 /**
  * Initialize a cloud instance with the specified configuration.
+ * @throws {CloudModeApiError} INIT_INSTANCE_FAILED - Failed to initialize instance
  * @param request - Instance initialization parameters
  * @returns Initialization response with instance details
  */
@@ -127,22 +136,32 @@ export async function initInstance(request: InitInstanceRequest): Promise<InitIn
 	try {
 		const requestBody = initInstanceRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate init instance request:", requestBody.summary);
-			throw new Error("Invalid request format for init instance");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
+
 		const response = await _302AIKy
 			.post("302/swas/instances/init", { json: requestBody })
 			.json();
 
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "INIT_INSTANCE_FAILED",
+					errorObj.message || "Failed to initialize instance",
+				);
+			}
+		}
+
 		const validated = initInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate init instance response:", validated.summary);
-			throw new Error("Invalid response format from init instance API");
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to init instance:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
@@ -171,6 +190,7 @@ export async function initInstance(request: InitInstanceRequest): Promise<InitIn
 
 /**
  * Restart Docker image (optionally update openclaw config first).
+ * @throws {CloudModeApiError} SWAS_REBOOT_FAILED - Failed to restart docker
  * @param request
  * @returns Restart docker response
  */
@@ -178,29 +198,38 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 	try {
 		const requestBody = restartDockerRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate restart docker request:", requestBody.summary);
-			throw new Error("Invalid request format for restart docker");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
+
 		const response = await _302AIKy
 			.post("302/swas/instances/openclaw/restart", { json: requestBody })
 			.json();
 
-		logger.debug("Restart docker actual response:", response);
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "SWAS_REBOOT_FAILED",
+					errorObj.message || "Failed to restart docker",
+				);
+			}
+		}
 
 		const validated = restartDockerResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate restart docker response:", validated.summary);
-			throw new Error("Invalid response format from restart docker API");
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to restart docker:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
 /**
  * Update auto-renew settings for a cloud instance.
+ * @throws {CloudModeApiError} UPDATE_AUTO_RENEW_FAILED - Failed to update auto-renew
  * @param request - Auto-renew configuration parameters
  * @returns Update response with new auto-renew status
  */
@@ -210,31 +239,39 @@ export async function updateAutoRenew(
 	try {
 		const requestBody = updateAutoRenewRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate update auto renew request:", requestBody.summary);
-			throw new Error("Invalid request format for update auto renew");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
-		const response = _302AIKy
+
+		const response = await _302AIKy
 			.post("302/swas/instances/auto-renew", { json: requestBody })
 			.json();
 
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "UPDATE_AUTO_RENEW_FAILED",
+					errorObj.message || "Failed to update auto-renew",
+				);
+			}
+		}
+
 		const validated = updateAutoRenewResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate update auto renew response:", validated.summary);
-			throw new Error("Invalid response format from update auto renew API");
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to update auto renew:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
 /**
  * Manually renew a cloud instance.
- * @throws 400 INSTANCE_RENEW_EXPIRED: Instance has been expired for more than 15 days and cannot be renewed
- * @throws 409 INSTANCE_LOCKED: The same instance is being operated by another request
- * @throws 500 SWAS_RENEW_INSTANCE_FAILED: Failed to renew the instance
- * @throws 500 MANUAL_RENEW_FAILED: Failed to manually renew the instance
+ * @throws {CloudModeApiError} INSTANCE_RENEW_EXPIRED - Instance expired over 15 days
+ * @throws {CloudModeApiError} MANUAL_RENEW_FAILED - Failed to manually renew
  * @param request - Manual renew configuration parameters
  * @returns Manual renew response
  */
@@ -242,22 +279,32 @@ export async function manualRenew(request: ManualRenewRequest): Promise<ManualRe
 	try {
 		const requestBody = manualRenewRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate manual renew request:", requestBody.summary);
-			throw new Error("Invalid request format for manual renew");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
-		const response = _302AIKy
+
+		const response = await _302AIKy
 			.post("302/swas/instances/manual-renew", { json: requestBody })
 			.json();
 
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "MANUAL_RENEW_FAILED",
+					errorObj.message || "Failed to manually renew",
+				);
+			}
+		}
+
 		const validated = manualRenewResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate manual renew response:", validated.summary);
-			throw new Error("Invalid response format from manual renew API");
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to manual renew:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
@@ -300,7 +347,6 @@ export async function manualRenew(request: ManualRenewRequest): Promise<ManualRe
 
 /**
  * Query manual renewal charge records for a cloud instance.
- * @param instanceName - Name of the instance to query
  * @param page - Page number for pagination (default: 1)
  * @param pageSize - Number of records per page (default: 20)
  * @returns Paginated list of manual renewal charges
@@ -314,23 +360,31 @@ export async function getManualRenewCharge(
 			.get(`302/swas/instances/manual-renew/charges?page=${page}&page_size=${pageSize}`)
 			.json();
 
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "UNKNOWN_ERROR",
+					errorObj.message || "Failed to get manual renew charges",
+				);
+			}
+		}
+
 		const validated = getManualRenewChargeResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error(
-				"Failed to validate get manual renew charges response:",
-				validated.summary,
-			);
-			throw new Error("Invalid response format from manual renew charges API");
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to get manual renew charges:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
 /**
  * Danger: Reboot the instance server (use sparingly).
+ * @throws {CloudModeApiError} SWAS_REBOOT_FAILED - Failed to reboot instance
  * @param request
  * @returns Reboot instance response
  */
@@ -340,22 +394,74 @@ export async function rebootInstance(
 	try {
 		const requestBody = rebootInstanceRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate reboot instance request:", requestBody.summary);
-			throw new Error("Invalid request format for reboot instance");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
+
 		const response = await _302AIKy
 			.post("302/swas/instances/reboot", { json: requestBody })
 			.json();
 
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "SWAS_REBOOT_FAILED",
+					errorObj.message || "Failed to reboot instance",
+				);
+			}
+		}
+
 		const validated = rebootInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate reboot instance response:", validated.summary);
-			throw new Error("Invalid response format from reboot instance API");
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to reboot instance:", error);
-		throw error;
+		throw await parseCloudModeError(error);
+	}
+}
+
+/**
+ * Update instance auto-renew settings.
+ * @throws {CloudModeApiError} UPDATE_AUTO_RENEW_FAILED - Failed to update auto-renew
+ * @param request
+ * @returns Update auto renew response
+ */
+export async function updateInstanceAutoRenew(
+	request: UpdateInstanceAutoRenewRequest,
+): Promise<UpdateInstanceAutoRenewResponse> {
+	try {
+		const requestBody = updateInstanceAutoRenewRequestSchema(request);
+		if (requestBody instanceof type.errors) {
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
+		}
+
+		const response = await _302AIKy("302/swas/instances/auto-renew", {
+			method: "POST",
+			json: requestBody,
+		}).json();
+
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "UPDATE_AUTO_RENEW_FAILED",
+					errorObj.message || "Failed to update auto-renew",
+				);
+			}
+		}
+
+		const validated = updateInstanceAutoRenewResponseSchema(response);
+		if (validated instanceof type.errors) {
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
+		}
+
+		return validated;
+	} catch (error) {
+		throw await parseCloudModeError(error);
 	}
 }
 
@@ -364,52 +470,36 @@ export async function rebootInstance(
  * @param request
  * @returns Read files response
  */
-export async function updateInstanceAutoRenew(
-	request: UpdateInstanceAutoRenewRequest,
-): Promise<UpdateInstanceAutoRenewResponse> {
-	try {
-		const requestBody = updateInstanceAutoRenewRequestSchema(request);
-		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate update auto renew request:", requestBody.summary);
-			throw new Error("Invalid request format for update auto renew");
-		}
-		const response = await _302AIKy("302/swas/instances/auto-renew", {
-			method: "POST",
-			json: requestBody,
-		}).json();
-
-		const validated = updateInstanceAutoRenewResponseSchema(response);
-		if (validated instanceof type.errors) {
-			logger.error("Failed to validate update auto renew response:", validated.summary);
-			throw new Error("Invalid response format from update auto renew API");
-		}
-		return validated;
-	} catch (error) {
-		logger.error("Failed to update instance auto renew:", error);
-		throw error;
-	}
-}
-
 export async function readInstanceFiles(request: ReadFilesRequest): Promise<ReadFilesResponse> {
 	try {
 		const requestBody = readFilesRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate read files request:", requestBody.summary);
-			throw new Error("Invalid request format for read files");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
-		const response = _302AIKy
+
+		const response = await _302AIKy
 			.post("302/swas/instances/files/read", { json: requestBody })
 			.json();
 
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "UNKNOWN_ERROR",
+					errorObj.message || "Failed to read files",
+				);
+			}
+		}
+
 		const validated = readFilesResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate read files response:", validated.summary);
-			throw new Error("Invalid response format from read files API");
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to read instance files:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
@@ -422,22 +512,32 @@ export async function writeInstanceFiles(request: WriteFilesRequest): Promise<Wr
 	try {
 		const requestBody = writeFilesRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate write files request:", requestBody.summary);
-			throw new Error("Invalid request format for write files");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
-		const response = _302AIKy
+
+		const response = await _302AIKy
 			.post("302/swas/instances/files/write", { json: requestBody })
 			.json();
 
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "UNKNOWN_ERROR",
+					errorObj.message || "Failed to write files",
+				);
+			}
+		}
+
 		const validated = writeFilesResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate write files response:", validated.summary);
-			throw new Error("Invalid response format from write files API");
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to write instance files:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
@@ -452,22 +552,32 @@ export async function execInstanceCommand(
 	try {
 		const requestBody = execCommandRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate exec command request:", requestBody.summary);
-			throw new Error("Invalid request format for exec command");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
-		const response = _302AIKy
+
+		const response = await _302AIKy
 			.post("302/swas/instances/commands/exec", { json: requestBody })
 			.json();
 
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "UNKNOWN_ERROR",
+					errorObj.message || "Failed to execute command",
+				);
+			}
+		}
+
 		const validated = execCommandResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate exec command response:", validated.summary);
-			throw new Error("Invalid response format from exec command API");
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to exec instance command:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
@@ -479,14 +589,18 @@ export async function getSandboxHealthStatus(
 		const response = await _302AIKy(
 			new URL(`http://${ip}:${port}/302/claude-code/sandbox/health`),
 		).json();
-		logger.debug("[getSandboxHealthStatus] Health check response:", response);
+
 		const validated = sandboxHealthResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate health check response:", validated.summary);
-			throw new Error(`Invalid health check response: ${validated.summary}`);
+			throw new CloudModeApiError(
+				"INVALID_RESPONSE",
+				`Invalid health check response: ${validated.summary}`,
+			);
 		}
+
 		return validated;
 	} catch (error) {
+		// Don't log expected connection errors
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		const lowerMsg = errorMessage.toLowerCase();
 		const isExpectedConnectionError =
@@ -498,8 +612,9 @@ export async function getSandboxHealthStatus(
 			lowerMsg.includes("timed out");
 
 		if (!isExpectedConnectionError) {
-			logger.error("[getSandboxHealthStatus] Health check failed:", error);
+			throw await parseCloudModeError(error);
 		}
+
 		throw error;
 	}
 }
@@ -560,7 +675,7 @@ export async function execCommandStream(
 						const event = JSON.parse(trimmed) as ExecStreamEvent;
 						onEvent(event);
 					} catch (_parseError) {
-						logger.warn("[execCommandStream] Failed to parse line:", trimmed);
+						// Silently skip unparseable lines
 					}
 				}
 			}
@@ -571,7 +686,7 @@ export async function execCommandStream(
 					const event = JSON.parse(buffer.trim()) as ExecStreamEvent;
 					onEvent(event);
 				} catch {
-					logger.warn("[execCommandStream] Failed to parse final buffer:", buffer);
+					// Silently skip unparseable buffer
 				}
 			}
 
@@ -581,13 +696,11 @@ export async function execCommandStream(
 		}
 	} catch (error) {
 		if (error instanceof DOMException && error.name === "AbortError") {
-			logger.debug("[execCommandStream] Stream aborted by user");
 			options?.onDone?.();
 			return;
 		}
 
 		const err = error instanceof Error ? error : new Error(String(error));
-		logger.error("[execCommandStream] Stream error:", err);
 		options?.onError?.(err);
 		throw err;
 	}

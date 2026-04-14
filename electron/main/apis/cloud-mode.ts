@@ -14,12 +14,10 @@ import {
 	restartDockerResponseSchema,
 	sandboxHealthResponseSchema,
 } from "@shared/storage/cloud-mode";
+import { CloudModeApiError, parseCloudModeError } from "@shared/storage/cloud-mode-errors";
 import { type } from "arktype";
 
-import { createLogger } from "@shared/logger";
 import { _302AIKy } from "./core/_302ai-ky";
-
-const logger = createLogger("apis");
 
 /**
  * Get available instance list for Apikey
@@ -29,21 +27,25 @@ export async function listInstances(): Promise<ListInstancesResponse> {
 	try {
 		const response = await _302AIKy.get("302/swas/instances").json();
 
-		const validated = listInstancesResponseSchema(response);
-		if (validated instanceof type.errors) {
-			logger.error(
-				"Failed to validate list instances response:",
-				validated.summary,
-				JSON.stringify(response),
-			);
-			throw new Error("Invalid response format from list instances API");
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "SWAS_LIST_INSTANCE_FAILED",
+					errorObj.message || "Failed to list instances",
+				);
+			}
 		}
 
-		logger.debug("List instances response:", JSON.stringify(validated));
+		const validated = listInstancesResponseSchema(response);
+		if (validated instanceof type.errors) {
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
+		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to list instances:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
@@ -57,29 +59,32 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 	try {
 		const requestBody = restartDockerRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate restart docker request:", requestBody.summary);
-			throw new Error("Invalid request format for restart docker");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
 		const response = await _302AIKy
 			.post("302/swas/instances/openclaw/restart", { json: requestBody })
 			.json();
 
-		const validated = restartDockerResponseSchema(response);
-		if (validated instanceof type.errors) {
-			logger.error(
-				"Failed to validate restart docker response:",
-				validated.summary,
-				JSON.stringify(response),
-			);
-			throw new Error("Invalid response format from restart docker API");
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "SWAS_REBOOT_FAILED",
+					errorObj.message || "Failed to restart docker",
+				);
+			}
 		}
 
-		logger.debug("Restart docker response:", JSON.stringify(validated));
+		const validated = restartDockerResponseSchema(response);
+		if (validated instanceof type.errors) {
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
+		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to restart docker:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
@@ -93,29 +98,32 @@ export async function readInstanceFiles(request: ReadFilesRequest): Promise<Read
 	try {
 		const requestBody = readFilesRequestSchema(request);
 		if (requestBody instanceof type.errors) {
-			logger.error("Failed to validate read files request:", requestBody.summary);
-			throw new Error("Invalid request format for read files");
+			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
 		const response = await _302AIKy
 			.post("302/swas/instances/files/read", { json: requestBody })
 			.json();
 
-		const validated = readFilesResponseSchema(response);
-		if (validated instanceof type.errors) {
-			logger.error(
-				"Failed to validate read files response:",
-				validated.summary,
-				JSON.stringify(response),
-			);
-			throw new Error("Invalid response format from read files API");
+		// Check for error response
+		if (response && typeof response === "object" && "success" in response) {
+			if (response.success === false && "error" in response) {
+				const errorObj = response.error as { code?: string; message?: string };
+				throw new CloudModeApiError(
+					errorObj.code || "UNKNOWN_ERROR",
+					errorObj.message || "Failed to read files",
+				);
+			}
 		}
 
-		logger.debug("Read files response:", JSON.stringify(validated));
+		const validated = readFilesResponseSchema(response);
+		if (validated instanceof type.errors) {
+			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
+		}
+
 		return validated;
 	} catch (error) {
-		logger.error("Failed to read instance files:", error);
-		throw error;
+		throw await parseCloudModeError(error);
 	}
 }
 
@@ -133,12 +141,15 @@ export async function getSandboxHealthStatus(
 		const response = await _302AIKy(
 			new URL(`http://${ip}:${port}/302/claude-code/sandbox/health`),
 		).json();
-		logger.debug("[getSandboxHealthStatus] Health check response:", response);
+
 		const validated = sandboxHealthResponseSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate health check response:", validated.summary);
-			throw new Error(`Invalid health check response: ${validated.summary}`);
+			throw new CloudModeApiError(
+				"INVALID_RESPONSE",
+				`Invalid health check response: ${validated.summary}`,
+			);
 		}
+
 		return validated;
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
@@ -152,8 +163,9 @@ export async function getSandboxHealthStatus(
 			lowerMsg.includes("timed out");
 
 		if (!isExpectedConnectionError) {
-			logger.error("[getSandboxHealthStatus] Health check failed:", error);
+			throw await parseCloudModeError(error);
 		}
+
 		throw error;
 	}
 }

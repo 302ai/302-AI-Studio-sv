@@ -10,6 +10,7 @@ import { _302AIKy } from "$lib/api/core/_302ai-ky";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
 import { createLogger } from "@shared/logger";
+import { CloudModeApiError } from "@shared/storage/cloud-mode-errors";
 import type { InstanceInfo } from "@shared/storage/cloud-mode";
 import { onMount } from "svelte";
 import { toast } from "svelte-sonner";
@@ -185,37 +186,73 @@ class CloudModeStateManager {
 	}
 
 	async loadInstances() {
-		const res = await window.electronAPI.cloudModeService.syncCloudInstanceToLocalByIpc();
-		if (!res.isOk) {
-			throw new Error("Failed to load cloud instance status");
+		try {
+			const res = await window.electronAPI.cloudModeService.syncCloudInstanceToLocalByIpc();
+			if (!res.isOk) {
+				throw new Error("Failed to load cloud instance status");
+			}
+		} catch (error) {
+			if (error instanceof CloudModeApiError) {
+				const i18nKey = error.getI18nKey();
+				const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
+				const message = messageFunc ? messageFunc() : m.cloud_mode_error_unknown();
+				toast.error(message);
+			} else {
+				toast.error(m.cloud_mode_error_unknown());
+			}
+			throw error;
 		}
 	}
 
 	async restartMachine() {
 		await this.loadingCommand("restart", async () => {
-			const res = await rebootInstance({
-				instanceName: this.state.instanceName,
-			});
-			if (!res.success) {
-				throw new Error("Failed to restart instance");
-			}
+			try {
+				const res = await rebootInstance({
+					instanceName: this.state.instanceName,
+				});
+				if (!res.success) {
+					throw new Error("Failed to restart instance");
+				}
 
-			// Unified handler: sync + start polling
-			await this.afterInstanceOperation();
+				// Unified handler: sync + start polling
+				await this.afterInstanceOperation();
+			} catch (error) {
+				if (error instanceof CloudModeApiError) {
+					const i18nKey = error.getI18nKey();
+					const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
+					const message = messageFunc ? messageFunc() : m.cloud_mode_error_unknown();
+					toast.error(message);
+				} else {
+					toast.error(m.cloud_mode_error_unknown());
+				}
+				throw error;
+			}
 		})();
 	}
 
 	async restartOpenClaw() {
 		await this.loadingCommand("restartOpenClaw", async () => {
-			const res = await restartDocker({
-				instanceName: this.state.instanceName,
-			});
-			if (!res.success) {
-				throw new Error("Failed to restart OpenClaw");
-			}
+			try {
+				const res = await restartDocker({
+					instanceName: this.state.instanceName,
+				});
+				if (!res.success) {
+					throw new Error("Failed to restart OpenClaw");
+				}
 
-			// Unified handler: sync + start polling
-			await this.afterInstanceOperation();
+				// Unified handler: sync + start polling
+				await this.afterInstanceOperation();
+			} catch (error) {
+				if (error instanceof CloudModeApiError) {
+					const i18nKey = error.getI18nKey();
+					const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
+					const message = messageFunc ? messageFunc() : m.cloud_mode_error_unknown();
+					toast.error(message);
+				} else {
+					toast.error(m.cloud_mode_error_unknown());
+				}
+				throw error;
+			}
 		})();
 	}
 
@@ -232,9 +269,17 @@ class CloudModeStateManager {
 					throw new Error("Failed to update auto-renew setting");
 				}
 				logger.info("Auto-renew setting updated successfully");
-			} catch (e) {
+			} catch (error) {
 				this.#updateState({ autoRenew: originalAutoRenew });
-				throw e;
+				if (error instanceof CloudModeApiError) {
+					const i18nKey = error.getI18nKey();
+					const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
+					const message = messageFunc ? messageFunc() : m.cloud_mode_error_unknown();
+					toast.error(message);
+				} else {
+					toast.error(m.cloud_mode_error_unknown());
+				}
+				throw error;
 			}
 		})();
 	}
@@ -267,36 +312,48 @@ class CloudModeStateManager {
 
 	async createInstance() {
 		await this.loadingCommand("createOrRenew", async () => {
-			const isRenewal = !!this.state.instanceName;
+			try {
+				const isRenewal = !!this.state.instanceName;
 
-			if (isRenewal) {
-				const res = await manualRenew({
-					instanceName: this.state.instanceName,
-					isDev: true, // TODO: remove this when ready
-				});
-				if (!res.success) {
-					throw new Error("Failed to renew instance");
+				if (isRenewal) {
+					const res = await manualRenew({
+						instanceName: this.state.instanceName,
+						isDev: true, // TODO: remove this when ready
+					});
+					if (!res.success) {
+						throw new Error("Failed to renew instance");
+					}
+					logger.info("Instance renewed successfully");
+				} else {
+					const res = await createInstance({
+						isDev: true, // TODO: remove this when ready
+						isAutoRenew: this.state.autoRenew,
+					});
+					if (!res.success) {
+						throw new Error("Failed to create instance");
+					}
+
+					await initInstance({
+						instanceName: res.instance.instanceName,
+						isDev: true, // TODO: remove this when ready
+					});
+
+					logger.info("Instance created successfully");
 				}
-				logger.info("Instance renewed successfully");
-			} else {
-				const res = await createInstance({
-					isDev: true, // TODO: remove this when ready
-					isAutoRenew: this.state.autoRenew,
-				});
-				if (!res.success) {
-					throw new Error("Failed to create instance");
+
+				// Unified handler: sync + start polling
+				await this.afterInstanceOperation();
+			} catch (error) {
+				if (error instanceof CloudModeApiError) {
+					const i18nKey = error.getI18nKey();
+					const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
+					const message = messageFunc ? messageFunc() : m.cloud_mode_error_unknown();
+					toast.error(message);
+				} else {
+					toast.error(m.cloud_mode_error_unknown());
 				}
-
-				await initInstance({
-					instanceName: res.instance.instanceName,
-					isDev: true, // TODO: remove this when ready
-				});
-
-				logger.info("Instance created successfully");
+				throw error;
 			}
-
-			// Unified handler: sync + start polling
-			await this.afterInstanceOperation();
 		})();
 	}
 }
