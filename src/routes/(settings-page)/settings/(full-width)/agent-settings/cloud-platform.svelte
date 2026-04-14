@@ -212,15 +212,17 @@
 								text={healthProps.text}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
-							<ButtonWithTooltip
-								onclick={() => (showRestartMachineDialog = true)}
-								tooltip={m.cloud_mode_reboot_instance()}
-								class="hover:!bg-icon-btn-hover size-8"
-							>
-								<RefreshCw
-									class={cn("h-4 w-4", loading.restart && "animate-spin")}
-								/>
-							</ButtonWithTooltip>
+							{#if !cloudState.expired}
+								<ButtonWithTooltip
+									onclick={() => (showRestartMachineDialog = true)}
+									tooltip={m.cloud_mode_reboot_instance()}
+									class="hover:!bg-icon-btn-hover size-8"
+								>
+									<RefreshCw
+										class={cn("h-4 w-4", loading.restart && "animate-spin")}
+									/>
+								</ButtonWithTooltip>
+							{/if}
 						</div>
 						<div class="flex items-center gap-3">
 							<Label class="text-muted-foreground min-w-18 font-normal"
@@ -231,7 +233,7 @@
 								text={resolveOpenClawText(openClaw.status)}
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
-							{#if !openClaw.status}
+							{#if !openClaw.status && !cloudState.expired}
 								<ButtonWithTooltip
 									onclick={() => (showRestartOpenClawDialog = true)}
 									tooltip={m.cloud_mode_restart_docker()}
