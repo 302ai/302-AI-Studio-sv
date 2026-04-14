@@ -3,6 +3,7 @@
 	import * as m from "$lib/paraglide/messages";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { codeAgentSendMessageButtonState, codeAgentState } from "$lib/stores/code-agent";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { codeAgentTaskboardState } from "$lib/stores/code-agent/code-agent-taskboard-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { persistedProviderState } from "$lib/stores/provider-state.svelte";
@@ -27,6 +28,9 @@
 	// Check if local sandbox is starting (for disabling run button)
 	const isLocalSandboxStarting = $derived(
 		codeAgentState.type === "local" && localEnvState.sandboxStarting,
+	);
+	const isCloudModeNotRunning = $derived(
+		codeAgentState.type === "cloud" && cloudModeState.state.status !== "running",
 	);
 
 	const hasConfiguredProviders = $derived(() => {
@@ -104,14 +108,23 @@
 			return didSend;
 		}
 		if (codeAgentState.enabled && codeAgentState.type === "local") {
-			// For local mode in non-fresh tabs, only ensure sandbox is running
-			const localSandboxResult =
-				await codeAgentSendMessageButtonState.ensureLocalSandboxReady();
-			if (!localSandboxResult.isOk) {
-				toast.error(localSandboxResult.error ?? m.code_agent_local_sandbox_start_failed());
-				return false;
+			if (codeAgentState.type === "local") {
+				const localSandboxResult =
+					await codeAgentSendMessageButtonState.ensureLocalSandboxReady();
+				if (!localSandboxResult.isOk) {
+					toast.error(
+						localSandboxResult.error ?? m.code_agent_local_sandbox_start_failed(),
+					);
+					return false;
+				}
+				return trySend(content);
+			} else if (codeAgentState.type === "cloud") {
+				if (isCloudModeNotRunning) {
+					toast.error(m.code_agent_cloud_instance_not_running());
+					return false;
+				}
+				return trySend(content);
 			}
-			return trySend(content);
 		}
 		return trySend(content);
 	};
@@ -178,7 +191,9 @@
 						(!isRunning &&
 							!isWaitingToStop &&
 							!isWaitingForChat &&
-							(codeAgentState.isChecking || isLocalSandboxStarting))}
+							(codeAgentState.isChecking ||
+								isLocalSandboxStarting ||
+								isCloudModeNotRunning))}
 					onclick={handleRun}
 				>
 					{buttonText}

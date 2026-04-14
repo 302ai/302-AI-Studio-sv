@@ -22,7 +22,7 @@ export async function createLocalCodeAgentKy() {
 		(await window.electronAPI.localVibeService.getLocalBaseUrl()) ?? "http://localhost:8123";
 
 	return ky.create({
-		timeout: 60000,
+		timeout: 180000,
 		prefixUrl: prefixUrl,
 		headers: {
 			"HTTP-Referer": "https://studio.302.ai/",

@@ -6,16 +6,18 @@
 		claudeCodeSandboxState,
 		persistedClaudeCodeSandboxState,
 	} from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
+	import { cloudModeSessionsState } from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { formatDateTimeShort } from "$lib/utils/date-format";
-	import { toast } from "svelte-sonner";
 	import { Loader2 } from "@lucide/svelte";
 	import type {
-		CodeAgentType,
 		ClaudeCodeSandboxInfo,
+		CodeAgentType,
 		LocalSessionInfo,
 	} from "@shared/storage/code-agent";
+	import { toast } from "svelte-sonner";
 
 	interface Props {
 		open?: boolean;
@@ -40,7 +42,7 @@
 
 	// Get the latest sessions from the persisted state (remote mode only)
 	const sessions = $derived.by(() => {
-		if (mode === "local" || !sandbox) return [];
+		if (["local", "cloud"].includes(mode) || !sandbox) return [];
 		const currentSandbox = persistedClaudeCodeSandboxState.current.find(
 			(s) => s.sandboxId === sandbox.sandboxId,
 		);
@@ -75,6 +77,13 @@
 					return;
 				}
 				await localClaudeCodeSandboxState.deleteSession(session.session_id);
+			} else if (mode === "cloud") {
+				if (!session) return;
+				if (cloudModeState.state.status !== "running") {
+					toast.error(m.code_agent_cloud_instance_not_running());
+					return;
+				}
+				await cloudModeSessionsState.deleteSession(session.session_id);
 			} else {
 				if (!sandbox) return;
 				await claudeCodeSandboxState.deleteSandbox(sandbox.sandboxId);
@@ -85,14 +94,16 @@
 			isDeleting = false;
 		}
 	}
+
+	const isLocalOrCloud = $derived(["local", "cloud"].includes(mode));
 </script>
 
 <Dialog.Root bind:open>
 	<Dialog.Content class="min-w-[568px] rounded-2xl p-6">
 		<!-- Header -->
 		<div class="mb-6">
-			<h2 class="text-lg font-semibold text-foreground">
-				{#if mode === "local"}
+			<h2 class="text-lg font-semibold text-foreg round">
+				{#if isLocalOrCloud}
 					{m.title_delete_session()}
 				{:else}
 					{m.title_delete_sandbox()}
@@ -102,7 +113,7 @@
 
 		<!-- Confirmation View -->
 		<div class="space-y-4">
-			{#if mode === "local"}
+			{#if isLocalOrCloud}
 				<!-- Local Mode: Session Info Only -->
 				<div class="space-y-1">
 					<p class="text-sm text-foreground">

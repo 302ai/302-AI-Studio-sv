@@ -5,18 +5,14 @@
 </script>
 
 <script lang="ts">
+	import AgentWorkspaceConfig from "$lib/components/buss/local-agent-panel/agent-workspace-config.svelte";
+
 	import CloudRuningCard from "$lib/components/buss/local-agent-panel/cloud-runing-card.svelte";
 
 	import { Button } from "$lib/components/ui/button";
 	import { m } from "$lib/paraglide/messages";
-	import { cloudEnvState } from "$lib/stores/code-agent/cloud-env-state.svelte";
 
 	let { onClose }: Props = $props();
-
-	// Sync cloud status when panel opens
-	$effect(() => {
-		cloudEnvState.checkStatus();
-	});
 
 	function handleLocalModeConfirm() {
 		onClose?.();
@@ -30,6 +26,10 @@
 		<div class="rounded-lg border p-4 space-y-4">
 			<CloudRuningCard />
 		</div>
+	</section>
+
+	<section class="space-y-4 mt-2">
+		<AgentWorkspaceConfig />
 	</section>
 
 	<!-- Footer with Cancel/Confirm buttons -->

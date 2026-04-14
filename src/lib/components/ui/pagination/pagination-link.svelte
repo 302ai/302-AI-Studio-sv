@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Pagination as PaginationPrimitive } from "bits-ui";
-	import { cn } from "$lib/utils.js";
 	import { type Props, buttonVariants } from "$lib/components/ui/button/index.js";
+	import { cn } from "$lib/utils.js";
+	import { Pagination as PaginationPrimitive } from "bits-ui";
 
 	let {
 		ref = $bindable(null),
@@ -10,6 +10,7 @@
 		isActive,
 		page,
 		children,
+		onclick,
 		...restProps
 	}: PaginationPrimitive.PageProps &
 		Props & {
@@ -36,4 +37,5 @@
 	)}
 	children={children || Fallback}
 	{...restProps}
+	onclick={isActive ? undefined : onclick}
 />

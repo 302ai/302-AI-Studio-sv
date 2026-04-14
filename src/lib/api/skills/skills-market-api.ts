@@ -8,10 +8,10 @@
  * - Individual skill details
  */
 
-import { type } from "arktype";
 import { createLogger } from "@shared/logger";
+import { type } from "arktype";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 const SKILLS_MARKET_BASE_URL = "https://api-skills.302.ai";
 

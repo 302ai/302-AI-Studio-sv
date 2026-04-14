@@ -1,7 +1,7 @@
 import { API_BASE_URL } from "$lib/constants/api";
 import { createLogger } from "@shared/logger";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 /**
  * MCP Server info from 302.AI API

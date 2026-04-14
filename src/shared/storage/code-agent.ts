@@ -45,7 +45,7 @@ export const codeAgentMetadata = type({
 	 * remote agent only
 	 */
 	currentSessionId: "string",
-	sandboxId: "string",
+	sandboxId: "string | 'local' | 'cloud'",
 	sandboxRemark: "string",
 	skills: skill.array(),
 	/**
@@ -82,7 +82,7 @@ export const claudeCodeSessionInfo = type({
 export type ClaudeCodeSessionInfo = typeof claudeCodeSessionInfo.infer;
 
 export const claudeCodeSandboxInfo = type({
-	sandboxId: "string",
+	sandboxId: "string | 'local' | 'cloud'",
 	sandboxRemark: "string",
 	diskTotal: "number",
 	diskUsed: "number",

@@ -258,9 +258,21 @@
 
 	async function handleClearModels() {
 		if (!currentProvider) return;
+		// 在清空前统计过滤后的模型数量，与获取时显示的数量保持一致
+		const providerModels = persistedModelState.current.filter(
+			(m) => m.providerId === currentProvider.id,
+		);
+		const filteredCount =
+			currentProvider.id === "302AI"
+				? getFilteredModels(providerModels).length
+				: providerModels.length;
 		const clearedCount = await providerState.clearModelsByProvider(currentProvider.id);
 		if (clearedCount > 0) {
-			toast.success(m.text_clear_models_success({ count: clearedCount.toString() }));
+			toast.success(
+				m.text_clear_models_success({
+					count: filteredCount.toString(),
+				}),
+			);
 		}
 	}
 

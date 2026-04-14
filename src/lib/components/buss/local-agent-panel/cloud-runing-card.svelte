@@ -10,85 +10,99 @@
 
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
+	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { m } from "$lib/paraglide/messages";
-	import { cloudEnvState } from "$lib/stores/code-agent/cloud-env-state.svelte";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
+	import { RefreshCw } from "@lucide/svelte";
+	import { cn } from "tailwind-variants";
+	import { ButtonWithTooltip } from "../button-with-tooltip";
+
+	let { state, openClaw, loading, healthProps } = $derived(cloudModeState.init());
+
+	function resolveOpenClawStatus(v: boolean | null): "green" | "red" | "gray" {
+		return v == null ? "gray" : v ? "green" : "red";
+	}
+
+	function resolveOpenClawText(v: boolean | null): string {
+		return v == null
+			? m.cloud_mode_unknown()
+			: v
+				? m.cloud_mode_healthy()
+				: m.cloud_mode_unhealthy();
+	}
 
 	function handleActivate() {
 		window.electronAPI.windowService.handleOpenSettingsWindow(
-			"/settings/agent-settings/platform?platform=cloud",
+			"/settings/agent-settings/openclaw?platform=cloud",
 		);
-	}
-
-	async function handleStart() {
-		await cloudEnvState.startCloud();
-	}
-
-	async function handleStop() {
-		await cloudEnvState.stopCloud();
 	}
 </script>
 
-<div class="flex items-start justify-between gap-4">
-	<div class="flex-1 space-y-2">
-		<div class="flex items-center gap-3">
-			<Label class="text-muted-foreground min-w-18 font-normal"
-				>{m.cloud_mode_activation_status()}</Label
-			>
-			<StatusIndicator
-				status={cloudEnvState.activated ? "green" : "gray"}
-				text={cloudEnvState.activated
-					? m.cloud_mode_activated()
-					: m.cloud_mode_not_activated()}
-			/>
-		</div>
-		<div class="flex items-center gap-3">
-			<Label class="text-muted-foreground min-w-18 font-normal"
-				>{m.cloud_mode_startup_status()}</Label
-			>
-			<StatusIndicator
-				status={cloudEnvState.running ? "green" : "gray"}
-				text={cloudEnvState.running ? m.cloud_mode_started() : m.cloud_mode_not_started()}
-			/>
-		</div>
-		<div class="flex items-center gap-3">
-			<Label class="text-muted-foreground min-w-18 font-normal"
-				>{m.cloud_mode_health_status()}</Label
-			>
-			<StatusIndicator
-				status={cloudEnvState.healthStatus === "healthy" ? "green" : "gray"}
-				text={cloudEnvState.healthStatus === "healthy"
-					? m.cloud_mode_healthy()
-					: m.cloud_mode_unknown()}
-			/>
-		</div>
-		<div class="flex items-center gap-3">
-			<Label class="text-muted-foreground min-w-18 font-normal"
-				>{m.cloud_mode_openclaw_status()}</Label
-			>
-			<StatusIndicator
-				status={cloudEnvState.openClawStatus === "healthy" ? "green" : "gray"}
-				text={cloudEnvState.openClawStatus === "healthy"
-					? m.cloud_mode_running()
-					: m.cloud_mode_unknown()}
-			/>
+{#if loading.init}
+	<div class="flex items-start justify-between gap-4">
+		<div class="flex-1 space-y-2">
+			<div class="flex items-center gap-3">
+				<Skeleton class="h-4 w-18" />
+				<Skeleton class="h-4 w-20" />
+				<Skeleton class="size-8 rounded-md" />
+			</div>
+			<div class="flex items-center gap-3">
+				<Skeleton class="h-4 w-18" />
+				<Skeleton class="h-4 w-20" />
+			</div>
+			<div class="flex items-center gap-3">
+				<Skeleton class="h-4 w-18" />
+				<Skeleton class="h-4 w-20" />
+			</div>
 		</div>
 	</div>
-	{#if !cloudEnvState.activated}
-		<Button size="sm" onclick={handleActivate}>
-			{m.cloud_mode_activate_button()}
-		</Button>
-	{:else if cloudEnvState.running}
-		<Button
-			size="sm"
-			variant="destructive"
-			disabled={cloudEnvState.starting}
-			onclick={handleStop}
-		>
-			{m.cloud_mode_not_started()}
-		</Button>
-	{:else}
-		<Button size="sm" disabled={cloudEnvState.starting} onclick={handleStart}>
-			{m.cloud_mode_started()}
-		</Button>
-	{/if}
-</div>
+{:else}
+	<div class="flex items-start justify-between gap-4">
+		<div class="flex-1 space-y-2">
+			<div class="flex items-center gap-3">
+				<Label class="text-muted-foreground min-w-18 font-normal"
+					>{m.agent_settings_instance_status()}</Label
+				>
+				<StatusIndicator
+					status={healthProps.status}
+					text={healthProps.text}
+					warningTooltip={m.cloud_mode_unhealthy()}
+				/>
+				<ButtonWithTooltip
+					onclick={() => cloudModeState.restartMachine()}
+					tooltip={m.cloud_mode_reboot_instance()}
+					class="hover:!bg-icon-btn-hover size-8"
+				>
+					<RefreshCw class={cn("h-4 w-4", loading.restart && "animate-spin")} />
+				</ButtonWithTooltip>
+			</div>
+			<div class="flex items-center gap-3">
+				<Label class="text-muted-foreground min-w-18 font-normal"
+					>{m.cloud_mode_openclaw_status()}</Label
+				>
+				<StatusIndicator
+					status={resolveOpenClawStatus(openClaw.status)}
+					text={resolveOpenClawText(openClaw.status)}
+					warningTooltip={m.cloud_mode_unhealthy()}
+				/>
+			</div>
+			<div class="flex items-center gap-3">
+				<Label class="text-muted-foreground min-w-18 font-normal">接口状态</Label>
+				<StatusIndicator
+					status={resolveOpenClawStatus(openClaw.api_status)}
+					text={resolveOpenClawText(openClaw.api_status)}
+					warningTooltip={m.cloud_mode_unhealthy()}
+				/>
+			</div>
+		</div>
+		{#if state.instanceName === ""}
+			<Button size="sm" onclick={handleActivate}>
+				{m.cloud_mode_activate_button()}
+			</Button>
+		{:else if state.expired}
+			<Button size="sm" onclick={handleActivate}>
+				{m.cloud_mode_renew_button()}
+			</Button>
+		{/if}
+	</div>
+{/if}

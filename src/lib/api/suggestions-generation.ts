@@ -1,10 +1,10 @@
 import type { ChatMessage } from "$lib/types/chat";
+import { createLogger } from "@shared/logger";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { Model } from "@shared/types";
 import { withGenerationFallback, type FallbackModelConfig } from "./generation-fallback";
-import { createLogger } from "@shared/logger";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 export interface GenerateSuggestionsRequest {
 	messages: ChatMessage[];

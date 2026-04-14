@@ -36,7 +36,7 @@
 
 <div class="mx-auto flex flex-col h-full gap-6 w-full">
 	<!-- Platform Section -->
-	<div class="w-full">
+	<div class="w-full px-2">
 		<SegButton
 			options={platformOptions}
 			selectedKey={selectedPlatform}
@@ -46,7 +46,7 @@
 		/>
 	</div>
 
-	<div class="grow min-h-0 h-fit overflow-auto">
+	<div class="grow min-h-0 h-fit overflow-auto px-2">
 		{#if selectedPlatform === "remote"}
 			<RemotePlatform />
 		{:else if selectedPlatform === "cloud"}

@@ -4,11 +4,13 @@
 	import * as Dialog from "$lib/components/ui/dialog";
 	import { m } from "$lib/paraglide/messages";
 	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
+	import { cloudModeSessionsState } from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { Loader2 } from "@lucide/svelte";
-	import { toast } from "svelte-sonner";
 	import { createLogger } from "@shared/logger";
+	import { toast } from "svelte-sonner";
 
 	const logger = createLogger("ui");
 
@@ -52,6 +54,12 @@
 						return;
 					}
 					success = await localClaudeCodeSandboxState.deleteSession(sessionId);
+				} else if (sandboxId === "cloud") {
+					if (cloudModeState.state.status !== "running") {
+						toast.error(m.code_agent_cloud_instance_not_running());
+						return;
+					}
+					success = await cloudModeSessionsState.deleteSession(sessionId);
 				} else {
 					success = await claudeCodeSandboxState.deleteSession(sandboxId, sessionId);
 				}

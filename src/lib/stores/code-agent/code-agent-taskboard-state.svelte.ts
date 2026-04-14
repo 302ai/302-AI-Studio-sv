@@ -18,6 +18,7 @@ import { toast } from "svelte-sonner";
 import { match } from "ts-pattern";
 import { chat, chatState } from "../chat-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
+import { codeAgentSharedState } from "./code-agent-shared-state.svelte";
 import { shouldPauseAfterTaskRestore } from "./taskboard-auto-execution-policy";
 import { withLoadingState } from "./utils";
 
@@ -30,9 +31,19 @@ export class CodeAgentTaskboardState {
 
 	isLoading = $state(false);
 	tasklist = $state<Task[]>([]);
-	taskboardStatus = $state<"idle" | "running" | "waiting_to_stop" | "waiting_for_chat">("idle");
+	#taskboardStatus = $state<"idle" | "running" | "waiting_to_stop" | "waiting_for_chat">("idle");
 	retryExhausted = $state(false);
 	isAutoPaused = $state(false);
+
+	get taskboardStatus() {
+		return this.#taskboardStatus;
+	}
+
+	set taskboardStatus(value: "idle" | "running" | "waiting_to_stop" | "waiting_for_chat") {
+		this.#taskboardStatus = value;
+		// Update shared state for code-agent-state to read
+		codeAgentSharedState.taskboardIsRunning = value === "running";
+	}
 
 	// Input state
 	inputValue = $state("");

@@ -11,6 +11,7 @@
 		perPage = 10,
 		page = $bindable(1),
 		siblingCount = 1,
+		children: childrenProp,
 		...restProps
 	}: PaginationPrimitive.RootProps = $props();
 </script>
@@ -26,4 +27,8 @@
 	{perPage}
 	{siblingCount}
 	{...restProps}
-/>
+>
+	{#snippet children(payload)}
+		{@render childrenProp?.(payload)}
+	{/snippet}
+</PaginationPrimitive.Root>

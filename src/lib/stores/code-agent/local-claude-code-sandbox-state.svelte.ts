@@ -1,14 +1,14 @@
 import { deleteLocalSession, listLocalSessions } from "$lib/api/sandbox-session";
-import { createLogger } from "@shared/logger";
-
-const logger = createLogger("state");
 import type { GroupedSelectData } from "$lib/components/buss/settings/setting-select.svelte";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
 import { formatDateTimeShort } from "$lib/utils/date-format";
+import { createLogger } from "@shared/logger";
 import type { LocalSessionInfo } from "@shared/storage/code-agent";
 import { toast } from "svelte-sonner";
 import { SvelteMap } from "svelte/reactivity";
+
+const logger = createLogger("state");
 
 /**
  * Persisted state for local Claude Code sessions.
@@ -201,7 +201,7 @@ class LocalClaudeCodeSandboxState {
 	async refreshSessions(): Promise<void> {
 		this.isLoading = true;
 		try {
-			const response = await listLocalSessions();
+			const response = await listLocalSessions("local");
 			if (response.success) {
 				persistedLocalClaudeCodeSessionsState.current = response.session_list;
 			}
@@ -254,7 +254,7 @@ class LocalClaudeCodeSandboxState {
 		const session = this.sessions.find((s) => s.session_id === sessionId);
 		const workspacePath = session?.workspace_path;
 
-		const result = await deleteLocalSession(sessionId);
+		const result = await deleteLocalSession(sessionId, "local");
 
 		if (result.success) {
 			// Delete the local workspace directory if it exists.

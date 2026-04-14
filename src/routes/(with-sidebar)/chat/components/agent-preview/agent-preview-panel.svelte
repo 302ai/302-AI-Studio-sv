@@ -30,9 +30,8 @@
 		type AgentPreviewSyncEnvelope,
 	} from "$lib/stores/agent-preview-state.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
-	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
-	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 
 	import { TaskboardPanel } from "$lib/components/buss/taskboard";
 	import { htmlPreviewState } from "$lib/stores/html-preview-state.svelte";
@@ -59,6 +58,7 @@
 	import OpenClawWebUI from "./openclaw-webui.svelte";
 	import SessionDeleted from "./session-deleted.svelte";
 	import Terminal from "./terminal.svelte";
+
 	import { handleError, isFileStillSelected } from "./utils";
 
 	const logger = createLogger("ui");
@@ -178,20 +178,40 @@
 	function resolvePreviewActiveTab(
 		availableTabs: ReadonlyArray<PreviewTab>,
 		currentTab: TabType,
+		isCloudOpenClawManageButtonMode: boolean,
 	): TabType | null {
 		if (availableTabs.length === 0) {
 			return null;
 		}
 
+		const fallbackTab = (
+			isCloudOpenClawManageButtonMode
+				? availableTabs.find((tab) => tab.id !== TAB_OPENCLAW_WEBUI)?.id
+				: availableTabs[0].id
+		) as TabType | undefined;
+
+		if (isCloudOpenClawManageButtonMode && currentTab === TAB_OPENCLAW_WEBUI) {
+			return fallbackTab ?? null;
+		}
+
 		return availableTabs.some((tab) => tab.id === currentTab)
 			? currentTab
-			: (availableTabs[0].id as TabType);
+			: (fallbackTab ?? null);
 	}
 
+	function shouldOpenManageTabInNewTab(
+		tabId: string,
+		isCloudOpenClawManageButtonMode: boolean,
+	): boolean {
+		return isCloudOpenClawManageButtonMode && tabId === TAB_OPENCLAW_WEBUI;
+	}
 	// --- State ---
 	// Sync activeTab with agentPreviewState
 	let activeTab = $derived(agentPreviewState.activeTab as TabType);
 	let deviceMode = $state<DeviceMode>(DEVICE_MODE_DESKTOP);
+	const isCloudOpenClawManageButtonMode = $derived(
+		codeAgentState.currentAgentId === "open-claw" && codeAgentState.type === "cloud",
+	);
 
 	// Skills data
 	let skillsData = $state<Omit<ListSkillsResponse, "success" | "project_skills">>({
@@ -343,12 +363,15 @@
 
 	// 0. 保证当前 tab 始终落在当前模式可用的范围内
 	$effect(() => {
-		const normalizedTab = resolvePreviewActiveTab(tabs, activeTab);
+		const normalizedTab = resolvePreviewActiveTab(
+			tabs,
+			activeTab,
+			isCloudOpenClawManageButtonMode,
+		);
 		if (normalizedTab && normalizedTab !== activeTab) {
 			agentPreviewState.setActiveTab(normalizedTab);
 		}
 	});
-
 	// 0.1 Reset isSkillsOnlyMode when streaming starts
 	// This shows all tabs (Preview, Files, Terminal) when the AI begins responding
 	$effect(() => {
@@ -472,13 +495,7 @@
 		isRestoringState = true;
 
 		try {
-			// Then refresh sessions to get workspace_path for the current session
-			// This ensures the file tree has the correct workspace path before loading
-			if (codeAgentState.type === "local") {
-				await localClaudeCodeSandboxState.refreshSessions();
-			} else {
-				await claudeCodeSandboxState.refreshSessions(sandboxId);
-			}
+			await codeAgentState.refreshSessions(sandboxId);
 
 			const [info, savedPath] = await Promise.all([
 				agentPreviewState.getDeploymentInfo(sandboxId, sessionId),
@@ -558,10 +575,10 @@
 
 				// Refresh sessions to get updated workspace_path after agent completes
 				// This is important because session/workspace is created after agent's first response
-				if (codeAgentState.type === "local") {
-					localClaudeCodeSandboxState.refreshSessions();
+				if (codeAgentState.type === "remote") {
+					codeAgentState.refreshSessions(currentSandboxId);
 				} else {
-					claudeCodeSandboxState.refreshSessions(currentSandboxId);
+					codeAgentState.refreshSessions();
 				}
 			}
 		}
@@ -910,19 +927,34 @@
 		await chatState.sendMessage();
 	};
 
-	const handleOpenInNewTab = async () => {
-		if (activeTab === TAB_OPENCLAW_WEBUI) {
-			try {
-				const url = await window.electronAPI.openClawService.getOpenClawWebUiUrl();
-				if (url) {
-					await tabBarState.handleNewTab("OpenClaw", "openClawWebUi", true, url);
-				} else {
-					toast.error(m.openclaw_webui_failed_to_load());
-				}
-			} catch (error) {
-				logger.error("Failed to open internal tab:", error);
+	const openOpenClawManageTab = async () => {
+		try {
+			const url = isCloudOpenClawManageButtonMode
+				? await cloudModeState.getOpenClawWebUiUrl()
+				: await window.electronAPI.openClawService.getOpenClawWebUiUrl();
+			if (url) {
+				await tabBarState.handleNewTab("OpenClaw", "openClawWebUi", true, url);
+			} else {
 				toast.error(m.openclaw_webui_failed_to_load());
 			}
+		} catch (error) {
+			logger.error("Failed to open internal tab:", error);
+			toast.error(m.openclaw_webui_failed_to_load());
+		}
+	};
+
+	const handlePreviewTabChange = async (tabId: string) => {
+		if (shouldOpenManageTabInNewTab(tabId, isCloudOpenClawManageButtonMode)) {
+			await openOpenClawManageTab();
+			return;
+		}
+
+		agentPreviewState.setActiveTab(tabId as TabType);
+	};
+
+	const handleOpenInNewTab = async () => {
+		if (activeTab === TAB_OPENCLAW_WEBUI) {
+			await openOpenClawManageTab();
 			return;
 		}
 
@@ -1172,7 +1204,7 @@
 				compactDeployButton={false}
 				isPinned={agentPreviewState.isPinned}
 				isStreaming={chatState.isStreaming}
-				onTabChange={(t) => agentPreviewState.setActiveTab(t as TabType)}
+				onTabChange={handlePreviewTabChange}
 				onDeviceModeChange={(d) => (deviceMode = d)}
 				onDeploy={isAgentMode ? handleDeploySandbox : handleDeploy}
 				onClose={() => agentPreviewState.closePreview()}

@@ -98,6 +98,15 @@ class OpenClawConfigState {
 		await window.electronAPI.openClawService.applyOpenClawBindingsConfig(threadId);
 	}
 
+	async updateOCBindingsCloud(ocAgentId: string) {
+		if (ocAgentId === "") return;
+
+		this.updateOCAgentId(ocAgentId);
+
+		await persistedOpenclawConfigState.flush();
+		await window.electronAPI.openClawService.applyCloudClawBindingsConfig(threadId);
+	}
+
 	async bindingAndRestart(ocAgentId: string) {
 		await this.updateOCBindings(ocAgentId);
 

@@ -12,6 +12,8 @@ export * from "./storage/session";
 export * from "./storage/tab";
 export * from "./storage/theme";
 export * from "./storage/thread";
+export * from "./storage/cloud-mode";
+export * from "./storage/openclaw";
 export * from "./types/shortcut";
 
 // Re-export plugin types from SDK

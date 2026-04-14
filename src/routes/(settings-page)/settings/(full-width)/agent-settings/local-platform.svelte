@@ -2,16 +2,13 @@
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import PodmanCard from "$lib/components/buss/local-agent-panel/podman-card.svelte";
 	import SandboxCard from "$lib/components/buss/local-agent-panel/sandbox-card.svelte";
-	import OpenClawConfigPanel from "$lib/components/buss/open-claw-config-panel/open-claw-config-panel.svelte";
 	import * as ContextMenu from "$lib/components/ui/context-menu";
 	import * as Empty from "$lib/components/ui/empty/index.js";
 	import { Input } from "$lib/components/ui/input";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
-	import {
-		localClaudeCodeSandboxState,
-		persistedLocalClaudeCodeSessionsState,
-	} from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
+	import { codeAgentState } from "$lib/stores/code-agent";
+	import { persistedLocalClaudeCodeSessionsState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { cn } from "$lib/utils";
 	import { RotateCw, Search } from "@lucide/svelte";
@@ -41,7 +38,7 @@
 	async function handleRefresh() {
 		isLoading = true;
 		try {
-			await localClaudeCodeSandboxState.refreshSessions();
+			await codeAgentState.refreshSessions(undefined, "local");
 		} finally {
 			isLoading = false;
 		}
@@ -63,10 +60,6 @@
 </script>
 
 <div class="gap-settings-gap flex flex-col">
-	<section class="space-y-4">
-		<OpenClawConfigPanel />
-	</section>
-
 	<!-- Section 1: Environment Monitoring -->
 	<section class="space-y-4">
 		<Label class="text-label-fg font-normal">{m.local_platform_environment_monitoring()}</Label>
@@ -82,7 +75,7 @@
 	<section class="space-y-4 mt-6">
 		<div class="flex items-center justify-between">
 			<div class="flex items-center">
-				<h2 class="text-base font-medium">{m.title_local_session_list()}</h2>
+				<Label class="text-label-fg font-normal">{m.title_local_session_list()}</Label>
 				<div class="flex gap-1">
 					<ButtonWithTooltip
 						class="hover:!bg-chat-action-hover"

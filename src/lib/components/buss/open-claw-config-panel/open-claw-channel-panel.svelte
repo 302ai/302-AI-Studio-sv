@@ -9,6 +9,7 @@
 	import { openclawConfigState } from "$lib/stores/code-agent/openclaw/openclaw-config-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
 	import { trim } from "es-toolkit/string";
+	import { toast } from "svelte-sonner";
 	import SettingInputField from "../settings/setting-input-field.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
 	import { ApplyOpenClawChannelConfigConfirm } from "./hooks";
@@ -19,19 +20,49 @@
 	let telegramBotId = $state(openclawConfigState.telegramBotId);
 	let hasConfigs = $derived(trim(feishuSessionId) !== "" || trim(telegramBotId) !== "");
 
-	const { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
-		prepareAction: async () => {
-			await openclawConfigState
-				.batchUpdater()
-				.update("feishuSessionId", feishuSessionId)
-				.update("telegramBotId", telegramBotId)
-				.apply();
+	const { handleConfirmDialogOk: handleLocalConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm(
+		{
+			action: async () => {
+				await openclawConfigState
+					.batchUpdater()
+					.update("feishuSessionId", feishuSessionId)
+					.update("telegramBotId", telegramBotId)
+					.apply();
 
-			await openclawConfigState.updateOCBindings(openclawConfigState.currentOcAgentId);
+				await openclawConfigState.updateOCBindings(openclawConfigState.currentOcAgentId);
+			},
+			open: (v) => (confirmDialogOpen = v),
+			loading: (v) => (applyConfigLoading = v),
+			error: (_) => {},
+			succeed: () => {
+				toast.success(m.open_claw_config_update_success());
+			},
 		},
-		open: (v) => (confirmDialogOpen = v),
-		loading: (v) => (applyConfigLoading = v),
-	});
+	);
+
+	const { handleConfirmDialogOk: handleCloudConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm(
+		{
+			action: async () => {
+				await openclawConfigState
+					.batchUpdater()
+					.update("feishuSessionId", feishuSessionId)
+					.update("telegramBotId", telegramBotId)
+					.apply();
+
+				await openclawConfigState.updateOCBindingsCloud(
+					openclawConfigState.currentOcAgentId,
+				);
+			},
+			open: (v) => (confirmDialogOpen = v),
+			loading: (v) => (applyConfigLoading = v),
+			error: (_) => {
+				toast.error(m.open_claw_cloud_host_error());
+			},
+			succeed: () => {
+				toast.success(m.open_claw_config_update_success());
+			},
+		},
+	);
 
 	async function handleNewSettingsTab(route: string) {
 		await window.electronAPI.windowService.handleOpenSettingsWindow(route);
@@ -58,14 +89,14 @@
 						<button
 							onclick={() =>
 								handleNewSettingsTab(
-									"/settings/agent-settings?platform=local&channel=feishu#feishu",
+									"/settings/agent-settings/openclaw?channel=feishu#feishu",
 								)}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_config_feishu()}</button
 						>
 						<button
 							onclick={() =>
-								handleNewSettingsTab("/settings/agent-settings?platform=local")}
+								handleNewSettingsTab("/settings/agent-settings/openclaw")}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_view_more_settings()}</button
 						>
@@ -96,14 +127,14 @@
 						<button
 							onclick={() =>
 								handleNewSettingsTab(
-									"/settings/agent-settings?platform=local&channel=telegram#telegram",
+									"/settings/agent-settings/openclaw?channel=telegram#telegram",
 								)}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_config_telegram()}</button
 						>
 						<button
 							onclick={() =>
-								handleNewSettingsTab("/settings/agent-settings?platform=local")}
+								handleNewSettingsTab("/settings/agent-settings/openclaw")}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_view_more_settings()}</button
 						>
@@ -126,7 +157,7 @@
 			{@render telegram()}
 			<div class="flex items-start justify-between">
 				<button
-					onclick={() => handleNewSettingsTab("/settings/agent-settings?platform=local")}
+					onclick={() => handleNewSettingsTab("/settings/agent-settings/openclaw")}
 					class="text-primary hover:underline cursor-pointer"
 					>{m.open_claw_channel_view_more_settings()}</button
 				>
@@ -135,7 +166,7 @@
 						class="w-fit"
 						onclick={() => {
 							if (codeAgentState.isPristineSession) {
-								handleConfirmDialogOk();
+								handleLocalConfirmDialogOk();
 								return;
 							}
 
@@ -152,4 +183,9 @@
 	</AccordionItem>
 </Accordion>
 
-<ConfirmDialog bind:confirmDialogOpen bind:applyConfigLoading {handleConfirmDialogOk} />
+<ConfirmDialog
+	bind:confirmDialogOpen
+	bind:applyConfigLoading
+	{handleLocalConfirmDialogOk}
+	{handleCloudConfirmDialogOk}
+/>

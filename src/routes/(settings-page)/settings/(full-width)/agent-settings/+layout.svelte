@@ -20,6 +20,12 @@
 			label: m.agent_settings_tab_platform(),
 		},
 		{
+			id: "openclaw",
+			name: "openclaw",
+			href: "/settings/agent-settings/openclaw",
+			label: "Open Claw配置",
+		},
+		{
 			id: "other",
 			name: "other",
 			href: "/settings/agent-settings/other",
@@ -39,7 +45,7 @@
 </script>
 
 <div class="w-full h-full flex">
-	<div class="border-r w-56">
+	<div class="border-r w-56 flex-shrink-0">
 		<div class="flex h-full w-auto min-w-[var(--setting-width)] justify-end">
 			<div class="flex w-full justify-end p-3">
 				<div class="h-full w-full flex flex-col">

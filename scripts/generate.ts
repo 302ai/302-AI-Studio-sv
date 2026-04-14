@@ -226,7 +226,13 @@ function generateState(className: string, persist: boolean, scoped: boolean): vo
 			);
 
 			class ${className}StateManager {
-				// TODO: Implement state management
+				#updateState(partial: Partial<${className}State>): void {
+					logger.debug(\`[${className}StateManager] updateState\`, partial);
+					persisted${className}State.current = {
+						...(persisted${className}State.current ?? getDefaults()),
+						...partial,
+					};
+				}
 			}
 
 			export const ${instanceName} = new ${className}StateManager();
@@ -249,7 +255,13 @@ function generateState(className: string, persist: boolean, scoped: boolean): vo
 			);
 
 			class ${className}StateManager {
-				// TODO: Implement state management
+				#updateState(partial: Partial<${className}State>): void {
+					logger.debug(\`[${className}StateManager] updateState\`, partial);
+					persisted${className}State.current = {
+						...(persisted${className}State.current ?? getDefaults()),
+						...partial,
+					};
+				}
 			}
 
 			export const ${instanceName} = new ${className}StateManager();

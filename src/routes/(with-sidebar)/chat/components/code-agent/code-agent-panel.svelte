@@ -54,6 +54,7 @@
 	import { type CodeAgentType } from "@shared/storage/code-agent";
 
 	import OpenClawChannelPanel from "$lib/components/buss/open-claw-config-panel/open-claw-channel-panel.svelte";
+	import { cloudModeSessionsState } from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
 	import ClaudeCodePanel from "./claude-code-panel.svelte";
@@ -97,7 +98,7 @@
 			})
 			.with("cloud", () => {
 				const sessionId = codeAgentState.currentSessionId;
-				const currentSession = localClaudeCodeSandboxState.sessions.find(
+				const currentSession = cloudModeSessionsState.sessions.find(
 					(s) => s.session_id === sessionId,
 				);
 				return currentSession?.note ?? currentSession?.session_id ?? m.title_new_chat();
@@ -170,14 +171,9 @@
 
 			{#if displayType === "remote"}
 				<ClaudeCodePanel {onClose} />
-			{/if}
-			{#if displayType === "local"}
-				<!-- max-h-[500px] overflow-y-auto -->
-				<div class="pr-2">
-					<LocalModePanel {onClose} />
-				</div>
-			{/if}
-			{#if displayType === "cloud"}
+			{:else if displayType === "local"}
+				<LocalModePanel {onClose} />
+			{:else if displayType === "cloud"}
 				<CloudModePanel {onClose} />
 			{/if}
 		</div>

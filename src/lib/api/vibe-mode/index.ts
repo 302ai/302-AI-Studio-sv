@@ -3,7 +3,7 @@ import { taskListSchema, type Task } from "@shared/types";
 import { type } from "arktype";
 import { batchUploadFile, downloadFilesFromSandbox, executeCommand } from "./base-apis";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 const TODO_TASKS_FILE_PATH = ".302ai/todo/tasks.json";
 const ATTACHMENTS_DIR_PATH = ".302ai/attachments";
