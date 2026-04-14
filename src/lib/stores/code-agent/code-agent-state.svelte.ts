@@ -265,6 +265,8 @@ class CodeAgentState {
 		if (type === "remote") {
 			updates.currentAgentId = "claude-code";
 			updates.codingAgentId = "claude-code";
+		} else if (type === "cloud") {
+			updates.currentAgentId = "open-claw";
 		}
 
 		this.updateState(updates);
