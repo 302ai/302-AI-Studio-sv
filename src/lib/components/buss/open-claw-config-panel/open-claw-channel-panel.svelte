@@ -89,14 +89,14 @@
 						<button
 							onclick={() =>
 								handleNewSettingsTab(
-									"/settings/agent-settings?platform=local&channel=feishu#feishu",
+									"/settings/agent-settings/openclaw?channel=feishu#feishu",
 								)}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_config_feishu()}</button
 						>
 						<button
 							onclick={() =>
-								handleNewSettingsTab("/settings/agent-settings?platform=local")}
+								handleNewSettingsTab("/settings/agent-settings/openclaw")}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_view_more_settings()}</button
 						>
@@ -127,14 +127,14 @@
 						<button
 							onclick={() =>
 								handleNewSettingsTab(
-									"/settings/agent-settings?platform=local&channel=telegram#telegram",
+									"/settings/agent-settings/openclaw?channel=telegram#telegram",
 								)}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_config_telegram()}</button
 						>
 						<button
 							onclick={() =>
-								handleNewSettingsTab("/settings/agent-settings?platform=local")}
+								handleNewSettingsTab("/settings/agent-settings/openclaw")}
 							class="text-primary hover:underline cursor-pointer"
 							>{m.open_claw_channel_view_more_settings()}</button
 						>
@@ -157,7 +157,7 @@
 			{@render telegram()}
 			<div class="flex items-start justify-between">
 				<button
-					onclick={() => handleNewSettingsTab("/settings/agent-settings?platform=local")}
+					onclick={() => handleNewSettingsTab("/settings/agent-settings/openclaw")}
 					class="text-primary hover:underline cursor-pointer"
 					>{m.open_claw_channel_view_more_settings()}</button
 				>
