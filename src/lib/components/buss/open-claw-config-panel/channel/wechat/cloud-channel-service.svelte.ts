@@ -63,7 +63,11 @@ class CloudChannelService implements ChannelService {
 				this.messageFn?.(d);
 			},
 			{
+				signal: this.fetchController.signal,
 				onDone: () => {
+					if (this.fetchController == null) {
+						return;
+					}
 					this.fetchController?.abort();
 					this.fetchController = null;
 					this.connect();
