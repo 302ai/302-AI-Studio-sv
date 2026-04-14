@@ -553,7 +553,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
-			<AlertDialog.Action onclick={handleConfirmCreateOrRenew}>
+			<AlertDialog.Action disabled={loading.createOrRenew} onclick={handleConfirmCreateOrRenew}>
 				{#if loading.createOrRenew}
 					<LoaderCircle class="h-4 w-4 animate-spin" />
 				{/if}
@@ -573,7 +573,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
-			<AlertDialog.Action onclick={handleRestartMachine}>
+			<AlertDialog.Action disabled={loading.restart} onclick={handleRestartMachine}>
 				{#if loading.restart}
 					<LoaderCircle class="h-4 w-4 animate-spin" />
 				{/if}
@@ -593,7 +593,7 @@
 		</AlertDialog.Header>
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
-			<AlertDialog.Action onclick={handleRestartOpenClaw}>
+			<AlertDialog.Action disabled={loading.restartOpenClaw} onclick={handleRestartOpenClaw}>
 				{#if loading.restartOpenClaw}
 					<LoaderCircle class="h-4 w-4 animate-spin" />
 				{/if}
