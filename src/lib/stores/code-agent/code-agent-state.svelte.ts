@@ -22,10 +22,10 @@ import { toast } from "svelte-sonner";
 import { match } from "ts-pattern";
 import { claudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
 import { claudeCodeAgentState, type ClaudeCodeSandboxInfo } from "./claude-code-state.svelte";
+import { codeAgentSharedState } from "./code-agent-shared-state.svelte";
 import { cloudModeSessionsState } from "./cloud-mode-sessions-state.svelte";
 import { codeAgentGlobalConfigsState } from "./code-agent-global-configs-state.svelte";
 import { codeAgentSendMessageButtonState } from "./code-agent-send-message-button-state.svelte";
-import { codeAgentTaskboardState } from "./code-agent-taskboard-state.svelte";
 import { localClaudeCodeSandboxState } from "./local-claude-code-sandbox-state.svelte";
 import { localEnvState } from "./local-env-state.svelte";
 import { isClaudeCodeOrOpenClaw, withLoadingState } from "./utils";
@@ -119,7 +119,7 @@ class CodeAgentState {
 
 	handleChatFinished = async (event: { canDeploy: boolean; lastMessage: ChatMessage }) => {
 		// Skip deployment if taskboard is still running - deployment will be triggered when all tasks complete
-		if (codeAgentTaskboardState.isRunning) {
+		if (codeAgentSharedState.taskboardIsRunning) {
 			return;
 		}
 
