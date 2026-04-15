@@ -1,0 +1,39 @@
+---
+name: commit-and-pr
+description: "Use this skill whenever the user wants to commit changes and create a Pull Request (e.g., 'commit and PR', 'push my changes', 'create a PR'). It automates branch checkout, conventional commits, and uses the create-github-pull-request-from-specification skill to open a PR."
+---
+
+# Commit and Pull Request Workflow
+
+This skill automates the process of committing local changes, pushing to a new branch, and opening a Pull Request using the project's PR template.
+
+## Important Rule
+**NEVER proceed without asking the user for the target base branch.** Even if the user provides a prompt like "commit and PR this", you must stop and ask them for the target branch (e.g., `dev/26.16`, `master`) before doing any Git operations.
+
+## Process Steps
+
+Follow these steps exactly in order:
+
+1. **Verify State & Ask for Information**:
+   - Run `git status` and `git diff` to understand the current changes.
+   - Ask the user: "What should the target base branch be for this PR? (And optionally, what do you want to name the new branch?)"
+   - **WAIT** for the user's response. Do not proceed to step 2 until they answer.
+
+2. **Checkout Branch**:
+   - If the user did not provide a branch name, generate one based on the changes using conventional prefixes (e.g., `feat/xxx`, `fix/xxx`, `chore/xxx`).
+   - Run `git checkout -b <branch-name>`.
+
+3. **Commit Code**:
+   - Write a conventional commit message describing the changes.
+   - Run `git commit -m "..."`.
+
+4. **Push Code**:
+   - Run `git push -u origin <branch-name>`.
+
+5. **Create the PR using Specification Skill**:
+   - Once the code is pushed, you must use the `create-github-pull-request-from-specification` skill to create the PR.
+   - Invoke the skill tool passing the target base branch the user provided:
+     `Tool call: Skill (skill: "create-github-pull-request-from-specification", args: "--base <target-branch>")`
+
+6. **Completion**:
+   - Inform the user that the PR has been created.

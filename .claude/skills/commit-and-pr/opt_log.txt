@@ -1,0 +1,40 @@
+Split: 11 train, 5 test (holdout=0.4)
+
+============================================================
+Iteration 1/3
+Description: Use this skill whenever the user wants to commit changes and create a Pull Request (e.g., 'commit and PR', 'push my changes', 'create a PR'). It automates branch checkout, conventional commits, and uses the create-github-pull-request-from-specification skill to open a PR.
+============================================================
+Train: 15/33 correct, precision=100% recall=0% accuracy=45% (142.2s)
+  [FAIL] rate=0/3 expected=True: i'm done with the settings page refactor, can you commit and
+  [FAIL] rate=0/3 expected=True: I finished the changes in claude-code-state.svelte.ts, pleas
+  [FAIL] rate=0/3 expected=True: wrap this up, commit, push, and PR
+  [FAIL] rate=0/3 expected=True: how do I use git rebase to squash my commits?
+  [FAIL] rate=0/3 expected=True: commit these changes and make a PR to dev/26.16
+  [PASS] rate=0/3 expected=False: help me resolve this merge conflict in page.svelte
+  [FAIL] rate=0/3 expected=True: push my current branch and open a pull request
+  [PASS] rate=0/3 expected=False: can you review my pull request #55?
+  [PASS] rate=0/3 expected=False: create a new issue for the bug in the settings page
+  [PASS] rate=0/3 expected=False: why is my GitHub Actions PR workflow failing?
+  [PASS] rate=0/3 expected=False: can you check the diff of my current changes and tell me if 
+Test : 6/15 correct, precision=100% recall=0% accuracy=40% (0.0s)
+  [FAIL] rate=0/3 expected=True: create a PR for the stuff I just worked on
+  [FAIL] rate=0/3 expected=True: hey, my boss wants this hotfix up ASAP, push it and PR to ma
+  [FAIL] rate=0/3 expected=True: ok i think the auth feature is done. push the code and open 
+  [PASS] rate=0/3 expected=False: write a PR description for the changes I made to the databas
+  [PASS] rate=0/3 expected=False: what's the git command to create a new branch?
+
+Improving description...
+Proposed (24.8s): Use this skill to finalize local code changes and submit them to version control. Trigger this workflow whenever the user indicates they are finished with a task and want to commit their modifications, push their local branch, or create a new Pull Request.
+
+Recognize active submission intents such as "wrap this up," "push my current branch," or "make a pull request against master." It should also trigger if the user asks for help managing their local commits (like squashing or rebasing) before they push.
+
+Do not trigger this skill for reviewing already-opened PRs, debugging CI/CD workflows, resolving merge conflicts, or creating repository issues. Rely on this skill exclusively when the user's primary goal is packaging their current local workspace changes to be committed, pushed, and proposed as a new pull request.
+
+============================================================
+Iteration 2/3
+Description: Use this skill to finalize local code changes and submit them to version control. Trigger this workflow whenever the user indicates they are finished with a task and want to commit their modifications, push their local branch, or create a new Pull Request.
+
+Recognize active submission intents such as "wrap this up," "push my current branch," or "make a pull request against master." It should also trigger if the user asks for help managing their local commits (like squashing or rebasing) before they push.
+
+Do not trigger this skill for reviewing already-opened PRs, debugging CI/CD workflows, resolving merge conflicts, or creating repository issues. Rely on this skill exclusively when the user's primary goal is packaging their current local workspace changes to be committed, pushed, and proposed as a new pull request.
+============================================================
