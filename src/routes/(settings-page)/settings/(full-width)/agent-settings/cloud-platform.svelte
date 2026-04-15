@@ -142,6 +142,7 @@
 	async function handleRestartOpenClaw() {
 		try {
 			await cloudModeState.restartOpenClaw();
+			showRestartOpenClawDialog = false;
 		} catch (e) {
 			toast.error(m.cloud_mode_openclaw_restart_failed() + e);
 		}
@@ -150,6 +151,7 @@
 	async function handleRestartMachine() {
 		try {
 			await cloudModeState.restartMachine();
+			showRestartMachineDialog = false;
 		} catch (e) {
 			toast.error(m.cloud_mode_instance_restart_failed() + e);
 		}
