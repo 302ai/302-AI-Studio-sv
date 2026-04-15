@@ -142,6 +142,7 @@
 	async function handleRestartOpenClaw() {
 		try {
 			await cloudModeState.restartOpenClaw();
+			showRestartOpenClawDialog = false;
 		} catch (e) {
 			toast.error(m.cloud_mode_openclaw_restart_failed() + e);
 		}
@@ -150,6 +151,7 @@
 	async function handleRestartMachine() {
 		try {
 			await cloudModeState.restartMachine();
+			showRestartMachineDialog = false;
 		} catch (e) {
 			toast.error(m.cloud_mode_instance_restart_failed() + e);
 		}
@@ -218,7 +220,7 @@
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 							<div class="relative size-5">
-								{#if !cloudState.expired && cloudState.instanceName}
+								{#if !cloudState.expired && cloudState.instanceName && cloudState.status == "running"}
 									<ButtonWithTooltip
 										onclick={() => (showRestartMachineDialog = true)}
 										tooltip={m.cloud_mode_reboot_instance()}

@@ -8,13 +8,14 @@
 
 	import StatusIndicator from "$lib/components/buss/local-agent-panel/status-indicator.svelte";
 
-	import { Button } from "$lib/components/ui/button";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
+	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { m } from "$lib/paraglide/messages";
 	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
 	import { cn } from "tailwind-variants";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 
@@ -26,9 +27,13 @@
 		confirmDialogOpen = true;
 	}
 
-	function handleRestartConfirm() {
-		confirmDialogOpen = false;
-		cloudModeState.restartMachine();
+	async function handleRestartConfirm() {
+		try {
+			await cloudModeState.restartMachine();
+			confirmDialogOpen = false;
+		} catch (e) {
+			toast.error(m.cloud_mode_instance_restart_failed() + e);
+		}
 	}
 
 	function resolveOpenClawStatus(v: boolean | null): "green" | "red" | "gray" {
