@@ -8,7 +8,7 @@ import type { InstanceInfo, SandboxHealthResponse } from "@shared/storage/cloud-
 import type { IpcMainInvokeEvent } from "electron";
 import { attemptAsync, isNull } from "es-toolkit";
 import { broadcastService } from "../broadcast-service";
-import { schedulerService } from "../scheduler-service";
+import { CRON_EXPRESSION, schedulerService } from "../scheduler-service";
 
 const logger = createLogger("services");
 
@@ -50,7 +50,8 @@ export class CloudModeService {
 	 */
 	private startPolling(mode: "fast" | "normal" = "normal"): void {
 		// Sync instance info: 20s if fast, 5m if normal
-		const instanceSyncCron = mode === "fast" ? "*/20 * * * * *" : "0 */5 * * * *";
+		const instanceSyncCron =
+			mode === "fast" ? CRON_EXPRESSION.EVERY_20_SECONDS : CRON_EXPRESSION.EVERY_5_MINUTES;
 
 		schedulerService.addTask("cloud-mode-instance-sync", instanceSyncCron, async () => {
 			const [error, instances] = await attemptAsync(() => this.syncCloudInstanceToLocal());
@@ -69,10 +70,14 @@ export class CloudModeService {
 			await this.checkAndStopPolling();
 		});
 
-		// Health check every 30 seconds
-		schedulerService.addTask("cloud-mode-health-polling", "*/30 * * * * *", async () => {
-			await this.fetchAndBroadcastHealth();
-		});
+		// Health check every 15 seconds
+		schedulerService.addTask(
+			"cloud-mode-health-polling",
+			CRON_EXPRESSION.EVERY_15_SECONDS,
+			async () => {
+				await this.fetchAndBroadcastHealth();
+			},
+		);
 	}
 
 	/**

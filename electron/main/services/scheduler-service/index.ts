@@ -13,6 +13,14 @@ export const CRON_EXPRESSION = {
 	 */
 	EVERY_10_SECONDS: "*/10 * * * * *",
 	/**
+	 * Run every 15 seconds
+	 */
+	EVERY_15_SECONDS: "*/15 * * * * *",
+	/**
+	 * Run every 20 seconds
+	 */
+	EVERY_20_SECONDS: "*/20 * * * * *",
+	/**
 	 * Run every 30 seconds
 	 */
 	EVERY_30_SECONDS: "*/30 * * * * *",
