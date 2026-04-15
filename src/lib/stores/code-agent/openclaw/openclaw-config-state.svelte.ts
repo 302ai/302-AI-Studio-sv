@@ -161,16 +161,16 @@ class OpenClawConfigState {
 	}
 
 	async bindingAndRestartCloud(ocAgentId: string) {
-		await this.updateOCBindingsCloud(ocAgentId);
-
 		if (!this.hasConfigs) return;
+
+		await this.updateOCBindingsCloud(ocAgentId);
 
 		const instanceName = cloudModeState.state.instanceName;
 		if (!instanceName) {
 			throw new Error("Cloud instance not found");
 		}
 
-		await window.electronAPI.openClawService.restartCloudOpenClaw(instanceName);
+		// await window.electronAPI.openClawService.restartCloudOpenClaw(instanceName);
 
 		let cleanup: (() => void) | undefined;
 
