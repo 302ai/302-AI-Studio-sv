@@ -87,6 +87,31 @@ export class CloudModeApiError extends Error {
 }
 
 /**
+ * Check if response contains an error and throw CloudModeApiError if so
+ * This helper reduces code duplication across API functions
+ *
+ * @param response - API response to check
+ * @param defaultErrorCode - Error code to use if not provided in response
+ * @param defaultMessage - Error message to use if not provided in response
+ * @throws {CloudModeApiError} If response indicates an error
+ */
+export function checkErrorResponse(
+	response: unknown,
+	defaultErrorCode: string,
+	defaultMessage: string,
+): void {
+	if (response && typeof response === "object" && "success" in response) {
+		if (response.success === false && "error" in response) {
+			const errorObj = response.error as { code?: string; message?: string };
+			throw new CloudModeApiError(
+				errorObj.code || defaultErrorCode,
+				errorObj.message || defaultMessage,
+			);
+		}
+	}
+}
+
+/**
  * Parse error response from Cloud Mode API
  * Handles multiple error formats:
  * 1. CloudModeApiError (already parsed)

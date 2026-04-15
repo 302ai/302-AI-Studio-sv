@@ -1,4 +1,8 @@
-import { CloudModeApiError, parseCloudModeError } from "@shared/storage/cloud-mode-errors";
+import {
+	CloudModeApiError,
+	parseCloudModeError,
+	checkErrorResponse,
+} from "@shared/storage/cloud-mode-errors";
 import {
 	createInstanceRequestSchema,
 	createInstanceResponseSchema,
@@ -104,16 +108,7 @@ export async function createInstance(
 
 		const response = await _302AIKy.post("302/swas/instances", { json: requestBody }).json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "CREATE_INSTANCE_FAILED",
-					errorObj.message || "Failed to create instance",
-				);
-			}
-		}
+		checkErrorResponse(response, "CREATE_INSTANCE_FAILED", "Failed to create instance");
 
 		const validated = createInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -143,16 +138,7 @@ export async function initInstance(request: InitInstanceRequest): Promise<InitIn
 			.post("302/swas/instances/init", { json: requestBody })
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "INIT_INSTANCE_FAILED",
-					errorObj.message || "Failed to initialize instance",
-				);
-			}
-		}
+		checkErrorResponse(response, "INIT_INSTANCE_FAILED", "Failed to initialize instance");
 
 		const validated = initInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -205,16 +191,7 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 			.post("302/swas/instances/openclaw/restart", { json: requestBody })
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "SWAS_REBOOT_FAILED",
-					errorObj.message || "Failed to restart docker",
-				);
-			}
-		}
+		checkErrorResponse(response, "SWAS_REBOOT_FAILED", "Failed to restart docker");
 
 		const validated = restartDockerResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -246,16 +223,7 @@ export async function updateAutoRenew(
 			.post("302/swas/instances/auto-renew", { json: requestBody })
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "UPDATE_AUTO_RENEW_FAILED",
-					errorObj.message || "Failed to update auto-renew",
-				);
-			}
-		}
+		checkErrorResponse(response, "UPDATE_AUTO_RENEW_FAILED", "Failed to update auto-renew");
 
 		const validated = updateAutoRenewResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -286,16 +254,7 @@ export async function manualRenew(request: ManualRenewRequest): Promise<ManualRe
 			.post("302/swas/instances/manual-renew", { json: requestBody })
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "MANUAL_RENEW_FAILED",
-					errorObj.message || "Failed to manually renew",
-				);
-			}
-		}
+		checkErrorResponse(response, "MANUAL_RENEW_FAILED", "Failed to manually renew");
 
 		const validated = manualRenewResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -360,16 +319,7 @@ export async function getManualRenewCharge(
 			.get(`302/swas/instances/manual-renew/charges?page=${page}&page_size=${pageSize}`)
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "UNKNOWN_ERROR",
-					errorObj.message || "Failed to get manual renew charges",
-				);
-			}
-		}
+		checkErrorResponse(response, "UNKNOWN_ERROR", "Failed to get manual renew charges");
 
 		const validated = getManualRenewChargeResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -401,16 +351,7 @@ export async function rebootInstance(
 			.post("302/swas/instances/reboot", { json: requestBody })
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "SWAS_REBOOT_FAILED",
-					errorObj.message || "Failed to reboot instance",
-				);
-			}
-		}
+		checkErrorResponse(response, "SWAS_REBOOT_FAILED", "Failed to reboot instance");
 
 		const validated = rebootInstanceResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -443,16 +384,7 @@ export async function updateInstanceAutoRenew(
 			json: requestBody,
 		}).json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "UPDATE_AUTO_RENEW_FAILED",
-					errorObj.message || "Failed to update auto-renew",
-				);
-			}
-		}
+		checkErrorResponse(response, "UPDATE_AUTO_RENEW_FAILED", "Failed to update auto-renew");
 
 		const validated = updateInstanceAutoRenewResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -481,16 +413,7 @@ export async function readInstanceFiles(request: ReadFilesRequest): Promise<Read
 			.post("302/swas/instances/files/read", { json: requestBody })
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "UNKNOWN_ERROR",
-					errorObj.message || "Failed to read files",
-				);
-			}
-		}
+		checkErrorResponse(response, "UNKNOWN_ERROR", "Failed to read files");
 
 		const validated = readFilesResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -519,16 +442,7 @@ export async function writeInstanceFiles(request: WriteFilesRequest): Promise<Wr
 			.post("302/swas/instances/files/write", { json: requestBody })
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "UNKNOWN_ERROR",
-					errorObj.message || "Failed to write files",
-				);
-			}
-		}
+		checkErrorResponse(response, "UNKNOWN_ERROR", "Failed to write files");
 
 		const validated = writeFilesResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -559,16 +473,7 @@ export async function execInstanceCommand(
 			.post("302/swas/instances/commands/exec", { json: requestBody })
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "UNKNOWN_ERROR",
-					errorObj.message || "Failed to execute command",
-				);
-			}
-		}
+		checkErrorResponse(response, "UNKNOWN_ERROR", "Failed to execute command");
 
 		const validated = execCommandResponseSchema(response);
 		if (validated instanceof type.errors) {

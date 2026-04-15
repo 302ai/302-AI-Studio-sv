@@ -14,7 +14,11 @@ import {
 	restartDockerResponseSchema,
 	sandboxHealthResponseSchema,
 } from "@shared/storage/cloud-mode";
-import { CloudModeApiError, parseCloudModeError } from "@shared/storage/cloud-mode-errors";
+import {
+	CloudModeApiError,
+	parseCloudModeError,
+	checkErrorResponse,
+} from "@shared/storage/cloud-mode-errors";
 import { type } from "arktype";
 
 import { _302AIKy } from "./core/_302ai-ky";
@@ -27,16 +31,7 @@ export async function listInstances(): Promise<ListInstancesResponse> {
 	try {
 		const response = await _302AIKy.get("302/swas/instances").json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "SWAS_LIST_INSTANCE_FAILED",
-					errorObj.message || "Failed to list instances",
-				);
-			}
-		}
+		checkErrorResponse(response, "SWAS_LIST_INSTANCE_FAILED", "Failed to list instances");
 
 		const validated = listInstancesResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -66,16 +61,7 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 			.post("302/swas/instances/openclaw/restart", { json: requestBody })
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "SWAS_REBOOT_FAILED",
-					errorObj.message || "Failed to restart docker",
-				);
-			}
-		}
+		checkErrorResponse(response, "SWAS_REBOOT_FAILED", "Failed to restart docker");
 
 		const validated = restartDockerResponseSchema(response);
 		if (validated instanceof type.errors) {
@@ -105,16 +91,7 @@ export async function readInstanceFiles(request: ReadFilesRequest): Promise<Read
 			.post("302/swas/instances/files/read", { json: requestBody })
 			.json();
 
-		// Check for error response
-		if (response && typeof response === "object" && "success" in response) {
-			if (response.success === false && "error" in response) {
-				const errorObj = response.error as { code?: string; message?: string };
-				throw new CloudModeApiError(
-					errorObj.code || "UNKNOWN_ERROR",
-					errorObj.message || "Failed to read files",
-				);
-			}
-		}
+		checkErrorResponse(response, "UNKNOWN_ERROR", "Failed to read files");
 
 		const validated = readFilesResponseSchema(response);
 		if (validated instanceof type.errors) {
