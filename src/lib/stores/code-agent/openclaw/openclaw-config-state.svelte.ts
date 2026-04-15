@@ -1,4 +1,5 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 import { type OpenClawConfig, openclawBindingKeys } from "@shared/storage/openclaw";
 import { clone } from "es-toolkit/compat";
@@ -108,6 +109,16 @@ class OpenClawConfigState {
 	}
 
 	async bindingAndRestart(ocAgentId: string) {
+		if (codeAgentState.type === "cloud") {
+			await this.bindingAndRestartCloud(ocAgentId);
+		} else if (codeAgentState.type === "local") {
+			await this.bindingAndRestartLocal(ocAgentId);
+		} else {
+			await this.updateOCBindings(ocAgentId);
+		}
+	}
+
+	async bindingAndRestartLocal(ocAgentId: string) {
 		await this.updateOCBindings(ocAgentId);
 
 		if (!this.hasConfigs) return;
@@ -136,6 +147,47 @@ class OpenClawConfigState {
 							}
 
 							if (data.isHealth && data.isOcHealth) {
+								cleanup?.();
+								resolve();
+							}
+						},
+					);
+				});
+			} catch (error) {
+				cleanup?.();
+				throw error;
+			}
+		}, 60000);
+	}
+
+	async bindingAndRestartCloud(ocAgentId: string) {
+		await this.updateOCBindingsCloud(ocAgentId);
+
+		if (!this.hasConfigs) return;
+
+		const instanceName = cloudModeState.state.instanceName;
+		if (!instanceName) {
+			throw new Error("Cloud instance not found");
+		}
+
+		await window.electronAPI.openClawService.restartCloudOpenClaw(instanceName);
+
+		let cleanup: (() => void) | undefined;
+
+		return withTimeout(async () => {
+			try {
+				return await new Promise<void>((resolve, reject) => {
+					cleanup = window.electronAPI.cloudMode.onTimedBroadcaster(
+						(data: { status?: string; oc_status?: string } | null) => {
+							if (!data) return;
+
+							if (data.status !== "ok") {
+								cleanup?.();
+								reject(new Error(data.status || "Cloud health check failed"));
+								return;
+							}
+
+							if (data.oc_status === "ok") {
 								cleanup?.();
 								resolve();
 							}

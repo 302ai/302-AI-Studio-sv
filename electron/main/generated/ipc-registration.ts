@@ -600,6 +600,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("openClawService:applyCloudClawBindingsConfig", (event, threadId) =>
 		openClawService.applyCloudClawBindingsConfig(event, threadId),
 	);
+	ipcMain.handle("openClawService:restartCloudOpenClaw", (event, instanceName) =>
+		openClawService.restartCloudOpenClaw(event, instanceName),
+	);
 	ipcMain.handle("openClawService:handleOpenClawWebUiReloadIpc", (event, tabId) =>
 		openClawService.handleOpenClawWebUiReloadIpc(event, tabId),
 	);
@@ -842,6 +845,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("openClawService:applyCloudClawChannelConfig");
 	ipcMain.removeHandler("openClawService:applyOpenClawBindingsConfig");
 	ipcMain.removeHandler("openClawService:applyCloudClawBindingsConfig");
+	ipcMain.removeHandler("openClawService:restartCloudOpenClaw");
 	ipcMain.removeHandler("openClawService:handleOpenClawWebUiReloadIpc");
 	ipcMain.removeHandler("openClawService:wechatInsalled");
 	ipcMain.removeHandler("openClawService:connectWechat");
