@@ -397,6 +397,6 @@
 <ConfirmDialog
 	bind:confirmDialogOpen
 	bind:applyConfigLoading
-	{handleLocalConfirmDialogOk}
 	{handleCloudConfirmDialogOk}
+	{handleLocalConfirmDialogOk}
 />
