@@ -54,6 +54,8 @@ class CloudModeStateManager {
 		api_status: null as boolean | null,
 	});
 
+	#bufferTimeout: ReturnType<typeof setTimeout> | null = $state(null);
+
 	healthProps = $derived.by(() => {
 		const { status } = this.state;
 		switch (status) {
@@ -95,6 +97,12 @@ class CloudModeStateManager {
 	constructor() {
 		window.electronAPI.cloudMode.onTimedBroadcaster((healthData) => {
 			if (healthData) {
+				if (this.#bufferTimeout !== null && healthData.oc_status !== "ok") {
+					logger.debug(
+						"[CloudModeStateManager] Skipping health update during buffer period",
+					);
+					return;
+				}
 				this.openClaw.status = healthData.oc_status === "ok";
 				this.openClaw.api_status = healthData.status === "ok";
 				logger.debug("Cloud instance health updated from broadcast", {
@@ -110,15 +118,24 @@ class CloudModeStateManager {
 	 */
 	private async afterInstanceOperation(): Promise<void> {
 		try {
-			// 1. Sync instance info and start polling
+			// 1. Set 30s buffer period to allow OpenClaw to start
+			this.#bufferTimeout = setTimeout(() => {
+				this.#bufferTimeout = null;
+			}, 30000);
+
+			// 2. Sync instance info and start polling
 			const res = await window.electronAPI.cloudModeService.syncAndStartPollingByIpc();
 			if (!res.isOk) {
 				logger.warn("[CloudModeStateManager] Sync after operation failed");
 			}
 
-			// 2. Immediately refresh health status (don't wait for 30s polling)
+			// 3. Immediately refresh health status (don't wait for 30s polling)
 			await window.electronAPI.cloudModeService.refreshHealthByIpc();
 		} catch (e) {
+			if (this.#bufferTimeout) {
+				clearTimeout(this.#bufferTimeout);
+				this.#bufferTimeout = null;
+			}
 			logger.error("[CloudModeStateManager] afterInstanceOperation failed:", e);
 		}
 	}

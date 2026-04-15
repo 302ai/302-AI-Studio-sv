@@ -218,7 +218,7 @@
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 							<div class="relative size-5">
-								{#if !cloudState.expired}
+								{#if !cloudState.expired && cloudState.instanceName}
 									<ButtonWithTooltip
 										onclick={() => (showRestartMachineDialog = true)}
 										tooltip={m.cloud_mode_reboot_instance()}
