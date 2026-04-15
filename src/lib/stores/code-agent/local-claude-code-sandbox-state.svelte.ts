@@ -1,4 +1,4 @@
-import { deleteLocalSession, listLocalSessions } from "$lib/api/sandbox-session";
+import { deleteLocalOrCloudSession, listLocalOrCloudSessions } from "$lib/api/sandbox-session";
 import type { GroupedSelectData } from "$lib/components/buss/settings/setting-select.svelte";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
@@ -201,7 +201,7 @@ class LocalClaudeCodeSandboxState {
 	async refreshSessions(): Promise<void> {
 		this.isLoading = true;
 		try {
-			const response = await listLocalSessions("local");
+			const response = await listLocalOrCloudSessions("local");
 			if (response.success) {
 				persistedLocalClaudeCodeSessionsState.current = response.session_list;
 			}
@@ -254,7 +254,7 @@ class LocalClaudeCodeSandboxState {
 		const session = this.sessions.find((s) => s.session_id === sessionId);
 		const workspacePath = session?.workspace_path;
 
-		const result = await deleteLocalSession(sessionId, "local");
+		const result = await deleteLocalOrCloudSession(sessionId, "local");
 
 		if (result.success) {
 			// Delete the local workspace directory if it exists.

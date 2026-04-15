@@ -28,7 +28,7 @@ export class CloudModeService {
 	/**
 	 * Check if local instance exists, decide whether to start polling
 	 */
-	private async maybeStartPolling(): Promise<void> {
+	private async maybeStartPolling(mode?: "fast" | "normal"): Promise<void> {
 		const [error, instance] = await attemptAsync(() => cloudModeStorage.getCloudModeInstance());
 
 		if (error || isNull(instance)) {
@@ -38,7 +38,9 @@ export class CloudModeService {
 
 		// Start polling if instance name exists (even if expired, need to monitor state changes)
 		if (instance.instanceName) {
-			this.startPolling();
+			// If mode isn't explicitly provided, default to fast if not running, normal if running
+			const resolvedMode = mode || (instance.status !== "running" ? "fast" : "normal");
+			this.startPolling(resolvedMode);
 			logger.info("[CloudModeService] Polling started for instance:", instance.instanceName);
 		}
 	}
@@ -46,10 +48,23 @@ export class CloudModeService {
 	/**
 	 * Start two scheduled tasks (addTask has internal deduplication, no need to worry about duplicate calls)
 	 */
-	private startPolling(): void {
-		// Sync instance info every 5 minutes
-		schedulerService.addTask("cloud-mode-instance-sync", "0 */5 * * * *", async () => {
-			await this.syncCloudInstanceToLocal();
+	private startPolling(mode: "fast" | "normal" = "normal"): void {
+		// Sync instance info: 20s if fast, 5m if normal
+		const instanceSyncCron = mode === "fast" ? "*/20 * * * * *" : "0 */5 * * * *";
+
+		schedulerService.addTask("cloud-mode-instance-sync", instanceSyncCron, async () => {
+			const [error, instances] = await attemptAsync(() => this.syncCloudInstanceToLocal());
+
+			// If we are in fast polling mode and the instance reached "running", revert to normal 5m polling
+			if (mode === "fast" && !error && instances && instances.length > 0) {
+				if (instances[0].status === "running") {
+					logger.info(
+						"[CloudModeService] Instance is running. Reverting to normal polling.",
+					);
+					this.startPolling("normal");
+				}
+			}
+
 			// Check if polling should stop after sync
 			await this.checkAndStopPolling();
 		});
@@ -161,6 +176,7 @@ export class CloudModeService {
 	 * IPC: Sync + Start polling (called by renderer after instance operations)
 	 */
 	public async syncAndStartPollingByIpc(_event: IpcMainInvokeEvent): Promise<{ isOk: boolean }> {
+		// Do a normal sync first (can show errors if it fails immediately after operation)
 		const [syncError] = await attemptAsync(() => this.syncCloudInstanceToLocal());
 
 		if (syncError) {
@@ -168,7 +184,8 @@ export class CloudModeService {
 			return { isOk: false };
 		}
 
-		await this.maybeStartPolling();
+		// Start fast polling
+		await this.maybeStartPolling("fast");
 		return { isOk: true };
 	}
 
