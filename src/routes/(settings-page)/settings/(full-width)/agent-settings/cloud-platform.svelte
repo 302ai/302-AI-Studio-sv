@@ -208,7 +208,7 @@
 			<div class="rounded-lg border p-5 space-y-5">
 				<div class="flex items-start justify-between gap-4">
 					<div class="flex-1 space-y-3">
-						<div class="flex items-center gap-3">
+						<div class="flex items-center gap-2 mb-2!">
 							<Label class="text-muted-foreground min-w-18 font-normal"
 								>{m.agent_settings_instance_status()}</Label
 							>
@@ -231,7 +231,7 @@
 								{/if}
 							</div>
 						</div>
-						<div class="flex items-center gap-3">
+						<div class="flex items-center gap-2 mb-2!">
 							<Label class="text-muted-foreground min-w-18 font-normal"
 								>{m.cloud_mode_openclaw_status()}</Label
 							>
@@ -257,7 +257,7 @@
 								{/if}
 							</div>
 						</div>
-						<div class="flex items-center gap-3">
+						<div class="flex items-center gap-2 mb-2!">
 							<Label class="text-muted-foreground min-w-18 font-normal"
 								>{m.cloud_mode_api_status()}</Label
 							>
