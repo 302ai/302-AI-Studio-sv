@@ -343,6 +343,10 @@ export class OpenClawService {
 		});
 	}
 
+	async restartCloudOpenClaw(_event: IpcMainInvokeEvent, instanceName: string) {
+		await restartDocker({ instanceName });
+	}
+
 	async handleOpenClawWebUiReloadIpc(_event: IpcMainInvokeEvent, tabId: string) {
 		const tabView = tabService.getTabView(tabId);
 		if (isUndefined(tabView)) return;

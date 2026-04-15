@@ -165,10 +165,10 @@
 					<Button
 						class="w-fit"
 						onclick={() => {
-							if (codeAgentState.isPristineSession) {
-								handleLocalConfirmDialogOk();
-								return;
-							}
+							// if (codeAgentState.isPristineSession) {
+							// 	handleLocalConfirmDialogOk();
+							// 	return;
+							// }
 
 							confirmDialogOpen = true;
 						}}
@@ -186,6 +186,7 @@
 <ConfirmDialog
 	bind:confirmDialogOpen
 	bind:applyConfigLoading
-	{handleLocalConfirmDialogOk}
-	{handleCloudConfirmDialogOk}
+	{...codeAgentState.type === "cloud"
+		? { handleCloudConfirmDialogOk }
+		: { handleLocalConfirmDialogOk }}
 />
