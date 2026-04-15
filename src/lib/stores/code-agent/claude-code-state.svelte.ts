@@ -161,42 +161,37 @@ class ClaudeCodeAgentState {
 		const metadata = message.metadata as any;
 		if (!metadata?.result?.preDeploy?.success) return null;
 
-		return await match(codeAgentState.type)
-			.with("remote", async () => {
-				logger.info("Pre-deploy check passed, triggering deployment...");
+		logger.info("Pre-deploy check passed, triggering deployment...");
 
-				if (!this.sandboxId) return null;
+		if (!this.sandboxId) return null;
 
-				agentPreviewState.isDeploying = true;
-				try {
-					const result = await deploySandboxProject({
-						sandbox_id: this.sandboxId,
-						session_id: this.currentSessionId,
-					});
+		agentPreviewState.isDeploying = true;
+		try {
+			const result = await deploySandboxProject({
+				sandbox_id: this.sandboxId,
+				session_id: this.currentSessionId,
+			});
 
-					if (result.success) {
-						logger.info("Deployment successful:", result);
-						return result;
-					} else {
-						const errorMsg =
-							result.error ||
-							`Deploy API returned success=false (status: ${result.status})`;
-						logger.error("Deployment failed:", result);
-						toast.error(`${m.toast_deploy_failed()}`);
-						this.#lastDeployApiError = errorMsg;
-						return null;
-					}
-				} catch (error) {
-					const errorMsg = String(error);
-					logger.error("Deployment error:", error);
-					toast.error(`${m.toast_deploy_failed()}: ${errorMsg}`);
-					this.#lastDeployApiError = errorMsg;
-					return null;
-				} finally {
-					agentPreviewState.isDeploying = false;
-				}
-			})
-			.otherwise(() => null);
+			if (result.success) {
+				logger.info("Deployment successful:", result);
+				return result;
+			} else {
+				const errorMsg =
+					result.error || `Deploy API returned success=false (status: ${result.status})`;
+				logger.error("Deployment failed:", result);
+				toast.error(`${m.toast_deploy_failed()}`);
+				this.#lastDeployApiError = errorMsg;
+				return null;
+			}
+		} catch (error) {
+			const errorMsg = String(error);
+			logger.error("Deployment error:", error);
+			toast.error(`${m.toast_deploy_failed()}: ${errorMsg}`);
+			this.#lastDeployApiError = errorMsg;
+			return null;
+		} finally {
+			agentPreviewState.isDeploying = false;
+		}
 	}
 
 	private parseDeployInfoFromText(message: ChatMessage): DeploySandboxResponse | null {
