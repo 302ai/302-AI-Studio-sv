@@ -142,6 +142,7 @@
 	async function handleRestartOpenClaw() {
 		try {
 			await cloudModeState.restartOpenClaw();
+			showRestartOpenClawDialog = false;
 		} catch (e) {
 			toast.error(m.cloud_mode_openclaw_restart_failed() + e);
 		}
@@ -150,6 +151,7 @@
 	async function handleRestartMachine() {
 		try {
 			await cloudModeState.restartMachine();
+			showRestartMachineDialog = false;
 		} catch (e) {
 			toast.error(m.cloud_mode_instance_restart_failed() + e);
 		}
@@ -208,7 +210,7 @@
 			<div class="rounded-lg border p-5 space-y-5">
 				<div class="flex items-start justify-between gap-4">
 					<div class="flex-1 space-y-3">
-						<div class="flex items-center gap-3">
+						<div class="flex items-center gap-2 mb-2!">
 							<Label class="text-muted-foreground min-w-18 font-normal"
 								>{m.agent_settings_instance_status()}</Label
 							>
@@ -218,7 +220,7 @@
 								warningTooltip={m.cloud_mode_unhealthy()}
 							/>
 							<div class="relative size-5">
-								{#if !cloudState.expired}
+								{#if !cloudState.expired && cloudState.instanceName && cloudState.status == "running"}
 									<ButtonWithTooltip
 										onclick={() => (showRestartMachineDialog = true)}
 										tooltip={m.cloud_mode_reboot_instance()}
@@ -231,7 +233,7 @@
 								{/if}
 							</div>
 						</div>
-						<div class="flex items-center gap-3">
+						<div class="flex items-center gap-2 mb-2!">
 							<Label class="text-muted-foreground min-w-18 font-normal"
 								>{m.cloud_mode_openclaw_status()}</Label
 							>
@@ -257,7 +259,7 @@
 								{/if}
 							</div>
 						</div>
-						<div class="flex items-center gap-3">
+						<div class="flex items-center gap-2 mb-2!">
 							<Label class="text-muted-foreground min-w-18 font-normal"
 								>{m.cloud_mode_api_status()}</Label
 							>

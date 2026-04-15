@@ -1,4 +1,4 @@
-import { deleteLocalSession, listLocalSessions } from "$lib/api/sandbox-session";
+import { deleteLocalOrCloudSession, listLocalOrCloudSessions } from "$lib/api/sandbox-session";
 import type { GroupedSelectData } from "$lib/components/buss/settings/setting-select.svelte";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
@@ -201,7 +201,7 @@ class CloudModeSessionsState {
 	async refreshSessions(): Promise<void> {
 		this.isLoading = true;
 		try {
-			const response = await listLocalSessions("cloud");
+			const response = await listLocalOrCloudSessions("cloud");
 			if (response.success) {
 				persistedCloudModeSessionsState.current = response.session_list;
 			} else {
@@ -253,7 +253,7 @@ class CloudModeSessionsState {
 	 * Delete a local session
 	 */
 	async deleteSession(sessionId: string): Promise<boolean> {
-		const result = await deleteLocalSession(sessionId, "cloud");
+		const result = await deleteLocalOrCloudSession(sessionId, "cloud");
 
 		if (result.success) {
 			await this.refreshSessions();

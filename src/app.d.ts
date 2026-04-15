@@ -1,7 +1,7 @@
 import type { ChatMessage } from "$lib/stores/chat-state.svelte";
 import type { ElectronAPI } from "@electron-toolkit/preload";
-import type { CodeAgentConfigMetadata, CodeAgentMetadata } from "@shared/storage/code-agent";
 import type { SandboxHealthResponse } from "@shared/storage/cloud-mode";
+import type { CodeAgentConfigMetadata, CodeAgentMetadata } from "@shared/storage/code-agent";
 import type {
 	BroadcastEventData,
 	OpenClawWeixinLoginMsg,

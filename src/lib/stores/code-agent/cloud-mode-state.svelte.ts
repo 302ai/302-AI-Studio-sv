@@ -1,17 +1,16 @@
 import {
 	createInstance,
-	initInstance,
 	manualRenew,
+	readInstanceFiles,
 	rebootInstance,
 	restartDocker,
 	updateInstanceAutoRenew,
 } from "$lib/api/cloud-mode/base-apis";
-import { _302AIKy } from "$lib/api/core/_302ai-ky";
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
 import { m } from "$lib/paraglide/messages";
 import { createLogger } from "@shared/logger";
-import { CloudModeApiError } from "@shared/storage/cloud-mode-errors";
 import type { InstanceInfo } from "@shared/storage/cloud-mode";
+import { CloudModeApiError } from "@shared/storage/cloud-mode-errors";
 import { onMount } from "svelte";
 import { toast } from "svelte-sonner";
 
@@ -54,6 +53,8 @@ class CloudModeStateManager {
 		api_status: null as boolean | null,
 	});
 
+	#bufferTimeout: ReturnType<typeof setTimeout> | null = $state(null);
+
 	healthProps = $derived.by(() => {
 		const { status } = this.state;
 		switch (status) {
@@ -95,6 +96,12 @@ class CloudModeStateManager {
 	constructor() {
 		window.electronAPI.cloudMode.onTimedBroadcaster((healthData) => {
 			if (healthData) {
+				if (this.#bufferTimeout !== null && healthData.oc_status !== "ok") {
+					logger.debug(
+						"[CloudModeStateManager] Skipping health update during buffer period",
+					);
+					return;
+				}
 				this.openClaw.status = healthData.oc_status === "ok";
 				this.openClaw.api_status = healthData.status === "ok";
 				logger.debug("Cloud instance health updated from broadcast", {
@@ -110,15 +117,24 @@ class CloudModeStateManager {
 	 */
 	private async afterInstanceOperation(): Promise<void> {
 		try {
-			// 1. Sync instance info and start polling
+			// 1. Set 30s buffer period to allow OpenClaw to start
+			this.#bufferTimeout = setTimeout(() => {
+				this.#bufferTimeout = null;
+			}, 30000);
+
+			// 2. Sync instance info and start polling
 			const res = await window.electronAPI.cloudModeService.syncAndStartPollingByIpc();
 			if (!res.isOk) {
 				logger.warn("[CloudModeStateManager] Sync after operation failed");
 			}
 
-			// 2. Immediately refresh health status (don't wait for 30s polling)
+			// 3. Immediately refresh health status (don't wait for 30s polling)
 			await window.electronAPI.cloudModeService.refreshHealthByIpc();
 		} catch (e) {
+			if (this.#bufferTimeout) {
+				clearTimeout(this.#bufferTimeout);
+				this.#bufferTimeout = null;
+			}
 			logger.error("[CloudModeStateManager] afterInstanceOperation failed:", e);
 		}
 	}
@@ -185,6 +201,21 @@ class CloudModeStateManager {
 		}
 	}
 
+	/**
+	 * Unified Cloud Mode error handler: resolves i18n message, shows toast, and re-throws.
+	 * Returns `never` so TypeScript knows the catch block always throws.
+	 */
+	#handleError(error: unknown): never {
+		if (error instanceof CloudModeApiError) {
+			const i18nKey = error.getI18nKey();
+			const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
+			toast.error(messageFunc ? messageFunc() : m.cloud_mode_error_unknown());
+		} else {
+			toast.error(m.cloud_mode_error_unknown());
+		}
+		throw error;
+	}
+
 	async loadInstances() {
 		try {
 			const res = await window.electronAPI.cloudModeService.syncCloudInstanceToLocalByIpc();
@@ -192,15 +223,7 @@ class CloudModeStateManager {
 				throw new Error("Failed to load cloud instance status");
 			}
 		} catch (error) {
-			if (error instanceof CloudModeApiError) {
-				const i18nKey = error.getI18nKey();
-				const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
-				const message = messageFunc ? messageFunc() : m.cloud_mode_error_unknown();
-				toast.error(message);
-			} else {
-				toast.error(m.cloud_mode_error_unknown());
-			}
-			throw error;
+			this.#handleError(error);
 		}
 	}
 
@@ -217,15 +240,7 @@ class CloudModeStateManager {
 				// Unified handler: sync + start polling
 				await this.afterInstanceOperation();
 			} catch (error) {
-				if (error instanceof CloudModeApiError) {
-					const i18nKey = error.getI18nKey();
-					const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
-					const message = messageFunc ? messageFunc() : m.cloud_mode_error_unknown();
-					toast.error(message);
-				} else {
-					toast.error(m.cloud_mode_error_unknown());
-				}
-				throw error;
+				this.#handleError(error);
 			}
 		})();
 	}
@@ -243,15 +258,7 @@ class CloudModeStateManager {
 				// Unified handler: sync + start polling
 				await this.afterInstanceOperation();
 			} catch (error) {
-				if (error instanceof CloudModeApiError) {
-					const i18nKey = error.getI18nKey();
-					const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
-					const message = messageFunc ? messageFunc() : m.cloud_mode_error_unknown();
-					toast.error(message);
-				} else {
-					toast.error(m.cloud_mode_error_unknown());
-				}
-				throw error;
+				this.#handleError(error);
 			}
 		})();
 	}
@@ -271,15 +278,7 @@ class CloudModeStateManager {
 				logger.info("Auto-renew setting updated successfully");
 			} catch (error) {
 				this.#updateState({ autoRenew: originalAutoRenew });
-				if (error instanceof CloudModeApiError) {
-					const i18nKey = error.getI18nKey();
-					const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
-					const message = messageFunc ? messageFunc() : m.cloud_mode_error_unknown();
-					toast.error(message);
-				} else {
-					toast.error(m.cloud_mode_error_unknown());
-				}
-				throw error;
+				this.#handleError(error);
 			}
 		})();
 	}
@@ -289,16 +288,14 @@ class CloudModeStateManager {
 		if (!publicIp || !ocPort || !instanceName) return null;
 
 		try {
-			const response = (await _302AIKy
-				.post("302/swas/instances/files/read", {
-					json: {
-						instance_name: instanceName,
-						file_paths: ["/home/user/.openclaw/openclaw.json"],
-					},
-				})
-				.json()) as { files: Array<{ file_content: string }> };
+			const response = await readInstanceFiles({
+				instanceName,
+				filePaths: ["/home/user/.openclaw/openclaw.json"],
+			});
 
-			const fileContent = response.files[0].file_content;
+			const fileContent = response.files[0]?.fileContent;
+			if (!fileContent) return null;
+
 			const config = JSON.parse(fileContent) as {
 				gateway?: { auth?: { token?: string } };
 			};
@@ -333,10 +330,10 @@ class CloudModeStateManager {
 						throw new Error("Failed to create instance");
 					}
 
-					await initInstance({
-						instanceName: res.instance.instanceName,
-						isDev: true, // TODO: remove this when ready
-					});
+					// await initInstance({
+					// 	instanceName: res.instance.instanceName,
+					// 	isDev: true, // TODO: remove this when ready
+					// });
 
 					logger.info("Instance created successfully");
 				}
@@ -344,15 +341,7 @@ class CloudModeStateManager {
 				// Unified handler: sync + start polling
 				await this.afterInstanceOperation();
 			} catch (error) {
-				if (error instanceof CloudModeApiError) {
-					const i18nKey = error.getI18nKey();
-					const messageFunc = (m as unknown as Record<string, () => string>)[i18nKey];
-					const message = messageFunc ? messageFunc() : m.cloud_mode_error_unknown();
-					toast.error(message);
-				} else {
-					toast.error(m.cloud_mode_error_unknown());
-				}
-				throw error;
+				this.#handleError(error);
 			}
 		})();
 	}

@@ -8,16 +8,33 @@
 
 	import StatusIndicator from "$lib/components/buss/local-agent-panel/status-indicator.svelte";
 
+	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { m } from "$lib/paraglide/messages";
 	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
+	import { toast } from "svelte-sonner";
 	import { cn } from "tailwind-variants";
 	import { ButtonWithTooltip } from "../button-with-tooltip";
 
-	let { state, openClaw, loading, healthProps } = $derived(cloudModeState.init());
+	let { state: _state, openClaw, loading, healthProps } = $derived(cloudModeState.init());
+
+	let confirmDialogOpen = $state(false);
+
+	function handleRestartClick() {
+		confirmDialogOpen = true;
+	}
+
+	async function handleRestartConfirm() {
+		try {
+			await cloudModeState.restartMachine();
+			confirmDialogOpen = false;
+		} catch (e) {
+			toast.error(m.cloud_mode_instance_restart_failed() + e);
+		}
+	}
 
 	function resolveOpenClawStatus(v: boolean | null): "green" | "red" | "gray" {
 		return v == null ? "gray" : v ? "green" : "red";
@@ -69,7 +86,7 @@
 					warningTooltip={m.cloud_mode_unhealthy()}
 				/>
 				<ButtonWithTooltip
-					onclick={() => cloudModeState.restartMachine()}
+					onclick={handleRestartClick}
 					tooltip={m.cloud_mode_reboot_instance()}
 					class="hover:!bg-icon-btn-hover size-8"
 				>
@@ -95,14 +112,31 @@
 				/>
 			</div>
 		</div>
-		{#if state.instanceName === ""}
+		{#if _state.instanceName === ""}
 			<Button size="sm" onclick={handleActivate}>
 				{m.cloud_mode_activate_button()}
 			</Button>
-		{:else if state.expired}
+		{:else if _state.expired}
 			<Button size="sm" onclick={handleActivate}>
 				{m.cloud_mode_renew_button()}
 			</Button>
 		{/if}
 	</div>
 {/if}
+
+<AlertDialog.Root bind:open={confirmDialogOpen}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>{m.cloud_mode_restart_machine_confirm_title()}</AlertDialog.Title>
+			<AlertDialog.Description>
+				{m.cloud_mode_restart_machine_confirm_desc()}
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
+			<AlertDialog.Action onclick={handleRestartConfirm}>
+				{m.cloud_mode_confirm()}
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
