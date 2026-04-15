@@ -171,12 +171,12 @@ export async function deleteSession(request: DeleteSessionRequest): Promise<Dele
 }
 
 /**
- * Delete a local session (always uses local ky instance, no global state dependency).
+ * Delete a local or cloud session (always uses local ky instance, no global state dependency).
  * Used by local-specific code paths.
  *
- * 删除本地对话（始终使用本地 ky 实例，不依赖全局状态）
+ * 删除本地或云端对话（始终使用本地 ky 实例，不依赖全局状态）
  */
-export async function deleteLocalSession(
+export async function deleteLocalOrCloudSession(
 	sessionId: string,
 	mode: CodeAgentType,
 ): Promise<DeleteSessionResult> {
@@ -206,11 +206,11 @@ export async function deleteLocalSession(
 }
 
 /**
- * List local sessions (always uses local ky instance, no global state dependency).
+ * List local or cloud sessions (always uses local ky instance, no global state dependency).
  *
- * 列出本地会话（始终使用本地 ky 实例）
+ * 列出本地或云端会话（始终使用本地 ky 实例）
  */
-export async function listLocalSessions(
+export async function listLocalOrCloudSessions(
 	mode: CodeAgentType,
 ): Promise<ListLocalClaudeCodeSessionsResponse> {
 	try {
@@ -227,7 +227,7 @@ export async function listLocalSessions(
 		}
 		return validated;
 	} catch (error) {
-		logger.error("Failed to list local claude code sessions:", error);
+		logger.error("Failed to list local or cloud claude code sessions:", error);
 		throw error;
 	}
 }
