@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { isDev } from "@electron/main/constants";
 import type { LogCategory, LogLevel } from "@shared/logger/types";
+import archiver from "archiver";
 import type { IpcMainInvokeEvent } from "electron";
 import { app, dialog } from "electron";
 import type { LogFunctions } from "electron-log";
 import log from "electron-log";
 import { createWriteStream, existsSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { join } from "path";
-import archiver from "archiver";
 import { schedulerService } from "../scheduler-service";
 
 // electron-log LogFunctions doesn't include 'fatal', map it to 'error'
@@ -79,7 +79,15 @@ export class LoggerService {
 				const pad = (n: number, len = 2) => String(n).padStart(len, "0");
 				const ts = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}.${pad(d.getMilliseconds(), 3)}`;
 				const text = data
-					.map((item: any) => (typeof item === "string" ? item : String(item)))
+					.map((item: any) => {
+						if (typeof item === "string") return item;
+						if (item instanceof Error) return item.stack || item.message;
+						try {
+							return JSON.stringify(item);
+						} catch (_e) {
+							return String(item);
+						}
+					})
 					.join(" ");
 				const c = ANSI[level] || "";
 				return [`${c}[${ts}] [${level}]${R} ${text}`];
