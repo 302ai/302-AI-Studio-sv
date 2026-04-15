@@ -19,9 +19,10 @@ Follow these steps exactly in order:
    - Ask the user: "What should the target base branch be for this PR? (And optionally, what do you want to name the new branch?)"
    - **WAIT** for the user's response. Do not proceed to step 2 until they answer.
 
-2. **Checkout Branch**:
+2. **Checkout Branch (CRITICAL)**:
    - If the user did not provide a branch name, generate one based on the changes using conventional prefixes (e.g., `feat/xxx`, `fix/xxx`, `chore/xxx`).
-   - Run `git checkout -b <branch-name>`.
+   - **CRITICAL RULE:** If the current branch is the same as the target base branch the user specified, you MUST checkout a new branch (e.g., `git checkout -b <new-branch-name>`). You must NEVER commit and push directly to the target base branch.
+   - Run `git checkout -b <branch-name>` (or `git checkout <branch-name>` if the user provided an existing one and it's not the base branch).
 
 3. **Commit Code**:
    - Write a conventional commit message describing the changes.
