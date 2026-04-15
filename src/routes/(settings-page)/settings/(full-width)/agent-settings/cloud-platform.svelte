@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getManualRenewCharge } from "$lib/api/cloud-mode/base-apis";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
-	import StatusIndicator from "$lib/components/buss/local-agent-panel/status-indicator.svelte";
+	import EnvironmentMonitor from "$lib/components/buss/cloud-mode-panel/environment-monitor.svelte";
 	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Button } from "$lib/components/ui/button";
 	import * as ContextMenu from "$lib/components/ui/context-menu";
@@ -30,7 +30,7 @@
 
 	const logger = createLogger("ui");
 
-	let { state: cloudState, openClaw, loading, healthProps } = $derived(cloudModeState.init());
+	let { state: cloudState, loading } = $derived(cloudModeState.init());
 
 	let charges: GetManualRenewChargeResponse["charges"] = $state([]);
 	let chargesPagination: GetManualRenewChargeResponse["pagination"] = $state({
@@ -87,18 +87,6 @@
 			fetchCharges(1);
 		}
 	});
-
-	function resolveOpenClawStatus(v: boolean | null): "green" | "red" | "gray" {
-		return v == null ? "gray" : v ? "green" : "red";
-	}
-
-	function resolveOpenClawText(v: boolean | null): string {
-		return v == null
-			? m.cloud_mode_unknown()
-			: v
-				? m.cloud_mode_healthy()
-				: m.cloud_mode_unhealthy();
-	}
 
 	function formatDate(iso?: string): string {
 		if (!iso) return "--";
@@ -185,94 +173,7 @@
 
 <div class="flex flex-col space-y-6">
 	<div class="space-y-2">
-		{#if loading.init}
-			<Skeleton class="h-5 w-32" />
-			<div class="rounded-lg border p-5 space-y-5">
-				<div class="space-y-3">
-					<div class="flex items-center gap-3">
-						<Skeleton class="h-4 w-18" />
-						<Skeleton class="h-4 w-20" />
-					</div>
-					<div class="flex items-center gap-3">
-						<Skeleton class="h-4 w-18" />
-						<Skeleton class="h-4 w-20" />
-					</div>
-					<div class="flex items-center gap-3">
-						<Skeleton class="h-4 w-18" />
-						<Skeleton class="h-4 w-20" />
-					</div>
-				</div>
-			</div>
-		{:else}
-			<Label class="text-label-fg font-normal"
-				>{m.local_platform_environment_monitoring()}</Label
-			>
-			<div class="rounded-lg border p-5 space-y-5">
-				<div class="flex items-start justify-between gap-4">
-					<div class="flex-1 space-y-3">
-						<div class="flex items-center gap-2 mb-2!">
-							<Label class="text-muted-foreground min-w-18 font-normal"
-								>{m.agent_settings_instance_status()}</Label
-							>
-							<StatusIndicator
-								status={healthProps.status}
-								text={healthProps.text}
-								warningTooltip={m.cloud_mode_unhealthy()}
-							/>
-							<div class="relative size-5">
-								{#if !cloudState.expired && cloudState.instanceName && cloudState.status == "running"}
-									<ButtonWithTooltip
-										onclick={() => (showRestartMachineDialog = true)}
-										tooltip={m.cloud_mode_reboot_instance()}
-										class="hover:!bg-icon-btn-hover size-8 absolute top-[-30%] left-0"
-									>
-										<RefreshCw
-											class={cn("size-4", loading.restart && "animate-spin")}
-										/>
-									</ButtonWithTooltip>
-								{/if}
-							</div>
-						</div>
-						<div class="flex items-center gap-2 mb-2!">
-							<Label class="text-muted-foreground min-w-18 font-normal"
-								>{m.cloud_mode_openclaw_status()}</Label
-							>
-							<StatusIndicator
-								status={resolveOpenClawStatus(openClaw.status)}
-								text={resolveOpenClawText(openClaw.status)}
-								warningTooltip={m.cloud_mode_unhealthy()}
-							/>
-							<div class="relative size-5">
-								{#if !openClaw.status && !cloudState.expired}
-									<ButtonWithTooltip
-										onclick={() => (showRestartOpenClawDialog = true)}
-										tooltip={m.cloud_mode_restart_docker()}
-										class="hover:!bg-icon-btn-hover size-8 absolute top-[-30%] left-0"
-									>
-										<RefreshCw
-											class={cn(
-												"size-4",
-												loading.restartOpenClaw && "animate-spin",
-											)}
-										/>
-									</ButtonWithTooltip>
-								{/if}
-							</div>
-						</div>
-						<div class="flex items-center gap-2 mb-2!">
-							<Label class="text-muted-foreground min-w-18 font-normal"
-								>{m.cloud_mode_api_status()}</Label
-							>
-							<StatusIndicator
-								status={resolveOpenClawStatus(openClaw.api_status)}
-								text={resolveOpenClawText(openClaw.api_status)}
-								warningTooltip={m.cloud_mode_unhealthy()}
-							/>
-						</div>
-					</div>
-				</div>
-			</div>
-		{/if}
+		<EnvironmentMonitor />
 	</div>
 
 	<div class="space-y-2">

@@ -53,6 +53,7 @@
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { type CodeAgentType } from "@shared/storage/code-agent";
 
+	import CloudRuningCard from "$lib/components/buss/local-agent-panel/cloud-runing-card.svelte";
 	import OpenClawChannelPanel from "$lib/components/buss/open-claw-config-panel/open-claw-channel-panel.svelte";
 	import { cloudModeSessionsState } from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
 	import { match } from "ts-pattern";
@@ -216,6 +217,15 @@
 						</Button>
 					</div>
 				</div>
+			{/if}
+
+			{#if codeAgentState.type == "cloud"}
+				<section class="space-y-4">
+					<!-- Environment Cards Container -->
+					<div class="rounded-lg border p-4 space-y-4">
+						<CloudRuningCard />
+					</div>
+				</section>
 			{/if}
 
 			<div class="gap-settings-gap flex flex-col">
