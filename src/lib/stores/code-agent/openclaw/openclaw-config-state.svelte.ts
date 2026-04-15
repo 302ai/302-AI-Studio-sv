@@ -165,6 +165,8 @@ class OpenClawConfigState {
 
 		await this.updateOCBindingsCloud(ocAgentId);
 
+		await window.electronAPI.cloudModeService.overrideCloudModeHealthPolling("fast");
+
 		const instanceName = cloudModeState.state.instanceName;
 		if (!instanceName) {
 			throw new Error("Cloud instance not found");
@@ -197,6 +199,8 @@ class OpenClawConfigState {
 			} catch (error) {
 				cleanup?.();
 				throw error;
+			} finally {
+				await window.electronAPI.cloudModeService.overrideCloudModeHealthPolling("normal");
 			}
 		}, 60000);
 	}

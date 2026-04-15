@@ -80,6 +80,18 @@ export class CloudModeService {
 		);
 	}
 
+	async overrideCloudModeHealthPolling(
+		_event: IpcMainInvokeEvent,
+		mode: "fast" | "normal" = "normal",
+	) {
+		const instanceSyncCron =
+			mode === "fast" ? CRON_EXPRESSION.EVERY_20_SECONDS : CRON_EXPRESSION.EVERY_5_MINUTES;
+
+		schedulerService.addTask("cloud-mode-health-polling", instanceSyncCron, async () => {
+			await this.fetchAndBroadcastHealth();
+		});
+	}
+
 	/**
 	 * Stop polling (called when instance is destroyed)
 	 */
