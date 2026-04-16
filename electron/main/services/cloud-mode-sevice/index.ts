@@ -70,10 +70,10 @@ export class CloudModeService {
 			await this.checkAndStopPolling();
 		});
 
-		// Health check every 15 seconds
+		// Health check every 30 seconds
 		schedulerService.addTask(
 			"cloud-mode-health-polling",
-			CRON_EXPRESSION.EVERY_15_SECONDS,
+			CRON_EXPRESSION.EVERY_30_SECONDS,
 			async () => {
 				await this.fetchAndBroadcastHealth();
 			},
@@ -84,10 +84,10 @@ export class CloudModeService {
 		_event: IpcMainInvokeEvent,
 		mode: "fast" | "normal" = "normal",
 	) {
-		const instanceSyncCron =
-			mode === "fast" ? CRON_EXPRESSION.EVERY_20_SECONDS : CRON_EXPRESSION.EVERY_5_MINUTES;
+		const healthPollingCron =
+			mode === "fast" ? CRON_EXPRESSION.EVERY_10_SECONDS : CRON_EXPRESSION.EVERY_30_SECONDS;
 
-		schedulerService.addTask("cloud-mode-health-polling", instanceSyncCron, async () => {
+		schedulerService.addTask("cloud-mode-health-polling", healthPollingCron, async () => {
 			await this.fetchAndBroadcastHealth();
 		});
 	}
