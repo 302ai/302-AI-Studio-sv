@@ -85,13 +85,15 @@
 					text={healthProps.text}
 					warningTooltip={m.cloud_mode_unhealthy()}
 				/>
-				<ButtonWithTooltip
-					onclick={handleRestartClick}
-					tooltip={m.cloud_mode_reboot_instance()}
-					class="hover:!bg-icon-btn-hover size-8"
-				>
-					<RefreshCw class={cn("h-4 w-4", loading.restart && "animate-spin")} />
-				</ButtonWithTooltip>
+				{#if !_state.expired}
+					<ButtonWithTooltip
+						onclick={handleRestartClick}
+						tooltip={m.cloud_mode_reboot_instance()}
+						class="hover:!bg-icon-btn-hover size-8"
+					>
+						<RefreshCw class={cn("h-4 w-4", loading.restart && "animate-spin")} />
+					</ButtonWithTooltip>
+				{/if}
 			</div>
 			<div class="flex items-center gap-3">
 				<Label class="text-muted-foreground min-w-18 font-normal"
@@ -104,7 +106,9 @@
 				/>
 			</div>
 			<div class="flex items-center gap-3">
-				<Label class="text-muted-foreground min-w-18 font-normal">接口状态</Label>
+				<Label class="text-muted-foreground min-w-18 font-normal"
+					>{m.cloud_mode_api_status()}</Label
+				>
 				<StatusIndicator
 					status={resolveOpenClawStatus(openClaw.api_status)}
 					text={resolveOpenClawText(openClaw.api_status)}
