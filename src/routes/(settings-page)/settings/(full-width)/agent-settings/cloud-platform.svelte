@@ -23,7 +23,7 @@
 	import { createLogger } from "@shared/logger";
 	import type { GetManualRenewChargeResponse } from "@shared/storage/cloud-mode";
 	import type { LocalSessionInfo } from "@shared/storage/code-agent";
-	import { format, parseISO } from "date-fns";
+	import { differenceInDays, format, parseISO, startOfDay } from "date-fns";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import SandboxDeleteConfirmDialog from "./sandbox-delete-confirm-dialog.svelte";
@@ -31,6 +31,13 @@
 	const logger = createLogger("ui");
 
 	let { state: cloudState, loading } = $derived(cloudModeState.init());
+
+	let expiredDays = $derived.by(() => {
+		if (!cloudState.expired || !cloudState.expiredAt) return 0;
+		const expiredAt = parseISO(cloudState.expiredAt);
+		const now = new Date();
+		return Math.max(0, differenceInDays(startOfDay(now), startOfDay(expiredAt)));
+	});
 
 	let charges: GetManualRenewChargeResponse["charges"] = $state([]);
 	let chargesPagination: GetManualRenewChargeResponse["pagination"] = $state({
@@ -246,23 +253,30 @@
 								? m.cloud_mode_renew_button()
 								: m.cloud_mode_activate_button()}
 						</Button>
-						<div class="flex items-center gap-2">
-							<Switch
-								disabled={loading.autoRenew}
-								checked={cloudState.autoRenew}
-								onCheckedChange={handleAutoRenewChange}
-								class="data-[state=checked]:bg-primary cursor-pointer"
-							/>
-							<span class="text-sm text-muted-foreground flex items-center gap-2">
-								{m.cloud_mode_auto_renew()}
-								{#if loading.autoRenew}
-									<LoaderCircle class="h-4 w-4 animate-spin" />
+						<div class="relative flex flex-col items-end">
+							<div class="flex items-center gap-2">
+								<Switch
+									disabled={loading.autoRenew}
+									checked={cloudState.autoRenew}
+									onCheckedChange={handleAutoRenewChange}
+									class="data-[state=checked]:bg-primary cursor-pointer"
+								/>
+								<span class="text-sm text-muted-foreground flex items-center gap-2">
+									{m.cloud_mode_auto_renew()}
+									{#if loading.autoRenew}
+										<LoaderCircle class="h-4 w-4 animate-spin" />
+									{/if}
+								</span>
+							</div>
+							<p
+								class="absolute top-full right-0 mt-1 whitespace-nowrap text-xs text-primary"
+							>
+								{m.cloud_mode_instance_destruction_warning()}
+								{#if cloudState.expired}
+									{m.cloud_mode_instance_expired_days({ days: expiredDays })}
 								{/if}
-							</span>
+							</p>
 						</div>
-						<p class="text-xs text-primary">
-							注意：实例在过期15天后将会被自动销毁(已过期1天)
-						</p>
 					</div>
 				</div>
 			</div>

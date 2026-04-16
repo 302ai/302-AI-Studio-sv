@@ -1572,5 +1572,7 @@
 	"code_agent_cloud_instance_not_running": "云端机器实例还未就绪",
 	"cloud_mode_expired": "已过期",
 	"cloud_mode_instance_name": "实例名",
+	"cloud_mode_instance_destruction_warning": "注意：实例在过期15天后将会被自动销毁",
+	"cloud_mode_instance_expired_days": "(已过期{days}天)",
 	"quick_prompt_trigger": "快捷 Prompt"
 }
