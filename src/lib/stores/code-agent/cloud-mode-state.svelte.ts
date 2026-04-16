@@ -322,7 +322,7 @@ class CloudModeStateManager {
 				if (isRenewal) {
 					const res = await manualRenew({
 						instanceName: this.state.instanceName,
-						isDev: true, // TODO: remove this when ready
+						isDev: false, // TODO: remove this when ready
 					});
 					if (!res.success) {
 						throw new Error("Failed to renew instance");
@@ -330,17 +330,12 @@ class CloudModeStateManager {
 					logger.info("Instance renewed successfully");
 				} else {
 					const res = await createInstance({
-						isDev: true, // TODO: remove this when ready
+						isDev: false, // TODO: remove this when ready
 						isAutoRenew: this.state.autoRenew,
 					});
 					if (!res.success) {
 						throw new Error("Failed to create instance");
 					}
-
-					// await initInstance({
-					// 	instanceName: res.instance.instanceName,
-					// 	isDev: true, // TODO: remove this when ready
-					// });
 
 					logger.info("Instance created successfully");
 				}
