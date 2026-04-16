@@ -85,7 +85,7 @@
 					text={healthProps.text}
 					warningTooltip={m.cloud_mode_unhealthy()}
 				/>
-				{#if !_state.expired}
+				{#if !_state.expired && _state.instanceName && _state.status == "running"}
 					<ButtonWithTooltip
 						onclick={handleRestartClick}
 						tooltip={m.cloud_mode_reboot_instance()}
