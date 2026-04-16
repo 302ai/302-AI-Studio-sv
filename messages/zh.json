@@ -1004,6 +1004,7 @@
 	"cloud_mode_error_update_auto_renew_failed": "更新自动续费设置失败。",
 	"cloud_mode_error_instance_renew_expired": "实例已过期超过 15 天，无法续费。",
 	"cloud_mode_error_manual_renew_failed": "续费失败，请重试。",
+	"cloud_mode_error_invalid_api_key": "无效的 API Key，请检查您的 API Key。",
 	"cloud_mode_error_unknown": "发生未知错误，请稍后重试。",
 	"toast_code_agent_model_change_failed": "更换沙盒模型失败",
 	"code_agent_local_sandbox_start_failed": "启动本地沙盒失败",

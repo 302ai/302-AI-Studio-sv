@@ -15,21 +15,26 @@ import {
 	sandboxHealthResponseSchema,
 } from "@shared/storage/cloud-mode";
 import {
+	checkErrorResponse,
 	CloudModeApiError,
 	parseCloudModeError,
-	checkErrorResponse,
 } from "@shared/storage/cloud-mode-errors";
 import { type } from "arktype";
 
-import { _302AIKy } from "./core/_302ai-ky";
+import { createLogger } from "@shared/logger";
+import { _302AIKy, create302AIKy } from "./core/_302ai-ky";
+
+const logger = createLogger("apis");
 
 /**
  * Get available instance list for Apikey
+ * @param apiKey - Optional API key to use instead of the stored one
  * @returns List of available instances
  */
-export async function listInstances(): Promise<ListInstancesResponse> {
+export async function listInstances(apiKey?: string): Promise<ListInstancesResponse> {
 	try {
-		const response = await _302AIKy.get("302/swas/instances").json();
+		const kyInstance = apiKey ? create302AIKy(apiKey) : _302AIKy;
+		const response = await kyInstance.get("302/swas/instances").json();
 
 		checkErrorResponse(response, "SWAS_LIST_INSTANCE_FAILED", "Failed to list instances");
 
@@ -38,6 +43,7 @@ export async function listInstances(): Promise<ListInstancesResponse> {
 			throw new CloudModeApiError("INVALID_RESPONSE", validated.summary);
 		}
 
+		logger.info("[listInstances] Response:", validated);
 		return validated;
 	} catch (error) {
 		throw await parseCloudModeError(error);

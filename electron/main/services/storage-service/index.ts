@@ -26,13 +26,15 @@ export class StorageService<T extends StorageValue> {
 	private static storagePath: string;
 
 	constructor(migrationConfig?: MigrationConfig<T>) {
-		const storagePath = isDev
-			? join(process.cwd(), "storage")
-			: join(userDataManager.storagePath, "storage");
-		StorageService.storagePath = storagePath;
+		if (!StorageService.storagePath) {
+			StorageService.storagePath = isDev
+				? join(process.cwd(), "storage")
+				: join(userDataManager.storagePath, "storage");
+		}
+
 		this.storage = createStorage<T>({
 			driver: fsDriver({
-				base: storagePath,
+				base: StorageService.storagePath,
 			}),
 		});
 		this.migrationConfig = migrationConfig;
@@ -42,7 +44,7 @@ export class StorageService<T extends StorageValue> {
 		}
 
 		if (!StorageService.globalWatcher) {
-			StorageService.globalWatcher = new GlobalStorageWatcher(storagePath);
+			StorageService.globalWatcher = new GlobalStorageWatcher(StorageService.storagePath);
 			StorageService.globalWatcher.start();
 		}
 	}
