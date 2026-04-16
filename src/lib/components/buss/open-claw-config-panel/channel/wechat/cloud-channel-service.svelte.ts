@@ -33,6 +33,10 @@ class CloudChannelService implements ChannelService {
 	}
 
 	async connect(): Promise<void> {
+		if (!cloudModeState.openClaw.status) {
+			return;
+		}
+
 		const { serverInfo } = this.envState;
 		if (serverInfo.ip.length <= 0 || serverInfo.port <= 0) {
 			logger.error("openclaw-weixin:connect: server info not ready");

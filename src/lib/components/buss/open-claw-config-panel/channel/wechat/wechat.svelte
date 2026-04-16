@@ -6,9 +6,16 @@
 	} from "$lib/components/ui/accordion";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import ChannelQrLoginPanel from "./channel-qr-login-panel.svelte";
 	import { cloudChannelService } from "./cloud-channel-service.svelte";
 	import { localChannelService } from "./local-channel-service.svelte";
+
+	$effect(() => {
+		if (cloudModeState.openClaw.status) {
+			cloudChannelService.connect();
+		}
+	});
 </script>
 
 <AccordionItem id="wechat" value="wechat" class="border-b-0 my-1">
