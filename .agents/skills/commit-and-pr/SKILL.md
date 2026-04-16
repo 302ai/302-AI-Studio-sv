@@ -15,6 +15,7 @@ This skill automates the process of committing local changes, pushing to a new b
 Follow these steps exactly in order:
 
 1. **Verify State & Ask for Information**:
+   - Run `git branch --show-current` to save the name of the original branch.
    - Run `git status` and `git diff` to understand the current changes.
    - Ask the user: "What should the target base branch be for this PR? (And optionally, what do you want to name the new branch?)"
    - **WAIT** for the user's response. Do not proceed to step 2 until they answer.
@@ -36,5 +37,8 @@ Follow these steps exactly in order:
    - Invoke the skill tool passing the target base branch the user provided:
      `Tool call: Skill (skill: "create-github-pull-request-from-specification", args: "--base <target-branch>")`
 
-6. **Completion**:
-   - Inform the user that the PR has been created.
+6. **Cleanup**:
+   - Switch back to the original branch captured in step 1: `git checkout <original-branch>`.
+
+7. **Completion**:
+   - Inform the user that the PR has been created and you have switched back to the original branch.
