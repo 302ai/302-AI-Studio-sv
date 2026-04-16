@@ -24,7 +24,7 @@
 	import { createLogger } from "@shared/logger";
 	import type { GetManualRenewChargeResponse } from "@shared/storage/cloud-mode";
 	import type { LocalSessionInfo } from "@shared/storage/code-agent";
-	import { differenceInDays, parseISO, startOfDay } from "date-fns";
+	import { differenceInDays, format, parseISO, startOfDay } from "date-fns";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import SandboxDeleteConfirmDialog from "./sandbox-delete-confirm-dialog.svelte";
@@ -100,10 +100,7 @@
 	function formatDate(iso?: string): string {
 		if (!iso) return "--";
 		const data = new TZDate(iso, "Asia/Shanghai");
-
-		const addZero = (num: number) => (num < 10 ? `0${num}` : `${num}`);
-
-		return `${data.getFullYear()}-${addZero(data.getMonth() + 1)}-${addZero(data.getDate())} ${addZero(data.getHours())}:${addZero(data.getMinutes())}:${addZero(data.getSeconds())}`;
+		return format(new Date(data.toUTCString()), "yyyy-MM-dd HH:mm:ss");
 	}
 
 	async function handleAutoRenewChange(checked: boolean) {
