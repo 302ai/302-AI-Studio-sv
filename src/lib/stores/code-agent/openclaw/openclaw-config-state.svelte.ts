@@ -157,7 +157,7 @@ class OpenClawConfigState {
 				cleanup?.();
 				throw error;
 			}
-		}, 60000);
+		}, 180000);
 	}
 
 	async bindingAndRestartCloud(ocAgentId: string) {
@@ -202,7 +202,7 @@ class OpenClawConfigState {
 			} finally {
 				await window.electronAPI.cloudModeService.overrideCloudModeHealthPolling("normal");
 			}
-		}, 60000);
+		}, 180000);
 	}
 }
 
