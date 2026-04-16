@@ -170,6 +170,18 @@
 	onMount(() => {
 		handleSessionRefresh();
 	});
+
+	const title = $derived.by(() => {
+		if (cloudState.instanceName) {
+			if (cloudState.expired) {
+				return { value: m.cloud_mode_expired(), class: "text-destructive" };
+			} else {
+				return { value: cloudState.instanceName, class: "text-primary" };
+			}
+		} else {
+			return { value: m.cloud_mode_not_activated(), class: "" };
+		}
+	});
 </script>
 
 {#snippet tableHeader()}
@@ -219,15 +231,8 @@
 					<div class="space-y-1">
 						<p class="text-sm text-muted-foreground">
 							{m.cloud_mode_instance_name()}：{#if cloudState.instanceName}
-								<span
-									class={cn(
-										"font-medium",
-										cloudState.expired ? "text-destructive" : "text-primary",
-									)}
-								>
-									{cloudState.expired
-										? m.cloud_mode_expired()
-										: cloudState.instanceName}
+								<span class={cn("font-medium", title.class)}>
+									{title.value}
 								</span>
 							{:else}
 								{m.cloud_mode_not_activated()}
