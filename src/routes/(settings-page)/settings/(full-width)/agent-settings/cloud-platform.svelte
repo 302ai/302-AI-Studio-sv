@@ -19,11 +19,11 @@
 	} from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
 	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { cn } from "$lib/utils";
+	import { TZDate } from "@date-fns/tz";
 	import { LoaderCircle, RefreshCw, RotateCw, Search } from "@lucide/svelte";
 	import { createLogger } from "@shared/logger";
 	import type { GetManualRenewChargeResponse } from "@shared/storage/cloud-mode";
 	import type { LocalSessionInfo } from "@shared/storage/code-agent";
-	import { format, parseISO } from "date-fns";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 	import SandboxDeleteConfirmDialog from "./sandbox-delete-confirm-dialog.svelte";
@@ -91,9 +91,11 @@
 
 	function formatDate(iso?: string): string {
 		if (!iso) return "--";
-		const date = parseISO(iso);
+		const data = new TZDate(iso, "Asia/Shanghai");
 
-		return format(date, "YYYY-MM-dd HH:mm:ss");
+		const addZero = (num: number) => (num < 10 ? `0${num}` : `${num}`);
+
+		return `${data.getFullYear()}-${addZero(data.getMonth() + 1)}-${addZero(data.getDate())} ${addZero(data.getHours())}:${addZero(data.getMinutes())}:${addZero(data.getSeconds())}`;
 	}
 
 	async function handleAutoRenewChange(checked: boolean) {
