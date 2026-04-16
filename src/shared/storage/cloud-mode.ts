@@ -88,7 +88,7 @@ export const initInstanceResponseSchema = type({
 	instance: {
 		instanceName: data.instance.instance_name,
 		publicIp: data.instance.public_ip,
-		expiredAt: data.instance.expired_at,
+		v: data.instance.expired_at,
 		apiPort: data.instance.api_port,
 		ocPort: data.instance.oc_port,
 		status: data.instance.status,

@@ -90,7 +90,9 @@
 
 	function formatDate(iso?: string): string {
 		if (!iso) return "--";
-		return format(parseISO(iso), "yyyy-MM-dd");
+		const date = parseISO(iso);
+
+		return format(date, "YYYY-MM-dd HH:mm:ss");
 	}
 
 	async function handleAutoRenewChange(checked: boolean) {
@@ -193,7 +195,7 @@
 		{:else}
 			<Label class="text-label-fg font-normal">{m.cloud_mode_subscription_info()}</Label>
 			<div class="rounded-lg border p-5 space-y-5">
-				<div class="flex justify-between items-end w-full">
+				<div class="flex justify-between items-start w-full">
 					<div class="space-y-1">
 						<p class="text-sm text-muted-foreground">
 							{m.cloud_mode_instance_name()}：{#if cloudState.instanceName}
@@ -245,6 +247,9 @@
 								{/if}
 							</span>
 						</div>
+						<p class="text-xs text-primary">
+							注意：实例在过期15天后将会被自动销毁(已过期1天)
+						</p>
 					</div>
 				</div>
 			</div>
