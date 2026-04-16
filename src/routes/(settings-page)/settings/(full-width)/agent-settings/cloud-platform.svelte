@@ -42,6 +42,7 @@
 	let isLoadingCharges = $state(false);
 	let hasInitialized = $state(false);
 	let showConfirmDialog = $state(false);
+	let showAutoRenewExpiredConfirmDialog = $state(false);
 	let showRestartMachineDialog = $state(false);
 	let showRestartOpenClawDialog = $state(false);
 
@@ -97,8 +98,20 @@
 		if (!cloudState.instanceName) return;
 		try {
 			await cloudModeState.updateAutoRenew(checked);
+			if (checked && cloudState.expired) {
+				showAutoRenewExpiredConfirmDialog = true;
+			}
 		} catch (e) {
 			toast.error(m.cloud_mode_auto_renew_error() + e);
+		}
+	}
+
+	async function handleImmediateRenew() {
+		try {
+			await cloudModeState.createInstance();
+			showAutoRenewExpiredConfirmDialog = false;
+		} catch (e) {
+			toast.error(m.cloud_mode_renew_failed() + e);
 		}
 	}
 
@@ -439,6 +452,26 @@
 		</div>
 	</div>
 </div>
+
+<AlertDialog.Root bind:open={showAutoRenewExpiredConfirmDialog}>
+	<AlertDialog.Content>
+		<AlertDialog.Header>
+			<AlertDialog.Title>{m.cloud_mode_auto_renew_enabled_title()}</AlertDialog.Title>
+			<AlertDialog.Description>
+				{m.cloud_mode_auto_renew_enabled_desc()}
+			</AlertDialog.Description>
+		</AlertDialog.Header>
+		<AlertDialog.Footer>
+			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
+			<AlertDialog.Action disabled={loading.createOrRenew} onclick={handleImmediateRenew}>
+				{#if loading.createOrRenew}
+					<LoaderCircle class="h-4 w-4 animate-spin" />
+				{/if}
+				{m.cloud_mode_auto_renew_enabled_confirm()}
+			</AlertDialog.Action>
+		</AlertDialog.Footer>
+	</AlertDialog.Content>
+</AlertDialog.Root>
 
 <AlertDialog.Root bind:open={showConfirmDialog}>
 	<AlertDialog.Content>
