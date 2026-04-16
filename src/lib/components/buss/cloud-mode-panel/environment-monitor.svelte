@@ -1,13 +1,13 @@
 <script lang="ts">
-	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { ButtonWithTooltip } from "$lib/components/buss/button-with-tooltip";
 	import StatusIndicator from "$lib/components/buss/local-agent-panel/status-indicator.svelte";
-	import { Skeleton } from "$lib/components/ui/skeleton";
+	import * as AlertDialog from "$lib/components/ui/alert-dialog";
 	import { Label } from "$lib/components/ui/label";
+	import { Skeleton } from "$lib/components/ui/skeleton";
 	import { m } from "$lib/paraglide/messages";
 	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { cn } from "$lib/utils";
-	import { RefreshCw, LoaderCircle } from "@lucide/svelte";
+	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 
 	let { state: cloudState, openClaw, loading, healthProps } = $derived(cloudModeState.init());
@@ -102,7 +102,7 @@
 						warningTooltip={m.cloud_mode_unhealthy()}
 					/>
 					<div class="relative size-5">
-						{#if !openClaw.status && !cloudState.expired}
+						{#if openClaw.status == false && !cloudState.expired}
 							<ButtonWithTooltip
 								onclick={() => (showRestartOpenClawDialog = true)}
 								tooltip={m.cloud_mode_restart_docker()}
