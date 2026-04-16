@@ -32,7 +32,7 @@
 		{
 			name: "phrasing-settings",
 			path: "/settings/phrasing-settings",
-			labelKey: "提示词",
+			labelKey: m.text_button_settings_phrasing(),
 		},
 		{
 			name: "agent-settings",
