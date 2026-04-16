@@ -95,20 +95,21 @@ class CloudModeStateManager {
 
 	constructor() {
 		window.electronAPI.cloudMode.onTimedBroadcaster((healthData) => {
-			if (healthData) {
-				if (this.#bufferTimeout !== null && healthData.oc_status !== "ok") {
-					logger.debug(
-						"[CloudModeStateManager] Skipping health update during buffer period",
-					);
-					return;
-				}
-				this.openClaw.status = healthData.oc_status === "ok";
-				this.openClaw.api_status = healthData.status === "ok";
-				logger.debug("Cloud instance health updated from broadcast", {
-					openClawStatus: this.openClaw.status,
-					apiStatus: this.openClaw.api_status,
-				});
+			if (!healthData) {
+				// Clear health status when backend broadcasts null
+				this.openClaw.status = null;
+				this.openClaw.api_status = null;
+				return;
 			}
+
+			// During buffer period, ignore non-ok status to prevent flickering
+			if (this.#bufferTimeout !== null && healthData.oc_status !== "ok") {
+				return;
+			}
+
+			// Update health status
+			this.openClaw.status = healthData.oc_status === "ok";
+			this.openClaw.api_status = healthData.status === "ok";
 		});
 	}
 
@@ -118,9 +119,14 @@ class CloudModeStateManager {
 	private async afterInstanceOperation(): Promise<void> {
 		try {
 			// 1. Set 30s buffer period to allow OpenClaw to start
+			// During buffer, ignore non-ok health status to prevent UI flickering
 			this.#bufferTimeout = setTimeout(() => {
 				this.#bufferTimeout = null;
 			}, 30000);
+
+			// Set initial "starting" state during buffer period
+			this.openClaw.status = false;
+			this.openClaw.api_status = false;
 
 			// 2. Sync instance info and start polling
 			const res = await window.electronAPI.cloudModeService.syncAndStartPollingByIpc();
@@ -165,7 +171,7 @@ class CloudModeStateManager {
 	): () => Promise<boolean> {
 		return async () => {
 			this.loading[key] = true;
-			logger.debug(`[CloudModeStateManager] Executing command: ${key}=>${this.loading[key]}`);
+
 			try {
 				await fn();
 			} catch (e) {
@@ -173,9 +179,6 @@ class CloudModeStateManager {
 				throw e;
 			} finally {
 				this.loading[key] = false;
-				logger.debug(
-					`[CloudModeStateManager] Executing command: ${key}=>${this.loading[key]}`,
-				);
 			}
 			return true;
 		};
@@ -220,7 +223,11 @@ class CloudModeStateManager {
 		try {
 			const res = await window.electronAPI.cloudModeService.syncCloudInstanceToLocalByIpc();
 			if (!res.isOk) {
-				throw new Error("Failed to load cloud instance status");
+				const errorInfo = res.error;
+				throw new CloudModeApiError(
+					errorInfo?.code ?? "UNKNOWN_ERROR",
+					errorInfo?.message ?? "Failed to load cloud instance status",
+				);
 			}
 		} catch (error) {
 			this.#handleError(error);

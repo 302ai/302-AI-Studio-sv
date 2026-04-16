@@ -34,6 +34,9 @@ export const CloudModeErrorCode = {
 	// Manual renew errors (400, 500)
 	INSTANCE_RENEW_EXPIRED: "INSTANCE_RENEW_EXPIRED",
 	MANUAL_RENEW_FAILED: "MANUAL_RENEW_FAILED",
+
+	// Authentication errors (401)
+	INVALID_API_KEY: "INVALID_API_KEY",
 } as const;
 
 export type CloudModeErrorCode = (typeof CloudModeErrorCode)[keyof typeof CloudModeErrorCode];
@@ -83,6 +86,19 @@ export class CloudModeApiError extends Error {
 	 */
 	getI18nKey(): string {
 		return `cloud_mode_error_${this.code.toLowerCase()}`;
+	}
+}
+
+/**
+ * Map 302.AI API err_code to CloudModeErrorCode
+ * 302.AI API returns { error: { err_code, message, type } } format
+ */
+function map302AIApiErrorCode(errCode: number): CloudModeErrorCode | undefined {
+	switch (errCode) {
+		case -10002:
+			return "INVALID_API_KEY";
+		default:
+			return undefined;
 	}
 }
 
@@ -174,6 +190,36 @@ export async function parseCloudModeError(error: unknown): Promise<CloudModeApiE
 			// Fallback: extract any error information from body
 			if (body && typeof body === "object") {
 				const errorObj = body as Record<string, unknown>;
+
+				// Handle 302.AI API error format: { error: { err_code, message, type } }
+				if (
+					errorObj.error &&
+					typeof errorObj.error === "object" &&
+					!Array.isArray(errorObj.error)
+				) {
+					const inner = errorObj.error as Record<string, unknown>;
+					const errCode = typeof inner.err_code === "number" ? inner.err_code : undefined;
+					const mappedCode =
+						errCode !== undefined ? map302AIApiErrorCode(errCode) : undefined;
+					const innerMessage =
+						typeof inner.message === "string"
+							? inner.message
+							: `HTTP ${httpStatus} error`;
+
+					const apiError = new CloudModeApiError(
+						mappedCode || "UNKNOWN_ERROR",
+						innerMessage,
+						httpStatus,
+					);
+					logger.error(`[CloudModeApiError] ${apiError.code}: ${apiError.message}`, {
+						code: apiError.code,
+						httpStatus,
+						errCode,
+						body,
+					});
+					return apiError;
+				}
+
 				const message =
 					(typeof errorObj.message === "string" ? errorObj.message : undefined) ||
 					(typeof errorObj.error === "string" ? errorObj.error : undefined) ||

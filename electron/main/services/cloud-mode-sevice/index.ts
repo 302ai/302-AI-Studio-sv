@@ -7,7 +7,7 @@ import { createLogger } from "@shared/logger";
 import type { InstanceInfo, SandboxHealthResponse } from "@shared/storage/cloud-mode";
 import type { IpcMainInvokeEvent } from "electron";
 import { attemptAsync, isNull } from "es-toolkit";
-import { broadcastService } from "../broadcast-service";
+import { broadcastService, emitter } from "../broadcast-service";
 import { CRON_EXPRESSION, schedulerService } from "../scheduler-service";
 
 const logger = createLogger("services");
@@ -23,6 +23,11 @@ export class CloudModeService {
 			.catch((err) => {
 				logger.warn("[CloudModeService] Initial sync failed, using cached data", err);
 			});
+
+		// Listen to API key changes
+		emitter.on("provider:302ai-provider-changed", ({ apiKey }) => {
+			this.handle302AIProviderChange(apiKey);
+		});
 	}
 
 	/**
@@ -32,7 +37,7 @@ export class CloudModeService {
 		const [error, instance] = await attemptAsync(() => cloudModeStorage.getCloudModeInstance());
 
 		if (error || isNull(instance)) {
-			logger.debug("[CloudModeService] No instance found, polling not started");
+			logger.info("[CloudModeService] No instance found, polling not started");
 			return;
 		}
 
@@ -54,6 +59,7 @@ export class CloudModeService {
 			mode === "fast" ? CRON_EXPRESSION.EVERY_20_SECONDS : CRON_EXPRESSION.EVERY_5_MINUTES;
 
 		schedulerService.addTask("cloud-mode-instance-sync", instanceSyncCron, async () => {
+			logger.info("[CloudModeService] Starting instance sync");
 			const [error, instances] = await attemptAsync(() => this.syncCloudInstanceToLocal());
 
 			// If we are in fast polling mode and the instance reached "running", revert to normal 5m polling
@@ -75,6 +81,7 @@ export class CloudModeService {
 			"cloud-mode-health-polling",
 			CRON_EXPRESSION.EVERY_30_SECONDS,
 			async () => {
+				logger.info("[CloudModeService] Starting health poll");
 				await this.fetchAndBroadcastHealth();
 			},
 		);
@@ -114,6 +121,39 @@ export class CloudModeService {
 	}
 
 	/**
+	 * Handle 302.AI provider API key change
+	 * Reset polling to sync latest instance state with new key
+	 */
+	private async handle302AIProviderChange(apiKey: string): Promise<void> {
+		logger.info("[CloudModeService] API key changed, resetting cloud mode polling");
+
+		// Stop existing polling to prevent race conditions
+		this.stopPolling();
+
+		// Clear health cache (old key's data is invalid)
+		this.#healthCache = null;
+
+		// Re-sync instance list with new key
+		const [error] = await attemptAsync(() => this.syncCloudInstanceToLocal(apiKey));
+
+		if (error) {
+			logger.error(
+				"[CloudModeService] Failed to sync instances after API key change:",
+				error,
+			);
+			// Clear local storage since old key's data is invalid
+			await cloudModeStorage.setCloudModeInstance(getDefaultInstanceInfo());
+			// Broadcast null to clear stale UI state
+			broadcastService.broadcastChannelToAll("cloud-mode:timed", null);
+			return;
+		}
+
+		// Restart polling if instance exists
+		await this.maybeStartPolling();
+		logger.info("[CloudModeService] Cloud mode polling restarted with new API key");
+	}
+
+	/**
 	 * Unified health check logic: Request → Update cache → Broadcast to all rendering processes
 	 */
 	private async fetchAndBroadcastHealth(): Promise<void> {
@@ -123,12 +163,14 @@ export class CloudModeService {
 
 		if (storageError || isNull(instance)) {
 			this.#healthCache = null;
+			logger.error("[CloudModeService] Failed to get cloud mode instance:", storageError);
 			broadcastService.broadcastChannelToAll("cloud-mode:timed", null);
 			return;
 		}
 
 		if (!instance.publicIp || !instance.apiPort || instance.expired) {
 			this.#healthCache = null;
+			logger.error("[CloudModeService] Instance is invalid or expired");
 			broadcastService.broadcastChannelToAll("cloud-mode:timed", null);
 			return;
 		}
@@ -139,21 +181,24 @@ export class CloudModeService {
 
 		if (healthError || isNull(healthData)) {
 			this.#healthCache = null;
+			logger.error("[CloudModeService] Failed to get cloud sandbox health:", healthError);
 			broadcastService.broadcastChannelToAll("cloud-mode:timed", null);
 			return;
 		}
 
 		this.#healthCache = healthData;
+		logger.info("[CloudModeService] Health data updated:", healthData);
 		broadcastService.broadcastChannelToAll("cloud-mode:timed", healthData);
 	}
 
 	/**
 	 * Sync cloud instances to local storage
+	 * @param apiKey - Optional API key to use instead of the stored one
 	 */
-	private async syncCloudInstanceToLocal(): Promise<InstanceInfo[]> {
-		logger.debug("[CloudModeService] Syncing cloud instances to local storage...");
+	private async syncCloudInstanceToLocal(apiKey?: string): Promise<InstanceInfo[]> {
+		logger.info("[CloudModeService] Syncing cloud instances to local storage...");
 
-		const [error, response] = await attemptAsync(() => listInstances());
+		const [error, response] = await attemptAsync(() => listInstances(apiKey));
 
 		if (error || !response?.success) {
 			logger.error("[CloudModeService] Error during cloud instance sync:", error, response);
@@ -178,12 +223,17 @@ export class CloudModeService {
 
 	public async syncCloudInstanceToLocalByIpc(
 		_event: IpcMainInvokeEvent,
-	): Promise<{ isOk: boolean; data: InstanceInfo[] }> {
+	): Promise<{ isOk: boolean; data: InstanceInfo[]; error?: { code: string; message: string } }> {
 		const [error, data] = await attemptAsync(() => this.syncCloudInstanceToLocal());
 
 		if (error || !data) {
 			logger.error("[CloudModeService] Error during cloud instance sync by IPC:", error);
-			return { isOk: false, data: [] };
+			const errorInfo =
+				error instanceof Error
+					? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+						{ code: (error as any).code ?? "UNKNOWN_ERROR", message: error.message }
+					: undefined;
+			return { isOk: false, data: [], error: errorInfo };
 		}
 
 		return { isOk: true, data };

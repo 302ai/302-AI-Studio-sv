@@ -1001,6 +1001,7 @@
 	"cloud_mode_error_update_auto_renew_failed": "Failed to update auto-renew settings.",
 	"cloud_mode_error_instance_renew_expired": "Instance has been expired for more than 15 days and cannot be renewed.",
 	"cloud_mode_error_manual_renew_failed": "Failed to renew instance. Please try again.",
+	"cloud_mode_error_invalid_api_key": "Invalid API Key. Please check your API Key at 302.AI.",
 	"cloud_mode_error_unknown": "An unknown error occurred. Please try again later.",
 	"toast_code_agent_model_change_failed": "Failed to replace sandbox model",
 	"code_agent_local_sandbox_start_failed": "Failed to start local sandbox",

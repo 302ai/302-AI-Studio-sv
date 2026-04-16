@@ -23,3 +23,22 @@ export const _302AIKy = ky.create({
 		],
 	},
 });
+
+/**
+ * Create a 302.AI ky instance with a specific API key
+ * @param apiKey - The API key to use for requests
+ * @returns A ky instance configured with the provided API key
+ */
+export function create302AIKy(apiKey: string) {
+	return ky.create({
+		timeout: 180000,
+		prefixUrl: "https://api.302.ai",
+		headers: {
+			"User-Agent": userAgent,
+			"HTTP-Referer": "https://studio.302.ai/",
+			"X-Title": "302.AI Studio",
+			Authorization: `Bearer ${apiKey}`,
+		},
+		retry: 3,
+	});
+}
