@@ -357,35 +357,13 @@
 			</ButtonWithTooltip>
 		{/if}
 
-		<!-- Skills management button (always visible) -->
-		<!-- <ButtonWithTooltip
-			class={cn(
-				"hover:!bg-icon-btn-hover",
-				agentPreviewState.isVisible &&
-					agentPreviewState.isSkillsOnlyMode &&
-					"!bg-icon-btn-active hover:!bg-icon-btn-active",
-			)}
-			tooltipSide="bottom"
-			tooltip={m.title_skills_management()}
-			onclick={handleSkillsOnlyToggle}
-		>
-			<BookOpen
-				class={cn(
-					"size-5",
-					agentPreviewState.isVisible &&
-						agentPreviewState.isSkillsOnlyMode &&
-						"!text-icon-btn-active-fg",
-				)}
-			/>
-		</ButtonWithTooltip> -->
-
 		<div class="relative">
 			{#if chatState.hasMessages}
 				<ButtonWithTooltip
 					class={cn(
-						"hover:!bg-accent hover:!text-accent-foreground",
+						"hover:!bg-icon-btn-hover",
 						chatState.isSearchInput &&
-							"!bg-accent !text-accent-foreground hover:!bg-accent hover:!text-accent-foreground",
+							"!bg-icon-btn-active !text-icon-btn-active-fg hover:!bg-icon-btn-active hover:!text-icon-btn-active-fg",
 					)}
 					tooltipSide="bottom"
 					tooltip={m.tooltip_search_content()}
@@ -415,8 +393,8 @@
 							class={cn(
 								"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
 								caseSensitive
-									? "bg-accent text-accent-foreground"
-									: "text-foreground/70 hover:bg-accent hover:text-accent-foreground",
+									? "bg-icon-btn-active text-icon-btn-active-fg"
+									: "text-foreground/70 hover:bg-icon-btn-hover",
 							)}
 							title={m.search_case_sensitive()}
 							onclick={toggleCaseSensitive}
@@ -427,8 +405,8 @@
 							class={cn(
 								"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
 								wholeWord
-									? "bg-accent text-accent-foreground"
-									: "text-foreground/70 hover:bg-accent hover:text-accent-foreground",
+									? "bg-icon-btn-active text-icon-btn-active-fg"
+									: "text-foreground/70 hover:bg-icon-btn-hover",
 							)}
 							title={m.search_whole_word()}
 							onclick={toggleWholeWord}
@@ -439,8 +417,8 @@
 							class={cn(
 								"flex size-5 cursor-pointer items-center justify-center rounded transition-colors",
 								useRegex
-									? "bg-accent text-accent-foreground"
-									: "text-foreground/70 hover:bg-accent hover:text-accent-foreground",
+									? "bg-icon-btn-active text-icon-btn-active-fg"
+									: "text-foreground/70 hover:bg-icon-btn-hover",
 							)}
 							title={m.search_regex()}
 							onclick={toggleRegex}
@@ -460,14 +438,14 @@
 								{/if}
 							</span>
 							<button
-								class="cursor-pointer text-foreground/70 hover:bg-accent hover:text-accent-foreground flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
+								class="cursor-pointer text-foreground/70 hover:bg-icon-btn-hover hover:text-foreground flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
 								onclick={handlePrevMatch}
 								disabled={totalMatches === 0}
 							>
 								<ChevronUp class="size-3.5" />
 							</button>
 							<button
-								class="cursor-pointer text-foreground/70 hover:bg-accent hover:text-accent-foreground flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
+								class="cursor-pointer text-foreground/70 hover:bg-icon-btn-hover hover:text-foreground flex items-center justify-center rounded p-0.5 transition-colors disabled:opacity-50"
 								onclick={handleNextMatch}
 								disabled={totalMatches === 0}
 							>
