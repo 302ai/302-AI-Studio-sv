@@ -15,7 +15,6 @@
 	import { ApplyOpenClawChannelConfigConfirm } from "./hooks";
 
 	let confirmDialogOpen = $state(false);
-	let applyConfigLoading = $state(false);
 	let feishuSessionId = $state(openclawConfigState.feishuSessionId);
 	let telegramBotId = $state(openclawConfigState.telegramBotId);
 	let hasConfigs = $derived(trim(feishuSessionId) !== "" || trim(telegramBotId) !== "");
@@ -32,7 +31,7 @@
 				await openclawConfigState.updateOCBindings(openclawConfigState.currentOcAgentId);
 			},
 			open: (v) => (confirmDialogOpen = v),
-			loading: (v) => (applyConfigLoading = v),
+			loading: (_) => {},
 			error: (_) => {},
 			succeed: () => {
 				toast.success(m.open_claw_config_update_success());
@@ -54,7 +53,7 @@
 				);
 			},
 			open: (v) => (confirmDialogOpen = v),
-			loading: (v) => (applyConfigLoading = v),
+			loading: () => {},
 			error: (_) => {
 				toast.error(m.open_claw_cloud_host_error());
 			},
@@ -185,7 +184,6 @@
 
 <ConfirmDialog
 	bind:confirmDialogOpen
-	bind:applyConfigLoading
 	{...codeAgentState.type === "cloud"
 		? { handleCloudConfirmDialogOk }
 		: { handleLocalConfirmDialogOk }}

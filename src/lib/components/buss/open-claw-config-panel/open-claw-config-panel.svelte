@@ -15,6 +15,7 @@
 	import { Label } from "$lib/components/ui/field";
 	import { m } from "$lib/paraglide/messages";
 	import { codeAgentGlobalConfigsState, codeAgentState } from "$lib/stores/code-agent";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
@@ -26,7 +27,8 @@
 	const { className }: Props = $props();
 
 	let confirmDialogOpen = $state(false);
-	let applyConfigLoading = $state(false);
+
+	let { state: _state } = $derived(cloudModeState.init());
 
 	let localFeishu = $state({
 		appId: codeAgentGlobalConfigsState.feishu.appId,
@@ -76,7 +78,7 @@
 			}
 		},
 		open: (v) => (confirmDialogOpen = v),
-		loading: (v) => (applyConfigLoading = v),
+		loading: (_) => {},
 		error: (_) => {
 			toast.error(m.code_agent_local_container_not_started(), {
 				action: {
@@ -110,7 +112,7 @@
 			await window.electronAPI.openClawService.applyCloudClawChannelConfig();
 		},
 		open: (v) => (confirmDialogOpen = v),
-		loading: (v) => (applyConfigLoading = v),
+		loading: () => {},
 		error: (_) => {
 			toast.error(m.open_claw_cloud_host_error());
 		},
@@ -396,7 +398,6 @@
 
 <ConfirmDialog
 	bind:confirmDialogOpen
-	bind:applyConfigLoading
-	{handleCloudConfirmDialogOk}
 	{handleLocalConfirmDialogOk}
+	handleCloudConfirmDialogOk={_state.expired ? undefined : handleCloudConfirmDialogOk}
 />
