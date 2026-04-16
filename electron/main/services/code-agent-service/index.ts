@@ -10,6 +10,7 @@ import { createLogger } from "@shared/logger";
 import type {
 	CodeAgentConfigMetadata,
 	CodeAgentCreateResult,
+	CodeAgentType,
 	CreateClaudeCodeSandboxRequest,
 } from "@shared/storage/code-agent";
 import type { ThreadParmas } from "@shared/types";
@@ -437,7 +438,7 @@ export class CodeAgentService {
 		_event: IpcMainInvokeEvent,
 		sandboxId: string,
 		MCPInfos: { url: string; name: string }[],
-		mode: string,
+		mode: CodeAgentType,
 	): Promise<{ isOK: boolean }> {
 		try {
 			const result = await addClaudeCodeSandboxMCP(sandboxId, MCPInfos, mode);

@@ -189,8 +189,19 @@ export class IpcStructureGenerator {
 			);
 		};
 
-		// Skip anonymous object types entirely
+		// Extract types from anonymous object properties (e.g. { key: Type })
 		if (this.isAnonymousObjectType(typeString)) {
+			const propertyTypeRegex = /:\s*([^,;{}]+)/g;
+			let propMatch;
+			while ((propMatch = propertyTypeRegex.exec(typeString)) !== null) {
+				const propType = propMatch[1].trim();
+				const innerTypes = this.extractTypesFromString(propType);
+				innerTypes.forEach((t) => {
+					if (t && !builtInTypes.has(t) && !isLiteral(t)) {
+						types.add(t);
+					}
+				});
+			}
 			return types;
 		}
 
@@ -213,11 +224,10 @@ export class IpcStructureGenerator {
 			}
 
 			// Recursively extract types from generic arguments
-			// Skip if the generic argument is an anonymous object type
-			if (genericArgs && !this.isAnonymousObjectType(genericArgs.trim())) {
+			if (genericArgs) {
 				const innerTypes = this.extractTypesFromString(genericArgs);
 				innerTypes.forEach((t) => {
-					if (!builtInTypes.has(t) && !isLiteral(t)) {
+					if (t && !builtInTypes.has(t) && !isLiteral(t)) {
 						types.add(t);
 					}
 				});
@@ -231,13 +241,14 @@ export class IpcStructureGenerator {
 				// Type was cleaned, extract from the cleaned version
 				const innerTypes = this.extractTypesFromString(cleanType);
 				innerTypes.forEach((t) => {
-					if (!builtInTypes.has(t) && !isLiteral(t)) {
+					if (t && !builtInTypes.has(t) && !isLiteral(t)) {
 						types.add(t);
 					}
 				});
 			} else {
 				// Simple type, add as is (unless it's an anonymous object type, built-in, or literal)
 				if (
+					cleanType &&
 					!this.isAnonymousObjectType(cleanType) &&
 					!builtInTypes.has(cleanType) &&
 					!isLiteral(cleanType)

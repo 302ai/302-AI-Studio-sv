@@ -5,7 +5,7 @@ const { getUserAgentFragment } = window.electronAPI.appService;
 const { get302AIApiKey } = window.electronAPI.providerService;
 
 export const _302AIKy = ky.create({
-	timeout: 60000,
+	timeout: 180000,
 	prefixUrl: "https://api.302.ai",
 	headers: {
 		"HTTP-Referer": "https://studio.302.ai/",

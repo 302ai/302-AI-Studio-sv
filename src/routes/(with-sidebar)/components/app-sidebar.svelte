@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { updateSessionNote } from "$lib/api/sandbox-session";
+	import { isLocalOrCloudMode } from "$lib/api/utils";
 	import * as Collapsible from "$lib/components/ui/collapsible";
 	import { Input } from "$lib/components/ui/input";
 	import * as Sidebar from "$lib/components/ui/sidebar";
@@ -178,7 +179,7 @@
 
 				if (sandboxId && currentSessionId) {
 					// Handle local mode
-					if (sandboxId === "local") {
+					if (isLocalOrCloudMode()) {
 						return {
 							isCodeAgent: true,
 							sandboxId: sandboxId,

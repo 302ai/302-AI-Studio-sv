@@ -1,9 +1,8 @@
-import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
-import { type } from "arktype";
-import { getCodeAgentKy } from "./utils";
 import { createLogger } from "@shared/logger";
+import { type } from "arktype";
+import { getCodeAgentKy, isLocalOrCloudMode } from "./utils";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 export const deploySandboxRequestSchema = type({
 	sandbox_id: "string",
@@ -46,12 +45,11 @@ export async function deploySandboxProject(
 		const kyInstance = await getCodeAgentKy();
 
 		// Local mode doesn't need sandbox_id
-		const requestBody =
-			codeAgentState.type === "local"
-				? {
-						session_id: request.session_id,
-					}
-				: request;
+		const requestBody = isLocalOrCloudMode()
+			? {
+					session_id: request.session_id,
+				}
+			: request;
 
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const response: any = await kyInstance

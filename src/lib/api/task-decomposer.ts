@@ -1,9 +1,9 @@
+import { createLogger } from "@shared/logger";
 import type { ModelProvider } from "@shared/storage/provider";
 import type { Model } from "@shared/types";
 import ky from "ky";
-import { createLogger } from "@shared/logger";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 export interface DecomposeTaskRequest {
 	requirement: string;

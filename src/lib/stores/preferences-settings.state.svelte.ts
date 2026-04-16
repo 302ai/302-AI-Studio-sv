@@ -31,6 +31,8 @@ export interface PreferencesSettingsState {
 	// Context compression settings
 	contextCompressionEnabled: boolean;
 	contextCompressionLimit: number;
+	// Default phrasing
+	defaultPhrasing: string;
 }
 
 const getDefaults = (): PreferencesSettingsState => ({
@@ -57,6 +59,8 @@ const getDefaults = (): PreferencesSettingsState => ({
 	// Context compression defaults
 	contextCompressionEnabled: true,
 	contextCompressionLimit: 20,
+	// Default phrasing
+	defaultPhrasing: "empty",
 });
 
 const persistedPreferencesSettings = new PersistedState<PreferencesSettingsState>(
@@ -65,6 +69,10 @@ const persistedPreferencesSettings = new PersistedState<PreferencesSettingsState
 );
 
 class PreferencesSettingsManager {
+	get isHydrated(): boolean {
+		return persistedPreferencesSettings.isHydrated;
+	}
+
 	get state(): PreferencesSettingsState {
 		return persistedPreferencesSettings.current;
 	}
@@ -293,6 +301,17 @@ class PreferencesSettingsManager {
 		persistedPreferencesSettings.current = {
 			...persistedPreferencesSettings.current,
 			contextCompressionLimit: Math.max(5, Math.min(100, limit)), // Clamp between 5-100
+		};
+	}
+
+	get defaultPhrasing(): string {
+		return persistedPreferencesSettings.current.defaultPhrasing;
+	}
+
+	setDefaultPhrasing(value: string): void {
+		persistedPreferencesSettings.current = {
+			...persistedPreferencesSettings.current,
+			defaultPhrasing: value,
 		};
 	}
 

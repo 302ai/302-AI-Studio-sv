@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isLocalOrCloudMode } from "$lib/api/utils";
 	import { Button } from "$lib/components/ui/button";
 	import * as Dialog from "$lib/components/ui/dialog/index.js";
 	import * as Resizable from "$lib/components/ui/resizable/index.js";
@@ -158,10 +159,9 @@
 				// Only process if this is the target thread
 				if (threadId === chatState.id) {
 					chatState.isCreateSkillMode = true;
-					chatState.inputValue =
-						codeAgentState.type === "local"
-							? `${m.create_skill_prompt_local()}`
-							: `${m.create_skill_prompt()}`;
+					chatState.inputValue = isLocalOrCloudMode()
+						? `${m.create_skill_prompt_local()}`
+						: `${m.create_skill_prompt()}`;
 					await chatState.sendMessage();
 					chatState.isCreateSkillMode = false;
 				}

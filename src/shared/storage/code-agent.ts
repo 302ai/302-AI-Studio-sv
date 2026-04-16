@@ -1,6 +1,6 @@
 import { type } from "arktype";
 
-export const codeAgentType = type("'local' | 'remote'");
+export const codeAgentType = type("'local' | 'remote' | 'cloud'");
 export type CodeAgentType = typeof codeAgentType.infer;
 export const agentClass = type("'claude-code' | 'open-claw'");
 export type AgentClass = typeof agentClass.infer;
@@ -45,7 +45,7 @@ export const codeAgentMetadata = type({
 	 * remote agent only
 	 */
 	currentSessionId: "string",
-	sandboxId: "string",
+	sandboxId: "string | 'local' | 'cloud'",
 	sandboxRemark: "string",
 	skills: skill.array(),
 	/**
@@ -82,7 +82,7 @@ export const claudeCodeSessionInfo = type({
 export type ClaudeCodeSessionInfo = typeof claudeCodeSessionInfo.infer;
 
 export const claudeCodeSandboxInfo = type({
-	sandboxId: "string",
+	sandboxId: "string | 'local' | 'cloud'",
 	sandboxRemark: "string",
 	diskTotal: "number",
 	diskUsed: "number",

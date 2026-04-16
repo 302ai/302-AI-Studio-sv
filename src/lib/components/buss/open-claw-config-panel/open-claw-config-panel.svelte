@@ -14,19 +14,21 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/field";
 	import { m } from "$lib/paraglide/messages";
-	import { codeAgentGlobalConfigsState } from "$lib/stores/code-agent";
+	import { codeAgentGlobalConfigsState, codeAgentState } from "$lib/stores/code-agent";
+	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { RefreshCw } from "@lucide/svelte";
 	import { toast } from "svelte-sonner";
 	import SettingInputField from "../settings/setting-input-field.svelte";
-	import Wechat from "./channel/wechat.svelte";
+	import Wechat from "./channel/wechat/wechat.svelte";
 	import ConfirmDialog from "./confirm-dialog.svelte";
 	import { ApplyOpenClawChannelConfigConfirm } from "./hooks";
 
 	const { className }: Props = $props();
 
 	let confirmDialogOpen = $state(false);
-	let applyConfigLoading = $state(false);
+
+	let { state: _state } = $derived(cloudModeState.init());
 
 	let localFeishu = $state({
 		appId: codeAgentGlobalConfigsState.feishu.appId,
@@ -51,8 +53,8 @@
 		botToken: codeAgentGlobalConfigsState.discord.token,
 	});
 
-	let { handleConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
-		prepareAction: async () => {
+	let { handleConfirmDialogOk: handleLocalConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
+		action: async () => {
 			await codeAgentGlobalConfigsState
 				.batchUpdater()
 				.update("feishu", localFeishu)
@@ -67,9 +69,56 @@
 				.update("discord", { token: localDiscord.botToken })
 				.apply();
 			await window.electronAPI.openClawService.applyOpenClawChannelConfig();
+
+			if (
+				!codeAgentState.isPristineSession &&
+				localEnvState.openClawHealthStatus !== "unknown"
+			) {
+				await window.electronAPI.localVibeService.restartPodmanMachine();
+			}
 		},
 		open: (v) => (confirmDialogOpen = v),
-		loading: (v) => (applyConfigLoading = v),
+		loading: (_) => {},
+		error: (_) => {
+			toast.error(m.code_agent_local_container_not_started(), {
+				action: {
+					label: m.toast_button_start_sandbox(),
+					onClick: async () => {
+						await localEnvState.startSandbox();
+					},
+				},
+			});
+		},
+		succeed: () => {
+			toast.success(m.open_claw_config_update_success());
+		},
+	});
+
+	let { handleConfirmDialogOk: handleCloudConfirmDialogOk } = ApplyOpenClawChannelConfigConfirm({
+		action: async () => {
+			await codeAgentGlobalConfigsState
+				.batchUpdater()
+				.update("feishu", localFeishu)
+				.update("dingtalk", localDingtalk)
+				.update("qqbot", localQqbot)
+				.update("wecom", localWecom)
+				.update("telegram", {
+					accounts: {
+						default: { botToken: localTelegram.botToken },
+					},
+				})
+				.update("discord", { token: localDiscord.botToken })
+				.apply();
+			await window.electronAPI.openClawService.applyCloudClawChannelConfig();
+		},
+		open: (v) => (confirmDialogOpen = v),
+		loading: () => {},
+		error: (_) => {
+			toast.error(m.open_claw_cloud_host_error());
+		},
+		succeed: () => {
+			toast.success(m.open_claw_config_update_success());
+		},
 	});
 
 	const url = new URL(window.location.href);
@@ -77,10 +126,6 @@
 	let channelAccordion = $state(queryChannel || "");
 
 	const handleApplyBtn = () => {
-		if (!localEnvState.sandboxRunning) {
-			toast.error(m.code_agent_local_container_not_started());
-			return;
-		}
 		confirmDialogOpen = true;
 	};
 </script>
@@ -294,13 +339,15 @@
 {#snippet discord()}
 	<AccordionItem id="discord" value="discord" class="border-b-0 my-1">
 		<AccordionTrigger class="py-3.5 px-4 bg-input hover:no-underline">
-			<Label class=" font-normal no-underline cursor-pointer">Discord</Label>
+			<Label class=" font-normal no-underline cursor-pointer"
+				>{m.open_claw_channel_discord()}</Label
+			>
 		</AccordionTrigger>
 		<AccordionContent class="pb-0 pt-2 space-y-2">
 			<div class="rounded-lg border p-4 space-y-4">
 				<SettingInputField
-					label="Bot Token"
-					placeholder="请输入 Bot Token"
+					label={m.open_claw_discord_bot_token()}
+					placeholder={m.open_claw_discord_placeholder_bot_token()}
 					bind:value={localDiscord.botToken}
 					class="[&>label]:text-label-fg"
 				/>
@@ -311,7 +358,7 @@
 						>
 						<div class="text-muted-foreground/50">|</div>
 						<a
-							href="https://studio.302.ai/zh/docs/advanced/open-claw/telegram"
+							href="https://studio.302.ai/zh/docs/advanced/open-claw/discord"
 							class="text-primary hover:underline"
 							>{m.open_claw_feishu_view_deployment_tutorial()}</a
 						>
@@ -349,4 +396,8 @@
 	</AccordionItem>
 </Accordion>
 
-<ConfirmDialog bind:confirmDialogOpen bind:applyConfigLoading {handleConfirmDialogOk} />
+<ConfirmDialog
+	bind:confirmDialogOpen
+	{handleLocalConfirmDialogOk}
+	handleCloudConfirmDialogOk={_state.expired ? undefined : handleCloudConfirmDialogOk}
+/>

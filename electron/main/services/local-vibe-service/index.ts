@@ -201,7 +201,6 @@ export class LocalVibeService {
 		isOperating: boolean;
 		isOcHealth: boolean;
 	}> {
-		// sandboxStatus === 'running': verify with an actual health check
 		const result = await this.checkLocalSandboxHealth();
 		return {
 			isRunning: result.isHealth,

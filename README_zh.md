@@ -1,5 +1,5 @@
 <h1 align="center">
-<img src='./docs/imgs/icon.svg' width='30'>
+<img src='./imgs/icon.svg' width='30'>
 <span>
     302 AI Studio
 </span>
@@ -9,7 +9,7 @@
 <em>您的跨平台桌面 AI 应用，适用于 Windows、Mac 和 Linux。提供强大的通用 AI 能力，如代码生成、文档总结和智能问答，全面提升您的生产力。</em>
 </p>
 
-<p align="center"><a href="https://302.ai/" target="blank"><img src="docs/imgs/banner.png" /></a></p >
+<p align="center"><a href="https://302.ai/" target="blank"><img src="imgs/banner.png" /></a></p >
 
 <p align="center"><a href="README_zh.md">中文</a> | <a href="README.md">English</a> | <a href="README_ja.md">日本語</a></p>
 
@@ -26,27 +26,27 @@
 ### 主聊天界面
 
 简洁直观的对话界面，支持多模型切换、文件上传、工具调用等功能
-<img src="./docs/imgs/302_AI_Studio_screenshot_01.png" >
+<img src="./imgs/302_AI_Studio_screenshot_01.png" >
 
 ### 多标签管理
 
 左侧会话列表，右侧多标签对话窗口，轻松管理多个对话线程
-<img src="./docs/imgs/302_AI_Studio_screenshot_02.png" >
+<img src="./imgs/302_AI_Studio_screenshot_02.png" >
 
 ### AI 应用集成
 
 内置 302.AI 工具箱，一键快速打开各类 AI 应用，无需跳转浏览器
-<img src="./docs/imgs/302_AI_Studio_screenshot_03.png" >
+<img src="./imgs/302_AI_Studio_screenshot_03.png" >
 
 ### 设置与配置
 
 独立设置窗口，支持数据管理、Vibe 模式、Skills、MCP 服务器等配置
-<img src="./docs/imgs/302_AI_Studio_screenshot_04.png" >
+<img src="./imgs/302_AI_Studio_screenshot_04.png" >
 
 ### Vibe Coding
 
 支持实时预览 AI 生成的前端代码效果，所见即所得的开发体验
-<img src="./docs/imgs/302_AI_Studio_screenshot_05.png" >
+<img src="./imgs/302_AI_Studio_screenshot_05.png" >
 
 ## 🌟 主要特点
 

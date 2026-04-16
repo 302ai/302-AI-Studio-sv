@@ -4,16 +4,26 @@
 	import { LoaderCircle } from "@lucide/svelte";
 	let {
 		confirmDialogOpen = $bindable(false),
-		applyConfigLoading = $bindable(false),
-		handleConfirmDialogOk,
+		handleLocalConfirmDialogOk = undefined,
+		handleCloudConfirmDialogOk = undefined,
 	}: {
 		confirmDialogOpen: boolean;
-		applyConfigLoading: boolean;
-		handleConfirmDialogOk: () => void;
+		handleLocalConfirmDialogOk?: () => Promise<void>;
+		handleCloudConfirmDialogOk?: () => Promise<void>;
 	} = $props();
 
-	const handleDialogOk = () => {
-		handleConfirmDialogOk();
+	let loading = $state({
+		localLoading: false,
+		cloudLoading: false,
+	});
+
+	const commandFn = async (l: keyof typeof loading, command: () => Promise<void>) => {
+		loading[l] = true;
+		try {
+			await command();
+		} finally {
+			loading[l] = false;
+		}
 	};
 </script>
 
@@ -28,12 +38,28 @@
 
 		<AlertDialog.Footer>
 			<AlertDialog.Cancel>{m.common_cancel()}</AlertDialog.Cancel>
-			<AlertDialog.Action onclick={handleDialogOk} disabled={applyConfigLoading}>
-				{#if applyConfigLoading}
-					<LoaderCircle class="h-4 w-4 animate-spin" />
-				{/if}
-				{m.open_claw_update()}
-			</AlertDialog.Action>
+			{#if handleLocalConfirmDialogOk}
+				<AlertDialog.Action
+					onclick={() => commandFn("localLoading", handleLocalConfirmDialogOk)}
+					disabled={loading.localLoading}
+				>
+					{#if loading.localLoading}
+						<LoaderCircle class="h-4 w-4 animate-spin" />
+					{/if}
+					{m.open_claw_update()}{m.title_local()}
+				</AlertDialog.Action>
+			{/if}
+			{#if handleCloudConfirmDialogOk}
+				<AlertDialog.Action
+					onclick={() => commandFn("cloudLoading", handleCloudConfirmDialogOk)}
+					disabled={loading.cloudLoading}
+				>
+					{#if loading.cloudLoading}
+						<LoaderCircle class="h-4 w-4 animate-spin" />
+					{/if}
+					{m.open_claw_update()}{m.cloud_mode_instance()}
+				</AlertDialog.Action>
+			{/if}
 		</AlertDialog.Footer>
 	</AlertDialog.Content>
 </AlertDialog.Root>

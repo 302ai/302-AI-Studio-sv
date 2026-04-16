@@ -1,4 +1,5 @@
 import { createLogger } from "@shared/logger";
+import type { CodeAgentType } from "@shared/types";
 import type { UIMessage } from "ai";
 import { batchUploadFile } from "../apis/code-agent";
 
@@ -966,7 +967,7 @@ export function appendPromptToSystemMessage(
 export async function uploadAttachmentsFromMessages(
 	sandboxId: string,
 	workspacePath: string,
-	mode: string,
+	mode: CodeAgentType,
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	messages: any[],
 ): Promise<void> {

@@ -19,7 +19,7 @@
 	const logger = createLogger("ui");
 
 	interface Props {
-		label: string;
+		label?: string;
 		tips?: string;
 		value?: string | null | undefined;
 		isSystemPrompt?: boolean;
@@ -33,10 +33,12 @@
 		onBlur?: () => void;
 		topBar?: import("svelte").Snippet;
 		right?: import("svelte").Snippet;
+		readonly?: boolean;
+		resize?: boolean;
 	}
 
 	let {
-		label,
+		label = "",
 		tips,
 		value = $bindable(),
 		isSystemPrompt = false,
@@ -50,6 +52,8 @@
 		onBlur,
 		topBar,
 		right,
+		readonly = false,
+		resize = false,
 	}: Props = $props();
 
 	let composer: Composer | undefined = $state();
@@ -170,13 +174,18 @@
 				wrapperClass,
 			)}
 		>
-			<ContentEditable
-				className={cn(
-					"h-[150px] w-full resize-none overflow-auto px-3 py-2 text-sm leading-relaxed focus:outline-none",
-					"[&_p]:m-0 [&_p]:min-h-[1.5em]",
+			<div
+				class={cn(
+					"h-[150px] w-full",
+					"[&_p]:m-0 [&_p]:min-h-[1.5em] overflow-auto",
 					className,
+					resize && "resize-y",
 				)}
-			/>
+			>
+				<ContentEditable
+					className={`${readonly ? "pointer-events-none" : ""} h-full px-3 py-2 resize-none text-sm leading-relaxed focus:outline-none`}
+				/>
+			</div>
 			<RichTextPlugin />
 			<HistoryPlugin />
 

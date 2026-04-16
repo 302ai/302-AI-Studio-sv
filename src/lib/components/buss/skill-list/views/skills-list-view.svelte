@@ -618,7 +618,7 @@
 					<Grid3x3 class="h-4 w-4" />
 				{/if}
 			</Button>
-			{#if currentSandboxId && currentSandboxId !== "local"}
+			{#if currentSandboxId && !["local", "cloud"].includes(currentSandboxId)}
 				<Button variant="outline" class="gap-2" onclick={handleSync} disabled={isSyncing}>
 					<RefreshCw class="h-4 w-4 {isSyncing ? 'animate-spin' : ''}" />
 					{m.skills_sync()}

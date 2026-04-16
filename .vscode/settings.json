@@ -18,7 +18,7 @@
 	"i18n-ally.sourceLanguage": "zh",
 	"i18n-ally.keystyle": "flat",
 	// TypeScript configuration for auto-reloading generated files
-	"typescript.tsserver.watchOptions": {
+	"js/ts.tsserver.watchOptions": {
 		"watchFile": "useFsEvents",
 		"watchDirectory": "useFsEvents",
 		"fallbackPolling": "dynamicPriorityPolling",

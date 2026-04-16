@@ -3,6 +3,7 @@
 	import { Input } from "$lib/components/ui/input";
 	import { m } from "$lib/paraglide/messages";
 	import { claudeCodeSandboxState } from "$lib/stores/code-agent/claude-code-sandbox-state.svelte";
+	import { cloudModeSessionsState } from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
 	import { ChevronDown, Search } from "@lucide/svelte";
@@ -85,6 +86,61 @@
 			return { groups };
 		}
 
+		if (codeAgentState.type === "cloud") {
+			const groupedByWorkspace = new SvelteMap<
+				string,
+				{
+					groupLabel: string;
+					latestUsedAt: number;
+					items: HistorySessionItem[];
+				}
+			>();
+
+			for (const session of cloudModeSessionsState.sessions) {
+				const workspacePath =
+					session.workspace_path || m.local_platform_new_work_directory();
+				const groupKey = `local:${workspacePath}`;
+				const usedAt = new Date(session.used_at).getTime();
+
+				if (!groupedByWorkspace.has(groupKey)) {
+					groupedByWorkspace.set(groupKey, {
+						groupLabel: workspacePath,
+						latestUsedAt: isNaN(usedAt) ? 0 : usedAt,
+						items: [],
+					});
+				}
+
+				const group = groupedByWorkspace.get(groupKey)!;
+				if (!isNaN(usedAt) && usedAt > group.latestUsedAt) {
+					group.latestUsedAt = usedAt;
+				}
+
+				group.items.push({
+					key: session.session_id,
+					label: session.note || session.session_id,
+					value: session.session_id,
+					extra: session.used_at,
+				});
+			}
+
+			const groups = Array.from(groupedByWorkspace.entries())
+				.map(([groupKey, group]) => ({
+					groupKey,
+					groupLabel: group.groupLabel,
+					sandboxId: "local",
+					sandboxLabel: group.groupLabel,
+					latestUsedAt: group.latestUsedAt,
+					items: group.items.sort(
+						(a, b) =>
+							new Date(b.extra ?? 0).getTime() - new Date(a.extra ?? 0).getTime(),
+					),
+				}))
+				.sort((a, b) => b.latestUsedAt - a.latestUsedAt)
+				.map(({ latestUsedAt: _latestUsedAt, ...group }) => group);
+
+			return { groups };
+		}
+
 		return {
 			groups: claudeCodeSandboxState.groupedSessions.groups.map((group) => ({
 				groupKey: group.groupKey,
@@ -102,9 +158,7 @@
 	let groupSignature = $state("");
 
 	onMount(async () => {
-		if (codeAgentState.type === "local" && localClaudeCodeSandboxState.sessions.length === 0) {
-			await localClaudeCodeSandboxState.refreshSessions();
-		}
+		await codeAgentState.refreshSessions();
 	});
 
 	// Filter groups based on search query

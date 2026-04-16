@@ -819,17 +819,6 @@ export class AgentPreviewState {
 		this.sandBoxId = sandBoxId;
 		this.mode = "preview";
 		this.isSkillsOnlyMode = false;
-		// if (codeAgentState.currentAgentId === "open-claw") {
-		// 	const validTabs: AgentPreviewTab[] =
-		// 		codeAgentState.type === "local"
-		// 			? ["preview", "code", "terminal", "openclaw-webui"]
-		// 			: ["code", "terminal", "openclaw-webui"];
-		// 	this.activeTab = validTabs.includes(this.activeTab)
-		// 		? this.activeTab
-		// 		: codeAgentState.type === "local"
-		// 			? "preview"
-		// 			: "code";
-		// }
 		this.isVisible = true;
 	}
 

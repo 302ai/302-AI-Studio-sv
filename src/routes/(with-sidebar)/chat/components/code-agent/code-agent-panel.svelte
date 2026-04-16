@@ -2,13 +2,18 @@
 	export const platformOptions = [
 		{
 			key: "remote",
-			label: m.title_remote(),
-			description: m.title_remote_platform_description(),
+			label: m.platform_remote_label(),
+			description: m.platform_remote_description(),
+		},
+		{
+			key: "cloud",
+			label: m.platform_cloud_label(),
+			description: m.platform_cloud_description(),
 		},
 		{
 			key: "local",
-			label: m.title_local(),
-			description: m.title_local_platform_description(),
+			label: m.platform_local_label(),
+			description: m.platform_local_description(),
 		},
 	];
 	export const options: SelectOption[] = [
@@ -48,10 +53,13 @@
 	import { localEnvState } from "$lib/stores/code-agent/local-env-state.svelte";
 	import { type CodeAgentType } from "@shared/storage/code-agent";
 
+	import CloudRuningCard from "$lib/components/buss/local-agent-panel/cloud-runing-card.svelte";
 	import OpenClawChannelPanel from "$lib/components/buss/open-claw-config-panel/open-claw-channel-panel.svelte";
+	import { cloudModeSessionsState } from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
 	import { match } from "ts-pattern";
 	import { DEFAULT_WORKSPACE_PATH } from "../agent-preview/constants";
 	import ClaudeCodePanel from "./claude-code-panel.svelte";
+	import CloudModePanel from "./cloud-mode-panel.svelte";
 	import LocalModePanel from "./local-mode-panel.svelte";
 
 	let { onClose }: Props = $props();
@@ -85,6 +93,13 @@
 			.with("local", () => {
 				const sessionId = codeAgentState.currentSessionId;
 				const currentSession = localClaudeCodeSandboxState.sessions.find(
+					(s) => s.session_id === sessionId,
+				);
+				return currentSession?.note ?? currentSession?.session_id ?? m.title_new_chat();
+			})
+			.with("cloud", () => {
+				const sessionId = codeAgentState.currentSessionId;
+				const currentSession = cloudModeSessionsState.sessions.find(
 					(s) => s.session_id === sessionId,
 				);
 				return currentSession?.note ?? currentSession?.session_id ?? m.title_new_chat();
@@ -157,12 +172,10 @@
 
 			{#if displayType === "remote"}
 				<ClaudeCodePanel {onClose} />
-			{/if}
-			{#if displayType === "local"}
-				<!-- max-h-[500px] overflow-y-auto -->
-				<div class="pr-2">
-					<LocalModePanel {onClose} />
-				</div>
+			{:else if displayType === "local"}
+				<LocalModePanel {onClose} />
+			{:else if displayType === "cloud"}
+				<CloudModePanel {onClose} />
 			{/if}
 		</div>
 	</div>
@@ -204,6 +217,15 @@
 						</Button>
 					</div>
 				</div>
+			{/if}
+
+			{#if codeAgentState.type == "cloud"}
+				<section class="space-y-4">
+					<!-- Environment Cards Container -->
+					<div class="rounded-lg border p-4 space-y-4">
+						<CloudRuningCard />
+					</div>
+				</section>
 			{/if}
 
 			<div class="gap-settings-gap flex flex-col">

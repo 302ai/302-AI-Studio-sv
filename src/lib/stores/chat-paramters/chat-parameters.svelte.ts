@@ -1,4 +1,5 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
 import type {
 	ChatParameters as ChatParametersType,
 	ChatVariable,
@@ -6,7 +7,6 @@ import type {
 import type { LexicalEditor } from "lexical";
 import { SvelteSet } from "svelte/reactivity";
 
-// Get threadId from window.tab (same logic as chat-state.svelte.ts)
 const tab = window?.tab ?? null;
 const threadId =
 	tab &&
@@ -17,13 +17,23 @@ const threadId =
 		? tab.threadId
 		: "shell";
 
-const VALID_BUILTIN_TYPES = ["universal-type", "terse-and-effective-type", "deep-thinking-type"];
+const VALID_BUILTIN_TYPES = [
+	"empty",
+	"universal-type",
+	"terse-and-effective-type",
+	"deep-thinking-type",
+];
 
-const initialChatParameters: ChatParametersType = {
+const getDefaultSystemPromptPresetType = (): string => {
+	const fallback = preferencesSettings.defaultPhrasing;
+	return isValidPresetType(fallback) ? fallback : "empty";
+};
+
+const createInitialChatParameters = (): ChatParametersType => ({
 	systemPromptVariables: [],
 	systemPromptMap: {},
 	systemPromptContent: "",
-	systemPromptPresetType: "universal-type",
+	systemPromptPresetType: "",
 	systemPromptRawJson:
 		'{"root":{"children":[{"children":[],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0,"textStyle":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
 	userPromptTemplateVariables: ["input"],
@@ -31,11 +41,11 @@ const initialChatParameters: ChatParametersType = {
 	userPromptTemplateContent: "{{#input#}}",
 	userPromptTemplateRawJson:
 		'{"root":{"children":[{"children":[{"type":"variable-value","version":1,"variable":"input"}],"direction":null,"format":"","indent":0,"type":"paragraph","version":1,"textFormat":0,"textStyle":""}],"direction":null,"format":"","indent":0,"type":"root","version":1}}',
-};
+});
 
 export const persistedChatParametersState = new PersistedState<ChatParametersType>(
 	"app-chat-parameters:" + threadId,
-	initialChatParameters,
+	createInitialChatParameters(),
 );
 
 function isValidPresetType(type: string): boolean {
@@ -44,6 +54,7 @@ function isValidPresetType(type: string): boolean {
 
 class ChatParameters {
 	#isPresetUpdate = $state(false);
+	#hasEnsuredInitialization = false;
 
 	systemPromptEditorRef = $state<LexicalEditor | null>(null);
 	userPromptTemplateEditorRef = $state<LexicalEditor | null>(null);
@@ -57,10 +68,7 @@ class ChatParameters {
 	);
 	systemPromptPresetType = $derived.by(() => {
 		const type = persistedChatParametersState.current.systemPromptPresetType;
-		if (!isValidPresetType(type)) {
-			return "universal-type";
-		}
-		return type;
+		return isValidPresetType(type) ? type : "empty";
 	});
 	systemPromptRawJson = $derived.by(
 		() => persistedChatParametersState.current.systemPromptRawJson,
@@ -84,6 +92,26 @@ class ChatParameters {
 			...persistedChatParametersState.current,
 			...partial,
 		};
+	}
+
+	ensureInitialized() {
+		if (this.#hasEnsuredInitialization) return;
+		if (!persistedChatParametersState.isHydrated || !preferencesSettings.isHydrated) return;
+
+		const current = persistedChatParametersState.current;
+		const hasPreset = Boolean(current.systemPromptPresetType);
+		const hasContent = Boolean(current.systemPromptContent);
+		const hasVariables = current.systemPromptVariables.length > 0;
+
+		if (hasPreset || hasContent || hasVariables) {
+			this.#hasEnsuredInitialization = true;
+			return;
+		}
+
+		this.#updateState({
+			systemPromptPresetType: getDefaultSystemPromptPresetType(),
+		});
+		this.#hasEnsuredInitialization = true;
 	}
 
 	setSystemPromptEditorRef(editor: LexicalEditor | null) {
@@ -116,67 +144,54 @@ class ChatParameters {
 		this.#updateState({ userPromptTemplateMap: {} });
 	}
 
-	startPresetChange(type: string) {
-		this.#isPresetUpdate = true;
-		this.#updateState({ systemPromptPresetType: type });
+	setIsPresetUpdate(value: boolean) {
+		this.#isPresetUpdate = value;
 	}
 
-	private extractVariablesFromRawJson(rawJson: string): ChatVariable[] {
-		try {
-			const parsed = JSON.parse(rawJson);
-			const variableSet = new SvelteSet<ChatVariable>();
-
-			const findVariables = (node: unknown) => {
-				if (!node || typeof node !== "object") return;
-
-				if (
-					"type" in node &&
-					node.type === "variable-value" &&
-					"variable" in node &&
-					typeof node.variable === "string"
-				) {
-					variableSet.add(node.variable as ChatVariable);
-				}
-
-				if ("children" in node && Array.isArray(node.children)) {
-					for (const child of node.children) {
-						findVariables(child);
-					}
-				}
-			};
-
-			findVariables(parsed.root);
-			return Array.from(variableSet);
-		} catch {
-			return [];
-		}
+	startPresetChange(type: string) {
+		this.#isPresetUpdate = true;
+		this.#updateState({
+			systemPromptPresetType: type,
+			systemPromptMap: {},
+		});
 	}
 
 	handleEditorChange(content: string, rawJson: string, isSystemPrompt: boolean) {
-		let updates: Partial<ChatParametersType> = {};
+		const extractedVariables = this.extractVariablesFromRawJson(rawJson);
 
 		if (isSystemPrompt) {
-			updates = {
+			const updates: Partial<ChatParametersType> = {
 				systemPromptContent: content,
 				systemPromptRawJson: rawJson,
-				systemPromptVariables: this.extractVariablesFromRawJson(rawJson),
-				// Reset cached variable map when content changes
-				systemPromptMap: {},
+				systemPromptVariables: extractedVariables,
 			};
 
 			if (this.#isPresetUpdate) {
 				this.#isPresetUpdate = false;
+			} else {
+				updates.systemPromptMap = {};
 			}
+
+			this.#updateState(updates);
 		} else {
-			updates = {
+			this.#updateState({
 				userPromptTemplateContent: content,
 				userPromptTemplateRawJson: rawJson,
-				userPromptTemplateVariables: this.extractVariablesFromRawJson(rawJson),
+				userPromptTemplateVariables: extractedVariables,
 				userPromptTemplateMap: {},
-			};
+			});
 		}
+	}
 
-		this.#updateState(updates);
+	extractVariablesFromRawJson(rawJson: string): ChatVariable[] {
+		const varSet = new SvelteSet<ChatVariable>();
+		const matchAll = rawJson.matchAll(/"variable":"(.*?)"/g);
+		for (const match of matchAll) {
+			if (match[1]) {
+				varSet.add(match[1] as ChatVariable);
+			}
+		}
+		return Array.from(varSet);
 	}
 }
 

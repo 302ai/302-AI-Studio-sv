@@ -1,3 +1,4 @@
+import { createLogger } from "@shared/logger";
 import {
 	type CodeAgentConfigMetadata,
 	type CodeAgentGlobalConfigs,
@@ -5,13 +6,12 @@ import {
 	type CodingAgentClass,
 } from "@shared/storage/code-agent";
 import type { MigrationConfig } from "@shared/types";
-import { createLogger } from "@shared/logger";
-
-const logger = createLogger("services");
 import { prefixStorage } from "@shared/types";
 import { isNull } from "es-toolkit";
 import { StorageService } from "..";
 import { createMigrate } from "../migration-utils";
+
+const logger = createLogger("services");
 
 class CodeAgentStorage extends StorageService<CodeAgentConfigMetadata> {
 	constructor() {
@@ -126,18 +126,6 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 			return { isOK: false };
 		}
 	}
-
-	// async setLastAgentId(agentId: CodingAgentClass): Promise<{ isOK: boolean }> {
-	// 	try {
-	// 		const { data: currentData } = await this.getGlobalConfigs();
-	// 		const updatedData = { ...currentData, lastAgentId: agentId };
-	// 		await this.setItemInternal("code-agent-global-configs", updatedData);
-	// 		return { isOK: true };
-	// 	} catch (error) {
-	// 		logger.error("Error setting lastAgentId:", error);
-	// 		return { isOK: false };
-	// 	}
-	// }
 }
 
 export const codeAgentGlobalConfigsStorage = new CodeAgentGlobalConfigsStorage();

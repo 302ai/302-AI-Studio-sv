@@ -1,10 +1,9 @@
-import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 import { createLogger } from "@shared/logger";
 import { skill } from "@shared/types";
 import { type } from "arktype";
-import { getCodeAgentKy } from "../utils";
+import { getCodeAgentKy, isLocalOrCloudMode } from "../utils";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 function normalizeSkillRecord(value: unknown) {
 	if (!value || typeof value !== "object") {
@@ -69,17 +68,16 @@ export async function _listSkills(request: ListSkillsRequest): Promise<ListSkill
 		const kyInstance = await getCodeAgentKy();
 
 		// Local mode doesn't need sandbox_id
-		const searchParams =
-			codeAgentState.type === "local"
-				? {
-						session_id: sessionId,
-						project_path: projectPath,
-					}
-				: {
-						sandbox_id: sandboxId,
-						session_id: sessionId,
-						project_path: projectPath,
-					};
+		const searchParams = isLocalOrCloudMode()
+			? {
+					session_id: sessionId,
+					project_path: projectPath,
+				}
+			: {
+					sandbox_id: sandboxId,
+					session_id: sessionId,
+					project_path: projectPath,
+				};
 
 		const response = await kyInstance
 			.get("302/claude-code/skills/list", {
@@ -368,12 +366,11 @@ export async function syncSkills(request: SyncSkillsRequest): Promise<SyncSkills
 		const kyInstance = await getCodeAgentKy();
 
 		// Local mode doesn't need sandbox_id
-		const requestBody =
-			codeAgentState.type === "local"
-				? {
-						session_id: request.session_id,
-					}
-				: request;
+		const requestBody = isLocalOrCloudMode()
+			? {
+					session_id: request.session_id,
+				}
+			: request;
 
 		const response = await kyInstance
 			.post("302/claude-code/skills/sync", {

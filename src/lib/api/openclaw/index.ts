@@ -1,7 +1,7 @@
-import { getOpenClawCronJobResult, type OpenClawCronJobResultResponse } from "./base-apis";
 import { createLogger } from "@shared/logger";
+import { getOpenClawCronJobResult, type OpenClawCronJobResultResponse } from "./base-apis";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 let currentPollInterval: ReturnType<typeof setInterval> | null = null;
 

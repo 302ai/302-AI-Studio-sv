@@ -16,6 +16,7 @@ import {
 	tabService,
 	aiApplicationService,
 	appService,
+	cloudModeService,
 	dataService,
 	devLauncherService,
 	externalLinkService,
@@ -500,6 +501,26 @@ export function registerIpcHandlers() {
 		appService.deleteTempDir(event, dirPath),
 	);
 
+	// cloudModeService service registration
+	ipcMain.handle("cloudModeService:overrideCloudModeHealthPolling", (event, mode) =>
+		cloudModeService.overrideCloudModeHealthPolling(event, mode),
+	);
+	ipcMain.handle("cloudModeService:syncCloudInstanceToLocalByIpc", (event) =>
+		cloudModeService.syncCloudInstanceToLocalByIpc(event),
+	);
+	ipcMain.handle("cloudModeService:syncAndStartPollingByIpc", (event) =>
+		cloudModeService.syncAndStartPollingByIpc(event),
+	);
+	ipcMain.handle("cloudModeService:getCloudModeInstanceBaseUrlByIpc", (event) =>
+		cloudModeService.getCloudModeInstanceBaseUrlByIpc(event),
+	);
+	ipcMain.handle("cloudModeService:getHealthStatusByIpc", (event) =>
+		cloudModeService.getHealthStatusByIpc(event),
+	);
+	ipcMain.handle("cloudModeService:refreshHealthByIpc", (event) =>
+		cloudModeService.refreshHealthByIpc(event),
+	);
+
 	// dataService service registration
 	ipcMain.handle("dataService:importLegacyJson", (event) => dataService.importLegacyJson(event));
 	ipcMain.handle("dataService:exportStorage", (event) => dataService.exportStorage(event));
@@ -573,8 +594,17 @@ export function registerIpcHandlers() {
 	ipcMain.handle("openClawService:applyOpenClawChannelConfig", (event) =>
 		openClawService.applyOpenClawChannelConfig(event),
 	);
+	ipcMain.handle("openClawService:applyCloudClawChannelConfig", (event) =>
+		openClawService.applyCloudClawChannelConfig(event),
+	);
 	ipcMain.handle("openClawService:applyOpenClawBindingsConfig", (event, threadId) =>
 		openClawService.applyOpenClawBindingsConfig(event, threadId),
+	);
+	ipcMain.handle("openClawService:applyCloudClawBindingsConfig", (event, threadId) =>
+		openClawService.applyCloudClawBindingsConfig(event, threadId),
+	);
+	ipcMain.handle("openClawService:restartCloudOpenClaw", (event, instanceName) =>
+		openClawService.restartCloudOpenClaw(event, instanceName),
 	);
 	ipcMain.handle("openClawService:handleOpenClawWebUiReloadIpc", (event, tabId) =>
 		openClawService.handleOpenClawWebUiReloadIpc(event, tabId),
@@ -788,6 +818,12 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("appService:zipDirectory");
 	ipcMain.removeHandler("appService:createSkillTempDir");
 	ipcMain.removeHandler("appService:deleteTempDir");
+	ipcMain.removeHandler("cloudModeService:overrideCloudModeHealthPolling");
+	ipcMain.removeHandler("cloudModeService:syncCloudInstanceToLocalByIpc");
+	ipcMain.removeHandler("cloudModeService:syncAndStartPollingByIpc");
+	ipcMain.removeHandler("cloudModeService:getCloudModeInstanceBaseUrlByIpc");
+	ipcMain.removeHandler("cloudModeService:getHealthStatusByIpc");
+	ipcMain.removeHandler("cloudModeService:refreshHealthByIpc");
 	ipcMain.removeHandler("dataService:importLegacyJson");
 	ipcMain.removeHandler("dataService:exportStorage");
 	ipcMain.removeHandler("dataService:importStorage");
@@ -810,7 +846,10 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("notificationService:requestPermission");
 	ipcMain.removeHandler("openClawService:getOpenClawWebUiUrl");
 	ipcMain.removeHandler("openClawService:applyOpenClawChannelConfig");
+	ipcMain.removeHandler("openClawService:applyCloudClawChannelConfig");
 	ipcMain.removeHandler("openClawService:applyOpenClawBindingsConfig");
+	ipcMain.removeHandler("openClawService:applyCloudClawBindingsConfig");
+	ipcMain.removeHandler("openClawService:restartCloudOpenClaw");
 	ipcMain.removeHandler("openClawService:handleOpenClawWebUiReloadIpc");
 	ipcMain.removeHandler("openClawService:wechatInsalled");
 	ipcMain.removeHandler("openClawService:connectWechat");

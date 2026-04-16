@@ -771,8 +771,8 @@ export class TabService {
 					logger.info(
 						`[Privacy] Deleting private chat data for tab ${tab.id}, thread ${tab.threadId}`,
 					);
-					// Use unified cleanup method from ThreadStorage
-					await threadStorage.cleanupThreadData(tab.threadId);
+					// Use complete delete method to ensure metadata is also removed
+					await threadStorage.deleteThread(tab.threadId);
 					isPrivateChat = true;
 
 					// Track if we removed the active tab

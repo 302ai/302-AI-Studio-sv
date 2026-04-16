@@ -14,6 +14,7 @@ import {
 	type ThinkingBudgetType,
 } from "@shared/storage/code-agent";
 import { toast } from "svelte-sonner";
+import { match, P } from "ts-pattern";
 import { agentPreviewState } from "../agent-preview-state.svelte";
 import { persistedClaudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
@@ -275,26 +276,32 @@ class ClaudeCodeAgentState {
 	}
 
 	/**
-	 * 获取当前 session 的备注，支持 local 和 remote 模式
+	 * Get note for the current session, supports local, remote and cloud modes.
 	 */
 	#getCurrentSessionNote(): string | null {
-		if (codeAgentState.type === "local") {
-			const sessionId = this.currentSessionId;
-			if (!sessionId) return null;
-			const localSessions = persistedLocalClaudeCodeSessionsState.current;
-			const session = localSessions.find((s) => s.session_id === sessionId);
-			return session?.note ?? null;
-		}
-
-		// Remote 模式
-		const sandboxId = this.sandboxId;
-		const sessionId = this.currentSessionId;
-		const sandbox = persistedClaudeCodeSandboxState.current.find(
-			(s) => s.sandboxId === sandboxId,
-		);
-		if (!sandbox) return null;
-		const session = sandbox.sessionInfos.find((s) => s.sessionId === sessionId);
-		return session?.note ?? null;
+		return match(codeAgentState.type)
+			.with("local", () => {
+				const sessionId = this.currentSessionId;
+				if (!sessionId) return null;
+				const localSessions = persistedLocalClaudeCodeSessionsState.current;
+				const session = localSessions.find((s) => s.session_id === sessionId);
+				return session?.note ?? null;
+			})
+			.with("cloud", () => {
+				logger.info("[ClaudeCodeAgentState] getCurrentSessionNote: cloud mode placeholder");
+				return null;
+			})
+			.with("remote", () => {
+				const sandboxId = this.sandboxId;
+				const sessionId = this.currentSessionId;
+				const sandbox = persistedClaudeCodeSandboxState.current.find(
+					(s) => s.sandboxId === sandboxId,
+				);
+				if (!sandbox) return null;
+				const session = sandbox.sessionInfos.find((s) => s.sessionId === sessionId);
+				return session?.note ?? null;
+			})
+			.exhaustive();
 	}
 
 	async handleThreadTitleUpdated({ title }: { title: string }) {
@@ -344,19 +351,28 @@ class ClaudeCodeAgentState {
 		const sessionId = this.currentSessionId;
 		if (!sessionId) return "";
 
-		if (codeAgentState.type === "local") {
-			return (
-				persistedLocalClaudeCodeSessionsState.current.find(
-					(s) => s.session_id === sessionId,
-				)?.workspace_path ?? ""
-			);
-		}
-
-		return (
-			persistedClaudeCodeSandboxState.current
-				.find((s) => s.sandboxId === this.sandboxId)
-				?.sessionInfos.find((s) => s.sessionId === sessionId)?.workspacePath ?? ""
-		);
+		return match(codeAgentState.type)
+			.with("local", () => {
+				return (
+					persistedLocalClaudeCodeSessionsState.current.find(
+						(s) => s.session_id === sessionId,
+					)?.workspace_path ?? ""
+				);
+			})
+			.with("cloud", () => {
+				logger.info(
+					"[ClaudeCodeAgentState] resolveWorkspacePathFromSession: cloud mode placeholder",
+				);
+				return "";
+			})
+			.with("remote", () => {
+				return (
+					persistedClaudeCodeSandboxState.current
+						.find((s) => s.sandboxId === this.sandboxId)
+						?.sessionInfos.find((s) => s.sessionId === sessionId)?.workspacePath ?? ""
+				);
+			})
+			.exhaustive();
 	}
 
 	private updateState(partial: Partial<CodeAgentMetadata>): void {
@@ -379,12 +395,12 @@ class ClaudeCodeAgentState {
 	}
 
 	/**
-	 * 批量重置 session、sandbox ID 和工作区路径，避免配置混乱
+	 * Bulk reset session, sandbox ID and workspace path to avoid configuration confusion.
 	 */
 	resetSessionAndSandbox(type: CodeAgentType): void {
 		this.updateState({
 			currentSessionId: "",
-			sandboxId: type === "remote" ? "" : "local",
+			sandboxId: type === "remote" ? "" : type,
 			currentWorkspacePath: "",
 		});
 	}
@@ -492,9 +508,9 @@ class ClaudeCodeAgentState {
 	 * Local mode doesn't need sandbox verification - it returns a virtual sandboxInfo
 	 * with "local" sandboxId since local mode runs on the user's machine.
 	 */
-	handleLocalModeExecute(): { isOK: boolean; sandboxInfo: ClaudeCodeSandboxInfo } {
+	handleLocalOrCloudModeExecute(): { isOK: boolean; sandboxInfo: ClaudeCodeSandboxInfo } {
 		const sandboxInfo: ClaudeCodeSandboxInfo = {
-			sandboxId: "local",
+			sandboxId: codeAgentState.type, // "local" or "cloud"
 			sandboxRemark: "",
 			llmModel: this.model,
 			diskUsage: "normal",
@@ -524,40 +540,64 @@ class ClaudeCodeAgentState {
 			this.selectedSandboxId,
 			this.selectedSessionId,
 		];
-		const isListExistsSessionSkills =
-			selectedSandboxId !== "auto" && selectedSessionId !== "new";
 
 		const listSkillsResponse = await listSkills(
-			isListExistsSessionSkills
-				? {
-						sandboxId: selectedSandboxId,
-						sessionId: selectedSessionId,
-					}
-				: {},
+			match({ type: codeAgentState.type, sessionId: selectedSessionId })
+				.with({ type: "remote", sessionId: P.not("new") }, () => ({
+					sandboxId: selectedSandboxId,
+					sessionId: selectedSessionId,
+				}))
+				.with({ type: "cloud" }, () => {
+					logger.info(
+						"[ClaudeCodeAgentState] listClaudeCodeSkills: cloud mode placeholder",
+					);
+					return {};
+				})
+				.otherwise(() => ({})),
 		);
 
 		if (isInit) {
 			const skillsPineline = (skills: ListSkillsResponse) => {
-				// In local mode (claude-code / open-claw), auto-enable all skills by default
-				if (codeAgentState.type === "local") {
-					const { builtin_skills, user_skills } = skills;
-					return [...builtin_skills, ...user_skills];
-				}
-				const { builtin_skills } = skills;
-				return [...builtin_skills];
+				return match(codeAgentState.type)
+					.with("local", () => {
+						const { builtin_skills, user_skills } = skills;
+						return [...builtin_skills, ...user_skills];
+					})
+					.with("cloud", () => {
+						logger.info(
+							"[ClaudeCodeAgentState] listClaudeCodeSkills (isInit): cloud mode placeholder",
+						);
+						// Cloud mode initialization placeholder - for now only return builtin skills
+						const { builtin_skills } = skills;
+						return [...builtin_skills];
+					})
+					.with("remote", () => {
+						const { builtin_skills } = skills;
+						return [...builtin_skills];
+					})
+					.exhaustive();
 			};
 			this.updateSkills(skillsPineline(listSkillsResponse));
-		} else if (codeAgentState.type === "local") {
-			// In local mode, auto-use any new skills that aren't already in the used list.
-			// This ensures newly added skills default to "used" without re-adding
-			// skills that the user explicitly removed.
-			const { builtin_skills, user_skills } = listSkillsResponse;
-			const allAvailable = [...builtin_skills, ...user_skills];
-			const currentSkillNames = new Set(this.skills.map((s) => s.name));
-			const newSkills = allAvailable.filter((s) => !currentSkillNames.has(s.name));
-			if (newSkills.length > 0) {
-				this.handleSkillUse(newSkills);
-			}
+		} else {
+			match(codeAgentState.type)
+				.with("local", () => {
+					const { builtin_skills, user_skills } = listSkillsResponse;
+					const allAvailable = [...builtin_skills, ...user_skills];
+					const currentSkillNames = new Set(this.skills.map((s) => s.name));
+					const newSkills = allAvailable.filter((s) => !currentSkillNames.has(s.name));
+					if (newSkills.length > 0) {
+						this.handleSkillUse(newSkills);
+					}
+				})
+				.with("cloud", () => {
+					logger.info(
+						"[ClaudeCodeAgentState] listClaudeCodeSkills (update): cloud mode placeholder",
+					);
+				})
+				.with("remote", () => {
+					// No auto-use for remote mode currently
+				})
+				.exhaustive();
 		}
 
 		return listSkillsResponse;
@@ -627,6 +667,19 @@ class ClaudeCodeAgentState {
 			currentSessionId: sessionId === "new" ? "" : sessionId,
 			currentWorkspacePath: workspacePath === "new" ? "" : workspacePath,
 			sandboxId: "local", // Local mode doesn't use sandbox
+			isManualNote: false,
+		});
+	}
+
+	/**
+	 * Handle cloud mode enabled - similar to handleEnabled but for cloud mode.
+	 * Local mode doesn't use sandboxId.
+	 */
+	handleCloudEnabled(sessionId: string, workspacePath: string): void {
+		this.updateState({
+			currentSessionId: sessionId === "new" ? "" : sessionId,
+			currentWorkspacePath: workspacePath === "new" ? "" : workspacePath,
+			sandboxId: "cloud", // Cloud mode doesn't use sandbox
 			isManualNote: false,
 		});
 	}

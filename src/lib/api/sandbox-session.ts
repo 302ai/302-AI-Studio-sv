@@ -3,17 +3,16 @@
  * 302.AI 沙盒会话 API
  */
 
-import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
+import { createLogger } from "@shared/logger";
 import {
 	listLocalClaudeCodeSessionsResponse,
+	type CodeAgentType,
 	type ListLocalClaudeCodeSessionsResponse,
 } from "@shared/types";
 import { type } from "arktype";
-import { createLocalCodeAgentKy } from "./core/local-code-agent-ky";
-import { getCodeAgentKy } from "./utils";
-import { createLogger } from "@shared/logger";
+import { getCodeAgentKy, isLocalOrCloudMode } from "./utils";
 
-const logger = createLogger("ui");
+const logger = createLogger("apis");
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -21,7 +20,7 @@ const logger = createLogger("ui");
  * Strip `sandbox_id` in local mode (local sandbox doesn't use it).
  */
 function buildParams<T extends { sandbox_id: string }>(params: T): Omit<T, "sandbox_id"> | T {
-	if (codeAgentState.type === "local") {
+	if (isLocalOrCloudMode()) {
 		const { sandbox_id: _, ...rest } = params;
 		return rest;
 	}
@@ -172,14 +171,17 @@ export async function deleteSession(request: DeleteSessionRequest): Promise<Dele
 }
 
 /**
- * Delete a local session (always uses local ky instance, no global state dependency).
+ * Delete a local or cloud session (always uses local ky instance, no global state dependency).
  * Used by local-specific code paths.
  *
- * 删除本地对话（始终使用本地 ky 实例，不依赖全局状态）
+ * 删除本地或云端对话（始终使用本地 ky 实例，不依赖全局状态）
  */
-export async function deleteLocalSession(sessionId: string): Promise<DeleteSessionResult> {
+export async function deleteLocalOrCloudSession(
+	sessionId: string,
+	mode: CodeAgentType,
+): Promise<DeleteSessionResult> {
 	try {
-		const kyInstance = await createLocalCodeAgentKy();
+		const kyInstance = await getCodeAgentKy(mode);
 
 		const data = (await kyInstance
 			.delete("302/claude-code/sandbox/session", {
@@ -204,13 +206,15 @@ export async function deleteLocalSession(sessionId: string): Promise<DeleteSessi
 }
 
 /**
- * List local sessions (always uses local ky instance, no global state dependency).
+ * List local or cloud sessions (always uses local ky instance, no global state dependency).
  *
- * 列出本地会话（始终使用本地 ky 实例）
+ * 列出本地或云端会话（始终使用本地 ky 实例）
  */
-export async function listLocalSessions(): Promise<ListLocalClaudeCodeSessionsResponse> {
+export async function listLocalOrCloudSessions(
+	mode: CodeAgentType,
+): Promise<ListLocalClaudeCodeSessionsResponse> {
 	try {
-		const kyInstance = await createLocalCodeAgentKy();
+		const kyInstance = await getCodeAgentKy(mode);
 		const response = await kyInstance.get("302/claude-code/sandbox/session").json();
 
 		const validated = listLocalClaudeCodeSessionsResponse(response);
@@ -223,7 +227,7 @@ export async function listLocalSessions(): Promise<ListLocalClaudeCodeSessionsRe
 		}
 		return validated;
 	} catch (error) {
-		logger.error("Failed to list local claude code sessions:", error);
+		logger.error("Failed to list local or cloud claude code sessions:", error);
 		throw error;
 	}
 }

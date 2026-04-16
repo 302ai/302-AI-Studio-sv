@@ -1,6 +1,6 @@
+import { createLogger } from "@shared/logger";
 import { type } from "arktype";
 import ky from "ky";
-import { createLogger } from "@shared/logger";
 
 const logger = createLogger("apis");
 
@@ -23,7 +23,7 @@ export async function fetch302AIUserInfo(apiKey: string): Promise<Ai302UserInfo>
 	try {
 		const response = await ky
 			.get("https://dash-api.302.ai/user/info", {
-				timeout: 60000,
+				timeout: 180000,
 				retry: {
 					limit: 3,
 					methods: ["get"],
@@ -72,7 +72,7 @@ export async function fetch302AIToolList(
 	try {
 		const response = await ky
 			.get("https://dash-api.302.ai/gpt/api/tool/list", {
-				timeout: 60000,
+				timeout: 180000,
 				retry: {
 					limit: 3,
 					methods: ["get"],
@@ -196,7 +196,11 @@ export async function fetch302AIToolDetail(apiKey: string): Promise<Ai302ToolDet
 
 		const validated = ai302ToolDetailSchema(response);
 		if (validated instanceof type.errors) {
-			logger.error("Failed to validate 302.AI tool detail:", validated.summary);
+			logger.error(
+				"Failed to validate 302.AI tool detail:",
+				validated.summary,
+				JSON.stringify(response),
+			);
 			throw new Error("Invalid response format from 302.AI tool detail API");
 		}
 

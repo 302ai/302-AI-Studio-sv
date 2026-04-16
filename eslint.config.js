@@ -13,7 +13,13 @@ const gitignorePath = fileURLToPath(new URL("./.gitignore", import.meta.url));
 export default defineConfig([
 	includeIgnoreFile(gitignorePath),
 	{
-		ignores: ["src/routes/demo/**/*", ".claude/**/*"],
+		ignores: [
+			"src/routes/demo/**/*",
+			".claude/**/*",
+			".agents/**/*",
+			"packages/plugin-sdk/dist/**/*",
+			"**/*.d.ts",
+		],
 	},
 	js.configs.recommended,
 	...ts.configs.recommended,
@@ -59,7 +65,6 @@ export default defineConfig([
 		languageOptions: {
 			parser: svelteParser,
 			parserOptions: {
-				projectService: true,
 				extraFileExtensions: [".svelte"],
 				svelteConfig,
 				parser: {
@@ -76,7 +81,6 @@ export default defineConfig([
 		files: ["**/*.svelte.ts", "**/*.svelte.js"],
 		languageOptions: {
 			parserOptions: {
-				projectService: true,
 				parser: tsParser,
 			},
 		},

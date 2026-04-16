@@ -2,6 +2,7 @@ import { createLogger } from "@shared/logger";
 import {
 	createClaudeCodeSandboxResponse,
 	skill,
+	type CodeAgentType,
 	type CreateClaudeCodeSandboxRequest,
 	type CreateClaudeCodeSandboxResponse,
 	type Skill,
@@ -11,6 +12,7 @@ import JSZip from "jszip";
 import ky from "ky";
 import { _302AIKy } from "./core/_302ai-ky";
 import { localCodeAgentKy } from "./core/code-agent-ky";
+import { getCodeAgentKyByMode, getCodeAgentKyBySandboxId } from "./utils";
 
 const logger = createLogger("apis");
 
@@ -77,7 +79,8 @@ export async function updateClaudeCodeSandbox(
 	max_thinking_token?: number,
 ): Promise<UpdateClaudeCodeSandboxResponse> {
 	try {
-		const response = await (sandbox_id === "local" ? localCodeAgentKy : _302AIKy)
+		const kyInstance = getCodeAgentKyBySandboxId(sandbox_id);
+		const response = await kyInstance
 			.post("302/claude-code/sandbox/reset", {
 				json: {
 					sandbox_id,
@@ -243,13 +246,13 @@ export type AddMcpSchema = typeof addMcpSchemaResponse.infer;
 export async function addClaudeCodeSandboxMCP(
 	sandboxId: string,
 	MCPInfos: { url: string; name: string }[],
-	mode: string,
+	mode: CodeAgentType,
 ): Promise<AddMcpSchema> {
 	const commands = MCPInfos.map(
 		(info) => `claude mcp add --transport http ${info.name} ${info.url}`,
 	);
 	try {
-		const response = await (mode === "remote" ? _302AIKy : localCodeAgentKy)
+		const response = await getCodeAgentKyByMode(mode)
 			.post("302/claude-code/sandbox/mcp/add", {
 				json: { sandbox_id: sandboxId, mcp_servers: commands },
 			})
@@ -296,9 +299,9 @@ export type BatchUploadFileResponse = typeof batchUploadFileResponseSchema.infer
  */
 export async function batchUploadFile(
 	request: BatchUploadFileRequest,
-	mode: string,
+	mode: CodeAgentType,
 ): Promise<BatchUploadFileResponse> {
-	const response = await (mode === "remote" ? _302AIKy : localCodeAgentKy)
+	const response = await getCodeAgentKyByMode(mode)
 		.post("302/claude-code/sandbox/file/upload/batch", {
 			json: request,
 			timeout: 300000,

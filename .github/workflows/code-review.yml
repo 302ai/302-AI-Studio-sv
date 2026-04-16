@@ -1,9 +1,9 @@
-name: Code Review
+name: AI Code Review
 
 on:
     pull_request:
-        types: [opened, synchronize]
-        # 阶段 1：只在 feat/xxx → dev/版本号 的 PR 中触发
+        types: [opened, synchronize, reopened]
+        # Trigger on PRs targeting dev/* branches
         branches:
             - "dev/*"
 
@@ -11,13 +11,12 @@ permissions:
     contents: read
     pull-requests: write
     issues: write
-    id-token: write
 
 jobs:
-    code-review:
+    claude-code-review:
         runs-on: ubuntu-latest
-        # 仅审查从开发分支发起的 PR，跳过 dependabot 和自动化 PR
-        # 支持的分支前缀：feat/ fix/ refactor/ perf/ docs/ style/ test/ chore/ ci/ build/
+        # Only review PRs from feature branches, skip dependabot and automated PRs
+        # Supported branch prefixes: feat/ fix/ refactor/ perf/ docs/ style/ test/ chore/ ci/ build/
         if: |
             !startsWith(github.head_ref, 'dev/') &&
             !startsWith(github.head_ref, 'develop') &&
@@ -30,6 +29,7 @@ jobs:
               uses: actions/checkout@v4
               with:
                   fetch-depth: 0
+                  ref: ${{ github.event.pull_request.head.sha }}
 
             - name: Setup pnpm
               uses: pnpm/action-setup@v4
@@ -46,161 +46,79 @@ jobs:
                   NODE_OPTIONS: --max-old-space-size=8192
 
             - name: Run AI Code Review
+              id: claude_review
               uses: anthropics/claude-code-action@v1
               with:
                   anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-                  # 使用第三方 API 端点（如 302.AI 代理）
-                  # 在 GitHub repo Settings → Secrets 中设置 ANTHROPIC_BASE_URL
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  # Use third-party API endpoint (e.g., 302.AI proxy)
+                  # Set ANTHROPIC_BASE_URL in GitHub repo Settings → Secrets
                   claude_args: |
                       --model cc-sonnet-4-6
-                      --max-turns 3
-                      --allowedTools "Read,Grep,Glob,Bash(pnpm check),Bash(pnpm lint),Bash(pnpm exec svelte-check)"
-                      --disallowedTools "Edit,Write,Replace,NotebookEditCell"
-                  # 审查 prompt - 引用项目审查标准
+                      --max-turns 25
+                  show_full_output: true
                   prompt: |
-                      你是 302-AI-Studio 项目的 AI 代码审查专家。请审查这个 PR。
+                      You are a code reviewer for the 302-AI-Studio project. Review this PR.
 
-                      ## 审查流程
+                      ## Review Process
+                      1. Read the PR diff: git diff HEAD~1 HEAD
+                      2. Read CLAUDE.md for project standards
+                      3. Check for issues in these categories:
+                         - 🔴 Blockers: Security vulnerabilities, type safety issues, architecture violations
+                         - 🟡 Major: Svelte 5 patterns, IPC patterns, error handling
+                         - 🟢 Minor: Code quality, naming conventions
 
-                      1. 先阅读 PR 的 diff（变更内容）
-                      2. 阅读项目审查标准文件获取上下文：
-                         - AGENTS.md（项目概览和架构）
-                         - docs/decision-trees/code-location.md（代码位置规范）
-                         - docs/quality/quality-gates.md（质量门禁标准）
-                         - .agents/skills/electron/SKILL.md（Electron 最佳实践）
-                         - .agents/skills/sveltekit-svelte5-tailwind-skill/references/best-practices.md（Svelte5 最佳实践）
-                      3. 判断 PR 变更涉及的领域（Electron 主进程 / Renderer / Svelte / IPC / 共享代码）
-                      4. 按领域加载对应的审查清单，逐项审查
+                      ## Output Format
+                      Provide your review in markdown format with:
+                      - Summary of changes
+                      - Issues found (categorized by severity)
+                      - Recommendations
+                      - Use English for all output
 
-                      ## 🔴 Blocker（必须修复）
-
-                      ### 安全漏洞
-                      - 硬编码密钥、API key、token、密码（包括 `.env` 泄露）
-                      - SQL 注入、XSS、命令注入等 OWASP Top 10
-                      - Electron 安全违规：
-                        - `nodeIntegration: true`（必须为 false）
-                        - `contextIsolation: false`（必须为 true）
-                        - 直接暴露 `ipcRenderer` 给 renderer（必须通过 `contextBridge`）
-                        - 使用 `remote` 模块（已废弃，应禁止）
-                        - `webSecurity: false`（不应禁用）
-
-                      ### 类型安全
-                      - 使用 `any` 类型（用 `unknown` 或具体类型替代）
-                      - 函数缺少返回类型注解
-                      - `@ts-ignore` 或 `@ts-nocheck`（应避免，除非有明确注释说明原因）
-
-                      ### 架构违规
-                      - 代码放错目录（参考 docs/decision-trees/code-location.md）
-                      - IPC Service 不是标准类结构或缺少异步签名
-                      - Store 未使用 singleton 模式
-                      - 跨层直接依赖（如 renderer 直接 import electron 模块）
-
-                      ### Electron 特有
-                      - BrowserWindow 未设置 `webPreferences` 安全选项
-                      - `ipcMain.handle` / `ipcMain.on` 的回调缺少错误处理（未 try-catch）
-                      - 事件监听器未清理（导致内存泄漏）：
-                        - `ipcRenderer.on` 未对应 `ipcRenderer.removeListener`
-                        - `BrowserWindow.on` 未在 `closed` 时清理
-                        - `app.on` 全局监听器未管理生命周期
-                      - 主进程中阻塞操作（应使用异步 API 或 worker thread）
-                      - `webContents.send` 在窗口已销毁时调用（需先检查 `win.isDestroyed()`）
-
-                      ### 质量门禁
-                      - `console.log`（应使用 `createLogger()`）
-                      - `pnpm check` 或 `pnpm lint` 会报错的代码
-
-                      ## 🟡 Major（建议修复）
-
-                      ### Svelte 5 模式
-                      - 使用旧的 `on:click` 而非 `onclick`
-                      - 使用 `slot` 而非 `Snippet`
-                      - 未使用 `$state()`/`$derived()`/`$props()` runes
-                      - `$:` 响应式语句（应迁移到 `$derived` 或 `$effect`）
-                      - 组件内直接修改 props（应通过回调）
-
-                      ### Electron IPC 模式
-                      - IPC 传输大量数据（应考虑分块或流式传输）
-                      - 未使用 `ipcRenderer.invoke` 的双向通信（用了 send/on 模式）
-                      - preload 脚本未做 channel 白名单校验
-
-                      ### Import 规范
-                      - 未使用 `$lib`/`@shared` 路径别名
-                      - 相对路径超过 2 层（`../../..`）
-                      - 未使用的 import
-
-                      ### 错误处理
-                      - async 函数缺少 try-catch
-                      - Promise 未处理 rejection
-                      - 捕获错误后静默忽略（`catch {}`）
-
-                      ### 可访问性
-                      - 交互元素缺少 ARIA 标签
-                      - 键盘导航不可用
-                      - 颜色对比度不足
-
-                      ## 🟢 Minor（可选改进）
-
-                      ### 代码质量
-                      - 函数过长（超过 50 行考虑拆分）
-                      - 重复代码（3 处以上相同模式应提取为工具函数）
-                      - 嵌套过深（超过 3 层 if/for 应提取子函数）
-                      - 魔术数字（应提取为命名常量）
-                      - 命名不清晰（`data`, `temp`, `foo` 等泛化名称）
-
-                      ### 命名规范
-                      - 变量/函数：camelCase
-                      - 类/接口/类型：PascalCase
-                      - 文件：kebab-case
-                      - 常量：UPPER_SNAKE_CASE
-
-                      ### 样式规范
-                      - 未使用 CSS 变量或 Tailwind
-                      - 硬编码颜色值（应使用 CSS 变量）
-                      - 内联样式（应使用 class）
-
-                      ### 国际化
-                      - 用户可见文本未使用 `$lib/paraglide/messages`
-                      - 新增的 i18n key 未同时添加到 `messages/en.json` 和 `messages/zh.json`
-
-                      ### 测试
-                      - 新增功能缺少测试
-                      - 关键路径（IPC、状态管理、数据转换）缺少测试
-
-                      ## 输出格式
-
-                      请按以下格式输出审查结果：
-
-                      ```
-                      ## 🤖 AI Code Review
-
-                      ### 摘要
-                      一句话总结这个 PR 的变更内容和整体质量评估。
-
-                      ### 审查结果
-
-                      #### 🔴 Blocker（如有）
-                      - **文件路径:行号** — 问题描述
-                        > 修复建议：具体修复方式
-
-                      #### 🟡 Major（如有）
-                      - **文件路径:行号** — 问题描述
-                        > 修复建议：具体修复方式
-
-                      #### 🟢 Minor（如有）
-                      - **文件路径:行号** — 问题描述
-                        > 修复建议：具体修复方式
-
-                      ### 总体评价
-                      ✅ 可以合并 / ⚠️ 修复后可合并 / ❌ 需要重大修改
-                      ```
-
-                      如果没有发现任何问题，给出简洁的 ✅ 审查通过。
-
-                      ## 注意事项
-                      - 只审查 PR 中实际变更的代码，不要审查未变更的文件
-                      - 每个问题必须包含具体的文件路径和行号
-                      - 修复建议要具体可执行，不要泛泛而谈
-                      - 根据变更涉及的领域选择性加载对应审查标准，不必全部检查
-                      - 用中文输出审查结果
+                      Your output will be posted as a PR comment automatically.
               env:
                   ANTHROPIC_BASE_URL: ${{ secrets.ANTHROPIC_BASE_URL }}
+
+            - name: Post Review Comment
+              if: always()
+              uses: actions/github-script@v7
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  script: |
+                      const fs = require('fs');
+                      const logPath = '/home/runner/work/_temp/claude-execution-output.json';
+
+                      let reviewContent = '';
+
+                      try {
+                          const logData = fs.readFileSync(logPath, 'utf8');
+                          const messages = JSON.parse(logData);
+
+                          // Find the result message with review content
+                          const resultMsg = messages.find(msg =>
+                              msg.type === 'result' &&
+                              msg.subtype === 'success' &&
+                              msg.result
+                          );
+
+                          if (resultMsg) {
+                              reviewContent = resultMsg.result;
+                          } else {
+                              reviewContent = '⚠️ No review content found';
+                          }
+                      } catch (error) {
+                          reviewContent = `❌ Failed to read review results: ${error.message}`;
+                      }
+
+                      // Add header if not present
+                      const finalContent = reviewContent.includes('🤖 AI Code Review')
+                          ? reviewContent
+                          : '## 🤖 AI Code Review\n\n' + reviewContent;
+
+                      // Post comment
+                      await github.rest.issues.createComment({
+                          owner: context.repo.owner,
+                          repo: context.repo.repo,
+                          issue_number: context.issue.number,
+                          body: finalContent
+                      });
