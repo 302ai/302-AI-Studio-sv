@@ -11,7 +11,7 @@ export const getDefaultInstanceInfo = (): InstanceInfo => ({
 	publicIp: "",
 	createdAt: "",
 	expiredAt: "",
-	expired: true,
+	expired: false,
 	apiPort: 0,
 	ocPort: 0,
 	status: "disabled",

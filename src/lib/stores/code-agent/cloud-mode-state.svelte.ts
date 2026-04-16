@@ -21,7 +21,7 @@ export const getDefaultInstanceInfo = (): InstanceInfo => ({
 	publicIp: "",
 	createdAt: "",
 	expiredAt: "",
-	expired: true,
+	expired: false,
 	apiPort: 0,
 	ocPort: 0,
 	status: "disabled",
@@ -39,7 +39,7 @@ class CloudModeStateManager {
 	state = $derived({
 		instanceName: persistedCloudModeState.current?.instanceName ?? "",
 		status: persistedCloudModeState.current?.status ?? "disabled",
-		expired: persistedCloudModeState.current?.expired ?? true,
+		expired: persistedCloudModeState.current?.expired ?? false,
 		publicIp: persistedCloudModeState.current?.publicIp ?? "",
 		createdAt: persistedCloudModeState.current?.createdAt ?? "",
 		expiredAt: persistedCloudModeState.current?.expiredAt ?? "",
