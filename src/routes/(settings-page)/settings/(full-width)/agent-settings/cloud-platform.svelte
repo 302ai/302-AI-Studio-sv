@@ -94,7 +94,7 @@
 	}
 
 	async function handleAutoRenewChange(checked: boolean) {
-		if (!cloudState.instanceName || cloudState.expired) return;
+		if (!cloudState.instanceName) return;
 		try {
 			await cloudModeState.updateAutoRenew(checked);
 		} catch (e) {
