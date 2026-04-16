@@ -118,29 +118,15 @@ class CloudModeStateManager {
 	 */
 	private async afterInstanceOperation(): Promise<void> {
 		try {
-			// 1. Set 30s buffer period to allow OpenClaw to start
-			// During buffer, ignore non-ok health status to prevent UI flickering
-			this.#bufferTimeout = setTimeout(() => {
-				this.#bufferTimeout = null;
-			}, 30000);
-
-			// Set initial "starting" state during buffer period
-			this.openClaw.status = false;
-			this.openClaw.api_status = false;
-
-			// 2. Sync instance info and start polling
+			// 1. Sync instance info and start polling
 			const res = await window.electronAPI.cloudModeService.syncAndStartPollingByIpc();
 			if (!res.isOk) {
 				logger.warn("[CloudModeStateManager] Sync after operation failed");
 			}
 
-			// 3. Immediately refresh health status (don't wait for 30s polling)
-			await window.electronAPI.cloudModeService.refreshHealthByIpc();
+			// 2. Immediately refresh health status (don't wait for 30s polling)
+			// await window.electronAPI.cloudModeService.refreshHealthByIpc();
 		} catch (e) {
-			if (this.#bufferTimeout) {
-				clearTimeout(this.#bufferTimeout);
-				this.#bufferTimeout = null;
-			}
 			logger.error("[CloudModeStateManager] afterInstanceOperation failed:", e);
 		}
 	}

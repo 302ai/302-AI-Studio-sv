@@ -40,14 +40,15 @@ export class CloudModeService {
 			logger.info("[CloudModeService] No instance found, polling not started");
 			return;
 		}
-
+		const resolvedMode = mode || (instance.status !== "running" ? "fast" : "normal");
 		// Start polling if instance name exists (even if expired, need to monitor state changes)
 		if (instance.instanceName) {
-			// If mode isn't explicitly provided, default to fast if not running, normal if running
-			const resolvedMode = mode || (instance.status !== "running" ? "fast" : "normal");
-			this.startPolling(resolvedMode);
 			logger.info("[CloudModeService] Polling started for instance:", instance.instanceName);
+		} else {
+			logger.info("[CloudModeService] No instance name found, polling not started");
 		}
+
+		this.startPolling(resolvedMode);
 	}
 
 	/**
@@ -79,7 +80,7 @@ export class CloudModeService {
 		// Health check every 30 seconds
 		schedulerService.addTask(
 			"cloud-mode-health-polling",
-			CRON_EXPRESSION.EVERY_30_SECONDS,
+			CRON_EXPRESSION.EVERY_15_SECONDS,
 			async () => {
 				logger.info("[CloudModeService] Starting health poll");
 				await this.fetchAndBroadcastHealth();
