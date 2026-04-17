@@ -19,6 +19,7 @@
 	import { CalendarDate, type DateValue } from "@internationalized/date";
 	import { Calendar as CalendarIcon, LoaderCircle } from "@lucide/svelte";
 	import { createLogger } from "@shared/logger";
+	import { isUndefined } from "es-toolkit";
 	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
@@ -38,10 +39,12 @@
 	let openExportDialog = $state(false);
 	let isExporting = $state(false);
 
-	const now = new Date();
-	let selectedDate = $state<DateValue>(
-		new CalendarDate(now.getFullYear(), now.getMonth() + 1, now.getDate()),
+	const today = new CalendarDate(
+		new Date().getFullYear(),
+		new Date().getMonth() + 1,
+		new Date().getDate(),
 	);
+	let selectedDate = $state<DateValue | undefined>(today);
 	let startHour = $state("0");
 	let endHour = $state("24");
 
@@ -59,17 +62,19 @@
 
 	const calendarLocale = $derived(getLocale() === "zh" ? "zh-CN" : "en-US");
 
+	// Reset to today when date is cleared (e.g., user cancels selection)
+	$effect(() => {
+		if (isUndefined(selectedDate)) {
+			selectedDate = today;
+		}
+	});
+
 	// Calendar date range: last 14 days
-	const minDate = $derived(
-		new CalendarDate(now.getFullYear(), now.getMonth() + 1, now.getDate()).subtract({
-			days: 13,
-		}),
-	);
-	const maxDate = $derived(
-		new CalendarDate(now.getFullYear(), now.getMonth() + 1, now.getDate()),
-	);
+	const minDate = $derived(today.subtract({ days: 13 }));
+	const maxDate = $derived(today);
 
 	async function handleExportLogs() {
+		if (isUndefined(selectedDate)) return;
 		try {
 			isExporting = true;
 			const dateStr = `${selectedDate.year}-${String(selectedDate.month).padStart(2, "0")}-${String(selectedDate.day).padStart(2, "0")}`;
@@ -240,10 +245,9 @@
 							class="w-full justify-start text-left font-normal"
 						>
 							<CalendarIcon class="mr-2 h-4 w-4" />
-							{selectedDate.year}-{String(selectedDate.month).padStart(
-								2,
-								"0",
-							)}-{String(selectedDate.day).padStart(2, "0")}
+							{!isUndefined(selectedDate)
+								? `${selectedDate.year}-${String(selectedDate.month).padStart(2, "0")}-${String(selectedDate.day).padStart(2, "0")}`
+								: m.about_export_logs_date()}
 						</Button>
 					</Popover.Trigger>
 					<Popover.Content class="w-auto p-0">
