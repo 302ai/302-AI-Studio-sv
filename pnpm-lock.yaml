@@ -99,6 +99,9 @@ importers:
       '@opendocsg/pdf2md':
         specifier: ^0.2.2
         version: 0.2.2(encoding@0.1.13)
+      '@openuidev/lang-core':
+        specifier: ^0.2.2
+        version: 0.2.2(@modelcontextprotocol/sdk@1.20.0)(zod@4.3.6)
       '@openuidev/svelte-lang':
         specifier: ^0.1.0
         version: 0.1.0(@modelcontextprotocol/sdk@1.20.0)(svelte@5.39.2)
@@ -2033,6 +2036,15 @@ packages:
     resolution: {integrity: sha512-ZNkNBrNPGL2VYvT1RpHueKWZozRUIDWMjRFiPcVAc5q6Ul0zcxF1meIWd3K0qbgqlGQbciB2K7oczyjB5ZkZvw==}
     peerDependencies:
       '@modelcontextprotocol/sdk': '>=1.0.0'
+    peerDependenciesMeta:
+      '@modelcontextprotocol/sdk':
+        optional: true
+
+  '@openuidev/lang-core@0.2.2':
+    resolution: {integrity: sha512-0er0fsoesuWR06OemF7Gsd2CzW22nEZ+8TQfRNcwp3qe74U2cuD5XD1qHKLUM+rkdLxeMaUoVm5h1wlnJYDU0Q==}
+    peerDependencies:
+      '@modelcontextprotocol/sdk': '>=1.0.0'
+      zod: ^3.25.0 || ^4.0.0
     peerDependenciesMeta:
       '@modelcontextprotocol/sdk':
         optional: true
@@ -9103,6 +9115,12 @@ snapshots:
   '@opentelemetry/api@1.9.0': {}
 
   '@openuidev/lang-core@0.1.2(@modelcontextprotocol/sdk@1.20.0)':
+    dependencies:
+      zod: 4.3.6
+    optionalDependencies:
+      '@modelcontextprotocol/sdk': 1.20.0
+
+  '@openuidev/lang-core@0.2.2(@modelcontextprotocol/sdk@1.20.0)(zod@4.3.6)':
     dependencies:
       zod: 4.3.6
     optionalDependencies:

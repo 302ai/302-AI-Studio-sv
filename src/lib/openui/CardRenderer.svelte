@@ -13,8 +13,8 @@
 		class?: string;
 		title?: string;
 		description?: string;
-		footer?: string;
 		children?: unknown;
+		footer?: string;
 	};
 
 	let { props, renderNode }: ComponentRenderProps<OpenUICardProps> = $props();

@@ -22,8 +22,8 @@ Avatar(class?: string, src?: string, alt?: string, fallback?: string) — A user
 Badge(class?: string, variant?: "default" | "secondary" | "destructive" | "outline", href?: string, text?: string, children?) — A small status badge
 BarChart(title?: string, description?: string, labels?: string[], series?: {label?: string, values: number[], color?: string}[], height?: number, showLegend?: boolean, class?: string) — A categorical comparison chart using vertical bars
 Button(class?: string, variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link", size?: "default" | "sm" | "lg" | "icon" | "icon-sm" | "icon-lg", href?: string, type?: "button" | "submit" | "reset", disabled?: boolean, children?) — A normal button
-Card(class?: string, title?: string, description?: string, footer?: string, children?) — A general purpose content container
-ChatPanel(title?: string, description?: string, class?: string, variant?: "default" | "subtle", children?) — A chat-oriented panel container with optional header and nested content
+Card(class?: string, title?: string, description?: string, children?, footer?: string) — A general purpose content container
+ChatPanel(title?: string, description?: string, class?: string, children?) — A chat-oriented panel container with optional header and nested content
 Checkbox(class?: string, checked?: boolean, indeterminate?: boolean, disabled?: boolean, required?: boolean, name?: string, value?: string) — A checkbox input
 Collapsible(open?: boolean, label?: string, content?: string, class?: string) — A disclosure section that can expand or collapse
 DoughnutChart(title?: string, description?: string, items?: {label: string, value: number, color?: string}[], height?: number, showLegend?: boolean, class?: string) — A circular chart for share or composition data
@@ -66,5 +66,4 @@ Before finishing, walk your output and verify:
 1. root = ChatPanel(...) is the FIRST line (for optimal streaming).
 2. Every referenced name is defined. Every defined name (other than root) is reachable from root.
 `;
-
 export default OPENUI_SYSTEM_PROMPT;
