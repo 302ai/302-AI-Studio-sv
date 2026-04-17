@@ -154,6 +154,7 @@
 		"archiver": "^7.0.1",
 		"arktype": "^2.1.22",
 		"browser-image-compression": "^2.0.2",
+		"chart.js": "^4.5.1",
 		"codemirror": "^6.0.2",
 		"croner": "^9.1.0",
 		"date-fns": "^4.1.0",
