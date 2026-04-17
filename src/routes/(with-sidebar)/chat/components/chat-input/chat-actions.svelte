@@ -15,8 +15,10 @@
 		TooltipProvider,
 		TooltipTrigger,
 	} from "$lib/components/ui/tooltip";
+	import OPENUI_SYSTEM_PROMPT from "$lib/openui/system-prompt";
 	import { m } from "$lib/paraglide/messages.js";
 	import { agentPreviewState } from "$lib/stores/agent-preview-state.svelte";
+	import { chatParameters } from "$lib/stores/chat-paramters/chat-parameters.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
@@ -27,6 +29,7 @@
 	import { cn } from "$lib/utils";
 	import mcpIcon from "@lobehub/icons-static-svg/icons/mcp.svg";
 	import {
+		Blocks,
 		ClipboardList,
 		Globe,
 		Lightbulb,
@@ -56,6 +59,7 @@
 	let addingMCP = $state(false);
 
 	let isThinkingBudgetOpen = $state(false);
+	let isOpenUIActive = $derived(chatParameters.systemPromptContent === OPENUI_SYSTEM_PROMPT);
 	let skillsData = $state<Omit<ListSkillsResponse, "success" | "project_skills">>({
 		builtin_skills: [],
 		user_skills: [],
@@ -121,6 +125,10 @@
 		}
 
 		agentPreviewState.openOpenClawWebUiTab();
+	}
+
+	function handleOpenUIToggle() {
+		chatParameters.setSystemPromptContent(isOpenUIActive ? "" : OPENUI_SYSTEM_PROMPT);
 	}
 
 	function handlePlanModeToggle() {
@@ -347,6 +355,30 @@
 			{disabled}
 		>
 			<Sparkles class={cn(quickPromptState.isOpen && "!text-chat-action-active-fg")} />
+		</ButtonWithTooltip>
+	{/if}
+{/snippet}
+
+{#snippet actionOpenUI(isMenu = false)}
+	{#if isMenu}
+		{@render menuButton({
+			icon: Blocks,
+			label: "OpenUI",
+			active: isOpenUIActive,
+			onclick: handleOpenUIToggle,
+			disabled,
+		})}
+	{:else}
+		<ButtonWithTooltip
+			class={cn(
+				"hover:!bg-chat-action-hover",
+				isOpenUIActive && "!bg-chat-action-active hover:!bg-chat-action-active",
+			)}
+			tooltip="OpenUI"
+			onclick={handleOpenUIToggle}
+			{disabled}
+		>
+			<Blocks class={cn(isOpenUIActive && "!text-chat-action-active-fg")} />
 		</ButtonWithTooltip>
 	{/if}
 {/snippet}
@@ -598,6 +630,10 @@
 			<div class="flex flex-col gap-0.5">
 				{@render actionOpenQuickPrompt(true)}
 
+				{#if !codeAgentState.enabled}
+					{@render actionOpenUI(true)}
+				{/if}
+
 				{#if !codeAgentState.enabled && chatState.providerType === "302ai"}
 					{@render actionEnableOnlineSearch(true)}
 					{@render actionEnableThinking(true)}
@@ -642,6 +678,10 @@
 	{:else}
 		<div class="flex items-center gap-chat-bar-gap shrink-0">
 			{@render actionOpenQuickPrompt()}
+
+			{#if !codeAgentState.enabled}
+				{@render actionOpenUI()}
+			{/if}
 
 			{#if !codeAgentState.enabled && chatState.providerType === "302ai"}
 				{@render actionEnableOnlineSearch()}

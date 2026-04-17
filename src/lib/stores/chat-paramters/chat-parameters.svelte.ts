@@ -140,6 +140,15 @@ class ChatParameters {
 		this.#updateState({ systemPromptMap: {} });
 	}
 
+	setSystemPromptContent(content: string) {
+		this.#updateState({
+			systemPromptContent: content,
+			systemPromptPresetType: "empty",
+			systemPromptVariables: [],
+			systemPromptMap: {},
+		});
+	}
+
 	clearUserPromptTemplateMap() {
 		this.#updateState({ userPromptTemplateMap: {} });
 	}
