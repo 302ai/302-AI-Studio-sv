@@ -47,84 +47,77 @@
 </script>
 
 {#if loading.init}
-	<Skeleton class="h-5 w-32" />
-	<div class="rounded-lg border p-5 space-y-5">
-		<div class="space-y-3">
-			<div class="flex items-center gap-3">
-				<Skeleton class="h-4 w-18" />
-				<Skeleton class="h-4 w-20" />
-			</div>
-			<div class="flex items-center gap-3">
-				<Skeleton class="h-4 w-18" />
-				<Skeleton class="h-4 w-20" />
-			</div>
-			<div class="flex items-center gap-3">
-				<Skeleton class="h-4 w-18" />
-				<Skeleton class="h-4 w-20" />
-			</div>
+	<Skeleton class="h-4 w-18" />
+	<div class="rounded-lg border p-4 space-y-4">
+		<div class="flex items-center gap-3">
+			<Skeleton class="h-4 w-18" />
+			<Skeleton class="h-4 w-14" />
+		</div>
+		<div class="flex items-center gap-3">
+			<Skeleton class="h-4 w-18" />
+			<Skeleton class="h-4 w-14" />
+		</div>
+		<div class="flex items-center gap-3">
+			<Skeleton class="h-4 w-18" />
+			<Skeleton class="h-4 w-14" />
 		</div>
 	</div>
 {:else}
 	<Label class="text-label-fg font-normal">{m.local_platform_environment_monitoring()}</Label>
-	<div class="rounded-lg border p-5 space-y-5">
-		<div class="flex items-start justify-between gap-4">
-			<div class="flex-1 space-y-3">
-				<div class="flex items-center gap-2 mb-2!">
-					<Label class="text-muted-foreground min-w-18 font-normal"
-						>{m.agent_settings_instance_status()}</Label
+	<div class="rounded-lg border p-4">
+		<div class="flex flex-col gap-2">
+			<div class="flex items-center gap-2">
+				<Label class="text-muted-foreground min-w-18 font-normal"
+					>{m.agent_settings_instance_status()}</Label
+				>
+				<StatusIndicator
+					status={healthProps.status}
+					text={healthProps.text}
+					warningTooltip={m.cloud_mode_unhealthy()}
+				/>
+
+				{#if !cloudState.expired && cloudState.instanceName && cloudState.status == "running"}
+					<ButtonWithTooltip
+						onclick={() => (showRestartMachineDialog = true)}
+						tooltip={m.cloud_mode_reboot_instance()}
+						class="hover:!bg-icon-btn-hover size-6 !rounded-lg"
 					>
-					<StatusIndicator
-						status={healthProps.status}
-						text={healthProps.text}
-						warningTooltip={m.cloud_mode_unhealthy()}
-					/>
-					<div class="relative size-5">
-						{#if !cloudState.expired && cloudState.instanceName && cloudState.status == "running"}
-							<ButtonWithTooltip
-								onclick={() => (showRestartMachineDialog = true)}
-								tooltip={m.cloud_mode_reboot_instance()}
-								class="hover:!bg-icon-btn-hover size-8 absolute top-[-30%] left-0"
-							>
-								<RefreshCw
-									class={cn("size-4", loading.restart && "animate-spin")}
-								/>
-							</ButtonWithTooltip>
-						{/if}
-					</div>
+						<RefreshCw class={cn("size-3.5", loading.restart && "animate-spin")} />
+					</ButtonWithTooltip>
+				{/if}
+			</div>
+			<div class="flex items-center gap-2">
+				<Label class="text-muted-foreground min-w-18 font-normal"
+					>{m.cloud_mode_openclaw_status()}</Label
+				>
+				<StatusIndicator
+					status={resolveOpenClawStatus(openClaw.status)}
+					text={resolveOpenClawText(openClaw.status)}
+					warningTooltip={m.cloud_mode_unhealthy()}
+				/>
+				<div class="relative size-5">
+					{#if openClaw.status == false && !cloudState.expired}
+						<ButtonWithTooltip
+							onclick={() => (showRestartOpenClawDialog = true)}
+							tooltip={m.cloud_mode_restart_docker()}
+							class="hover:!bg-icon-btn-hover size-6 !rounded-lg"
+						>
+							<RefreshCw
+								class={cn("size-3.5", loading.restartOpenClaw && "animate-spin")}
+							/>
+						</ButtonWithTooltip>
+					{/if}
 				</div>
-				<div class="flex items-center gap-2 mb-2!">
-					<Label class="text-muted-foreground min-w-18 font-normal"
-						>{m.cloud_mode_openclaw_status()}</Label
-					>
-					<StatusIndicator
-						status={resolveOpenClawStatus(openClaw.status)}
-						text={resolveOpenClawText(openClaw.status)}
-						warningTooltip={m.cloud_mode_unhealthy()}
-					/>
-					<div class="relative size-5">
-						{#if openClaw.status == false && !cloudState.expired}
-							<ButtonWithTooltip
-								onclick={() => (showRestartOpenClawDialog = true)}
-								tooltip={m.cloud_mode_restart_docker()}
-								class="hover:!bg-icon-btn-hover size-8 absolute top-[-30%] left-0"
-							>
-								<RefreshCw
-									class={cn("size-4", loading.restartOpenClaw && "animate-spin")}
-								/>
-							</ButtonWithTooltip>
-						{/if}
-					</div>
-				</div>
-				<div class="flex items-center gap-2 mb-2!">
-					<Label class="text-muted-foreground min-w-18 font-normal"
-						>{m.cloud_mode_api_status()}</Label
-					>
-					<StatusIndicator
-						status={resolveOpenClawStatus(openClaw.api_status)}
-						text={resolveOpenClawText(openClaw.api_status)}
-						warningTooltip={m.cloud_mode_unhealthy()}
-					/>
-				</div>
+			</div>
+			<div class="flex items-center gap-2">
+				<Label class="text-muted-foreground min-w-18 font-normal"
+					>{m.cloud_mode_api_status()}</Label
+				>
+				<StatusIndicator
+					status={resolveOpenClawStatus(openClaw.api_status)}
+					text={resolveOpenClawText(openClaw.api_status)}
+					warningTooltip={m.cloud_mode_unhealthy()}
+				/>
 			</div>
 		</div>
 	</div>

@@ -216,13 +216,9 @@
 
 	<div class="space-y-2">
 		{#if loading.init}
-			<Skeleton class="h-5 w-24" />
-			<div class="rounded-lg border p-5 space-y-5">
-				<div class="flex justify-between items-center w-full">
-					<Skeleton class="h-5 w-40" />
-					<Skeleton class="h-4 w-28" />
-				</div>
-				<div class="space-y-1">
+			<Skeleton class="h-4 w-18" />
+			<div class="rounded-lg border p-4 space-y-5">
+				<div class="space-y-4">
 					<Skeleton class="h-4 w-48" />
 					<Skeleton class="h-4 w-48" />
 					<Skeleton class="h-4 w-48" />
@@ -230,9 +226,9 @@
 			</div>
 		{:else}
 			<Label class="text-label-fg font-normal">{m.cloud_mode_subscription_info()}</Label>
-			<div class="rounded-lg border p-5 space-y-5">
+			<div class="rounded-lg border p-4">
 				<div class="flex justify-between items-start w-full">
-					<div class="space-y-1">
+					<div class="space-y-2">
 						<p class="text-sm text-muted-foreground">
 							{m.cloud_mode_instance_name()}：{#if cloudState.instanceName}
 								<span class={cn("font-medium", instanceStatusLabel.class)}>
