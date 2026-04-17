@@ -60,6 +60,7 @@
 
 	let isThinkingBudgetOpen = $state(false);
 	let isOpenUIActive = $derived(chatParameters.systemPromptContent === OPENUI_SYSTEM_PROMPT);
+	let previousSystemPromptContent = $state("");
 	let skillsData = $state<Omit<ListSkillsResponse, "success" | "project_skills">>({
 		builtin_skills: [],
 		user_skills: [],
@@ -128,7 +129,12 @@
 	}
 
 	function handleOpenUIToggle() {
-		chatParameters.setSystemPromptContent(isOpenUIActive ? "" : OPENUI_SYSTEM_PROMPT);
+		if (isOpenUIActive) {
+			chatParameters.setSystemPromptContent(previousSystemPromptContent);
+		} else {
+			previousSystemPromptContent = chatParameters.systemPromptContent;
+			chatParameters.setSystemPromptContent(OPENUI_SYSTEM_PROMPT);
+		}
 	}
 
 	function handlePlanModeToggle() {

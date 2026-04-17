@@ -6,7 +6,6 @@
 		title?: string;
 		description?: string;
 		class?: string;
-		variant?: "default" | "subtle";
 		children?: unknown;
 	};
 
@@ -16,7 +15,6 @@
 <div
 	class={cn(
 		"bg-input overflow-hidden rounded-chat border text-foreground shadow-sm",
-		props.variant === "subtle" && "bg-background/80",
 		props.class,
 	)}
 >

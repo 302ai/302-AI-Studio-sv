@@ -3,4 +3,4 @@
 
 npx @openuidev/cli@latest generate ./library.ts --out system-prompt.txt
 
-python escape_js_template.py system-prompt.txt -o system-prompt.txt
+python escape_js_template.py system-prompt.txt -o system-prompt.ts

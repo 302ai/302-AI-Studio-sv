@@ -4,7 +4,6 @@ export const ChatPanelSchema = z.object({
 	title: z.string().optional().describe("Optional panel title"),
 	description: z.string().optional().describe("Optional helper text below the title"),
 	class: z.string().optional().describe("Additional classes for the panel container"),
-	variant: z.enum(["default", "subtle"]).optional().describe("Visual panel style"),
 	children: z.any().optional().describe("Nested child components to render inside the panel"),
 });
 
@@ -123,8 +122,8 @@ export const CardSchema = z.object({
 	class: z.string().optional(),
 	title: z.string().optional(),
 	description: z.string().optional(),
-	footer: z.string().optional(),
 	children: z.any().optional(),
+	footer: z.string().optional(),
 });
 
 export const RadioGroupSchema = z.object({
