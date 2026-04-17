@@ -57,11 +57,10 @@
 
 {#if loading.init}
 	<div class="flex items-start justify-between gap-4">
-		<div class="flex-1 space-y-2">
-			<div class="flex items-center gap-3">
+		<div class="flex-1 space-y-4">
+			<div class="flex items-center gap-4">
 				<Skeleton class="h-4 w-18" />
 				<Skeleton class="h-4 w-20" />
-				<Skeleton class="size-8 rounded-md" />
 			</div>
 			<div class="flex items-center gap-3">
 				<Skeleton class="h-4 w-18" />

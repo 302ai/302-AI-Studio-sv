@@ -33,7 +33,7 @@
 
 <div class="gap-settings-gap flex flex-col">
 	<!-- Section 1: Environment Monitoring -->
-	<section class="space-y-4">
+	<section class="space-y-2">
 		<Label class="text-label-fg font-normal">{m.local_platform_environment_monitoring()}</Label>
 
 		<!-- Environment Cards Container -->

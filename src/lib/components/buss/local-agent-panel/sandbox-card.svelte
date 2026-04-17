@@ -10,12 +10,12 @@
 	import { cn } from "$lib/utils";
 	import { createDevSequenceDetector } from "$lib/utils/dev-konami-code";
 	import { LoaderCircle, RefreshCw } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import { onMount } from "svelte";
 	import DevSandboxPanel from "./dev-sandbox-panel.svelte";
 	import LogDialog from "./log-dialog.svelte";
 	import PlatformServiceCard from "./platform-service-card.svelte";
 	import StatusIndicator from "./status-indicator.svelte";
-	import { createLogger } from "@shared/logger";
 
 	const logger = createLogger("ui");
 
@@ -109,9 +109,9 @@
 
 <PlatformServiceCard title={m.local_platform_local_sandbox()} bind:isOpen>
 	<div class="flex items-start justify-between gap-4">
-		<div class="flex-1 space-y-2">
+		<div class="flex flex-col gap-2">
 			<!-- Startup Status -->
-			<div class="flex items-center gap-3">
+			<div class="flex items-center">
 				<Label class="text-muted-foreground min-w-16 font-normal"
 					>{m.local_platform_startup_status()}</Label
 				>
@@ -123,7 +123,7 @@
 				/>
 			</div>
 			<!-- Health Status -->
-			<div class="flex items-center gap-3">
+			<div class="flex items-center">
 				<Label class="text-muted-foreground min-w-16 font-normal"
 					>{m.local_platform_health_status()}</Label
 				>
@@ -134,7 +134,7 @@
 					warningTooltip={m.local_platform_try_restart()}
 				/>
 			</div>
-			<div class="flex items-center gap-3">
+			<div class="flex items-center">
 				<Label class="text-muted-foreground min-w-16 font-normal"
 					>{m.local_platform_open_claw()}</Label
 				>
@@ -156,7 +156,7 @@
 				{/if}
 			</div>
 			<!-- File Directory -->
-			<div class="flex items-baseline gap-3">
+			<div class="flex items-baseline">
 				<Label class="text-muted-foreground min-w-16 font-normal"
 					>{m.local_platform_file_directory()}</Label
 				>

@@ -70,12 +70,12 @@
 		<div class="flex items-center justify-between">
 			<Label class="text-label-fg font-normal">{m.local_platform_select_session()}</Label>
 			<ButtonWithTooltip
-				class="hover:!bg-chat-action-hover"
+				class="hover:!bg-chat-action-hover size-6 !rounded-lg"
 				tooltip={m.label_button_reload()}
 				onclick={handleRefresh}
 				disabled={sessionStore.isLoading}
 			>
-				<RefreshCcw class={cn("h-4 w-4", sessionStore.isLoading ? "animate-spin" : "")} />
+				<RefreshCcw class={cn("size-3.5", sessionStore.isLoading ? "animate-spin" : "")} />
 			</ButtonWithTooltip>
 		</div>
 		<SettingSelect
