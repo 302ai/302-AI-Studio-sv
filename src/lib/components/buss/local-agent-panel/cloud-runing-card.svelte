@@ -76,7 +76,7 @@
 {:else}
 	<div class="flex items-start justify-between gap-4">
 		<div class="flex-1 space-y-2">
-			<div class="flex items-center gap-3">
+			<div class="flex items-center gap-3 mb-2!">
 				<Label class="text-muted-foreground min-w-18 font-normal"
 					>{m.agent_settings_instance_status()}</Label
 				>
@@ -85,15 +85,17 @@
 					text={healthProps.text}
 					warningTooltip={m.cloud_mode_unhealthy()}
 				/>
-				{#if !_state.expired && _state.instanceName && _state.status == "running"}
-					<ButtonWithTooltip
-						onclick={handleRestartClick}
-						tooltip={m.cloud_mode_reboot_instance()}
-						class="hover:!bg-icon-btn-hover size-8"
-					>
-						<RefreshCw class={cn("h-4 w-4", loading.restart && "animate-spin")} />
-					</ButtonWithTooltip>
-				{/if}
+				<div class="relative">
+					{#if !_state.expired && _state.instanceName && _state.status == "running"}
+						<ButtonWithTooltip
+							onclick={handleRestartClick}
+							tooltip={m.cloud_mode_reboot_instance()}
+							class="hover:!bg-icon-btn-hover size-8 absolute -top-4 left-0"
+						>
+							<RefreshCw class={cn("h-4 w-4", loading.restart && "animate-spin")} />
+						</ButtonWithTooltip>
+					{/if}
+				</div>
 			</div>
 			<div class="flex items-center gap-3">
 				<Label class="text-muted-foreground min-w-18 font-normal"
