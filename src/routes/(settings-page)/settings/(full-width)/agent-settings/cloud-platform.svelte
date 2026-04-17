@@ -171,16 +171,20 @@
 		handleSessionRefresh();
 	});
 
-	const title = $derived.by(() => {
-		if (cloudState.instanceName) {
-			if (cloudState.expired) {
-				return { value: m.cloud_mode_expired(), class: "text-destructive" };
-			} else {
-				return { value: cloudState.instanceName, class: "text-primary" };
-			}
-		} else {
+	const instanceStatusLabel = $derived.by(() => {
+		if (cloudState.status === "waiting_init") {
+			return { value: m.cloud_mode_initializing(), class: "text-muted-foreground" };
+		}
+
+		if (!cloudState.instanceName) {
 			return { value: m.cloud_mode_not_activated(), class: "" };
 		}
+
+		if (cloudState.expired) {
+			return { value: m.cloud_mode_expired(), class: "text-destructive" };
+		}
+
+		return { value: cloudState.instanceName, class: "text-primary" };
 	});
 </script>
 
@@ -231,8 +235,8 @@
 					<div class="space-y-1">
 						<p class="text-sm text-muted-foreground">
 							{m.cloud_mode_instance_name()}：{#if cloudState.instanceName}
-								<span class={cn("font-medium", title.class)}>
-									{title.value}
+								<span class={cn("font-medium", instanceStatusLabel.class)}>
+									{instanceStatusLabel.value}
 								</span>
 							{:else}
 								{m.cloud_mode_not_activated()}
