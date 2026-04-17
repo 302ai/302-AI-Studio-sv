@@ -148,10 +148,12 @@
 		"@lobehub/icons-static-svg": "^1.84.0",
 		"@modelcontextprotocol/sdk": "^1.20.0",
 		"@opendocsg/pdf2md": "^0.2.2",
+		"@openuidev/svelte-lang": "^0.1.0",
 		"@sveltejs/adapter-static": "^3.0.9",
 		"archiver": "^7.0.1",
 		"arktype": "^2.1.22",
 		"browser-image-compression": "^2.0.2",
+		"chart.js": "^4.5.1",
 		"codemirror": "^6.0.2",
 		"croner": "^9.1.0",
 		"date-fns": "^4.1.0",
@@ -186,7 +188,8 @@
 		"svelte-dnd-action": "^0.9.65",
 		"svelte-image-viewer": "^5.0.0",
 		"svelte-lexical": "^0.6.3",
-		"ts-pattern": "^5.9.0"
+		"ts-pattern": "^5.9.0",
+		"zod": "^4.3.6"
 	},
 	"packageManager": "pnpm@10.18.3+sha512.bbd16e6d7286fd7e01f6b3c0b3c932cda2965c06a908328f74663f10a9aea51f1129eea615134bf992831b009eabe167ecb7008b597f40ff9bc75946aadfb08d",
 	"pnpm": {
