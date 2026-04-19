@@ -59,7 +59,9 @@ if (process.contextIsolated) {
 			theme: {
 				setTheme: (theme: Theme) => ipcRenderer.send("app:theme:setTheme", theme),
 				onThemeChange: (callback: (theme: Theme) => void) => {
-					ipcRenderer.on("app:theme:setTheme", (_, theme) => callback(theme));
+					const listener = (_: unknown, theme: Theme) => callback(theme);
+					ipcRenderer.on("app:theme:setTheme", listener);
+					return () => ipcRenderer.removeListener("app:theme:setTheme", listener);
 				},
 				getCurrentTheme: () => ipcRenderer.invoke("app:theme:getCurrentTheme"),
 			},
@@ -79,14 +81,18 @@ if (process.contextIsolated) {
 				},
 			},
 			onThemeChange: (callback: (theme: string) => void) => {
-				ipcRenderer.on("theme:set", (_, theme) => callback(theme));
+				const listener = (_: unknown, theme: string) => callback(theme);
+				ipcRenderer.on("theme:set", listener);
+				return () => ipcRenderer.removeListener("theme:set", listener);
 			},
 			onThreadListUpdate: (callback: () => void) => {
-				ipcRenderer.on("broadcast-event", (_, eventData: BroadcastEventData) => {
+				const listener = (_: unknown, eventData: BroadcastEventData) => {
 					if (eventData.broadcastEvent === "thread-list-updated") {
 						callback();
 					}
-				});
+				};
+				ipcRenderer.on("broadcast-event", listener);
+				return () => ipcRenderer.removeListener("broadcast-event", listener);
 			},
 
 			onThreadBusyStateChanged: (

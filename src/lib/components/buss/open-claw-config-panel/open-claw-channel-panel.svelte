@@ -144,7 +144,7 @@
 	</Accordion>
 {/snippet}
 
-<Accordion type="single" value="channel-settings" class="w-full m-0 ">
+<Accordion type="single" value="channel-settings" class="w-full m-0">
 	<AccordionItem value="channel-settings" class="border-b-0">
 		<AccordionTrigger class="py-2 hover:no-underline">
 			<Label class="text-label-fg cursor-pointer"
