@@ -18,10 +18,6 @@ class CloudChannelService implements ChannelService {
 	});
 	fetchController: AbortController | null = null;
 
-	constructor() {
-		cloudModeState.loadInstances();
-	}
-
 	private messageFn: ((event: OpenClawWeixinLoginMsg) => void) | null = null;
 
 	async isInstalled(): Promise<boolean> {

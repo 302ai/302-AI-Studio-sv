@@ -522,6 +522,11 @@ export class TabService {
 				tab.type === "openClawWebUi"
 					? tab.href
 					: MAIN_WINDOW_VITE_DEV_SERVER_URL || "app://localhost",
+			showLoadingPage:
+				// tab.type !== "aiApplications" &&
+				// tab.type !== "helpDocs" &&
+				// tab.type !== "skillsHub" &&
+				tab.type == "openClawWebUi",
 			// autoOpenDevTools: !!MAIN_WINDOW_VITE_DEV_SERVER_URL,
 		});
 

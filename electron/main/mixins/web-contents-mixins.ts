@@ -7,6 +7,7 @@ export interface LoadHandlerConfig {
 	baseUrl?: string;
 	routePath?: string;
 	autoOpenDevTools?: boolean;
+	showLoadingPage?: boolean;
 }
 
 /**
@@ -49,11 +50,23 @@ export const withDevToolsShortcuts = (view: WebContentsView): void => {
  * Adds common load handling to a WebContentsView
  */
 export const withLoadHandlers = (view: WebContentsView, config: LoadHandlerConfig): void => {
-	const { baseUrl, routePath, autoOpenDevTools = false } = config;
+	const { baseUrl, routePath, autoOpenDevTools = false, showLoadingPage = false } = config;
 
 	if (baseUrl) {
 		const fullUrl = routePath ? `${baseUrl}${routePath}` : baseUrl;
-		view.webContents.loadURL(fullUrl);
+
+		if (showLoadingPage) {
+			const loadingUrl = `${baseUrl}/loading`;
+			view.webContents.loadURL(loadingUrl);
+
+			setTimeout(() => {
+				if (!view.webContents.isDestroyed()) {
+					view.webContents.loadURL(fullUrl);
+				}
+			}, 1000);
+		} else {
+			view.webContents.loadURL(fullUrl);
+		}
 
 		if (autoOpenDevTools) {
 			view.webContents.once("did-frame-finish-load", () => {

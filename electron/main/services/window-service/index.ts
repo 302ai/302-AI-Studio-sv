@@ -858,8 +858,24 @@ export class WindowService {
 			}
 		});
 
-		// Clean up reference when window is closed
-		this.settingsWindow.addListener("closed", () => {
+		this.settingsWindow.addListener("close", (e) => {
+			e.preventDefault();
+
+			// Clean up WebContentsView event listeners to prevent memory leaks
+			const view = this.settingsWindow?.contentView.children[0];
+			if (view instanceof WebContentsView && !view.webContents.isDestroyed()) {
+				view.webContents.removeAllListeners();
+				view.webContents.close();
+			}
+
+			// Remove the view from contentView before destroying window
+			if (this.settingsWindow && !this.settingsWindow.isDestroyed()) {
+				if (view) {
+					this.settingsWindow.contentView.removeChildView(view);
+				}
+				this.settingsWindow.destroy();
+			}
+
 			this.settingsWindow = null;
 		});
 	}

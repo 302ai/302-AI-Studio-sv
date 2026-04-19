@@ -143,6 +143,7 @@ class SyncBus {
 
 	constructor(private readonly instanceId: string) {
 		this.initChannel();
+
 		if (typeof window !== "undefined" && "addEventListener" in window) {
 			window.addEventListener("storage", this.handleStorageEvent);
 		}

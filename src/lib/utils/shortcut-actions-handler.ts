@@ -7,9 +7,9 @@ import { persistedProviderState } from "$lib/stores/provider-state.svelte";
 import { sidebarSearchState } from "$lib/stores/sidebar-search-state.svelte";
 import { tabBarState } from "$lib/stores/tab-bar-state.svelte";
 import { threadsState } from "$lib/stores/threads-state.svelte";
+import { createLogger } from "@shared/logger";
 import type { ShortcutActionEvent } from "@shared/types/shortcut";
 import { toast } from "svelte-sonner";
-import { createLogger } from "@shared/logger";
 
 const logger = createLogger("ui");
 
@@ -121,7 +121,7 @@ export class ShortcutActionsHandler {
 			const newThreadId = await chatState.createBranch(lastMessage.id);
 			if (newThreadId) {
 				// Open the new thread in a new tab
-				await tabBarState.handleNewTabForExistingThread(newThreadId);
+				tabBarState.handleNewTabForExistingThread(newThreadId);
 			} else {
 				toast.error(m.toast_unknown_error());
 			}
