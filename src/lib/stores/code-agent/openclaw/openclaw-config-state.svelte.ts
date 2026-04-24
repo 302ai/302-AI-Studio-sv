@@ -1,11 +1,14 @@
 import { PersistedState } from "$lib/hooks/persisted-state.svelte";
+import { cloudModeSessionsState } from "$lib/stores/code-agent/cloud-mode-sessions-state.svelte";
 import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 import { localClaudeCodeSandboxState } from "$lib/stores/code-agent/local-claude-code-sandbox-state.svelte";
+import { createLogger } from "@shared/logger";
 import { type OpenClawConfig, openclawBindingKeys } from "@shared/storage/openclaw";
 import { clone } from "es-toolkit/compat";
 import { withTimeout } from "es-toolkit/promise";
 import { trim } from "es-toolkit/string";
 import { codeAgentState } from "../code-agent-state.svelte";
+import { extractAgentIdFromWorkspacePath } from "../utils";
 
 const tab = window.tab ?? null;
 const threadId =
@@ -35,6 +38,8 @@ export const persistedOpenclawConfigState = new PersistedState<OpenClawConfig>(
 	getInitialData(),
 );
 
+const logger = createLogger("ui");
+
 class OpenClawConfigState {
 	feishuSessionId = $derived(persistedOpenclawConfigState.current?.feishuSessionId ?? "");
 	telegramBotId = $derived(persistedOpenclawConfigState.current?.telegramBotId ?? "");
@@ -46,17 +51,25 @@ class OpenClawConfigState {
 	);
 
 	currentOcAgentId = $derived.by(() => {
-		return (
-			persistedOpenclawConfigState.current?.agentId ?? this.#resolveOCAgentIdFromSessionId()
-		);
+		const persisted = persistedOpenclawConfigState.current?.agentId;
+		if (persisted) return persisted;
+
+		const fromSession = this.#resolveOCAgentIdFromSessionId();
+		if (fromSession) return fromSession;
+
+		return extractAgentIdFromWorkspacePath(codeAgentState.currentWorkspacePath);
 	});
 
 	#resolveOCAgentIdFromSessionId(): string {
 		const sessionId = codeAgentState.currentSessionId;
 		if (!sessionId) return "";
-		const session = localClaudeCodeSandboxState.sessions.find(
-			(s) => s.session_id === sessionId,
-		);
+
+		const sessions =
+			codeAgentState.type === "cloud"
+				? cloudModeSessionsState.sessions
+				: localClaudeCodeSandboxState.sessions;
+
+		const session = sessions.find((s) => s.session_id === sessionId);
 		return session?.oc_agent_id ?? "";
 	}
 
@@ -91,7 +104,10 @@ class OpenClawConfigState {
 	}
 
 	async updateOCBindings(ocAgentId: string) {
-		if (ocAgentId === "") return;
+		if (ocAgentId === "") {
+			logger.error("updateOCBindings: ocAgentId is empty");
+			return;
+		}
 
 		this.updateOCAgentId(ocAgentId);
 
@@ -100,12 +116,15 @@ class OpenClawConfigState {
 	}
 
 	async updateOCBindingsCloud(ocAgentId: string) {
-		if (ocAgentId === "") return;
+		try {
+			if (ocAgentId === "") throw "no ocAgentId";
+			this.updateOCAgentId(ocAgentId);
 
-		this.updateOCAgentId(ocAgentId);
-
-		await persistedOpenclawConfigState.flush();
-		await window.electronAPI.openClawService.applyCloudClawBindingsConfig(threadId);
+			await persistedOpenclawConfigState.flush();
+			await window.electronAPI.openClawService.applyCloudClawBindingsConfig(threadId);
+		} catch (e) {
+			logger.error(e + "");
+		}
 	}
 
 	async bindingAndRestart(ocAgentId: string) {

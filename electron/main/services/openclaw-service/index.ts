@@ -337,11 +337,18 @@ export class OpenClawService {
 		nextBindings.push(...desiredBindings);
 		cloudConfig["bindings"] = nextBindings;
 
-		logger.info("Applying OpenClaw bindings config and restarting container");
-		await restartDocker({
-			instanceName,
-			openclawConfigContent: JSON.stringify(cloudConfig),
-		});
+		logger.info(
+			"Applying OpenClaw bindings config and restarting container",
+			JSON.stringify(cloudConfig),
+		);
+		try {
+			await restartDocker({
+				instanceName,
+				openclawConfigContent: JSON.stringify(cloudConfig),
+			});
+		} catch (e) {
+			logger.error("Failed to apply OpenClaw bindings config:", e);
+		}
 		logger.info("OpenClaw bindings config applied and container restarted");
 	}
 
