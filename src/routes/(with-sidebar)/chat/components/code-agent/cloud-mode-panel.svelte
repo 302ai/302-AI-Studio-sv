@@ -12,10 +12,12 @@
 	import { Button } from "$lib/components/ui/button";
 	import { Label } from "$lib/components/ui/label";
 	import { m } from "$lib/paraglide/messages";
+	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 
 	let { onClose }: Props = $props();
 
-	function handleLocalModeConfirm() {
+	function handleCloudModeConfirm() {
+		codeAgentState.handleConfirmEnabled();
 		onClose?.();
 	}
 </script>
@@ -38,7 +40,7 @@
 		<Button variant="secondary" onclick={onClose}>
 			{m.common_cancel()}
 		</Button>
-		<Button onclick={handleLocalModeConfirm}>
+		<Button onclick={handleCloudModeConfirm}>
 			{m.label_button_confirm()}
 		</Button>
 	</div>
