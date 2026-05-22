@@ -1574,5 +1574,6 @@
 	"cloud_mode_instance_name": "实例名",
 	"cloud_mode_instance_destruction_warning": "注意：实例在过期15天后将会被自动销毁",
 	"cloud_mode_instance_expired_days": "(已过期{days}天)",
-	"quick_prompt_trigger": "快捷 Prompt"
+	"quick_prompt_trigger": "快捷 Prompt",
+	"openui_mode": "生成式UI模式·依赖模型能力"
 }

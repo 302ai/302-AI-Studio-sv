@@ -369,7 +369,7 @@
 	{#if isMenu}
 		{@render menuButton({
 			icon: Blocks,
-			label: "OpenUI",
+			label: "openUI",
 			active: isOpenUIActive,
 			onclick: handleOpenUIToggle,
 			disabled,
@@ -380,7 +380,7 @@
 				"hover:!bg-chat-action-hover",
 				isOpenUIActive && "!bg-chat-action-active hover:!bg-chat-action-active",
 			)}
-			tooltip="OpenUI"
+			tooltip={m.openui_mode()}
 			onclick={handleOpenUIToggle}
 			{disabled}
 		>

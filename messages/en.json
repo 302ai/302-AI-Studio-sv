@@ -1574,5 +1574,6 @@
 	"cloud_mode_instance_name": "Instance Name",
 	"cloud_mode_instance_destruction_warning": "Note: Instances will be automatically destroyed 15 days after expiration",
 	"cloud_mode_instance_expired_days": " (Expired for {days} days)",
-	"quick_prompt_trigger": "Quick Prompt"
+	"quick_prompt_trigger": "Quick Prompt",
+	"openui_mode": "OpenUI Mode (Model-dependent)"
 }
