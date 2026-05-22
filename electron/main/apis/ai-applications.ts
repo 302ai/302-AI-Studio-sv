@@ -22,7 +22,7 @@ type Ai302UserInfo = typeof ai302UserInfoSchema.infer;
 export async function fetch302AIUserInfo(apiKey: string): Promise<Ai302UserInfo> {
 	try {
 		const response = await ky
-			.get("https://api.302.ai/user/info", {
+			.get("https://dash-api.302ai.cn/user/info", {
 				timeout: 180000,
 				retry: {
 					limit: 3,
@@ -71,7 +71,7 @@ export async function fetch302AIToolList(
 ): Promise<Ai302ToolsList["data"]["data"]> {
 	try {
 		const response = await ky
-			.get("https://api.302.ai/gpt/api/tool/list", {
+			.get("https://dash-api.302ai.cn/gpt/api/tool/list", {
 				timeout: 180000,
 				retry: {
 					limit: 3,
@@ -187,7 +187,7 @@ type Ai302ToolDetail = typeof ai302ToolDetailSchema.infer;
 export async function fetch302AIToolDetail(apiKey: string): Promise<Ai302ToolDetail> {
 	try {
 		const response = await ky
-			.get("https://api.302.ai/gpt/api/v1/code", {
+			.get("https://dash-api.302ai.cn/gpt/api/v1/code", {
 				searchParams: {
 					apikey: apiKey,
 				},
