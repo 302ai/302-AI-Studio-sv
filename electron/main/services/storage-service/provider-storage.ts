@@ -1,4 +1,5 @@
 import type { MigrationConfig, ModelProvider } from "@shared/types";
+import { DEFAULT_302AI_BASE_URL, get302AIBaseUrlWithoutV1 } from "@shared/utils/302ai-base-url";
 import { hashApiKey } from "@shared/utils/hash";
 import { isNull, isUndefined } from "es-toolkit";
 import { StorageService } from "../storage-service";
@@ -72,6 +73,29 @@ export class ProviderStorage extends StorageService<ModelProvider[]> {
 			valid: true,
 			apiKey: _302AIProvider.apiKey,
 		};
+	}
+
+	async get302AIBaseUrl(): Promise<string> {
+		const allProviders = await this.getItemInternal("app-providers");
+		if (isNull(allProviders)) return DEFAULT_302AI_BASE_URL;
+
+		const providersArray: ModelProvider[] = Array.isArray(allProviders)
+			? allProviders
+			: Object.values(allProviders).filter(
+					(p): p is ModelProvider =>
+						p !== null && typeof p === "object" && "apiType" in p,
+				);
+
+		const _302AIProvider = providersArray.find((p) => p.apiType === "302ai");
+		if (isUndefined(_302AIProvider) || !_302AIProvider.baseUrl.trim()) {
+			return DEFAULT_302AI_BASE_URL;
+		}
+
+		return _302AIProvider.baseUrl;
+	}
+
+	async get302AIBaseUrlWithoutV1(): Promise<string> {
+		return get302AIBaseUrlWithoutV1(await this.get302AIBaseUrl());
 	}
 
 	/**

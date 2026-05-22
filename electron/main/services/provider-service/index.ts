@@ -14,6 +14,14 @@ export class ProviderService {
 		}
 		return apiKey;
 	}
+
+	async get302AIBaseUrl(_event: IpcMainInvokeEvent): Promise<string> {
+		return await providerStorage.get302AIBaseUrl();
+	}
+
+	async get302AIBaseUrlWithoutV1(_event: IpcMainInvokeEvent): Promise<string> {
+		return await providerStorage.get302AIBaseUrlWithoutV1();
+	}
 }
 
 export const providerService = new ProviderService();

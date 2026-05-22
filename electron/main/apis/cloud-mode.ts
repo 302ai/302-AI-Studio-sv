@@ -22,6 +22,7 @@ import {
 import { type } from "arktype";
 
 import { createLogger } from "@shared/logger";
+import { providerStorage } from "@electron/main/services/storage-service/provider-storage";
 import { _302AIKy, create302AIKy } from "./core/_302ai-ky";
 
 const logger = createLogger("apis");
@@ -33,7 +34,9 @@ const logger = createLogger("apis");
  */
 export async function listInstances(apiKey?: string): Promise<ListInstancesResponse> {
 	try {
-		const kyInstance = apiKey ? create302AIKy(apiKey) : _302AIKy;
+		const kyInstance = apiKey
+			? create302AIKy(apiKey, await providerStorage.get302AIBaseUrlWithoutV1())
+			: _302AIKy;
 		const response = await kyInstance.get("302/swas/instances").json();
 
 		checkErrorResponse(response, "SWAS_LIST_INSTANCE_FAILED", "Failed to list instances");

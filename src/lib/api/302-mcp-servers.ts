@@ -1,5 +1,7 @@
 import { API_BASE_URL } from "$lib/constants/api";
+import { persistedProviderState } from "$lib/stores/provider-state.svelte.js";
 import { createLogger } from "@shared/logger";
+import { DEFAULT_302AI_BASE_URL, get302AIBaseUrlWithoutV1 } from "@shared/utils/302ai-base-url";
 
 const logger = createLogger("apis");
 
@@ -96,5 +98,7 @@ export async function fetch302McpServers(token: string): Promise<Mcp302Server[]>
  * @returns The full MCP server URL
  */
 export function buildMcpServerUrl(proxyId: string): string {
-	return `https://api.302ai.com/custom-mcp/mcp/${proxyId}`;
+	const provider = persistedProviderState.current.find((p) => p.apiType === "302ai");
+	const baseUrl = get302AIBaseUrlWithoutV1(provider?.baseUrl || DEFAULT_302AI_BASE_URL);
+	return `${baseUrl}/custom-mcp/mcp/${proxyId}`;
 }

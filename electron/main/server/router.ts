@@ -29,6 +29,7 @@ import { chatParametersService } from "../services/chat-parameters-service";
 import { mcpService } from "../services/mcp-service";
 import { storageService } from "../services/storage-service";
 import { codeAgentGlobalConfigsStorage } from "../services/storage-service/code-agent/code-agent-storage";
+import { providerStorage } from "../services/storage-service/provider-storage";
 import { createCitationsFetch } from "./citations-processor";
 import { createClaudeCodeFetch } from "./claude-code-processor";
 import { THINKING_BUDGET_MAP } from "./constant";
@@ -1467,11 +1468,12 @@ app.post("/decompose-tasks", async (c) => {
 	}>();
 
 	let languageModel;
+	const configured302AIBaseUrl = baseUrl || (await providerStorage.get302AIBaseUrl());
 	switch (providerType) {
 		case "302ai": {
 			const openai = createOpenAICompatible({
 				name: "302.AI",
-				baseURL: baseUrl || "https://api.302ai.com/v1",
+				baseURL: configured302AIBaseUrl,
 				apiKey: apiKey || "[REDACTED:sk-secret]",
 			});
 			languageModel = openai.chatModel(model);
@@ -1787,8 +1789,9 @@ app.post("/chat/302ai-code-agent", async (c) => {
 			const abortController = new AbortController();
 
 			try {
+				const configured302AIBaseUrl = baseUrl ?? (await providerStorage.get302AIBaseUrl());
 				const responsePromise = claudeCodeFetch(
-					`${baseUrl ?? "https://api.302ai.com/v1"}/chat/completions`,
+					`${configured302AIBaseUrl}/chat/completions`,
 					{
 						method: "POST",
 						headers: {

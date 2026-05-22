@@ -19,6 +19,14 @@ export const _302AIKy = ky.create({
 				const { valid, apiKey } = await providerStorage.validate302AIProvider();
 				if (!valid) throw new Error("302.ai API key validation failed");
 				request.headers.set("Authorization", `Bearer ${apiKey}`);
+
+				const baseUrl = await providerStorage.get302AIBaseUrlWithoutV1();
+				const base = new URL(baseUrl);
+				const url = new URL(request.url);
+				url.protocol = base.protocol;
+				url.hostname = base.hostname;
+				url.port = base.port;
+				return new Request(url.toString(), request);
 			},
 		],
 	},
@@ -29,10 +37,10 @@ export const _302AIKy = ky.create({
  * @param apiKey - The API key to use for requests
  * @returns A ky instance configured with the provided API key
  */
-export function create302AIKy(apiKey: string) {
+export function create302AIKy(apiKey: string, baseUrl = "https://api.302ai.com") {
 	return ky.create({
 		timeout: 180000,
-		prefixUrl: "https://api.302ai.com",
+		prefixUrl: baseUrl.replace(/\/v1\/?$/, ""),
 		headers: {
 			"User-Agent": userAgent,
 			"HTTP-Referer": "https://studio.302.ai/",

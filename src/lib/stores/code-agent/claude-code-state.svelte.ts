@@ -7,6 +7,7 @@ import { m } from "$lib/paraglide/messages";
 import type { ChatMessage } from "$lib/types/chat";
 import { clone } from "$lib/utils/clone";
 import { createLogger } from "@shared/logger";
+import { DEFAULT_302AI_BASE_URL } from "@shared/utils/302ai-base-url";
 import {
 	type CodeAgentMetadata,
 	type CodeAgentType,
@@ -16,6 +17,7 @@ import {
 import { toast } from "svelte-sonner";
 import { match, P } from "ts-pattern";
 import { agentPreviewState } from "../agent-preview-state.svelte";
+import { persistedProviderState } from "../provider-state.svelte";
 import { persistedClaudeCodeSandboxState } from "./claude-code-sandbox-state.svelte";
 import { codeAgentState } from "./code-agent-state.svelte";
 import { BUILTIN_SKILLS } from "./constant";
@@ -82,7 +84,10 @@ export const persistedClaudeCodeAgentState = new PersistedState<CodeAgentMetadat
 );
 
 class ClaudeCodeAgentState {
-	baseUrl = "https://api.302ai.com/v1";
+	baseUrl = $derived.by(() => {
+		const provider = persistedProviderState.current.find((p) => p.apiType === "302ai");
+		return provider?.baseUrl || DEFAULT_302AI_BASE_URL;
+	});
 
 	customSandboxName = $state("");
 

@@ -629,6 +629,12 @@ export function registerIpcHandlers() {
 	ipcMain.handle("providerService:get302AIApiKey", (event) =>
 		providerService.get302AIApiKey(event),
 	);
+	ipcMain.handle("providerService:get302AIBaseUrl", (event) =>
+		providerService.get302AIBaseUrl(event),
+	);
+	ipcMain.handle("providerService:get302AIBaseUrlWithoutV1", (event) =>
+		providerService.get302AIBaseUrlWithoutV1(event),
+	);
 
 	// threadService service registration
 	ipcMain.handle("threadService:addThread", (event, threadId) =>
@@ -857,6 +863,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("openClawService:disposeWechat");
 	ipcMain.removeHandler("providerService:handle302AIProviderChange");
 	ipcMain.removeHandler("providerService:get302AIApiKey");
+	ipcMain.removeHandler("providerService:get302AIBaseUrl");
+	ipcMain.removeHandler("providerService:get302AIBaseUrlWithoutV1");
 	ipcMain.removeHandler("threadService:addThread");
 	ipcMain.removeHandler("threadService:getThreads");
 	ipcMain.removeHandler("threadService:getThread");
