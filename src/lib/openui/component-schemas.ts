@@ -20,7 +20,7 @@ export const ButtonSchema = z.object({
 	href: z.string().optional().describe("The href of the button, if it's a link"),
 	type: z.enum(["button", "submit", "reset"]).optional().describe("The type of the button"),
 	disabled: z.boolean().optional().describe("Whether the button is disabled"),
-	children: z.any().optional().describe("Nested child components rendered inside the button"),
+	children: z.string().optional().describe("Nested child components rendered inside the button"),
 });
 
 export const InputSchema = z.object({
@@ -82,7 +82,7 @@ export const SkeletonSchema = z.object({
 
 export const AspectRatioSchema = z.object({
 	ratio: z.number().optional(),
-	children: z.any().optional(),
+	children: z.string().optional(),
 });
 
 export const BadgeSchema = z.object({
@@ -90,11 +90,10 @@ export const BadgeSchema = z.object({
 	variant: z.enum(["default", "secondary", "destructive", "outline"]).optional(),
 	href: z.string().optional(),
 	text: z.string().optional(),
-	children: z.any().optional(),
 });
 
 export const StackSchema = z.object({
-	children: z.any(),
+	children: z.string(),
 	direction: z.enum(["vertical", "horizontal"]),
 	gap: z.enum(["s", "m", "l"]).optional(),
 	class: z.string().optional(),
@@ -109,20 +108,20 @@ export const TextSchema = z.object({
 export const AlertSchema = z.object({
 	class: z.string().optional(),
 	variant: z.enum(["default", "destructive"]).optional(),
-	children: z.any().optional(),
+	children: z.string().optional(),
 });
 
 export const LabelSchema = z.object({
 	class: z.string().optional(),
 	for: z.string().optional(),
-	children: z.any().optional(),
+	children: z.string().optional(),
 });
 
 export const CardSchema = z.object({
 	class: z.string().optional(),
 	title: z.string(),
 	description: z.string().optional(),
-	children: z.any().optional(),
+	children: z.string().optional(),
 	footer: z.string().optional(),
 });
 
@@ -175,13 +174,13 @@ export const ToggleSchema = z.object({
 	disabled: z.boolean().optional(),
 	variant: z.enum(["default", "outline"]).optional(),
 	size: z.enum(["default", "sm", "lg"]).optional(),
-	children: z.any().optional(),
+	children: z.string().optional(),
 });
 
 export const ScrollAreaSchema = z.object({
 	class: z.string().optional(),
 	orientation: z.enum(["vertical", "horizontal", "both"]).optional(),
-	children: z.any().optional(),
+	children: z.string().optional(),
 });
 
 export const AvatarSchema = z.object({

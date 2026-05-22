@@ -1,6 +1,5 @@
 import { createLibrary, defineComponent } from "@openuidev/svelte-lang";
 import AccordionRenderer from "./AccordionRenderer.svelte";
-import AlertRenderer from "./AlertRenderer.svelte";
 import AspectRatioRenderer from "./AspectRatioRenderer.svelte";
 import AvatarRenderer from "./AvatarRenderer.svelte";
 import BadgeRenderer from "./BadgeRenderer.svelte";
@@ -13,7 +12,6 @@ import CollapsibleRenderer from "./CollapsibleRenderer.svelte";
 import DoughnutChartRenderer from "./DoughnutChartRenderer.svelte";
 import {
 	AccordionSchema,
-	AlertSchema,
 	AspectRatioSchema,
 	AvatarSchema,
 	BadgeSchema,
@@ -66,13 +64,6 @@ const AccordionDef = defineComponent({
 		"A vertical list of expandable sections. Props: type ('single'|'multiple'), value (current open item), items (array of {value, title, content}). Example: Accordion({type: 'multiple', items: [{value: 'intro', title: 'Introduction', content: '...'}, {value: 'setup', title: 'Setup', content: '...'}]})",
 	props: AccordionSchema,
 	component: AccordionRenderer,
-});
-const AlertDef = defineComponent({
-	name: "Alert",
-	description:
-		"An alert message container. Props: variant ('default'|'destructive'), children (content). Use for important messages, warnings, or errors. Example: Alert({variant: 'destructive', children: 'Error message here'})",
-	props: AlertSchema,
-	component: AlertRenderer,
 });
 const AspectRatioDef = defineComponent({
 	name: "AspectRatio",
@@ -266,7 +257,6 @@ const ToggleGroupDef = defineComponent({
 
 export const components = [
 	AccordionDef,
-	AlertDef,
 	AspectRatioDef,
 	AvatarDef,
 	BadgeDef,
