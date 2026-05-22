@@ -6,7 +6,7 @@ const userAgent = getCustomUserAgentFragment();
 
 export const _302AIKy = ky.create({
 	timeout: 180000,
-	prefixUrl: "https://api.302.ai",
+	prefixUrl: "https://api.302ai.com",
 	headers: {
 		"User-Agent": userAgent,
 		"HTTP-Referer": "https://studio.302.ai/",
@@ -32,7 +32,7 @@ export const _302AIKy = ky.create({
 export function create302AIKy(apiKey: string) {
 	return ky.create({
 		timeout: 180000,
-		prefixUrl: "https://api.302.ai",
+		prefixUrl: "https://api.302ai.com",
 		headers: {
 			"User-Agent": userAgent,
 			"HTTP-Referer": "https://studio.302.ai/",

@@ -106,7 +106,7 @@ AI SDK 5.0 定义了一种标准的消息流格式，用于前端渲染 AI 响�
 ┌─────────────────────────────────────────────────────────────────────┐
 │  Step 2: router.ts 向 302.AI 发起请求                                │
 │                                                                      │
-│  POST https://api.302.ai/v1/chat/completions                        │
+│  POST https://api.302ai.com/v1/chat/completions                        │
 │  Body: { model: "sandbox-xxx", messages: [...] }                    │
 └─────────────────────────────────────────────────────────────────────┘
       │

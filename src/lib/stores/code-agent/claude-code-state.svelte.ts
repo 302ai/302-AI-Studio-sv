@@ -82,7 +82,7 @@ export const persistedClaudeCodeAgentState = new PersistedState<CodeAgentMetadat
 );
 
 class ClaudeCodeAgentState {
-	baseUrl = "https://api.302.ai/v1";
+	baseUrl = "https://api.302ai.com/v1";
 
 	customSandboxName = $state("");
 

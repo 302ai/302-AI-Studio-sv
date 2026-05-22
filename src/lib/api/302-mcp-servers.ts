@@ -96,5 +96,5 @@ export async function fetch302McpServers(token: string): Promise<Mcp302Server[]>
  * @returns The full MCP server URL
  */
 export function buildMcpServerUrl(proxyId: string): string {
-	return `https://api.302.ai/custom-mcp/mcp/${proxyId}`;
+	return `https://api.302ai.com/custom-mcp/mcp/${proxyId}`;
 }

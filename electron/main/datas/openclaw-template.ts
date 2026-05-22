@@ -62,7 +62,7 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 		mode: "merge",
 		providers: {
 			ai302: {
-				baseUrl: "https://api.302.ai/v1",
+				baseUrl: "https://api.302ai.com/v1",
 				apiKey: "",
 				api: "openai-completions",
 				models: [
@@ -78,7 +78,7 @@ export const OPENCLAW_DEFAULT_CONFIG = {
 				],
 			},
 			"ai302-coding": {
-				baseUrl: "https://api.302.ai/v1",
+				baseUrl: "https://api.302ai.com/v1",
 				apiKey: "",
 				api: "anthropic-messages",
 				models: [

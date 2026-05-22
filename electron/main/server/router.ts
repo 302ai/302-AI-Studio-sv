@@ -1471,7 +1471,7 @@ app.post("/decompose-tasks", async (c) => {
 		case "302ai": {
 			const openai = createOpenAICompatible({
 				name: "302.AI",
-				baseURL: baseUrl || "https://api.302.ai/v1",
+				baseURL: baseUrl || "https://api.302ai.com/v1",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
 			});
 			languageModel = openai.chatModel(model);
@@ -1788,7 +1788,7 @@ app.post("/chat/302ai-code-agent", async (c) => {
 
 			try {
 				const responsePromise = claudeCodeFetch(
-					`${baseUrl ?? "https://api.302.ai/v1"}/chat/completions`,
+					`${baseUrl ?? "https://api.302ai.com/v1"}/chat/completions`,
 					{
 						method: "POST",
 						headers: {

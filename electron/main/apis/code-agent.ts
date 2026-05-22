@@ -178,7 +178,7 @@ export async function listClaudeCodeSandboxes(
 		const response =
 			apiKey && apiKey.trim() !== ""
 				? await ky
-						.get("https://api.302.ai/302/claude-code/sandbox/list", {
+						.get("https://api.302ai.com/302/claude-code/sandbox/list", {
 							headers: {
 								Authorization: `Bearer ${apiKey}`,
 							},

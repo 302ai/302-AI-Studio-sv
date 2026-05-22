@@ -24,11 +24,11 @@
   - SDK/Client: @302ai/ai-sdk 0.2.14
   - Auth: API key (via SSO or manual entry)
   - Endpoints:
-    - `https://api.302.ai/v1` - AI model API
-    - `https://api.302.ai/302/claude-code/sandbox/*` - Claude Code sandbox management
-    - `https://dash-api.302.ai/user/info` - User information
-    - `https://dash-api.302.ai/gpt/api/tool/list` - AI application/tool list
-    - `https://dash-api.302.ai/gpt/api/v1/code` - Application codes
+    - `https://api.302ai.com/v1` - AI model API
+    - `https://api.302ai.com/302/claude-code/sandbox/*` - Claude Code sandbox management
+    - `https://dash-api.302ai.com/user/info` - User information
+    - `https://dash-api.302ai.com/gpt/api/tool/list` - AI application/tool list
+    - `https://dash-api.302ai.com/gpt/api/v1/code` - Application codes
   - Implementation: `electron/main/apis/core/_302ai-ky.ts`
   - HTTP-Referer: `https://studio.302.ai/`
 
@@ -43,7 +43,7 @@
   - Endpoints:
     - Create: `302/claude-code/sandbox/create`
     - Reset: `302/claude-code/sandbox/reset`
-    - List: `https://api.302.ai/302/claude-code/sandbox/list`
+    - List: `https://api.302ai.com/302/claude-code/sandbox/list`
     - MCP Add: `302/claude-code/sandbox/mcp/add`
   - Implementation: `electron/main/apis/code-agent.ts`
   - Features: Session management, file operations, terminal access
@@ -184,8 +184,8 @@
 
 **Firewall Requirements:**
 - Outbound HTTPS to:
-  - api.302.ai (port 443)
-  - dash-api.302.ai (port 443)
+  - api.302ai.com (port 443)
+  - dash-api.302ai.com (port 443)
   - updater.302.ai (port 443)
   - Anthropic API endpoints
   - OpenAI API endpoints

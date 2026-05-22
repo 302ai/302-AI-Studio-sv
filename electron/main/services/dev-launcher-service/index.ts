@@ -54,7 +54,7 @@ services:
     environment:
       - DB_SQLITE_PATH=/home/user/db/app.db
       - ROOT_SAVE_PATH=/home/user
-      - ANTHROPIC_BASE_URL=https://api.302.ai
+      - ANTHROPIC_BASE_URL=https://api.302ai.com
       - ANTHROPIC_AUTH_TOKEN=${apiKey}
       - ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-5.2
       - AI302_API_KEY=${apiKey}
