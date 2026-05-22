@@ -9,6 +9,7 @@
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 	import { isOpenClawBundledSkill } from "$lib/utils/skill";
 	import { Plus, Search, ShoppingBag } from "@lucide/svelte";
+	import { createLogger } from "@shared/logger";
 	import type { Skill } from "@shared/types";
 	import { toast } from "svelte-sonner";
 	import { SvelteMap, SvelteSet } from "svelte/reactivity";
@@ -18,7 +19,6 @@
 	import SkillEditDialog from "./skill-edit-dialog.svelte";
 	import { canFavoriteSkill } from "./skill-favorite-availability";
 	import { getOrderedSkillsByFavorite } from "./skill-favorite-order";
-	import { createLogger } from "@shared/logger";
 
 	const logger = createLogger("ui");
 
@@ -309,7 +309,7 @@
 							window.electronAPI.windowService.handleNavigateToUrl(
 								"302 Skills Hub",
 								"skillsHub",
-								"https://skills.302.ai",
+								"https://api-skills.302ai.cn",
 							)}
 					>
 						<ShoppingBag class="h-4 w-4" />
