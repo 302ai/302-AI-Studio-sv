@@ -13,6 +13,7 @@
 	let proxyPort = $state(generalSettings.proxy.port);
 	let isTesting = $state(false);
 	let testResult = $state<{ success: boolean; message: string } | null>(null);
+	let saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
 	// Validation
 	function validateHost(host: string): boolean {
@@ -28,29 +29,38 @@
 		return port >= 1 && port <= 65535;
 	}
 
-	// Apply proxy settings
-	function handleApply() {
-		// Validate inputs if proxy is enabled
-		if (proxyEnabled) {
-			if (!validateHost(proxyHost)) {
-				toast.error(m.proxy_invalid_host());
-				return;
-			}
-			if (!validatePort(proxyPort)) {
-				toast.error(m.proxy_invalid_port());
-				return;
-			}
+	// Auto-save with debounce
+	function autoSave() {
+		// Clear previous timer
+		if (saveDebounceTimer) {
+			clearTimeout(saveDebounceTimer);
 		}
 
-		const proxySettings: ProxySettings = {
-			enabled: proxyEnabled,
-			host: proxyHost.trim(),
-			port: proxyPort,
-		};
+		// Set new debounce timer (1000ms)
+		saveDebounceTimer = setTimeout(() => {
+			// Validate inputs if proxy is enabled
+			if (proxyEnabled) {
+				if (!validateHost(proxyHost)) {
+					toast.warning(m.proxy_invalid_host());
+				}
+				if (!validatePort(proxyPort)) {
+					toast.warning(m.proxy_invalid_port());
+				}
+			}
 
-		generalSettings.setProxy(proxySettings);
-		toast.success(m.proxy_apply());
-		testResult = null; // Clear test result when applying new settings
+			// Save settings even if validation fails (with warning)
+			const proxySettings: ProxySettings = {
+				enabled: proxyEnabled,
+				host: proxyHost.trim(),
+				port: proxyPort,
+			};
+
+			generalSettings.setProxy(proxySettings);
+			// Silent save - no success toast
+			testResult = null; // Clear test result when settings change
+
+			saveDebounceTimer = null;
+		}, 1000);
 	}
 
 	// Test proxy connection
@@ -64,15 +74,26 @@
 			return;
 		}
 
+		// Save settings before testing
+		if (saveDebounceTimer) {
+			clearTimeout(saveDebounceTimer);
+			saveDebounceTimer = null;
+		}
+
+		const proxySettings: ProxySettings = {
+			enabled: true, // Force enable for testing
+			host: proxyHost.trim(),
+			port: proxyPort,
+		};
+
+		generalSettings.setProxy(proxySettings);
+
 		isTesting = true;
 		testResult = null;
 
 		try {
-			const result = await window.electronAPI.generalSettingsService.testProxyConnection({
-				enabled: true,
-				host: proxyHost.trim(),
-				port: proxyPort,
-			});
+			const result =
+				await window.electronAPI.generalSettingsService.testProxyConnection(proxySettings);
 
 			if (result.success) {
 				testResult = { success: true, message: m.proxy_test_success() };
@@ -103,7 +124,10 @@
 		<SettingSwitchItem
 			label={m.proxy_enable()}
 			checked={proxyEnabled}
-			onCheckedChange={(v) => (proxyEnabled = v)}
+			onCheckedChange={(v) => {
+				proxyEnabled = v;
+				autoSave();
+			}}
 		/>
 	</div>
 
@@ -115,6 +139,7 @@
 		placeholder={m.proxy_host_placeholder()}
 		bind:value={proxyHost}
 		disabled={!proxyEnabled}
+		oninput={autoSave}
 	/>
 
 	<!-- Proxy Port -->
@@ -125,6 +150,7 @@
 		placeholder={m.proxy_port_placeholder()}
 		bind:value={proxyPort}
 		disabled={!proxyEnabled}
+		oninput={autoSave}
 	/>
 
 	<!-- Action Buttons -->
@@ -132,7 +158,6 @@
 		<Button onclick={handleTest} disabled={!proxyEnabled || isTesting} variant="outline">
 			{isTesting ? m.proxy_testing() : m.proxy_test()}
 		</Button>
-		<Button onclick={handleApply}>{m.proxy_apply()}</Button>
 	</div>
 
 	<!-- Test Result Display -->
