@@ -55,9 +55,12 @@ export class ProxyForwardService {
 			});
 
 			return new Promise((resolve, reject) => {
-				this.server!.listen(this.port, "127.0.0.1", () => {
+				this.server!.listen(this.port, "0.0.0.0", () => {
 					this.isRunning = true;
-					logger.info(`[ProxyForward] Service started on 127.0.0.1:${this.port}`);
+					logger.info(`[ProxyForward] Service started on 0.0.0.0:${this.port}`);
+					logger.info(
+						`[ProxyForward] Containers can access via http://host.docker.internal:${this.port}`,
+					);
 					resolve();
 				});
 
