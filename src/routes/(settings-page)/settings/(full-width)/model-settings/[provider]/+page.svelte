@@ -110,18 +110,22 @@
 		};
 	});
 
-	// 为 baseUrl 创建独立的输入状态
+	// 为 baseUrl 和 apiKey 创建独立的输入状态
 	let baseUrlInput = $state("");
+	let apiKeyInput = $state("");
 	let baseUrlDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+	let apiKeyDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-	// 监听 currentProvider 变化，同步到 baseUrlInput
+	// 记录上一次的 provider ID，用于检测切换
+	let lastProviderId = $state<string>("");
+
+	// 只在切换 Provider 时同步一次，不使用响应式 $effect
 	$effect(() => {
-		if (currentProvider) {
-			// 只在切换 provider 或初始化时同步，避免在用户输入时覆盖
-			const newBaseUrl = currentProvider.baseUrl;
-			if (newBaseUrl !== baseUrlInput && !baseUrlDebounceTimer) {
-				baseUrlInput = newBaseUrl;
-			}
+		if (currentProvider && currentProvider.id !== lastProviderId) {
+			// Provider 切换了，同步数据
+			baseUrlInput = currentProvider.baseUrl;
+			apiKeyInput = currentProvider.apiKey;
+			lastProviderId = currentProvider.id;
 		}
 	});
 
@@ -135,7 +139,7 @@
 			clearTimeout(baseUrlDebounceTimer);
 		}
 
-		// 设置新的防抖定时器
+		// 设置新的防抖定时器 - 延长到 1000ms
 		baseUrlDebounceTimer = setTimeout(async () => {
 			if (formData.id) {
 				await providerState.updateProvider(formData.id, {
@@ -144,7 +148,29 @@
 			}
 			// 清除定时器引用
 			baseUrlDebounceTimer = null;
-		}, 500);
+		}, 1000);
+	}
+
+	// apiKey 防抖保存函数
+	function handleApiKeyInput(event: Event) {
+		const target = event.target as HTMLInputElement;
+		apiKeyInput = target.value;
+
+		// 清除之前的定时器
+		if (apiKeyDebounceTimer) {
+			clearTimeout(apiKeyDebounceTimer);
+		}
+
+		// 设置新的防抖定时器 - 延长到 1000ms
+		apiKeyDebounceTimer = setTimeout(async () => {
+			if (formData.id) {
+				await providerState.updateProvider(formData.id, {
+					apiKey: apiKeyInput,
+				});
+			}
+			// 清除定时器引用
+			apiKeyDebounceTimer = null;
+		}, 1000);
 	}
 
 	async function saveFormData() {
@@ -152,7 +178,7 @@
 			await providerState.updateProvider(formData.id, {
 				name: formData.name,
 				apiType: formData.apiType,
-				apiKey: formData.apiKey,
+				apiKey: apiKeyInput,
 				baseUrl: baseUrlInput, // 使用 baseUrlInput 而不是 formData.baseUrl
 				enabled: formData.enabled,
 				custom: formData.custom,
@@ -180,9 +206,17 @@
 			clearTimeout(baseUrlDebounceTimer);
 			baseUrlDebounceTimer = null;
 		}
+
+		// 同时保存 apiKey 的最新值
+		if (apiKeyDebounceTimer) {
+			clearTimeout(apiKeyDebounceTimer);
+			apiKeyDebounceTimer = null;
+		}
+
 		if (formData.id) {
 			await providerState.updateProvider(formData.id, {
 				baseUrl: baseUrlInput,
+				apiKey: apiKeyInput,
 			});
 		}
 
@@ -206,8 +240,15 @@
 		// The SSO callback returns the actual API key that should be used
 		const apiKeyToUse = userState.ssoApiKey || userState.userInfo?.api_key;
 		if (apiKeyToUse) {
-			formData.apiKey = apiKeyToUse;
-			handleInputChange();
+			apiKeyInput = apiKeyToUse;
+
+			// 立即保存，不使用防抖
+			if (formData.id) {
+				providerState.updateProvider(formData.id, {
+					apiKey: apiKeyInput,
+				});
+			}
+
 			toast.success(m.text_provider_update_success({ name: formData.name }));
 		}
 	}
@@ -421,10 +462,10 @@
 					<Input
 						id="apiKey"
 						type={showApiKey ? "text" : "password"}
-						bind:value={formData.apiKey}
+						value={apiKeyInput}
 						placeholder={m.placeholder_input_provider_api_key()}
 						class="rounded-settings-item bg-settings-item-bg hover:ring-ring pr-10 hover:ring-1"
-						oninput={handleInputChange}
+						oninput={handleApiKeyInput}
 					/>
 					<Button
 						variant="ghost"

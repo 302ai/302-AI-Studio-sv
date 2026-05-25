@@ -1080,10 +1080,14 @@ class ClaudeCodeProcessor {
  * @param preGeneratedMessageId - Optional pre-generated messageId for optimistic UI updates.
  *                                 When provided, the processor will skip generating the start event
  *                                 (assuming it was already sent immediately for optimistic UI).
+ * @param customFetch - Optional custom fetch function (e.g., proxy-enabled fetch).
  */
-export function createClaudeCodeFetch(preGeneratedMessageId?: string): typeof fetch {
+export function createClaudeCodeFetch(
+	preGeneratedMessageId?: string,
+	customFetch: typeof fetch = fetch,
+): typeof fetch {
 	return async (url, options) => {
-		const response = await fetch(url, options);
+		const response = await customFetch(url, options);
 		const processor = new ClaudeCodeProcessor(preGeneratedMessageId);
 		return interceptSSEResponse(response, processor);
 	};

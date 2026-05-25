@@ -1,5 +1,6 @@
 import { providerStorage } from "@electron/main/services/storage-service/provider-storage";
 import { getCustomUserAgentFragment } from "@electron/main/utils/user-agent";
+import { getProxyAgent } from "@electron/main/utils/proxy-helper";
 import ky from "ky";
 
 const userAgent = getCustomUserAgentFragment();
@@ -26,6 +27,14 @@ export const _302AIKy = ky.create({
 				url.protocol = base.protocol;
 				url.hostname = base.hostname;
 				url.port = base.port;
+
+				// Add proxy support
+				const proxyAgent = await getProxyAgent();
+				if (proxyAgent) {
+					// @ts-expect-error - dispatcher is a valid option for undici fetch
+					request.dispatcher = proxyAgent;
+				}
+
 				return new Request(url.toString(), request);
 			},
 		],
@@ -48,5 +57,18 @@ export function create302AIKy(apiKey: string, baseUrl = "https://api.302ai.com")
 			Authorization: `Bearer ${apiKey}`,
 		},
 		retry: 3,
+		hooks: {
+			beforeRequest: [
+				async (request) => {
+					// Add proxy support
+					const proxyAgent = await getProxyAgent();
+					if (proxyAgent) {
+						// @ts-expect-error - dispatcher is a valid option for undici fetch
+						request.dispatcher = proxyAgent;
+					}
+					return request;
+				},
+			],
+		},
 	});
 }

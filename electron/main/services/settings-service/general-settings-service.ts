@@ -2,6 +2,10 @@ import type { LanguageCode, ProxySettings } from "@shared/storage/general-settin
 import { net, session, webContents, type IpcMainInvokeEvent } from "electron";
 import { emitter } from "../broadcast-service";
 import { generalSettingsStorage } from "../storage-service/general-settings-storage";
+import { clearProxyAgentCache } from "../../utils/proxy-helper";
+import { createLogger } from "@shared/logger";
+
+const logger = createLogger("services");
 
 export class GeneralSettingsService {
 	async getLanguage(): Promise<LanguageCode> {
@@ -90,11 +94,27 @@ export class GeneralSettingsService {
 
 	async applyProxySettings(proxySettings: ProxySettings): Promise<void> {
 		if (proxySettings.enabled && proxySettings.host && proxySettings.port) {
+			const proxyUrl = `http://${proxySettings.host}:${proxySettings.port}`;
+
+			logger.info(`[Proxy] Applying proxy settings: ${proxyUrl}`);
+
+			// Clear cached ProxyAgent to force recreation with new settings
+			clearProxyAgentCache();
+
+			// Set Electron session proxy (for browser requests like net.request)
 			await session.defaultSession.setProxy({
-				proxyRules: `http://${proxySettings.host}:${proxySettings.port}`,
+				proxyRules: proxyUrl,
 				proxyBypassRules: "localhost,127.0.0.1",
 			});
+
+			logger.info("[Proxy] Electron session proxy configured");
 		} else {
+			logger.info("[Proxy] Clearing proxy settings");
+
+			// Clear cached ProxyAgent
+			clearProxyAgentCache();
+
+			// Clear Electron session proxy
 			await session.defaultSession.setProxy({ proxyRules: "" });
 		}
 	}
