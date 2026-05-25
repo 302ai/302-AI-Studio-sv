@@ -110,13 +110,50 @@
 		};
 	});
 
+	// 为 baseUrl 创建独立的输入状态
+	let baseUrlInput = $state("");
+	let baseUrlDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// 监听 currentProvider 变化，同步到 baseUrlInput
+	$effect(() => {
+		if (currentProvider) {
+			// 只在切换 provider 或初始化时同步，避免在用户输入时覆盖
+			const newBaseUrl = currentProvider.baseUrl;
+			if (newBaseUrl !== baseUrlInput && !baseUrlDebounceTimer) {
+				baseUrlInput = newBaseUrl;
+			}
+		}
+	});
+
+	// baseUrl 防抖保存函数
+	function handleBaseUrlInput(event: Event) {
+		const target = event.target as HTMLInputElement;
+		baseUrlInput = target.value;
+
+		// 清除之前的定时器
+		if (baseUrlDebounceTimer) {
+			clearTimeout(baseUrlDebounceTimer);
+		}
+
+		// 设置新的防抖定时器
+		baseUrlDebounceTimer = setTimeout(async () => {
+			if (formData.id) {
+				await providerState.updateProvider(formData.id, {
+					baseUrl: baseUrlInput,
+				});
+			}
+			// 清除定时器引用
+			baseUrlDebounceTimer = null;
+		}, 500);
+	}
+
 	async function saveFormData() {
 		if (formData.id) {
 			await providerState.updateProvider(formData.id, {
 				name: formData.name,
 				apiType: formData.apiType,
 				apiKey: formData.apiKey,
-				baseUrl: formData.baseUrl,
+				baseUrl: baseUrlInput, // 使用 baseUrlInput 而不是 formData.baseUrl
 				enabled: formData.enabled,
 				custom: formData.custom,
 				status: formData.status,
@@ -138,7 +175,18 @@
 		}
 		isLoadingModels = true;
 
-		// 先保存表单数据，确保使用最新的 API key
+		// 先保存 baseUrl 的最新值
+		if (baseUrlDebounceTimer) {
+			clearTimeout(baseUrlDebounceTimer);
+			baseUrlDebounceTimer = null;
+		}
+		if (formData.id) {
+			await providerState.updateProvider(formData.id, {
+				baseUrl: baseUrlInput,
+			});
+		}
+
+		// 再保存其他表单数据，确保使用最新的 API key
 		clearTimeout(saveTimeout);
 		await saveFormData();
 
@@ -352,15 +400,15 @@
 				<Label for="baseUrl">{m.text_label_provider_base_url()}</Label>
 				<Input
 					id="baseUrl"
-					bind:value={formData.baseUrl}
+					value={baseUrlInput}
 					placeholder={formData.custom ? m.placeholder_input_provider_base_url() : ""}
-					oninput={handleInputChange}
+					oninput={handleBaseUrlInput}
 					class="rounded-settings-item bg-settings-item-bg hover:ring-ring hover:ring-1"
 				/>
-				{#if formData.baseUrl}
+				{#if baseUrlInput}
 					<p class="text-muted-foreground max-w-full break-all text-xs">
 						{m.text_base_url_request_info({
-							url: getChatEndpointUrl(formData.baseUrl, formData.apiType),
+							url: getChatEndpointUrl(baseUrlInput, formData.apiType),
 						})}
 					</p>
 				{/if}
