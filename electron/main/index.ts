@@ -70,6 +70,23 @@ if (!gotTheLock) {
 	app.on("ready", async () => {
 		await init();
 
+		// Apply saved proxy settings on startup
+		try {
+			const { generalSettingsStorage } = await import(
+				"./services/storage-service/general-settings-storage"
+			);
+			const { generalSettingsService } = await import(
+				"./services/settings-service/general-settings-service"
+			);
+			const proxySettings = await generalSettingsStorage.getProxySettings();
+			if (proxySettings.enabled) {
+				await generalSettingsService.applyProxySettings(proxySettings);
+				logger.info("Proxy settings applied on startup:", proxySettings);
+			}
+		} catch (error) {
+			logger.error("Failed to apply proxy settings on startup:", error);
+		}
+
 		// Configure Custom Headers and User Agent
 		setupNetworkInterceptor();
 

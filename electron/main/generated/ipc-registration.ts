@@ -157,6 +157,12 @@ export function registerIpcHandlers() {
 	ipcMain.handle("generalSettingsService:handleLanguageChanged", (event, language) =>
 		generalSettingsService.handleLanguageChanged(event, language),
 	);
+	ipcMain.handle("generalSettingsService:handleProxyChanged", (event, proxySettings) =>
+		generalSettingsService.handleProxyChanged(event, proxySettings),
+	);
+	ipcMain.handle("generalSettingsService:testProxyConnection", (event, proxySettings) =>
+		generalSettingsService.testProxyConnection(event, proxySettings),
+	);
 
 	// ssoService service registration
 	ipcMain.handle("ssoService:openSsoLogin", (event, serverPort, language) =>
@@ -731,6 +737,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("pluginService:executeAfterSendMessageHook");
 	ipcMain.removeHandler("pluginService:executeErrorHook");
 	ipcMain.removeHandler("generalSettingsService:handleLanguageChanged");
+	ipcMain.removeHandler("generalSettingsService:handleProxyChanged");
+	ipcMain.removeHandler("generalSettingsService:testProxyConnection");
 	ipcMain.removeHandler("ssoService:openSsoLogin");
 	ipcMain.removeHandler("ssoService:waitForSsoCallback");
 	ipcMain.removeHandler("ssoService:cancelSsoLogin");

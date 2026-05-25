@@ -20,6 +20,11 @@
 			labelKey: m.text_button_settings_preferences(),
 		},
 		{
+			name: "proxy-settings",
+			path: "/settings/proxy-settings",
+			labelKey: m.text_button_settings_proxy(),
+		},
+		{
 			name: "theme-settings",
 			path: "/settings/theme-settings",
 			labelKey: m.text_button_settings_theme(),
