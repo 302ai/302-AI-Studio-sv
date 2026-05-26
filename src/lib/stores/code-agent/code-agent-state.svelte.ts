@@ -51,6 +51,7 @@ function getInitialData() {
 	if (codeAgentConfig) {
 		return clone(codeAgentConfig as CodeAgentConfigMetadata);
 	}
+
 	const initialData: CodeAgentConfigMetadata = {
 		enabled: false,
 		threadId: threadId,
@@ -255,6 +256,7 @@ class CodeAgentState {
 	updateCurrentAgentId(agentId: AgentClass): void {
 		const codingAgentId = agentId === "open-claw" ? "claude-code" : agentId;
 		this.updateState({ currentAgentId: agentId, codingAgentId });
+		codeAgentGlobalConfigsState.updateLastAgentId(agentId);
 	}
 
 	updateType(type: CodeAgentType): void {

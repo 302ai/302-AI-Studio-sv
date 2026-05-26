@@ -1,5 +1,6 @@
 import { MAX_TABS_PER_WINDOW } from "@shared/constants/tab";
 import { createLogger } from "@shared/logger";
+import type { CodeAgentConfigMetadata } from "@shared/storage/code-agent";
 import {
 	isChatTab,
 	type ChatMessage,
@@ -19,10 +20,12 @@ import {
 	withLifecycleHandlers,
 	withLoadHandlers,
 } from "../../mixins/web-contents-mixins";
+import { createInitialCodeAgentConfig } from "../../utils/code-agent-config-utils";
 import { TempStorage } from "../../utils/temp-storage";
 import { emitter } from "../broadcast-service";
 import { shortcutService } from "../shortcut-service";
 import { storageService } from "../storage-service";
+import { codeAgentGlobalConfigsStorage } from "../storage-service/code-agent/code-agent-storage";
 import { providerStorage } from "../storage-service/provider-storage";
 import { sessionStorage } from "../storage-service/session-storage";
 import { tabStorage } from "../storage-service/tab-storage";
@@ -54,6 +57,16 @@ const TAB_CONFIGS: Record<TabType, TabConfig> = {
 } as const;
 
 const getTabConfig = (type: TabType) => TAB_CONFIGS[type] || TAB_CONFIGS.chat;
+
+async function getInitialCodeAgentConfig(threadId: string): Promise<CodeAgentConfigMetadata> {
+	const existingConfig = await storageService.getItemInternal(
+		`CodeAgentStorage:code-agent-config-state-${threadId}`,
+	);
+	if (!isNull(existingConfig)) return existingConfig as CodeAgentConfigMetadata;
+
+	const { data: globalConfigs } = await codeAgentGlobalConfigsStorage.getGlobalConfigs();
+	return createInitialCodeAgentConfig(threadId, globalConfigs);
+}
 
 interface TabAccessInfo {
 	lastAccessTime: number;
@@ -475,9 +488,7 @@ export class TabService {
 				await Promise.all([
 					storageService.getItemInternal("app-thread:" + tab.threadId),
 					storageService.getItemInternal("app-chat-messages:" + tab.threadId),
-					storageService.getItemInternal(
-						`CodeAgentStorage:code-agent-config-state-${tab.threadId}`,
-					),
+					getInitialCodeAgentConfig(tab.threadId),
 					storageService.getItemInternal(
 						`CodeAgentStorage:claude-code-agent-state-${tab.threadId}`,
 					),

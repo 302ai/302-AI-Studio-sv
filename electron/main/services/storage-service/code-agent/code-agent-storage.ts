@@ -78,6 +78,7 @@ class CodeAgentGlobalConfigsStorage extends StorageService<CodeAgentGlobalConfig
 			notificationsEnabled: false,
 			lastVibeMode: "remote" as CodeAgentType,
 			lastAgentId: "claude-code" as CodingAgentClass,
+			lastSessionMode: "chat" as "chat" | "vibe",
 			feishu: {
 				appId: "",
 				appSecret: "",
