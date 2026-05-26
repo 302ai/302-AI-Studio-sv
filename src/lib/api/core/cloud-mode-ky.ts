@@ -4,8 +4,12 @@ const { getUserAgentFragment } = window.electronAPI.appService;
 const { get302AIApiKey } = window.electronAPI.providerService;
 
 export async function createCloudModeKy() {
-	const { baseUrl } =
+	const { isOk, baseUrl } =
 		await window.electronAPI.cloudModeService.getCloudModeInstanceBaseUrlByIpc();
+	if (!isOk || !baseUrl) {
+		throw new Error("Cloud mode instance address is not ready");
+	}
+
 	return ky.create({
 		timeout: 180000,
 		prefixUrl: baseUrl,

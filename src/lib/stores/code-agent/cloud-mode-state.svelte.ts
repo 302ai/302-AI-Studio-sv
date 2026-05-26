@@ -133,11 +133,9 @@ class CloudModeStateManager {
 
 	init() {
 		onMount(() => {
-			try {
-				cloudModeState.initStatus();
-			} catch (e) {
+			void cloudModeState.initStatus().catch((e) => {
 				toast.error("Failed to load cloud instance status, please retry later" + e);
-			}
+			});
 		});
 
 		return this;

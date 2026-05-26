@@ -7,6 +7,7 @@ import { createLogger } from "@shared/logger";
 import type { LocalSessionInfo } from "@shared/storage/code-agent";
 import { toast } from "svelte-sonner";
 import { SvelteMap } from "svelte/reactivity";
+import { cloudModeState } from "./cloud-mode-state.svelte";
 
 const logger = createLogger("state");
 
@@ -201,6 +202,20 @@ class CloudModeSessionsState {
 	async refreshSessions(): Promise<void> {
 		this.isLoading = true;
 		try {
+			const syncResult =
+				await window.electronAPI.cloudModeService.syncCloudInstanceToLocalByIpc();
+			if (!syncResult.isOk) {
+				persistedCloudModeSessionsState.current = [];
+				return;
+			}
+
+			const { isOk, baseUrl } =
+				await window.electronAPI.cloudModeService.getCloudModeInstanceBaseUrlByIpc();
+			if (!isOk || !baseUrl || cloudModeState.state.status !== "running") {
+				persistedCloudModeSessionsState.current = [];
+				return;
+			}
+
 			const response = await listLocalOrCloudSessions("cloud");
 			if (response.success) {
 				persistedCloudModeSessionsState.current = response.session_list;

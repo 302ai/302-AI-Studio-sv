@@ -9,6 +9,7 @@ import type { IpcMainInvokeEvent } from "electron";
 import { attemptAsync, isNull } from "es-toolkit";
 import { broadcastService, emitter } from "../broadcast-service";
 import { CRON_EXPRESSION, schedulerService } from "../scheduler-service";
+import { buildCloudModeInstanceBaseUrl } from "./cloud-mode-base-url";
 
 const logger = createLogger("services");
 
@@ -265,7 +266,18 @@ export class CloudModeService {
 			return { isOk: false, baseUrl: "" };
 		}
 
-		return { isOk: true, baseUrl: `http://${instance.publicIp}:${instance.apiPort}` };
+		const result = buildCloudModeInstanceBaseUrl(instance);
+		if (!result.isOk) {
+			logger.warn("[CloudModeService] Cloud mode instance address is not ready:", {
+				instanceName: instance.instanceName,
+				status: instance.status,
+				publicIp: instance.publicIp,
+				apiPort: instance.apiPort,
+				expired: instance.expired,
+			});
+		}
+
+		return result;
 	}
 
 	public async getCloudModeInstanceBaseUrlByIpc(
