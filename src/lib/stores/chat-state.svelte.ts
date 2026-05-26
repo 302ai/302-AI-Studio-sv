@@ -1722,6 +1722,7 @@ export const chat = new Chat({
 		},
 		body: () => {
 			const codeAgentEnabled = codeAgentState.enabled;
+			const currentAgentId = codeAgentState.currentAgentId;
 			const sessionId = codeAgentEnabled
 				? (() => {
 						if (codeAgentState.currentSessionId) {
@@ -1735,6 +1736,14 @@ export const chat = new Chat({
 						return newSessionId;
 					})()
 				: "";
+
+			// Debug log for OpenClaw agent type
+			if (codeAgentEnabled && currentAgentId === "open-claw") {
+				logger.debug("[ChatTransport] OpenClaw mode detected, setting agentType=1", {
+					codeAgentEnabled,
+					currentAgentId,
+				});
+			}
 
 			return {
 				baseUrl: codeAgentEnabled
@@ -1800,8 +1809,8 @@ export const chat = new Chat({
 						contextSummary: chatState.contextSummary,
 						compressedMessageCount: chatState.compressedMessageCount ?? 0,
 					}),
-				...(codeAgentEnabled &&
-					codeAgentState.currentAgentId === "open-claw" && { agentType: 1 }),
+				// OpenClaw agent type - use captured currentAgentId to ensure correct value
+				...(codeAgentEnabled && currentAgentId === "open-claw" && { agentType: 1 }),
 			};
 		},
 	}),

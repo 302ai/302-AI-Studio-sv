@@ -73,14 +73,56 @@ export async function createProxyFetch(): Promise<typeof fetch> {
 	// We need to cast types because undici's fetch has slightly different types than standard fetch
 	// but they are compatible at runtime
 	return (async (url: RequestInfo | URL, init?: RequestInit) => {
-		// Cast to unknown first to bypass type incompatibilities between standard fetch and undici fetch
-		// They are functionally compatible but have minor type differences
-		return undiciFetch(
-			url as unknown as Parameters<typeof undiciFetch>[0],
-			{
-				...init,
-				dispatcher: proxyAgent,
-			} as Parameters<typeof undiciFetch>[1],
-		) as unknown as Promise<Response>;
+		// Parse URL to extract hostname and full URL string
+		const urlString =
+			typeof url === "string" ? url : url instanceof URL ? url.href : (url as Request).url;
+		const parsedUrl = new URL(urlString);
+
+		// Check if this is a localhost request
+		const isLocalhost =
+			parsedUrl.hostname === "localhost" ||
+			parsedUrl.hostname === "127.0.0.1" ||
+			parsedUrl.hostname === "::1";
+
+		// Log request details
+		logger.info(`[Proxy] Fetch request: ${parsedUrl.href}`);
+		logger.debug(`[Proxy] - Hostname: ${parsedUrl.hostname}`);
+		logger.debug(`[Proxy] - Is localhost: ${isLocalhost}`);
+
+		// Bypass proxy for localhost requests
+		if (isLocalhost) {
+			logger.info(`[Proxy] Bypassing proxy for localhost request: ${parsedUrl.href}`);
+			try {
+				const response = await fetch(url, init);
+				logger.info(
+					`[Proxy] Localhost fetch success: ${parsedUrl.href} - Status: ${response.status}`,
+				);
+				return response;
+			} catch (error) {
+				logger.error(`[Proxy] Localhost fetch failed: ${parsedUrl.href}`, error);
+				throw error;
+			}
+		}
+
+		// Use proxy for non-localhost requests
+		logger.debug(`[Proxy] Using proxy for: ${parsedUrl.href} via ${proxyUrl}`);
+		try {
+			// Cast to unknown first to bypass type incompatibilities between standard fetch and undici fetch
+			// They are functionally compatible but have minor type differences
+			const response = (await undiciFetch(
+				url as unknown as Parameters<typeof undiciFetch>[0],
+				{
+					...init,
+					dispatcher: proxyAgent,
+				} as Parameters<typeof undiciFetch>[1],
+			)) as unknown as Response;
+			logger.info(
+				`[Proxy] Proxied fetch success: ${parsedUrl.href} - Status: ${response.status}`,
+			);
+			return response;
+		} catch (error) {
+			logger.error(`[Proxy] Proxied fetch failed: ${parsedUrl.href}`, error);
+			throw error;
+		}
 	}) as typeof fetch;
 }

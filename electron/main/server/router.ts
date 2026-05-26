@@ -1754,6 +1754,11 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		...(agentType !== undefined ? { agent_type: agentType } : {}),
 	};
 
+	// Debug log for agentType
+	if (agentType !== undefined) {
+		logger.info(`[302ai-code-agent] agentType detected: ${agentType}`);
+	}
+
 	logger.debug("[302ai-code-agent] Messages:", JSON.stringify(requestBody.messages));
 	logger.debug("[302ai-code-agent] Sending request to 302.AI...");
 	logger.debug("[302ai-code-agent] Request body:", JSON.stringify(requestBody, null, 2));
