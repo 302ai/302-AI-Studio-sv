@@ -6,7 +6,7 @@ export const DEFAULT_PROVIDERS: ModelProvider[] = [
 		name: "302.AI",
 		apiType: "302ai",
 		apiKey: "",
-		baseUrl: "https://api.302.ai/v1",
+		baseUrl: "https://api.302ai.com/v1",
 		enabled: true,
 		custom: false,
 		status: "pending",
@@ -15,7 +15,7 @@ export const DEFAULT_PROVIDERS: ModelProvider[] = [
 			apiKey: "https://dash.302.ai/apis/list",
 			docs: "https://302ai.apifox.cn/",
 			models: "https://302ai.apifox.cn/api-147522038",
-			defaultBaseUrl: "https://api.302.ai/v1",
+			defaultBaseUrl: "https://api.302ai.com/v1",
 		},
 	},
 	{

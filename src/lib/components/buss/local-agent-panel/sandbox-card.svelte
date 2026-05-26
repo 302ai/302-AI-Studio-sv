@@ -143,6 +143,7 @@
 					text={openClawHealthProps.text}
 					showWarning={openClawHealthStatus === "unhealthy"}
 					warningTooltip={m.local_platform_try_restart()}
+					className="ml-2"
 				/>
 				{#if openClawHealthStatus === "unhealthy" || isRestarting}
 					<ButtonWithTooltip

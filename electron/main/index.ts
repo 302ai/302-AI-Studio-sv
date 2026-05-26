@@ -21,6 +21,7 @@ import {
 	trayService,
 	windowService,
 } from "./services";
+import { proxyForwardService } from "./services/proxy-forward-service";
 import { StorageService } from "./services/storage-service";
 import { UpdaterService } from "./services/updater-service";
 import { setupNetworkInterceptor } from "./utils/network-interceptor";
@@ -70,6 +71,32 @@ if (!gotTheLock) {
 	app.on("ready", async () => {
 		await init();
 
+		// Start proxy forward service
+		try {
+			await proxyForwardService.start();
+			logger.info("[Main] Proxy forward service started successfully");
+		} catch (error) {
+			logger.error("[Main] Failed to start proxy forward service:", error);
+			// Continue app initialization even if proxy service fails
+		}
+
+		// Apply saved proxy settings on startup
+		try {
+			const { generalSettingsStorage } = await import(
+				"./services/storage-service/general-settings-storage"
+			);
+			const { generalSettingsService } = await import(
+				"./services/settings-service/general-settings-service"
+			);
+			const proxySettings = await generalSettingsStorage.getProxySettings();
+			if (proxySettings.enabled) {
+				await generalSettingsService.applyProxySettings(proxySettings);
+				logger.info("Proxy settings applied on startup:", proxySettings);
+			}
+		} catch (error) {
+			logger.error("Failed to apply proxy settings on startup:", error);
+		}
+
 		// Configure Custom Headers and User Agent
 		setupNetworkInterceptor();
 
@@ -94,6 +121,14 @@ if (!gotTheLock) {
 					"[Main] Update installation in progress, skipping window-all-closed handler",
 				);
 				return;
+			}
+
+			// Stop proxy forward service
+			try {
+				await proxyForwardService.stop();
+				logger.info("[Main] Proxy forward service stopped");
+			} catch (error) {
+				logger.error("[Main] Failed to stop proxy forward service:", error);
 			}
 
 			// Stop local sandbox before quitting (for Windows/Linux)
@@ -122,6 +157,14 @@ if (!gotTheLock) {
 			windows.forEach((window) => {
 				window.close();
 			});
+
+			// Stop proxy forward service
+			try {
+				await proxyForwardService.stop();
+				logger.info("[Main] Proxy forward service stopped");
+			} catch (error) {
+				logger.error("[Main] Failed to stop proxy forward service:", error);
+			}
 
 			// Stop local sandbox before exiting (for macOS)
 			logger.info("[Main] Stopping local sandbox before exit...");

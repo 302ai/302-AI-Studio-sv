@@ -34,10 +34,10 @@ The workflow automatically triggers on:
 
 Set these in **Settings → Secrets and variables → Actions**:
 
-| Secret               | Description                    | Example                 |
-| -------------------- | ------------------------------ | ----------------------- |
-| `ANTHROPIC_API_KEY`  | API key for Claude             | `sk-ant-...`            |
-| `ANTHROPIC_BASE_URL` | Custom API endpoint (optional) | `https://api.302.ai/v1` |
+| Secret               | Description                    | Example                    |
+| -------------------- | ------------------------------ | -------------------------- |
+| `ANTHROPIC_API_KEY`  | API key for Claude             | `sk-ant-...`               |
+| `ANTHROPIC_BASE_URL` | Custom API endpoint (optional) | `https://api.302ai.com/v1` |
 
 ### Using 302.AI as API Provider
 

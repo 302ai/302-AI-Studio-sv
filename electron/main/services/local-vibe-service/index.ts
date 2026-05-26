@@ -293,11 +293,18 @@ export class LocalVibeService {
 			const templateConfig = cloneDeep(OPENCLAW_DEFAULT_CONFIG) as Record<string, unknown>;
 			delete templateConfig["_version"];
 
+			const baseUrl = await providerStorage.get302AIBaseUrl();
+			const templateProviders = get(templateConfig, "models.providers") as
+				| Record<string, Record<string, unknown>>
+				| undefined;
+			if (templateProviders) {
+				for (const providerName of Object.keys(templateProviders)) {
+					set(templateConfig, `models.providers.${providerName}.baseUrl`, baseUrl);
+				}
+			}
+
 			// Set API keys in template for all providers
 			if (apiKey) {
-				const templateProviders = get(templateConfig, "models.providers") as
-					| Record<string, Record<string, unknown>>
-					| undefined;
 				if (templateProviders) {
 					for (const providerName of Object.keys(templateProviders)) {
 						set(templateConfig, `models.providers.${providerName}.apiKey`, apiKey);

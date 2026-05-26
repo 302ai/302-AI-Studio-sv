@@ -1,4 +1,5 @@
 import { createLogger } from "@shared/logger";
+import { providerStorage } from "@electron/main/services/storage-service/provider-storage";
 import {
 	createClaudeCodeSandboxResponse,
 	skill,
@@ -175,10 +176,11 @@ export async function listClaudeCodeSandboxes(
 	apiKey?: string,
 ): Promise<ListClaudeCodeSandboxesResponse> {
 	try {
+		const baseUrl = await providerStorage.get302AIBaseUrlWithoutV1();
 		const response =
 			apiKey && apiKey.trim() !== ""
 				? await ky
-						.get("https://api.302.ai/302/claude-code/sandbox/list", {
+						.get(`${baseUrl}/302/claude-code/sandbox/list`, {
 							headers: {
 								Authorization: `Bearer ${apiKey}`,
 							},

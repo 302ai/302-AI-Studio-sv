@@ -3,7 +3,6 @@
 	import * as Sidebar from "$lib/components/ui/sidebar";
 	import { useSidebar } from "$lib/components/ui/sidebar";
 	import { m } from "$lib/paraglide/messages";
-	import { getLocale } from "$lib/paraglide/runtime";
 	import { agentPreviewState } from "$lib/stores/agent-preview-state.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
@@ -30,9 +29,7 @@
 	}
 
 	async function handleOpenHelpDocs() {
-		const locale = getLocale();
-		const lang = locale === "en" ? "en" : "zh";
-		const helpDocsUrl = `https://studio.302.ai/${lang}/docs`;
+		const helpDocsUrl = "https://studio.302ai.cn/zh/docs";
 
 		await window.electronAPI.tabService.handleNewTab(
 			"Help Docs",

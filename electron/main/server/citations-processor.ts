@@ -23,6 +23,7 @@ interface Choice {
 
 export function createCitationsFetch(
 	providerOptions?: Record<string, boolean | string>,
+	customFetch: typeof fetch = fetch,
 ): typeof fetch {
 	return async (url, options) => {
 		// Modify request body to add provider options if needed
@@ -55,7 +56,7 @@ export function createCitationsFetch(
 			}
 		}
 
-		const response = await fetch(url, options);
+		const response = await customFetch(url, options);
 		const citationsProcessor = new CitationsProcessor();
 		return interceptSSEResponse(response, citationsProcessor);
 	};

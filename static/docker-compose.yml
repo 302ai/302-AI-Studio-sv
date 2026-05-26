@@ -13,15 +13,26 @@ services:
       - DB_SQLITE_PATH=/home/user/db/app.db
       - ROOT_SAVE_PATH=/home/user
       # set these as needed
-      - ANTHROPIC_BASE_URL=https://api.302.ai
+      - ANTHROPIC_BASE_URL=https://api.302ai.com
       - ANTHROPIC_AUTH_TOKEN=${AI302_API_KEY}
       - ANTHROPIC_DEFAULT_HAIKU_MODEL=gpt-5.2
       # injected from .env file at runtime
       - AI302_API_KEY=${AI302_API_KEY}
       - IS_SANDBOX=1
+      # Proxy settings (always point to Electron's proxy forward service)
+      # The proxy forward service automatically handles proxy enable/disable
+      - HTTP_PROXY=http://host.docker.internal:18890
+      - HTTPS_PROXY=http://host.docker.internal:18890
+      - http_proxy=http://host.docker.internal:18890
+      - https_proxy=http://host.docker.internal:18890
+      - NO_PROXY=localhost,127.0.0.1
+      - no_proxy=localhost,127.0.0.1
     volumes:
       # host path injected from .env file at runtime
       - type: bind
         source: ${HOST_DATA_PATH}
         target: /home/user
     restart: unless-stopped
+    # Add host.docker.internal mapping for Linux compatibility
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

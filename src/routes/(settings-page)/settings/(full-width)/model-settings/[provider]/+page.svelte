@@ -110,13 +110,76 @@
 		};
 	});
 
+	// 为 baseUrl 和 apiKey 创建独立的输入状态
+	let baseUrlInput = $state("");
+	let apiKeyInput = $state("");
+	let baseUrlDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+	let apiKeyDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+	// 记录上一次的 provider ID，用于检测切换
+	let lastProviderId = $state<string>("");
+
+	// 只在切换 Provider 时同步一次，不使用响应式 $effect
+	$effect(() => {
+		if (currentProvider && currentProvider.id !== lastProviderId) {
+			// Provider 切换了，同步数据
+			baseUrlInput = currentProvider.baseUrl;
+			apiKeyInput = currentProvider.apiKey;
+			lastProviderId = currentProvider.id;
+		}
+	});
+
+	// baseUrl 防抖保存函数
+	function handleBaseUrlInput(event: Event) {
+		const target = event.target as HTMLInputElement;
+		baseUrlInput = target.value;
+
+		// 清除之前的定时器
+		if (baseUrlDebounceTimer) {
+			clearTimeout(baseUrlDebounceTimer);
+		}
+
+		// 设置新的防抖定时器 - 延长到 1000ms
+		baseUrlDebounceTimer = setTimeout(async () => {
+			if (formData.id) {
+				await providerState.updateProvider(formData.id, {
+					baseUrl: baseUrlInput,
+				});
+			}
+			// 清除定时器引用
+			baseUrlDebounceTimer = null;
+		}, 1000);
+	}
+
+	// apiKey 防抖保存函数
+	function handleApiKeyInput(event: Event) {
+		const target = event.target as HTMLInputElement;
+		apiKeyInput = target.value;
+
+		// 清除之前的定时器
+		if (apiKeyDebounceTimer) {
+			clearTimeout(apiKeyDebounceTimer);
+		}
+
+		// 设置新的防抖定时器 - 延长到 1000ms
+		apiKeyDebounceTimer = setTimeout(async () => {
+			if (formData.id) {
+				await providerState.updateProvider(formData.id, {
+					apiKey: apiKeyInput,
+				});
+			}
+			// 清除定时器引用
+			apiKeyDebounceTimer = null;
+		}, 1000);
+	}
+
 	async function saveFormData() {
 		if (formData.id) {
 			await providerState.updateProvider(formData.id, {
 				name: formData.name,
 				apiType: formData.apiType,
-				apiKey: formData.apiKey,
-				baseUrl: formData.baseUrl,
+				apiKey: apiKeyInput,
+				baseUrl: baseUrlInput, // 使用 baseUrlInput 而不是 formData.baseUrl
 				enabled: formData.enabled,
 				custom: formData.custom,
 				status: formData.status,
@@ -138,7 +201,26 @@
 		}
 		isLoadingModels = true;
 
-		// 先保存表单数据，确保使用最新的 API key
+		// 先保存 baseUrl 的最新值
+		if (baseUrlDebounceTimer) {
+			clearTimeout(baseUrlDebounceTimer);
+			baseUrlDebounceTimer = null;
+		}
+
+		// 同时保存 apiKey 的最新值
+		if (apiKeyDebounceTimer) {
+			clearTimeout(apiKeyDebounceTimer);
+			apiKeyDebounceTimer = null;
+		}
+
+		if (formData.id) {
+			await providerState.updateProvider(formData.id, {
+				baseUrl: baseUrlInput,
+				apiKey: apiKeyInput,
+			});
+		}
+
+		// 再保存其他表单数据，确保使用最新的 API key
 		clearTimeout(saveTimeout);
 		await saveFormData();
 
@@ -158,8 +240,15 @@
 		// The SSO callback returns the actual API key that should be used
 		const apiKeyToUse = userState.ssoApiKey || userState.userInfo?.api_key;
 		if (apiKeyToUse) {
-			formData.apiKey = apiKeyToUse;
-			handleInputChange();
+			apiKeyInput = apiKeyToUse;
+
+			// 立即保存，不使用防抖
+			if (formData.id) {
+				providerState.updateProvider(formData.id, {
+					apiKey: apiKeyInput,
+				});
+			}
+
 			toast.success(m.text_provider_update_success({ name: formData.name }));
 		}
 	}
@@ -352,15 +441,15 @@
 				<Label for="baseUrl">{m.text_label_provider_base_url()}</Label>
 				<Input
 					id="baseUrl"
-					bind:value={formData.baseUrl}
+					value={baseUrlInput}
 					placeholder={formData.custom ? m.placeholder_input_provider_base_url() : ""}
-					oninput={handleInputChange}
+					oninput={handleBaseUrlInput}
 					class="rounded-settings-item bg-settings-item-bg hover:ring-ring hover:ring-1"
 				/>
-				{#if formData.baseUrl}
+				{#if baseUrlInput}
 					<p class="text-muted-foreground max-w-full break-all text-xs">
 						{m.text_base_url_request_info({
-							url: getChatEndpointUrl(formData.baseUrl, formData.apiType),
+							url: getChatEndpointUrl(baseUrlInput, formData.apiType),
 						})}
 					</p>
 				{/if}
@@ -373,10 +462,10 @@
 					<Input
 						id="apiKey"
 						type={showApiKey ? "text" : "password"}
-						bind:value={formData.apiKey}
+						value={apiKeyInput}
 						placeholder={m.placeholder_input_provider_api_key()}
 						class="rounded-settings-item bg-settings-item-bg hover:ring-ring pr-10 hover:ring-1"
-						oninput={handleInputChange}
+						oninput={handleApiKeyInput}
 					/>
 					<Button
 						variant="ghost"
