@@ -1,6 +1,7 @@
 import type {
 	GeneralSettingsState,
 	LanguageCode,
+	ProxySettings,
 	UpdateChannel,
 } from "@shared/storage/general-settings";
 import { prefixStorage } from "@shared/types";
@@ -34,6 +35,18 @@ export class GeneralSettingsStorage extends StorageService<GeneralSettingsState>
 			return "stable";
 		}
 		return result.updateChannel ?? "stable";
+	}
+
+	async getProxySettings(): Promise<ProxySettings> {
+		const result = await this.getItemInternal("state");
+		if (!result || !result.proxy) {
+			return {
+				enabled: false,
+				host: "",
+				port: 8080,
+			};
+		}
+		return result.proxy;
 	}
 }
 

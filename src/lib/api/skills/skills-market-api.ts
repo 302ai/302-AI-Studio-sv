@@ -1,6 +1,6 @@
 /**
  * Skills Market REST API
- * https://skills.302.ai
+ * https://api-skills.302ai.cn
  *
  * This API provides:
  * - Category listing with i18n support
@@ -13,7 +13,7 @@ import { type } from "arktype";
 
 const logger = createLogger("apis");
 
-const SKILLS_MARKET_BASE_URL = "https://api-skills.302.ai";
+const SKILLS_MARKET_BASE_URL = "https://api-skills.302ai.cn";
 
 // ============== Types ==============
 

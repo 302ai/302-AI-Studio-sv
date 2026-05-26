@@ -639,7 +639,7 @@
 					window.electronAPI.windowService.handleNavigateToUrl(
 						"302 Skills Hub",
 						"skillsHub",
-						"https://skills.302.ai",
+						"https://api-skills.302ai.cn",
 					)}
 			>
 				<ShoppingBag class="h-3 w-3" />

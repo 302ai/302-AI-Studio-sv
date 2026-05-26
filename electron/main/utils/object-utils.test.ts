@@ -225,11 +225,11 @@ describe("deepMergeWithOverride", () => {
 			models: {
 				providers: {
 					ai302: {
-						baseUrl: "https://api.302.ai/v1",
+						baseUrl: "https://api.302ai.com/v1",
 						apiKey: "new-key-456",
 					},
 					"ai302-coding": {
-						baseUrl: "https://api.302.ai/v1",
+						baseUrl: "https://api.302ai.com/v1",
 						apiKey: "new-key-456",
 					},
 				},
@@ -255,7 +255,9 @@ describe("deepMergeWithOverride", () => {
 		expect(get(result, "models.providers.ai302.baseUrl")).toBe("https://custom.example.com/v1");
 
 		// New provider added from template
-		expect(get(result, "models.providers.ai302-coding.baseUrl")).toBe("https://api.302.ai/v1");
+		expect(get(result, "models.providers.ai302-coding.baseUrl")).toBe(
+			"https://api.302ai.com/v1",
+		);
 
 		// New field "bind" added from template
 		expect(get(result, "gateway.bind")).toBe("loopback");

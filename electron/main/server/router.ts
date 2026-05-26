@@ -29,6 +29,8 @@ import { chatParametersService } from "../services/chat-parameters-service";
 import { mcpService } from "../services/mcp-service";
 import { storageService } from "../services/storage-service";
 import { codeAgentGlobalConfigsStorage } from "../services/storage-service/code-agent/code-agent-storage";
+import { providerStorage } from "../services/storage-service/provider-storage";
+import { createProxyFetch } from "../utils/proxy-helper";
 import { createCitationsFetch } from "./citations-processor";
 import { createClaudeCodeFetch } from "./claude-code-processor";
 import { THINKING_BUDGET_MAP } from "./constant";
@@ -269,10 +271,13 @@ app.post("/chat/302ai", async (c) => {
 		provider302Options["search-service"] = searchProvider;
 	}
 
+	// Create proxy-enabled fetch for AI SDK
+	const proxyFetch = await createProxyFetch();
+
 	const ai302 = createAI302({
 		baseURL: baseUrl || "https://api.openai.com/v1",
 		apiKey: apiKey || "[REDACTED:sk-secret]",
-		fetch: createCitationsFetch(provider302Options),
+		fetch: createCitationsFetch(provider302Options, proxyFetch),
 	});
 
 	// Only enable thinking for DeepSeek models
@@ -493,6 +498,7 @@ app.post("/chat/openai", async (c) => {
 	const openai = createOpenAI({
 		baseURL: baseUrl || "https://api.openai.com/v1",
 		apiKey: apiKey || "[REDACTED:sk-secret]",
+		fetch: await createProxyFetch(),
 	});
 
 	const wrapModel = wrapLanguageModel({
@@ -691,6 +697,7 @@ app.post("/chat/anthropic", async (c) => {
 	const anthropic = createAnthropic({
 		baseURL: baseUrl || "https://api.anthropic.com/v1",
 		apiKey: apiKey || "[REDACTED:sk-secret]",
+		fetch: await createProxyFetch(),
 	});
 
 	const wrapModel = wrapLanguageModel({
@@ -889,6 +896,7 @@ app.post("/chat/gemini", async (c) => {
 	const google = createGoogleGenerativeAI({
 		baseURL: baseUrl || "https://generativelanguage.googleapis.com/v1beta",
 		apiKey: apiKey || "[REDACTED:sk-secret]",
+		fetch: await createProxyFetch(),
 	});
 
 	const wrapModel = wrapLanguageModel({
@@ -1063,12 +1071,14 @@ app.post("/generate-title", async (c) => {
 		.join("\n");
 
 	let languageModel;
+	const proxyFetch = await createProxyFetch();
 	switch (providerType) {
 		case "302ai": {
 			const openai = createOpenAICompatible({
 				name: "302.AI",
 				baseURL: baseUrl || "https://api.openai.com/v1",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = openai.chatModel(model);
 			break;
@@ -1077,6 +1087,7 @@ app.post("/generate-title", async (c) => {
 			const openai = createOpenAI({
 				baseURL: baseUrl || "https://api.openai.com/v1",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = openai.chat(model);
 			break;
@@ -1085,6 +1096,7 @@ app.post("/generate-title", async (c) => {
 			const anthropic = createAnthropic({
 				baseURL: baseUrl || "https://api.anthropic.com/v1",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = anthropic.chat(model);
 			break;
@@ -1093,6 +1105,7 @@ app.post("/generate-title", async (c) => {
 			const google = createGoogleGenerativeAI({
 				baseURL: baseUrl || "https://generativelanguage.googleapis.com/v1beta",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = google.chat(model);
 			break;
@@ -1180,12 +1193,14 @@ app.post("/generate-context-summary", async (c) => {
 		.join("\n");
 
 	let languageModel;
+	const proxyFetch = await createProxyFetch();
 	switch (providerType) {
 		case "302ai": {
 			const openai = createOpenAICompatible({
 				name: "302.AI",
-				baseURL: baseUrl || "https://api.openai.com/v1",
-				apiKey: apiKey || "sk-placeholder",
+				baseURL: baseUrl || "https://api.302ai.com/v1",
+				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = openai.chatModel(model);
 			break;
@@ -1194,6 +1209,7 @@ app.post("/generate-context-summary", async (c) => {
 			const openai = createOpenAI({
 				baseURL: baseUrl || "https://api.openai.com/v1",
 				apiKey: apiKey || "sk-placeholder",
+				fetch: proxyFetch,
 			});
 			languageModel = openai.chat(model);
 			break;
@@ -1202,6 +1218,7 @@ app.post("/generate-context-summary", async (c) => {
 			const anthropic = createAnthropic({
 				baseURL: baseUrl || "https://api.anthropic.com/v1",
 				apiKey: apiKey || "sk-placeholder",
+				fetch: proxyFetch,
 			});
 			languageModel = anthropic.chat(model);
 			break;
@@ -1210,6 +1227,7 @@ app.post("/generate-context-summary", async (c) => {
 			const google = createGoogleGenerativeAI({
 				baseURL: baseUrl || "https://generativelanguage.googleapis.com/v1beta",
 				apiKey: apiKey || "sk-placeholder",
+				fetch: proxyFetch,
 			});
 			languageModel = google.chat(model);
 			break;
@@ -1328,12 +1346,14 @@ app.post("/generate-suggestions", async (c) => {
 	}>();
 
 	let languageModel;
+	const proxyFetch = await createProxyFetch();
 	switch (providerType) {
 		case "302ai": {
 			const openai = createOpenAICompatible({
 				name: "302.AI",
 				baseURL: baseUrl || "https://api.openai.com/v1",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = openai.chatModel(model);
 			break;
@@ -1342,6 +1362,7 @@ app.post("/generate-suggestions", async (c) => {
 			const openai = createOpenAI({
 				baseURL: baseUrl || "https://api.openai.com/v1",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = openai.chat(model);
 			break;
@@ -1350,6 +1371,7 @@ app.post("/generate-suggestions", async (c) => {
 			const anthropic = createAnthropic({
 				baseURL: baseUrl || "https://api.anthropic.com/v1",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = anthropic.chat(model);
 			break;
@@ -1358,6 +1380,7 @@ app.post("/generate-suggestions", async (c) => {
 			const google = createGoogleGenerativeAI({
 				baseURL: baseUrl || "https://generativelanguage.googleapis.com/v1beta",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = google.chat(model);
 			break;
@@ -1467,12 +1490,15 @@ app.post("/decompose-tasks", async (c) => {
 	}>();
 
 	let languageModel;
+	const proxyFetch = await createProxyFetch();
+	const configured302AIBaseUrl = baseUrl || (await providerStorage.get302AIBaseUrl());
 	switch (providerType) {
 		case "302ai": {
 			const openai = createOpenAICompatible({
 				name: "302.AI",
-				baseURL: baseUrl || "https://api.302.ai/v1",
+				baseURL: configured302AIBaseUrl,
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = openai.chatModel(model);
 			break;
@@ -1481,6 +1507,7 @@ app.post("/decompose-tasks", async (c) => {
 			const openai = createOpenAI({
 				baseURL: baseUrl || "https://api.openai.com/v1",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = openai.chat(model);
 			break;
@@ -1489,6 +1516,7 @@ app.post("/decompose-tasks", async (c) => {
 			const anthropic = createAnthropic({
 				baseURL: baseUrl || "https://api.anthropic.com/v1",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = anthropic.chat(model);
 			break;
@@ -1497,6 +1525,7 @@ app.post("/decompose-tasks", async (c) => {
 			const google = createGoogleGenerativeAI({
 				baseURL: baseUrl || "https://generativelanguage.googleapis.com/v1beta",
 				apiKey: apiKey || "[REDACTED:sk-secret]",
+				fetch: proxyFetch,
 			});
 			languageModel = google.chat(model);
 			break;
@@ -1615,7 +1644,8 @@ app.post("/chat/302ai-code-agent", async (c) => {
 	const messageId = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
 	// Use createClaudeCodeFetch to get the transformed stream directly
-	const claudeCodeFetch = createClaudeCodeFetch(messageId);
+	const proxyFetch = await createProxyFetch();
+	const claudeCodeFetch = createClaudeCodeFetch(messageId, proxyFetch);
 
 	const availableSkills =
 		skills?.reduce<string[]>((acc, skill) => {
@@ -1724,6 +1754,11 @@ app.post("/chat/302ai-code-agent", async (c) => {
 		...(agentType !== undefined ? { agent_type: agentType } : {}),
 	};
 
+	// Debug log for agentType
+	if (agentType !== undefined) {
+		logger.info(`[302ai-code-agent] agentType detected: ${agentType}`);
+	}
+
 	logger.debug("[302ai-code-agent] Messages:", JSON.stringify(requestBody.messages));
 	logger.debug("[302ai-code-agent] Sending request to 302.AI...");
 	logger.debug("[302ai-code-agent] Request body:", JSON.stringify(requestBody, null, 2));
@@ -1787,8 +1822,9 @@ app.post("/chat/302ai-code-agent", async (c) => {
 			const abortController = new AbortController();
 
 			try {
+				const configured302AIBaseUrl = baseUrl ?? (await providerStorage.get302AIBaseUrl());
 				const responsePromise = claudeCodeFetch(
-					`${baseUrl ?? "https://api.302.ai/v1"}/chat/completions`,
+					`${configured302AIBaseUrl}/chat/completions`,
 					{
 						method: "POST",
 						headers: {

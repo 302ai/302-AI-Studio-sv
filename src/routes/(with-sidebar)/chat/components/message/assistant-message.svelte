@@ -17,8 +17,12 @@
 	} from "$lib/components/buss/markdown/download-utils";
 	import { MarkdownRenderer } from "$lib/components/buss/markdown/index.js";
 	import { ModelIcon } from "$lib/components/buss/model-icon/index.js";
+	import library from "$lib/openui/library.runtime";
+	import OPENUI_SYSTEM_PROMPT from "$lib/openui/system-prompt";
+	import { Renderer } from "@openuidev/svelte-lang";
 	import { m } from "$lib/paraglide/messages.js";
 	import { getLocale } from "$lib/paraglide/runtime";
+	import { chatParameters } from "$lib/stores/chat-paramters/chat-parameters.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
 	import { mcpState } from "$lib/stores/mcp-state.svelte";
 	import { preferencesSettings } from "$lib/stores/preferences-settings.state.svelte";
@@ -213,6 +217,7 @@
 	const isStreamingText = $derived(
 		isCurrentMessageStreaming && (hasTextContent || (!hasReasoningContent && !hasTextContent)),
 	);
+	const isOpenUIMessage = $derived(chatParameters.systemPromptContent === OPENUI_SYSTEM_PROMPT);
 
 	async function handleCopyMessage() {
 		try {
@@ -498,7 +503,16 @@
 
 		{#each messagePartsWithExtractedReasoning() as part, partIndex (partIndex)}
 			{#if part.type === "text"}
-				{#if preferencesSettings.autoDisableMarkdown}
+				{#if isOpenUIMessage}
+					<div class="overflow-hidden rounded-chat border bg-background/40 p-3">
+						<Renderer
+							response={part.text}
+							{library}
+							isStreaming={isCurrentMessageStreaming}
+							onAction={() => {}}
+						/>
+					</div>
+				{:else if preferencesSettings.autoDisableMarkdown}
 					<div class="whitespace-pre-wrap break-all text-sm leading-relaxed">
 						{part.text}
 					</div>

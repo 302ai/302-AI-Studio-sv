@@ -8,6 +8,7 @@ import type {
 	GeneralSettingsState,
 	LanguageCode,
 	LayoutMode,
+	ProxySettings,
 	UpdateChannel,
 } from "@shared/storage/general-settings";
 
@@ -19,6 +20,11 @@ const getDefaults = (): GeneralSettingsState => ({
 	privacyAutoInherit: false,
 	autoUpdate: false,
 	updateChannel: "stable",
+	proxy: {
+		enabled: false,
+		host: "",
+		port: 8080,
+	},
 });
 
 const persistedGeneralSettings = new PersistedState<GeneralSettingsState>(
@@ -111,6 +117,34 @@ class GeneralSettingsManager {
 		};
 		// Notify main process to change update channel
 		window.electronAPI.updaterService.setUpdateChannel(channel);
+	}
+
+	get proxy(): ProxySettings {
+		return (
+			persistedGeneralSettings.current.proxy ?? {
+				enabled: false,
+				host: "",
+				port: 8080,
+			}
+		);
+	}
+
+	setProxy(proxy: ProxySettings): void {
+		persistedGeneralSettings.current = {
+			...persistedGeneralSettings.current,
+			proxy,
+		};
+		// Notify main process to apply proxy settings
+		generalSettingsService.handleProxyChanged(proxy);
+	}
+
+	get proxyEnabled(): boolean {
+		return persistedGeneralSettings.current.proxy?.enabled ?? false;
+	}
+
+	setProxyEnabled(enabled: boolean): void {
+		const currentProxy = this.proxy;
+		this.setProxy({ ...currentProxy, enabled });
 	}
 
 	update(partial: Partial<GeneralSettingsState>): void {

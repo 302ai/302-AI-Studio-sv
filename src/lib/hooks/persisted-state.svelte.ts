@@ -165,11 +165,27 @@ export class PersistedState<T extends StorageValue> {
 	async #hydratePersistState(key: string, initialValue: T): Promise<void> {
 		try {
 			const electronStorage = this.#storage;
-			const existingValue = await electronStorage?.getItemAsync(key);
+			let existingValue = (await electronStorage?.getItemAsync(key)) as T | null;
 			if (existingValue == null) {
 				await electronStorage?.setItemAsync(key, initialValue);
 				this.#isHydrated = true;
 				return;
+			}
+
+			// Handle object format conversion to array for app-providers
+			if (
+				key === "app-providers" &&
+				existingValue &&
+				typeof existingValue === "object" &&
+				!Array.isArray(existingValue)
+			) {
+				logger.info(`Converting app-providers from object to array format`);
+				const converted = Object.values(existingValue).filter(
+					(p: object) => p !== null && typeof p === "object" && "apiType" in p,
+				);
+				existingValue = converted as T;
+				// Save the converted value back to storage
+				await electronStorage?.setItemAsync(key, existingValue);
 			}
 
 			if (!isEqual(existingValue, initialValue)) {
