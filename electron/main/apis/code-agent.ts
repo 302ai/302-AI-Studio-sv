@@ -10,8 +10,7 @@ import {
 } from "@shared/storage/code-agent";
 import { type } from "arktype";
 import JSZip from "jszip";
-import ky from "ky";
-import { _302AIKy } from "./core/_302ai-ky";
+import { _302AIKy, create302AIKy } from "./core/_302ai-ky";
 import { localCodeAgentKy } from "./core/code-agent-ky";
 import { getCodeAgentKyByMode, getCodeAgentKyBySandboxId } from "./utils";
 
@@ -176,15 +175,10 @@ export async function listClaudeCodeSandboxes(
 	apiKey?: string,
 ): Promise<ListClaudeCodeSandboxesResponse> {
 	try {
-		const baseUrl = await providerStorage.get302AIBaseUrlWithoutV1();
 		const response =
 			apiKey && apiKey.trim() !== ""
-				? await ky
-						.get(`${baseUrl}/302/claude-code/sandbox/list`, {
-							headers: {
-								Authorization: `Bearer ${apiKey}`,
-							},
-						})
+				? await create302AIKy(apiKey, await providerStorage.get302AIBaseUrlWithoutV1())
+						.get("302/claude-code/sandbox/list")
 						.json()
 				: await _302AIKy.get("302/claude-code/sandbox/list").json();
 
