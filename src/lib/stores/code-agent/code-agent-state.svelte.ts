@@ -278,6 +278,13 @@ class CodeAgentState {
 
 		this.updateState(updates);
 
+		// Save the current platform mode and agent selection to global config for next new session
+		// This ensures new sessions use the same platform and agent as the current session
+		codeAgentGlobalConfigsState.updateLastVibeMode(type);
+		if (updates.currentAgentId) {
+			codeAgentGlobalConfigsState.updateLastAgentId(updates.currentAgentId);
+		}
+
 		// Reset session and sandbox ID when switching modes to avoid configuration confusion and race conditions
 		claudeCodeAgentState.resetSessionAndSandbox(type);
 		// Reset local session selection

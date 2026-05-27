@@ -166,6 +166,10 @@ class CodeAgentGlobalConfigsState {
 		this.#updateState({ lastSessionMode: mode });
 	}
 
+	updateLastVibeMode(mode: CodeAgentType) {
+		this.#updateState({ lastVibeMode: mode });
+	}
+
 	batchUpdater() {
 		const value: Partial<CodeAgentGlobalConfigs> = {};
 		const obj = {
