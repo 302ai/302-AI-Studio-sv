@@ -10,6 +10,9 @@ export function createInitialCodeAgentConfig(
 	globalConfigs: CodeAgentGlobalConfigs,
 ): CodeAgentConfigMetadata {
 	const shouldEnableVibe = globalConfigs.lastSessionMode === "vibe";
+
+	// Determine the initial agent based on mode and compatibility
+	// Remote mode only supports claude-code, other modes use lastAgentId
 	const currentAgentId: AgentClass =
 		shouldEnableVibe && globalConfigs.lastVibeMode !== "remote"
 			? globalConfigs.lastAgentId

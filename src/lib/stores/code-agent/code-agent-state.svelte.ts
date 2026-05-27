@@ -269,7 +269,12 @@ class CodeAgentState {
 			updates.codingAgentId = "claude-code";
 		}
 		// Cloud and Local modes support both agents, preserve user's choice
-		// Removed forced open-claw assignment for cloud mode
+		// However, if switching to a fresh tab (no messages yet), use the last saved agent preference
+		else if (this.isFreshTab && type !== "remote") {
+			const lastAgentId = codeAgentGlobalConfigsState.lastAgentId;
+			updates.currentAgentId = lastAgentId;
+			updates.codingAgentId = lastAgentId === "open-claw" ? "claude-code" : lastAgentId;
+		}
 
 		this.updateState(updates);
 
