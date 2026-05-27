@@ -2,7 +2,7 @@ import { attemptAsync } from "es-toolkit";
 import ky from "ky";
 
 const { getUserAgentFragment } = window.electronAPI.appService;
-const { get302AIApiKey, get302AIBaseUrlWithoutV1 } = window.electronAPI.providerService;
+const { get302AIApiKey } = window.electronAPI.providerService;
 
 export const _302AIKy = ky.create({
 	timeout: 180000,
@@ -18,13 +18,6 @@ export const _302AIKy = ky.create({
 				const userAgent = await getUserAgentFragment();
 				request.headers.set("User-Agent", userAgent);
 
-				const baseUrl = await get302AIBaseUrlWithoutV1();
-				const base = new URL(baseUrl);
-				const url = new URL(request.url);
-				url.protocol = base.protocol;
-				url.hostname = base.hostname;
-				url.port = base.port;
-
 				const [error, apiKey] = await attemptAsync(get302AIApiKey);
 
 				if (error) {
@@ -32,7 +25,7 @@ export const _302AIKy = ky.create({
 				}
 
 				request.headers.set("Authorization", `Bearer ${apiKey}`);
-				return new Request(url.toString(), request);
+				return request;
 			},
 		],
 	},
