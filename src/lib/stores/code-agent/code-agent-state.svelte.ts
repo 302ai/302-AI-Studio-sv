@@ -262,14 +262,14 @@ class CodeAgentState {
 	updateType(type: CodeAgentType): void {
 		const updates: Partial<CodeAgentConfigMetadata> = { type };
 
-		// Reset currentAgentId to claude-code when switching to remote mode,
-		// as remote mode currently only supports claude-code
-		if (type === "remote") {
+		// Only force agent switch when current selection is incompatible with the target mode
+		// Remote mode only supports claude-code, so switch from open-claw if needed
+		if (type === "remote" && this.currentAgentId === "open-claw") {
 			updates.currentAgentId = "claude-code";
 			updates.codingAgentId = "claude-code";
-		} else if (type === "cloud") {
-			updates.currentAgentId = "open-claw";
 		}
+		// Cloud and Local modes support both agents, preserve user's choice
+		// Removed forced open-claw assignment for cloud mode
 
 		this.updateState(updates);
 
