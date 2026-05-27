@@ -1,6 +1,6 @@
 import { providerStorage } from "@electron/main/services/storage-service/provider-storage";
-import { getCustomUserAgentFragment } from "@electron/main/utils/user-agent";
 import { getProxyAgent } from "@electron/main/utils/proxy-helper";
+import { getCustomUserAgentFragment } from "@electron/main/utils/user-agent";
 import ky from "ky";
 import { fetch as undiciFetch } from "undici";
 
@@ -62,15 +62,7 @@ export const _302AIKy = ky.create({
 				const { valid, apiKey } = await providerStorage.validate302AIProvider();
 				if (!valid) throw new Error("302.ai API key validation failed");
 				request.headers.set("Authorization", `Bearer ${apiKey}`);
-
-				const baseUrl = await providerStorage.get302AIBaseUrlWithoutV1();
-				const base = new URL(baseUrl);
-				const url = new URL(request.url);
-				url.protocol = base.protocol;
-				url.hostname = base.hostname;
-				url.port = base.port;
-
-				return new Request(url.toString(), request);
+				return request;
 			},
 		],
 	},
