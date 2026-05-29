@@ -100,6 +100,8 @@ class ClaudeCodeAgentState {
 	isUpdatingThinkingBudget = $state(false);
 
 	#lastDeployApiError: string | null = null;
+	#deployRetryCount = 0;
+	readonly #MAX_DEPLOY_RETRY_COUNT = 3;
 
 	model = $derived(persistedClaudeCodeAgentState.current?.model ?? "");
 	currentSessionId = $derived(persistedClaudeCodeAgentState.current?.currentSessionId ?? "");
@@ -135,6 +137,10 @@ class ClaudeCodeAgentState {
 	}) {
 		if (!canDeploy || !lastMessage || lastMessage.role !== "assistant") return;
 
+		logger.info(
+			`[ClaudeCodeAgentState] handleChatFinished - Current retry count: ${this.#deployRetryCount}, canDeploy: ${canDeploy}`,
+		);
+
 		let deployInfo: DeploySandboxResponse | null =
 			await this.handleActiveDeployment(lastMessage);
 		const textDeployInfo = this.parseDeployInfoFromText(lastMessage);
@@ -154,6 +160,9 @@ class ClaudeCodeAgentState {
 			this.#lastDeployApiError = null;
 
 			if (errorText) {
+				logger.info(
+					`[ClaudeCodeAgentState] Deploy failed, attempting retry. Current count: ${this.#deployRetryCount}`,
+				);
 				await this.attemptDeployRetry(errorText, sendRetryMessage);
 			}
 		}
@@ -164,11 +173,31 @@ class ClaudeCodeAgentState {
 	): Promise<DeploySandboxResponse | null> {
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		const metadata = message.metadata as any;
+
+		logger.info(
+			`[ClaudeCodeAgentState] handleActiveDeployment - metadata.result:`,
+			metadata?.result,
+		);
+		logger.info(
+			`[ClaudeCodeAgentState] handleActiveDeployment - preDeploy:`,
+			metadata?.result?.preDeploy,
+		);
+
 		if (!metadata?.result?.preDeploy?.success) return null;
 
 		logger.info("Pre-deploy check passed, triggering deployment...");
+		logger.info(
+			`[ClaudeCodeAgentState] Current retry count before reset: ${this.#deployRetryCount}`,
+		);
 
 		if (!this.sandboxId) return null;
+
+		// Reset retry counter at the start of a new deployment attempt (with preDeploy flag)
+		// This only happens on user-initiated deployments, not during AI retry attempts
+		this.#deployRetryCount = 0;
+		logger.info(
+			"[ClaudeCodeAgentState] Reset retry counter to 0 (new deployment with preDeploy flag)",
+		);
 
 		agentPreviewState.isDeploying = true;
 		try {
@@ -230,6 +259,9 @@ class ClaudeCodeAgentState {
 	}
 
 	private async finalizeDeployment(deployInfo: DeploySandboxResponse) {
+		// Reset retry counter on successful deployment
+		this.#deployRetryCount = 0;
+
 		await agentPreviewState.setDeploymentInfo(
 			this.sandboxId,
 			this.currentSessionId,
@@ -264,13 +296,39 @@ class ClaudeCodeAgentState {
 
 	/**
 	 * Send the deploy error back to the AI model so it can attempt to fix the issue.
+	 * Limited to MAX_DEPLOY_RETRY_COUNT attempts (default: 3).
 	 */
 	private async attemptDeployRetry(
 		errorText: string,
 		sendRetryMessage: (content: string) => Promise<void>,
 	): Promise<void> {
+		// Check if retry limit has been reached
+		if (this.#deployRetryCount >= this.#MAX_DEPLOY_RETRY_COUNT) {
+			logger.warn(
+				`[ClaudeCodeAgentState] Deploy retry limit reached (${this.#MAX_DEPLOY_RETRY_COUNT}). Stopping automatic retries.`,
+			);
+			toast.error(m.toast_deploy_retry_exhausted(), {
+				duration: 8000,
+			});
+			return;
+		}
+
+		// Increment retry counter
+		this.#deployRetryCount++;
+
 		logger.info(
-			`[ClaudeCodeAgentState] Sending deploy error to model: ${errorText.slice(0, 200)}`,
+			`[ClaudeCodeAgentState] Deploy retry attempt ${this.#deployRetryCount}/${this.#MAX_DEPLOY_RETRY_COUNT}. Error: ${errorText.slice(0, 200)}`,
+		);
+
+		// Show retry notification to user
+		toast.info(
+			m.toast_deploy_auto_retrying({
+				attempt: this.#deployRetryCount.toString(),
+				maxAttempts: this.#MAX_DEPLOY_RETRY_COUNT.toString(),
+			}),
+			{
+				duration: 3000,
+			},
 		);
 
 		// Delay to let UI settle
