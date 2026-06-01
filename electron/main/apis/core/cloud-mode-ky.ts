@@ -3,8 +3,49 @@ import { providerStorage } from "@electron/main/services/storage-service/provide
 import { getCustomUserAgentFragment } from "@electron/main/utils/user-agent";
 import { getProxyAgent } from "@electron/main/utils/proxy-helper";
 import ky from "ky";
+import { fetch as undiciFetch } from "undici";
 
 const userAgent = getCustomUserAgentFragment();
+
+// Create a custom fetch function that uses proxy
+async function createFetchWithProxy(
+	input: RequestInfo | URL,
+	init?: RequestInit,
+): Promise<Response> {
+	const proxyAgent = await getProxyAgent();
+	if (proxyAgent) {
+		// Convert Request object to URL string for undici compatibility
+		let url: string;
+		let fetchInit = init;
+
+		if (input instanceof Request) {
+			// Extract URL from Request object
+			url = input.url;
+			// Merge Request's properties with provided init
+			fetchInit = {
+				method: input.method,
+				headers: input.headers,
+				body: input.body,
+				...init,
+			};
+		} else if (input instanceof URL) {
+			url = input.href;
+		} else {
+			url = input;
+		}
+
+		// Use undici fetch with proxy dispatcher
+		// Type assertion needed for undici compatibility with standard fetch types
+
+		return undiciFetch(url, {
+			...fetchInit,
+			dispatcher: proxyAgent,
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		} as any) as unknown as Promise<Response>;
+	}
+	// Use standard fetch if no proxy
+	return fetch(input, init);
+}
 
 export const cloudModeKy = ky.create({
 	timeout: 180000,
@@ -14,6 +55,7 @@ export const cloudModeKy = ky.create({
 		"HTTP-Referer": "https://studio.302.ai/",
 		"X-Title": "302.AI Studio",
 	},
+	fetch: createFetchWithProxy,
 	hooks: {
 		beforeRequest: [
 			async (request) => {
@@ -32,13 +74,6 @@ export const cloudModeKy = ky.create({
 				url.protocol = base.protocol;
 				url.hostname = base.hostname;
 				url.port = base.port;
-
-				// Add proxy support
-				const proxyAgent = await getProxyAgent();
-				if (proxyAgent) {
-					// @ts-expect-error - dispatcher is a valid option for undici fetch
-					request.dispatcher = proxyAgent;
-				}
 
 				return new Request(url.toString(), request);
 			},

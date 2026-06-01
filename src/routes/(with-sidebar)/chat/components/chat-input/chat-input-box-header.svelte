@@ -59,6 +59,9 @@
 		codeAgentState.updateEnabled(isVibe, false);
 		codeAgentState.updateType(codeAgentGlobalConfigsState.lastVibeMode);
 
+		// Save the selected mode to global config for next new session
+		codeAgentGlobalConfigsState.updateLastSessionMode(isVibe ? "vibe" : "chat");
+
 		// 切换到聊天模式时，自动删除超出限制的附件（保留最新的）
 		if (!isVibe && chatState.attachments.length > MAX_ATTACHMENT_COUNT) {
 			const attachmentsToKeep = chatState.attachments.slice(-MAX_ATTACHMENT_COUNT);

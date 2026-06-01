@@ -26,10 +26,13 @@ export async function getProxyAgent(): Promise<ProxyAgent | undefined> {
 		return cachedProxyAgent;
 	}
 
-	// Create new ProxyAgent
+	// Create new ProxyAgent with HTTP/2 disabled for better proxy compatibility
 	logger.info(`[Proxy] Creating ProxyAgent for: ${proxyUrl}`);
 	cachedProxyUrl = proxyUrl;
-	cachedProxyAgent = new ProxyAgent(proxyUrl);
+	cachedProxyAgent = new ProxyAgent({
+		uri: proxyUrl,
+		allowH2: false,
+	});
 
 	return cachedProxyAgent;
 }
@@ -74,8 +77,26 @@ export async function createProxyFetch(): Promise<typeof fetch> {
 	// but they are compatible at runtime
 	return (async (url: RequestInfo | URL, init?: RequestInit) => {
 		// Parse URL to extract hostname and full URL string
-		const urlString =
-			typeof url === "string" ? url : url instanceof URL ? url.href : (url as Request).url;
+		// Handle Request object for undici compatibility
+		let urlString: string;
+		let fetchInit = init;
+
+		if (url instanceof Request) {
+			// Extract URL from Request object
+			urlString = url.url;
+			// Merge Request's properties with provided init
+			fetchInit = {
+				method: url.method,
+				headers: url.headers,
+				body: url.body,
+				...init,
+			};
+		} else if (url instanceof URL) {
+			urlString = url.href;
+		} else {
+			urlString = url;
+		}
+
 		const parsedUrl = new URL(urlString);
 
 		// Check if this is a localhost request
@@ -109,10 +130,11 @@ export async function createProxyFetch(): Promise<typeof fetch> {
 		try {
 			// Cast to unknown first to bypass type incompatibilities between standard fetch and undici fetch
 			// They are functionally compatible but have minor type differences
+			// Use urlString instead of url to ensure undici gets a string, not a Request object
 			const response = (await undiciFetch(
-				url as unknown as Parameters<typeof undiciFetch>[0],
+				urlString as unknown as Parameters<typeof undiciFetch>[0],
 				{
-					...init,
+					...fetchInit,
 					dispatcher: proxyAgent,
 				} as Parameters<typeof undiciFetch>[1],
 			)) as unknown as Response;

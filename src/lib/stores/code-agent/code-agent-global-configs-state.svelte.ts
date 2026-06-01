@@ -16,6 +16,7 @@ function getInitialData() {
 		notificationsEnabled: false,
 		lastVibeMode: "remote" as CodeAgentType,
 		lastAgentId: "claude-code" as CodingAgentClass,
+		lastSessionMode: "chat" as "chat" | "vibe",
 		feishu: { appId: "", appSecret: "" },
 		dingtalk: { clientId: "", clientSecret: "" },
 		qqbot: { appId: "", clientSecret: "" },
@@ -41,9 +42,12 @@ class CodeAgentGlobalConfigsState {
 		persistedCodeAgentGlobalConfigsState.current?.notificationsEnabled ?? false,
 	);
 	lastVibeMode = $derived(persistedCodeAgentGlobalConfigsState.current?.lastVibeMode ?? "remote");
-	// lastAgentId = $derived(
-	// 	persistedCodeAgentGlobalConfigsState.current?.lastAgentId ?? "claude-code",
-	// );
+	lastSessionMode = $derived(
+		persistedCodeAgentGlobalConfigsState.current?.lastSessionMode ?? "chat",
+	);
+	lastAgentId = $derived(
+		persistedCodeAgentGlobalConfigsState.current?.lastAgentId ?? "claude-code",
+	);
 	isHydrated = $derived(persistedCodeAgentGlobalConfigsState.isHydrated);
 	feishu = $derived(
 		persistedCodeAgentGlobalConfigsState.current.feishu ?? { appId: "", appSecret: "" },
@@ -102,9 +106,9 @@ class CodeAgentGlobalConfigsState {
 		this.#updateState({ apiKey });
 	}
 
-	// updateLastAgentId(agentId: CodingAgentClass): void {
-	// 	this.#updateState({ lastAgentId: agentId });
-	// }
+	updateLastAgentId(agentId: CodingAgentClass): void {
+		this.#updateState({ lastAgentId: agentId });
+	}
 
 	resetApiKey() {
 		this.#updateState({ apiKey: this.getDefaultApiKey() });
@@ -156,6 +160,14 @@ class CodeAgentGlobalConfigsState {
 
 	updateTelegramBotToken(botToken: string) {
 		this.#updateState({ telegram: { ...this.telegram, accounts: { default: { botToken } } } });
+	}
+
+	updateLastSessionMode(mode: "chat" | "vibe") {
+		this.#updateState({ lastSessionMode: mode });
+	}
+
+	updateLastVibeMode(mode: CodeAgentType) {
+		this.#updateState({ lastVibeMode: mode });
 	}
 
 	batchUpdater() {

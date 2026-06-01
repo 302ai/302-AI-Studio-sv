@@ -51,6 +51,7 @@ function getInitialData() {
 	if (codeAgentConfig) {
 		return clone(codeAgentConfig as CodeAgentConfigMetadata);
 	}
+
 	const initialData: CodeAgentConfigMetadata = {
 		enabled: false,
 		threadId: threadId,
@@ -255,21 +256,34 @@ class CodeAgentState {
 	updateCurrentAgentId(agentId: AgentClass): void {
 		const codingAgentId = agentId === "open-claw" ? "claude-code" : agentId;
 		this.updateState({ currentAgentId: agentId, codingAgentId });
+		codeAgentGlobalConfigsState.updateLastAgentId(agentId);
 	}
 
 	updateType(type: CodeAgentType): void {
 		const updates: Partial<CodeAgentConfigMetadata> = { type };
 
-		// Reset currentAgentId to claude-code when switching to remote mode,
-		// as remote mode currently only supports claude-code
-		if (type === "remote") {
+		// Only force agent switch when current selection is incompatible with the target mode
+		// Remote mode only supports claude-code, so switch from open-claw if needed
+		if (type === "remote" && this.currentAgentId === "open-claw") {
 			updates.currentAgentId = "claude-code";
 			updates.codingAgentId = "claude-code";
-		} else if (type === "cloud") {
-			updates.currentAgentId = "open-claw";
+		}
+		// Cloud and Local modes support both agents, preserve user's choice
+		// However, if switching to a fresh tab (no messages yet), use the last saved agent preference
+		else if (this.isFreshTab && type !== "remote") {
+			const lastAgentId = codeAgentGlobalConfigsState.lastAgentId;
+			updates.currentAgentId = lastAgentId;
+			updates.codingAgentId = lastAgentId === "open-claw" ? "claude-code" : lastAgentId;
 		}
 
 		this.updateState(updates);
+
+		// Save the current platform mode and agent selection to global config for next new session
+		// This ensures new sessions use the same platform and agent as the current session
+		codeAgentGlobalConfigsState.updateLastVibeMode(type);
+		if (updates.currentAgentId) {
+			codeAgentGlobalConfigsState.updateLastAgentId(updates.currentAgentId);
+		}
 
 		// Reset session and sandbox ID when switching modes to avoid configuration confusion and race conditions
 		claudeCodeAgentState.resetSessionAndSandbox(type);
