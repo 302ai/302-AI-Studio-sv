@@ -58,6 +58,7 @@ export type RouterRequestBody = {
 	presencePenalty?: number;
 	isThinkingActive?: boolean;
 	isOnlineSearchActive?: boolean;
+	isOCRActive?: boolean;
 	isMCPActive?: boolean;
 	mcpServerIds?: string[];
 	autoParseUrl?: boolean;
@@ -198,6 +199,7 @@ app.post("/chat/302ai", async (c) => {
 		presencePenalty,
 		isThinkingActive,
 		isOnlineSearchActive,
+		isOCRActive,
 		isMCPActive,
 		mcpServerIds = [],
 		autoParseUrl,
@@ -221,6 +223,7 @@ app.post("/chat/302ai", async (c) => {
 
 		isThinkingActive?: boolean;
 		isOnlineSearchActive?: boolean;
+		isOCRActive?: boolean;
 		isMCPActive?: boolean;
 		mcpServerIds?: string[];
 		autoParseUrl?: boolean;
@@ -269,6 +272,10 @@ app.post("/chat/302ai", async (c) => {
 	if (isOnlineSearchActive) {
 		provider302Options["web-search"] = true;
 		provider302Options["search-service"] = searchProvider;
+	}
+
+	if (isOCRActive) {
+		provider302Options["ocr_model"] = "gpt-4o-mini";
 	}
 
 	// Create proxy-enabled fetch for AI SDK

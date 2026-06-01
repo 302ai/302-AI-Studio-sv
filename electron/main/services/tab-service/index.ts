@@ -1364,6 +1364,7 @@ export class TabService {
 				mcpServerIds: [],
 				isThinkingActive: false,
 				isOnlineSearchActive: false,
+				isOCRActive: false,
 				isMCPActive: false,
 				selectedModel: preferencesSettings?.newSessionModel ?? latestUsedModel,
 				isPrivateChatActive: inheritedPrivacyState,
