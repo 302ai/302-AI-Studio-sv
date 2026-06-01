@@ -50,3 +50,6 @@ ai302/
 
 .omx
 .eslintcache
+
+.pi-lens
+.codegraph
