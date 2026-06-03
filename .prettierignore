@@ -26,3 +26,6 @@ yarn.lock
 ai302/
 
 .agents/
+
+# Symlink (Prettier cannot handle symlinks)
+CLAUDE.md
