@@ -720,8 +720,8 @@
 				{@render actionEnableThinking()}
 			{/if}
 
-			{#if codeAgentState.currentAgentId !== "open-claw"}
-				{@render actionEnableMCP()}
+			{#if codeAgentState.currentAgentId !== "open-claw" || !codeAgentState.enabled}
+				{@render actionEnableMCP(false)}
 			{/if}
 
 			{#if codeAgentState.enabled}
