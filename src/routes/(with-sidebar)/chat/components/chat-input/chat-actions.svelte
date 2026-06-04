@@ -687,12 +687,11 @@
 					{#if codeAgentState.currentAgentId !== "open-claw"}
 						{@render actionEnabledAgentThinking(true)}
 					{/if}
+					{#if codeAgentState.currentAgentId === "open-claw"}
+						{@render actionOpenClawWebUi(true)}
+					{/if}
 				{:else if !codeAgentState.enabled}
 					{@render actionSetParameters(true)}
-				{/if}
-
-				{#if codeAgentState.currentAgentId === "open-claw"}
-					{@render actionOpenClawWebUi(true)}
 				{/if}
 			</div>
 		</Popover.Content>
@@ -737,12 +736,11 @@
 				{#if codeAgentState.currentAgentId !== "open-claw"}
 					{@render actionEnabledAgentThinking()}
 				{/if}
+				{#if codeAgentState.currentAgentId === "open-claw"}
+					{@render actionOpenClawWebUi()}
+				{/if}
 			{:else if !codeAgentState.enabled}
 				{@render actionSetParameters()}
-			{/if}
-
-			{#if codeAgentState.currentAgentId === "open-claw"}
-				{@render actionOpenClawWebUi()}
 			{/if}
 		</div>
 	{/if}
