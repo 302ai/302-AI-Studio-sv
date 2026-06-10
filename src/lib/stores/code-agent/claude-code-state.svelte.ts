@@ -100,7 +100,7 @@ class ClaudeCodeAgentState {
 
 	isUpdatingThinkingBudget = $state(false);
 
-	readonly #deployRetryState = new DeployRetryState(3);
+	static readonly deployRetryState = new DeployRetryState(3);
 
 	model = $derived(persistedClaudeCodeAgentState.current?.model ?? "");
 	currentSessionId = $derived(persistedClaudeCodeAgentState.current?.currentSessionId ?? "");
@@ -137,7 +137,7 @@ class ClaudeCodeAgentState {
 		if (!canDeploy || !lastMessage || lastMessage.role !== "assistant") return;
 
 		logger.info(
-			`[ClaudeCodeAgentState] handleChatFinished - Current retry count: ${this.#deployRetryState.retryCount}, canDeploy: ${canDeploy}`,
+			`[ClaudeCodeAgentState] handleChatFinished - Current retry count: ${ClaudeCodeAgentState.deployRetryState.retryCount}, canDeploy: ${canDeploy}`,
 		);
 
 		let deployInfo: DeploySandboxResponse | null =
@@ -156,11 +156,11 @@ class ClaudeCodeAgentState {
 		if (sendRetryMessage) {
 			const errorText =
 				this.extractDeployErrorFromMessage(lastMessage) ||
-				this.#deployRetryState.consumeApiError();
+				ClaudeCodeAgentState.deployRetryState.consumeApiError();
 
 			if (errorText) {
 				logger.info(
-					`[ClaudeCodeAgentState] Deploy failed, attempting retry. Current count: ${this.#deployRetryState.retryCount}`,
+					`[ClaudeCodeAgentState] Deploy failed, attempting retry. Current count: ${ClaudeCodeAgentState.deployRetryState.retryCount}`,
 				);
 				await this.attemptDeployRetry(errorText, sendRetryMessage);
 			}
@@ -186,17 +186,10 @@ class ClaudeCodeAgentState {
 
 		logger.info("Pre-deploy check passed, triggering deployment...");
 		logger.info(
-			`[ClaudeCodeAgentState] Current retry count before reset: ${this.#deployRetryState.retryCount}`,
+			`[ClaudeCodeAgentState] Current retry count before deployment: ${ClaudeCodeAgentState.deployRetryState.retryCount}`,
 		);
 
 		if (!this.sandboxId) return null;
-
-		// Reset retry counter at the start of a new deployment attempt (with preDeploy flag)
-		// This only happens on user-initiated deployments, not during AI retry attempts
-		this.#deployRetryState.reset();
-		logger.info(
-			"[ClaudeCodeAgentState] Reset retry counter to 0 (new deployment with preDeploy flag)",
-		);
 
 		agentPreviewState.isDeploying = true;
 		try {
@@ -213,14 +206,14 @@ class ClaudeCodeAgentState {
 					result.error || `Deploy API returned success=false (status: ${result.status})`;
 				logger.error("Deployment failed:", result);
 				toast.error(`${m.toast_deploy_failed()}`);
-				this.#deployRetryState.recordApiError(errorMsg);
+				ClaudeCodeAgentState.deployRetryState.recordApiError(errorMsg);
 				return null;
 			}
 		} catch (error) {
 			const errorMsg = String(error);
 			logger.error("Deployment error:", error);
 			toast.error(`${m.toast_deploy_failed()}: ${errorMsg}`);
-			this.#deployRetryState.recordApiError(errorMsg);
+			ClaudeCodeAgentState.deployRetryState.recordApiError(errorMsg);
 			return null;
 		} finally {
 			agentPreviewState.isDeploying = false;
@@ -259,7 +252,7 @@ class ClaudeCodeAgentState {
 
 	private async finalizeDeployment(deployInfo: DeploySandboxResponse) {
 		// Reset retry counter on successful deployment
-		this.#deployRetryState.reset();
+		ClaudeCodeAgentState.deployRetryState.reset();
 
 		await agentPreviewState.setDeploymentInfo(
 			this.sandboxId,
@@ -302,9 +295,9 @@ class ClaudeCodeAgentState {
 		sendRetryMessage: (content: string) => Promise<void>,
 	): Promise<void> {
 		// Check if retry limit has been reached
-		if (!this.#deployRetryState.canRetry()) {
+		if (!ClaudeCodeAgentState.deployRetryState.canRetry()) {
 			logger.warn(
-				`[ClaudeCodeAgentState] Deploy retry limit reached (${this.#deployRetryState.maxRetryCount}). Stopping automatic retries.`,
+				`[ClaudeCodeAgentState] Deploy retry limit reached (${ClaudeCodeAgentState.deployRetryState.maxRetryCount}). Stopping automatic retries.`,
 			);
 			toast.error(m.toast_deploy_retry_exhausted(), {
 				duration: 8000,
@@ -313,17 +306,17 @@ class ClaudeCodeAgentState {
 		}
 
 		// Increment retry counter
-		const retryCount = this.#deployRetryState.incrementRetry();
+		const retryCount = ClaudeCodeAgentState.deployRetryState.incrementRetry();
 
 		logger.info(
-			`[ClaudeCodeAgentState] Deploy retry attempt ${retryCount}/${this.#deployRetryState.maxRetryCount}. Error: ${errorText.slice(0, 200)}`,
+			`[ClaudeCodeAgentState] Deploy retry attempt ${retryCount}/${ClaudeCodeAgentState.deployRetryState.maxRetryCount}. Error: ${errorText.slice(0, 200)}`,
 		);
 
 		// Show retry notification to user
 		toast.info(
 			m.toast_deploy_auto_retrying({
 				attempt: retryCount.toString(),
-				maxAttempts: this.#deployRetryState.maxRetryCount.toString(),
+				maxAttempts: ClaudeCodeAgentState.deployRetryState.maxRetryCount.toString(),
 			}),
 			{
 				duration: 3000,
@@ -338,7 +331,7 @@ class ClaudeCodeAgentState {
 	}
 
 	resetDeployRetryState(): void {
-		this.#deployRetryState.reset();
+		ClaudeCodeAgentState.deployRetryState.reset();
 	}
 
 	/**
