@@ -239,6 +239,7 @@
 	"attachment_size": "大小",
 	"attachment_note": "注意",
 	"text_base_url_request_info": "接口将会请求至：{url}",
+	"text_base_url_302ai_domains_hint": "当前支持的域名：{domains}",
 	"text_button_add_model": "添加模型",
 	"text_button_add_provider": "添加",
 	"text_button_cancel": "取消",

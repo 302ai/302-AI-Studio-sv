@@ -29,3 +29,6 @@ ai302/
 
 # Symlink (Prettier cannot handle symlinks)
 CLAUDE.md
+
+# Pi agent config
+.pi/

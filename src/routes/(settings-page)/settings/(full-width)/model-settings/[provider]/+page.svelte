@@ -453,6 +453,14 @@
 						})}
 					</p>
 				{/if}
+				{#if formData.apiType === "302ai"}
+					<p class="text-muted-foreground text-xs">
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -- domains is hardcoded, no XSS risk -->
+						{@html m.text_base_url_302ai_domains_hint({
+							domains: `<span class="text-primary font-medium">「 https://api.302ai.cn, https://api.302ai.com, https://api.302.ai 」</span>`,
+						})}
+					</p>
+				{/if}
 			</div>
 
 			<!-- API Key -->

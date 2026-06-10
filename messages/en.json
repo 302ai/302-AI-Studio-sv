@@ -238,6 +238,7 @@
 	"attachment_size": "Size",
 	"attachment_note": "Note",
 	"text_base_url_request_info": "Interface will request to: {url}",
+	"text_base_url_302ai_domains_hint": "Currently supported domains: {domains}",
 	"text_button_add_model": "Add Model",
 	"text_button_add_provider": "Add",
 	"text_button_cancel": "Cancel",

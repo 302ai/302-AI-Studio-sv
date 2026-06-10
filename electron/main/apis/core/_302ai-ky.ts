@@ -62,6 +62,16 @@ export const _302AIKy = ky.create({
 				const { valid, apiKey } = await providerStorage.validate302AIProvider();
 				if (!valid) throw new Error("302.ai API key validation failed");
 				request.headers.set("Authorization", `Bearer ${apiKey}`);
+
+				// Dynamically replace baseUrl with user-configured value
+				const dynamicBaseUrl = await providerStorage.get302AIBaseUrlWithoutV1();
+				if (request.url.startsWith("https://api.302ai.com")) {
+					return new Request(
+						request.url.replace("https://api.302ai.com", dynamicBaseUrl),
+						request,
+					);
+				}
+
 				return request;
 			},
 		],
