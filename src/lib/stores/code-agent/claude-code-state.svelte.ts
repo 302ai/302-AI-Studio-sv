@@ -7,13 +7,13 @@ import { m } from "$lib/paraglide/messages";
 import type { ChatMessage } from "$lib/types/chat";
 import { clone } from "$lib/utils/clone";
 import { createLogger } from "@shared/logger";
-import { DEFAULT_302AI_BASE_URL } from "@shared/utils/302ai-base-url";
 import {
 	type CodeAgentMetadata,
 	type CodeAgentType,
 	type Skill,
 	type ThinkingBudgetType,
 } from "@shared/storage/code-agent";
+import { DEFAULT_302AI_BASE_URL } from "@shared/utils/302ai-base-url";
 import { toast } from "svelte-sonner";
 import { match, P } from "ts-pattern";
 import { agentPreviewState } from "../agent-preview-state.svelte";
@@ -310,6 +310,7 @@ class ClaudeCodeAgentState {
 			toast.error(m.toast_deploy_retry_exhausted(), {
 				duration: 8000,
 			});
+			this.#deployRetryCount = 0;
 			return;
 		}
 
