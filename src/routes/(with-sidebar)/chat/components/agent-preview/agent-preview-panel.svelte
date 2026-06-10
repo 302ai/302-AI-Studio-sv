@@ -30,6 +30,7 @@
 		type AgentPreviewSyncEnvelope,
 	} from "$lib/stores/agent-preview-state.svelte";
 	import { chatState } from "$lib/stores/chat-state.svelte";
+	import { claudeCodeAgentState } from "$lib/stores/code-agent/claude-code-state.svelte";
 	import { cloudModeState } from "$lib/stores/code-agent/cloud-mode-state.svelte";
 	import { codeAgentState } from "$lib/stores/code-agent/code-agent-state.svelte";
 
@@ -919,6 +920,8 @@
 		);
 
 	const handleDeploySandbox = async () => {
+		claudeCodeAgentState.resetDeployRetryState();
+
 		// Set /deploy command in the chat input and send it
 		// This is equivalent to typing /deploy in the chat input and pressing enter
 		chatState.inputValue = "/deploy";
