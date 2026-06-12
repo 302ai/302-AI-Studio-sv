@@ -18,8 +18,16 @@ const logger = createLogger("services");
  */
 export class ProxyForwardService {
 	private server: http.Server | null = null;
-	private port: number = 18890; // Fixed port for container proxy
+	private port: number = 18890;
 	private isRunning: boolean = false;
+
+	private static readonly BYPASS_DOMAINS = ["open.feishu.cn"];
+
+	private shouldBypass(hostname: string): boolean {
+		return ProxyForwardService.BYPASS_DOMAINS.some(
+			(domain) => hostname === domain || hostname.endsWith(`.${domain}`),
+		);
+	}
 
 	/**
 	 * Start the proxy forward service
@@ -115,16 +123,23 @@ export class ProxyForwardService {
 		clientRes: http.ServerResponse,
 	): Promise<void> {
 		try {
+			const host = clientReq.headers.host;
+			const hostname = host ? host.split(":")[0] : "";
+
+			if (this.shouldBypass(hostname)) {
+				logger.debug(`[ProxyForward] Bypassing proxy for: ${hostname}`);
+				this.forwardDirect(clientReq, clientRes);
+				return;
+			}
+
 			const proxySettings = await generalSettingsStorage.getProxySettings();
 
 			if (proxySettings.enabled && proxySettings.host && proxySettings.port) {
-				// Proxy enabled: forward to user's configured proxy
 				logger.debug(
 					`[ProxyForward] Forwarding HTTP request to proxy: ${proxySettings.host}:${proxySettings.port}`,
 				);
 				this.forwardToProxy(clientReq, clientRes, proxySettings);
 			} else {
-				// Proxy disabled: forward directly to target server
 				logger.debug("[ProxyForward] Forwarding HTTP request directly");
 				this.forwardDirect(clientReq, clientRes);
 			}
@@ -144,16 +159,22 @@ export class ProxyForwardService {
 		head: Buffer,
 	): Promise<void> {
 		try {
+			const [hostname] = (req.url || "").split(":");
+
+			if (this.shouldBypass(hostname)) {
+				logger.debug(`[ProxyForward] Bypassing proxy for CONNECT: ${hostname}`);
+				this.connectDirect(req, clientSocket, head);
+				return;
+			}
+
 			const proxySettings = await generalSettingsStorage.getProxySettings();
 
 			if (proxySettings.enabled && proxySettings.host && proxySettings.port) {
-				// Proxy enabled: connect through user's configured proxy
 				logger.debug(
 					`[ProxyForward] Forwarding HTTPS CONNECT to proxy: ${proxySettings.host}:${proxySettings.port}`,
 				);
 				this.connectToProxy(req, clientSocket, head, proxySettings);
 			} else {
-				// Proxy disabled: connect directly to target server
 				logger.debug("[ProxyForward] Forwarding HTTPS CONNECT directly");
 				this.connectDirect(req, clientSocket, head);
 			}
