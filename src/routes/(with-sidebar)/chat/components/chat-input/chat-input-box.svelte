@@ -44,10 +44,12 @@
 
 	// Check if local sandbox is starting (for disabling send button)
 	const isLocalSandboxStarting = $derived(
-		codeAgentState.type === "local" && localEnvState.sandboxStarting,
+		codeAgentState.enabled && codeAgentState.type === "local" && localEnvState.sandboxStarting,
 	);
 	const isCloudModeNotRunning = $derived(
-		codeAgentState.type === "cloud" && cloudModeState.state.status !== "running",
+		codeAgentState.enabled &&
+			codeAgentState.type === "cloud" &&
+			cloudModeState.state.status !== "running",
 	);
 
 	let isVibe = $state(false);
