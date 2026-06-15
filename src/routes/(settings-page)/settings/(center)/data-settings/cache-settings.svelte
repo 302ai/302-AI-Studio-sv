@@ -4,8 +4,9 @@
 	import Label from "$lib/components/ui/label/label.svelte";
 	import { m } from "$lib/paraglide/messages.js";
 	import { generalSettings } from "$lib/stores/general-settings.state.svelte";
-	import { FolderOpen, RefreshCw, RotateCcw } from "@lucide/svelte";
+	import { FolderOpen, RotateCcw } from "@lucide/svelte";
 	import { createLogger } from "@shared/logger";
+	import { onMount } from "svelte";
 	import { toast } from "svelte-sonner";
 
 	const logger = createLogger("ui");
@@ -20,7 +21,6 @@
 		};
 	} | null>(null);
 
-	let isLoading = $state(false);
 	let isMigrating = $state(false);
 
 	// Format bytes to human-readable size
@@ -34,13 +34,10 @@
 
 	async function loadCacheInfo() {
 		try {
-			isLoading = true;
 			cacheInfo = await generalSettings.getCacheInfo();
 		} catch (error) {
 			logger.error("Failed to load cache info:", error);
 			toast.error(m.settings_cache_load_failed());
-		} finally {
-			isLoading = false;
 		}
 	}
 
@@ -107,7 +104,7 @@
 	}
 
 	// Load cache info on mount
-	$effect(() => {
+	onMount(() => {
 		loadCacheInfo();
 	});
 </script>
@@ -131,12 +128,6 @@
 	</div>
 {/snippet}
 
-{#snippet refreshButton()}
-	<Button size="sm" variant="ghost" onclick={loadCacheInfo} disabled={isLoading}>
-		<RefreshCw class="size-4 {isLoading ? 'animate-spin' : ''}" />
-	</Button>
-{/snippet}
-
 <div class="gap-settings-gap flex flex-col">
 	<Label class="text-label-fg font-normal">{m.settings_cache_management()}</Label>
 
@@ -152,7 +143,6 @@
 		<SettingInfoItem
 			label={m.settings_cache_current_size()}
 			value={formatBytes(cacheInfo.size)}
-			action={refreshButton}
 		/>
 	{/if}
 </div>
