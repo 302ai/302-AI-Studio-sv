@@ -23,13 +23,17 @@
 		className,
 	)}
 >
-	<div class="flex items-center gap-2">
+	<div class="flex items-center gap-2 pr-2">
 		<Label class="text-sm font-normal">{label}</Label>
 		{#if value}
 			{#if isBold}
-				<Label class="text-sm font-semibold truncate">{value}</Label>
+				<Label class="text-sm font-semibold truncate flex-1 min-w-0 block" title={value}
+					>{value}</Label
+				>
 			{:else}
-				<Label class="text-label-fg font-normal">{value}</Label>
+				<Label class="text-label-fg font-normal truncate flex-1 min-w-0 block" title={value}
+					>{value}</Label
+				>
 			{/if}
 		{/if}
 	</div>
