@@ -1,20 +1,24 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { nanoid } from "nanoid";
 import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { parse, stringify } from "superjson";
 import { createLogger } from "@shared/logger";
+import { cacheManager } from "../services/cache-manager";
 
 const logger = createLogger("utils");
 
 export class TempStorage {
-	private static readonly TEMP_DIR = join(tmpdir(), "302ai-studio-temp");
-	private static readonly cleanupRegistry = new Set<string>();
+	private static cleanupRegistry = new Set<string>();
+
+	static getTempDir(): string {
+		return cacheManager.getTempCacheDir();
+	}
 
 	static ensureTempDir(): void {
-		if (!existsSync(this.TEMP_DIR)) {
-			mkdirSync(this.TEMP_DIR, { recursive: true });
+		const tempDir = this.getTempDir();
+		if (!existsSync(tempDir)) {
+			mkdirSync(tempDir, { recursive: true });
 		}
 	}
 
@@ -22,7 +26,7 @@ export class TempStorage {
 		this.ensureTempDir();
 
 		const fileName = `${prefix}-${nanoid()}.json`;
-		const filePath = join(this.TEMP_DIR, fileName);
+		const filePath = join(this.getTempDir(), fileName);
 
 		try {
 			const serializedData = stringify(data);

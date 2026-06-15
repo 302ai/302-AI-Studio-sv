@@ -12,7 +12,7 @@ import type { PluginMarketEntry } from "@shared/types";
 import ky from "ky";
 import path from "path";
 import fs from "fs-extra";
-import os from "os";
+import { cacheManager } from "./cache-manager";
 
 /**
  * Registry configuration
@@ -26,7 +26,6 @@ const REGISTRY_CONFIG = {
 
 	// Cache configuration
 	cacheMaxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
-	cacheDir: path.join(os.tmpdir(), "302-ai-studio", "plugin-registry-cache"),
 	cacheFile: "registry.json",
 };
 
@@ -56,14 +55,14 @@ export class RegistryService {
 	 * Get the cache file path
 	 */
 	private getCachePath(): string {
-		return path.join(REGISTRY_CONFIG.cacheDir, REGISTRY_CONFIG.cacheFile);
+		return path.join(cacheManager.getRegistryCacheDir(), REGISTRY_CONFIG.cacheFile);
 	}
 
 	/**
 	 * Get the cache metadata file path
 	 */
 	private getCacheMetadataPath(): string {
-		return path.join(REGISTRY_CONFIG.cacheDir, "metadata.json");
+		return path.join(cacheManager.getRegistryCacheDir(), "metadata.json");
 	}
 
 	/**
@@ -123,7 +122,7 @@ export class RegistryService {
 	 */
 	private async saveCache(data: RegistryData, etag?: string): Promise<void> {
 		try {
-			await fs.ensureDir(REGISTRY_CONFIG.cacheDir);
+			await fs.ensureDir(cacheManager.getRegistryCacheDir());
 
 			const cachePath = this.getCachePath();
 			const metadataPath = this.getCacheMetadataPath();
@@ -359,8 +358,9 @@ export class RegistryService {
 			this.cache = null;
 			this.cacheMetadata = null;
 
-			if (await fs.pathExists(REGISTRY_CONFIG.cacheDir)) {
-				await fs.remove(REGISTRY_CONFIG.cacheDir);
+			const cacheDir = cacheManager.getRegistryCacheDir();
+			if (await fs.pathExists(cacheDir)) {
+				await fs.remove(cacheDir);
 				logger.info("Cache cleared successfully");
 			}
 		} catch (error) {

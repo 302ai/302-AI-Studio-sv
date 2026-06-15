@@ -204,6 +204,16 @@ async function init() {
 
 	await appService.initFromStorage();
 
+	// Initialize cache manager
+	try {
+		const { cacheManager } = await import("./services/cache-manager");
+		await cacheManager.initialize();
+		logger.info("[Main] Cache manager initialized successfully");
+	} catch (error) {
+		logger.error("[Main] Failed to initialize cache manager:", error);
+		// Continue app initialization even if cache manager fails
+	}
+
 	// Initialize plugin system
 	try {
 		logger.debug("[Main] Initializing plugin system...");

@@ -15,4 +15,15 @@ export interface GeneralSettingsState {
 	autoUpdate: boolean;
 	updateChannel: UpdateChannel;
 	proxy: ProxySettings;
+	cacheDirectory?: string; // Custom cache directory path, undefined means use default (os.tmpdir())
+}
+
+export interface CacheInfo {
+	path: string;
+	size: number;
+	subdirs: {
+		registry: { path: string; size: number };
+		downloads: { path: string; size: number };
+		temp: { path: string; size: number };
+	};
 }
