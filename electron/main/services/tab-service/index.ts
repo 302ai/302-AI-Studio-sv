@@ -1502,6 +1502,7 @@ export class TabService {
 				isMCPActive: false,
 				selectedModel: selectedModel,
 				isPrivateChatActive: inheritedPrivacyState,
+				reasoningEffort: "off",
 				updatedAt: new Date(),
 				apiKeyHash, // Track which API key was used when creating this thread
 			};

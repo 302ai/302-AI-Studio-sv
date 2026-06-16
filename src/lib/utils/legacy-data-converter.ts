@@ -136,6 +136,7 @@ export function convertThreads(
 			isMCPActive: mcpServerIds.length > 0,
 			selectedModel: selectedModel,
 			isPrivateChatActive: legacy.isPrivate,
+			reasoningEffort: "off",
 			updatedAt: new Date(legacy.updatedAt),
 		};
 

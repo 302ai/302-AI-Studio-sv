@@ -60,6 +60,7 @@
 	let addingMCP = $state(false);
 
 	let isThinkingBudgetOpen = $state(false);
+	let isReasoningEffortOpen = $state(false);
 	let isOpenUIActive = $derived(chatParameters.systemPromptContent === OPENUI_SYSTEM_PROMPT);
 	let previousSystemPromptContent = $state("");
 	let skillsData = $state<Omit<ListSkillsResponse, "success" | "project_skills">>({
@@ -163,7 +164,9 @@
 		} else {
 			return (
 				(chatState.providerType === "302ai" &&
-					(chatState.isOnlineSearchActive || chatState.isThinkingActive)) ||
+					(chatState.isOnlineSearchActive ||
+						chatState.isThinkingActive ||
+						chatState.reasoningEffort !== "off")) ||
 				chatState.isMCPActive
 			);
 		}
@@ -211,6 +214,15 @@
 {/snippet}
 
 {#snippet actionEnableThinking(isMenu = false)}
+	{@const isReasoningModel = chatState.selectedModel?.capabilities.has("reasoning") ?? false}
+	{#if isReasoningModel}
+		{@render actionReasoningEffort()}
+	{:else}
+		{@render actionFusionThinking(isMenu)}
+	{/if}
+{/snippet}
+
+{#snippet actionFusionThinking(isMenu = false)}
 	{#if isMenu}
 		{@render menuButton({
 			icon: Lightbulb,
@@ -232,6 +244,68 @@
 			<Lightbulb class={cn(chatState.isThinkingActive && "!text-chat-action-active-fg")} />
 		</ButtonWithTooltip>
 	{/if}
+{/snippet}
+
+{#snippet actionReasoningEffort()}
+	<Popover.Root bind:open={isReasoningEffortOpen}>
+		<TooltipProvider delayDuration={500}>
+			<Tooltip ignoreNonKeyboardFocus={true}>
+				<TooltipTrigger>
+					{#snippet child({ props: tooltipProps })}
+						<Popover.Trigger>
+							{#snippet child({ props: popoverProps })}
+								<button
+									{...tooltipProps}
+									{...popoverProps}
+									class={cn(
+										buttonVariants({ variant: "ghost", size: "icon" }),
+										"group rounded-[10px]",
+										"hover:!bg-chat-action-hover",
+										chatState.reasoningEffort !== "off" &&
+											"!bg-chat-action-active hover:!bg-chat-action-active",
+									)}
+									disabled={disabled || actionDisabled}
+								>
+									<Lightbulb
+										class={cn(
+											chatState.reasoningEffort !== "off" &&
+												"!text-chat-action-active-fg",
+										)}
+									/>
+								</button>
+							{/snippet}
+						</Popover.Trigger>
+					{/snippet}
+				</TooltipTrigger>
+				<TooltipContent
+					side="top"
+					class="bg-overlay text-overlay-foreground rounded-[10px] border px-2.5 py-1.5 text-sm/6"
+					arrowClasses="hidden"
+					sideOffset={5}
+				>
+					{actionDisabled ? m.title_unsupport_action() : m.title_thinking_strength()}
+				</TooltipContent>
+			</Tooltip>
+		</TooltipProvider>
+
+		<Popover.Content class="w-[400px] p-4" align="center" side="bottom" sideOffset={10}>
+			<div class="flex flex-col gap-2">
+				<div class="flex flex-col gap-2">
+					<Label class="text-label-fg">{m.title_thinking_strength()}</Label>
+					<div class="text-muted-foreground text-xs">
+						{m.description_thinking_strength()}
+					</div>
+				</div>
+				<SegButton
+					options={thinkingBudgetOptions}
+					selectedKey={chatState.reasoningEffort}
+					onSelect={(key) =>
+						chatState.handleReasoningEffortChange(key as ThinkingBudgetType)}
+					disabled={disabled || actionDisabled}
+				/>
+			</div>
+		</Popover.Content>
+	</Popover.Root>
 {/snippet}
 
 {#snippet actionEnableOnlineSearch(isMenu = false)}

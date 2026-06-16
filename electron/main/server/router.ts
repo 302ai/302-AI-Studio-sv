@@ -81,6 +81,7 @@ export type RouterRequestBody = {
 	inTaskOrchestrationMode?: boolean;
 	workspacePath?: string;
 	thinkingBudget?: ThinkingBudgetType;
+	reasoningEffort?: ThinkingBudgetType;
 	vibeMode?: CodeAgentType;
 	agentType?: number;
 	contextSummary?: string;
@@ -211,6 +212,7 @@ app.post("/chat/302ai", async (c) => {
 		threadId,
 		contextSummary,
 		compressedMessageCount,
+		reasoningEffort,
 	} = await c.req.json<{
 		baseUrl?: string;
 		model?: string;
@@ -240,6 +242,7 @@ app.post("/chat/302ai", async (c) => {
 		threadId: string;
 		contextSummary?: string;
 		compressedMessageCount?: number;
+		reasoningEffort?: ThinkingBudgetType;
 	}>();
 	logger.info(
 		"Router request params:",
@@ -289,7 +292,12 @@ app.post("/chat/302ai", async (c) => {
 
 	// Only enable thinking for DeepSeek models
 	const isDeepSeekModel = model.toLowerCase().includes("deepseek");
-	const modelOptions = isDeepSeekModel ? { thinking: { type: "enabled" as const } } : {};
+	const modelOptions = {
+		...(isDeepSeekModel ? { thinking: { type: "enabled" as const } } : {}),
+		...(reasoningEffort && reasoningEffort !== "off"
+			? { reasoning_effort: reasoningEffort }
+			: {}),
+	};
 
 	const wrapModel = wrapLanguageModel({
 		model: ai302.chatModel(model, modelOptions),
