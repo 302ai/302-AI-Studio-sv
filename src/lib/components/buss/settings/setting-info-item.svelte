@@ -23,7 +23,7 @@
 		className,
 	)}
 >
-	<div class="flex items-center gap-2 pr-2">
+	<div class="flex items-center gap-2 pr-2 min-w-0">
 		<Label class="text-sm font-normal">{label}</Label>
 		{#if value}
 			{#if isBold}
