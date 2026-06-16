@@ -254,6 +254,7 @@ app.post("/chat/302ai", async (c) => {
 		maxTokens,
 		frequencyPenalty,
 		presencePenalty,
+		reasoningEffort,
 		isThinkingActive,
 		isOnlineSearchActive,
 		messages,
@@ -281,6 +282,10 @@ app.post("/chat/302ai", async (c) => {
 		provider302Options["ocr_model"] = "gpt-4o-mini";
 	}
 
+	if (reasoningEffort && reasoningEffort !== "off") {
+		provider302Options["reasoning_effort"] = reasoningEffort;
+	}
+
 	// Create proxy-enabled fetch for AI SDK
 	const proxyFetch = await createProxyFetch();
 
@@ -294,9 +299,6 @@ app.post("/chat/302ai", async (c) => {
 	const isDeepSeekModel = model.toLowerCase().includes("deepseek");
 	const modelOptions = {
 		...(isDeepSeekModel ? { thinking: { type: "enabled" as const } } : {}),
-		...(reasoningEffort && reasoningEffort !== "off"
-			? { reasoning_effort: reasoningEffort }
-			: {}),
 	};
 
 	const wrapModel = wrapLanguageModel({
