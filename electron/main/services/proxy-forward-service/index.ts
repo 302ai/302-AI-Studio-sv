@@ -1,4 +1,5 @@
 import { createLogger } from "@shared/logger";
+import { execSync } from "child_process";
 import http from "http";
 import net from "net";
 import { URL } from "url";
@@ -39,17 +40,21 @@ export class ProxyForwardService {
 		}
 
 		try {
-			// Check if port is available
+			// Ensure port 18890 is available — kill any process occupying it
 			const portAvailable = await this.isPortAvailable(this.port);
 			if (!portAvailable) {
-				// Try to find an available port in range 18890-18899
-				const availablePort = await this.findAvailablePort(18890, 18899);
-				if (availablePort) {
-					this.port = availablePort;
-					logger.info(`[ProxyForward] Port 18890 occupied, using ${this.port} instead`);
-				} else {
-					throw new Error("No available port in range 18890-18899");
+				logger.warn(
+					`[ProxyForward] Port ${this.port} is occupied, attempting to kill the process`,
+				);
+				this.killProcessOnPort(this.port);
+				// Re-check after kill
+				const stillOccupied = !(await this.isPortAvailable(this.port));
+				if (stillOccupied) {
+					throw new Error(
+						`Port ${this.port} is still occupied after attempting to kill the process`,
+					);
 				}
+				logger.info(`[ProxyForward] Port ${this.port} freed successfully`);
 			}
 
 			this.server = http.createServer(this.handleRequest.bind(this));
@@ -353,15 +358,46 @@ export class ProxyForwardService {
 	}
 
 	/**
-	 * Find an available port in the given range
+	 * Kill the process occupying the given port (cross-platform)
 	 */
-	private async findAvailablePort(start: number, end: number): Promise<number | null> {
-		for (let port = start; port <= end; port++) {
-			if (await this.isPortAvailable(port)) {
-				return port;
+	private killProcessOnPort(port: number): void {
+		try {
+			const platform = process.platform;
+			let pid: string | null = null;
+
+			if (platform === "win32") {
+				// Windows: find PID via netstat, then taskkill
+				const output = execSync(`netstat -ano | findstr ":${port} "`, {
+					encoding: "utf-8",
+					timeout: 5000,
+				}).trim();
+				const lines = output.split("\n");
+				for (const line of lines) {
+					const match = line.match(/\s+(\d+)\s*$/);
+					if (match) {
+						pid = match[1];
+						break;
+					}
+				}
+				if (pid) {
+					logger.info(`[ProxyForward] Killing process ${pid} on port ${port}`);
+					execSync(`taskkill /F /PID ${pid}`, { timeout: 5000 });
+				}
+			} else {
+				// Linux / macOS: lsof
+				pid = execSync(`lsof -ti :${port}`, {
+					encoding: "utf-8",
+					timeout: 5000,
+				}).trim();
+				if (pid) {
+					logger.info(`[ProxyForward] Killing process ${pid} on port ${port}`);
+					execSync(`kill -9 ${pid}`, { timeout: 5000 });
+				}
 			}
+		} catch (error) {
+			logger.error(`[ProxyForward] Failed to kill process on port ${port}:`, error);
+			throw error;
 		}
-		return null;
 	}
 }
 
