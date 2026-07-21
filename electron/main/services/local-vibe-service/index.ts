@@ -262,6 +262,17 @@ export class LocalVibeService {
 				composeContent = composeContent.replace(/^\s*user:.*$/gm, "");
 				fs.writeFileSync(runtimeComposePath, composeContent, "utf-8");
 			}
+			// Windows (WSL2): remove extra_hosts because host.docker.internal
+			// is natively resolved by Docker Desktop to the Windows host IP.
+			// Using host-gateway on WSL2 resolves to WSL2's gateway IP instead,
+			// which breaks connectivity to the proxy forward service on the Windows host.
+			if (process.platform === "win32") {
+				composeContent = composeContent.replace(
+					/^\s*# Add host\.docker\.internal mapping for Linux compatibility\s*\n\s*extra_hosts:\s*\n\s*- "host\.docker\.internal:host-gateway"\s*\n?/gm,
+					"",
+				);
+				fs.writeFileSync(runtimeComposePath, composeContent, "utf-8");
+			}
 		} catch (error) {
 			logger.warn("Failed to normalize runtime compose:", error);
 		}
