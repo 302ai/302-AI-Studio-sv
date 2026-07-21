@@ -271,10 +271,12 @@ export class LocalVibeService {
 				let windowsHostIp = "";
 				try {
 					const { stdout } = await execAsync(
-						`podman machine ssh ai302-machine -- "ip route show default 2>/dev/null | awk '{print \\$3}'"`,
+						`podman machine ssh ai302-machine -- ip route show default`,
 						{ timeout: 10000 },
 					);
-					windowsHostIp = stdout.trim();
+					// Parse: "default via 172.28.224.1 dev eth0" → extract the IP
+					const match = stdout.trim().match(/default via (\d+\.\d+\.\d+\.\d+)/);
+					windowsHostIp = match?.[1] ?? "";
 				} catch {
 					logger.warn(
 						"Failed to query Windows host IP from Podman machine, keeping host-gateway as fallback",
