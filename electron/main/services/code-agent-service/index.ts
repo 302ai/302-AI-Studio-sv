@@ -497,6 +497,7 @@ export class CodeAgentService {
 						type: "chat",
 					},
 					isPrivateChatActive: false,
+					reasoningEffort: "off",
 					updatedAt: new Date(),
 				};
 				await storageService.setItemInternal("app-thread:" + threadId, newThread);

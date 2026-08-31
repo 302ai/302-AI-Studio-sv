@@ -11,10 +11,10 @@ import { app, dialog, type IpcMainInvokeEvent } from "electron";
 import extract from "extract-zip";
 import fs from "fs-extra";
 import ky from "ky";
-import os from "os";
 import path from "path";
 import { pluginLoader } from "../plugin-manager/plugin-loader";
 import { pluginRegistry } from "../plugin-manager/plugin-registry";
+import { cacheManager } from "./cache-manager";
 import {
 	executeFetchModelsHook,
 	hasProviderPlugin,
@@ -125,7 +125,9 @@ export class PluginService {
 		logger.debug(`[PluginService] Downloading plugin from: ${url}`);
 
 		// Create a temporary directory for download
-		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "plugin-download-"));
+		const tempDir = await fs.mkdtemp(
+			path.join(cacheManager.getPluginDownloadDir(), "plugin-download-"),
+		);
 		const zipPath = path.join(tempDir, "plugin.zip");
 
 		try {

@@ -1,8 +1,8 @@
 import { ipcMain } from "electron";
 import {
-	registryService,
 	broadcastService,
 	storageService,
+	registryService,
 	pluginService,
 	generalSettingsService,
 	ssoService,
@@ -33,25 +33,6 @@ import {
  * Auto-generated IPC service interfaces
  */
 export function registerIpcHandlers() {
-	// registryService service registration
-	ipcMain.handle("registryService:getMarketplacePlugins", (event) =>
-		registryService.getMarketplacePlugins(event),
-	);
-	ipcMain.handle("registryService:getMarketplacePlugin", (event, pluginId) =>
-		registryService.getMarketplacePlugin(event, pluginId),
-	);
-	ipcMain.handle("registryService:searchMarketplacePlugins", (event, query) =>
-		registryService.searchMarketplacePlugins(event, query),
-	);
-	ipcMain.handle("registryService:getFeaturedPlugins", (event) =>
-		registryService.getFeaturedPlugins(event),
-	);
-	ipcMain.handle("registryService:refreshRegistry", (event) =>
-		registryService.refreshRegistry(event),
-	);
-	ipcMain.handle("registryService:clearCache", (event) => registryService.clearCache(event));
-	ipcMain.handle("registryService:getCacheInfo", (event) => registryService.getCacheInfo(event));
-
 	// broadcastService service registration
 	ipcMain.handle("broadcastService:broadcastExcludeSource", (event, broadcastEvent, data) =>
 		broadcastService.broadcastExcludeSource(event, broadcastEvent, data),
@@ -90,6 +71,25 @@ export function registerIpcHandlers() {
 	ipcMain.handle("storageService:unwatch", (event, watchKey) =>
 		storageService.unwatch(event, watchKey),
 	);
+
+	// registryService service registration
+	ipcMain.handle("registryService:getMarketplacePlugins", (event) =>
+		registryService.getMarketplacePlugins(event),
+	);
+	ipcMain.handle("registryService:getMarketplacePlugin", (event, pluginId) =>
+		registryService.getMarketplacePlugin(event, pluginId),
+	);
+	ipcMain.handle("registryService:searchMarketplacePlugins", (event, query) =>
+		registryService.searchMarketplacePlugins(event, query),
+	);
+	ipcMain.handle("registryService:getFeaturedPlugins", (event) =>
+		registryService.getFeaturedPlugins(event),
+	);
+	ipcMain.handle("registryService:refreshRegistry", (event) =>
+		registryService.refreshRegistry(event),
+	);
+	ipcMain.handle("registryService:clearCache", (event) => registryService.clearCache(event));
+	ipcMain.handle("registryService:getCacheInfo", (event) => registryService.getCacheInfo(event));
 
 	// pluginService service registration
 	ipcMain.handle("pluginService:getInstalledPlugins", (event) =>
@@ -162,6 +162,24 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("generalSettingsService:testProxyConnection", (event, proxySettings) =>
 		generalSettingsService.testProxyConnection(event, proxySettings),
+	);
+	ipcMain.handle("generalSettingsService:getCacheDirectory", (event) =>
+		generalSettingsService.getCacheDirectory(event),
+	);
+	ipcMain.handle("generalSettingsService:setCacheDirectory", (event, dirPath) =>
+		generalSettingsService.setCacheDirectory(event, dirPath),
+	);
+	ipcMain.handle("generalSettingsService:getCacheInfo", (event) =>
+		generalSettingsService.getCacheInfo(event),
+	);
+	ipcMain.handle("generalSettingsService:clearCache", (event) =>
+		generalSettingsService.clearCache(event),
+	);
+	ipcMain.handle("generalSettingsService:resetCacheToDefault", (event) =>
+		generalSettingsService.resetCacheToDefault(event),
+	);
+	ipcMain.handle("generalSettingsService:selectCacheDirectory", (event) =>
+		generalSettingsService.selectCacheDirectory(event),
 	);
 
 	// ssoService service registration
@@ -694,13 +712,6 @@ export function registerIpcHandlers() {
  * Clean up IPC handlers
  */
 export function removeIpcHandlers() {
-	ipcMain.removeHandler("registryService:getMarketplacePlugins");
-	ipcMain.removeHandler("registryService:getMarketplacePlugin");
-	ipcMain.removeHandler("registryService:searchMarketplacePlugins");
-	ipcMain.removeHandler("registryService:getFeaturedPlugins");
-	ipcMain.removeHandler("registryService:refreshRegistry");
-	ipcMain.removeHandler("registryService:clearCache");
-	ipcMain.removeHandler("registryService:getCacheInfo");
 	ipcMain.removeHandler("broadcastService:broadcastExcludeSource");
 	ipcMain.removeHandler("broadcastService:broadcastToAll");
 	ipcMain.removeHandler("storageService:setItem");
@@ -716,6 +727,13 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:setItems");
 	ipcMain.removeHandler("storageService:watch");
 	ipcMain.removeHandler("storageService:unwatch");
+	ipcMain.removeHandler("registryService:getMarketplacePlugins");
+	ipcMain.removeHandler("registryService:getMarketplacePlugin");
+	ipcMain.removeHandler("registryService:searchMarketplacePlugins");
+	ipcMain.removeHandler("registryService:getFeaturedPlugins");
+	ipcMain.removeHandler("registryService:refreshRegistry");
+	ipcMain.removeHandler("registryService:clearCache");
+	ipcMain.removeHandler("registryService:getCacheInfo");
 	ipcMain.removeHandler("pluginService:getInstalledPlugins");
 	ipcMain.removeHandler("pluginService:getPlugin");
 	ipcMain.removeHandler("pluginService:getEnabledPlugins");
@@ -739,6 +757,12 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("generalSettingsService:handleLanguageChanged");
 	ipcMain.removeHandler("generalSettingsService:handleProxyChanged");
 	ipcMain.removeHandler("generalSettingsService:testProxyConnection");
+	ipcMain.removeHandler("generalSettingsService:getCacheDirectory");
+	ipcMain.removeHandler("generalSettingsService:setCacheDirectory");
+	ipcMain.removeHandler("generalSettingsService:getCacheInfo");
+	ipcMain.removeHandler("generalSettingsService:clearCache");
+	ipcMain.removeHandler("generalSettingsService:resetCacheToDefault");
+	ipcMain.removeHandler("generalSettingsService:selectCacheDirectory");
 	ipcMain.removeHandler("ssoService:openSsoLogin");
 	ipcMain.removeHandler("ssoService:waitForSsoCallback");
 	ipcMain.removeHandler("ssoService:cancelSsoLogin");

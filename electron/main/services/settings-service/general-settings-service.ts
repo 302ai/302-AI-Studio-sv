@@ -1,9 +1,10 @@
-import type { LanguageCode, ProxySettings } from "@shared/storage/general-settings";
-import { net, session, webContents, type IpcMainInvokeEvent } from "electron";
+import type { CacheInfo, LanguageCode, ProxySettings } from "@shared/storage/general-settings";
+import { dialog, net, session, webContents, type IpcMainInvokeEvent } from "electron";
 import { emitter } from "../broadcast-service";
 import { generalSettingsStorage } from "../storage-service/general-settings-storage";
 import { clearProxyAgentCache } from "../../utils/proxy-helper";
 import { createLogger } from "@shared/logger";
+import { cacheManager } from "../cache-manager";
 
 const logger = createLogger("services");
 
@@ -117,6 +118,54 @@ export class GeneralSettingsService {
 			// Clear Electron session proxy
 			await session.defaultSession.setProxy({ proxyRules: "" });
 		}
+	}
+
+	// ******************************* Cache Management ******************************* //
+
+	async getCacheDirectory(_event: IpcMainInvokeEvent): Promise<string> {
+		return cacheManager.getCacheRoot();
+	}
+
+	async setCacheDirectory(
+		_event: IpcMainInvokeEvent,
+		dirPath: string,
+	): Promise<{ success: boolean; error?: string }> {
+		try {
+			await cacheManager.setCacheDirectory(dirPath);
+			return { success: true };
+		} catch (error) {
+			logger.error("[CacheManager] Failed to set cache directory:", error);
+			return {
+				success: false,
+				error: error instanceof Error ? error.message : "Unknown error",
+			};
+		}
+	}
+
+	async getCacheInfo(_event: IpcMainInvokeEvent): Promise<CacheInfo> {
+		return await cacheManager.getCacheInfo();
+	}
+
+	async clearCache(_event: IpcMainInvokeEvent): Promise<void> {
+		await cacheManager.clearAllCache();
+	}
+
+	async resetCacheToDefault(_event: IpcMainInvokeEvent): Promise<void> {
+		await cacheManager.resetToDefault();
+	}
+
+	async selectCacheDirectory(_event: IpcMainInvokeEvent): Promise<string | null> {
+		const result = await dialog.showOpenDialog({
+			properties: ["openDirectory", "createDirectory"],
+			title: "Select Cache Directory",
+			buttonLabel: "Select",
+		});
+
+		if (result.canceled || result.filePaths.length === 0) {
+			return null;
+		}
+
+		return result.filePaths[0];
 	}
 }
 

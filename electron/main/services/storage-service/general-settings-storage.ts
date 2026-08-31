@@ -48,6 +48,11 @@ export class GeneralSettingsStorage extends StorageService<GeneralSettingsState>
 		}
 		return result.proxy;
 	}
+
+	async getCacheDirectory(): Promise<string | undefined> {
+		const result = await this.getItemInternal("state");
+		return result?.cacheDirectory;
+	}
 }
 
 export const generalSettingsStorage = new GeneralSettingsStorage();

@@ -18,7 +18,13 @@ import { replaceCodeBlockAt } from "$lib/utils/markdown-code-block";
 import { Chat } from "@ai-sdk/svelte";
 import { createLogger } from "@shared/logger";
 import type { ModelProvider } from "@shared/storage/provider";
-import type { AttachmentFile, MCPServer, Model, ThreadParmas } from "@shared/types";
+import type {
+	AttachmentFile,
+	MCPServer,
+	Model,
+	ThreadParmas,
+	ThinkingBudgetType,
+} from "@shared/types";
 import { hashApiKey } from "@shared/utils/hash";
 import { nanoid } from "nanoid";
 import { untrack } from "svelte";
@@ -100,6 +106,7 @@ const initialThread: ThreadParmas = hasValidThreadData
 			maxTokens: null,
 			frequencyPenalty: null,
 			presencePenalty: null,
+			reasoningEffort: "off",
 			updatedAt: new Date(),
 		};
 
@@ -447,6 +454,13 @@ class ChatState {
 	}
 	set isThinkingActive(value: boolean) {
 		persistedChatParamsState.current.isThinkingActive = value;
+	}
+
+	get reasoningEffort(): ThinkingBudgetType {
+		return persistedChatParamsState.current.reasoningEffort ?? "off";
+	}
+	set reasoningEffort(value: ThinkingBudgetType) {
+		persistedChatParamsState.current.reasoningEffort = value;
 	}
 
 	get isOnlineSearchActive(): boolean {
@@ -1403,6 +1417,7 @@ class ChatState {
 				maxTokens: this.maxTokens,
 				frequencyPenalty: this.frequencyPenalty,
 				presencePenalty: this.presencePenalty,
+				reasoningEffort: this.reasoningEffort,
 				updatedAt: new Date(),
 				apiKeyHash: this.get302AIApiKeyHash(),
 			});
@@ -1520,6 +1535,7 @@ class ChatState {
 				maxTokens: this.maxTokens,
 				frequencyPenalty: this.frequencyPenalty,
 				presencePenalty: this.presencePenalty,
+				reasoningEffort: this.reasoningEffort,
 				updatedAt: new Date(),
 				autoSendOnLoad: true, // Set flag to trigger AI reply on load
 				apiKeyHash: this.get302AIApiKeyHash(),
@@ -1590,6 +1606,10 @@ class ChatState {
 
 	handleThinkingActiveChange(active: boolean) {
 		this.isThinkingActive = active;
+	}
+
+	handleReasoningEffortChange(effort: ThinkingBudgetType) {
+		this.reasoningEffort = effort;
 	}
 
 	handleOnlineSearchActiveChange(active: boolean) {
@@ -1773,6 +1793,7 @@ export const chat = new Chat({
 				isOCRActive: persistedChatParamsState.current.isOCRActive,
 				isMCPActive: persistedChatParamsState.current.isMCPActive,
 				mcpServerIds: persistedChatParamsState.current.mcpServerIds,
+				reasoningEffort: persistedChatParamsState.current.reasoningEffort,
 
 				autoParseUrl: preferencesSettings.autoParseUrl,
 				searchProvider: preferencesSettings.searchProvider,

@@ -147,6 +147,49 @@ class GeneralSettingsManager {
 		this.setProxy({ ...currentProxy, enabled });
 	}
 
+	get cacheDirectory(): string | undefined {
+		return persistedGeneralSettings.current.cacheDirectory;
+	}
+
+	async setCacheDirectory(path: string): Promise<{ success: boolean; error?: string }> {
+		const result = await generalSettingsService.setCacheDirectory(path);
+		if (result.success) {
+			persistedGeneralSettings.current = {
+				...persistedGeneralSettings.current,
+				cacheDirectory: path,
+			};
+		}
+		return result;
+	}
+
+	async getCacheInfo(): Promise<{
+		path: string;
+		size: number;
+		subdirs: {
+			registry: { path: string; size: number };
+			downloads: { path: string; size: number };
+			temp: { path: string; size: number };
+		};
+	}> {
+		return await generalSettingsService.getCacheInfo();
+	}
+
+	async clearCache(): Promise<void> {
+		await generalSettingsService.clearCache();
+	}
+
+	async resetCacheToDefault(): Promise<void> {
+		await generalSettingsService.resetCacheToDefault();
+		persistedGeneralSettings.current = {
+			...persistedGeneralSettings.current,
+			cacheDirectory: undefined,
+		};
+	}
+
+	async selectCacheDirectory(): Promise<string | null> {
+		return await generalSettingsService.selectCacheDirectory();
+	}
+
 	update(partial: Partial<GeneralSettingsState>): void {
 		persistedGeneralSettings.current = { ...persistedGeneralSettings.current, ...partial };
 	}

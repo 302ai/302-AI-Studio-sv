@@ -113,6 +113,7 @@ export class TabStorage extends StorageService<TabState> {
 				isMCPActive: false,
 				selectedModel: preferencesSettings?.newSessionModel ?? latestUsedModel,
 				isPrivateChatActive: false,
+				reasoningEffort: "off",
 				updatedAt: new Date(),
 				apiKeyHash,
 			};

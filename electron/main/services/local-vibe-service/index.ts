@@ -262,6 +262,34 @@ export class LocalVibeService {
 				composeContent = composeContent.replace(/^\s*user:.*$/gm, "");
 				fs.writeFileSync(runtimeComposePath, composeContent, "utf-8");
 			}
+			// Windows (WSL2): inject actual Windows host IP for host.docker.internal.
+			// Podman on Windows/WSL2 does not natively resolve host.docker.internal,
+			// and host-gateway resolves to the Podman bridge gateway, not the Windows host.
+			// Query the Windows host IP from within the Podman WSL2 VM's default route
+			// so the container can reach the proxy forward service at port 18890.
+			if (process.platform === "win32") {
+				let windowsHostIp = "";
+				try {
+					const { stdout } = await execAsync(
+						`podman machine ssh ai302-machine -- ip route show default`,
+						{ timeout: 10000 },
+					);
+					// Parse: "default via 172.28.224.1 dev eth0" → extract the IP
+					const match = stdout.trim().match(/default via (\d+\.\d+\.\d+\.\d+)/);
+					windowsHostIp = match?.[1] ?? "";
+				} catch {
+					logger.warn(
+						"Failed to query Windows host IP from Podman machine, keeping host-gateway as fallback",
+					);
+				}
+				if (windowsHostIp && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(windowsHostIp)) {
+					composeContent = composeContent.replace(
+						/host\.docker\.internal:host-gateway/g,
+						`host.docker.internal:${windowsHostIp}`,
+					);
+				}
+				fs.writeFileSync(runtimeComposePath, composeContent, "utf-8");
+			}
 		} catch (error) {
 			logger.warn("Failed to normalize runtime compose:", error);
 		}

@@ -129,6 +129,7 @@ export interface AttachmentFile {
 }
 
 export type { ChatVariable } from "./storage/chat-parameters";
+import type { ThinkingBudgetType } from "./storage/code-agent";
 
 export interface ThreadParmas {
 	id: string;
@@ -148,6 +149,7 @@ export interface ThreadParmas {
 	isMCPActive: boolean;
 	selectedModel: Model | null;
 	isPrivateChatActive: boolean;
+	reasoningEffort?: ThinkingBudgetType;
 	updatedAt: Date;
 	autoSendOnLoad?: boolean; // Flag to auto-send message when thread loads (for branch and send)
 	/** Hash of the API key used when creating this thread, used to track account association */
