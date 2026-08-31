@@ -2,8 +2,6 @@ import { ipcMain } from "electron";
 import {
 	broadcastService,
 	storageService,
-	registryService,
-	pluginService,
 	generalSettingsService,
 	ssoService,
 	ghostWindowService,
@@ -70,87 +68,6 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("storageService:unwatch", (event, watchKey) =>
 		storageService.unwatch(event, watchKey),
-	);
-
-	// registryService service registration
-	ipcMain.handle("registryService:getMarketplacePlugins", (event) =>
-		registryService.getMarketplacePlugins(event),
-	);
-	ipcMain.handle("registryService:getMarketplacePlugin", (event, pluginId) =>
-		registryService.getMarketplacePlugin(event, pluginId),
-	);
-	ipcMain.handle("registryService:searchMarketplacePlugins", (event, query) =>
-		registryService.searchMarketplacePlugins(event, query),
-	);
-	ipcMain.handle("registryService:getFeaturedPlugins", (event) =>
-		registryService.getFeaturedPlugins(event),
-	);
-	ipcMain.handle("registryService:refreshRegistry", (event) =>
-		registryService.refreshRegistry(event),
-	);
-	ipcMain.handle("registryService:clearCache", (event) => registryService.clearCache(event));
-	ipcMain.handle("registryService:getCacheInfo", (event) => registryService.getCacheInfo(event));
-
-	// pluginService service registration
-	ipcMain.handle("pluginService:getInstalledPlugins", (event) =>
-		pluginService.getInstalledPlugins(event),
-	);
-	ipcMain.handle("pluginService:getPlugin", (event, pluginId) =>
-		pluginService.getPlugin(event, pluginId),
-	);
-	ipcMain.handle("pluginService:getEnabledPlugins", (event) =>
-		pluginService.getEnabledPlugins(event),
-	);
-	ipcMain.handle("pluginService:getProviderPlugins", (event) =>
-		pluginService.getProviderPlugins(event),
-	);
-	ipcMain.handle("pluginService:enablePlugin", (event, pluginId) =>
-		pluginService.enablePlugin(event, pluginId),
-	);
-	ipcMain.handle("pluginService:disablePlugin", (event, pluginId) =>
-		pluginService.disablePlugin(event, pluginId),
-	);
-	ipcMain.handle("pluginService:installPlugin", (event, source) =>
-		pluginService.installPlugin(event, source),
-	);
-	ipcMain.handle("pluginService:uninstallPlugin", (event, pluginId) =>
-		pluginService.uninstallPlugin(event, pluginId),
-	);
-	ipcMain.handle("pluginService:checkForUpdates", (event, pluginId) =>
-		pluginService.checkForUpdates(event, pluginId),
-	);
-	ipcMain.handle("pluginService:updatePlugin", (event, pluginId) =>
-		pluginService.updatePlugin(event, pluginId),
-	);
-	ipcMain.handle("pluginService:reloadPlugin", (event, pluginId) =>
-		pluginService.reloadPlugin(event, pluginId),
-	);
-	ipcMain.handle("pluginService:selectPluginFolder", (event) =>
-		pluginService.selectPluginFolder(event),
-	);
-	ipcMain.handle("pluginService:getPluginConfig", (event, pluginId) =>
-		pluginService.getPluginConfig(event, pluginId),
-	);
-	ipcMain.handle("pluginService:setPluginConfig", (event, pluginId, config) =>
-		pluginService.setPluginConfig(event, pluginId, config),
-	);
-	ipcMain.handle("pluginService:getPluginConfigValue", (event, pluginId, key) =>
-		pluginService.getPluginConfigValue(event, pluginId, key),
-	);
-	ipcMain.handle("pluginService:setPluginConfigValue", (event, pluginId, key, value) =>
-		pluginService.setPluginConfigValue(event, pluginId, key, value),
-	);
-	ipcMain.handle("pluginService:fetchModelsFromProvider", (event, provider) =>
-		pluginService.fetchModelsFromProvider(event, provider),
-	);
-	ipcMain.handle("pluginService:executeBeforeSendMessageHook", (event, context) =>
-		pluginService.executeBeforeSendMessageHook(event, context),
-	);
-	ipcMain.handle("pluginService:executeAfterSendMessageHook", (event, context, response) =>
-		pluginService.executeAfterSendMessageHook(event, context, response),
-	);
-	ipcMain.handle("pluginService:executeErrorHook", (event, errorData, context) =>
-		pluginService.executeErrorHook(event, errorData, context),
 	);
 
 	// generalSettingsService service registration
@@ -736,33 +653,6 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("storageService:setItems");
 	ipcMain.removeHandler("storageService:watch");
 	ipcMain.removeHandler("storageService:unwatch");
-	ipcMain.removeHandler("registryService:getMarketplacePlugins");
-	ipcMain.removeHandler("registryService:getMarketplacePlugin");
-	ipcMain.removeHandler("registryService:searchMarketplacePlugins");
-	ipcMain.removeHandler("registryService:getFeaturedPlugins");
-	ipcMain.removeHandler("registryService:refreshRegistry");
-	ipcMain.removeHandler("registryService:clearCache");
-	ipcMain.removeHandler("registryService:getCacheInfo");
-	ipcMain.removeHandler("pluginService:getInstalledPlugins");
-	ipcMain.removeHandler("pluginService:getPlugin");
-	ipcMain.removeHandler("pluginService:getEnabledPlugins");
-	ipcMain.removeHandler("pluginService:getProviderPlugins");
-	ipcMain.removeHandler("pluginService:enablePlugin");
-	ipcMain.removeHandler("pluginService:disablePlugin");
-	ipcMain.removeHandler("pluginService:installPlugin");
-	ipcMain.removeHandler("pluginService:uninstallPlugin");
-	ipcMain.removeHandler("pluginService:checkForUpdates");
-	ipcMain.removeHandler("pluginService:updatePlugin");
-	ipcMain.removeHandler("pluginService:reloadPlugin");
-	ipcMain.removeHandler("pluginService:selectPluginFolder");
-	ipcMain.removeHandler("pluginService:getPluginConfig");
-	ipcMain.removeHandler("pluginService:setPluginConfig");
-	ipcMain.removeHandler("pluginService:getPluginConfigValue");
-	ipcMain.removeHandler("pluginService:setPluginConfigValue");
-	ipcMain.removeHandler("pluginService:fetchModelsFromProvider");
-	ipcMain.removeHandler("pluginService:executeBeforeSendMessageHook");
-	ipcMain.removeHandler("pluginService:executeAfterSendMessageHook");
-	ipcMain.removeHandler("pluginService:executeErrorHook");
 	ipcMain.removeHandler("generalSettingsService:handleLanguageChanged");
 	ipcMain.removeHandler("generalSettingsService:handleProxyChanged");
 	ipcMain.removeHandler("generalSettingsService:testProxyConnection");
