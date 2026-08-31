@@ -40,14 +40,33 @@
 	}
 
 	// Check if agent preview button (with full tabs) should be shown
-	const showAgentPreviewButton = $derived(
-		codeAgentState.enabled &&
-			((codeAgentState.currentAgentId === "claude-code" &&
-				codeAgentState.sandboxId !== "" &&
-				codeAgentState.currentSessionId !== "") ||
-				(codeAgentState.currentAgentId === "open-claw" &&
-					codeAgentState.currentSessionId !== "")),
-	);
+	const showAgentPreviewButton = $derived.by(() => {
+		// Must have Code Agent enabled and have messages
+		if (!codeAgentState.enabled || codeAgentState.isFreshTab) {
+			return false;
+		}
+
+		const agentId = codeAgentState.currentAgentId;
+		const sandboxId = codeAgentState.sandboxId;
+		const sessionId = codeAgentState.currentSessionId;
+
+		if (agentId === "claude-code") {
+			// Local or Cloud mode: show button once there are messages
+			if (sandboxId === "local" || sandboxId === "cloud") {
+				return true;
+			}
+
+			// Remote mode: require both sandbox and session to be initialized
+			return sandboxId !== "" && sessionId !== "";
+		}
+
+		if (agentId === "open-claw") {
+			// Open-claw: show button once there are messages (session check is optional)
+			return true;
+		}
+
+		return false;
+	});
 
 	// Handle agent preview toggle (full mode with sandbox)
 	function handleAgentPreviewToggle() {

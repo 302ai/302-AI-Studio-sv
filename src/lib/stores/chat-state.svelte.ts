@@ -91,6 +91,7 @@ const initialThread: ThreadParmas = hasValidThreadData
 			mcpServerIds: [],
 			isThinkingActive: false,
 			isOnlineSearchActive: false,
+			isOCRActive: false,
 			isMCPActive: false,
 			isPrivateChatActive: false,
 			selectedModel: null,
@@ -453,6 +454,13 @@ class ChatState {
 	}
 	set isOnlineSearchActive(value: boolean) {
 		persistedChatParamsState.current.isOnlineSearchActive = value;
+	}
+
+	get isOCRActive(): boolean {
+		return persistedChatParamsState.current.isOCRActive;
+	}
+	set isOCRActive(value: boolean) {
+		persistedChatParamsState.current.isOCRActive = value;
 	}
 
 	get isMCPActive(): boolean {
@@ -1386,6 +1394,7 @@ class ChatState {
 				mcpServerIds: persistedChatParamsState.current.mcpServerIds || [],
 				isThinkingActive: this.isThinkingActive,
 				isOnlineSearchActive: this.isOnlineSearchActive,
+				isOCRActive: this.isOCRActive,
 				isMCPActive: this.isMCPActive,
 				isPrivateChatActive: this.isPrivateChatActive,
 				selectedModel: this.selectedModel,
@@ -1502,6 +1511,7 @@ class ChatState {
 				mcpServerIds: persistedChatParamsState.current.mcpServerIds || [],
 				isThinkingActive: this.isThinkingActive,
 				isOnlineSearchActive: this.isOnlineSearchActive,
+				isOCRActive: this.isOCRActive,
 				isMCPActive: this.isMCPActive,
 				isPrivateChatActive: this.isPrivateChatActive,
 				selectedModel: this.selectedModel,
@@ -1584,6 +1594,10 @@ class ChatState {
 
 	handleOnlineSearchActiveChange(active: boolean) {
 		this.isOnlineSearchActive = active;
+	}
+
+	handleOCRActiveChange(active: boolean) {
+		this.isOCRActive = active;
 	}
 
 	handleMCPActiveChange(active: boolean) {
@@ -1756,6 +1770,7 @@ export const chat = new Chat({
 
 				isThinkingActive: persistedChatParamsState.current.isThinkingActive,
 				isOnlineSearchActive: persistedChatParamsState.current.isOnlineSearchActive,
+				isOCRActive: persistedChatParamsState.current.isOCRActive,
 				isMCPActive: persistedChatParamsState.current.isMCPActive,
 				mcpServerIds: persistedChatParamsState.current.mcpServerIds,
 

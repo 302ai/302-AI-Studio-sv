@@ -1,7 +1,7 @@
 import { codeAgentState } from "$lib/stores/code-agent";
 import type { CodeAgentType, ModelProvider } from "@shared/types";
 import { match } from "ts-pattern";
-import { _302AIKy } from "./core/_302ai-ky";
+import { create302AIKy } from "./core/_302ai-ky";
 import { createCloudModeKy } from "./core/cloud-mode-ky";
 import { createLocalCodeAgentKy } from "./core/local-code-agent-ky";
 
@@ -24,7 +24,7 @@ export async function getCodeAgentKy(mode?: CodeAgentType) {
 	return await match(currentMode)
 		.with("local", () => createLocalCodeAgentKy())
 		.with("cloud", () => createCloudModeKy())
-		.with("remote", () => _302AIKy)
+		.with("remote", () => create302AIKy())
 		.exhaustive();
 }
 

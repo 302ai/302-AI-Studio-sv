@@ -1,6 +1,6 @@
 import { MAX_TABS_PER_WINDOW } from "@shared/constants/tab";
 import { createLogger } from "@shared/logger";
-import type { CodeAgentConfigMetadata } from "@shared/storage/code-agent";
+import type { CodeAgentConfigMetadata, CodeAgentMetadata } from "@shared/storage/code-agent";
 import {
 	isChatTab,
 	type ChatMessage,
@@ -1327,6 +1327,7 @@ export class TabService {
 			]);
 			const preferencesSettings = newSessionModel as unknown as {
 				newSessionModel?: ThreadParmas["selectedModel"];
+				vibeNewSessionModel?: ThreadParmas["selectedModel"];
 			} | null;
 
 			const generalSettings = (await storageService.getItemInternal(
@@ -1350,6 +1351,139 @@ export class TabService {
 				}
 			}
 
+			// ========== CHECK: Inherit Code Agent config from active tab ==========
+			let shouldInheritCodeAgent = false;
+			let inheritedCodeAgentConfig: CodeAgentConfigMetadata | null = null;
+			let inheritedClaudeCodeState: CodeAgentMetadata | null = null;
+
+			const activeTabId = this.windowActiveTabId.get(window.id);
+			logger.info(
+				`[TabService] handleNewTab - windowId: ${window.id}, activeTabId: ${activeTabId}`,
+			);
+
+			if (activeTabId) {
+				const activeTab = this.tabMap.get(activeTabId);
+				logger.info(`[TabService] Active tab found:`, {
+					tabId: activeTabId,
+					threadId: activeTab?.threadId,
+					type: activeTab?.type,
+				});
+
+				if (activeTab?.threadId) {
+					const activeCodeAgentConfig = (await storageService.getItemInternal(
+						"CodeAgentStorage:code-agent-config-state-" + activeTab.threadId,
+					)) as CodeAgentConfigMetadata | null;
+
+					logger.info(
+						`[TabService] Active tab Code Agent config:`,
+						activeCodeAgentConfig,
+					);
+
+					if (activeCodeAgentConfig?.enabled) {
+						shouldInheritCodeAgent = true;
+						inheritedCodeAgentConfig = activeCodeAgentConfig;
+
+						// Also read claude-code-agent-state for sandbox info
+						const activeClaudeCodeState = (await storageService.getItemInternal(
+							"CodeAgentStorage:claude-code-agent-state-" + activeTab.threadId,
+						)) as CodeAgentMetadata | null;
+
+						if (activeClaudeCodeState) {
+							inheritedClaudeCodeState = activeClaudeCodeState;
+							logger.info(`[TabService] Active tab Claude Code state:`, {
+								sandboxId: activeClaudeCodeState.sandboxId,
+								model: activeClaudeCodeState.model,
+								hasSkills: !!activeClaudeCodeState.skills,
+							});
+						}
+
+						logger.info(
+							`[TabService] ✅ Will inherit Code Agent config (type: ${activeCodeAgentConfig.type})`,
+						);
+					} else {
+						logger.info(
+							`[TabService] ❌ Active tab Code Agent NOT enabled (enabled: ${activeCodeAgentConfig?.enabled})`,
+						);
+					}
+				} else {
+					logger.info(`[TabService] ❌ Active tab has no threadId`);
+				}
+			} else {
+				logger.info(`[TabService] ❌ No active tab found in window ${window.id}`);
+			}
+
+			// If inheriting Code Agent, create config for new tab
+			if (shouldInheritCodeAgent && inheritedCodeAgentConfig) {
+				const newCodeAgentConfig: CodeAgentConfigMetadata = {
+					enabled: true,
+					threadId: newThreadId,
+					type: inheritedCodeAgentConfig.type,
+					currentAgentId: inheritedCodeAgentConfig.currentAgentId || "claude-code",
+					codingAgentId: inheritedCodeAgentConfig.codingAgentId || "claude-code",
+					isDeleted: false,
+				};
+				logger.info(
+					`[TabService] Saving Code Agent config BEFORE creating view for thread ${newThreadId}`,
+				);
+				await storageService.setItemInternal(
+					"CodeAgentStorage:code-agent-config-state-" + newThreadId,
+					newCodeAgentConfig,
+				);
+				logger.info(
+					`[TabService] Code Agent config saved successfully (enabled: true, type: ${newCodeAgentConfig.type})`,
+				);
+
+				// Also create claude-code-agent-state to inherit sandbox info
+				if (inheritedClaudeCodeState) {
+					const inheritedSandboxId = inheritedClaudeCodeState.sandboxId;
+					const inheritedType = inheritedCodeAgentConfig.type;
+
+					// Smart sandboxId assignment: mimic the logic of clicking "Apply" button
+					// - For local mode: sandboxId should be "local"
+					// - For cloud mode: sandboxId should be "cloud"
+					// - For remote mode: use inherited sandboxId (or empty if not set yet)
+					const newSandboxId =
+						inheritedSandboxId ||
+						(inheritedType === "local"
+							? "local"
+							: inheritedType === "cloud"
+								? "cloud"
+								: "");
+
+					const newClaudeCodeState = {
+						model: inheritedClaudeCodeState.model || "[REDACTED]",
+						currentWorkspacePath: "", // Don't inherit - each tab should be independent
+						variables: inheritedClaudeCodeState.variables || [],
+						currentSessionId: "", // Don't inherit - create new session on first message
+						sandboxId: newSandboxId, // Use smart default based on type
+						sandboxRemark: inheritedClaudeCodeState.sandboxRemark || "",
+						skills: inheritedClaudeCodeState.skills || [],
+						thinkingBudget: inheritedClaudeCodeState.thinkingBudget || "off",
+						isManualNote: inheritedClaudeCodeState.isManualNote || false,
+						inPlanMode: inheritedClaudeCodeState.inPlanMode || false,
+					};
+
+					logger.info(
+						`[TabService] Saving Claude Code state for new thread (sandboxId: ${newSandboxId}, type: ${inheritedType})`,
+					);
+					await storageService.setItemInternal(
+						"CodeAgentStorage:claude-code-agent-state-" + newThreadId,
+						newClaudeCodeState,
+					);
+					logger.info(`[TabService] Claude Code state saved successfully`);
+				}
+			} else {
+				logger.info(
+					`[TabService] NOT inheriting Code Agent config (shouldInherit: ${shouldInheritCodeAgent})`,
+				);
+			}
+			// ========================================================================
+
+			// Select appropriate model based on Code Agent state
+			const selectedModel = shouldInheritCodeAgent
+				? (preferencesSettings?.vibeNewSessionModel ?? latestUsedModel)
+				: (preferencesSettings?.newSessionModel ?? latestUsedModel);
+
 			const newThread: ThreadParmas = {
 				id: newThreadId,
 				title: title,
@@ -1364,8 +1498,9 @@ export class TabService {
 				mcpServerIds: [],
 				isThinkingActive: false,
 				isOnlineSearchActive: false,
+				isOCRActive: false,
 				isMCPActive: false,
-				selectedModel: preferencesSettings?.newSessionModel ?? latestUsedModel,
+				selectedModel: selectedModel,
 				isPrivateChatActive: inheritedPrivacyState,
 				updatedAt: new Date(),
 				apiKeyHash, // Track which API key was used when creating this thread

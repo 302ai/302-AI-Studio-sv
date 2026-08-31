@@ -35,6 +35,7 @@
 		Lightbulb,
 		ListTodo,
 		MonitorCog,
+		ScanEye,
 		Settings2,
 		Sparkles,
 		ToolCase,
@@ -256,6 +257,30 @@
 			{disabled}
 		>
 			<Globe class={cn(chatState.isOnlineSearchActive && "!text-chat-action-active-fg")} />
+		</ButtonWithTooltip>
+	{/if}
+{/snippet}
+
+{#snippet actionEnableOCR(isMenu = false)}
+	{#if isMenu}
+		{@render menuButton({
+			icon: ScanEye,
+			label: actionDisabled ? m.title_unsupport_action() : m.title_ocr(),
+			active: chatState.isOCRActive,
+			disabled: disabled || actionDisabled,
+			onclick: () => chatState.handleOCRActiveChange(!chatState.isOCRActive),
+		})}
+	{:else}
+		<ButtonWithTooltip
+			class={cn(
+				"hover:!bg-chat-action-hover",
+				chatState.isOCRActive && "!bg-chat-action-active hover:!bg-chat-action-active",
+			)}
+			tooltip={actionDisabled ? m.title_unsupport_action() : m.title_ocr()}
+			onclick={() => chatState.handleOCRActiveChange(!chatState.isOCRActive)}
+			{disabled}
+		>
+			<ScanEye class={cn(chatState.isOCRActive && "!text-chat-action-active-fg")} />
 		</ButtonWithTooltip>
 	{/if}
 {/snippet}
@@ -642,6 +667,7 @@
 
 				{#if !codeAgentState.enabled && chatState.providerType === "302ai"}
 					{@render actionEnableOnlineSearch(true)}
+					{@render actionEnableOCR(true)}
 					{@render actionEnableThinking(true)}
 				{/if}
 
@@ -661,12 +687,11 @@
 					{#if codeAgentState.currentAgentId !== "open-claw"}
 						{@render actionEnabledAgentThinking(true)}
 					{/if}
+					{#if codeAgentState.currentAgentId === "open-claw"}
+						{@render actionOpenClawWebUi(true)}
+					{/if}
 				{:else if !codeAgentState.enabled}
 					{@render actionSetParameters(true)}
-				{/if}
-
-				{#if codeAgentState.currentAgentId === "open-claw"}
-					{@render actionOpenClawWebUi(true)}
 				{/if}
 			</div>
 		</Popover.Content>
@@ -691,11 +716,12 @@
 
 			{#if !codeAgentState.enabled && chatState.providerType === "302ai"}
 				{@render actionEnableOnlineSearch()}
+				{@render actionEnableOCR()}
 				{@render actionEnableThinking()}
 			{/if}
 
-			{#if codeAgentState.currentAgentId !== "open-claw"}
-				{@render actionEnableMCP()}
+			{#if codeAgentState.currentAgentId !== "open-claw" || !codeAgentState.enabled}
+				{@render actionEnableMCP(false)}
 			{/if}
 
 			{#if codeAgentState.enabled}
@@ -710,12 +736,11 @@
 				{#if codeAgentState.currentAgentId !== "open-claw"}
 					{@render actionEnabledAgentThinking()}
 				{/if}
+				{#if codeAgentState.currentAgentId === "open-claw"}
+					{@render actionOpenClawWebUi()}
+				{/if}
 			{:else if !codeAgentState.enabled}
 				{@render actionSetParameters()}
-			{/if}
-
-			{#if codeAgentState.currentAgentId === "open-claw"}
-				{@render actionOpenClawWebUi()}
 			{/if}
 		</div>
 	{/if}

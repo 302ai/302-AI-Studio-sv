@@ -132,6 +132,7 @@ export function convertThreads(
 			mcpServerIds: mcpServerIds,
 			isThinkingActive: false,
 			isOnlineSearchActive: false,
+			isOCRActive: false,
 			isMCPActive: mcpServerIds.length > 0,
 			selectedModel: selectedModel,
 			isPrivateChatActive: legacy.isPrivate,

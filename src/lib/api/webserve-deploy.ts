@@ -1,5 +1,5 @@
 import type { ModelProvider } from "@shared/types";
-import { _302AIKy } from "./core/_302ai-ky";
+import { create302AIKy } from "./core/_302ai-ky";
 
 /**
  * 302.AI Web Hosting API
@@ -237,7 +237,8 @@ export async function getWebserveList(
 		if (request.page) searchParams.page = String(request.page);
 		if (request.limit) searchParams.limit = String(request.limit);
 
-		const data = await _302AIKy
+		const ky = await create302AIKy();
+		const data = await ky
 			.get("302/webserve/list", {
 				searchParams,
 			})
@@ -280,9 +281,8 @@ export async function deleteDeployedWebsite(
 	webId: string | number,
 ): Promise<DeleteWebserveResponse> {
 	try {
-		const data = await _302AIKy
-			.post(`302/webserve/delete/${webId}`)
-			.json<DeleteWebserveResponse>();
+		const ky = await create302AIKy();
+		const data = await ky.post(`302/webserve/delete/${webId}`).json<DeleteWebserveResponse>();
 
 		const errorMessage = extractErrorMessage(data);
 		if (errorMessage) {

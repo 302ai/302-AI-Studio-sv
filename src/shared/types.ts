@@ -144,6 +144,7 @@ export interface ThreadParmas {
 	mcpServerIds: string[];
 	isThinkingActive: boolean;
 	isOnlineSearchActive: boolean;
+	isOCRActive: boolean;
 	isMCPActive: boolean;
 	selectedModel: Model | null;
 	isPrivateChatActive: boolean;

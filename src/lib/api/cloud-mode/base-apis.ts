@@ -53,7 +53,7 @@ import {
 	type WriteFilesResponse,
 } from "@shared/storage/cloud-mode";
 import { type } from "arktype";
-import { _302AIKy } from "../core/_302ai-ky";
+import { create302AIKy } from "../core/_302ai-ky";
 
 /**
  * Get cloud sandbox health status (mock implementation)
@@ -106,7 +106,8 @@ export async function createInstance(
 			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
-		const response = await _302AIKy.post("302/swas/instances", { json: requestBody }).json();
+		const ky = await create302AIKy();
+		const response = await ky.post("302/swas/instances", { json: requestBody }).json();
 
 		checkErrorResponse(response, "CREATE_INSTANCE_FAILED", "Failed to create instance");
 
@@ -134,9 +135,8 @@ export async function initInstance(request: InitInstanceRequest): Promise<InitIn
 			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
-		const response = await _302AIKy
-			.post("302/swas/instances/init", { json: requestBody })
-			.json();
+		const ky = await create302AIKy();
+		const response = await ky.post("302/swas/instances/init", { json: requestBody }).json();
 
 		checkErrorResponse(response, "INIT_INSTANCE_FAILED", "Failed to initialize instance");
 
@@ -187,7 +187,8 @@ export async function restartDocker(request: RestartDockerRequest): Promise<Rest
 			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
-		const response = await _302AIKy
+		const ky = await create302AIKy();
+		const response = await ky
 			.post("302/swas/instances/openclaw/restart", { json: requestBody })
 			.json();
 
@@ -219,7 +220,8 @@ export async function updateAutoRenew(
 			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
-		const response = await _302AIKy
+		const ky = await create302AIKy();
+		const response = await ky
 			.post("302/swas/instances/auto-renew", { json: requestBody })
 			.json();
 
@@ -250,7 +252,8 @@ export async function manualRenew(request: ManualRenewRequest): Promise<ManualRe
 			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
-		const response = await _302AIKy
+		const ky = await create302AIKy();
+		const response = await ky
 			.post("302/swas/instances/manual-renew", { json: requestBody })
 			.json();
 
@@ -315,7 +318,8 @@ export async function getManualRenewCharge(
 	pageSize = 20,
 ): Promise<GetManualRenewChargeResponse> {
 	try {
-		const response = await _302AIKy
+		const ky = await create302AIKy();
+		const response = await ky
 			.get(`302/swas/instances/manual-renew/charges?page=${page}&page_size=${pageSize}`)
 			.json();
 
@@ -347,9 +351,8 @@ export async function rebootInstance(
 			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
-		const response = await _302AIKy
-			.post("302/swas/instances/reboot", { json: requestBody })
-			.json();
+		const ky = await create302AIKy();
+		const response = await ky.post("302/swas/instances/reboot", { json: requestBody }).json();
 
 		checkErrorResponse(response, "SWAS_REBOOT_FAILED", "Failed to reboot instance");
 
@@ -379,7 +382,8 @@ export async function updateInstanceAutoRenew(
 			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
-		const response = await _302AIKy("302/swas/instances/auto-renew", {
+		const ky = await create302AIKy();
+		const response = await ky("302/swas/instances/auto-renew", {
 			method: "POST",
 			json: requestBody,
 		}).json();
@@ -409,7 +413,8 @@ export async function readInstanceFiles(request: ReadFilesRequest): Promise<Read
 			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
-		const response = await _302AIKy
+		const ky = await create302AIKy();
+		const response = await ky
 			.post("302/swas/instances/files/read", { json: requestBody })
 			.json();
 
@@ -438,7 +443,8 @@ export async function writeInstanceFiles(request: WriteFilesRequest): Promise<Wr
 			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
-		const response = await _302AIKy
+		const ky = await create302AIKy();
+		const response = await ky
 			.post("302/swas/instances/files/write", { json: requestBody })
 			.json();
 
@@ -469,7 +475,8 @@ export async function execInstanceCommand(
 			throw new CloudModeApiError("INVALID_REQUEST", requestBody.summary);
 		}
 
-		const response = await _302AIKy
+		const ky = await create302AIKy();
+		const response = await ky
 			.post("302/swas/instances/commands/exec", { json: requestBody })
 			.json();
 
@@ -491,7 +498,8 @@ export async function getSandboxHealthStatus(
 	port: number,
 ): Promise<SandboxHealthResponse> {
 	try {
-		const response = await _302AIKy(
+		const ky = await create302AIKy();
+		const response = await ky(
 			new URL(`http://${ip}:${port}/302/claude-code/sandbox/health`),
 		).json();
 
@@ -546,7 +554,8 @@ export async function execCommandStream(
 	},
 ): Promise<void> {
 	try {
-		const response = await _302AIKy(
+		const ky = await create302AIKy();
+		const response = await ky(
 			new URL(`http://${publicInfo.ip}:${publicInfo.port}/302/claude-code/commands/stream`),
 			{
 				method: "POST",
