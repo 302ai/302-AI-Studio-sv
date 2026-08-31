@@ -586,6 +586,9 @@ export function registerIpcHandlers() {
 	ipcMain.handle("externalLinkService:openExternalLink", (event, url) =>
 		externalLinkService.openExternalLink(event, url),
 	);
+	ipcMain.handle("externalLinkService:open302WebsiteLink", (event, path) =>
+		externalLinkService.open302WebsiteLink(event, path),
+	);
 
 	// loggerService service registration
 	ipcMain.handle("loggerService:log", (event, level, category, processType, message, args) =>
@@ -658,6 +661,12 @@ export function registerIpcHandlers() {
 	);
 	ipcMain.handle("providerService:get302AIBaseUrlWithoutV1", (event) =>
 		providerService.get302AIBaseUrlWithoutV1(event),
+	);
+	ipcMain.handle("providerService:get302WebsiteBaseDomain", (event) =>
+		providerService.get302WebsiteBaseDomain(event),
+	);
+	ipcMain.handle("providerService:get302WebsiteUrl", (event, path) =>
+		providerService.get302WebsiteUrl(event, path),
 	);
 
 	// threadService service registration
@@ -876,6 +885,7 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("devLauncherService:launchDevSandbox");
 	ipcMain.removeHandler("devLauncherService:stopDevSandbox");
 	ipcMain.removeHandler("externalLinkService:openExternalLink");
+	ipcMain.removeHandler("externalLinkService:open302WebsiteLink");
 	ipcMain.removeHandler("loggerService:log");
 	ipcMain.removeHandler("loggerService:exportLogs");
 	ipcMain.removeHandler("mcpService:getToolsFromServer");
@@ -897,6 +907,8 @@ export function removeIpcHandlers() {
 	ipcMain.removeHandler("providerService:get302AIApiKey");
 	ipcMain.removeHandler("providerService:get302AIBaseUrl");
 	ipcMain.removeHandler("providerService:get302AIBaseUrlWithoutV1");
+	ipcMain.removeHandler("providerService:get302WebsiteBaseDomain");
+	ipcMain.removeHandler("providerService:get302WebsiteUrl");
 	ipcMain.removeHandler("threadService:addThread");
 	ipcMain.removeHandler("threadService:getThreads");
 	ipcMain.removeHandler("threadService:getThread");
